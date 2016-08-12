@@ -1,0 +1,519 @@
+﻿Log file open, 08/12/16 10:04:12
+LogInit:Display: Running engine for game: CognitiveVRTest
+LogPlatformFile: Not using cached read wrapper
+LogInit:Display: RandInit(-1610793018) SRandInit(-1610793017).
+LogTaskGraph: Started task graph with 4 named threads and 7 total threads with 1 sets of task threads.
+LogStats: Stats thread started at 0.083620
+LogInit:Warning: Incompatible or missing module: UE4Editor-CognitiveVRTest.dll
+LogInit:Warning: Incompatible or missing module: UE4Editor-CognitiveVRAnalytics.dll
+Running C:/Program Files (x86)/Epic Games/4.12/Engine/Binaries/DotNET/UnrealBuildTool.exe CognitiveVRTest Development Win64 -project="C:/Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/CognitiveVRTest.uproject" -editorrecompile -progress -noubtmakefiles -NoHotReloadFromIDE
+@progress push 5%
+Parsing headers for CognitiveVRTestEditor
+  Running UnrealHeaderTool "C:\Users\calder\Documents\GitHub\cvr-sdk-unreal\CognitiveVRTest\CognitiveVRTest.uproject" "C:\Users\calder\Documents\GitHub\cvr-sdk-unreal\CognitiveVRTest\Intermediate\Build\Win64\CognitiveVRTestEditor\Development\CognitiveVRTestEditor.uhtmanifest" -LogCmds="loginit warning, logexit warning, logdatabase error" -Unattended -WarningsAsErrors -installed
+Reflection code generated for CognitiveVRTestEditor in 2.3131089 seconds
+@progress pop
+Performing 22 actions (4 in parallel)
+transaction.cc
+Module.CognitiveVRAnalytics.cpp
+PCH.CognitiveVRTest.h.cpp
+tuning.cc
+network.cc
+thread_manager.cc
+override_http_interface.cc
+util.cc
+[9/22] Resource PCLaunch.rc
+[10/22] Resource ModuleVersionResource.rc.inl
+log.cc
+config.cc
+CognitiveVRTestHUD.cpp
+CognitiveVRTestCharacter.cpp
+CognitiveVRTest.generated.cpp
+CognitiveVRTestGameMode.cpp
+CognitiveVRTestProjectile.cpp
+CognitiveVRTest.cpp
+[19/22] Resource ModuleVersionResource.rc.inl
+[20/22] Resource PCLaunch.rc
+[21/22] Link UE4Editor-CognitiveVRAnalytics.dll
+   Creating library C:\Users\calder\Documents\GitHub\cvr-sdk-unreal\CognitiveVRTest\Plugins\CognitiveVRAnalytics\Intermediate\Build\Win64\UE4Editor\Development\UE4Editor-CognitiveVRAnalytics.lib and object C:\Users\calder\Documents\GitHub\cvr-sdk-unreal\CognitiveVRTest\Plugins\CognitiveVRAnalytics\Intermediate\Build\Win64\UE4Editor\Development\UE4Editor-CognitiveVRAnalytics.exp
+[22/22] Link UE4Editor-CognitiveVRTest.dll
+   Creating library C:\Users\calder\Documents\GitHub\cvr-sdk-unreal\CognitiveVRTest\Intermediate\Build\Win64\UE4Editor\Development\UE4Editor-CognitiveVRTest.lib and object C:\Users\calder\Documents\GitHub\cvr-sdk-unreal\CognitiveVRTest\Intermediate\Build\Win64\UE4Editor\Development\UE4Editor-CognitiveVRTest.exp
+Total build time: 28.57 seconds
+LogInit: Version: 4.12.5-3039270+++UE4+Release-4.12
+LogInit: API Version: 2992821
+LogInit: Net Version: 3039270
+LogDevObjectVersion: Number of dev versions registered: 13
+LogDevObjectVersion:   Dev-Blueprints (B0D832E4-1F89-4F0D-ACCF-7EB736FD4AA2): 3
+LogDevObjectVersion:   Dev-Build (E1C64328-A22C-4D53-A36C-8E866417BD8C): 0
+LogDevObjectVersion:   Dev-Core (375EC13C-06E4-48FB-B500-84F0262A717E): 1
+LogDevObjectVersion:   Dev-Editor (E4B068ED-F494-42E9-A231-DA0B2E46BB41): 2
+LogDevObjectVersion:   Dev-Framework (CFFC743F-43B0-4480-9391-14DF171D2073): 6
+LogDevObjectVersion:   Dev-Mobile (B02B49B5-BB20-44E9-A304-32B752E40360): 0
+LogDevObjectVersion:   Dev-Networking (A4E4105C-59A1-49B5-A7C5-40C4547EDFEE): 0
+LogDevObjectVersion:   Dev-Online (39C831C9-5AE6-47DC-9A44-9C173E1C8E7C): 0
+LogDevObjectVersion:   Dev-Physics (78F01B33-EBEA-4F98-B9B4-84EACCB95AA2): 0
+LogDevObjectVersion:   Dev-Platform (6631380F-2D4D-43E0-8009-CF276956A95A): 0
+LogDevObjectVersion:   Dev-Rendering (12F88B9F-8875-4AFC-A67C-D90C383ABD29): 2
+LogDevObjectVersion:   Dev-Sequencer (7B5AE74C-D270-4C10-A958-57980B212A5A): 0
+LogDevObjectVersion:   Dev-VR (D7296918-1DD6-4BDD-9DE2-64A83CC13884): 0
+LogInit: Compiled (64-bit): Jul  6 2016 09:09:46
+LogInit: Compiled with Visual C++: 19.00.23026.00
+LogInit: Build Configuration: Development
+LogInit: Branch Name: ++UE4+Release-4.12
+LogInit: Command line:  
+LogInit: Base directory: C:/Program Files (x86)/Epic Games/4.12/Engine/Binaries/Win64/
+LogInit: Installed Engine Build: 1
+LogInit: Using libcurl 7.41.0
+LogInit:  - built for x86_64-pc-win32
+LogInit:  - supports SSL with WinSSL
+LogInit:  - other features:
+LogInit:      CURL_VERSION_SSL
+LogInit:      CURL_VERSION_IPV6
+LogInit:      CURL_VERSION_ASYNCHDNS
+LogInit:      CURL_VERSION_LARGEFILE
+LogInit:      CURL_VERSION_IDN
+LogInit:  CurlRequestOptions (configurable via config and command line):
+LogInit:  - bVerifyPeer = true  - Libcurl will verify peer certificate
+LogInit:  - bUseHttpProxy = false  - Libcurl will NOT use HTTP proxy
+LogInit:  - bDontReuseConnections = false  - Libcurl will reuse connections
+LogInit:  - CertBundlePath = nullptr  - Libcurl will use whatever was configured at build time.
+LogInit: Presizing for max 8388607 objects, including 0 objects not considered by GC, pre-allocating 0 bytes for permanent pool.
+LogInit: Object subsystem initialized
+[2016.08.12-17.04.43:231][  0]LogInit: Selected Device Profile: [Windows]
+[2016.08.12-17.04.43:231][  0]LogInit: Applying CVar settings loaded from the selected device profile: [Windows]
+[2016.08.12-17.04.43:240][  0]LogInit: Computer: CVR-CALDER
+[2016.08.12-17.04.43:240][  0]LogInit: User: calder
+[2016.08.12-17.04.43:240][  0]LogInit: CPU Page size=65536, Cores=4
+[2016.08.12-17.04.43:240][  0]LogInit: High frequency timer resolution =3.328129 MHz
+[2016.08.12-17.04.43:240][  0]LogMemory: Memory total: Physical=15.9GB (16GB approx)
+[2016.08.12-17.04.43:240][  0]LogMemory: Platform Memory Stats for Windows
+[2016.08.12-17.04.43:240][  0]LogMemory: Process Physical Memory: 193.68 MB used, 193.68 MB peak
+[2016.08.12-17.04.43:240][  0]LogMemory: Process Virtual Memory: 192.43 MB used, 192.43 MB peak
+[2016.08.12-17.04.43:240][  0]LogMemory: Physical Memory: 5140.17 MB used, 16299.09 MB total
+[2016.08.12-17.04.43:240][  0]LogMemory: Virtual Memory: 571.09 MB used, 134217728.00 MB total
+[2016.08.12-17.04.43:418][  0]LogTextLocalizationManager: No specific translations for ('en-US') exist, so ('en') translations will be used.
+[2016.08.12-17.04.43:767][  0]LogD3D11RHI: D3D11 adapters:
+[2016.08.12-17.04.43:797][  0]LogD3D11RHI:    0. 'NVIDIA GeForce GTX 970' (Feature Level 11_0)
+[2016.08.12-17.04.43:797][  0]LogD3D11RHI:       4007/0/8149 MB DedicatedVideo/DedicatedSystem/SharedSystem, Outputs:2, VendorId:0x10de
+[2016.08.12-17.04.43:798][  0]LogD3D11RHI:    1. 'Microsoft Basic Render Driver' (Feature Level 11_0)
+[2016.08.12-17.04.43:798][  0]LogD3D11RHI:       0/0/8149 MB DedicatedVideo/DedicatedSystem/SharedSystem, Outputs:0, VendorId:0x1414
+[2016.08.12-17.04.43:798][  0]LogD3D11RHI: Chosen D3D11 Adapter: 0
+[2016.08.12-17.04.43:801][  0]LogD3D11RHI: Creating new Direct3DDevice
+[2016.08.12-17.04.43:801][  0]LogD3D11RHI:     GPU DeviceId: 0x13c2 (for the marketing name, search the web for "GPU Device Id")
+[2016.08.12-17.04.43:801][  0]LogWindows: EnumDisplayDevices:
+[2016.08.12-17.04.43:801][  0]LogWindows:    0. 'NVIDIA GeForce GTX 970' (P:1 D:1)
+[2016.08.12-17.04.43:801][  0]LogWindows:    1. 'NVIDIA GeForce GTX 970' (P:0 D:1)
+[2016.08.12-17.04.43:801][  0]LogWindows:    2. 'NVIDIA GeForce GTX 970' (P:0 D:0)
+[2016.08.12-17.04.43:802][  0]LogWindows:    3. 'NVIDIA GeForce GTX 970' (P:0 D:0)
+[2016.08.12-17.04.43:802][  0]LogWindows: DebugString: FoundDriverCount:4 
+[2016.08.12-17.04.43:802][  0]LogD3D11RHI:     Adapter Name: NVIDIA GeForce GTX 970
+[2016.08.12-17.04.43:802][  0]LogD3D11RHI:   Driver Version: 368.22 (internal:10.18.13.6822, unified:368.22)
+[2016.08.12-17.04.43:802][  0]LogD3D11RHI:      Driver Date: 5-19-2016
+[2016.08.12-17.04.43:802][  0]LogRHI: Texture pool is 1361 MB (70% of 1945 MB)
+[2016.08.12-17.04.43:816][  0]LogD3D11RHI: Async texture creation enabled
+[2016.08.12-17.04.43:825][  0]LogD3D11RHI: GPU Timing Frequency: 1000.000000 (Debug: 2 1)
+[2016.08.12-17.04.43:825][  0]LogShaderCompilers: Guid format shader working directory is -32 characters bigger than the processId version (../../../../../../Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/Intermediate/Shaders/WorkingDirectory/11940/).
+[2016.08.12-17.04.43:825][  0]LogShaderCompilers: Cleaned the shader compiler working directory 'C:/Users/calder/AppData/Local/Temp/UnrealShaderWorkingDir/922DB55E4885B7FDE8C0569C023F9507/'.
+[2016.08.12-17.04.43:825][  0]LogShaderCompilers:Display: Using Local Shader Compiler.
+[2016.08.12-17.04.44:681][  0]LogTemp:Display: Loaded TP AllDesktopTargetPlatform
+[2016.08.12-17.04.44:688][  0]LogTemp:Display: Loaded TP WindowsClientTargetPlatform
+[2016.08.12-17.04.44:696][  0]LogTemp:Display: Loaded TP WindowsNoEditorTargetPlatform
+[2016.08.12-17.04.44:703][  0]LogTemp:Display: Loaded TP WindowsServerTargetPlatform
+[2016.08.12-17.04.44:710][  0]LogTemp:Display: Loaded TP WindowsTargetPlatform
+[2016.08.12-17.04.44:716][  0]LogTemp:Display: Loaded TP AndroidTargetPlatform
+[2016.08.12-17.04.44:722][  0]LogTemp:Display: Loaded TP Android_ASTCTargetPlatform
+[2016.08.12-17.04.44:728][  0]LogTemp:Display: Loaded TP Android_ATCTargetPlatform
+[2016.08.12-17.04.44:734][  0]LogTemp:Display: Loaded TP Android_DXTTargetPlatform
+[2016.08.12-17.04.44:740][  0]LogTemp:Display: Loaded TP Android_ETC1TargetPlatform
+[2016.08.12-17.04.44:746][  0]LogTemp:Display: Loaded TP Android_ETC2TargetPlatform
+[2016.08.12-17.04.44:757][  0]LogTemp:Display: Loaded TP Android_MultiTargetPlatform
+[2016.08.12-17.04.44:757][  0]LogTemp:Display: Loaded TP Android_PVRTCTargetPlatform
+[2016.08.12-17.04.44:758][  0]LogTemp:Display: Loaded TP HTML5TargetPlatform
+[2016.08.12-17.04.44:795][  0]LogTemp:Display: Loaded TP IOSTargetPlatform
+[2016.08.12-17.04.44:802][  0]LogTemp:Display: Loaded TP TVOSTargetPlatform
+[2016.08.12-17.04.44:807][  0]LogTemp:Display: Loaded TP LinuxNoEditorTargetPlatform
+[2016.08.12-17.04.44:813][  0]LogTemp:Display: Loaded TP LinuxServerTargetPlatform
+[2016.08.12-17.04.44:819][  0]LogTemp:Display: Loaded TP LinuxTargetPlatform
+[2016.08.12-17.04.44:819][  0]LogTargetPlatformManager:Display: Building Assets For Windows
+[2016.08.12-17.04.45:039][  0]LogDerivedDataCache:Display: Max Cache Size: 512 MB
+[2016.08.12-17.04.45:077][  0]LogDerivedDataCache: Loaded boot cache 0.04s 50MB C:/Users/calder/AppData/Local/UnrealEngine/4.12/DerivedDataCache/Boot.ddc.
+[2016.08.12-17.04.45:077][  0]LogDerivedDataCache:Display: Loaded Boot cache: C:/Users/calder/AppData/Local/UnrealEngine/4.12/DerivedDataCache/Boot.ddc
+[2016.08.12-17.04.45:077][  0]LogDerivedDataCache: FDerivedDataBackendGraph:  Pak pak cache file ../../../../../../Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/DerivedDataCache/DDC.ddp not found, will not use a pak cache.
+[2016.08.12-17.04.45:077][  0]LogDerivedDataCache: Unable to find inner node Pak for hierarchical cache Hierarchy.
+[2016.08.12-17.04.45:077][  0]LogDerivedDataCache: FDerivedDataBackendGraph:  CompressedPak pak cache file ../../../../../../Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/DerivedDataCache/Compressed.ddp not found, will not use a pak cache.
+[2016.08.12-17.04.45:077][  0]LogDerivedDataCache: Unable to find inner node CompressedPak for hierarchical cache Hierarchy.
+[2016.08.12-17.04.45:093][  0]LogDerivedDataCache:Display: Pak cache opened for reading ../../../Engine/DerivedDataCache/Compressed.ddp.
+[2016.08.12-17.04.45:105][  0]LogDerivedDataCache: Using Local data cache path C:/Users/calder/AppData/Local/UnrealEngine/Common/DerivedDataCache: Writable
+[2016.08.12-17.04.46:965][  0]LogInit: Selected Device Profile: [Windows]
+[2016.08.12-17.04.46:966][  0]LogContentStreaming: Texture pool size is 0.00 MB
+[2016.08.12-17.04.47:150][  0]LogMeshUtilities: No automatic mesh reduction module available
+[2016.08.12-17.04.47:150][  0]LogMeshUtilities: No automatic mesh merging module available
+[2016.08.12-17.04.47:150][  0]LogMeshUtilities: No distributed automatic mesh merging module available
+[2016.08.12-17.04.47:519][  0]LogAssetRegistry: FAssetRegistry took 0.0216 seconds to start up
+[2016.08.12-17.04.47:541][  0]LogPackageLocalizationCache: Processed 3 localized package path(s) for 2 prioritized culture(s) in 0.020798 seconds
+[2016.08.12-17.04.47:545][  0]LogUObjectArray: 28739 objects as part of root set at end of initial load.
+[2016.08.12-17.04.47:545][  0]LogUObjectAllocator: 5855624 out of 0 bytes used by permanent object pool.
+[2016.08.12-17.04.47:545][  0]LogUObjectArray: CloseDisregardForGC: 0/0 objects in disregard for GC pool
+[2016.08.12-17.04.47:550][  0]LogInit: WinSock: version 1.1 (2.2), MaxSocks=32767, MaxUdp=65467
+[2016.08.12-17.04.47:777][  0]LogSlate: SlateFontCache - WITH_FREETYPE: 1, WITH_HARFBUZZ: 1
+[2016.08.12-17.04.47:777][  0]LogSlate: SlateFontCache - WITH_FREETYPE: 1, WITH_HARFBUZZ: 1
+[2016.08.12-17.04.48:806][  0]LogUdpMessaging: Initializing bridge on interface 0.0.0.0:0 to multicast group 230.0.0.1:6666.
+[2016.08.12-17.04.49:227][  0]SourceControl: Info Source control is disabled
+[2016.08.12-17.04.49:312][  0]SourceControl: Info Source control is disabled
+[2016.08.12-17.04.49:317][  0]SourceControl: Info Source control is disabled
+[2016.08.12-17.04.49:322][  0]SourceControl: Info Source control is disabled
+[2016.08.12-17.04.49:477][  0]LogEngine: Initializing Engine...
+[2016.08.12-17.04.49:553][  0]LogHMD: SteamVR failed to initialize.  Err: 126
+[2016.08.12-17.04.49:557][  0]LogHMD: SteamVR failed to initialize.  Err: 126
+[2016.08.12-17.04.49:664][  0]LogAIModule: Creating AISystem for world NewWorld
+[2016.08.12-17.04.49:670][  0]LogInit: XAudio2 using 'ASUS VS247-C (NVIDIA High Definition Audio)' : 2 channels at 48 kHz using 16 bits per sample (channel mask 0x3)
+[2016.08.12-17.04.49:681][  0]LogInit: FAudioDevice initialized.
+[2016.08.12-17.04.49:700][  0]LogDerivedDataCache: Saved boot cache 0.02s 50MB C:/Users/calder/AppData/Local/UnrealEngine/4.12/DerivedDataCache/Boot.ddc.
+[2016.08.12-17.04.49:705][  0]LogInit: Texture streaming: Enabled
+[2016.08.12-17.04.49:720][  0]LogInit: Transaction tracking system initialized
+[2016.08.12-17.04.49:736][  0]BlueprintLog: New page: Editor Load
+[2016.08.12-17.04.49:819][  0]LocalizationService: Info Localization service is disabled
+[2016.08.12-17.04.49:867][  0]LogConsoleResponse:Display: 
+[2016.08.12-17.04.50:017][  0]LogCook:Display: Max memory allowance for cook 8192mb
+[2016.08.12-17.04.50:017][  0]LogCook:Display: Mobile HDR setting 1
+[2016.08.12-17.04.50:095][  0]LogFileCache: Scanning file cache for directory 'C:/Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/Content/' took 0.01s
+[2016.08.12-17.04.50:095][  0]SourceControl: Info Source control is disabled
+[2016.08.12-17.04.50:095][  0]Cmd: MAP LOAD FILE="../../../../../../Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/Content/FirstPersonCPP/Maps/FirstPersonExampleMap.umap" TEMPLATE=0 SHOWPROGRESS=1 FEATURELEVEL=3
+[2016.08.12-17.04.50:098][  0]LightingResults: New page: Lighting Build
+[2016.08.12-17.04.50:099][  0]MapCheck: New page: Map Check
+[2016.08.12-17.04.50:099][  0]LightingResults: New page: Lighting Build
+[2016.08.12-17.04.50:259][  0]LogAIModule: Creating AISystem for world FirstPersonExampleMap
+[2016.08.12-17.04.50:371][  0]LogEditorServer: Finished looking for orphan Actors (0.000 secs)
+[2016.08.12-17.04.50:371][  0]Cmd: MAP CHECKDEP NOCLEARLOG
+[2016.08.12-17.04.50:403][  0]MapCheck: Info Map check complete: 0 Error(s), 0 Warning(s), took 31.693ms to complete.
+[2016.08.12-17.04.50:403][  0]LogFileHelpers: Loading map 'FirstPersonExampleMap' took 0.308
+[2016.08.12-17.04.50:547][  0]LogCollectionManager: Loaded 0 collections in 0.001742 seconds
+[2016.08.12-17.04.50:588][  0]LogFileCache: Scanning file cache for directory 'C:/Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/Saved/Collections/' took 0.01s
+[2016.08.12-17.04.50:588][  0]LogFileCache: Scanning file cache for directory 'C:/Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/Content/Developers/calder/Collections/' took 0.01s
+[2016.08.12-17.04.50:588][  0]LogFileCache: Scanning file cache for directory 'C:/Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/Content/Collections/' took 0.01s
+[2016.08.12-17.04.50:588][  0]LogCollectionManager: Rebuilt the GUID cache for 0 collections in 0.000002 seconds
+[2016.08.12-17.04.50:594][  0]LogContentBrowser: Native class hierarchy populated in 0.0067 seconds. Added 2051 classes and 371 folders.
+[2016.08.12-17.04.50:597][  0]LogStats: UGameplayTagsManager::ConstructGameplayTagTree: Construct from data asset -  0.000 s
+[2016.08.12-17.04.50:597][  0]LogStats: UGameplayTagsManager::ConstructGameplayTagTree: GameplayTagTreeChangedEvent.Broadcast -  0.000 s
+[2016.08.12-17.04.50:598][  0]LogContentBrowser: Native class hierarchy updated for 'GameplayTags' in 0.0009 seconds. Added 12 classes and 0 folders.
+[2016.08.12-17.04.50:602][  0]LogContentBrowser: Native class hierarchy updated for 'WidgetCarousel' in 0.0008 seconds. Added 0 classes and 0 folders.
+[2016.08.12-17.04.50:758][  0]LogContentBrowser: Native class hierarchy updated for 'AddContentDialog' in 0.0008 seconds. Added 0 classes and 0 folders.
+[2016.08.12-17.04.50:762][  0]LogContentBrowser: Native class hierarchy updated for 'SceneOutliner' in 0.0009 seconds. Added 1 classes and 2 folders.
+[2016.08.12-17.04.50:773][  0]LogCrashTracker: Crashtracker disabled due to settings.
+[2016.08.12-17.04.50:778][  0]LogUObjectGlobals:Warning: Failed to find object 'Class None.'
+[2016.08.12-17.04.50:804][  0]LogContentBrowser: Native class hierarchy updated for 'HierarchicalLODOutliner' in 0.0008 seconds. Added 1 classes and 2 folders.
+[2016.08.12-17.04.50:804][  0]LogLoad: Full Startup: 39.76 seconds (BP compile: 0.06 seconds)
+[2016.08.12-17.04.50:804][  0]LogExternalProfiler: Found external profiler: VSPerf
+[2016.08.12-17.04.50:804][  0]LogExternalProfiler: Using external profiler: VSPerf
+[2016.08.12-17.04.50:813][  0]LogOcInput: OculusInput pre-init called
+[2016.08.12-17.04.50:835][  0]LogContentStreaming: Texture pool size now 1000 MB
+[2016.08.12-17.04.50:982][  0]LogRenderer: Reallocating scene render targets to support 916x528 (Frame:2).
+[2016.08.12-17.04.51:045][  1]LogAssetRegistry: Asset discovery search completed in 3.5476 seconds
+[2016.08.12-17.04.51:045][  1]LogCollectionManager: Rebuilt the object cache for 0 collections in 0.000001 seconds (found 0 objects)
+[2016.08.12-17.04.51:045][  1]LogCollectionManager: Fixed up redirectors for 0 collections in 0.000059 seconds (updated 0 objects)
+[2016.08.12-17.05.55:384][599]Running C:/Program Files (x86)/Epic Games/4.12/Engine/Binaries/DotNET/UnrealBuildTool.exe  -projectfiles -project="C:/Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/CognitiveVRTest.uproject" -game -rocket -progress
+[2016.08.12-17.05.55:586][599]Discovering modules, targets and source code for project...
+[2016.08.12-17.05.57:703][599]LogVSAccessor:Warning: Couldn't access Visual Studio
+[2016.08.12-17.05.57:708][599]Recompiling CognitiveVRTest...
+[2016.08.12-17.05.57:709][599]Launching UnrealBuildTool... [C:/Program Files (x86)/Epic Games/4.12/Engine/Binaries/DotNET/UnrealBuildTool.exe CognitiveVRTest -ModuleWithSuffix CognitiveVRTest 6631 Win64 Development -editorrecompile -canskiplink "C:/Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/CognitiveVRTest.uproject"  -2015]
+[2016.08.12-17.06.05:424][599]CompilerResultsLog: New page: Compilation - Aug 12, 2016, 2:06:05 AM
+[2016.08.12-17.06.05:424][599]CompilerResultsLog: Info Performing full C++ include scan (hot reloading a new target)
+[2016.08.12-17.06.05:425][599]CompilerResultsLog: Info Creating makefile for hot reloading CognitiveVRTest (no existing makefile)
+[2016.08.12-17.06.05:425][599]CompilerResultsLog: Info Compiling game modules for hot reload
+[2016.08.12-17.06.05:425][599]CompilerResultsLog: Info Parsing headers for CognitiveVRTestEditor
+[2016.08.12-17.06.05:425][599]CompilerResultsLog: Info   Running UnrealHeaderTool "C:\Users\calder\Documents\GitHub\cvr-sdk-unreal\CognitiveVRTest\CognitiveVRTest.uproject" "C:\Users\calder\Documents\GitHub\cvr-sdk-unreal\CognitiveVRTest\Intermediate\Build\Win64\CognitiveVRTestEditor\Development\CognitiveVRTestEditor.uhtmanifest" -LogCmds="loginit warning, logexit warning, logdatabase error" -Unattended -WarningsAsErrors -installed
+[2016.08.12-17.06.05:425][599]CompilerResultsLog: Info Reflection code generated for CognitiveVRTestEditor in 2.6408294 seconds
+[2016.08.12-17.06.05:425][599]CompilerResultsLog: Info Performing 3 actions (4 in parallel)
+[2016.08.12-17.06.05:425][599]CompilerResultsLog: Info CognitiveVRInitializer.cpp
+[2016.08.12-17.06.05:425][599]CompilerResultsLog: Info CognitiveVRTest.generated.cpp
+[2016.08.12-17.06.05:425][599]CompilerResultsLog: Info [3/3] Link UE4Editor-CognitiveVRTest-6631.dll
+[2016.08.12-17.06.05:425][599]CompilerResultsLog: Info    Creating library C:\Users\calder\Documents\GitHub\cvr-sdk-unreal\CognitiveVRTest\Intermediate\Build\Win64\UE4Editor\Development\UE4Editor-CognitiveVRTest-6631.lib and object C:\Users\calder\Documents\GitHub\cvr-sdk-unreal\CognitiveVRTest\Intermediate\Build\Win64\UE4Editor\Development\UE4Editor-CognitiveVRTest-6631.exp
+[2016.08.12-17.06.05:425][599]CompilerResultsLog: Info Total build time: 7.58 seconds
+[2016.08.12-17.06.05:425][599]LogMainFrame: MainFrame: Module compiling took 7.722 seconds
+[2016.08.12-17.06.05:453][599]LogClass: Could not find existing class CognitiveVRInitializer in package /Script/CognitiveVRTest for HotReload, assuming new class
+[2016.08.12-17.06.05:458][599]LogContentBrowser: Native class hierarchy updated for 'CognitiveVRTest' in 0.0011 seconds. Added 5 classes and 2 folders.
+[2016.08.12-17.06.05:459][599]Warning: HotReload successful (1 functions remapped  0 scriptstructs remapped)
+[2016.08.12-17.06.05:527][599]LogContentBrowser: Native class hierarchy populated in 0.0075 seconds. Added 2054 classes and 375 folders.
+[2016.08.12-17.06.05:527][599]Warning: HotReload took  7.8s.
+[2016.08.12-17.06.05:529][599]Warning: HotReload operation took  7.8s.
+[2016.08.12-17.06.05:635][599]LogHotReload: New module detected: UE4Editor-CognitiveVRTest-6631.dll
+[2016.08.12-17.06.05:662][600]LogHotReload: Starting Hot-Reload from IDE
+[2016.08.12-17.06.05:697][600]LogContentBrowser: Native class hierarchy updated for 'CognitiveVRTest' in 0.0009 seconds. Added 5 classes and 2 folders.
+[2016.08.12-17.06.05:698][600]Warning: HotReload successful (0 functions remapped  0 scriptstructs remapped)
+[2016.08.12-17.06.05:707][600]LogContentBrowser: Native class hierarchy populated in 0.0077 seconds. Added 2054 classes and 375 folders.
+[2016.08.12-17.06.05:713][600]Warning: HotReload took  0.1s.
+[2016.08.12-17.06.10:941][608]LogVSAccessor:Warning: Couldn't goto line number '0' in 'C:/Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/Source/CognitiveVRTest/CognitiveVRInitializer.h'
+[2016.08.12-17.06.11:202][608]LogVSAccessor:Warning: Couldn't goto line number '0' in 'C:/Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/Source/CognitiveVRTest/CognitiveVRInitializer.cpp'
+[2016.08.12-17.08.50:966][326]LogHotReload: New module detected: UE4Editor-CognitiveVRTest-1806.dll
+[2016.08.12-17.08.52:642][332]LogHotReload: Starting Hot-Reload from IDE
+[2016.08.12-17.08.52:690][332]LogContentBrowser: Native class hierarchy updated for 'CognitiveVRTest' in 0.0009 seconds. Added 5 classes and 2 folders.
+[2016.08.12-17.08.52:690][332]Warning: HotReload successful (1 functions remapped  0 scriptstructs remapped)
+[2016.08.12-17.08.52:720][332]LogContentBrowser: Native class hierarchy populated in 0.0074 seconds. Added 2054 classes and 375 folders.
+[2016.08.12-17.08.52:728][332]Warning: HotReload took  0.1s.
+[2016.08.12-17.08.58:483][698]LogEditor: Attempting to add actor of class 'CognitiveVRInitializer' to level at -620.00,-140.00,170.00
+[2016.08.12-17.08.59:145][770]LogEditor: Attempting to add actor of class 'CognitiveVRInitializer' to level at -600.00,-210.00,170.00
+[2016.08.12-17.09.27:824][ 84]LogBlueprintUserMessages: Early PlayInEditor Detection: Level '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap:PersistentLevel' has LevelScriptBlueprint '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap:PersistentLevel.FirstPersonExampleMap' with GeneratedClass '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap_C' with ClassGeneratedBy '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap:PersistentLevel.FirstPersonExampleMap'
+[2016.08.12-17.09.27:824][ 84]LogPlayLevel: PlayLevel: No blueprints needed recompiling
+[2016.08.12-17.09.27:824][ 84]PIE: New page: PIE session: FirstPersonExampleMap (Aug 12, 2016, 2:09:27 AM)
+[2016.08.12-17.09.27:824][ 84]LogPlayLevel: Creating play world package: /Game/FirstPersonCPP/Maps/UEDPIE_0_FirstPersonExampleMap
+[2016.08.12-17.09.27:846][ 84]LogPlayLevel: PIE: StaticDuplicateObject took: (0.022224s)
+[2016.08.12-17.09.27:847][ 84]LogAIModule: Creating AISystem for world FirstPersonExampleMap
+[2016.08.12-17.09.27:847][ 84]LogPlayLevel: PIE: World Init took: (0.001063s)
+[2016.08.12-17.09.27:848][ 84]LogPlayLevel: PIE: Created PIE world by copying editor world from /Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap to /Game/FirstPersonCPP/Maps/UEDPIE_0_FirstPersonExampleMap.FirstPersonExampleMap (0.023770s)
+[2016.08.12-17.09.27:866][ 84]LogInit: XAudio2 using 'ASUS VS247-C (NVIDIA High Definition Audio)' : 2 channels at 48 kHz using 16 bits per sample (channel mask 0x3)
+[2016.08.12-17.09.27:869][ 84]LogInit: FAudioDevice initialized.
+[2016.08.12-17.09.27:927][ 84]LogWorld: Game class is 'CognitiveVRTestGameMode'
+[2016.08.12-17.09.27:932][ 84]LogWorld: Bringing World /Game/FirstPersonCPP/Maps/UEDPIE_0_FirstPersonExampleMap.FirstPersonExampleMap up for play (max tick rate 0) at 2016.08.12-10.09.27
+[2016.08.12-17.09.27:933][ 84]LogWorld: Bringing up level for play took: 0.004058
+[2016.08.12-17.09.27:941][ 84]LogContentBrowser: Native class hierarchy updated for 'MovieSceneCapture' in 0.0008 seconds. Added 11 classes and 0 folders.
+[2016.08.12-17.09.27:941][ 84]LogTemp:Warning: FCognitiveVRAnalytics::Init----------
+[2016.08.12-17.09.27:941][ 84]LogTemp:Warning: ___[
+	"1471021767",
+	"1471021767",
+	"cliff blezinski",
+	"unreal engine",
+	"",
+	""
+]____
+[2016.08.12-17.09.27:941][ 84]LogTemp:Warning: CognitiveVRAnalytics::ResponseException!
+[2016.08.12-17.09.27:941][ 84]PIE: Info Play in editor start time for /Game/FirstPersonCPP/Maps/UEDPIE_0_FirstPersonExampleMap 0.807
+[2016.08.12-17.09.27:941][ 84]LogBlueprintUserMessages: Late PlayInEditor Detection: Level '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap:PersistentLevel' has LevelScriptBlueprint '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap:PersistentLevel.FirstPersonExampleMap' with GeneratedClass '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap_C' with ClassGeneratedBy '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap:PersistentLevel.FirstPersonExampleMap'
+[2016.08.12-17.09.28:723][164]LogTemp:Warning: Network::Callback INIT----------------------------------------
+[2016.08.12-17.10.17:200][898]LogBlueprintUserMessages: Early EndPlayMap Detection: Level '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap:PersistentLevel' has LevelScriptBlueprint '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap:PersistentLevel.FirstPersonExampleMap' with GeneratedClass '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap_C' with ClassGeneratedBy '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap:PersistentLevel.FirstPersonExampleMap'
+[2016.08.12-17.10.17:231][898]LogBlueprintUserMessages: Late EndPlayMap Detection: Level '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap:PersistentLevel' has LevelScriptBlueprint '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap:PersistentLevel.FirstPersonExampleMap' with GeneratedClass '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap_C' with ClassGeneratedBy '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap.FirstPersonExampleMap:PersistentLevel.FirstPersonExampleMap'
+[2016.08.12-17.15.53:539][283]LogSavePackage: Save=1614.00ms
+[2016.08.12-17.15.53:540][283]LogSavePackage: Moving '../../../../../../Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/Saved/FirstPersonExampleMap_Auto163D89EF94433FBBD89050FBF13C0A52F.tmp' to '../../../../../../Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/Saved/Autosaves/Game/FirstPersonCPP/Maps/FirstPersonExampleMap_Auto1.umap'
+[2016.08.12-17.15.53:541][283]LogSavePackage:Display: Finished SavePackage ../../../../../../Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/Saved/Autosaves/Game/FirstPersonCPP/Maps/FirstPersonExampleMap_Auto1.umap
+[2016.08.12-17.15.53:545][283]LogFileHelpers: Editor autosave (incl. sublevels) for '/Game/FirstPersonCPP/Maps/FirstPersonExampleMap' took 1.644
+[2016.08.12-17.15.53:545][283]LogFileHelpers: Editor autosave (incl. sublevels) for all levels took 1.644
+[2016.08.12-17.19.11:229][877]LogHotReload: New module detected: UE4Editor-CognitiveVRTest-1913.dll
+[2016.08.12-17.19.12:572][882]LogHotReload: Starting Hot-Reload from IDE
+[2016.08.12-17.19.12:603][882]LogModuleManager:Warning: ModuleManager: Unable to load module 'CognitiveVRTest' because the file 'C:/Users/calder/Documents/GitHub/cvr-sdk-unreal/CognitiveVRTest/Binaries/Win64/UE4Editor-CognitiveVRTest-1913.dll' was not found.
+[2016.08.12-17.19.12:603][882]Warning: HotReload failed, reload failed /Script/CognitiveVRTest.
+[2016.08.12-17.19.12:612][882]LogContentBrowser: Native class hierarchy populated in 0.0073 seconds. Added 2054 classes and 375 folders.
+[2016.08.12-17.19.12:619][882]Warning: HotReload took  0.0s.
+[2016.08.12-17.25.42:870][191]Cmd: QUIT_EDITOR
+[2016.08.12-17.25.43:626][191]LogWindowsTextInputMethodSystem:Display: IME system now deactivated.
+[2016.08.12-17.25.43:649][191]LogExit: Preparing to exit.
+[2016.08.12-17.25.44:258][191]LogExit: Editor shut down
+[2016.08.12-17.25.44:258][191]LogExit: Transaction tracking system shut down
+[2016.08.12-17.25.44:371][191]LogObj: Freed 0b from 0 cluster array pools.
+[2016.08.12-17.25.44:371][191]LogExit: Object subsystem successfully closed.
+[2016.08.12-17.25.44:411][191]LogD3D11RHI: Shutdown
+[2016.08.12-17.25.44:411][191]LogD3D11RHI: CleanupD3DDevice
+[2016.08.12-17.25.44:459][191]LogD3D11RHI: ~FD3D11DynamicRHI
+[2016.08.12-17.25.44:468][191]LogModuleManager: Shutting down and abandoning module MovieSceneCapture (216)
+[2016.08.12-17.25.44:468][191]LogModuleManager: Shutting down and abandoning module HierarchicalLODOutliner (215)
+[2016.08.12-17.25.44:468][191]LogModuleManager: Shutting down and abandoning module CrashTracker (214)
+[2016.08.12-17.25.44:468][191]LogModuleManager: Shutting down and abandoning module SceneOutliner (213)
+[2016.08.12-17.25.44:468][191]LogModuleManager: Shutting down and abandoning module WidgetCarousel (212)
+[2016.08.12-17.25.44:468][191]LogModuleManager: Shutting down and abandoning module AddContentDialog (211)
+[2016.08.12-17.25.44:468][191]LogModuleManager: Shutting down and abandoning module GameplayTags (210)
+[2016.08.12-17.25.44:468][191]LogModuleManager: Shutting down and abandoning module EditorWidgets (209)
+[2016.08.12-17.25.44:468][191]LogModuleManager: Shutting down and abandoning module CollectionManager (208)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module StatsViewer (207)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module FoliageEdit (206)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module LandscapeEditor (205)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module SceneDepthPickerMode (204)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module ActorPickerMode (203)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module GeometryMode (202)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module TextureAlignMode (201)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module BspMode (200)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module HardwareSurvey (199)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module SequenceRecorderSections (198)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module SequenceRecorder (197)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module AutomationWorker (196)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module MatineeToLevelSequence (195)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module PlacementMode (194)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module LevelSequenceEditor (193)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module CharacterAI (192)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module SmartSnapping (191)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module SessionServices (190)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module ViewportSnapping (189)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module LogVisualizer (188)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module GameProjectGeneration (187)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module IntroTutorials (186)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module EditorLiveStreaming (185)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module IOSPlatformEditor (184)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module HTML5PlatformEditor (183)
+[2016.08.12-17.25.44:469][191]LogModuleManager: Shutting down and abandoning module AndroidDeviceDetection (182)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module AndroidPlatformEditor (181)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module IOSRuntimeSettings (180)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module AndroidRuntimeSettings (179)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module MergeActors (178)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module SizeMap (177)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module TreeMap (176)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module ReferenceViewer (175)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module LocalizationService (174)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module LocalizationDashboard (173)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module HardwareTargeting (172)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module DeviceProfileEditor (171)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module UndoHistory (170)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module UserFeedback (169)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module XmlParser (168)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module Blutility (167)
+[2016.08.12-17.25.45:219][191]LogModuleManager: Shutting down and abandoning module ProjectTargetPlatformEditor (166)
+[2016.08.12-17.25.45:220][191]LogModuleManager: Shutting down and abandoning module ProjectSettingsViewer (165)
+[2016.08.12-17.25.45:220][191]LogModuleManager: Shutting down and abandoning module InputBindingEditor (164)
+[2016.08.12-17.25.45:220][191]LogModuleManager: Shutting down and abandoning module EditorSettingsViewer (163)
+[2016.08.12-17.25.45:220][191]LogModuleManager: Shutting down and abandoning module SettingsEditor (162)
+[2016.08.12-17.25.45:220][191]LogModuleManager: Shutting down and abandoning module ProjectLauncher (161)
+[2016.08.12-17.25.45:220][191]LogModuleManager: Shutting down and abandoning module SessionFrontend (160)
+[2016.08.12-17.25.45:220][191]LogModuleManager: Shutting down and abandoning module ProfilerClient (159)
+[2016.08.12-17.25.45:220][191]LogModuleManager: Shutting down and abandoning module TargetDeviceServices (158)
+[2016.08.12-17.25.45:220][191]LogModuleManager: Shutting down and abandoning module DeviceManager (157)
+[2016.08.12-17.25.45:262][191]LogModuleManager: Shutting down and abandoning module AutomationController (156)
+[2016.08.12-17.25.45:262][191]LogModuleManager: Shutting down and abandoning module AutomationWindow (155)
+[2016.08.12-17.25.45:262][191]LogModuleManager: Shutting down and abandoning module Layers (154)
+[2016.08.12-17.25.45:262][191]LogModuleManager: Shutting down and abandoning module ComponentVisualizers (153)
+[2016.08.12-17.25.45:262][191]LogModuleManager: Shutting down and abandoning module DetailCustomizations (152)
+[2016.08.12-17.25.45:262][191]LogModuleManager: Shutting down and abandoning module PackagesDialog (151)
+[2016.08.12-17.25.45:262][191]LogModuleManager: Shutting down and abandoning module Persona (150)
+[2016.08.12-17.25.45:262][191]LogModuleManager: Shutting down and abandoning module Kismet (149)
+[2016.08.12-17.25.45:262][191]LogModuleManager: Shutting down and abandoning module GraphEditor (148)
+[2016.08.12-17.25.45:262][191]LogModuleManager: Shutting down and abandoning module ClassViewer (147)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module Toolbox (146)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module ModuleUI (145)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module MovieSceneTools (144)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module OutputLog (143)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module GammaUI (142)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module Documentation (141)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module StreamingPauseRendering (140)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module AnalyticsET (139)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module Analytics (138)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module PortalServices (137)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module PortalRpc (136)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module MessagingRpc (135)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module GameplayDebugger (134)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module AITestSuite (133)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module AIModule (132)
+[2016.08.12-17.25.45:263][191]LogModuleManager: Shutting down and abandoning module ProfilerService (131)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module TaskGraph (130)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module CognitiveVRAnalytics (129)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module SlateRemote (128)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module SteamVRController (127)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module SteamVR (126)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module ProceduralMeshComponent (125)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module OculusLibrary (124)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module OculusInput (123)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module CustomMeshComponent (122)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module CableComponent (121)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module ArchVisCharacter (120)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module MediaPlayerEditor (119)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module HTML5Networking (118)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module SuperSearch (117)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module SuperSearchEditor (116)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module SpeedTreeImporter (115)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module PluginBrowser (114)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module EpicSurvey (113)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module VisualStudioSourceCodeAccess (112)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module UObjectPlugin (111)
+[2016.08.12-17.25.45:460][191]LogModuleManager: Shutting down and abandoning module SubversionSourceControl (110)
+[2016.08.12-17.25.45:461][191]LogModuleManager: Shutting down and abandoning module PerforceSourceControl (109)
+[2016.08.12-17.25.45:461][191]LogModuleManager: Shutting down and abandoning module SourceControl (108)
+[2016.08.12-17.25.45:461][191]LogModuleManager: Shutting down and abandoning module GitSourceControl (107)
+[2016.08.12-17.25.45:461][191]LogModuleManager: Shutting down and abandoning module LightPropagationVolumeEditor (106)
+[2016.08.12-17.25.45:461][191]LogModuleManager: Shutting down and abandoning module PaperTiledImporter (105)
+[2016.08.12-17.25.45:461][191]LogModuleManager: Shutting down and abandoning module PaperSpriteSheetImporter (104)
+[2016.08.12-17.25.45:461][191]LogModuleManager: Shutting down and abandoning module MeshPaint (103)
+[2016.08.12-17.25.45:461][191]LogModuleManager: Shutting down and abandoning module PixelInspectorModule (102)
+[2016.08.12-17.25.45:461][191]LogModuleManager: Shutting down and abandoning module HotReload (101)
+[2016.08.12-17.25.45:461][191]LogModuleManager: Shutting down and abandoning module MainFrame (100)
+[2016.08.12-17.25.45:461][191]LogModuleManager: Shutting down and abandoning module LevelEditor (99)
+[2016.08.12-17.25.45:462][191]LogModuleManager: Shutting down and abandoning module ContentBrowser (98)
+[2016.08.12-17.25.45:462][191]LogModuleManager: Shutting down and abandoning module Paper2DEditor (97)
+[2016.08.12-17.25.45:462][191]LogModuleManager: Shutting down and abandoning module UdpMessaging (95)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module LightPropagationVolumeRuntime (94)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module Paper2D (93)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module WindowsMoviePlayer (92)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module Media (91)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module WmfMedia (90)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module MediaAssets (89)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module GameLiveStreaming (88)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module GameplayTagsEditor (87)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module OnlineBlueprintSupport (86)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module VREditor (85)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module GameplayTasksEditor (84)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module PropertyEditor (83)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module BehaviorTreeEditor (82)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module FunctionalTesting (81)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module CollisionAnalyzer (80)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module Sequencer (79)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module WorkspaceMenuStructure (78)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module MessageLog (77)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module AssetTools (76)
+[2016.08.12-17.25.45:563][191]LogModuleManager: Shutting down and abandoning module UMGEditor (75)
+[2016.08.12-17.25.45:564][191]LogModuleManager: Shutting down and abandoning module UMG (74)
+[2016.08.12-17.25.45:564][191]LogModuleManager: Shutting down and abandoning module SlateReflector (73)
+[2016.08.12-17.25.45:564][191]LogModuleManager: Shutting down and abandoning module Slate (72)
+[2016.08.12-17.25.45:564][191]LogModuleManager: Shutting down and abandoning module EditorStyle (71)
+[2016.08.12-17.25.45:565][191]LogModuleManager: Shutting down and abandoning module SourceCodeAccess (70)
+[2016.08.12-17.25.45:565][191]LogModuleManager: Shutting down and abandoning module HeadMountedDisplay (69)
+[2016.08.12-17.25.45:565][191]LogModuleManager: Shutting down and abandoning module XAudio2 (68)
+[2016.08.12-17.25.45:565][191]LogModuleManager: Shutting down and abandoning module Networking (66)
+[2016.08.12-17.25.45:565][191]LogModuleManager: Shutting down and abandoning module Core (65)
+[2016.08.12-17.25.45:565][191]LogModuleManager: Shutting down and abandoning module DirectoryWatcher (64)
+[2016.08.12-17.25.45:566][191]LogModuleManager: Shutting down and abandoning module AssetRegistry (63)
+[2016.08.12-17.25.45:786][191]LogModuleManager: Shutting down and abandoning module KismetCompiler (62)
+[2016.08.12-17.25.45:786][191]LogModuleManager: Shutting down and abandoning module PhysXFormats (61)
+[2016.08.12-17.25.45:786][191]LogModuleManager: Shutting down and abandoning module MeshUtilities (60)
+[2016.08.12-17.25.45:786][191]LogModuleManager: Shutting down and abandoning module DerivedDataCache (59)
+[2016.08.12-17.25.45:886][191]LogDerivedDataCache: Shutdown
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module VulkanShaderFormat (58)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module ShaderFormatOpenGL (57)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module ShaderFormatD3D (56)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module MetalShaderFormat (55)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module TextureFormatUncompressed (54)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module TextureFormatPVR (53)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module TextureFormatIntelISPCTexComp (52)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module TextureFormatDXT (51)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module ImageWrapper (50)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module TextureFormatASTC (49)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module TextureFormatAndroid (48)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module AudioFormatOpus (47)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module AudioFormatOgg (46)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module AudioFormatADPCM (45)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module LinuxTargetPlatform (44)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module LinuxServerTargetPlatform (43)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module LinuxNoEditorTargetPlatform (42)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module TVOSTargetPlatform (41)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module Messaging (40)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module IOSTargetPlatform (39)
+[2016.08.12-17.25.45:886][191]LogModuleManager: Shutting down and abandoning module HTML5TargetPlatform (38)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module Android_PVRTCTargetPlatform (37)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module Android_MultiTargetPlatform (36)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module Android_ETC2TargetPlatform (35)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module Android_ETC1TargetPlatform (34)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module Android_DXTTargetPlatform (33)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module Android_ATCTargetPlatform (32)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module Android_ASTCTargetPlatform (31)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module AndroidTargetPlatform (30)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module WindowsTargetPlatform (29)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module WindowsServerTargetPlatform (28)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module WindowsNoEditorTargetPlatform (27)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module WindowsClientTargetPlatform (26)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module AllDesktopTargetPlatform (25)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module TargetPlatform (24)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module InputCore (23)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module Settings (22)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module OnlineSubsystem (20)
+[2016.08.12-17.25.45:887][191]LogModuleManager: Shutting down and abandoning module HTTP (19)
+[2016.08.12-17.25.50:397][191]LogModuleManager: Shutting down and abandoning module XMPP (18)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module OculusRift (17)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module ExampleDeviceProfileSelector (16)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module DesktopPlatform (15)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module TextureCompressor (14)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module ShaderCore (13)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module Landscape (12)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module SlateRHIRenderer (11)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module OpenGLDrv (10)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module D3D11RHI (9)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module AnimGraphRuntime (8)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module Renderer (7)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module Engine (6)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module CoreUObject (5)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module NetworkFile (4)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module StreamingFile (3)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module SandboxFile (2)
+[2016.08.12-17.25.50:398][191]LogModuleManager: Shutting down and abandoning module PakFile (1)
+[2016.08.12-17.25.50:400][191]LogExit: Exiting.
+[2016.08.12-17.25.50:411][191]Log file closed, 08/12/16 10:25:50

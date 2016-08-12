@@ -1,0 +1,4 @@
+C:\Users\calder\Documents\GitHub\cvr-sdk-unreal\CognitiveVRTest\Source\CognitiveVRTest\CognitiveVRTest.Build.cs
+C:\Users\calder\Documents\GitHub\cvr-sdk-unreal\CognitiveVRTest\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\CognitiveVRAnalytics.Build.cs
+C:\Users\calder\Documents\GitHub\cvr-sdk-unreal\CognitiveVRTest\Source\CognitiveVRTest.Target.cs
+C:\Users\calder\Documents\GitHub\cvr-sdk-unreal\CognitiveVRTest\Source\CognitiveVRTestEditor.Target.cs
