@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2015 Knetik, Inc. All rights reserved.
+** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #ifndef COGNITIVEVR_UTIL_H_
 #define COGNITIVEVR_UTIL_H_
@@ -13,6 +13,7 @@
 #include <cctype>
 #include <locale>
 #include "Json.h"
+#include "Windows/WindowsPlatformMisc.h"
 
 namespace cognitivevrapi
 {
@@ -37,6 +38,8 @@ namespace cognitivevrapi
             static inline std::string &Trim(std::string &s) {
                 return LTrim(RTrim(s));
             }
+
+			static TSharedPtr<FJsonObject> DeviceScraper(TSharedPtr<FJsonObject> properties);
 
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, FString &fstring);
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, std::string &string);

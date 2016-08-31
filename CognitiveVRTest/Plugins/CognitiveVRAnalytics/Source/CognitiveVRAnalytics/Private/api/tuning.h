@@ -1,11 +1,16 @@
 /*
-** Copyright (c) 2015 Knetik, Inc. All rights reserved.
+** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #ifndef COGNITIVEVR_TUNING_H_
 #define COGNITIVEVR_TUNING_H_
 
 #include "CognitiveVRAnalytics.h"
 #include "Private/network/network.h"
+
+#include "AllowWindowsPlatformTypes.h" 
+#include <windows.h>
+#include <map>
+#include "HideWindowsPlatformTypes.h"
 
 namespace cognitivevrapi
 {
@@ -45,8 +50,8 @@ namespace cognitivevrapi
 			CognitiveVR* s;
 
 			//TODO why is this flipping out? somethign about header order?
-            //std::map< std::string, std::map<std::string, TuningValue*> > users_value_cache;
-            //std::map< std::string, std::map<std::string, TuningValue*> > devices_value_cache;
+            std::map< std::string, std::map<std::string, TuningValue*> > users_value_cache;
+            std::map< std::string, std::map<std::string, TuningValue*> > devices_value_cache;
             long getallval_cache_ttl;
 
             std::string GetEntityTypeString(EntityType entity_type);
@@ -89,7 +94,7 @@ namespace cognitivevrapi
                 @return CognitiveVRResponse
                 @throws cognitivevr_exception
             */
-            void RecordValueAsync(NetworkCallback callback, std::string name, std::string default_value, std::string user_id = "", std::string device_id = "", std::string context = "defaultContext");
+            void RecordValueAsync(NetworkCallback callback, std::string name, std::string default_value, std::string user_id = "", std::string device_id = "");
     };
 }
 #endif  // COGNITIVEVR_TUNING_H_

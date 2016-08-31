@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2015 Knetik, Inc. All rights reserved.
+** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #ifndef COGNITIVEVR_CONFIG_H_
 #define COGNITIVEVR_CONFIG_H_

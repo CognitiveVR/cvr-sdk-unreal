@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2015 Knetik, Inc. All rights reserved.
+** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #include "util/util.h"
 
@@ -34,6 +34,26 @@ namespace cognitivevrapi
         stm << n ;
         return stm.str() ;
     }
+
+	TSharedPtr<FJsonObject> Util::DeviceScraper(TSharedPtr<FJsonObject> properties)
+	{
+		//TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		//properties->SetStringField("platform", UGameplayStatics::GetPlatformName());
+		properties->SetStringField("cpu brand", FWindowsPlatformMisc::GetCPUBrand());
+		properties->SetStringField("cpu vendor", FWindowsPlatformMisc::GetCPUVendor());
+		properties->SetNumberField("cores", FWindowsPlatformMisc::NumberOfCores());
+		properties->SetStringField("gpu", FWindowsPlatformMisc::GetPrimaryGPUBrand());
+
+		FString osVersionOut;
+		FString osSubVersionOut;
+		FWindowsPlatformMisc::GetOSVersions(osVersionOut, osSubVersionOut);
+
+		properties->SetStringField("os", osVersionOut+osSubVersionOut);
+
+		return properties;
+	}
+
+
 	void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, FString &fstring)
 	{
 		TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();

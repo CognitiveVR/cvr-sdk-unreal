@@ -22,8 +22,8 @@ ACognitiveVRTestProjectile::ACognitiveVRTestProjectile()
 	// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
-	ProjectileMovement->InitialSpeed = 3000.f;
-	ProjectileMovement->MaxSpeed = 3000.f;
+	ProjectileMovement->InitialSpeed = 30000.f;
+	ProjectileMovement->MaxSpeed = 30000.f;
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = true;
 
@@ -40,8 +40,20 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 		properties->SetStringField("projectile", "hit");
-		FCognitiveVRAnalytics::Get().CognitiveVR()->transaction->BeginEndAsync(NULL, "id", "category", "result", "context", properties, "", "device");
 
+		FCognitiveVRAnalytics::Get().CognitiveVR()->transaction->End("shooty", NULL, "shootid", NULL);
 		Destroy();
 	}
+	else
+	{
+
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		properties->SetStringField("projectile", "miss");
+		FCognitiveVRAnalytics::Get().CognitiveVR()->transaction->Begin("shooty", NULL, "shootid");
+	}
+}
+
+void DebugCallback(cognitivevrapi::CognitiveVRResponse resp)
+{
+	UE_LOG(LogTemp, Warning, TEXT("CognitiveVRAnalytics::Callback INIT----------------------------------------response"));
 }

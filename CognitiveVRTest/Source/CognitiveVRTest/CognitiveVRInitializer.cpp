@@ -2,27 +2,28 @@
 
 #include "CognitiveVRTest.h"
 #include "CognitiveVRInitializer.h"
-
+#include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
+#include "Runtime/Core/Public/GenericPlatform/GenericPlatformMemory.h"
 
 // Sets default values
 ACognitiveVRInitializer::ACognitiveVRInitializer()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
+	PrimaryActorTick.bCanEverTick = false;
 }
 
 // Called when the game starts or when spawned
 void ACognitiveVRInitializer::BeginPlay()
 {
 	Super::BeginPlay();
-	FCognitiveVRAnalytics::Get().Init("compnayname1234-productname-test", "test username", "test device id");
+
+	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+	properties->SetStringField("platform", UGameplayStatics::GetPlatformName());
+	properties->SetNumberField("ram", FGenericPlatformMemory::GetPhysicalGBRam());
+
+	//FGenericPlatformMemoryStats stats = FGenericPlatformMemory::GetStats();
+	//stats.TotalPhysical
+
+	//FCognitiveVRAnalytics::Get().Init("altimagegames59340-unitywanderdemo-test", "test username", "test device id", properties);
+	FCognitiveVRAnalytics::Get().Init("test username", "test device id", properties);
 }
-
-// Called every frame
-void ACognitiveVRInitializer::Tick( float DeltaTime )
-{
-	Super::Tick( DeltaTime );
-
-}
-

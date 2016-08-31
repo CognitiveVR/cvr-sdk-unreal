@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2015 Knetik, Inc. All rights reserved.
+** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #ifndef COGNITIVEVR_NETWORK_H_
 #define COGNITIVEVR_NETWORK_H_
@@ -22,6 +22,8 @@ namespace cognitivevrapi
             Network(CognitiveVR* sp);
             ~Network();
 
+			FJsonObject InitCallback(CognitiveVRResponse response);
+
             /** Initialize the networking class used to make calls to the CognitiveVR API and
                 send the initial application_init request.
 
@@ -29,7 +31,7 @@ namespace cognitivevrapi
 
                 @return Json::Value
             */
-			FJsonObject Init(HttpInterface* http);
+			void Init(HttpInterface* http, NetworkCallback callback);
 
             /** Make a call to the CognitiveVR API.
 
@@ -39,7 +41,7 @@ namespace cognitivevrapi
 
                 @return CognitiveVRResponse - Object that contains error data or the JSON content.
             */
-			CognitiveVRResponse Call(std::string path, TSharedPtr<FJsonValueArray> content, std::string context = "defaultContext", NetworkCallback callback = NULL);
+			void Call(std::string path, TSharedPtr<FJsonValueArray> content, NetworkCallback callback = NULL);
 
             static CognitiveVRResponse ParseResponse(std::string str_response);
             static std::string InterpretError(int code);

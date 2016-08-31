@@ -1,7 +1,11 @@
 /*
-** Copyright (c) 2015 Knetik, Inc. All rights reserved.
+** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #include "override_http_interface.h"
+#include "Engine.h" //only needed for eu_log
+#include "CognitiveVRAnalyticsPrivatePCH.h"
+#include "CognitiveVRAnalytics.h"
+#include "json.h"
 
 namespace cognitivevrapi
 {
@@ -12,8 +16,12 @@ namespace cognitivevrapi
 
     void OverrideHttpInterface::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, NetworkCallback callback)
     {
-		//UE_LOG(LogTemp, Warning, TEXT("override_http_int.cc::OnResponseReceivedAsync"));
+		
         FString UE4Str = Response->GetContentAsString();
+		UE_LOG(LogTemp, Warning, TEXT("http::async response %s"), *UE4Str);
+		//UE_LOG(LogTemp, Warning, FText::FromString(UE4Str));
+		//UE_LOG(LogTemp, Warning, TEXT("CognitiveVRAnalytics::Callback INIT----------------------------------------response"));
+
         std::string content(TCHAR_TO_UTF8(*UE4Str));
 		CognitiveVRResponse response = Network::ParseResponse(content);
         callback(response);
@@ -29,6 +37,7 @@ namespace cognitivevrapi
         this->response_received = true;
     }
 
+	//TODO remove this return value. never anything useful!
     std::string OverrideHttpInterface::Post(std::string url, std::string path, std::string headers[], int header_count, std::string stdcontent, long timeout, NetworkCallback callback)
     {
         //Construct URL.
@@ -62,11 +71,15 @@ namespace cognitivevrapi
         HttpRequest->SetURL(full_url);
         HttpRequest->SetVerb(TEXT("POST"));
         HttpRequest->SetContentAsString(content);
-        if (callback != NULL) {
-            HttpRequest->OnProcessRequestComplete().BindRaw(this, &OverrideHttpInterface::OnResponseReceivedAsync, callback);
-        } else {
-            HttpRequest->OnProcessRequestComplete().BindRaw(this, &OverrideHttpInterface::OnResponseReceivedSync);
-        }
+
+		if (callback != NULL) {
+			HttpRequest->OnProcessRequestComplete().BindRaw(this, &OverrideHttpInterface::OnResponseReceivedAsync, callback);
+		}
+
+		//HttpRequest->OnProcessRequestComplete().BindRaw(this, &OverrideHttpInterface::OnResponseReceivedAsync, callback);
+
+
+
 		//UE_LOG(LogTemp, Warning, TEXT("3 override_http_int.cc::pre process request"));
 		bool process_result = HttpRequest->ProcessRequest();
 		
@@ -76,12 +89,16 @@ namespace cognitivevrapi
             throw std::runtime_error("Failed to process HTTP request.");
         }
 
-        if (callback != NULL) {
+        /*if (callback != NULL) {
 			//UE_LOG(LogTemp, Warning, TEXT("override_http_int.cc::callback"));
             this->http_response = "";
             return this->http_response;
-        }
+        }*/
 
+		//UE_LOG(LogTemp, Warning, TEXT("override_http_int.cc::waiting for sync call"));
+		this->http_response = "";
+		return this->http_response;
+		/*
         if (process_result) {
             double ntimeout = FPlatformTime::Seconds() + timeout;
             double last_tick = FPlatformTime::Seconds();
@@ -114,6 +131,8 @@ namespace cognitivevrapi
 
         this->response_received = false;
 
-        return this->http_response;
+        return th
+		is->http_response;
+		*/
     }
 }

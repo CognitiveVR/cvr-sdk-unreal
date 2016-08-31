@@ -59,6 +59,10 @@ void ACognitiveVRTestCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint")); //Attach gun mesh component to Skeleton, doing it here because the skelton is not yet created in the constructor
+
+	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+	properties->SetStringField("playername", "player0");
+	FCognitiveVRAnalytics::Get().CognitiveVR()->transaction->BeginEnd("playerstart", properties, "", NULL, "");
 }
 
 //////////////////////////////////////////////////////////////////////////

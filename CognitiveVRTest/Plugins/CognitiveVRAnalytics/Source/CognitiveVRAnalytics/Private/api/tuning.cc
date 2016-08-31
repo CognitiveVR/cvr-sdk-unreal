@@ -1,7 +1,9 @@
 /*
-** Copyright (c) 2015 Knetik, Inc. All rights reserved.
+** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #include "api/tuning.h"
+#include "Json.h"
+#include <string>
 
 namespace cognitivevrapi
 {
@@ -9,9 +11,8 @@ namespace cognitivevrapi
     {
         s = sp;
 
-		//TODO cache values
-        //CacheValues(sp->user_id, json.GetObjectField("usertuning"), kEntityTypeUser, true);
-        //CacheValues(sp->device_id, json.GetObjectField("devicetuning"), kEntityTypeDevice, true);
+        CacheValues(TCHAR_TO_UTF8(*sp->user_id), *json.GetObjectField("usertuning").Get(), kEntityTypeUser, true);
+		CacheValues(TCHAR_TO_UTF8(*sp->device_id), *json.GetObjectField("devicetuning").Get(), kEntityTypeDevice, true);
     }
 
     Tuning::~Tuning()
@@ -32,15 +33,34 @@ namespace cognitivevrapi
         }
 
 		Log::Info("CACHING TUNING VALUES: " + entity_id + ":" + Tuning::GetEntityTypeString(entity_type));// +" " + values.toStyledString());
-
-		/*for (TObjectIterator<TMap<FString, TSharedPtr<FJsonValue>>> Itr; Itr; ++Itr)
+		
+																										  // Iterate over Json Values
+		for (auto currJsonValue = values.Values.CreateConstIterator(); currJsonValue; ++currJsonValue)
 		{
-			//TODO iterate through values;
-		}*/
-		/*
-        for(FJsonObject::iterator it = values.begin(); it != values.end(); ++it)
+			// Get the key name
+			const FString Name = (*currJsonValue).Key;
+
+			// Get the value as a FJsonValue object
+			TSharedPtr< FJsonValue > Value = (*currJsonValue).Value;
+
+			// Do your stuff with crazy casting and other questionable rituals
+
+			/*FJsonObject value = currJsonValue.Value.AsString();
+			std::string skey = TCHAR_TO_UTF8(*currJsonValue.Key);
+
+			TuningValue* tval = new TuningValue(value.asString(), cache_time);
+			if (entity_type == kEntityTypeUser) {
+				users_value_cache[entity_id][skey] = tval;
+			}
+			else {
+				devices_value_cache[entity_id][skey] = tval;
+			}*/
+
+		}
+
+        //for(FJsonObject::iterator it = values.begin(); it != values.end(); ++it)
         {
-			FJsonObject value = (*it);
+			/*FJsonObject value = (*it);
             std::string skey = it.key().asString();
 
             TuningValue* tval = new TuningValue(value.asString(), cache_time);
@@ -48,8 +68,8 @@ namespace cognitivevrapi
                 users_value_cache[entity_id][skey] = tval;
             } else {
                 devices_value_cache[entity_id][skey] = tval;
-            }
-        }*/
+            }*/
+        }
     }
 
     void Tuning::GetAllValues(std::string entity_id, EntityType entity_type)
@@ -104,9 +124,9 @@ namespace cognitivevrapi
 
         Log::Info("Get All Value cache has expired or the entity does not exist.");
 		
-		CognitiveVRResponse resp = s->GetNetwork()->Call("tuner_getAllValues", jsonArray);
+		//CognitiveVRResponse resp = s->GetNetwork()->Call("tuner_getAllValues", jsonArray);
 		//resp.SetContent(resp.GetContent().GetObjectField("value").Get);// ["value"]);
-        CacheValues(entity_id, resp.GetContent(), entity_type, true);
+        //CacheValues(entity_id, resp.GetContent(), entity_type, true);
     }
 
 	CognitiveVRResponse Tuning::GetValue(std::string name, std::string default_value, std::string entity_id, EntityType entity_type)
@@ -188,7 +208,7 @@ namespace cognitivevrapi
         return resp;
     }
 
-    void Tuning::RecordValueAsync(NetworkCallback callback, std::string name, std::string default_value, std::string user_id, std::string device_id, std::string ncontext)
+    void Tuning::RecordValueAsync(NetworkCallback callback, std::string name, std::string default_value, std::string user_id, std::string device_id)
     {
 		TArray< TSharedPtr<FJsonValue> > ObjArray;
 		TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
@@ -198,11 +218,11 @@ namespace cognitivevrapi
 
 		Util::AppendToJsonArray(jsonArray, fs);
 		Util::AppendToJsonArray(jsonArray, fs);
-		s->AppendUD(jsonArray, user_id.c_str(), device_id.c_str());
+		s->AppendUD(jsonArray);
 		Util::AppendToJsonArray(jsonArray, name);
 		Util::AppendToJsonArray(jsonArray, default_value);
 
-        s->thread_manager->PushTask(callback, "tuner_recordUsed", jsonArray, ncontext);
+        s->thread_manager->PushTask(callback, "tuner_recordUsed", jsonArray);
     }
 
     std::string Tuning::GetEntityTypeString(EntityType entity_type)

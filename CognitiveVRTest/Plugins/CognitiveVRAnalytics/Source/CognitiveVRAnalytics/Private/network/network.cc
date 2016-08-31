@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2015 Knetik, Inc. All rights reserved.
+** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #include "network.h"
 
@@ -17,13 +17,7 @@ namespace cognitivevrapi
         httpint = NULL;
     }
 
-	void InitCallback(cognitivevrapi::CognitiveVRResponse response)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Network::Callback INIT----------------------------------------"));
-		//FCognitiveVRAnalytics::Get().CognitiveVR()->transaction->BeginEndShort("trans", "cat", "result", "context", "user", "device");
-	}
-
-	FJsonObject Network::Init(HttpInterface* a)
+	void Network::Init(HttpInterface* a, NetworkCallback callback)
     {
         this->httpint = a;
         Log::Info("Network init.");
@@ -41,33 +35,18 @@ namespace cognitivevrapi
 		Util::AppendToJsonArray(jsonArray, s->user_id);
 		Util::AppendToJsonArray(jsonArray, s->device_id);
 		Util::AppendToJsonArray(jsonArray, empty);
-		Util::AppendToJsonArray(jsonArray, empty);
 
-		/*cognitivevrapi::Value json;
-        std::string ts = Util::GetTimestampStr();
-        json.append(ts); //send timestamp
-        json.append(ts); //event timestamp
-        json.append(s->user_id);
-        json.append(s->device_id);
-        json.append(""); //user properties
-        json.append(""); //device properties*/
+		//s->initProperties.Get()
 
-		CognitiveVRResponse resp = Network::Call("application_init", jsonArray, "defaultcontext", &InitCallback);
+		TSharedPtr<FJsonObject>deviceProperties = Util::DeviceScraper(s->initProperties);
+		Util::AppendToJsonArray(jsonArray, deviceProperties);
+		//Util::AppendToJsonArray(jsonArray, empty);
 
-        if (!resp.IsSuccessful()) {
-
-			//std::cout << "Network.c Init response raw: " << resp.GetContent(). << std::endl;
-
-			//std::cout << "Netwerk.c Init response not successful: " << resp.GetContent().asString() << std::endl;
-
-            cognitivevrapi::ThrowDummyResponseException("Failed to initialize CognitiveVR: " + resp.GetErrorMessage());
-        }
-
-        return resp.GetContent();
+		Network::Call("application_init", jsonArray, callback);
     }
 
 	//'application_init' and json'd sendtimestamp, eventtimestamp, userid, deviceid, userprops, deviceprops
-	CognitiveVRResponse Network::Call(std::string sub_path, TSharedPtr<FJsonValueArray> content, std::string context, NetworkCallback callback)
+	void Network::Call(std::string sub_path, TSharedPtr<FJsonValueArray> content, NetworkCallback callback)
     {
         if(!this->httpint) {
 			UE_LOG(LogTemp, Warning, TEXT("Network::Call NO HTTP IMPLEMENTATION"));
@@ -89,7 +68,7 @@ namespace cognitivevrapi
         query.append("&ssf_sdk_version=");
         query.append(COGNITIVEVR_SDK_VERSION);
         query.append("&ssf_sdk_contextname=");
-        query.append(context); //context is rarely/never used?
+        query.append("defaultContext"); //context is rarely/never used?
 
         std::string headers[] = {
             "ssf-use-positional-post-params: true",
@@ -128,72 +107,113 @@ namespace cognitivevrapi
 
 			//FString hardCodeFS = hardcode.c_str();
 
-			UE_LOG(LogTemp, Warning, TEXT("___%s____"), *OutputString);
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *OutputString);
 			//UE_LOG(LogTemp, Warning, TEXT("___%s____"), *hardCodeFS);
 
-			//std::cout << "Netwerk.c Call network content: " << hardcode << std::endl;
 			std::cout << "Netwerk.c Call network timeout: " << Config::kNetworkTimeout << std::endl;
 
-			//UE_LOG(LogTemp, Warning, TEXT("Network::pre POST"));
 			//str_response = this->httpint->Post(Config::kNetworkHost, path + query, headers, 2, hardcode, Config::kNetworkTimeout, callback);
 			str_response = this->httpint->Post(Config::kNetworkHost, path + query, headers, 2, TCHAR_TO_UTF8(*OutputString), Config::kNetworkTimeout, callback);
-			std::cout << "Netwerk.c Call POST POST" << std::endl;
-			//UE_LOG(LogTemp, Warning, TEXT("Network::Post POST"));
-            //str_response = this->httpint->Post(Config::kNetworkHost, path + query, headers, 2, fast_writer.write(content), Config::kNetworkTimeout, callback);
         } catch (std::runtime_error e) {
             std::string err = e.what();
 
 			std::cout << "Netwerk.c Call response error: " << ".....something went wrong in post" << std::endl;
-			UE_LOG(LogTemp, Warning, TEXT("Network::catch %s"), UTF8_TO_TCHAR(err.c_str()));
+			UE_LOG(LogTemp, Warning, TEXT("Network::Call catch %s"), UTF8_TO_TCHAR(err.c_str()));
             cognitivevrapi::ThrowDummyResponseException("Network Error: " + err); //EXCEPTION HERE
         }
 		//UE_LOG(LogTemp, Warning, TEXT("Network::Response pre parse"));
-		CognitiveVRResponse resp = Network::ParseResponse(str_response);
+		//CognitiveVRResponse resp = Network::ParseResponse(str_response);
+		//CognitiveVRResponse resp(false);
 		//UE_LOG(LogTemp, Warning, TEXT("Network::return parsed Response"));
-        return resp;
+        //return resp;
     }
 
 	CognitiveVRResponse Network::ParseResponse(std::string str_response)
     {
-		/*
-		cognitivevrapi::Value root;
-		cognitivevrapi::Reader reader;
-        bool parsingSuccessful = reader.parse(str_response, root);
+		//CognitiveVRResponse response(false);
+		//return response;
 
-        if (parsingSuccessful) {
-            if (Config::kDebugLog) {
-                Log::Info("RESPONSE: " + root.toStyledString());
-            }
+		TSharedPtr<FJsonObject> root;
+		TSharedRef<TJsonReader<>> reader = TJsonReaderFactory<>::Create(str_response.c_str());
+		
+		//UE_LOG(LogTemp, Warning, TEXT("Network parse response::%s"), str_response.c_str());
 
-            int error_code = root.get("error", -1).asInt();
-            bool success = (error_code == kErrorSuccess);
+		if (FJsonSerializer::Deserialize(reader,root))
+		{
+			if (Config::kDebugLog) {
+				//Log::Info("RESPONSE: " + root.toStyledString());
+			}
 
-            CognitiveVRResponse response(success);
+			int error_code = root.Get()->GetIntegerField("error");
+			bool success = (error_code == kErrorSuccess);
 
-            if (!success) {
-                std::string err = Network::InterpretError(error_code);
-                Log::Error(err);
-                response.SetErrorMessage(err);
-            } else {
-                if (root["data"].isNull()) {
-                    response.SetContent(root);
-                } else {
-                    response.SetContent(root["data"]);
-                }
-            }
+			CognitiveVRResponse response(success);
 
-            return response;
-        } else {
-            CognitiveVRResponse response(false);
-            response.SetErrorMessage("Failed to parse JSON response.");
-            return response;
-            Log::Error("Failed to parse JSON response.");
-        }
-		*/
-		CognitiveVRResponse response(false);
-        response.SetErrorMessage("Unknown error.");
+			if (!success) {
+				std::string err = Network::InterpretError(error_code);
+				Log::Error(err);
+				response.SetErrorMessage(err);
+				UE_LOG(LogTemp, Warning, TEXT("Network::failure to parse response"));
+			}
+			else {
+				if (root.Get()->GetObjectField("data").IsValid())
+				{
+					/*
+					{
+						"error":0,
+						"description" : "",
+						"data" :
+						{
+							"userid":"test username",
+							"usertuning" :
+							{
+								"Hungry":"true",
+								"FavouriteFood" : "Burritos",
+							},
+								"usernew" : false,
+								"deviceid" : "test device id",
+								"devicetuning" :
+							{
+								"Hungry":"true",
+								"FavouriteFood" : "Burritos",
+							},
+							"devicenew" : false
+						}
+					}
+					*/
 
-        return response;
+					response.SetContent(*root.Get()->GetObjectField("data").Get());
+					UE_LOG(LogTemp, Warning, TEXT("Network::found data field"));
+				}
+				else
+				{
+					response.SetContent(*root.Get());
+					UE_LOG(LogTemp, Warning, TEXT("Network::did not find data field"));
+				}
+
+				/*
+				if (root["data"].isNull()) {
+					response.SetContent(root);
+				}
+				else {
+					response.SetContent(root["data"]);
+				}*/
+			}
+
+			return response;
+		}
+		else {
+			CognitiveVRResponse response(false);
+			response.SetErrorMessage("Failed to parse JSON response.");
+			return response;
+			Log::Error("Failed to parse JSON response.");
+		}
+
+
+		CognitiveVRResponse resp(false);
+		resp.SetErrorMessage("Unknown error.");
+
+		return resp;
     }
 
     std::string Network::InterpretError(int code)

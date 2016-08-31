@@ -15,7 +15,7 @@
 #include "Private/network/cognitivevr_response.h"
 #include "Private/util/cognitivevr_exception.h"
 #include "Private/network/http_interface.h"
-#include "Private/unreal/thread_manager.h"
+#include "Private/unreal/buffer_manager.h"
 #include "Private/api/tuning.h"
 #include "Private/api/transaction.h"
 #include "Private/network/network.h"
@@ -37,7 +37,8 @@ class FCognitiveVRAnalytics : public IModuleInterface
 protected:
 	cognitivevrapi::CognitiveVR* cognitivevr;
 public:
-	virtual void Init(std::string customer_id, std::string user_id, std::string device_id);
+	virtual void Init(std::string user_id, std::string device_id);
+	virtual void Init(std::string user_id, std::string device_id, TSharedPtr<FJsonObject> init_device_properties);
 	virtual cognitivevrapi::CognitiveVR* CognitiveVR();
 	//virtual TSharedPtr<IAnalyticsProvider> CreateAnalyticsProvider(const FAnalytics::FProviderConfigurationDelegate& GetConfigValue) const override;
 
@@ -89,7 +90,7 @@ namespace cognitivevrapi
 	class Network;
 	class Transaction;
 	class Tuning;
-	class ThreadManager;
+	class BufferManager;
 
 class CognitiveVR
 {
@@ -99,24 +100,29 @@ class CognitiveVR
 #pragma warning(push)
 #pragma warning(disable:4251) //Disable DLL warning that does not apply in this context.
 private:
-	Network* network;
-	ThreadManager* thread_manager;
+
+
 
 public:
 
-	std::string customer_id;
-	std::string user_id;
-	std::string device_id;
+	std::string customer_id = "altimagegames59340-unitywanderdemo-test"; //TODO put this somewhere nice - a text file or editor options or something
+	FString user_id;
+	FString device_id;
+	TSharedPtr<FJsonObject> initProperties; //optional properties sent when initializing. platform, ram, etc
 	Transaction* transaction;
 	Tuning* tuning;
+	Network* network;
+	BufferManager* thread_manager;
+
 #pragma warning(pop)
 
 	~CognitiveVR();
 
 	//Helper function to append user_id and device_id to API calls.
-	void AppendUD(TSharedPtr<FJsonValueArray> &json, FString user_id, FString device_id);
+	void AppendUD(TSharedPtr<FJsonValueArray> &json);
 
 	void InitNetwork(HttpInterface* httpint);
+	//void InitCallback(CognitiveVRResponse resp);
 
 	Network* GetNetwork()
 	{
@@ -133,7 +139,7 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void NewUserAsync(NetworkCallback callback, std::string user_id, std::string context);
+	void NewUser(NetworkCallback callback, std::string user_id);
 
 	/** Create a new device.
 
@@ -143,7 +149,7 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void NewDeviceAsync(NetworkCallback callback, std::string device_id, std::string context);
+	void NewDevice(NetworkCallback callback, std::string device_id);
 
 	/** Create a new user if it does not already exist.
 
@@ -153,7 +159,7 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void NewUserCheckedAsync(NetworkCallback callback, std::string user_id, std::string context);
+	void NewUserChecked(NetworkCallback callback, std::string user_id);
 
 	/** Create a new device if it does not already exist.
 
@@ -163,7 +169,7 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void NewDeviceCheckedAsync(NetworkCallback callback, std::string device_id, std::string context);
+	void NewDeviceChecked(NetworkCallback callback, std::string device_id);
 
 	/** Update user state.
 
@@ -174,7 +180,7 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void UpdateUserStateAsync(NetworkCallback callback, std::string user_id, std::string context, TSharedPtr<FJsonObject> properties);
+	void UpdateUserState(NetworkCallback callback, std::string user_id, TSharedPtr<FJsonObject> properties);
 
 	/** Update device state.
 
@@ -185,7 +191,7 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void UpdateDeviceStateAsync(NetworkCallback callback, std::string device_id, std::string context, TSharedPtr<FJsonObject> properties);
+	void UpdateDeviceState(NetworkCallback callback, std::string device_id, TSharedPtr<FJsonObject> properties);
 
 	/** Updates collections, used for virtual currencies or collections.
 
@@ -200,7 +206,7 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void UpdateCollectionAsync(NetworkCallback callback, std::string name, double balance, double balance_delta, bool is_currency, std::string context, std::string user_id = "", std::string device_id = "");
+	void UpdateCollection(NetworkCallback callback, std::string name, double balance, double balance_delta, bool is_currency, std::string user_id = "", std::string device_id = "");
 
 	/** Records purchases, used for real currencies.
 
@@ -218,7 +224,7 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void RecordPurchaseAsync(NetworkCallback callback, std::string name, double price, std::string currency_code, std::string result, std::string offer_id, std::string point_of_sale, std::string item_name, std::string context, std::string user_id = "", std::string device_id = "");
+	void RecordPurchase(NetworkCallback callback, std::string name, double price, std::string currency_code, std::string result, std::string offer_id, std::string point_of_sale, std::string item_name, std::string user_id = "", std::string device_id = "");
 
 };
 
@@ -235,7 +241,7 @@ NOTE: user_id and device_id are optional, but you must at least pass one or the 
 @returns CognitiveVR - An instance of the CognitiveVR API.
 @throws cognitivevr_exception
 */
-extern CognitiveVR* Init(std::string customer_id, std::string user_id, std::string device_id);
+extern CognitiveVR* Init(std::string user_id, std::string device_id, TSharedPtr<FJsonObject> properties);
 //extern CognitiveVR* Init(std::string customer_id, std::string user_id, std::string device_id, std::string context, HttpInterface* httpint);
 
 //Helper function to throw CognitiveVRException.

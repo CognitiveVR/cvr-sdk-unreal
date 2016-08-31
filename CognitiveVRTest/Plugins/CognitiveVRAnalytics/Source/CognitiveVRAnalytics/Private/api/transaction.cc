@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2015 Knetik, Inc. All rights reserved.
+** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #include "api/transaction.h"
 #include "util/util.h"
@@ -11,8 +11,19 @@ namespace cognitivevrapi
         s = sp;
     }
 
-    void Transaction::BeginAsync(NetworkCallback callback, std::string transaction_id, std::string category, int timeout, std::string context, TSharedPtr<FJsonObject> properties, FString user_id, FString device_id)
+    void Transaction::Begin(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, NetworkCallback callback)
     {
+		if (s == NULL)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Transaction::Begin null cognitivevr - probably not initialized yet!"));
+			return;
+		}
+
+		if (properties.Get() == NULL)
+		{
+			properties = MakeShareable(new FJsonObject);
+		}
+
 		TArray< TSharedPtr<FJsonValue> > ObjArray;
 		TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
@@ -22,27 +33,29 @@ namespace cognitivevrapi
 
 		Util::AppendToJsonArray(jsonArray, fs);
 		Util::AppendToJsonArray(jsonArray, fs);
-		s->AppendUD(jsonArray, user_id, device_id);
+		s->AppendUD(jsonArray);
 		Util::AppendToJsonArray(jsonArray, category);
 		Util::AppendToJsonArray(jsonArray, trans);
-		Util::AppendToJsonArray(jsonArray, timeout);
+		Util::AppendToJsonArray(jsonArray, Config::kNetworkTimeout);
 		Util::AppendToJsonArray(jsonArray, transaction_id);
 		Util::AppendToJsonArray(jsonArray, properties);
-		
-		//TODO proper deserialize this. atm, this doesn't support nested objects - pretty sure?
-		TArray<FString> keys;
-		/*for (int i = 0; i < properties.Values.GetKeys(keys); i++)
-		{
-			json.SetStringField(keys[i],properties.GetStringField(keys[i]));
-		}*/
 
-		//json.SetObjectField("data", properties.GetObjectField("data"));
-
-        s->thread_manager->PushTask(callback, "datacollector_beginTransaction", jsonArray, context);
+        s->thread_manager->PushTask(callback, "datacollector_beginTransaction", jsonArray);
     }
 
-    void Transaction::UpdateAsync(NetworkCallback callback, std::string transaction_id, std::string category, double progress, std::string context, TSharedPtr<FJsonObject> properties, FString user_id, FString device_id)
+    void Transaction::Update(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, NetworkCallback callback, double progress)
     {
+		if (s == NULL)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Transaction::Update null cognitivevr - probably not initialized yet!"));
+			return;
+		}
+
+		if (properties.Get() == NULL)
+		{
+			properties = MakeShareable(new FJsonObject);
+		}
+
 		TArray< TSharedPtr<FJsonValue> > ObjArray;
 		TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
@@ -51,17 +64,28 @@ namespace cognitivevrapi
 
 		Util::AppendToJsonArray(jsonArray, fs);
 		Util::AppendToJsonArray(jsonArray, fs);
-		s->AppendUD(jsonArray, user_id, device_id);
+		s->AppendUD(jsonArray);
 		Util::AppendToJsonArray(jsonArray, category);
 		Util::AppendToJsonArray(jsonArray, progress);
 		Util::AppendToJsonArray(jsonArray, transaction_id);
 		Util::AppendToJsonArray(jsonArray, properties);
 
-        s->thread_manager->PushTask(callback, "datacollector_updateTransaction", jsonArray, context);
+        s->thread_manager->PushTask(callback, "datacollector_updateTransaction", jsonArray);
     }
 
-    void Transaction::EndAsync(NetworkCallback callback, std::string transaction_id, std::string category, std::string result, std::string context, TSharedPtr<FJsonObject> properties, FString user_id, FString device_id)
+    void Transaction::End(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, NetworkCallback callback, std::string result)
     {
+		if (s == NULL)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Transaction::End null cognitivevr - probably not initialized yet!"));
+			return;
+		}
+
+		if (properties.Get() == NULL)
+		{
+			properties = MakeShareable(new FJsonObject);
+		}
+
 		TArray< TSharedPtr<FJsonValue> > ObjArray;
 		TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
@@ -70,23 +94,27 @@ namespace cognitivevrapi
 
 		Util::AppendToJsonArray(jsonArray, fs);
 		Util::AppendToJsonArray(jsonArray, fs);
-		s->AppendUD(jsonArray, user_id, device_id);
+		s->AppendUD(jsonArray);
 		Util::AppendToJsonArray(jsonArray, category);
 		Util::AppendToJsonArray(jsonArray, result);
 		Util::AppendToJsonArray(jsonArray, transaction_id);
 		Util::AppendToJsonArray(jsonArray, properties);
 
-		FString OutputString;
-		TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
-		FJsonSerializer::Serialize(properties.ToSharedRef(), Writer);
+		//FString OutputString;
+		//TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+		//FJsonSerializer::Serialize(properties.ToSharedRef(), Writer);
 
-        s->thread_manager->PushTask(callback, "datacollector_endTransaction", jsonArray, context);
+        s->thread_manager->PushTask(callback, "datacollector_endTransaction", jsonArray);
     }
 
-    void Transaction::BeginEndAsync(NetworkCallback callback, std::string transaction_id, std::string category, std::string result, std::string context, TSharedPtr<FJsonObject> properties, FString user_id, FString device_id)
+    void Transaction::BeginEnd(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, NetworkCallback callback, std::string result)
     {
-		//isntead of NULL, was FJsonObject::null. previously Value::null
-        this->BeginAsync(NULL, transaction_id, category, 1000, context, properties, user_id, device_id);
-        this->EndAsync(callback, transaction_id, category, result, context, properties, user_id, device_id);
+		if (this == NULL)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Transaction::BeginEnd null cognitivevr - probably not initialized yet!"));
+			return;
+		}
+		this->Begin(category, properties, transaction_id, callback);
+		this->End(category, properties, transaction_id, callback, result);
     }
 }
