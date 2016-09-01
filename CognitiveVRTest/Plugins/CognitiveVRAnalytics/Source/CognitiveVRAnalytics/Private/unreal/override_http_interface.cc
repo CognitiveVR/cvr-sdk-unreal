@@ -27,7 +27,7 @@ namespace cognitivevrapi
         callback(response);
     }
 
-    void OverrideHttpInterface::OnResponseReceivedSync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+    /*void OverrideHttpInterface::OnResponseReceivedSync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
     {
 		//UE_LOG(LogTemp, Warning, TEXT("override_http_int.cc::OnResponseReceivedSync"));
         FString UE4Str = Response->GetContentAsString();
@@ -35,7 +35,7 @@ namespace cognitivevrapi
         this->http_response = content;
         this->response_valid = bWasSuccessful;
         this->response_received = true;
-    }
+    }*/
 
 	//TODO remove this return value. never anything useful!
     std::string OverrideHttpInterface::Post(std::string url, std::string path, std::string headers[], int header_count, std::string stdcontent, long timeout, NetworkCallback callback)

@@ -74,6 +74,15 @@ namespace cognitivevrapi
 		json = MakeShareable(new FJsonValueArray(ValueArray));
 	}
 
+	void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, bool &mybool)
+	{
+		TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
+		TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueNumber(mybool));
+		ValueArray.Emplace(tempVal);
+
+		json = MakeShareable(new FJsonValueArray(ValueArray));
+	}
+
 	void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, const char &mychar)
 	{
 		//FString fstring = mychar.c_str();

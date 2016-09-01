@@ -45,6 +45,7 @@ namespace cognitivevrapi
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, std::string &string);
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, const char &mychar);
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, long &longValue);
+			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, bool &mybool);
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, int &intValue);
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, double &doubleValue);
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, TSharedPtr<FJsonObject> &object);

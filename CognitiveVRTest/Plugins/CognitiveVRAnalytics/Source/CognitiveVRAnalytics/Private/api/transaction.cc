@@ -11,7 +11,7 @@ namespace cognitivevrapi
         s = sp;
     }
 
-    void Transaction::Begin(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, NetworkCallback callback)
+    void Transaction::Begin(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id)
     {
 		if (s == NULL)
 		{
@@ -40,10 +40,10 @@ namespace cognitivevrapi
 		Util::AppendToJsonArray(jsonArray, transaction_id);
 		Util::AppendToJsonArray(jsonArray, properties);
 
-        s->thread_manager->PushTask(callback, "datacollector_beginTransaction", jsonArray);
+        s->thread_manager->PushTask(NULL, "datacollector_beginTransaction", jsonArray);
     }
 
-    void Transaction::Update(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, NetworkCallback callback, double progress)
+    void Transaction::Update(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, double progress)
     {
 		if (s == NULL)
 		{
@@ -70,10 +70,10 @@ namespace cognitivevrapi
 		Util::AppendToJsonArray(jsonArray, transaction_id);
 		Util::AppendToJsonArray(jsonArray, properties);
 
-        s->thread_manager->PushTask(callback, "datacollector_updateTransaction", jsonArray);
+        s->thread_manager->PushTask(NULL, "datacollector_updateTransaction", jsonArray);
     }
 
-    void Transaction::End(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, NetworkCallback callback, std::string result)
+    void Transaction::End(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, std::string result)
     {
 		if (s == NULL)
 		{
@@ -104,17 +104,17 @@ namespace cognitivevrapi
 		//TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
 		//FJsonSerializer::Serialize(properties.ToSharedRef(), Writer);
 
-        s->thread_manager->PushTask(callback, "datacollector_endTransaction", jsonArray);
+        s->thread_manager->PushTask(NULL, "datacollector_endTransaction", jsonArray);
     }
 
-    void Transaction::BeginEnd(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, NetworkCallback callback, std::string result)
+    void Transaction::BeginEnd(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, std::string result)
     {
 		if (this == NULL)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Transaction::BeginEnd null cognitivevr - probably not initialized yet!"));
 			return;
 		}
-		this->Begin(category, properties, transaction_id, callback);
-		this->End(category, properties, transaction_id, callback, result);
+		this->Begin(category, properties, transaction_id);
+		this->End(category, properties, transaction_id, result);
     }
 }

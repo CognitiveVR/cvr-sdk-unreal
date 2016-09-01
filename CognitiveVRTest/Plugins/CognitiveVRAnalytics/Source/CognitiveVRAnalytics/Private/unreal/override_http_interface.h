@@ -24,7 +24,7 @@ namespace cognitivevrapi
             bool response_valid;
             std::string http_response;
             virtual void OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, NetworkCallback callback);
-            virtual void OnResponseReceivedSync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+            //virtual void OnResponseReceivedSync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
         public:
             OverrideHttpInterface();

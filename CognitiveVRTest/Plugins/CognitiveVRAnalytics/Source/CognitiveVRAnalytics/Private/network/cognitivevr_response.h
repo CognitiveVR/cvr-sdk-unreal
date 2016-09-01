@@ -39,7 +39,6 @@ namespace cognitivevrapi
                 return content;
             }
     };
-
-    typedef void (*NetworkCallback)(CognitiveVRResponse);
+	typedef void(*NetworkCallback)(CognitiveVRResponse);
 }
 #endif  // COGNITIVEVR_NETWORK_DEFS_H_

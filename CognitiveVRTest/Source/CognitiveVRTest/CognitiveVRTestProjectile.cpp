@@ -31,6 +31,8 @@ ACognitiveVRTestProjectile::ACognitiveVRTestProjectile()
 	InitialLifeSpan = 3.0f;
 }
 
+int ACognitiveVRTestProjectile::boxesHit = 0;
+
 void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	// Only add impulse and destroy projectile if we hit a physics
@@ -41,7 +43,21 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 		properties->SetStringField("projectile", "hit");
 
-		FCognitiveVRAnalytics::Get().CognitiveVR()->transaction->End("shooty", NULL, "shootid", NULL);
+		//FCognitiveVRAnalytics::Get().CognitiveVR()->transaction->End("shooty", NULL, "shootid");
+
+		boxesHit++;
+		double one = 1;
+
+		//cognitivevrapi::CognitiveVR *cog = FCognitiveVRAnalytics::Get().CognitiveVR();
+		//cog->transaction = new cognitivevrapi::Transaction(cog);
+		//cog->tuning = new cognitivevrapi::Tuning(cog, new FJsonObject);
+		//cog->thread_manager = new cognitivevrapi::BufferManager(cog->network);
+		//cog->UpdateCollection("string", 0, 0, false);
+		
+		//FCognitiveVRAnalytics::Get().CognitiveVR()->UpdateCollection();// , 0, 0, false);
+		FCognitiveVRAnalytics::Get().CognitiveVR()->core_utils->UpdateCollection("boxesHit",boxesHit,1,false);
+		FCognitiveVRAnalytics::Get().CognitiveVR()->core_utils->UpdateDeviceState("device", NULL);
+		//FCognitiveVRAnalytics::Get().CognitiveVR()->GetNetwork();
 		Destroy();
 	}
 	else
@@ -49,11 +65,6 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 		properties->SetStringField("projectile", "miss");
-		FCognitiveVRAnalytics::Get().CognitiveVR()->transaction->Begin("shooty", NULL, "shootid");
+		//FCognitiveVRAnalytics::Get().CognitiveVR()->transaction->Begin("shooty", NULL, "shootid");
 	}
-}
-
-void DebugCallback(cognitivevrapi::CognitiveVRResponse resp)
-{
-	UE_LOG(LogTemp, Warning, TEXT("CognitiveVRAnalytics::Callback INIT----------------------------------------response"));
 }

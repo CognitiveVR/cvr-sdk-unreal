@@ -62,7 +62,7 @@ void ACognitiveVRTestCharacter::BeginPlay()
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 	properties->SetStringField("playername", "player0");
-	FCognitiveVRAnalytics::Get().CognitiveVR()->transaction->BeginEnd("playerstart", properties, "", NULL, "");
+	FCognitiveVRAnalytics::Get().CognitiveVR()->transaction->BeginEnd("playerstart", properties, "", "");
 }
 
 //////////////////////////////////////////////////////////////////////////

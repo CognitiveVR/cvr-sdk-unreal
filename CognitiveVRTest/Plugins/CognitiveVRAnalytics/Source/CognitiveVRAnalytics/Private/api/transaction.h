@@ -16,36 +16,26 @@ namespace cognitivevrapi
         public:
             Transaction(CognitiveVR* sp);
 
-			/*void Begin(FString category, TSharedPtr<FJsonObject> properties, FString transaction_id, int timeout = Config::kNetworkTimeout);
-			void End(FString category, TSharedPtr<FJsonObject> properties, FString transaction_id);
-			void BeginAndEnd(FString category, TSharedPtr<FJsonObject> properties, FString transaction_id);*/
-
             /** Begin a new transaction.
 
 				@param std::string category
                 @param std::string transaction_id - Optional.
-                @param std::string user_id - Optional.
-                @param std::string device_id - Optional.
                 @param Json::Value properties - Optional.
-				@param NetworkCallback - Optional.
                 
                 @throws CognitiveVR_exception
             */
-            void Begin(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", NetworkCallback callback = NULL);
+            void Begin(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "");
 
             /** Update an existing transaction.
 
 				@param std::string category
                 @param std::string transaction_id - Optional.                
                 @param double progress - Optional.
-                @param std::string user_id - Optional.
-                @param std::string device_id - Optional.
                 @param Json::Value properties - Optional.
-				@param NetworkCallback - Optional.
 
                 @throws CognitiveVR_exception
             */
-            void Update(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", NetworkCallback callback = NULL, double progress = 0);
+            void Update(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", double progress = 0);
 
             /** End an existing transaction.
 
@@ -55,25 +45,21 @@ namespace cognitivevrapi
                 @param std::string user_id - Optional.
                 @param std::string device_id - Optional.
                 @param Json::Value properties - Optional.
-				@param NetworkCallback - Optional.
 
                 @throws cognitivevr_exception
             */
-            void End(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", NetworkCallback callback = NULL, std::string result = "");
+            void End(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", std::string result = "");
 
             /** Begin and end new transaction.
 
 				@param std::string category
                 @param std::string transaction_id - Optional.
                 @param std::string result - Optional.
-                @param std::string user_id - Optional.
-                @param std::string device_id - Optional.
                 @param Json::Value properties - Optional.
-				@param NetworkCallback - Optional.
 
                 @throws cognitivevr_exception
             */
-            void BeginEnd(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", NetworkCallback callback = NULL,  std::string result = "");
+            void BeginEnd(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", std::string result = "");
     };
 }
 #endif  // COGNITIVEVR_TRANSACTION_H_

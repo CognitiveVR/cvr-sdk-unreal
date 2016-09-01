@@ -18,6 +18,7 @@
 #include "Private/unreal/buffer_manager.h"
 #include "Private/api/tuning.h"
 #include "Private/api/transaction.h"
+#include "Private/api/coreutilities.h"
 #include "Private/network/network.h"
 #include "Json.h"
 //#include "util/util.h"
@@ -27,7 +28,7 @@
  * within this plugin.
  */
 
-#define COGNITIVEVR_SDK_NAME "cpp"
+#define COGNITIVEVR_SDK_NAME "unreal"
 #define COGNITIVEVR_SDK_VERSION "0.1.0"
 
 //class IAnalyticsProvider;
@@ -91,11 +92,13 @@ namespace cognitivevrapi
 	class Transaction;
 	class Tuning;
 	class BufferManager;
+	class Core;
 
 class CognitiveVR
 {
 	friend class Transaction;
 	friend class Tuning;
+	friend class CoreUtilities;
 
 #pragma warning(push)
 #pragma warning(disable:4251) //Disable DLL warning that does not apply in this context.
@@ -113,6 +116,7 @@ public:
 	Tuning* tuning;
 	Network* network;
 	BufferManager* thread_manager;
+	CoreUtilities* core_utils;
 
 #pragma warning(pop)
 
@@ -139,7 +143,7 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void NewUser(NetworkCallback callback, std::string user_id);
+	//void NewUser(std::string user_id);
 
 	/** Create a new device.
 
@@ -149,7 +153,7 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void NewDevice(NetworkCallback callback, std::string device_id);
+	//void NewDevice(std::string device_id);
 
 	/** Create a new user if it does not already exist.
 
@@ -159,7 +163,7 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void NewUserChecked(NetworkCallback callback, std::string user_id);
+	//void NewUserChecked(std::string user_id);
 
 	/** Create a new device if it does not already exist.
 
@@ -169,7 +173,7 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void NewDeviceChecked(NetworkCallback callback, std::string device_id);
+	//void NewDeviceChecked(std::string device_id);
 
 	/** Update user state.
 
@@ -180,7 +184,7 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void UpdateUserState(NetworkCallback callback, std::string user_id, TSharedPtr<FJsonObject> properties);
+	//void UpdateUserState(std::string user_id, TSharedPtr<FJsonObject> properties);
 
 	/** Update device state.
 
@@ -191,7 +195,7 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void UpdateDeviceState(NetworkCallback callback, std::string device_id, TSharedPtr<FJsonObject> properties);
+	//void UpdateDeviceState(std::string device_id, TSharedPtr<FJsonObject> properties);
 
 	/** Updates collections, used for virtual currencies or collections.
 
@@ -206,11 +210,11 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void UpdateCollection(NetworkCallback callback, std::string name, double balance, double balance_delta, bool is_currency, std::string user_id = "", std::string device_id = "");
+	//void UpdateCollection(std::string nname, double nbalance, double nbalance_delta, bool nis_currency);//, std::string user_id = "", std::string device_id = "");
 
 	/** Records purchases, used for real currencies.
 
-	@param std::string name
+	@param std::string transaction_id
 	@param double price
 	@param std::string currency_code
 	@param std::string result
@@ -224,7 +228,7 @@ public:
 	@return CognitiveVRResponse
 	@throws cognitivevr_exception
 	*/
-	void RecordPurchase(NetworkCallback callback, std::string name, double price, std::string currency_code, std::string result, std::string offer_id, std::string point_of_sale, std::string item_name, std::string user_id = "", std::string device_id = "");
+	//void RecordPurchase(std::string transaction_id, double price, std::string currency_code, std::string result, std::string offer_id, std::string point_of_sale, std::string item_name);//, std::string user_id = "", std::string device_id = "");
 
 };
 

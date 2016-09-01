@@ -22,6 +22,8 @@ namespace cognitivevrapi
         this->httpint = a;
         Log::Info("Network init.");
 
+		//applicaiton init
+
 		TArray< TSharedPtr<FJsonValue> > ObjArray;
 		TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 		TSharedPtr<FJsonObject> json = MakeShareable(new FJsonObject);
@@ -36,13 +38,24 @@ namespace cognitivevrapi
 		Util::AppendToJsonArray(jsonArray, s->device_id);
 		Util::AppendToJsonArray(jsonArray, empty);
 
-		//s->initProperties.Get()
-
 		TSharedPtr<FJsonObject>deviceProperties = Util::DeviceScraper(s->initProperties);
 		Util::AppendToJsonArray(jsonArray, deviceProperties);
-		//Util::AppendToJsonArray(jsonArray, empty);
 
 		Network::Call("application_init", jsonArray, callback);
+
+		//device update
+
+		TSharedPtr<FJsonValueArray> jsonArrayDevice = MakeShareable(new FJsonValueArray(ObjArray));
+		TSharedPtr<FJsonObject> jsonDevice = MakeShareable(new FJsonObject);
+		Util::AppendToJsonArray(jsonArrayDevice, fs);
+		Util::AppendToJsonArray(jsonArrayDevice, fs);
+		Util::AppendToJsonArray(jsonArrayDevice, s->user_id);
+		Util::AppendToJsonArray(jsonArrayDevice, s->device_id);
+		Util::AppendToJsonArray(jsonArrayDevice, deviceProperties);
+
+
+		Network::Call("datacollector_updateDeviceState", jsonArrayDevice, NULL);
+		//s->thread_manager->PushTask(NULL, "datacollector_updateDeviceState", jsonArray);
     }
 
 	//'application_init' and json'd sendtimestamp, eventtimestamp, userid, deviceid, userprops, deviceprops

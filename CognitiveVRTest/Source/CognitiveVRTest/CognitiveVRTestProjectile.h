@@ -27,5 +27,8 @@ public:
 	FORCEINLINE class USphereComponent* GetCollisionComp() const { return CollisionComp; }
 	/** Returns ProjectileMovement subobject **/
 	FORCEINLINE class UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
+
+	static int boxesHit;
+	//void DebugCallback(cognitivevrapi::CognitiveVRResponse resp) {}
 };
 
