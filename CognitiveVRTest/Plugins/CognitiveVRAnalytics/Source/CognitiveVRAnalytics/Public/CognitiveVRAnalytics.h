@@ -23,6 +23,8 @@
 #include "Json.h"
 //#include "util/util.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(CognitiveVR_Log, Log, All);
+
 /**
  * The public interface to this module.  In most cases, this interface is only public to sibling modules
  * within this plugin.
@@ -108,7 +110,7 @@ private:
 
 public:
 
-	std::string customer_id = "altimagegames59340-unitywanderdemo-test"; //TODO put this somewhere nice - a text file or editor options or something
+	std::string customer_id;// = "altimagegames59340-unitywanderdemo-test"; //TODO put this somewhere nice - a text file or editor options or something
 	FString user_id;
 	FString device_id;
 	TSharedPtr<FJsonObject> initProperties; //optional properties sent when initializing. platform, ram, etc

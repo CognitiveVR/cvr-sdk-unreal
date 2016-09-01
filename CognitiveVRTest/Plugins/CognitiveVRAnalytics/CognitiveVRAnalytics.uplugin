@@ -16,9 +16,14 @@
 	"Installed": false,
 	"Modules": [
 		{
+			"Name" : "CognitiveVRAnalytics",
+			"Type" : "Editor",
+			"LoadingPhase" : "Default"
+		},
+		{
 			"Name": "CognitiveVRAnalytics",
-			"Type": "Developer",
-			"LoadingPhase": "Default"
+			"Type" : "Runtime",
+			"LoadingPhase" : "PreDefault"
 		}
 	]
 }

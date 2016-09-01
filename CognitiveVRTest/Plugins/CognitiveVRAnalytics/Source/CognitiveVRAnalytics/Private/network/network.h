@@ -16,7 +16,6 @@ namespace cognitivevrapi
         private:
 			CognitiveVR* s;
             HttpInterface* httpint;
-			//void InitCallback(cognitivevrapi::CognitiveVRtResponse callback);
 
         public:
             Network(CognitiveVR* sp);

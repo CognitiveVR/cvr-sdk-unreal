@@ -1,23 +1,27 @@
 #include "CognitiveVRAnalyticsPrivatePCH.h"
 #include "CognitiveVRAnalytics.h"
 #include "json.h"
-//#include "IAnalyticsProvider.h"
+#include "ISettingsModule.h"
+#include "ISettingsSection.h"
+#include "ModuleInterface.h"
+#include "ModuleManager.h"
 
-//#define LOCTEXT_NAMESPACE "FCognitiveVRAnalytics"
+DEFINE_LOG_CATEGORY(CognitiveVR_Log);
+
+#define LOCTEXT_NAMESPACE "FCognitiveVRAnalytics"
 
 void FCognitiveVRAnalytics::Init(std::string user_id, std::string device_id)
 {
 	if (this->cognitivevr == NULL)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("CognitiveVRAnalytics::Init this IS null"));
+
 	}
 	else if (this->cognitivevr->user_id.IsEmpty() && this->cognitivevr->device_id.IsEmpty())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("CognitiveVRAnalytics::Init found stub implementation"));
+		cognitivevrapi::Log::Info("CognitiveVRAnalytics::Init - Found empty cognitivevr object. Initializing");
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 		this->cognitivevr = cognitivevrapi::Init(user_id, device_id, properties);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("CognitiveVRAnalytics::Init this NOT null"));
 	return;
 }
 
@@ -25,14 +29,13 @@ void FCognitiveVRAnalytics::Init(std::string user_id, std::string device_id, TSh
 {
 	if (this->cognitivevr == NULL)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("CognitiveVRAnalytics::Init this IS null"));
+		
 	}
 	else if (this->cognitivevr->user_id.IsEmpty() && this->cognitivevr->device_id.IsEmpty())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("CognitiveVRAnalytics::Init found stub implementation"));
+		cognitivevrapi::Log::Info("CognitiveVRAnalytics::Init - Found empty cognitivevr object. Initializing");
 		this->cognitivevr = cognitivevrapi::Init(user_id, device_id, init_device_properties);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("CognitiveVRAnalytics::Init this NOT null"));
 	return;
 }
 
@@ -40,16 +43,9 @@ cognitivevrapi::CognitiveVR* FCognitiveVRAnalytics::CognitiveVR()
 {
 	if (this->cognitivevr == NULL)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("CognitiveVRAnalytics::OH GOD FALLBACK INIT"));
-
 		TSharedPtr<FJsonObject> init_device_properties = MakeShareable(new FJsonObject);
-		//this->cognitivevr = cognitivevrapi::Init("companyname1234-product-test", "", "", properties);
 		this->cognitivevr = cognitivevrapi::Init("", "", init_device_properties);
-
-		//cognitivevrapi::CognitiveVRResponse response(false);
-		//response.SetErrorMessage("CognitiveVR has not been initialized yet.");
-		//response.SetContent(Json::Value::null); //may need json here! conflict between splut jsoncpp and unreal built in
-		//throw cognitivevrapi::cognitivevr_exception(response);
+		cognitivevrapi::Log::Warning("CognitiveVR Not Initialized!");
 	}
 
 	return this->cognitivevr;
@@ -60,14 +56,32 @@ void FCognitiveVRAnalytics::StartupModule()
 {
 	// This code will execute after your module is loaded into memory (but after global variables are initialized, of course.)
 	FModuleManager::LoadModuleChecked<FHttpModule>("HTTP");
+
+	ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
+
+	if (SettingsModule != nullptr)
+	{
+		ISettingsSectionPtr SettingsSection = SettingsModule->RegisterSettings("Project", "Plugins", "CognitiveVR",
+			LOCTEXT("DisplayName", "CognitiveVR Analytics"),
+			LOCTEXT("Description", "Configure the CognitiveVR Analytics plug-in."),
+			GetMutableDefault<UCognitiveVRSettings>()
+		);
+	}
 }
 
 void FCognitiveVRAnalytics::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
+	// unregister settings
+	ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
+
+	if (SettingsModule != nullptr)
+	{
+		SettingsModule->UnregisterSettings("Project", "Plugins", "CognitiveVR");
+	}
 }
-//#undef LOCTEXT_NAMESPACE
+
 
 IMPLEMENT_MODULE(FCognitiveVRAnalytics, "CognitiveVRAnalytics")
 
@@ -79,16 +93,10 @@ namespace cognitivevrapi
 {
 	void InitCallback(CognitiveVRResponse resp)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("CognitiveVRAnalytics::Callback INIT----------------------------------------response"));
+		Log::Info("CognitiveVR InitCallback Response");
 
-		//CognitiveVRResponse response = callback;
-
-		if (!resp.IsSuccessful()) {
-
-			//std::cout << "Network.c Init response raw: " << resp.GetContent(). << std::endl;
-
-			//std::cout << "Netwerk.c Init response not successful: " << resp.GetContent().asString() << std::endl;
-
+		if (!resp.IsSuccessful())
+		{
 			cognitivevrapi::ThrowDummyResponseException("Failed to initialize CognitiveVR: " + resp.GetErrorMessage());
 		}
 
@@ -132,10 +140,10 @@ namespace cognitivevrapi
 
 	CognitiveVRResponse CognitiveVR::HandleResponse(std::string type, CognitiveVRResponse resp)
     {
-        if (!resp.IsSuccessful()) {
+        if (!resp.IsSuccessful())
+		{
             resp.SetErrorMessage("CognitiveVR Error: " + resp.GetErrorMessage());
-			UE_LOG(LogTemp, Warning, TEXT("CognitiveVRAnalytics::ResponseException!"));
-            //throw cognitivevrapi::cognitivevr_exception(resp);
+			Log::Error("CognitiveVRAnalytics::ResponseException!");
         }
 
         return resp;
@@ -144,16 +152,11 @@ namespace cognitivevrapi
 	CognitiveVR* Init(std::string user_id, std::string device_id, TSharedPtr<FJsonObject> init_device_properties)
 	{
         OverrideHttpInterface* httpint = new OverrideHttpInterface();
-		Log::Info("CognitiveVR init.");
-
-		/*if (customer_id.empty()) {
-			cognitivevrapi::ThrowDummyResponseException("A customer ID is required.");
-		}*/
 
 		CognitiveVR* s = new CognitiveVR();
 
 		if (user_id.empty() && device_id.empty()) {
-			cognitivevrapi::ThrowDummyResponseException("A user or device ID is required.");
+			Log::Error("CognitiveVR::Init - A user or device ID is required. Returning un-initialized CognitiveVR");
 			return s;
 		}
 
@@ -161,7 +164,6 @@ namespace cognitivevrapi
 			cognitivevrapi::ThrowDummyResponseException("Invalid tuning cache TTL.");
 		}
 
-		//s->customer_id = customer_id;
 		s->user_id = user_id.c_str();
 		s->device_id = device_id.c_str();
 		s->initProperties = init_device_properties;
@@ -190,13 +192,9 @@ namespace cognitivevrapi
 
     void ThrowDummyResponseException(std::string s)
     {
-		std::cout << "CognitiveVR.c ThrowDummyResponseException: " << s << std::endl;
-
 		CognitiveVRResponse response(false);
         response.SetErrorMessage(s);
         response.SetContent(FJsonObject());
-		UE_LOG(LogTemp, Warning, TEXT("CognitiveVRAnalytics::ResponseException! %s"), UTF8_TO_TCHAR(s.c_str()));
-		//UE_LOG(LogTemp, Warning, TEXT("cognitiveanalytics::dummy response exception %s"), UTF8_TO_TCHAR(response.c_str()));
-        //throw cognitivevrapi::cognitivevr_exception(response);
+		Log::Error("CognitiveVRAnalytics::ResponseException! " + s);
     }
 }

@@ -13,7 +13,6 @@ namespace cognitivevrapi
 		return time(0);
 		//http://stackoverflow.com/questions/997946/how-to-get-current-time-and-date-in-c
 
-        //return (std::time(0) * 1000);
 		#pragma warning(pop)
     }
 
@@ -26,8 +25,6 @@ namespace cognitivevrapi
         return Util::ToString(t);
     }
 
-
-
     template < typename T > std::string Util::ToString( const T& n )
     {
         std::ostringstream stm ;
@@ -37,8 +34,6 @@ namespace cognitivevrapi
 
 	TSharedPtr<FJsonObject> Util::DeviceScraper(TSharedPtr<FJsonObject> properties)
 	{
-		//TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-		//properties->SetStringField("platform", UGameplayStatics::GetPlatformName());
 		properties->SetStringField("cpu brand", FWindowsPlatformMisc::GetCPUBrand());
 		properties->SetStringField("cpu vendor", FWindowsPlatformMisc::GetCPUVendor());
 		properties->SetNumberField("cores", FWindowsPlatformMisc::NumberOfCores());
@@ -85,6 +80,7 @@ namespace cognitivevrapi
 
 	void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, const char &mychar)
 	{
+		//cognitivevrapi::Log::Error("Util::AppendToJsonArray - char not supported!");
 		//FString fstring = mychar.c_str();
 		//TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueString(fstring));
 		//TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();

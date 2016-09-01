@@ -13,9 +13,6 @@ namespace cognitivevrapi
 			#pragma warning(push)
 			#pragma warning(disable:4251) //Disable DLL warning that does not apply in this context.
 
-            //Debug logging.
-            static bool kDebugLog;
-
             //Enables use of async calls.
             static bool kNetworkEnableThreading;
 

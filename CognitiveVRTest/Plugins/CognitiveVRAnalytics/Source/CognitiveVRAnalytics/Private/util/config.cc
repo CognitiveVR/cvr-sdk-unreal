@@ -6,7 +6,6 @@
 namespace cognitivevrapi
 {
     //Configuration defaults.
-    bool Config::kDebugLog = false;
     bool Config::kNetworkEnableThreading = false;
     bool Config::kNetworkEnableGracefulShutdown = true;
     std::string Config::kNetworkHost = "https://data.cognitivevr.io";

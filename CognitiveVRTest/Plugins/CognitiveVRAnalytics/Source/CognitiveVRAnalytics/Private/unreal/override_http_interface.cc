@@ -16,26 +16,13 @@ namespace cognitivevrapi
 
     void OverrideHttpInterface::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, NetworkCallback callback)
     {
-		
         FString UE4Str = Response->GetContentAsString();
-		UE_LOG(LogTemp, Warning, TEXT("http::async response %s"), *UE4Str);
-		//UE_LOG(LogTemp, Warning, FText::FromString(UE4Str));
-		//UE_LOG(LogTemp, Warning, TEXT("CognitiveVRAnalytics::Callback INIT----------------------------------------response"));
-
-        std::string content(TCHAR_TO_UTF8(*UE4Str));
+		std::string content(TCHAR_TO_UTF8(*UE4Str));
+		Log::Info("OverrideHttpInterface::OnResponseReceivedAsync - Response: " + content);
+        
 		CognitiveVRResponse response = Network::ParseResponse(content);
         callback(response);
     }
-
-    /*void OverrideHttpInterface::OnResponseReceivedSync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-    {
-		//UE_LOG(LogTemp, Warning, TEXT("override_http_int.cc::OnResponseReceivedSync"));
-        FString UE4Str = Response->GetContentAsString();
-        std::string content(TCHAR_TO_UTF8(*UE4Str));
-        this->http_response = content;
-        this->response_valid = bWasSuccessful;
-        this->response_received = true;
-    }*/
 
 	//TODO remove this return value. never anything useful!
     std::string OverrideHttpInterface::Post(std::string url, std::string path, std::string headers[], int header_count, std::string stdcontent, long timeout, NetworkCallback callback)
@@ -43,8 +30,8 @@ namespace cognitivevrapi
         //Construct URL.
         std::string stdfull_url = url + path;
         FString full_url(stdfull_url.c_str());
-        cognitivevrapi::Log::Info(stdfull_url);
-        cognitivevrapi::Log::Info("REQUEST: " + stdcontent);
+        cognitivevrapi::Log::Info("POST URL " + stdfull_url);
+        cognitivevrapi::Log::Info("POST CONTENT " + stdcontent);
 
         FString content(stdcontent.c_str());
 
@@ -76,26 +63,12 @@ namespace cognitivevrapi
 			HttpRequest->OnProcessRequestComplete().BindRaw(this, &OverrideHttpInterface::OnResponseReceivedAsync, callback);
 		}
 
-		//HttpRequest->OnProcessRequestComplete().BindRaw(this, &OverrideHttpInterface::OnResponseReceivedAsync, callback);
-
-
-
-		//UE_LOG(LogTemp, Warning, TEXT("3 override_http_int.cc::pre process request"));
 		bool process_result = HttpRequest->ProcessRequest();
 		
-		//UE_LOG(LogTemp, Warning, TEXT("override_http_int.cc::post process request"));
         if (!process_result) {
-			UE_LOG(LogTemp, Warning, TEXT("override_http_int.cc::failed http request"));
-            throw std::runtime_error("Failed to process HTTP request.");
+			Log::Error("OverrideHttpInterface::Post - Process Request Failed!");
         }
 
-        /*if (callback != NULL) {
-			//UE_LOG(LogTemp, Warning, TEXT("override_http_int.cc::callback"));
-            this->http_response = "";
-            return this->http_response;
-        }*/
-
-		//UE_LOG(LogTemp, Warning, TEXT("override_http_int.cc::waiting for sync call"));
 		this->http_response = "";
 		return this->http_response;
 		/*

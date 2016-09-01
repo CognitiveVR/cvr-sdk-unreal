@@ -24,6 +24,5 @@ void ACognitiveVRInitializer::BeginPlay()
 	//FGenericPlatformMemoryStats stats = FGenericPlatformMemory::GetStats();
 	//stats.TotalPhysical
 
-	//FCognitiveVRAnalytics::Get().Init("altimagegames59340-unitywanderdemo-test", "test username", "test device id", properties);
 	FCognitiveVRAnalytics::Get().Init("test username", "test device id", properties);
 }

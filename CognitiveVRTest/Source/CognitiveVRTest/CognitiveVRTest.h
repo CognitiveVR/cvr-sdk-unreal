@@ -6,5 +6,4 @@
 #include "EngineMinimal.h"
 #include "CognitiveVRAnalytics.h"
 
-
 #endif

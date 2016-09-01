@@ -116,11 +116,11 @@ namespace cognitivevrapi
 		Util::AppendToJsonArray(jsonArray, empty);
 		Util::AppendToJsonArray(jsonArray, ndevice_id);
 		Util::AppendToJsonArray(jsonArray, nproperties);
-		return;
+
 		s->thread_manager->PushTask(NULL, "datacollector_updateDeviceState", jsonArray);
 	}
 
-	void CoreUtilities::UpdateCollection(std::string nname, double nbalance, double nbalance_delta, bool nis_currency)//, std::string nuser_id, std::string ndevice_id)
+	void CoreUtilities::UpdateCollection(std::string nname, double nbalance, double nbalance_delta, bool nis_currency)
 	{
 		TArray< TSharedPtr<FJsonValue> > ObjArray;
 		TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
@@ -139,7 +139,6 @@ namespace cognitivevrapi
 		Util::AppendToJsonArray(jsonArray, nis_currency);
 
 		//timestamp, timestamp, userid, deviceid, name, balance, balancemod, currency
-
 		s->thread_manager->PushTask(NULL, "datacollector_updateCollection", jsonArray);
 	}
 

@@ -15,7 +15,7 @@ namespace cognitivevrapi
     {
 		if (s == NULL)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Transaction::Begin null cognitivevr - probably not initialized yet!"));
+			Log::Warning("Transaction::Begin - CognitiveVR is null!");
 			return;
 		}
 
@@ -47,7 +47,7 @@ namespace cognitivevrapi
     {
 		if (s == NULL)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Transaction::Update null cognitivevr - probably not initialized yet!"));
+			Log::Warning("Transaction::Update - CognitiveVR is null!");
 			return;
 		}
 
@@ -77,7 +77,7 @@ namespace cognitivevrapi
     {
 		if (s == NULL)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Transaction::End null cognitivevr - probably not initialized yet!"));
+			Log::Warning("Transaction::End - CognitiveVR is null!");
 			return;
 		}
 
@@ -100,10 +100,6 @@ namespace cognitivevrapi
 		Util::AppendToJsonArray(jsonArray, transaction_id);
 		Util::AppendToJsonArray(jsonArray, properties);
 
-		//FString OutputString;
-		//TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
-		//FJsonSerializer::Serialize(properties.ToSharedRef(), Writer);
-
         s->thread_manager->PushTask(NULL, "datacollector_endTransaction", jsonArray);
     }
 
@@ -111,7 +107,7 @@ namespace cognitivevrapi
     {
 		if (this == NULL)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Transaction::BeginEnd null cognitivevr - probably not initialized yet!"));
+			Log::Warning("Transaction::BeginEnd - CognitiveVR is null!");
 			return;
 		}
 		this->Begin(category, properties, transaction_id);

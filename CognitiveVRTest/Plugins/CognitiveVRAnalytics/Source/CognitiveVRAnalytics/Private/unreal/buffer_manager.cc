@@ -15,6 +15,7 @@ namespace cognitivevrapi
 		if (this->network != NULL)
 		{
 			//TODO cache events and send them together
+			//TODO cache events sent before Init called
 
 			//Threading is already handled by Unreal Engine, so we simply pass data along to the network class.
 			this->network->Call(sub_path, content, callback);

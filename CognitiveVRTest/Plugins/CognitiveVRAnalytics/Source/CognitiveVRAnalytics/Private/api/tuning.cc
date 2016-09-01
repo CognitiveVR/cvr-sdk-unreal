@@ -32,9 +32,9 @@ namespace cognitivevrapi
             Tuning::getallval_cache_ttl = cache_time;
         }
 
-		Log::Info("CACHING TUNING VALUES: " + entity_id + ":" + Tuning::GetEntityTypeString(entity_type));// +" " + values.toStyledString());
+		Log::Info("CACHING TUNING VALUES: " + entity_id + ":" + Tuning::GetEntityTypeString(entity_type));
 		
-																										  // Iterate over Json Values
+		// Iterate over Json Values
 		for (auto currJsonValue = values.Values.CreateConstIterator(); currJsonValue; ++currJsonValue)
 		{
 			// Get the key name
