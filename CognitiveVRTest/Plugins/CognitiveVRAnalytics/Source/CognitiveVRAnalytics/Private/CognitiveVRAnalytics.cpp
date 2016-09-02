@@ -1,8 +1,10 @@
 #include "CognitiveVRAnalyticsPrivatePCH.h"
 #include "CognitiveVRAnalytics.h"
 #include "json.h"
+#if WITH_EDITOR
 #include "ISettingsModule.h"
 #include "ISettingsSection.h"
+#endif
 #include "ModuleInterface.h"
 #include "ModuleManager.h"
 
@@ -12,31 +14,31 @@ DEFINE_LOG_CATEGORY(CognitiveVR_Log);
 
 void FCognitiveVRAnalytics::Init(std::string user_id, std::string device_id)
 {
+	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 	if (this->cognitivevr == NULL)
 	{
-
+		cognitivevrapi::Log::Info("CognitiveVRAnalytics::Init - Initializing");
+		this->cognitivevr = cognitivevrapi::Init(user_id, device_id, properties);
 	}
 	else if (this->cognitivevr->user_id.IsEmpty() && this->cognitivevr->device_id.IsEmpty())
 	{
 		cognitivevrapi::Log::Info("CognitiveVRAnalytics::Init - Found empty cognitivevr object. Initializing");
-		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 		this->cognitivevr = cognitivevrapi::Init(user_id, device_id, properties);
 	}
-	return;
 }
 
 void FCognitiveVRAnalytics::Init(std::string user_id, std::string device_id, TSharedPtr<FJsonObject>init_device_properties)
 {
 	if (this->cognitivevr == NULL)
 	{
-		
+		cognitivevrapi::Log::Info("CognitiveVRAnalytics::Init - Initializing");
+		this->cognitivevr = cognitivevrapi::Init(user_id, device_id, init_device_properties);
 	}
 	else if (this->cognitivevr->user_id.IsEmpty() && this->cognitivevr->device_id.IsEmpty())
 	{
 		cognitivevrapi::Log::Info("CognitiveVRAnalytics::Init - Found empty cognitivevr object. Initializing");
 		this->cognitivevr = cognitivevrapi::Init(user_id, device_id, init_device_properties);
 	}
-	return;
 }
 
 cognitivevrapi::CognitiveVR* FCognitiveVRAnalytics::CognitiveVR()
@@ -47,13 +49,13 @@ cognitivevrapi::CognitiveVR* FCognitiveVRAnalytics::CognitiveVR()
 		this->cognitivevr = cognitivevrapi::Init("", "", init_device_properties);
 		cognitivevrapi::Log::Warning("CognitiveVR Not Initialized!");
 	}
-
 	return this->cognitivevr;
 }
 
 
 void FCognitiveVRAnalytics::StartupModule()
 {
+#if WITH_EDITOR
 	// This code will execute after your module is loaded into memory (but after global variables are initialized, of course.)
 	FModuleManager::LoadModuleChecked<FHttpModule>("HTTP");
 
@@ -67,10 +69,12 @@ void FCognitiveVRAnalytics::StartupModule()
 			GetMutableDefault<UCognitiveVRSettings>()
 		);
 	}
+#endif
 }
 
 void FCognitiveVRAnalytics::ShutdownModule()
 {
+#if WITH_EDITOR
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
 	// unregister settings
@@ -80,10 +84,13 @@ void FCognitiveVRAnalytics::ShutdownModule()
 	{
 		SettingsModule->UnregisterSettings("Project", "Plugins", "CognitiveVR");
 	}
+#endif
 }
 
 
-IMPLEMENT_MODULE(FCognitiveVRAnalytics, "CognitiveVRAnalytics")
+//IMPLEMENT_MODULE(FCognitiveVRAnalytics, "CognitiveVRAnalytics")
+
+#undef LOCTEXT_NAMESPACE
 
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
@@ -111,6 +118,7 @@ namespace cognitivevrapi
 
     void CognitiveVR::InitNetwork(HttpInterface* httpint)
     {
+		Log::Info("CognitiveVR::InitNetowkr");
 		this->network = new cognitivevrapi::Network(this);
         this->network->Init(httpint, &InitCallback);
     }

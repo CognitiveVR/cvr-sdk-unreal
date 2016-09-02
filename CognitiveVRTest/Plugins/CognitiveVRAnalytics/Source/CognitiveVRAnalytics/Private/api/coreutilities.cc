@@ -122,6 +122,14 @@ namespace cognitivevrapi
 
 	void CoreUtilities::UpdateCollection(std::string nname, double nbalance, double nbalance_delta, bool nis_currency)
 	{
+		//TODO this null check explodes everything - why??
+		return;
+		if (s == NULL)
+		{
+			Log::Warning("CoreUtilities::UpdateCollection- CognitiveVR is null!");
+			return;
+		}
+
 		TArray< TSharedPtr<FJsonValue> > ObjArray;
 		TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 

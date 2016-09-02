@@ -2,6 +2,7 @@
 
 #include "CognitiveVRAnalytics.h"
 #include "CognitiveVRSettings.h"
+#include "Analytics.h"
 
 
 

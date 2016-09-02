@@ -3,6 +3,9 @@
 */
 #include "network.h"
 #include "CognitiveVRAnalyticsPrivatePCH.h"
+#if WITH_EDITOR
+#include "CognitiveVRSettings.h"
+#endif
 
 namespace cognitivevrapi
 {
@@ -67,8 +70,26 @@ namespace cognitivevrapi
 			Log::Warning("Network::Call - No HTTP implementation available. Did you call cognitivevr::Init()?");
         }
 
-		UCognitiveVRSettings* Settings = GetMutableDefault<UCognitiveVRSettings>();
-		std::string customerid(TCHAR_TO_UTF8(*Settings->CustomerID));
+		//UCognitiveVRSettings* Settings = GetMutableDefault<UCognitiveVRSettings>();
+
+		FString ValueReceived;
+
+		GConfig->GetString(
+			TEXT("Analytics"),
+			TEXT("CognitiveVRApiKey"),
+			ValueReceived,
+			GGameIni
+		);
+
+		std::string customerid(TCHAR_TO_UTF8(*ValueReceived));
+
+		//Log::Info("network::call api key from ini = "+ customerid);
+
+		//return;
+
+		//FString ReadApiKey = FAnalytics::Get().GetConfigValueFromIni(GetIniName(), GetReleaseIniSection(), TEXT("CognitiveVRApiKey"), true);
+
+		//std::string customerid(TCHAR_TO_UTF8(*ValueReceived));
 
         std::string path = "/" + Config::kSsfApp + "/ws/interface/" + sub_path;
 
@@ -94,7 +115,14 @@ namespace cognitivevrapi
 
         std::string str_response = "";
 
-        try
+
+		FString OutputString;
+		TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+		FJsonSerializer::Serialize(content.Get()->AsArray(), Writer);
+
+		str_response = this->httpint->Post(Config::kNetworkHost, path + query, headers, 2, TCHAR_TO_UTF8(*OutputString), Config::kNetworkTimeout, callback);
+
+        /*try
 		{
 			//networkHost https://data.cognitivevr.io
 			//path  /isos-personalization/ws/interface/application_init
@@ -111,7 +139,7 @@ namespace cognitivevrapi
 		{
             std::string err = e.what();
             cognitivevrapi::ThrowDummyResponseException("Network Error: " + err);
-        }
+        }*/
     }
 
 	CognitiveVRResponse Network::ParseResponse(std::string str_response)

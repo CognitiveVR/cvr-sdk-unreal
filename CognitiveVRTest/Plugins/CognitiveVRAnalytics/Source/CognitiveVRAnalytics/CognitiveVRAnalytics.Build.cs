@@ -10,7 +10,8 @@ public class CognitiveVRAnalytics : ModuleRules
 
         PublicIncludePathModuleNames.AddRange(
 			new string[] {
-				"Analytics"
+                "Engine",
+                "Analytics"
 				// ... add public include paths required here ...
 			}
 			);
@@ -23,10 +24,12 @@ public class CognitiveVRAnalytics : ModuleRules
 		
 		PrivateIncludePaths.AddRange(
 			new string[] {
-                					"Runtime/CognitiveVRAnalytics/Private",
-					"Engine",
-                    "HTTP",
+            	"Runtime/CognitiveVRAnalytics/Private",
+				"Engine",
+                "HTTP",
                 "Private",
+                "Analytics",
+                "Settings",
                 "Private/unreal",
                 "CognitiveVRAnalytics/Private",
                 "CognitiveVRAnalytics/Private/api",
@@ -46,6 +49,8 @@ public class CognitiveVRAnalytics : ModuleRules
                     "Engine",
                     "AnalyticsBlueprintLibrary",
                     "Analytics",
+                    "AnalyticsVisualEditing",
+                    "Projects",
                     "HTTP",
 					"Json",
 					"JsonUtilities"

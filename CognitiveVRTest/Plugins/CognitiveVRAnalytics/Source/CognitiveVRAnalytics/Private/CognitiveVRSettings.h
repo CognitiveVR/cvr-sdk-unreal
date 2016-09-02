@@ -2,33 +2,35 @@
 
 #pragma once
 
+#include "AnalyticsSettings.h"
 #include "CognitiveVRSettings.generated.h"
 
-
-/**
- * Implements the settings for the Slate Remote plug-in.
- */
-UCLASS(config=Engine)
+UCLASS()
 class UCognitiveVRSettings
-	: public UObject
+	: public UAnalyticsSettingsBase
 {
 	GENERATED_UCLASS_BODY()
 
-public:
-
 	/** Display all info, warning and error messages from cognitiveVR. */
-	UPROPERTY(config, EditAnywhere, Category=General)
+	UPROPERTY(EditAnywhere, Category=General, meta = (ConfigRestartRequired = true))
 	bool EnableFullDebugLogging;
 
 	/** Display only error messages from cognitiveVR. */
-	UPROPERTY(config, EditAnywhere, Category = General)
+	UPROPERTY(EditAnywhere, Category = General, meta = (ConfigRestartRequired = true))
 	bool EnableErrorDebugLogging;
 
 	/** The unique identifier for your company and product. 'companyname1234-productname-test' */
-	UPROPERTY(config, EditAnywhere, Category= General)
+	UPROPERTY(EditAnywhere, Category= General, meta = (ConfigRestartRequired = true))
 	FString CustomerID;
 
-	/** The IP endpoint to listen to when the Remote Server runs in a game. */
-	//UPROPERTY(config, EditAnywhere, Category= General)
-	//FString GameServerEndpoint;
+	// UAnalyticsSettingsBase interface
+protected:
+	/**
+	* Provides a mechanism to read the section based information into this UObject's properties
+	*/
+	virtual void ReadConfigSettings();
+	/**
+	* Provides a mechanism to save this object's properties to the section based ini values
+	*/
+	virtual void WriteConfigSettings();
 };
