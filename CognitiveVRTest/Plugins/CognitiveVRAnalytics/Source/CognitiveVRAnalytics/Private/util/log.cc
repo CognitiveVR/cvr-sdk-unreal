@@ -17,25 +17,71 @@ namespace cognitivevrapi
 
 	void Log::Info(std::string s, bool newline)
 	{
+		FString ValueReceived;
+
+		GConfig->GetString(
+			TEXT("Analytics"),
+			TEXT("CognitiveVRDebugAll"),
+			ValueReceived,
+			GGameIni
+		);
+
+		if (ValueReceived.Len() == 0) { return; }
+		UE_LOG(CognitiveVR_Log, Log, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
+
+		/*
 		UCognitiveVRSettings* Settings = GetMutableDefault<UCognitiveVRSettings>();
 		if (!Settings || !Settings->EnableFullDebugLogging) { return; }
 		if (s.empty()) { return; }
-		UE_LOG(CognitiveVR_Log, Log, TEXT("%s"),UTF8_TO_TCHAR(s.c_str()));
+		UE_LOG(CognitiveVR_Log, Log, TEXT("%s"),UTF8_TO_TCHAR(s.c_str()));*/
 	}
 
     void Log::Warning(std::string s, bool newline)
     {
-		UCognitiveVRSettings* Settings = GetMutableDefault<UCognitiveVRSettings>();
+		FString ValueReceived;
+
+		GConfig->GetString(
+			TEXT("Analytics"),
+			TEXT("CognitiveVRDebugAll"),
+			ValueReceived,
+			GGameIni
+		);
+
+		if (ValueReceived.Len() == 0) { return; }
+		UE_LOG(CognitiveVR_Log, Warning, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
+
+		/*UCognitiveVRSettings* Settings = GetMutableDefault<UCognitiveVRSettings>();
 		if (!Settings || !Settings->EnableFullDebugLogging) { return; }
 		if (s.empty()) { return; }
-		UE_LOG(CognitiveVR_Log, Warning, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
+		UE_LOG(CognitiveVR_Log, Warning, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));*/
     }
 
     void Log::Error(std::string s, bool newline)
     {
-		UCognitiveVRSettings* Settings = GetMutableDefault<UCognitiveVRSettings>();
+		FString ValueReceived;
+
+		GConfig->GetString(
+			TEXT("Analytics"),
+			TEXT("CognitiveVRDebugAll"),
+			ValueReceived,
+			GGameIni
+		);
+
+		FString ValueReceivedE;
+
+		GConfig->GetString(
+			TEXT("Analytics"),
+			TEXT("CognitiveVRDebugError"),
+			ValueReceivedE,
+			GGameIni
+		);
+
+		if (ValueReceived.Len() + ValueReceivedE.Len() == 0) { return; }
+		UE_LOG(CognitiveVR_Log, Error, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
+
+		/*UCognitiveVRSettings* Settings = GetMutableDefault<UCognitiveVRSettings>();
 		if (!Settings || (!Settings->EnableFullDebugLogging && !Settings->EnableErrorDebugLogging)) { return; }
 		if (s.empty()) { return; }
-		UE_LOG(CognitiveVR_Log, Error, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
+		UE_LOG(CognitiveVR_Log, Error, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));*/
     }
 }
