@@ -5,22 +5,22 @@
 #include "AnalyticsSettings.h"
 #include "CognitiveVRSettings.generated.h"
 
-UCLASS()
+UCLASS(Config=Game)
 class UCognitiveVRSettings
 	: public UAnalyticsSettingsBase
 {
 	GENERATED_UCLASS_BODY()
 
 	/** Display all info, warning and error messages from cognitiveVR. */
-	UPROPERTY(EditAnywhere, Category=General, meta = (ConfigRestartRequired = true))
+	UPROPERTY(EditAnywhere, Config, Category=General, meta = (ConfigRestartRequired = true))
 	bool EnableFullDebugLogging;
 
 	/** Display only error messages from cognitiveVR. */
-	UPROPERTY(EditAnywhere, Category = General, meta = (ConfigRestartRequired = true))
+	UPROPERTY(EditAnywhere, Config, Category = General, meta = (ConfigRestartRequired = true))
 	bool EnableErrorDebugLogging;
 
 	/** The unique identifier for your company and product. 'companyname1234-productname-test' */
-	UPROPERTY(EditAnywhere, Category= General, meta = (ConfigRestartRequired = true))
+	UPROPERTY(EditAnywhere, Config, Category= General, meta = (ConfigRestartRequired = true))
 	FString CustomerID;
 
 	// UAnalyticsSettingsBase interface

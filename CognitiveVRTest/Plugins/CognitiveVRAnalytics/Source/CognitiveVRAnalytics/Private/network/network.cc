@@ -3,6 +3,7 @@
 */
 #include "network.h"
 #include "CognitiveVRAnalyticsPrivatePCH.h"
+#include "AnalyticsSettings.h"
 #if WITH_EDITOR
 #include "CognitiveVRSettings.h"
 #endif
@@ -74,12 +75,49 @@ namespace cognitivevrapi
 
 		FString ValueReceived;
 
-		GConfig->GetString(
+		//ValueReceived = UCognitiveVRSettings:: ::Get().CustomerID;
+		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
+		//ValueReceived += " engine analytics apikey";
+		//Log::Info(TCHAR_TO_UTF8(*ValueReceived));
+
+		/*ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GGameIni, "Analytics", "CognitiveVRApiKey", false);
+		ValueReceived += " game analytics apikey";
+		Log::Info(TCHAR_TO_UTF8(*ValueReceived));
+
+
+		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CustomerID", false);
+		ValueReceived += " engine analytics customer";
+		Log::Info(TCHAR_TO_UTF8(*ValueReceived));
+
+		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GGameIni, "Analytics", "CustomerID", false);
+		ValueReceived += " game analytics customer";
+		Log::Info(TCHAR_TO_UTF8(*ValueReceived));
+
+
+		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Scripts/CognitiveVRAnalytics/CognitiveVRSettings", "CognitiveVRApiKey", false);
+		ValueReceived += " engine module apikey";
+		Log::Info(TCHAR_TO_UTF8(*ValueReceived));
+
+		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GGameIni, "/Scripts/CognitiveVRAnalytics/CognitiveVRSettings", "CognitiveVRApiKey", false);
+		ValueReceived += " game module apikey";
+		Log::Info(TCHAR_TO_UTF8(*ValueReceived));
+
+		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Scripts/CognitiveVRAnalytics/CognitiveVRSettings", "CustomerID", false);
+		ValueReceived += " engine module customer";
+		Log::Info(TCHAR_TO_UTF8(*ValueReceived));
+
+		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GGameIni, "/Scripts/CognitiveVRAnalytics/CognitiveVRSettings", "CustomerID", false);
+		ValueReceived += " game module customer";
+		Log::Info(TCHAR_TO_UTF8(*ValueReceived));*/
+
+		//Log::Info(FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false));
+
+		/*GConfig->GetString(
 			TEXT("Analytics"),
 			TEXT("CognitiveVRApiKey"),
 			ValueReceived,
-			GGameIni
-		);
+			"DefaultEngine"
+		);*/
 
 		std::string customerid(TCHAR_TO_UTF8(*ValueReceived));
 

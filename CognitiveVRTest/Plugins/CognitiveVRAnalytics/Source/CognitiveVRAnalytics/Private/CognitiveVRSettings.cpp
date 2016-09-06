@@ -18,11 +18,11 @@ void UCognitiveVRSettings::ReadConfigSettings()
 {
 	//FString ReadApiKey = FAnalytics::Get().GetConfigValueFromIni(GetIniName(), GetTestIniSection(), TEXT("CognitiveVRApiKey"), true);
 
-	FString ReadApiKey = FAnalytics::Get().GetConfigValueFromIni(GGameIni, "Analytics", TEXT("CognitiveVRApiKey"), true);
+	FString ReadApiKey = FAnalytics::Get().GetConfigValueFromIni("DefaultEngine", "Analytics", TEXT("CognitiveVRApiKey"), true);
 	CustomerID = ReadApiKey;
 
 	
-	ReadApiKey = FAnalytics::Get().GetConfigValueFromIni(GGameIni, "Analytics", TEXT("CognitiveVRDebugAll"), true);
+	ReadApiKey = FAnalytics::Get().GetConfigValueFromIni("DefaultEngine", "Analytics", TEXT("CognitiveVRDebugAll"), true);
 	if (ReadApiKey.Len() > 0)
 	{
 		//ReadApiKey = ReleaseApiKey;
@@ -33,7 +33,7 @@ void UCognitiveVRSettings::ReadConfigSettings()
 		EnableFullDebugLogging = false;
 	}
 
-	ReadApiKey = FAnalytics::Get().GetConfigValueFromIni(GGameIni, "Analytics", TEXT("CognitiveVRDebugError"), true);
+	ReadApiKey = FAnalytics::Get().GetConfigValueFromIni("DefaultEngine", "Analytics", TEXT("CognitiveVRDebugError"), true);
 	if (ReadApiKey.Len() > 0)
 	{
 		//ReadApiKey = ReleaseApiKey;
@@ -62,26 +62,26 @@ void UCognitiveVRSettings::ReadConfigSettings()
 void UCognitiveVRSettings::WriteConfigSettings()
 {
 	//FAnalytics::Get().WriteConfigValueToIni(GetIniName(), GetTestIniSection(), TEXT("CognitiveVRApiKey"), CustomerID);
-	FAnalytics::Get().WriteConfigValueToIni(GGameIni, "Analytics", TEXT("CognitiveVRApiKey"), CustomerID);
+	FAnalytics::Get().WriteConfigValueToIni("DefaultEngine", "Analytics", TEXT("CognitiveVRApiKey"), CustomerID);
 
 	//full
 	if (EnableFullDebugLogging)
 	{
-		FAnalytics::Get().WriteConfigValueToIni(GGameIni, "Analytics", TEXT("CognitiveVRDebugAll"), "true");
+		FAnalytics::Get().WriteConfigValueToIni("DefaultEngine", "Analytics", TEXT("CognitiveVRDebugAll"), "true");
 	}
 	else
 	{
-		FAnalytics::Get().WriteConfigValueToIni(GGameIni, "Analytics", TEXT("CognitiveVRDebugAll"), "");
+		FAnalytics::Get().WriteConfigValueToIni("DefaultEngine", "Analytics", TEXT("CognitiveVRDebugAll"), "");
 	}
 												
 	//errors only					
 	if (EnableErrorDebugLogging)			
 	{										
-		FAnalytics::Get().WriteConfigValueToIni(GGameIni, "Analytics", TEXT("CognitiveVRDebugError"), "true");
+		FAnalytics::Get().WriteConfigValueToIni("DefaultEngine", "Analytics", TEXT("CognitiveVRDebugError"), "true");
 	}										
 	else									
 	{			
-		FAnalytics::Get().WriteConfigValueToIni(GGameIni, "Analytics", TEXT("CognitiveVRDebugError"), "");
+		FAnalytics::Get().WriteConfigValueToIni("DefaultEngine", "Analytics", TEXT("CognitiveVRDebugError"), "");
 	}
 
 	//FAnalytics::Get().WriteConfigValueToIni(GetIniName(), GetReleaseIniSection(), TEXT("CognitiveVRDebugAll"), EnableFullDebugLogging);
@@ -89,5 +89,5 @@ void UCognitiveVRSettings::WriteConfigSettings()
 	/*FAnalytics::Get().WriteConfigValueToIni(GetIniName(), GetTestIniSection(), TEXT("FlurryApiKey"), TestApiKey);
 	FAnalytics::Get().WriteConfigValueToIni(GetIniName(), GetDebugIniSection(), TEXT("FlurryApiKey"), DebugApiKey);
 	FAnalytics::Get().WriteConfigValueToIni(GetIniName(), GetDevelopmentIniSection(), TEXT("FlurryApiKey"), DevelopmentApiKey);*/
-	GConfig->Flush(false, GGameIni);
+	GConfig->Flush(false, "DefaultEngine");
 }

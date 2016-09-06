@@ -3,6 +3,7 @@
 */
 #include "util/log.h"
 #include "CognitiveVRAnalyticsPrivatePCH.h"
+#include "AnalyticsSettings.h"
 
 namespace cognitivevrapi
 {
@@ -23,10 +24,10 @@ namespace cognitivevrapi
 			TEXT("Analytics"),
 			TEXT("CognitiveVRDebugAll"),
 			ValueReceived,
-			GGameIni
+			"DefaultEngine"
 		);
 
-		if (ValueReceived.Len() == 0) { return; }
+		//if (ValueReceived.Len() == 0) { return; }
 		UE_LOG(CognitiveVR_Log, Log, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
 
 		/*
@@ -44,10 +45,10 @@ namespace cognitivevrapi
 			TEXT("Analytics"),
 			TEXT("CognitiveVRDebugAll"),
 			ValueReceived,
-			GGameIni
+			"DefaultEngine"
 		);
 
-		if (ValueReceived.Len() == 0) { return; }
+		//if (ValueReceived.Len() == 0) { return; }
 		UE_LOG(CognitiveVR_Log, Warning, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
 
 		/*UCognitiveVRSettings* Settings = GetMutableDefault<UCognitiveVRSettings>();
@@ -64,7 +65,7 @@ namespace cognitivevrapi
 			TEXT("Analytics"),
 			TEXT("CognitiveVRDebugAll"),
 			ValueReceived,
-			GGameIni
+			"DefaultEngine"
 		);
 
 		FString ValueReceivedE;
@@ -73,10 +74,10 @@ namespace cognitivevrapi
 			TEXT("Analytics"),
 			TEXT("CognitiveVRDebugError"),
 			ValueReceivedE,
-			GGameIni
+			"DefaultEngine"
 		);
 
-		if (ValueReceived.Len() + ValueReceivedE.Len() == 0) { return; }
+		//if (ValueReceived.Len() + ValueReceivedE.Len() == 0) { return; }
 		UE_LOG(CognitiveVR_Log, Error, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
 
 		/*UCognitiveVRSettings* Settings = GetMutableDefault<UCognitiveVRSettings>();
