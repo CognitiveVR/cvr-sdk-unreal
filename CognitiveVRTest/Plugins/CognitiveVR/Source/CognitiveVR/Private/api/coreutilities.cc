@@ -113,8 +113,8 @@
 		}
 		Util::AppendToJsonArray(jsonArray, fs);
 		Util::AppendToJsonArray(jsonArray, fs);
-		Util::AppendToJsonArray(jsonArray, empty);
-		Util::AppendToJsonArray(jsonArray, ndevice_id);
+		Util::AppendToJsonArray(jsonArray, empty); //user
+		Util::AppendToJsonArray(jsonArray, ndevice_id); //device
 		Util::AppendToJsonArray(jsonArray, nproperties);
 
 		s->thread_manager->PushTask(NULL, "datacollector_updateDeviceState", jsonArray);

@@ -44,11 +44,11 @@ class CoreUtilities;
 class FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
 {
 	/** Path where analytics files are saved out */
-	FString AnalyticsFilePath;
+	//FString AnalyticsFilePath;
 	/** Tracks whether we need to start the session or restart it */
 	bool bHasSessionStarted;
 	/** Whether an event was written before or not */
-	bool bHasWrittenFirstEvent;
+	//bool bHasWrittenFirstEvent;
 	/** Id representing the user the analytics are recording for */
 	FString UserId;
 	/** Unique Id representing the session the analytics are recording for */
@@ -62,7 +62,7 @@ class FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
 	/** Holds the build info if set */
 	FString BuildInfo;
 	/** The file archive used to write the data */
-	FArchive* FileArchive;
+	//FArchive* FileArchive;
 
 public:
 	FAnalyticsProviderCognitiveVR();
@@ -107,6 +107,7 @@ public:
 	CoreUtilities* core_utils;
 	TSharedPtr<FJsonObject> initProperties; //optional properties sent when initializing. platform, ram, etc
 	FString GetDeviceID() const;
+	void SetDeviceID(const FString& InDeviceID);
 
 	void AppendUD(TSharedPtr<FJsonValueArray> &json);
 

@@ -42,12 +42,8 @@ TSharedPtr<IAnalyticsProvider> FAnalyticsCognitiveVR::CreateAnalyticsProvider(co
 
 FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR() :
 	bHasSessionStarted(false),
-	bHasWrittenFirstEvent(false),
-	Age(0),
-	FileArchive(nullptr)
+	Age(0)
 {
-	FileArchive = nullptr;
-	AnalyticsFilePath = FPaths::GameSavedDir() + TEXT("Analytics/");
 	UserId = FPlatformMisc::GetUniqueDeviceId();
 }
 
@@ -59,13 +55,39 @@ FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
 	}
 }
 
+void InitCallback(CognitiveVRResponse resp)
+{
+	Log::Info("CognitiveVR InitCallback Response");
+	if (!resp.IsSuccessful())
+	{
+		ThrowDummyResponseException("Failed to initialize CognitiveVR " + resp.GetErrorMessage());
+	}
+	FJsonObject json = resp.GetContent();
+}
+
 bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	if (bHasSessionStarted)
 	{
 		EndSession();
 	}
+	
 	SessionId = UserId + TEXT("-") + FDateTime::Now().ToString();
+
+	//get attributes
+	//userid
+	//deviceid
+	//initProperties
+
+	OverrideHttpInterface* httpint = new OverrideHttpInterface();
+	network = new Network(this);
+	network->Init(httpint, &InitCallback);
+
+	//FAnalyticsProviderCognitiveVR c = 
+
+	//what are the attributes?
+
+	/*
 	const FString FileName = AnalyticsFilePath + SessionId + TEXT(".txt");
 	// Close the old file and open a new one
 	FileArchive = IFileManager::Get().CreateFileWriter(*FileName);
@@ -98,12 +120,14 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	{
 		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::StartSession failed to create file to log analytics events to"));
 	}
+	*/
+
 	return bHasSessionStarted;
 }
 
 void FAnalyticsProviderCognitiveVR::EndSession()
 {
-	if (FileArchive != nullptr)
+	/*if (FileArchive != nullptr)
 	{
 		FileArchive->Logf(TEXT("\t]"));
 		FileArchive->Logf(TEXT("}"));
@@ -113,17 +137,17 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 		FileArchive = nullptr;
 		UE_LOG(CognitiveVR_Log, Display, TEXT("Session ended for user (%s) and session id (%s)"), *UserId, *SessionId);
 	}
-	bHasWrittenFirstEvent = false;
+	bHasWrittenFirstEvent = false;*/
 	bHasSessionStarted = false;
 }
 
 void FAnalyticsProviderCognitiveVR::FlushEvents()
 {
-	if (FileArchive != nullptr)
+	/*if (FileArchive != nullptr)
 	{
 		FileArchive->Flush();
 		UE_LOG(CognitiveVR_Log, Display, TEXT("Analytics file flushed"));
-	}
+	}*/
 }
 
 void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
@@ -174,7 +198,7 @@ void FAnalyticsProviderCognitiveVR::RecordEvent(const FString& EventName, const 
 {
 	if (bHasSessionStarted)
 	{
-		check(FileArchive != nullptr);
+		/*check(FileArchive != nullptr);
 
 		if (bHasWrittenFirstEvent)
 		{
@@ -203,7 +227,7 @@ void FAnalyticsProviderCognitiveVR::RecordEvent(const FString& EventName, const 
 			}
 			FileArchive->Logf(TEXT("\t\t\t]"));
 		}
-		FileArchive->Logf(TEXT("\t\t}"));
+		FileArchive->Logf(TEXT("\t\t}"));*/
 
 		UE_LOG(CognitiveVR_Log, Display, TEXT("Analytics event (%s) written with (%d) attributes"), *EventName, Attributes.Num());
 	}
@@ -217,7 +241,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, co
 {
 	if (bHasSessionStarted)
 	{
-		check(FileArchive != nullptr);
+		/*check(FileArchive != nullptr);
 
 		if (bHasWrittenFirstEvent)
 		{
@@ -238,7 +262,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, co
 
 		FileArchive->Logf(TEXT("\t\t\t]"));
 
-		FileArchive->Logf(TEXT("\t\t}"));
+		FileArchive->Logf(TEXT("\t\t}"));*/
 
 		UE_LOG(CognitiveVR_Log, Display, TEXT("(%d) number of item (%s) purchased with (%s) at a cost of (%d) each"), ItemQuantity, *ItemId, *Currency, PerItemCost);
 	}
@@ -252,7 +276,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 {
 	if (bHasSessionStarted)
 	{
-		check(FileArchive != nullptr);
+		/*check(FileArchive != nullptr);
 
 		if (bHasWrittenFirstEvent)
 		{
@@ -274,7 +298,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 
 		FileArchive->Logf(TEXT("\t\t\t]"));
 
-		FileArchive->Logf(TEXT("\t\t}"));
+		FileArchive->Logf(TEXT("\t\t}"));*/
 
 		UE_LOG(CognitiveVR_Log, Display, TEXT("(%d) amount of in game currency (%s) purchased with (%s) at a cost of (%f) each"), GameCurrencyAmount, *GameCurrencyType, *RealCurrencyType, RealMoneyCost);
 	}
@@ -288,7 +312,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 {
 	if (bHasSessionStarted)
 	{
-		check(FileArchive != nullptr);
+		/*check(FileArchive != nullptr);
 
 		if (bHasWrittenFirstEvent)
 		{
@@ -307,7 +331,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 
 		FileArchive->Logf(TEXT("\t\t\t]"));
 
-		FileArchive->Logf(TEXT("\t\t}"));
+		FileArchive->Logf(TEXT("\t\t}"));*/
 
 		UE_LOG(CognitiveVR_Log, Display, TEXT("(%d) amount of in game currency (%s) given to user"), GameCurrencyAmount, *GameCurrencyType);
 	}
@@ -341,7 +365,7 @@ void FAnalyticsProviderCognitiveVR::RecordError(const FString& Error, const TArr
 {
 	if (bHasSessionStarted)
 	{
-		check(FileArchive != nullptr);
+		/*check(FileArchive != nullptr);
 
 		if (bHasWrittenFirstEvent)
 		{
@@ -370,7 +394,7 @@ void FAnalyticsProviderCognitiveVR::RecordError(const FString& Error, const TArr
 		}
 		FileArchive->Logf(TEXT("\t\t\t]"));
 
-		FileArchive->Logf(TEXT("\t\t}"));
+		FileArchive->Logf(TEXT("\t\t}"));*/
 
 		UE_LOG(CognitiveVR_Log, Display, TEXT("Error is (%s) number of attributes is (%d)"), *Error, Attributes.Num());
 	}
@@ -384,7 +408,7 @@ void FAnalyticsProviderCognitiveVR::RecordProgress(const FString& ProgressType, 
 {
 	if (bHasSessionStarted)
 	{
-		check(FileArchive != nullptr);
+		/*check(FileArchive != nullptr);
 
 		if (bHasWrittenFirstEvent)
 		{
@@ -415,7 +439,7 @@ void FAnalyticsProviderCognitiveVR::RecordProgress(const FString& ProgressType, 
 		}
 		FileArchive->Logf(TEXT("\t\t\t]"));
 
-		FileArchive->Logf(TEXT("\t\t}"));
+		FileArchive->Logf(TEXT("\t\t}"));*/
 
 		UE_LOG(CognitiveVR_Log, Display, TEXT("Progress event is type (%s), named (%s), number of attributes is (%d)"), *ProgressType, *ProgressName, Attributes.Num());
 	}
@@ -429,7 +453,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, in
 {
 	if (bHasSessionStarted)
 	{
-		check(FileArchive != nullptr);
+		/*check(FileArchive != nullptr);
 
 		if (bHasWrittenFirstEvent)
 		{
@@ -460,7 +484,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, in
 		}
 		FileArchive->Logf(TEXT("\t\t\t]"));
 
-		FileArchive->Logf(TEXT("\t\t}"));
+		FileArchive->Logf(TEXT("\t\t}"));*/
 
 		UE_LOG(CognitiveVR_Log, Display, TEXT("Item purchase id (%s), quantity (%d), number of attributes is (%d)"), *ItemId, ItemQuantity, Attributes.Num());
 	}
@@ -474,7 +498,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 {
 	if (bHasSessionStarted)
 	{
-		check(FileArchive != nullptr);
+		/*check(FileArchive != nullptr);
 
 		if (bHasWrittenFirstEvent)
 		{
@@ -505,7 +529,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 		}
 		FileArchive->Logf(TEXT("\t\t\t]"));
 
-		FileArchive->Logf(TEXT("\t\t}"));
+		FileArchive->Logf(TEXT("\t\t}"));*/
 
 		UE_LOG(CognitiveVR_Log, Display, TEXT("Currency purchase type (%s), quantity (%d), number of attributes is (%d)"), *GameCurrencyType, GameCurrencyAmount, Attributes.Num());
 	}
@@ -519,7 +543,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 {
 	if (bHasSessionStarted)
 	{
-		check(FileArchive != nullptr);
+		/*check(FileArchive != nullptr);
 
 		if (bHasWrittenFirstEvent)
 		{
@@ -550,7 +574,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 		}
 		FileArchive->Logf(TEXT("\t\t\t]"));
 
-		FileArchive->Logf(TEXT("\t\t}"));
+		FileArchive->Logf(TEXT("\t\t}"));*/
 
 		UE_LOG(CognitiveVR_Log, Display, TEXT("Currency given type (%s), quantity (%d), number of attributes is (%d)"), *GameCurrencyType, GameCurrencyAmount, Attributes.Num());
 	}
@@ -580,6 +604,20 @@ void FAnalyticsProviderCognitiveVR::AppendUD(TSharedPtr<FJsonValueArray>& jsonAr
 	else
 	{
 		Util::AppendToJsonArray(jsonArray, DeviceId);
+	}
+}
+
+void FAnalyticsProviderCognitiveVR::SetDeviceID(const FString& InDeviceID)
+{
+	if (!bHasSessionStarted)
+	{
+		DeviceId = InDeviceID;
+		UE_LOG(CognitiveVR_Log, Display, TEXT("User is now (%s)"), *DeviceId);
+	}
+	else
+	{
+		// Log that we shouldn't switch users during a session
+		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::SetDevuceID called while a session is in progress. Ignoring."));
 	}
 }
 

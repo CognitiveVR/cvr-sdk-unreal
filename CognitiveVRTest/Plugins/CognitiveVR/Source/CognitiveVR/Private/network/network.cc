@@ -36,16 +36,19 @@
 		std::string ts = Util::GetTimestampStr();
 		FString fs(ts.c_str());
 		FString empty;
-		
+
 		FString user = s->GetUserID();
 		FString device = s->GetDeviceID();
 
 		Util::AppendToJsonArray(jsonArray, fs);
 		Util::AppendToJsonArray(jsonArray, fs);
-		Util::AppendToJsonArray(jsonArray, user);
-		Util::AppendToJsonArray(jsonArray, device);
+		s->AppendUD(jsonArray);
+		//Util::AppendToJsonArray(jsonArray, user);
+		//Util::AppendToJsonArray(jsonArray, device);
 		Util::AppendToJsonArray(jsonArray, empty);
 
+		if (s->initProperties.Get() == NULL)
+			s->initProperties = MakeShareable(new FJsonObject);
 		TSharedPtr<FJsonObject>deviceProperties = Util::DeviceScraper(s->initProperties);
 		Util::AppendToJsonArray(jsonArray, deviceProperties);
 
@@ -57,8 +60,9 @@
 		TSharedPtr<FJsonObject> jsonDevice = MakeShareable(new FJsonObject);
 		Util::AppendToJsonArray(jsonArrayDevice, fs);
 		Util::AppendToJsonArray(jsonArrayDevice, fs);
-		Util::AppendToJsonArray(jsonArray, user);
-		Util::AppendToJsonArray(jsonArray, device);
+		s->AppendUD(jsonArrayDevice);
+		//Util::AppendToJsonArray(jsonArrayDevice, user);
+		//Util::AppendToJsonArray(jsonArrayDevice, device);
 		Util::AppendToJsonArray(jsonArrayDevice, deviceProperties);
 
 
