@@ -1,18 +1,9 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 
-#include "CognitiveVRAnalyticsPrivatePCH.h"
+#include "CognitiveVRPrivatePCH.h"
 #include "CognitiveVRSettings.h"
 
-IMPLEMENT_MODULE(FCognitiveVRAnalytics, CognitiveVRAnalytics);
-
-#define LOCTEXT_NAMESPACE "CognitiveVR"
-
-UCognitiveVRSettings::UCognitiveVRSettings(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-{
-	//SettingsDisplayName = LOCTEXT("SettingsDisplayName", "Flurry");
-	//SettingsTooltip = LOCTEXT("SettingsTooltip", "Flurry analytics configuration settings");
-}
+//IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
 void UCognitiveVRSettings::ReadConfigSettings()
 {
