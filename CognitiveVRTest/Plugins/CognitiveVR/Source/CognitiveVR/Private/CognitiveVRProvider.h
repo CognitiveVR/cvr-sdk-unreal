@@ -2,6 +2,26 @@
 
 #pragma once
 
+#include <cstdio>
+#include <cstddef>
+#include <stdexcept>
+#include <ctime>
+#include <string>
+
+#include "Private/unreal/override_http_interface.h"
+#include "Private/util/util.h"
+#include "Private/util/config.h"
+#include "Private/util/log.h"
+#include "Private/network/cognitivevr_response.h"
+#include "Private/util/cognitivevr_exception.h"
+#include "Private/network/http_interface.h"
+#include "Private/unreal/buffer_manager.h"
+#include "Private/api/tuning.h"
+#include "Private/api/transaction.h"
+#include "Private/api/coreutilities.h"
+#include "Private/network/network.h"
+#include "Json.h"
+#include "Runtime/Analytics/Analytics/Public/Interfaces/IAnalyticsProviderModule.h"
 
 enum Error {
 	kErrorSuccess = 0,
@@ -14,11 +34,12 @@ enum Error {
 	kErrorUnknown = -7
 };
 
+//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 class Network;
 class Transaction;
 class Tuning;
 class BufferManager;
-class Core;
+class CoreUtilities;
 
 class FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
 {
@@ -75,4 +96,22 @@ public:
 	virtual void RecordCurrencyGiven(const FString& GameCurrencyType, int GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 	virtual void RecordError(const FString& Error, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 	virtual void RecordProgress(const FString& ProgressType, const FString& ProgressHierarchy, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
+
+
+	//custom cognitive
+	FString DeviceId;
+	Transaction* transaction;
+	Tuning* tuning;
+	Network* network;
+	BufferManager* thread_manager;
+	CoreUtilities* core_utils;
+	TSharedPtr<FJsonObject> initProperties; //optional properties sent when initializing. platform, ram, etc
+	FString GetDeviceID() const;
+
+	void AppendUD(TSharedPtr<FJsonValueArray> &json);
+
+
+
 };
+
+void ThrowDummyResponseException(std::string s);

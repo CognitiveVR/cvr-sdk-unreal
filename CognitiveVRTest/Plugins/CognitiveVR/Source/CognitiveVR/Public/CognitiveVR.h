@@ -6,6 +6,7 @@
 #include "Core.h"
 
 //DECLARE_LOG_CATEGORY_EXTERN(CognitiveVR_Log, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);
 
 #define COGNITIVEVR_SDK_NAME "unreal"
 #define COGNITIVEVR_SDK_VERSION "0.1.0"

@@ -17,12 +17,12 @@ void ACognitiveVRInitializer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	properties->SetStringField("platform", UGameplayStatics::GetPlatformName());
-	properties->SetNumberField("ram", FGenericPlatformMemory::GetPhysicalGBRam());
+	//TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+	//properties->SetStringField("platform", UGameplayStatics::GetPlatformName());
+	//properties->SetNumberField("ram", FGenericPlatformMemory::GetPhysicalGBRam());
 
 	//FGenericPlatformMemoryStats stats = FGenericPlatformMemory::GetStats();
 	//stats.TotalPhysical
 
-	FCognitiveVRAnalytics::Get().Init("test username", "test device id", properties);
+	//FCognitiveVRAnalytics::Get().Init("test username", "test device id", properties);
 }

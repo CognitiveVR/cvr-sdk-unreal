@@ -30,11 +30,11 @@ namespace UnrealBuildTool.Rules
 					"Analytics",
 					"Settings",
 					"Private/unreal",
-					"CognitiveVRAnalytics/Private",
-					"CognitiveVRAnalytics/Private/api",
-					"CognitiveVRAnalytics/Private/network",
-					"CognitiveVRAnalytics/Private/unreal",
-					"CognitiveVRAnalytics/Private/util",
+					"CognitiveVR/Private",
+					"CognitiveVR/Private/api",
+					"CognitiveVR/Private/network",
+					"CognitiveVR/Private/unreal",
+					"CognitiveVR/Private/util",
 					// ... add other private include paths required here ...
 				}
 				);

@@ -7,10 +7,9 @@
 #endif
 
 #include "CognitiveVRSettings.h"
+#include "Log.h"
 
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
-
-DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);
 
 #define LOCTEXT_NAMESPACE "CognitiveVR"
 
@@ -144,6 +143,11 @@ void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
 FString FAnalyticsProviderCognitiveVR::GetUserID() const
 {
 	return UserId;
+}
+
+FString FAnalyticsProviderCognitiveVR::GetDeviceID() const
+{
+	return DeviceId;
 }
 
 FString FAnalyticsProviderCognitiveVR::GetSessionID() const
@@ -554,4 +558,35 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 	{
 		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::RecordCurrencyGiven called before StartSession. Ignoring."));
 	}
+}
+
+void FAnalyticsProviderCognitiveVR::AppendUD(TSharedPtr<FJsonValueArray>& jsonArray)
+{
+	if (UserId.IsEmpty())
+	{
+		FString empty = FString("");
+		Util::AppendToJsonArray(jsonArray, empty);
+	}
+	else
+	{
+		Util::AppendToJsonArray(jsonArray, UserId);
+	}
+
+	if (DeviceId.IsEmpty())
+	{
+		FString empty = FString("");
+		Util::AppendToJsonArray(jsonArray, empty);
+	}
+	else
+	{
+		Util::AppendToJsonArray(jsonArray, DeviceId);
+	}
+}
+
+void ThrowDummyResponseException(std::string s)
+{
+	CognitiveVRResponse response(false);
+	response.SetErrorMessage(s);
+	response.SetContent(FJsonObject());
+	Log::Error("CognitiveVRAnalytics::ResponseException! " + s);
 }

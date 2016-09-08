@@ -40,13 +40,15 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 
-		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-		properties->SetStringField("projectile", "hit");
+		//TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		//properties->SetStringField("projectile", "hit");
 
-		FCognitiveVRAnalytics::Get().CognitiveVR()->transaction->BeginEnd("impact", properties);
+		//FAnalytics::Get().GetDefaultConfiguredProvider()->RecordEvent("hit");
+
+		//FCognitiveVRAnalytics::Get().CognitiveVR()->transaction->BeginEnd("impact", properties);
 
 		boxesHit++;
-		FCognitiveVRAnalytics::Get().CognitiveVR()->core_utils->UpdateCollection("boxesHit",boxesHit,1,false);
+		//FCognitiveVRAnalytics::Get().CognitiveVR()->core_utils->UpdateCollection("boxesHit",boxesHit,1,false);
 
 		Destroy();
 	}
