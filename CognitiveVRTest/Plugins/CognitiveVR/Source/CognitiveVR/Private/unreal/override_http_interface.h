@@ -4,7 +4,8 @@
 #ifndef COGNITIVEVR_UNREAL_HTTP_INTERFACE_H_
 #define COGNITIVEVR_UNREAL_HTTP_INTERFACE_H_
 
-#include <string>
+#include "CognitiveVRPrivatePCH.h"
+
 #include <stdexcept>
 
 #include "EngineMinimal.h"
@@ -15,20 +16,22 @@
 
 //namespace cognitivevrapi
 //{
-    class FAnalyticsProviderCognitiveVR;
+//class HttpInterface;
+//class Network;
+class FAnalyticsProviderCognitiveVR;
 
-    class OverrideHttpInterface : public HttpInterface
-    {
-        private:
-            bool response_received;
-            bool response_valid;
-            std::string http_response;
-            virtual void OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, NetworkCallback callback);
+class OverrideHttpInterface : public HttpInterface
+{
+    private:
+        bool response_received;
+        bool response_valid;
+        std::string http_response;
+        virtual void OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, NetworkCallback callback);
 
-        public:
-            OverrideHttpInterface();
-            ~OverrideHttpInterface(){}
-            virtual std::string Post(std::string url, std::string path, std::string headers[], int header_count, std::string content, long timeout, NetworkCallback callback = NULL);
-    };
+    public:
+		OverrideHttpInterface();
+        ~OverrideHttpInterface(){}
+        virtual std::string Post(std::string url, std::string path, std::string headers[], int header_count, std::string content, long timeout, NetworkCallback callback = NULL);
+};
 //}
 #endif  // COGNITIVEVR_UNREAL_HTTP_INTERFACE_H_

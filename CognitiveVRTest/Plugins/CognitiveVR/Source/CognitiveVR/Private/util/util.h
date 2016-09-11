@@ -15,8 +15,8 @@
 #include "Json.h"
 #include "Windows/WindowsPlatformMisc.h"
 
-//namespace cognitivevrapi
-//{
+namespace cognitivevrapi
+{
     class Util
     {
         public:
@@ -50,5 +50,5 @@
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, double &doubleValue);
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, TSharedPtr<FJsonObject> &object);
     };
-//}
+}
 #endif  // COGNITIVEVR_UTIL_H_

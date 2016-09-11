@@ -4,17 +4,17 @@
 #ifndef COGNITIVEVR_HTTP_INTERFACE_H_
 #define COGNITIVEVR_HTTP_INTERFACE_H_
 
-#include <string>
 #include <stdexcept>
-#include "json.h"
+
+#include "CognitiveVRPrivatePCH.h"
 
 #include "Private/util/log.h"
 #include "Private/network/cognitivevr_response.h"
 
+class FAnalyticsProviderCognitiveVR;
+
 //namespace cognitivevrapi
 //{
-    class FAnalyticsProviderCognitiveVR;
-
     class HttpInterface
     {
         protected:

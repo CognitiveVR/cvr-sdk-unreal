@@ -2,16 +2,18 @@
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #include "api/transaction.h"
-#include "util/util.h"
+
+using namespace cognitivevrapi;
 
 Transaction::Transaction(FAnalyticsProviderCognitiveVR* sp)
 {
-    s = sp;
+	s = sp;
+	Log::Warning("Transaction::Transaction - INITIALIZED");
 }
 
 void Transaction::Begin(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id)
 {
-	if (s == NULL)
+	if (this == NULL)
 	{
 		Log::Warning("Transaction::Begin - FAnalyticsProviderCognitiveVR is null!");
 		return;
@@ -38,12 +40,12 @@ void Transaction::Begin(std::string category, TSharedPtr<FJsonObject> properties
 	Util::AppendToJsonArray(jsonArray, transaction_id);
 	Util::AppendToJsonArray(jsonArray, properties);
 
-    s->thread_manager->PushTask(NULL, "datacollector_beginTransaction", jsonArray);
+	s->thread_manager->PushTask(NULL, "datacollector_beginTransaction", jsonArray);
 }
 
 void Transaction::Update(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, double progress)
 {
-	if (s == NULL)
+	if (this == NULL)
 	{
 		Log::Warning("Transaction::Update - CognitiveVR is null!");
 		return;
@@ -68,12 +70,12 @@ void Transaction::Update(std::string category, TSharedPtr<FJsonObject> propertie
 	Util::AppendToJsonArray(jsonArray, transaction_id);
 	Util::AppendToJsonArray(jsonArray, properties);
 
-    s->thread_manager->PushTask(NULL, "datacollector_updateTransaction", jsonArray);
+	s->thread_manager->PushTask(NULL, "datacollector_updateTransaction", jsonArray);
 }
 
 void Transaction::End(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, std::string result)
 {
-	if (s == NULL)
+	if (this == NULL)
 	{
 		Log::Warning("Transaction::End - FAnalyticsProviderCognitiveVR is null!");
 		return;
@@ -98,12 +100,12 @@ void Transaction::End(std::string category, TSharedPtr<FJsonObject> properties, 
 	Util::AppendToJsonArray(jsonArray, transaction_id);
 	Util::AppendToJsonArray(jsonArray, properties);
 
-    s->thread_manager->PushTask(NULL, "datacollector_endTransaction", jsonArray);
+	s->thread_manager->PushTask(NULL, "datacollector_endTransaction", jsonArray);
 }
 
 void Transaction::BeginEnd(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, std::string result)
 {
-	if (this == NULL)
+	if (this == NULL) //does this ever happen? when called before transaction is constructed?
 	{
 		Log::Warning("Transaction::BeginEnd - FAnalyticsProviderCognitiveVR is null!");
 		return;

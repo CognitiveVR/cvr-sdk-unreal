@@ -4,6 +4,10 @@
 #include "CognitiveVRTestProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
+#include "Private/CognitiveVRProvider.h"
+#include "Private/api/transaction.h"
+
+
 ACognitiveVRTestProjectile::ACognitiveVRTestProjectile() 
 {
 	// Use a sphere as a simple collision representation
@@ -39,6 +43,21 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL) && OtherComp->IsSimulatingPhysics())
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
+
+		auto Analytics = FAnalytics::Get().GetDefaultConfiguredProvider();
+		Analytics.Get()->RecordEvent("interface impact");
+
+
+		//Analytics.Get()->RecordEvent()
+
+		
+
+		//TODO can't link transaction.beginend
+		//TSharedPtr<FAnalyticsProviderCognitiveVR> cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+		//cog.Get()->transaction->BeginEnd("STRINGRIGN");
+
+		//auto ca = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+		//ca.Get()->transaction->BeginEnd("c impact", NULL);
 
 		//TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 		//properties->SetStringField("projectile", "hit");

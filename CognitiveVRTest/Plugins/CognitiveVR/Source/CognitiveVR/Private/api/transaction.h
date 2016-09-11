@@ -4,11 +4,12 @@
 #ifndef COGNITIVEVR_TRANSACTION_H_
 #define COGNITIVEVR_TRANSACTION_H_
 
-#include "CognitiveVR.h"
-#include "CognitiveVRProvider.h"
+#include "CognitiveVRPrivatePCH.h"
+#include "util/util.h"
 
 //namespace cognitivevrapi
 //{
+	class FAnalyticsProviderCognitiveVR;
     class Transaction
     {
         private:

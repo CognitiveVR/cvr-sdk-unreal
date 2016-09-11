@@ -4,6 +4,8 @@
 #ifndef COGNITIVEVR_NETWORK_DEFS_H_
 #define COGNITIVEVR_NETWORK_DEFS_H_
 
+#include "CognitiveVRPrivatePCH.h"
+
 //namespace cognitivevrapi
 //{
     class CognitiveVRResponse

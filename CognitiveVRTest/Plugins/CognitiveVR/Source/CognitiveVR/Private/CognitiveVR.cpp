@@ -5,13 +5,17 @@
 #include "ISettingsModule.h"
 #include "ISettingsSection.h"
 #endif
-
 #include "CognitiveVRSettings.h"
-#include "Log.h"
+#include "CognitiveVR.h"
+#include "CognitiveVRProvider.h"
+
+using namespace cognitivevrapi;
 
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
-#define LOCTEXT_NAMESPACE "CognitiveVR"
+#define LOCTEXT_NAMESPACE "CognitiveVRLoc"
+
+
 
 void FAnalyticsCognitiveVR::StartupModule()
 {
@@ -26,6 +30,19 @@ void FAnalyticsCognitiveVR::ShutdownModule()
 	}
 }
 
+TSharedPtr<IAnalyticsProvider> FAnalyticsCognitiveVR::CreateAnalyticsProvider(const FAnalytics::FProviderConfigurationDelegate& GetConfigValue) const
+{
+	return CognitiveVRProvider;
+}
+
+TSharedPtr<FAnalyticsProviderCognitiveVR> FAnalyticsCognitiveVR::GetCognitiveVRProvider() const
+{
+	TSharedPtr<FAnalyticsProviderCognitiveVR> prov = StaticCastSharedPtr<FAnalyticsProviderCognitiveVR>(CognitiveVRProvider);
+	return prov;
+}
+
+// Provider
+
 UCognitiveVRSettings::UCognitiveVRSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -33,18 +50,12 @@ UCognitiveVRSettings::UCognitiveVRSettings(const FObjectInitializer& ObjectIniti
 	SettingsTooltip = LOCTEXT("SettingsTooltip", "Cognitive VR analytics configuration settings");
 }
 
-TSharedPtr<IAnalyticsProvider> FAnalyticsCognitiveVR::CreateAnalyticsProvider(const FAnalytics::FProviderConfigurationDelegate& GetConfigValue) const
-{
-	return CognitiveVRProvider;
-}
-
-// Provider
 
 FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR() :
 	bHasSessionStarted(false),
 	Age(0)
 {
-	UserId = FPlatformMisc::GetUniqueDeviceId();
+	DeviceId = FPlatformMisc::GetUniqueDeviceId();
 }
 
 FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
@@ -63,6 +74,14 @@ void InitCallback(CognitiveVRResponse resp)
 		ThrowDummyResponseException("Failed to initialize CognitiveVR " + resp.GetErrorMessage());
 	}
 	FJsonObject json = resp.GetContent();
+
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	cog->transaction = new Transaction(cog);
+	cog->tuning = new Tuning(cog, json);
+	cog->thread_manager = new BufferManager(cog->network);
+	cog->core_utils = new CoreUtilities(cog);
+
+	cog->transaction->Begin("Session");
 }
 
 bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAttribute>& Attributes)
@@ -71,78 +90,73 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	{
 		EndSession();
 	}
-	
+
 	SessionId = UserId + TEXT("-") + FDateTime::Now().ToString();
+
+	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+	
+	
 
 	//get attributes
 	//userid
 	//deviceid
 	//initProperties
+	if (Age != 0)
+	{
+		properties->SetNumberField("Age", Age);
+	}
+	if (Gender.Len() > 0)
+	{
+		properties->SetStringField("Gender", Gender);
+	}
+	if (Location.Len() > 0)
+	{
+		properties->SetStringField("Location", Location);
+	}
+
+	initProperties = properties;
+
 
 	OverrideHttpInterface* httpint = new OverrideHttpInterface();
 	network = new Network(this);
 	network->Init(httpint, &InitCallback);
 
-	//FAnalyticsProviderCognitiveVR c = 
-
-	//what are the attributes?
-
-	/*
-	const FString FileName = AnalyticsFilePath + SessionId + TEXT(".txt");
-	// Close the old file and open a new one
-	FileArchive = IFileManager::Get().CreateFileWriter(*FileName);
-	if (FileArchive != nullptr)
-	{
-		FileArchive->Logf(TEXT("{"));
-		FileArchive->Logf(TEXT("\t\"sessionId\" : \"%s\","), *SessionId);
-		FileArchive->Logf(TEXT("\t\"userId\" : \"%s\","), *UserId);
-		if (BuildInfo.Len() > 0)
-		{
-			FileArchive->Logf(TEXT("\t\"buildInfo\" : \"%s\","), *BuildInfo);
-		}
-		if (Age != 0)
-		{
-			FileArchive->Logf(TEXT("\t\"age\" : %d,"), Age);
-		}
-		if (Gender.Len() > 0)
-		{
-			FileArchive->Logf(TEXT("\t\"gender\" : \"%s\","), *Gender);
-		}
-		if (Location.Len() > 0)
-		{
-			FileArchive->Logf(TEXT("\t\"location\" : \"%s\","), *Location);
-		}
-		FileArchive->Logf(TEXT("\t\"events\" : ["));
-		bHasSessionStarted = true;
-		UE_LOG(CognitiveVR_Log, Display, TEXT("Session created file (%s) for user (%s)"), *FileName, *UserId);
-	}
-	else
-	{
-		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::StartSession failed to create file to log analytics events to"));
-	}
-	*/
+	bHasSessionStarted = true;
 
 	return bHasSessionStarted;
 }
 
 void FAnalyticsProviderCognitiveVR::EndSession()
 {
-	/*if (FileArchive != nullptr)
-	{
-		FileArchive->Logf(TEXT("\t]"));
-		FileArchive->Logf(TEXT("}"));
-		FileArchive->Flush();
-		FileArchive->Close();
-		delete FileArchive;
-		FileArchive = nullptr;
-		UE_LOG(CognitiveVR_Log, Display, TEXT("Session ended for user (%s) and session id (%s)"), *UserId, *SessionId);
-	}
-	bHasWrittenFirstEvent = false;*/
+	transaction->End("Session");
+
+	/*
+	FlushEvents();
+	Log::Info("Freeing CognitiveVR memory.");
+	delete thread_manager;
+	thread_manager = NULL;
+
+	delete network;
+	network = NULL;
+
+	delete transaction;
+	transaction = NULL;
+
+	delete tuning;
+	tuning = NULL;
+
+	delete core_utils;
+	core_utils = NULL;
+	Log::Info("CognitiveVR memory freed.");
+	*/
+
 	bHasSessionStarted = false;
 }
 
 void FAnalyticsProviderCognitiveVR::FlushEvents()
 {
+	//TODO flush batched calls
+
 	/*if (FileArchive != nullptr)
 	{
 		FileArchive->Flush();
@@ -185,11 +199,16 @@ bool FAnalyticsProviderCognitiveVR::SetSessionID(const FString& InSessionID)
 	{
 		SessionId = InSessionID;
 		UE_LOG(CognitiveVR_Log, Display, TEXT("Session is now (%s)"), *SessionId);
+		
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		properties->SetStringField("id", SessionId);
+		
+		transaction->Update("Session", properties);
 	}
 	else
 	{
 		// Log that we shouldn't switch session ids during a session
-		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::SetSessionID called while a session is in progress. Ignoring."));
+		Log::Warning("FAnalyticsProvideCognitiveVR::RecordEvent while a session is in progress. Ignoring");
 	}
 	return !bHasSessionStarted;
 }
@@ -198,42 +217,21 @@ void FAnalyticsProviderCognitiveVR::RecordEvent(const FString& EventName, const 
 {
 	if (bHasSessionStarted)
 	{
-		/*check(FileArchive != nullptr);
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 
-		if (bHasWrittenFirstEvent)
+
+		for (auto Attr : Attributes)
 		{
-			FileArchive->Logf(TEXT(","));
+			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
 		}
-		bHasWrittenFirstEvent = true;
 
-		FileArchive->Logf(TEXT("\t\t{"));
-		FileArchive->Logf(TEXT("\t\t\t\"eventName\" : \"%s\""), *EventName);
-		if (Attributes.Num() > 0)
-		{
-			FileArchive->Logf(TEXT(",\t\t\t\"attributes\" : ["));
-			bool bHasWrittenFirstAttr = false;
-			// Write out the list of attributes as an array of attribute objects
-			for (auto Attr : Attributes)
-			{
-				if (bHasWrittenFirstAttr)
-				{
-					FileArchive->Logf(TEXT("\t\t\t,"));
-				}
-				FileArchive->Logf(TEXT("\t\t\t{"));
-				FileArchive->Logf(TEXT("\t\t\t\t\"name\" : \"%s\","), *Attr.AttrName);
-				FileArchive->Logf(TEXT("\t\t\t\t\"value\" : \"%s\""), *Attr.AttrValue);
-				FileArchive->Logf(TEXT("\t\t\t}"));
-				bHasWrittenFirstAttr = true;
-			}
-			FileArchive->Logf(TEXT("\t\t\t]"));
-		}
-		FileArchive->Logf(TEXT("\t\t}"));*/
+		std::string temp(TCHAR_TO_UTF8(*EventName));
 
-		UE_LOG(CognitiveVR_Log, Display, TEXT("Analytics event (%s) written with (%d) attributes"), *EventName, Attributes.Num());
+		transaction->BeginEnd(temp, properties);
 	}
 	else
 	{
-		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::RecordEvent called before StartSession. Ignoring."));
+		Log::Warning("FAnalyticsProvideCognitiveVR::RecordEvent called before StartSession. Ignoring");
 	}
 }
 
@@ -241,34 +239,17 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, co
 {
 	if (bHasSessionStarted)
 	{
-		/*check(FileArchive != nullptr);
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		properties->SetStringField("itemId", ItemId);
+		properties->SetStringField("currency", Currency);
+		properties->SetNumberField("PerItemCost", PerItemCost);
+		properties->SetNumberField("ItemQuantity", ItemQuantity);
 
-		if (bHasWrittenFirstEvent)
-		{
-			FileArchive->Logf(TEXT("\t\t,"));
-		}
-		bHasWrittenFirstEvent = true;
-
-		FileArchive->Logf(TEXT("\t\t{"));
-		FileArchive->Logf(TEXT("\t\t\t\"eventName\" : \"recordItemPurchase\","));
-
-		FileArchive->Logf(TEXT("\t\t\t\"attributes\" :"));
-		FileArchive->Logf(TEXT("\t\t\t["));
-
-		FileArchive->Logf(TEXT("\t\t\t\t{ \"name\" : \"itemId\", \t\"value\" : \"%s\" },"), *ItemId);
-		FileArchive->Logf(TEXT("\t\t\t\t{ \"name\" : \"currency\", \t\"value\" : \"%s\" },"), *Currency);
-		FileArchive->Logf(TEXT("\t\t\t\t{ \"name\" : \"perItemCost\", \t\"value\" : \"%d\" },"), PerItemCost);
-		FileArchive->Logf(TEXT("\t\t\t\t{ \"name\" : \"itemQuantity\", \t\"value\" : \"%d\" }"), ItemQuantity);
-
-		FileArchive->Logf(TEXT("\t\t\t]"));
-
-		FileArchive->Logf(TEXT("\t\t}"));*/
-
-		UE_LOG(CognitiveVR_Log, Display, TEXT("(%d) number of item (%s) purchased with (%s) at a cost of (%d) each"), ItemQuantity, *ItemId, *Currency, PerItemCost);
+		transaction->BeginEnd("RecordItemPurchase", properties);
 	}
 	else
 	{
-		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::RecordItemPurchase called before StartSession. Ignoring."));
+		Log::Warning("FAnalyticsProvideCognitiveVR::RecordItemPurchase called before StartSession. Ignoring");
 	}
 }
 
@@ -276,35 +257,18 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 {
 	if (bHasSessionStarted)
 	{
-		/*check(FileArchive != nullptr);
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		properties->SetStringField("GameCurrencyType", GameCurrencyType);
+		properties->SetNumberField("GameCurrencyAmount", GameCurrencyAmount);
+		properties->SetStringField("RealCurrencyType", RealCurrencyType);
+		properties->SetNumberField("RealMoneyCost", RealMoneyCost);
+		properties->SetStringField("PaymentProvider", PaymentProvider);
 
-		if (bHasWrittenFirstEvent)
-		{
-			FileArchive->Logf(TEXT("\t\t,"));
-		}
-		bHasWrittenFirstEvent = true;
-
-		FileArchive->Logf(TEXT("\t\t{"));
-		FileArchive->Logf(TEXT("\t\t\t\"eventName\" : \"recordCurrencyPurchase\","));
-
-		FileArchive->Logf(TEXT("\t\t\t\"attributes\" :"));
-		FileArchive->Logf(TEXT("\t\t\t["));
-
-		FileArchive->Logf(TEXT("\t\t\t\t{ \"name\" : \"gameCurrencyType\", \t\"value\" : \"%s\" },"), *GameCurrencyType);
-		FileArchive->Logf(TEXT("\t\t\t\t{ \"name\" : \"gameCurrencyAmount\", \t\"value\" : \"%d\" },"), GameCurrencyAmount);
-		FileArchive->Logf(TEXT("\t\t\t\t{ \"name\" : \"realCurrencyType\", \t\"value\" : \"%s\" },"), *RealCurrencyType);
-		FileArchive->Logf(TEXT("\t\t\t\t{ \"name\" : \"realMoneyCost\", \t\"value\" : \"%f\" },"), RealMoneyCost);
-		FileArchive->Logf(TEXT("\t\t\t\t{ \"name\" : \"paymentProvider\", \t\"value\" : \"%s\" }"), *PaymentProvider);
-
-		FileArchive->Logf(TEXT("\t\t\t]"));
-
-		FileArchive->Logf(TEXT("\t\t}"));*/
-
-		UE_LOG(CognitiveVR_Log, Display, TEXT("(%d) amount of in game currency (%s) purchased with (%s) at a cost of (%f) each"), GameCurrencyAmount, *GameCurrencyType, *RealCurrencyType, RealMoneyCost);
+		transaction->BeginEnd("RecordCurrencyPurchase", properties);
 	}
 	else
 	{
-		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::RecordCurrencyPurchase called before StartSession. Ignoring."));
+		Log::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyPurchase called before StartSession. Ignoring");
 	}
 }
 
@@ -312,36 +276,19 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 {
 	if (bHasSessionStarted)
 	{
-		/*check(FileArchive != nullptr);
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		properties->SetStringField("GameCurrencyType", GameCurrencyType);
+		properties->SetNumberField("GameCurrencyAmount", GameCurrencyAmount);
 
-		if (bHasWrittenFirstEvent)
-		{
-			FileArchive->Logf(TEXT("\t\t,"));
-		}
-		bHasWrittenFirstEvent = true;
-
-		FileArchive->Logf(TEXT("\t\t{"));
-		FileArchive->Logf(TEXT("\t\t\t\"eventName\" : \"recordCurrencyGiven\","));
-
-		FileArchive->Logf(TEXT("\t\t\t\"attributes\" :"));
-		FileArchive->Logf(TEXT("\t\t\t["));
-
-		FileArchive->Logf(TEXT("\t\t\t\t{ \"name\" : \"gameCurrencyType\", \t\"value\" : \"%s\" },"), *GameCurrencyType);
-		FileArchive->Logf(TEXT("\t\t\t\t{ \"name\" : \"gameCurrencyAmount\", \t\"value\" : \"%d\" }"), GameCurrencyAmount);
-
-		FileArchive->Logf(TEXT("\t\t\t]"));
-
-		FileArchive->Logf(TEXT("\t\t}"));*/
-
-		UE_LOG(CognitiveVR_Log, Display, TEXT("(%d) amount of in game currency (%s) given to user"), GameCurrencyAmount, *GameCurrencyType);
+		transaction->BeginEnd("RecordCurrencyGiven", properties);
 	}
 	else
 	{
-		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::RecordCurrencyGiven called before StartSession. Ignoring."));
+		Log::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyGiven called before StartSession. Ignoring");
 	}
 }
 
-void FAnalyticsProviderCognitiveVR::SetAge(int InAge)
+void FAnalyticsProviderCognitiveVR::SetAge(const int32 InAge)
 {
 	Age = InAge;
 }
@@ -365,42 +312,21 @@ void FAnalyticsProviderCognitiveVR::RecordError(const FString& Error, const TArr
 {
 	if (bHasSessionStarted)
 	{
-		/*check(FileArchive != nullptr);
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		properties->SetStringField("Error", Error);
 
-		if (bHasWrittenFirstEvent)
-		{
-			FileArchive->Logf(TEXT("\t\t,"));
-		}
-		bHasWrittenFirstEvent = true;
-
-		FileArchive->Logf(TEXT("\t\t{"));
-		FileArchive->Logf(TEXT("\t\t\t\"error\" : \"%s\","), *Error);
-
-		FileArchive->Logf(TEXT("\t\t\t\"attributes\" :"));
-		FileArchive->Logf(TEXT("\t\t\t["));
-		bool bHasWrittenFirstAttr = false;
-		// Write out the list of attributes as an array of attribute objects
 		for (auto Attr : Attributes)
 		{
-			if (bHasWrittenFirstAttr)
-			{
-				FileArchive->Logf(TEXT("\t\t\t,"));
-			}
-			FileArchive->Logf(TEXT("\t\t\t{"));
-			FileArchive->Logf(TEXT("\t\t\t\t\"name\" : \"%s\","), *Attr.AttrName);
-			FileArchive->Logf(TEXT("\t\t\t\t\"value\" : \"%s\""), *Attr.AttrValue);
-			FileArchive->Logf(TEXT("\t\t\t}"));
-			bHasWrittenFirstAttr = true;
+			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
 		}
-		FileArchive->Logf(TEXT("\t\t\t]"));
 
-		FileArchive->Logf(TEXT("\t\t}"));*/
+		transaction->BeginEnd("RecordError", properties);
 
-		UE_LOG(CognitiveVR_Log, Display, TEXT("Error is (%s) number of attributes is (%d)"), *Error, Attributes.Num());
+		Log::Warning("FAnalyticsProvideCognitiveVR::RecordError");
 	}
 	else
 	{
-		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::RecordError called before StartSession. Ignoring."));
+		Log::Warning("FAnalyticsProvideCognitiveVR::RecordError called before StartSession. Ignoring");
 	}
 }
 
@@ -408,44 +334,20 @@ void FAnalyticsProviderCognitiveVR::RecordProgress(const FString& ProgressType, 
 {
 	if (bHasSessionStarted)
 	{
-		/*check(FileArchive != nullptr);
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		properties->SetStringField("ProgressType", ProgressType);
+		properties->SetStringField("ProgressName", ProgressName);
 
-		if (bHasWrittenFirstEvent)
-		{
-			FileArchive->Logf(TEXT("\t\t,"));
-		}
-		bHasWrittenFirstEvent = true;
-
-		FileArchive->Logf(TEXT("\t\t{"));
-		FileArchive->Logf(TEXT("\t\t\t\"eventType\" : \"Progress\","));
-		FileArchive->Logf(TEXT("\t\t\t\"progressType\" : \"%s\","), *ProgressType);
-		FileArchive->Logf(TEXT("\t\t\t\"progressName\" : \"%s\","), *ProgressName);
-
-		FileArchive->Logf(TEXT("\t\t\t\"attributes\" :"));
-		FileArchive->Logf(TEXT("\t\t\t["));
-		bool bHasWrittenFirstAttr = false;
-		// Write out the list of attributes as an array of attribute objects
 		for (auto Attr : Attributes)
 		{
-			if (bHasWrittenFirstAttr)
-			{
-				FileArchive->Logf(TEXT("\t\t\t,"));
-			}
-			FileArchive->Logf(TEXT("\t\t\t{"));
-			FileArchive->Logf(TEXT("\t\t\t\t\"name\" : \"%s\","), *Attr.AttrName);
-			FileArchive->Logf(TEXT("\t\t\t\t\"value\" : \"%s\""), *Attr.AttrValue);
-			FileArchive->Logf(TEXT("\t\t\t}"));
-			bHasWrittenFirstAttr = true;
+			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
 		}
-		FileArchive->Logf(TEXT("\t\t\t]"));
 
-		FileArchive->Logf(TEXT("\t\t}"));*/
-
-		UE_LOG(CognitiveVR_Log, Display, TEXT("Progress event is type (%s), named (%s), number of attributes is (%d)"), *ProgressType, *ProgressName, Attributes.Num());
+		transaction->BeginEnd("RecordProgress", properties);
 	}
 	else
 	{
-		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::RecordProgress called before StartSession. Ignoring."));
+		Log::Warning("FAnalyticsProvideCognitiveVR::RecordError called before StartSession. Ignoring");
 	}
 }
 
@@ -453,44 +355,20 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, in
 {
 	if (bHasSessionStarted)
 	{
-		/*check(FileArchive != nullptr);
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		properties->SetStringField("ItemId", ItemId);
+		properties->SetNumberField("ItemQuantity", ItemQuantity);
 
-		if (bHasWrittenFirstEvent)
-		{
-			FileArchive->Logf(TEXT("\t\t,"));
-		}
-		bHasWrittenFirstEvent = true;
-
-		FileArchive->Logf(TEXT("\t\t{"));
-		FileArchive->Logf(TEXT("\t\t\t\"eventType\" : \"ItemPurchase\","));
-		FileArchive->Logf(TEXT("\t\t\t\"itemId\" : \"%s\","), *ItemId);
-		FileArchive->Logf(TEXT("\t\t\t\"itemQuantity\" : %d,"), ItemQuantity);
-
-		FileArchive->Logf(TEXT("\t\t\t\"attributes\" :"));
-		FileArchive->Logf(TEXT("\t\t\t["));
-		bool bHasWrittenFirstAttr = false;
-		// Write out the list of attributes as an array of attribute objects
 		for (auto Attr : Attributes)
 		{
-			if (bHasWrittenFirstAttr)
-			{
-				FileArchive->Logf(TEXT("\t\t\t,"));
-			}
-			FileArchive->Logf(TEXT("\t\t\t{"));
-			FileArchive->Logf(TEXT("\t\t\t\t\"name\" : \"%s\","), *Attr.AttrName);
-			FileArchive->Logf(TEXT("\t\t\t\t\"value\" : \"%s\""), *Attr.AttrValue);
-			FileArchive->Logf(TEXT("\t\t\t}"));
-			bHasWrittenFirstAttr = true;
+			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
 		}
-		FileArchive->Logf(TEXT("\t\t\t]"));
 
-		FileArchive->Logf(TEXT("\t\t}"));*/
-
-		UE_LOG(CognitiveVR_Log, Display, TEXT("Item purchase id (%s), quantity (%d), number of attributes is (%d)"), *ItemId, ItemQuantity, Attributes.Num());
+		transaction->BeginEnd("RecordItemPurchase", properties);
 	}
 	else
 	{
-		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::RecordItemPurchase called before StartSession. Ignoring."));
+		Log::Warning("FAnalyticsProvideCognitiveVR::RecordItemPurchase called before StartSession. Ignoring");
 	}
 }
 
@@ -498,44 +376,20 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 {
 	if (bHasSessionStarted)
 	{
-		/*check(FileArchive != nullptr);
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		properties->SetStringField("GameCurrencyType", GameCurrencyType);
+		properties->SetNumberField("GameCurrencyAmount", GameCurrencyAmount);
 
-		if (bHasWrittenFirstEvent)
-		{
-			FileArchive->Logf(TEXT("\t\t,"));
-		}
-		bHasWrittenFirstEvent = true;
-
-		FileArchive->Logf(TEXT("\t\t{"));
-		FileArchive->Logf(TEXT("\t\t\t\"eventType\" : \"CurrencyPurchase\","));
-		FileArchive->Logf(TEXT("\t\t\t\"gameCurrencyType\" : \"%s\","), *GameCurrencyType);
-		FileArchive->Logf(TEXT("\t\t\t\"gameCurrencyAmount\" : %d,"), GameCurrencyAmount);
-
-		FileArchive->Logf(TEXT("\t\t\t\"attributes\" :"));
-		FileArchive->Logf(TEXT("\t\t\t["));
-		bool bHasWrittenFirstAttr = false;
-		// Write out the list of attributes as an array of attribute objects
 		for (auto Attr : Attributes)
 		{
-			if (bHasWrittenFirstAttr)
-			{
-				FileArchive->Logf(TEXT("\t\t\t,"));
-			}
-			FileArchive->Logf(TEXT("\t\t\t{"));
-			FileArchive->Logf(TEXT("\t\t\t\t\"name\" : \"%s\","), *Attr.AttrName);
-			FileArchive->Logf(TEXT("\t\t\t\t\"value\" : \"%s\""), *Attr.AttrValue);
-			FileArchive->Logf(TEXT("\t\t\t}"));
-			bHasWrittenFirstAttr = true;
+			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
 		}
-		FileArchive->Logf(TEXT("\t\t\t]"));
 
-		FileArchive->Logf(TEXT("\t\t}"));*/
-
-		UE_LOG(CognitiveVR_Log, Display, TEXT("Currency purchase type (%s), quantity (%d), number of attributes is (%d)"), *GameCurrencyType, GameCurrencyAmount, Attributes.Num());
+		transaction->BeginEnd("RecordCurrencyPurchase", properties);
 	}
 	else
 	{
-		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::RecordCurrencyPurchase called before StartSession. Ignoring."));
+		Log::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyPurchase called before StartSession. Ignoring");
 	}
 }
 
@@ -543,44 +397,20 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 {
 	if (bHasSessionStarted)
 	{
-		/*check(FileArchive != nullptr);
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		properties->SetStringField("GameCurrencyType", GameCurrencyType);
+		properties->SetNumberField("GameCurrencyAmount", GameCurrencyAmount);
 
-		if (bHasWrittenFirstEvent)
-		{
-			FileArchive->Logf(TEXT("\t\t,"));
-		}
-		bHasWrittenFirstEvent = true;
-
-		FileArchive->Logf(TEXT("\t\t{"));
-		FileArchive->Logf(TEXT("\t\t\t\"eventType\" : \"CurrencyGiven\","));
-		FileArchive->Logf(TEXT("\t\t\t\"gameCurrencyType\" : \"%s\","), *GameCurrencyType);
-		FileArchive->Logf(TEXT("\t\t\t\"gameCurrencyAmount\" : %d,"), GameCurrencyAmount);
-
-		FileArchive->Logf(TEXT("\t\t\t\"attributes\" :"));
-		FileArchive->Logf(TEXT("\t\t\t["));
-		bool bHasWrittenFirstAttr = false;
-		// Write out the list of attributes as an array of attribute objects
 		for (auto Attr : Attributes)
 		{
-			if (bHasWrittenFirstAttr)
-			{
-				FileArchive->Logf(TEXT("\t\t\t,"));
-			}
-			FileArchive->Logf(TEXT("\t\t\t{"));
-			FileArchive->Logf(TEXT("\t\t\t\t\"name\" : \"%s\","), *Attr.AttrName);
-			FileArchive->Logf(TEXT("\t\t\t\t\"value\" : \"%s\""), *Attr.AttrValue);
-			FileArchive->Logf(TEXT("\t\t\t}"));
-			bHasWrittenFirstAttr = true;
+			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
 		}
-		FileArchive->Logf(TEXT("\t\t\t]"));
 
-		FileArchive->Logf(TEXT("\t\t}"));*/
-
-		UE_LOG(CognitiveVR_Log, Display, TEXT("Currency given type (%s), quantity (%d), number of attributes is (%d)"), *GameCurrencyType, GameCurrencyAmount, Attributes.Num());
+		transaction->BeginEnd("RecordCurrencyGiven", properties);
 	}
 	else
 	{
-		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::RecordCurrencyGiven called before StartSession. Ignoring."));
+		Log::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyGiven called before StartSession. Ignoring");
 	}
 }
 

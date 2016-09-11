@@ -6,12 +6,14 @@
 
 #include <iostream>
 #include <ctime>
-#include <string>
 
+#include "CognitiveVRPrivatePCH.h"
 #include "Private/util/config.h"
 
-//namespace cognitivevrapi
-//{
+#include "CognitiveVR.h"
+
+namespace cognitivevrapi
+{
     class Log
     {
         /*private:
@@ -34,5 +36,5 @@
             static void Warning(std::string s, bool newline = true);
             static void Error(std::string s, bool newline = true);
     };
-//}
+}
 #endif  // COGNITIVEVR_LOG_H_

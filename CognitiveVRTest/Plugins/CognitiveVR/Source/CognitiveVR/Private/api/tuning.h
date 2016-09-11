@@ -4,98 +4,102 @@
 #ifndef COGNITIVEVR_TUNING_H_
 #define COGNITIVEVR_TUNING_H_
 
-#include "CognitiveVR.h"
-#include "CognitiveVRProvider.h"
+#include "CognitiveVRPrivatePCH.h"
 #include "Private/network/network.h"
 
 #include "AllowWindowsPlatformTypes.h" 
 #include <windows.h>
 #include <map>
 #include "HideWindowsPlatformTypes.h"
+#include "Private/util/log.h"
+#include "Private/util/util.h"
+#include "Private/unreal/buffer_manager.h"
+//using namespace cognitivevrapi;
 
-//namespace cognitivevrapi
-//{
-    enum EntityType {
-        kEntityTypeUser,
-        kEntityTypeDevice
-    };
+namespace cognitivevrapi
+{
+	enum EntityType {
+		kEntityTypeUser,
+		kEntityTypeDevice
+	};
 
-    class TuningValue
-    {
-        private:
-            std::string value;
-            long ttl;
+	class TuningValue
+	{
+	private:
+		std::string value;
+		long ttl;
 
-        public:
-            TuningValue(std::string val, long time)
-            {
-                value = val;
-                ttl = time;
-            }
+	public:
+		TuningValue(std::string val, long time)
+		{
+			value = val;
+			ttl = time;
+		}
 
-            long GetTtl()
-            {
-                return ttl;
-            }
+		long GetTtl()
+		{
+			return ttl;
+		}
 
-            std::string GetValue()
-            {
-                return value;
-            }
-    };
+		std::string GetValue()
+		{
+			return value;
+		}
+	};
+}
 
-    class Tuning
-    {
-        friend class Network;
-        private:
-			FAnalyticsProviderCognitiveVR* s;
+class Tuning
+{
+	friend class Network;
 
-			//TODO why is this flipping out? somethign about header order?
-            std::map< std::string, std::map<std::string, TuningValue*> > users_value_cache;
-            std::map< std::string, std::map<std::string, TuningValue*> > devices_value_cache;
-            long getallval_cache_ttl;
+    private:
+		FAnalyticsProviderCognitiveVR* s;
 
-            std::string GetEntityTypeString(EntityType entity_type);
-            void CacheValues(std::string entity_id, FJsonObject object, EntityType entity_type, bool getallc = false);
+        std::map< std::string, std::map<std::string, cognitivevrapi::TuningValue*> > users_value_cache;
+        std::map< std::string, std::map<std::string, cognitivevrapi::TuningValue*> > devices_value_cache;
+        long getallval_cache_ttl;
 
-        public:
-            Tuning(FAnalyticsProviderCognitiveVR* sp, FJsonObject json);
-            ~Tuning();
+        std::string GetEntityTypeString(cognitivevrapi::EntityType entity_type);
+        void CacheValues(std::string entity_id, FJsonObject object, cognitivevrapi::EntityType entity_type, bool getallc = false);
 
-            /** Get all tuning values for an entity. These values are cached according to the kTuningCacheTtl variable.
+    public:
+        Tuning(FAnalyticsProviderCognitiveVR* sp, FJsonObject json);
+        ~Tuning();
 
-                @param std::string entity_id
-                @param EntityType entity_type
+        /** Get all tuning values for an entity. These values are cached according to the kTuningCacheTtl variable.
 
-                @return CognitiveVRResponse
-                @throws cognitivevr_exception
-            */
-            void GetAllValues(std::string entity_id, EntityType entity_type);
+            @param std::string entity_id
+            @param EntityType entity_type
 
-            /** Get a single tuning value. These values are cached according to the kTuningCacheTtl variable.
+            @return CognitiveVRResponse
+            @throws cognitivevr_exception
+        */
+        void GetAllValues(std::string entity_id, cognitivevrapi::EntityType entity_type);
 
-                @param std::string name
-                @param std::string default_value - Value returned if the CognitiveVR network is not available.
-                @param std::string entity_id
-                @param EntityType entity_type
+        /** Get a single tuning value. These values are cached according to the kTuningCacheTtl variable.
 
-                @return CognitiveVRResponse
-                @throws cognitivevr_exception
-            */
-			CognitiveVRResponse GetValue(std::string name, std::string default_value, std::string entity_id, EntityType entity_type);
+            @param std::string name
+            @param std::string default_value - Value returned if the CognitiveVR network is not available.
+            @param std::string entity_id
+            @param EntityType entity_type
 
-            /** Record the use of a tuning value.
+            @return CognitiveVRResponse
+            @throws cognitivevr_exception
+        */
+		CognitiveVRResponse GetValue(std::string name, std::string default_value, std::string entity_id, cognitivevrapi::EntityType entity_type);
 
-                @param std::string name
-                @param std::string default_value
-                @param std::string user_id - Optional.
-                @param std::string device_id - Optional.
-                @param std::string context -Optional.
+        /** Record the use of a tuning value.
 
-                @return CognitiveVRResponse
-                @throws cognitivevr_exception
-            */
-            void RecordValueAsync(NetworkCallback callback, std::string name, std::string default_value, std::string user_id = "", std::string device_id = "");
-    };
+            @param std::string name
+            @param std::string default_value
+            @param std::string user_id - Optional.
+            @param std::string device_id - Optional.
+            @param std::string context -Optional.
+
+            @return CognitiveVRResponse
+            @throws cognitivevr_exception
+        */
+        void RecordValueAsync(NetworkCallback callback, std::string name, std::string default_value, std::string user_id = "", std::string device_id = "");
+};
 //}
 #endif  // COGNITIVEVR_TUNING_H_

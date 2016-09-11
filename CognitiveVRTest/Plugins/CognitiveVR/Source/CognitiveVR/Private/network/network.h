@@ -4,14 +4,16 @@
 #ifndef COGNITIVEVR_NETWORK_H_
 #define COGNITIVEVR_NETWORK_H_
 
-#include <string>
 #include <stdexcept>
-
-#include "CognitiveVR.h"
-#include "CognitiveVRProvider.h"
+#include "CognitiveVRPrivatePCH.h"
+#include "cognitivevr_response.h"
 
 //namespace cognitivevrapi
 //{
+	class FAnalyticsProviderCognitiveVR;
+	class HttpInterface;
+	typedef void(*NetworkCallback)(CognitiveVRResponse);
+
     class Network
     {
         private:
@@ -22,7 +24,7 @@
             Network(FAnalyticsProviderCognitiveVR* sp);
             ~Network();
 
-			FJsonObject InitCallback(CognitiveVRResponse response);
+			//FJsonObject InitCallback(CognitiveVRResponse response);
 
             /** Initialize the networking class used to make calls to the CognitiveVR API and
                 send the initial application_init request.

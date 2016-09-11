@@ -6,8 +6,8 @@
 
 #include <string>
 
-//namespace cognitivevrapi
-//{
+namespace cognitivevrapi
+{
     class Config {
         public:
 			#pragma warning(push)
@@ -41,5 +41,5 @@
             static long kNetworkTimeout;
 			#pragma warning(pop)
     };
-//}
+}
 #endif  // COGNITIVEVR_CONFIG_H_

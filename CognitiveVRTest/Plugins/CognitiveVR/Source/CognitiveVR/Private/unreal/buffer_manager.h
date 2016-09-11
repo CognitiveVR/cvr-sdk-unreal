@@ -6,8 +6,7 @@
 
 #include "EngineMinimal.h"
 #include "Http.h"
-#include "CognitiveVR.h"
-#include "CognitiveVRProvider.h"
+#include "CognitiveVRPrivatePCH.h"
 
 //namespace cognitivevrapi
 //{
