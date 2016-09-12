@@ -5,6 +5,15 @@
 
 //IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
+#define LOCTEXT_NAMESPACE "CognitiveVRLoc"
+
+UCognitiveVRSettings::UCognitiveVRSettings(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	SettingsDisplayName = LOCTEXT("SettingsDisplayName", "Cognitive VR");
+	SettingsTooltip = LOCTEXT("SettingsTooltip", "Cognitive VR analytics configuration settings");
+}
+
 void UCognitiveVRSettings::ReadConfigSettings()
 {
 	//FString ReadApiKey = FAnalytics::Get().GetConfigValueFromIni(GetIniName(), GetTestIniSection(), TEXT("CognitiveVRApiKey"), true);
@@ -82,3 +91,5 @@ void UCognitiveVRSettings::WriteConfigSettings()
 	FAnalytics::Get().WriteConfigValueToIni(GetIniName(), GetDevelopmentIniSection(), TEXT("FlurryApiKey"), DevelopmentApiKey);*/
 	GConfig->Flush(false, "DefaultEngine");
 }
+
+#undef LOCTEXT_NAMESPACE

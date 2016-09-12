@@ -14,7 +14,7 @@
 
 namespace cognitivevrapi
 {
-    class Log
+    class CognitiveLog
     {
         /*private:
             static void LogString(std::string s, bool newline);

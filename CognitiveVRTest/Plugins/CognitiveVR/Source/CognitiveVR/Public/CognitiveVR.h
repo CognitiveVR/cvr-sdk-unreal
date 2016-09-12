@@ -4,7 +4,7 @@
 
 #include "Private/CognitiveVRPrivatePCH.h"
 #include "Runtime/Analytics/Analytics/Public/Interfaces/IAnalyticsProviderModule.h"
-#include "IAnalyticsProviderModule.h"
+//#include "IAnalyticsProviderModule.h"
 //#include "Core.h"
 //#include "ModuleManager.h"
 //#include "AnalyticsEventAttribute.h"

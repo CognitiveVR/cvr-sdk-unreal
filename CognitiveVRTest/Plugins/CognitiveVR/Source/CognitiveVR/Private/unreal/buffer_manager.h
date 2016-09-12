@@ -4,8 +4,8 @@
 #ifndef COGNITIVEVR_BUFFER_MANAGER_H_
 #define COGNITIVEVR_BUFFER_MANAGER_H_
 
-#include "EngineMinimal.h"
-#include "Http.h"
+//#include "EngineMinimal.h"
+//#include "Http.h"
 #include "CognitiveVRPrivatePCH.h"
 
 //namespace cognitivevrapi

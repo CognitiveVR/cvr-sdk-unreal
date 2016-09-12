@@ -4,11 +4,11 @@
 #ifndef COGNITIVEVR_HTTP_INTERFACE_H_
 #define COGNITIVEVR_HTTP_INTERFACE_H_
 
-#include <stdexcept>
+//#include <stdexcept>
 
 #include "CognitiveVRPrivatePCH.h"
 
-#include "Private/util/log.h"
+#include "Private/util/cognitive_log.h"
 #include "Private/network/cognitivevr_response.h"
 
 class FAnalyticsProviderCognitiveVR;

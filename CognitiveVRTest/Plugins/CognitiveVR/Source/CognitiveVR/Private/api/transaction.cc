@@ -8,14 +8,14 @@ using namespace cognitivevrapi;
 Transaction::Transaction(FAnalyticsProviderCognitiveVR* sp)
 {
 	s = sp;
-	Log::Warning("Transaction::Transaction - INITIALIZED");
+	CognitiveLog::Warning("Transaction::Transaction - INITIALIZED");
 }
 
 void Transaction::Begin(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id)
 {
 	if (this == NULL)
 	{
-		Log::Warning("Transaction::Begin - FAnalyticsProviderCognitiveVR is null!");
+		CognitiveLog::Warning("Transaction::Begin - FAnalyticsProviderCognitiveVR is null!");
 		return;
 	}
 
@@ -47,7 +47,7 @@ void Transaction::Update(std::string category, TSharedPtr<FJsonObject> propertie
 {
 	if (this == NULL)
 	{
-		Log::Warning("Transaction::Update - CognitiveVR is null!");
+		CognitiveLog::Warning("Transaction::Update - CognitiveVR is null!");
 		return;
 	}
 
@@ -77,7 +77,7 @@ void Transaction::End(std::string category, TSharedPtr<FJsonObject> properties, 
 {
 	if (this == NULL)
 	{
-		Log::Warning("Transaction::End - FAnalyticsProviderCognitiveVR is null!");
+		CognitiveLog::Warning("Transaction::End - FAnalyticsProviderCognitiveVR is null!");
 		return;
 	}
 
@@ -107,7 +107,7 @@ void Transaction::BeginEnd(std::string category, TSharedPtr<FJsonObject> propert
 {
 	if (this == NULL) //does this ever happen? when called before transaction is constructed?
 	{
-		Log::Warning("Transaction::BeginEnd - FAnalyticsProviderCognitiveVR is null!");
+		CognitiveLog::Warning("Transaction::BeginEnd - FAnalyticsProviderCognitiveVR is null!");
 		return;
 	}
 	this->Begin(category, properties, transaction_id);

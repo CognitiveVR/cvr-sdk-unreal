@@ -126,7 +126,7 @@ void CoreUtilities::UpdateCollection(std::string nname, double nbalance, double 
 	return;
 	if (s == NULL)
 	{
-		Log::Warning("CoreUtilities::UpdateCollection- FAnalyticsProviderCognitiveVR is null!");
+		CognitiveLog::Warning("CoreUtilities::UpdateCollection- FAnalyticsProviderCognitiveVR is null!");
 		return;
 	}
 

@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include <cstdio>
-#include <cstddef>
-#include <stdexcept>
-#include <ctime>
+//#include <cstdio>
+//#include <cstddef>
+//#include <stdexcept>
+//#include <ctime>
 #include <string>
 
 #include "CognitiveVRPrivatePCH.h"
@@ -14,7 +14,7 @@
 #include "Private/unreal/override_http_interface.h"
 #include "Private/util/util.h"
 #include "Private/util/config.h"
-#include "Private/util/log.h"
+#include "Private/util/cognitive_log.h"
 #include "Private/network/cognitivevr_response.h"
 #include "Private/util/cognitivevr_exception.h"
 #include "Private/network/http_interface.h"
@@ -69,7 +69,7 @@
 
 	public:
 		FAnalyticsProviderCognitiveVR();
-		virtual ~FAnalyticsProviderCognitiveVR();
+		//virtual ~FAnalyticsProviderCognitiveVR();
 
 		virtual bool StartSession(const TArray<FAnalyticsEventAttribute>& Attributes) override;
 		virtual void EndSession() override;

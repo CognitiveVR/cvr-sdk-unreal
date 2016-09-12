@@ -16,7 +16,7 @@ Network::Network(FAnalyticsProviderCognitiveVR* sp)
 
 Network::~Network()
 {
-    Log::Info("Freeing network memory.");
+	CognitiveLog::Info("Freeing network memory.");
     delete httpint;
     httpint = NULL;
 }
@@ -24,7 +24,7 @@ Network::~Network()
 void Network::Init(HttpInterface* a, NetworkCallback callback)
 {
     this->httpint = a;
-    Log::Info("CognitiveVR::Network - Init");
+	CognitiveLog::Info("CognitiveVR::Network - Init");
 
 	//applicaiton init
 
@@ -74,7 +74,7 @@ void Network::Call(std::string sub_path, TSharedPtr<FJsonValueArray> content, Ne
 {
     if(!this->httpint)
 	{
-		Log::Warning("Network::Call - No HTTP implementation available. Did you call cognitivevr::Init()?");
+		CognitiveLog::Warning("Network::Call - No HTTP implementation available. Did you call cognitivevr::Init()?");
     }
 
 	//UCognitiveVRSettings* Settings = GetMutableDefault<UCognitiveVRSettings>();
@@ -84,8 +84,8 @@ void Network::Call(std::string sub_path, TSharedPtr<FJsonValueArray> content, Ne
 	bool moduleIsAvailable = FAnalytics::IsAvailable();
 	if (!moduleIsAvailable)
 	{
-		UE_LOG(CognitiveVR_Log, Warning, TEXT("Network::Call FAnalytics is not available! Ignore network call"));
-		//Log::Warning("Network::Call FAnalytics is not available! Ignore network call");
+		//UE_LOG(CognitiveVR_Log, Warning, TEXT("Network::Call FAnalytics is not available! Ignore network call"));
+		//CognitiveLog::Warning("Network::Call FAnalytics is not available! Ignore network call");
 		return;
 	}
 
@@ -140,9 +140,9 @@ CognitiveVRResponse Network::ParseResponse(std::string str_response)
 
 		if (!success) {
 			std::string err = Network::InterpretError(error_code);
-			Log::Error(err);
+			CognitiveLog::Error(err);
 			response.SetErrorMessage(err);
-			Log::Warning("Network::ParseResponse - Failed");
+			CognitiveLog::Warning("Network::ParseResponse - Failed");
 		}
 		else {
 			if (root.Get()->GetObjectField("data").IsValid())
@@ -193,7 +193,7 @@ CognitiveVRResponse Network::ParseResponse(std::string str_response)
 	{
 		CognitiveVRResponse response(false);
 		response.SetErrorMessage("Failed to parse JSON response.");
-		Log::Error("Network::ParseResponse - Failed to parse JSON response.");
+		CognitiveLog::Error("Network::ParseResponse - Failed to parse JSON response.");
 		return response;
 	}
 

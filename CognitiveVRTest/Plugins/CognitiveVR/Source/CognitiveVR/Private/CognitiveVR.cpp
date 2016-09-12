@@ -1,20 +1,17 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 
 #include "CognitiveVRPrivatePCH.h"
-#if WITH_EDITOR
-#include "ISettingsModule.h"
-#include "ISettingsSection.h"
-#endif
+//#if WITH_EDITOR
+//#include "ISettingsModule.h"
+//#include "ISettingsSection.h"
+//#endif
+#include "AnalyticsSettings.h"
 #include "CognitiveVRSettings.h"
 #include "CognitiveVR.h"
-#include "CognitiveVRProvider.h"
 
 using namespace cognitivevrapi;
 
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
-
-#define LOCTEXT_NAMESPACE "CognitiveVRLoc"
-
 
 
 void FAnalyticsCognitiveVR::StartupModule()
@@ -43,13 +40,6 @@ TSharedPtr<FAnalyticsProviderCognitiveVR> FAnalyticsCognitiveVR::GetCognitiveVRP
 
 // Provider
 
-UCognitiveVRSettings::UCognitiveVRSettings(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-{
-	SettingsDisplayName = LOCTEXT("SettingsDisplayName", "Cognitive VR");
-	SettingsTooltip = LOCTEXT("SettingsTooltip", "Cognitive VR analytics configuration settings");
-}
-
 
 FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR() :
 	bHasSessionStarted(false),
@@ -58,17 +48,17 @@ FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR() :
 	DeviceId = FPlatformMisc::GetUniqueDeviceId();
 }
 
-FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
+/*FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
 {
 	if (bHasSessionStarted)
 	{
 		EndSession();
 	}
-}
+}*/
 
 void InitCallback(CognitiveVRResponse resp)
 {
-	Log::Info("CognitiveVR InitCallback Response");
+	CognitiveLog::Info("CognitiveVR InitCallback Response");
 	if (!resp.IsSuccessful())
 	{
 		ThrowDummyResponseException("Failed to initialize CognitiveVR " + resp.GetErrorMessage());
@@ -132,7 +122,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 	/*
 	FlushEvents();
-	Log::Info("Freeing CognitiveVR memory.");
+	CognitiveLog::Info("Freeing CognitiveVR memory.");
 	delete thread_manager;
 	thread_manager = NULL;
 
@@ -147,7 +137,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 	delete core_utils;
 	core_utils = NULL;
-	Log::Info("CognitiveVR memory freed.");
+	CognitiveLog::Info("CognitiveVR memory freed.");
 	*/
 
 	bHasSessionStarted = false;
@@ -169,12 +159,14 @@ void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
 	if (!bHasSessionStarted)
 	{
 		UserId = InUserID;
-		UE_LOG(CognitiveVR_Log, Display, TEXT("User is now (%s)"), *UserId);
+		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetUserID set user id");
+		//UE_LOG(CognitiveVR_Log, Display, TEXT("User is now (%s)"), *UserId);
 	}
 	else
 	{
 		// Log that we shouldn't switch users during a session
-		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::SetUserID called while a session is in progress. Ignoring."));
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SetUserID called while session is in progress. Ignoring");
+		//UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::SetUserID called while a session is in progress. Ignoring."));
 	}
 }
 
@@ -198,7 +190,7 @@ bool FAnalyticsProviderCognitiveVR::SetSessionID(const FString& InSessionID)
 	if (!bHasSessionStarted)
 	{
 		SessionId = InSessionID;
-		UE_LOG(CognitiveVR_Log, Display, TEXT("Session is now (%s)"), *SessionId);
+		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetSessionID set new session id");
 		
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 		properties->SetStringField("id", SessionId);
@@ -208,7 +200,7 @@ bool FAnalyticsProviderCognitiveVR::SetSessionID(const FString& InSessionID)
 	else
 	{
 		// Log that we shouldn't switch session ids during a session
-		Log::Warning("FAnalyticsProvideCognitiveVR::RecordEvent while a session is in progress. Ignoring");
+		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordEvent while a session is in progress. Ignoring");
 	}
 	return !bHasSessionStarted;
 }
@@ -231,7 +223,7 @@ void FAnalyticsProviderCognitiveVR::RecordEvent(const FString& EventName, const 
 	}
 	else
 	{
-		Log::Warning("FAnalyticsProvideCognitiveVR::RecordEvent called before StartSession. Ignoring");
+		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordEvent called before StartSession. Ignoring");
 	}
 }
 
@@ -249,7 +241,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, co
 	}
 	else
 	{
-		Log::Warning("FAnalyticsProvideCognitiveVR::RecordItemPurchase called before StartSession. Ignoring");
+		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordItemPurchase called before StartSession. Ignoring");
 	}
 }
 
@@ -268,7 +260,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 	}
 	else
 	{
-		Log::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyPurchase called before StartSession. Ignoring");
+		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyPurchase called before StartSession. Ignoring");
 	}
 }
 
@@ -284,7 +276,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 	}
 	else
 	{
-		Log::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyGiven called before StartSession. Ignoring");
+		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyGiven called before StartSession. Ignoring");
 	}
 }
 
@@ -322,11 +314,11 @@ void FAnalyticsProviderCognitiveVR::RecordError(const FString& Error, const TArr
 
 		transaction->BeginEnd("RecordError", properties);
 
-		Log::Warning("FAnalyticsProvideCognitiveVR::RecordError");
+		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordError");
 	}
 	else
 	{
-		Log::Warning("FAnalyticsProvideCognitiveVR::RecordError called before StartSession. Ignoring");
+		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordError called before StartSession. Ignoring");
 	}
 }
 
@@ -347,7 +339,7 @@ void FAnalyticsProviderCognitiveVR::RecordProgress(const FString& ProgressType, 
 	}
 	else
 	{
-		Log::Warning("FAnalyticsProvideCognitiveVR::RecordError called before StartSession. Ignoring");
+		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordError called before StartSession. Ignoring");
 	}
 }
 
@@ -368,7 +360,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, in
 	}
 	else
 	{
-		Log::Warning("FAnalyticsProvideCognitiveVR::RecordItemPurchase called before StartSession. Ignoring");
+		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordItemPurchase called before StartSession. Ignoring");
 	}
 }
 
@@ -389,7 +381,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 	}
 	else
 	{
-		Log::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyPurchase called before StartSession. Ignoring");
+		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyPurchase called before StartSession. Ignoring");
 	}
 }
 
@@ -410,7 +402,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 	}
 	else
 	{
-		Log::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyGiven called before StartSession. Ignoring");
+		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyGiven called before StartSession. Ignoring");
 	}
 }
 
@@ -442,12 +434,12 @@ void FAnalyticsProviderCognitiveVR::SetDeviceID(const FString& InDeviceID)
 	if (!bHasSessionStarted)
 	{
 		DeviceId = InDeviceID;
-		UE_LOG(CognitiveVR_Log, Display, TEXT("User is now (%s)"), *DeviceId);
+		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetDeviceID set device id");
 	}
 	else
 	{
 		// Log that we shouldn't switch users during a session
-		UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::SetDevuceID called while a session is in progress. Ignoring."));
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SetDeviceID called while session is in progress. Ignoring");
 	}
 }
 
@@ -456,5 +448,5 @@ void ThrowDummyResponseException(std::string s)
 	CognitiveVRResponse response(false);
 	response.SetErrorMessage(s);
 	response.SetContent(FJsonObject());
-	Log::Error("CognitiveVRAnalytics::ResponseException! " + s);
+	CognitiveLog::Error("CognitiveVRAnalytics::ResponseException! " + s);
 }

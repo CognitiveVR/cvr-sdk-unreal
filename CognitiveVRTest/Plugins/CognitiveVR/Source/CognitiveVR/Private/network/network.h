@@ -12,7 +12,7 @@
 //{
 	class FAnalyticsProviderCognitiveVR;
 	class HttpInterface;
-	typedef void(*NetworkCallback)(CognitiveVRResponse);
+	//typedef void(*NetworkCallback)(CognitiveVRResponse);
 
     class Network
     {

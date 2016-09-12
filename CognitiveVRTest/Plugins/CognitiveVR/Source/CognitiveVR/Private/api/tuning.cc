@@ -16,7 +16,7 @@ Tuning::Tuning(FAnalyticsProviderCognitiveVR* sp, FJsonObject json)
 
 Tuning::~Tuning()
 {
-	Log::Info("Freeing tuning memory.");
+	CognitiveLog::Info("Freeing tuning memory.");
 }
 
 void Tuning::CacheValues(std::string entity_id, FJsonObject values, EntityType entity_type, bool getallc)
@@ -31,7 +31,7 @@ void Tuning::CacheValues(std::string entity_id, FJsonObject values, EntityType e
         Tuning::getallval_cache_ttl = cache_time;
     }
 
-	Log::Info("CACHING TUNING VALUES: " + entity_id + ":" + Tuning::GetEntityTypeString(entity_type));
+	CognitiveLog::Info("CACHING TUNING VALUES: " + entity_id + ":" + Tuning::GetEntityTypeString(entity_type));
 		
 	// Iterate over Json Values
 	for (auto currJsonValue = values.Values.CreateConstIterator(); currJsonValue; ++currJsonValue)
@@ -100,10 +100,10 @@ void Tuning::GetAllValues(std::string entity_id, EntityType entity_type)
         }
 
         if (entvalid) {
-            Log::Info("Get All Value cache has NOT expired and entity already exists.");
+            CognitiveLog::Info("Get All Value cache has NOT expired and entity already exists.");
             resp.SetContent(root);
 
-            Log::Info("GET: " + Tuning::GetEntityTypeString(entity_type) + " " + resp.GetContent().toStyledString());
+            CognitiveLog::Info("GET: " + Tuning::GetEntityTypeString(entity_type) + " " + resp.GetContent().toStyledString());
             return resp;
         }
     }
@@ -121,7 +121,7 @@ void Tuning::GetAllValues(std::string entity_id, EntityType entity_type)
 	Util::AppendToJsonArray(jsonArray, entity_id);
 	Util::AppendToJsonArray(jsonArray, entityType);
 
-    Log::Info("Get All Value cache has expired or the entity does not exist.");
+	CognitiveLog::Info("Get All Value cache has expired or the entity does not exist.");
 		
 	//CognitiveVRResponse resp = s->GetNetwork()->Call("tuner_getAllValues", jsonArray);
 	//resp.SetContent(resp.GetContent().GetObjectField("value").Get);// ["value"]);
@@ -156,7 +156,7 @@ CognitiveVRResponse Tuning::GetValue(std::string name, std::string default_value
     }
 
     if (curtime >= ttl) {
-        Log::Info("Value cache has expired.");
+        CognitiveLog::Info("Value cache has expired.");
 
 		FJsonObject json;
 
@@ -172,7 +172,7 @@ CognitiveVRResponse Tuning::GetValue(std::string name, std::string default_value
         try {
             resp = s->GetNetwork()->Call("tuner_getValue", json);
         } catch(cognitivevrapi::cognitivevr_exception e) {
-            Log::Error("Get Tuning Value Fail(Returning Default): " + e.GetResponse().GetErrorMessage());
+            CognitiveLog::Error("Get Tuning Value Fail(Returning Default): " + e.GetResponse().GetErrorMessage());
 
             CognitiveVRResponse dresp(true);
 			FJsonObject content;
@@ -192,7 +192,7 @@ CognitiveVRResponse Tuning::GetValue(std::string name, std::string default_value
         return resp;
     }
 	*/
-    Log::Info("Value cache has NOT expired.");
+	CognitiveLog::Info("Value cache has NOT expired.");
 	CognitiveVRResponse resp(true);
 
 	FJsonObject root;
@@ -200,8 +200,8 @@ CognitiveVRResponse Tuning::GetValue(std::string name, std::string default_value
     //root[name] = v->GetValue();
     resp.SetContent(root);
 
-	//Log::Info("GET: " + Tuning::GetEntityTypeString(entity_type) + " " + resp.GetContent().Values.);
-    //Log::Info("GET: " + Tuning::GetEntityTypeString(entity_type) + " " + resp.GetContent().toStyledString());
+	//CognitiveLog::Info("GET: " + Tuning::GetEntityTypeString(entity_type) + " " + resp.GetContent().Values.);
+    //CognitiveLog::Info("GET: " + Tuning::GetEntityTypeString(entity_type) + " " + resp.GetContent().toStyledString());
 
 
     return resp;

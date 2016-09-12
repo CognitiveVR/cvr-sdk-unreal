@@ -2,7 +2,7 @@
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #include "override_http_interface.h"
-#include "Engine.h" //only needed for eu_log
+//#include "Engine.h" //only needed for eu_log
 
 using namespace cognitivevrapi;
 
@@ -15,7 +15,7 @@ void OverrideHttpInterface::OnResponseReceivedAsync(FHttpRequestPtr Request, FHt
 {
     FString UE4Str = Response->GetContentAsString();
 	std::string content(TCHAR_TO_UTF8(*UE4Str));
-	cognitivevrapi::Log::Info("OverrideHttpInterface::OnResponseReceivedAsync - Response: " + content);
+	cognitivevrapi::CognitiveLog::Info("OverrideHttpInterface::OnResponseReceivedAsync - Response: " + content);
         
 	CognitiveVRResponse response = Network::ParseResponse(content);
     callback(response);
@@ -27,8 +27,8 @@ std::string OverrideHttpInterface::Post(std::string url, std::string path, std::
     //Construct URL.
     std::string stdfull_url = url + path;
     FString full_url(stdfull_url.c_str());
-	cognitivevrapi::Log::Info("POST URL " + stdfull_url);
-	cognitivevrapi::Log::Info("POST CONTENT " + stdcontent);
+	cognitivevrapi::CognitiveLog::Info("POST URL " + stdfull_url);
+	cognitivevrapi::CognitiveLog::Info("POST CONTENT " + stdcontent);
 
     FString content(stdcontent.c_str());
 
@@ -63,7 +63,7 @@ std::string OverrideHttpInterface::Post(std::string url, std::string path, std::
 	bool process_result = HttpRequest->ProcessRequest();
 		
     if (!process_result) {
-		cognitivevrapi::Log::Error("OverrideHttpInterface::Post - Process Request Failed!");
+		cognitivevrapi::CognitiveLog::Error("OverrideHttpInterface::Post - Process Request Failed!");
     }
 
 	this->http_response = "";

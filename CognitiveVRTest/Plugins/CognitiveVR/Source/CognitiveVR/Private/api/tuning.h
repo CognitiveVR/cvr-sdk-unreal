@@ -11,7 +11,7 @@
 #include <windows.h>
 #include <map>
 #include "HideWindowsPlatformTypes.h"
-#include "Private/util/log.h"
+#include "Private/util/cognitive_log.h"
 #include "Private/util/util.h"
 #include "Private/unreal/buffer_manager.h"
 //using namespace cognitivevrapi;

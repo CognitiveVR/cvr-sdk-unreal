@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "Core.h"
+//#include "Core.h"
 #include "IAnalyticsProvider.h"
 //#include "CognitiveVR.h"
 #include "CognitiveVRProvider.h"

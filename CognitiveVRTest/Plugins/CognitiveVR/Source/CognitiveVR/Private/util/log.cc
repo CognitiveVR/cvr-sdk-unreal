@@ -1,21 +1,21 @@
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
-#include "util/log.h"
+#include "util/cognitive_log.h"
 #include "AnalyticsSettings.h"
 
 using namespace cognitivevrapi;
 
-/*void Log::LogString(std::string s, bool newline)
+/*void CognitiveLog::LogString(std::string s, bool newline)
 {
-    std::string nstring = "[" + Log::CurrentDateTime() + "] " + s;
+    std::string nstring = "[" + CognitiveLog::CurrentDateTime() + "] " + s;
     std::cout << nstring;
     if (newline) {
         std::cout << "\n";
     }
 }*/
 
-void Log::Info(std::string s, bool newline)
+void CognitiveLog::Info(std::string s, bool newline)
 {
 	FString ValueReceived;
 
@@ -31,7 +31,7 @@ void Log::Info(std::string s, bool newline)
 	UE_LOG(CognitiveVR_Log, Log, TEXT("%s"),UTF8_TO_TCHAR(s.c_str()));*/
 }
 
-void Log::Warning(std::string s, bool newline)
+void CognitiveLog::Warning(std::string s, bool newline)
 {
 	FString ValueReceived;
 
@@ -46,7 +46,7 @@ void Log::Warning(std::string s, bool newline)
 	UE_LOG(CognitiveVR_Log, Warning, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));*/
 }
 
-void Log::Error(std::string s, bool newline)
+void CognitiveLog::Error(std::string s, bool newline)
 {
 	FString ValueReceived;
 
