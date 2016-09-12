@@ -1,13 +1,13 @@
 #ifndef COGNITIVEVR_COREUTILITIES_H_
 #define COGNITIVEVR_COREUTILITIES_H_
 
-#include "CognitiveVRPrivatePCH.h"
+#include "Private/CognitiveVRPrivatePCH.h"
 
 //namespace cognitivevrapi
 //{
 	class FAnalyticsProviderCognitiveVR;
 
-	class CoreUtilities
+	class COGNITIVEVR_API CoreUtilities
 	{
 	private:
 		FAnalyticsProviderCognitiveVR* s;

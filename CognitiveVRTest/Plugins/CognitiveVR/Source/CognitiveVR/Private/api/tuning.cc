@@ -1,7 +1,7 @@
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
-#include "api/tuning.h"
+#include "Private/api/tuning.h"
 
 using namespace cognitivevrapi;
 

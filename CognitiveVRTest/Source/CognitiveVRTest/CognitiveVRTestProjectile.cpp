@@ -4,9 +4,9 @@
 #include "CognitiveVRTestProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
-#include "Private/CognitiveVRProvider.h"
-#include "Private/api/transaction.h"
-
+//#include "Private/CognitiveVRProvider.h"
+//#include "Public/transaction.h"
+//#include "Public/CognitiveVR.h"
 
 ACognitiveVRTestProjectile::ACognitiveVRTestProjectile() 
 {
@@ -44,17 +44,40 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 
-		auto Analytics = FAnalytics::Get().GetDefaultConfiguredProvider();
-		Analytics.Get()->RecordEvent("interface impact");
+		/*TSharedPtr<IAnalyticsProvider> Analytics = FAnalytics::Get().GetDefaultConfiguredProvider();
+		
+		Analytics.Get()->StartSession();
 
+		Analytics.Get()->RecordEvent("simple event");
+
+		TArray<FAnalyticsEventAttribute> attributes;
+		attributes.Add(FAnalyticsEventAttribute("MyBoolean", false));
+		attributes.Add(FAnalyticsEventAttribute("NumbersNotSupported", FString("5")));
+		attributes.Add(FAnalyticsEventAttribute("MyString", FString("Words")));
+
+		Analytics.Get()->RecordEvent("event with attributes", attributes);
+
+		*/
 
 		//Analytics.Get()->RecordEvent()
 
 		
 
 		//TODO can't link transaction.beginend
-		//TSharedPtr<FAnalyticsProviderCognitiveVR> cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-		//cog.Get()->transaction->BeginEnd("STRINGRIGN");
+		TSharedPtr<FAnalyticsProviderCognitiveVR> cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+
+		//std::string temp = "STRINGRIGN";
+
+		//cog.Get()->SetAge(1);
+		auto trans = cog.Get()->transaction;// ->FBeginEnd("name");
+		FString temp = "name";
+		std::string stdtemp = "userid";
+
+		//cog.Get()->core_utils;// ->NewUser(stdtemp);
+		//trans->FBeginEnd(temp);
+		trans->BeginEnd(stdtemp);
+
+		//cog.Get()->transaction->FBeginEnd(FString("SOMEVALUE"));
 
 		//auto ca = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 		//ca.Get()->transaction->BeginEnd("c impact", NULL);

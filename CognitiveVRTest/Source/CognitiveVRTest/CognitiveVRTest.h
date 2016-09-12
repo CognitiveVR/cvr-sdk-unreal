@@ -4,6 +4,6 @@
 #define __COGNITIVEVRTEST_H__
 
 #include "EngineMinimal.h"
-#include "CognitiveVR.h"
+#include "Public/CognitiveVR.h"
 
 #endif

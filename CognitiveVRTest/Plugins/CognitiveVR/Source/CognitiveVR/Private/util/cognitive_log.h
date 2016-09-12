@@ -7,6 +7,7 @@
 #include <iostream>
 #include <ctime>
 
+#include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
 #include "Private/util/config.h"
 

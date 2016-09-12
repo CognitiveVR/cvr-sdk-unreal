@@ -5,6 +5,7 @@
 #define COGNITIVEVR_CONFIG_H_
 
 #include <string>
+#include "CognitiveVR.h"
 
 namespace cognitivevrapi
 {

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "CognitiveVR.h"
 #include "AnalyticsSettings.h"
 #include "CognitiveVRSettings.generated.h"
 

@@ -4,6 +4,9 @@
 
 #include "Private/CognitiveVRPrivatePCH.h"
 #include "Runtime/Analytics/Analytics/Public/Interfaces/IAnalyticsProviderModule.h"
+#include "Private/api/tuning.h"
+#include "Private/api/transaction.h"
+#include "Private/api/coreutilities.h"
 //#include "IAnalyticsProviderModule.h"
 //#include "Core.h"
 //#include "ModuleManager.h"
@@ -39,6 +42,7 @@ public:
 		*/
 	static inline FAnalyticsCognitiveVR& Get()
 	{
+		UE_LOG(CognitiveVR_Log, Error, TEXT("FANALYTICS COGNITIVEVR GET"));
 		return FModuleManager::LoadModuleChecked< FAnalyticsCognitiveVR >( "CognitiveVR" );
 	}
 

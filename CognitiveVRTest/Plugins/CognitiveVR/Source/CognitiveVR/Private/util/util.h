@@ -4,6 +4,7 @@
 #ifndef COGNITIVEVR_UTIL_H_
 #define COGNITIVEVR_UTIL_H_
 
+#include "CognitiveVR.h"
 #include <sstream>
 #include <ctime>
 #include <string>

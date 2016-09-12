@@ -4,7 +4,7 @@
 #ifndef COGNITIVEVR_TUNING_H_
 #define COGNITIVEVR_TUNING_H_
 
-#include "CognitiveVRPrivatePCH.h"
+#include "Private/CognitiveVRPrivatePCH.h"
 #include "Private/network/network.h"
 
 #include "AllowWindowsPlatformTypes.h" 
@@ -15,6 +15,8 @@
 #include "Private/util/util.h"
 #include "Private/unreal/buffer_manager.h"
 //using namespace cognitivevrapi;
+
+class FAnalyticsProviderCognitiveVR;
 
 namespace cognitivevrapi
 {
@@ -48,7 +50,7 @@ namespace cognitivevrapi
 	};
 }
 
-class Tuning
+class COGNITIVEVR_API Tuning
 {
 	friend class Network;
 

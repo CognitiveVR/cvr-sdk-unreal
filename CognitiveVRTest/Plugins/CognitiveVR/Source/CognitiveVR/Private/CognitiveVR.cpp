@@ -1,5 +1,6 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 
+#include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
 //#if WITH_EDITOR
 //#include "ISettingsModule.h"
@@ -7,7 +8,6 @@
 //#endif
 #include "AnalyticsSettings.h"
 #include "CognitiveVRSettings.h"
-#include "CognitiveVR.h"
 
 using namespace cognitivevrapi;
 

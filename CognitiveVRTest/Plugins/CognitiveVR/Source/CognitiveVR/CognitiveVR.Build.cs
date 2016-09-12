@@ -19,7 +19,10 @@ namespace UnrealBuildTool.Rules
 			PublicIncludePaths.AddRange(
 				new string[] {
                     "Analytics",
-                    "CognitiveVR/Private"
+                    "CognitiveVR/Private",
+                    "CognitiveVR/Public",
+                    "Private",
+					"Public"
 					//"CognitiveVRAnalytics/Public",
 					// ... add other private include paths required here ...
 				}
@@ -31,11 +34,17 @@ namespace UnrealBuildTool.Rules
 					"Engine",
 					"HTTP",
 					"Private",
-					"Analytics",
+					"Public",
+                    "Private/api",
+                    "Private/network",
+                    "Private/unreal",
+                    "Private/util",
+                    "Analytics",
 					"Settings",
 					"Private/unreal",
 					"CognitiveVR/Private",
-					"CognitiveVR/Private/api",
+                    "CognitiveVR/Public",
+                    "CognitiveVR/Private/api",
 					"CognitiveVR/Private/network",
 					"CognitiveVR/Private/unreal",
 					"CognitiveVR/Private/util"
@@ -47,16 +56,16 @@ namespace UnrealBuildTool.Rules
 			PublicDependencyModuleNames.AddRange(
 				new string[]
 				{
-						"Core",
-						"CoreUObject",
-						"Engine",
-						"AnalyticsBlueprintLibrary",
-						"Analytics",
-						"AnalyticsVisualEditing",
-						"Projects",
-						"HTTP",
-						"Json",
-						"JsonUtilities"
+					"Core",
+					"CoreUObject",
+					"Engine",
+					"AnalyticsBlueprintLibrary",
+					"Analytics",
+					"AnalyticsVisualEditing",
+					"Projects",
+					"HTTP",
+					"Json",
+					"JsonUtilities"
 				}
 				);
 

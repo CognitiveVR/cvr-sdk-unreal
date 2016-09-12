@@ -6,6 +6,7 @@
 
 //#include <stdexcept>
 
+#include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
 
 #include "Private/util/cognitive_log.h"

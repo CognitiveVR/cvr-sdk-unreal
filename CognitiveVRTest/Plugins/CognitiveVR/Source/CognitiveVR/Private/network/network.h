@@ -5,6 +5,7 @@
 #define COGNITIVEVR_NETWORK_H_
 
 #include <stdexcept>
+#include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
 #include "cognitivevr_response.h"
 

@@ -6,8 +6,8 @@
 //#include <cstddef>
 //#include <stdexcept>
 //#include <ctime>
-#include <string>
 
+#include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
 //#include "Runtime/Analytics/Analytics/Public/Interfaces/IAnalyticsProviderModule.h"
 
@@ -19,10 +19,10 @@
 #include "Private/util/cognitivevr_exception.h"
 #include "Private/network/http_interface.h"
 #include "Private/unreal/buffer_manager.h"
+#include "Private/network/network.h"
 #include "Private/api/tuning.h"
 #include "Private/api/transaction.h"
 #include "Private/api/coreutilities.h"
-#include "Private/network/network.h"
 
 	enum Error {
 		kErrorSuccess = 0,

@@ -1,4 +1,4 @@
-#include "api/coreutilities.h"
+#include "Private/api/coreutilities.h"
 
 using namespace cognitivevrapi;
 

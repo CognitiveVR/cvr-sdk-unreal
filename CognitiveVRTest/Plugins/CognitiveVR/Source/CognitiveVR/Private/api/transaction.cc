@@ -1,7 +1,7 @@
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
-#include "api/transaction.h"
+#include "Private/api/transaction.h"
 
 using namespace cognitivevrapi;
 
@@ -101,6 +101,12 @@ void Transaction::End(std::string category, TSharedPtr<FJsonObject> properties, 
 	Util::AppendToJsonArray(jsonArray, properties);
 
 	s->thread_manager->PushTask(NULL, "datacollector_endTransaction", jsonArray);
+}
+
+void Transaction::FBeginEnd(FString category)
+{
+	//std::string MyStdString(TCHAR_TO_UTF8(*category));
+	//BeginEnd(MyStdString);
 }
 
 void Transaction::BeginEnd(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, std::string result)

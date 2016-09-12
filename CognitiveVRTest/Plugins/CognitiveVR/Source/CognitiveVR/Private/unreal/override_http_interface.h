@@ -4,6 +4,7 @@
 #ifndef COGNITIVEVR_UNREAL_HTTP_INTERFACE_H_
 #define COGNITIVEVR_UNREAL_HTTP_INTERFACE_H_
 
+#include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
 
 //#include <stdexcept>

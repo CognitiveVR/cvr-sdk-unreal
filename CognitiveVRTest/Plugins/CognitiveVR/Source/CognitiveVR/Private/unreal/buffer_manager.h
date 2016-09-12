@@ -6,11 +6,14 @@
 
 //#include "EngineMinimal.h"
 //#include "Http.h"
+#include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
 
 //namespace cognitivevrapi
 //{
     class Network;
+	class CognitiveVRResponse;
+	typedef void(*NetworkCallback)(CognitiveVRResponse);
 
 	//TODO save these transactions in a buffer until a threshold is reached. send a batch of transactions at once, instead of as requested
 
