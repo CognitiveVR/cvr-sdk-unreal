@@ -4,10 +4,6 @@
 #include "CognitiveVRTestProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
-//#include "Private/CognitiveVRProvider.h"
-//#include "Public/transaction.h"
-//#include "Public/CognitiveVR.h"
-
 ACognitiveVRTestProjectile::ACognitiveVRTestProjectile() 
 {
 	// Use a sphere as a simple collision representation
@@ -44,10 +40,11 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 
+		//generic analytics code
+
 		/*TSharedPtr<IAnalyticsProvider> Analytics = FAnalytics::Get().GetDefaultConfiguredProvider();
 		
 		Analytics.Get()->StartSession();
-
 		Analytics.Get()->RecordEvent("simple event");
 
 		TArray<FAnalyticsEventAttribute> attributes;
@@ -56,41 +53,41 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 		attributes.Add(FAnalyticsEventAttribute("MyString", FString("Words")));
 
 		Analytics.Get()->RecordEvent("event with attributes", attributes);
-
 		*/
-
-		//Analytics.Get()->RecordEvent()
 
 		
 
-		//TODO can't link transaction.beginend
-		TSharedPtr<FAnalyticsProviderCognitiveVR> cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 
-		//std::string temp = "STRINGRIGN";
 
-		//cog.Get()->SetAge(1);
-		auto trans = cog.Get()->transaction;// ->FBeginEnd("name");
-		FString temp = "name";
-		std::string stdtemp = "userid";
+		//cogntive vr analytics code
+		
+		/*TSharedPtr<FAnalyticsProviderCognitiveVR> cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 
-		//cog.Get()->core_utils;// ->NewUser(stdtemp);
-		//trans->FBeginEnd(temp);
-		trans->BeginEnd(stdtemp);
+		auto trans = cog.Get()->transaction;
+		trans->Begin("begin");
+		trans->Update("update");
+		trans->End("end");
 
-		//cog.Get()->transaction->FBeginEnd(FString("SOMEVALUE"));
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		properties->SetStringField("mystring", "stringvalue");
+		properties->SetNumberField("mynumber", 5);
 
-		//auto ca = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-		//ca.Get()->transaction->BeginEnd("c impact", NULL);
+		trans->BeginEnd("beginend",properties);
 
-		//TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-		//properties->SetStringField("projectile", "hit");
 
-		//FAnalytics::Get().GetDefaultConfiguredProvider()->RecordEvent("hit");
+		auto tune = cog.Get()->tuning;
+		tune->GetAllValues("entityid", cognitivevrapi::EntityType::kEntityTypeDevice);
+		tune->GetValue("name", "defaultvalue", "entityid", cognitivevrapi::EntityType::kEntityTypeUser);
+		tune->RecordValueAsync(NULL, "name", "defaultvalue");
 
-		//FCognitiveVRAnalytics::Get().CognitiveVR()->transaction->BeginEnd("impact", properties);
+		auto core = cog.Get()->core_utils;
+		core->UpdateCollection("collectionname", 5, 1, false);
+		core->NewDevice("deviceid");
+		core->NewUser("userid");
+		*/
 
 		boxesHit++;
-		//FCognitiveVRAnalytics::Get().CognitiveVR()->core_utils->UpdateCollection("boxesHit",boxesHit,1,false);
+		//FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->core_utils->UpdateCollection("boxesHit",boxesHit,1,false);
 
 		Destroy();
 	}
