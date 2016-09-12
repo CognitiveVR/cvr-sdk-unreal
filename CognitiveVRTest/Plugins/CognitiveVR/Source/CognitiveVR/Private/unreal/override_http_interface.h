@@ -30,7 +30,7 @@ class OverrideHttpInterface : public HttpInterface
 
     public:
 		OverrideHttpInterface();
-        ~OverrideHttpInterface(){}
+        //~OverrideHttpInterface(){}
         virtual std::string Post(std::string url, std::string path, std::string headers[], int header_count, std::string content, long timeout, NetworkCallback callback = NULL);
 };
 //}

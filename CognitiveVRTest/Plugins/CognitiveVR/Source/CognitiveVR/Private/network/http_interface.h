@@ -21,7 +21,7 @@ class FAnalyticsProviderCognitiveVR;
             HttpInterface(){}
 
         public:
-            virtual ~HttpInterface(){}
+            //virtual ~HttpInterface(){}
             //Note: The NetworkCallback callback argument is currently only used for the Unreal Engine, as it does not use the thread manager.
             virtual std::string Post(std::string url, std::string path, std::string headers[], int header_count, std::string content, long timeout, NetworkCallback callback = NULL) = 0;
     };

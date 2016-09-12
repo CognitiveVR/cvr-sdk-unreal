@@ -64,7 +64,7 @@ class Tuning
 
     public:
         Tuning(FAnalyticsProviderCognitiveVR* sp, FJsonObject json);
-        ~Tuning();
+        //~Tuning();
 
         /** Get all tuning values for an entity. These values are cached according to the kTuningCacheTtl variable.
 

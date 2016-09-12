@@ -21,7 +21,7 @@
 
         public:
 			BufferManager(Network* n);
-            ~BufferManager(){}
+            //~BufferManager(){}
 
 			/** Begin and end new transaction.
 				@param NetworkCallback

@@ -22,7 +22,7 @@
 
         public:
             Network(FAnalyticsProviderCognitiveVR* sp);
-            ~Network();
+            //~Network();
 
 			//FJsonObject InitCallback(CognitiveVRResponse response);
 

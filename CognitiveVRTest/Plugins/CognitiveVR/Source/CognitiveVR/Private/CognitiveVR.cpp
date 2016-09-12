@@ -16,24 +16,28 @@ IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
 void FAnalyticsCognitiveVR::StartupModule()
 {
+	//UE_LOG(CognitiveVR_Log, Log, TEXT("---------------------------------------------------FANALYTICS COGNITIVEVR STARTUP"));
 	CognitiveVRProvider = MakeShareable(new FAnalyticsProviderCognitiveVR());
 }
 
 void FAnalyticsCognitiveVR::ShutdownModule()
 {
-	if (CognitiveVRProvider.IsValid())
+	//UE_LOG(CognitiveVR_Log, Log, TEXT("---------------------------------------------------FANALYTICS COGNITIVEVR SHUTDOWN"));
+	/*if (CognitiveVRProvider.IsValid())
 	{
 		CognitiveVRProvider->EndSession();
-	}
+	}*/
 }
 
 TSharedPtr<IAnalyticsProvider> FAnalyticsCognitiveVR::CreateAnalyticsProvider(const FAnalytics::FProviderConfigurationDelegate& GetConfigValue) const
 {
+	//UE_LOG(CognitiveVR_Log, Log, TEXT("---------------------------------------------------FANALYTICS COGNITIVEVR CREATE PROVIDER"));
 	return CognitiveVRProvider;
 }
 
 TSharedPtr<FAnalyticsProviderCognitiveVR> FAnalyticsCognitiveVR::GetCognitiveVRProvider() const
 {
+	//UE_LOG(CognitiveVR_Log, Log, TEXT("---------------------------------------------------FANALYTICS COGNITIVEVR GET COGNITIVE PROVIDER"));
 	TSharedPtr<FAnalyticsProviderCognitiveVR> prov = StaticCastSharedPtr<FAnalyticsProviderCognitiveVR>(CognitiveVRProvider);
 	return prov;
 }
@@ -45,6 +49,7 @@ FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR() :
 	bHasSessionStarted(false),
 	Age(0)
 {
+	//UE_LOG(CognitiveVR_Log, Log, TEXT("---------------------------------------------------COGNITITVE PROVIDER CONSTUCTOR"));
 	DeviceId = FPlatformMisc::GetUniqueDeviceId();
 }
 

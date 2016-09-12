@@ -18,7 +18,7 @@
 
         public:
             cognitivevr_exception(CognitiveVRResponse resp) : std::runtime_error(resp.GetErrorMessage().c_str()), response(resp){}
-            ~cognitivevr_exception(void) throw(){}
+            //~cognitivevr_exception(void) throw(){}
 
 			CognitiveVRResponse GetResponse()
             {

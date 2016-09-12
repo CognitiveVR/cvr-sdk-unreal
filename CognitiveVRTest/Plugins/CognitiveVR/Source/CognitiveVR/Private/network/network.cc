@@ -14,12 +14,12 @@ Network::Network(FAnalyticsProviderCognitiveVR* sp)
     s = sp;
 }
 
-Network::~Network()
+/*Network::~Network()
 {
 	CognitiveLog::Info("Freeing network memory.");
     delete httpint;
     httpint = NULL;
-}
+}*/
 
 void Network::Init(HttpInterface* a, NetworkCallback callback)
 {
