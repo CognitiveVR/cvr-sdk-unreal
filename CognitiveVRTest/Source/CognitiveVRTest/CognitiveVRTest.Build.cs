@@ -6,8 +6,8 @@ public class CognitiveVRTest : ModuleRules
 {
 	public CognitiveVRTest(TargetInfo Target)
 	{
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "CognitiveVRAnalytics"});
-		PrivateDependencyModuleNames.AddRange(new string[] {"Json","JsonUtilities","CognitiveVRAnalytics"});
-		PrivateIncludePathModuleNames.AddRange(new string[] {"CognitiveVRAnalytics"});
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore","Http", "CognitiveVR"});
+		PrivateDependencyModuleNames.AddRange(new string[] {"Json","JsonUtilities","CognitiveVR"});
+		PrivateIncludePathModuleNames.AddRange(new string[] {"CognitiveVR"});
 	}
 }
