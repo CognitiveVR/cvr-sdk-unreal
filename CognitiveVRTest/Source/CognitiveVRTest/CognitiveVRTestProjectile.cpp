@@ -42,8 +42,10 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 
 		//generic analytics code
 
-		/*TSharedPtr<IAnalyticsProvider> Analytics = FAnalytics::Get().GetDefaultConfiguredProvider();
 		
+		
+
+		/*
 		Analytics.Get()->StartSession();
 		Analytics.Get()->RecordEvent("simple event");
 
@@ -55,13 +57,49 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 		Analytics.Get()->RecordEvent("event with attributes", attributes);
 		*/
 
-		
+		TSharedPtr<IAnalyticsProvider> analytics = FAnalytics::Get().GetDefaultConfiguredProvider();
+		TArray<FAnalyticsEventAttribute> attributes;
+		attributes.Add(FAnalyticsEventAttribute("MyBoolean", false));
+		attributes.Add(FAnalyticsEventAttribute("NumbersNotSupported", FString("5")));
+		attributes.Add(FAnalyticsEventAttribute("MyString", FString("Words")));
+		analytics.Get()->RecordEvent("EventName", attributes);
+
+		analytics.Get()->SetUserID("UniqueUserID");
+
+
 
 
 
 		//cogntive vr analytics code
 		
-		/*TSharedPtr<FAnalyticsProviderCognitiveVR> cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+		TSharedPtr<FAnalyticsProviderCognitiveVR> cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		properties->SetStringField("MyStrin", "stringvalue");
+		properties->SetNumberField("MyNumber", 5);
+		properties->SetBoolField("MyBoolean", true);
+		cognitive.Get()->transaction->BeginEnd("EventName", properties);
+
+
+		cognitive.Get()->StartSession(attributes);
+		cognitive.Get()->SetUserID("UniqueUserID");
+		cognitive.Get()->SetGender("Male");
+		cognitive.Get()->SetAge(20);
+		
+		int newValue = 5;
+		int delta = 1;
+		bool isCurrency = false;
+		cognitive.Get()->core_utils->UpdateCollection("collectionname", newValue, delta, isCurrency);
+
+		//cognitive.Get()->core_utils->UpdateCollection()
+
+
+
+		properties->SetStringField("hair color", "black");
+		properties->SetNumberField("height", 180);
+		cognitive.Get()->core_utils->UpdateUserState("UniqueUserID", properties);
+		cognitive.Get()->transaction->Begin("EventName",NULL,"UniqueTransactionID");
+		cognitive.Get()->transaction->End("EventName", NULL, "UniqueTransactionID");
+/*
 
 		auto trans = cog.Get()->transaction;
 		trans->Begin("begin");

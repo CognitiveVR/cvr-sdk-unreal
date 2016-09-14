@@ -61,7 +61,5 @@ class COGNITIVEVR_API Transaction
             @throws cognitivevr_exception
         */
         void BeginEnd(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", std::string result = "");
-
-		void FBeginEnd(FString category);
 };
 #endif  // COGNITIVEVR_TRANSACTION_H_

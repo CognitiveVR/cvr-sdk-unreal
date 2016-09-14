@@ -103,12 +103,6 @@ void Transaction::End(std::string category, TSharedPtr<FJsonObject> properties, 
 	s->thread_manager->PushTask(NULL, "datacollector_endTransaction", jsonArray);
 }
 
-void Transaction::FBeginEnd(FString category)
-{
-	//std::string MyStdString(TCHAR_TO_UTF8(*category));
-	//BeginEnd(MyStdString);
-}
-
 void Transaction::BeginEnd(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, std::string result)
 {
 	if (this == NULL) //does this ever happen? when called before transaction is constructed?

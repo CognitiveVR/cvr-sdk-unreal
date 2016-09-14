@@ -77,10 +77,13 @@ void InitCallback(CognitiveVRResponse resp)
 	cog->core_utils = new CoreUtilities(cog);
 
 	cog->transaction->Begin("Session");
+	cog->bHasSessionStarted = true;
+	cog->bPendingInitRequest = false;
 }
 
 bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAttribute>& Attributes)
 {
+	if (bPendingInitRequest) { return false; }
 	if (bHasSessionStarted)
 	{
 		EndSession();
@@ -115,8 +118,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	OverrideHttpInterface* httpint = new OverrideHttpInterface();
 	network = new Network(this);
 	network->Init(httpint, &InitCallback);
-
-	bHasSessionStarted = true;
+	bPendingInitRequest = true;
 
 	return bHasSessionStarted;
 }

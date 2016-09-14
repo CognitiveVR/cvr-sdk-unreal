@@ -49,7 +49,7 @@
 		/** Path where analytics files are saved out */
 		//FString AnalyticsFilePath;
 		/** Tracks whether we need to start the session or restart it */
-		bool bHasSessionStarted;
+		//bool bHasSessionStarted;
 		/** Whether an event was written before or not */
 		//bool bHasWrittenFirstEvent;
 		/** Id representing the user the analytics are recording for */
@@ -68,6 +68,11 @@
 		//FArchive* FileArchive;
 
 	public:
+		/** True once server has responded. everything is initialized at this point */
+		bool bHasSessionStarted=false;
+		//TODO time out should set bPendingInitRequest to false
+		bool bPendingInitRequest=false;
+
 		FAnalyticsProviderCognitiveVR();
 		//virtual ~FAnalyticsProviderCognitiveVR();
 

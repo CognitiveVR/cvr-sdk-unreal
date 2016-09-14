@@ -123,7 +123,7 @@ void CoreUtilities::UpdateDeviceState(std::string ndevice_id, TSharedPtr<FJsonOb
 void CoreUtilities::UpdateCollection(std::string nname, double nbalance, double nbalance_delta, bool nis_currency)
 {
 	//TODO this null check explodes everything - why??
-	return;
+	//return;
 	if (s == NULL)
 	{
 		CognitiveLog::Warning("CoreUtilities::UpdateCollection- FAnalyticsProviderCognitiveVR is null!");
