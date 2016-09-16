@@ -7,6 +7,7 @@
 #include "CognitiveVR.h"
 #include "Private/CognitiveVRPrivatePCH.h"
 #include "Engine.h"
+#include "Classes/AnalyticsBlueprintLibrary.h"
 //#include "EngineAnalytics.h"
 //#include "Runtime/Analytics/Analytics/Public/AnalyticsEventAttribute.h"
 //#include "IAnalyticsProvider.h"

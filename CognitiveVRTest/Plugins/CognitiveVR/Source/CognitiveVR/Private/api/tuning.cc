@@ -5,6 +5,7 @@
 
 using namespace cognitivevrapi;
 
+//bool bHasSessionStarted = false;
 
 Tuning::Tuning(FAnalyticsProviderCognitiveVR* sp, FJsonObject json)
 {
@@ -21,6 +22,13 @@ Tuning::Tuning(FAnalyticsProviderCognitiveVR* sp, FJsonObject json)
 
 void Tuning::CacheValues(std::string entity_id, FJsonObject values, EntityType entity_type, bool getallc)
 {
+	//TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
+	if (!bHasSessionStarted)
+	{
+		CognitiveLog::Warning("Tuning::CacheValues provider is null!");
+		return;
+	}
+
     if (Config::kTuningCacheTtl <= 0) {
         ThrowDummyResponseException("Invalid tuning cache TTL.");
     }
@@ -38,11 +46,24 @@ void Tuning::CacheValues(std::string entity_id, FJsonObject values, EntityType e
 	{
 		// Get the key name
 		const FString Name = (*currJsonValue).Key;
+		std::string skey = TCHAR_TO_UTF8(*Name);
 
 		// Get the value as a FJsonValue object
 		TSharedPtr< FJsonValue > Value = (*currJsonValue).Value;
 
 		// Do your stuff with crazy casting and other questionable rituals
+
+		FString ValueString = Value.Get()->AsString();
+
+		TuningValue* tval = new TuningValue(TCHAR_TO_UTF8(*ValueString), cache_time);
+		if (entity_type == kEntityTypeUser) {
+			users_value_cache[entity_id][skey] = tval;
+		}
+		else {
+			devices_value_cache[entity_id][skey] = tval;
+		}
+
+
 
 		/*FJsonObject value = currJsonValue.Value.AsString();
 		std::string skey = TCHAR_TO_UTF8(*currJsonValue.Key);
@@ -73,6 +94,13 @@ void Tuning::CacheValues(std::string entity_id, FJsonObject values, EntityType e
 
 void Tuning::GetAllValues(std::string entity_id, EntityType entity_type)
 {
+	TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
+	if (!Provider.IsValid() || !bHasSessionStarted)
+	{
+		CognitiveLog::Warning("Tuning::GetAllValues provider is null!");
+		return;
+	}
+
 	/*
     long curtime = Util::GetTimestamp();
 
@@ -128,12 +156,67 @@ void Tuning::GetAllValues(std::string entity_id, EntityType entity_type)
     //CacheValues(entity_id, resp.GetContent(), entity_type, true);
 }
 
+CognitiveVRResponse Tuning::GetValue(std::string name, std::string default_value)
+{
+	FString user = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->GetUserID();
+	FString device = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->GetDeviceID();
+	FString selectedID;
+	EntityType entityType;
+
+	if (!device.IsEmpty())
+	{
+		entityType = EntityType::kEntityTypeDevice;
+		selectedID = device;
+	}
+	else if (!user.IsEmpty())
+	{
+		entityType = EntityType::kEntityTypeUser;
+		selectedID = user;
+	}
+	else
+	{
+		CognitiveLog::Warning("Tuning::GetValue no entity found!");
+		CognitiveVRResponse failresp(false);
+		return failresp;
+	}
+
+
+
+	/*
+	if (!user.IsEmpty())
+	{
+		entityType = EntityType::kEntityTypeUser;
+		selectedID = user;
+	}
+	else if (!device.IsEmpty())
+	{
+		entityType = EntityType::kEntityTypeDevice;
+		selectedID = device;
+	}
+	else
+	{
+		CognitiveLog::Warning("Tuning::GetValue no entity found!");
+		CognitiveVRResponse failresp(false);
+		return failresp;
+	}*/
+
+	return GetValue(name, default_value, TCHAR_TO_UTF8(*selectedID), entityType);
+}
+
+
 CognitiveVRResponse Tuning::GetValue(std::string name, std::string default_value, std::string entity_id, EntityType entity_type)
 {
-		
+	TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
+	if (!Provider.IsValid() || !bHasSessionStarted)
+	{
+		CognitiveLog::Warning("Tuning::GetValue provider is null!");
+		CognitiveVRResponse failresp(false);
+		return failresp;
+	}
+
     long curtime = Util::GetTimestamp();
     TuningValue* v = NULL;
-    /*
+    
 	if (entity_type == kEntityTypeUser) {
         if (users_value_cache.count(entity_id)) {
             std::map<std::string, TuningValue*> entcache = users_value_cache.find(entity_id)->second;
@@ -154,7 +237,7 @@ CognitiveVRResponse Tuning::GetValue(std::string name, std::string default_value
     if (v != NULL) {
         ttl = v->GetTtl();
     }
-
+	/*
     if (curtime >= ttl) {
         CognitiveLog::Info("Value cache has expired.");
 
@@ -192,19 +275,30 @@ CognitiveVRResponse Tuning::GetValue(std::string name, std::string default_value
         return resp;
     }
 	*/
-	CognitiveLog::Info("Value cache has NOT expired.");
-	CognitiveVRResponse resp(true);
 
-	FJsonObject root;
-	root.SetStringField(name.c_str(), v->GetValue().c_str());
-    //root[name] = v->GetValue();
-    resp.SetContent(root);
+	CognitiveLog::Info("Value cache has NOT expired.");
+	
+	if (v != NULL)
+	{
+		CognitiveLog::Info("found the searched key!?!!!");
+
+		CognitiveVRResponse resp(true);
+		FJsonObject root;
+		root.SetStringField(name.c_str(), v->GetValue().c_str());
+
+		//root[name] = v->GetValue();
+		resp.SetContent(root);
+		return resp;
+	}
 
 	//CognitiveLog::Info("GET: " + Tuning::GetEntityTypeString(entity_type) + " " + resp.GetContent().Values.);
     //CognitiveLog::Info("GET: " + Tuning::GetEntityTypeString(entity_type) + " " + resp.GetContent().toStyledString());
 
+	CognitiveLog::Info("tuning v == NULL");
 
-    return resp;
+	CognitiveVRResponse resp(false);
+	return resp;
+    
 }
 
 void Tuning::RecordValueAsync(NetworkCallback callback, std::string name, std::string default_value, std::string user_id, std::string device_id)

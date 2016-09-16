@@ -90,6 +90,9 @@ class COGNITIVEVR_API Tuning
         */
 		CognitiveVRResponse GetValue(std::string name, std::string default_value, std::string entity_id, cognitivevrapi::EntityType entity_type);
 
+
+		CognitiveVRResponse GetValue(std::string name, std::string default_value);
+
         /** Record the use of a tuning value.
 
             @param std::string name

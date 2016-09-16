@@ -43,7 +43,47 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 		//generic analytics code
 
 		
-		
+
+		TSharedPtr<FAnalyticsProviderCognitiveVR> cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+		auto resp = cognitive.Get()->tuning->GetValue("Hungry", "false");
+
+		if (resp.IsSuccessful())
+		{
+			bool hungry = resp.GetContent().GetBoolField("Hungry");
+			if (hungry)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("hungry true"));
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("hungry false"));
+			}
+		}
+
+		auto resp2 = cognitive.Get()->tuning->GetValue("MetresToTacoBell", "default");
+		if (resp2.IsSuccessful())
+		{
+			//FString val = resp2.GetContent().GetStringField("MetresToTacoBell");
+			bool outBool;
+			if (resp2.GetContent().TryGetBoolField("MetresToTacoBell", outBool))
+			{
+				//whatever out bool
+			}
+
+			//if (resp2.GetContent().)
+
+			FString outString;
+			int32 outInt;
+			if (resp2.GetContent().TryGetStringField("MetresToTacoBell", outString))
+			{
+				//it's a string
+
+				outInt = FCString::Atoi(*outString);
+				UE_LOG(LogTemp, Warning, TEXT("MetresToTacoBell %d"), outInt);
+			}
+
+			//double metres = resp2.GetContent().GetNumberField("MetresToTacoBell");
+		}
 
 		/*
 		Analytics.Get()->StartSession();
@@ -56,7 +96,7 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 
 		Analytics.Get()->RecordEvent("event with attributes", attributes);
 		*/
-
+		/*
 		TSharedPtr<IAnalyticsProvider> analytics = FAnalytics::Get().GetDefaultConfiguredProvider();
 		TArray<FAnalyticsEventAttribute> attributes;
 		attributes.Add(FAnalyticsEventAttribute("MyBoolean", false));
@@ -98,7 +138,7 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 		properties->SetNumberField("height", 180);
 		cognitive.Get()->core_utils->UpdateUserState("UniqueUserID", properties);
 		cognitive.Get()->transaction->Begin("EventName",NULL,"UniqueTransactionID");
-		cognitive.Get()->transaction->End("EventName", NULL, "UniqueTransactionID");
+		cognitive.Get()->transaction->End("EventName", NULL, "UniqueTransactionID");*/
 /*
 
 		auto trans = cog.Get()->transaction;

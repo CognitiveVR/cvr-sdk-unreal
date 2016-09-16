@@ -2,6 +2,8 @@
 
 using namespace cognitivevrapi;
 
+//bool bHasSessionStarted = false;
+
 CoreUtilities::CoreUtilities(FAnalyticsProviderCognitiveVR* sp)
 {
 	s = sp;
