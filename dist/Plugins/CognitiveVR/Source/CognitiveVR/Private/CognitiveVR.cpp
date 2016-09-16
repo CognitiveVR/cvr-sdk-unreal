@@ -13,6 +13,7 @@ using namespace cognitivevrapi;
 
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
+bool bHasSessionStarted = false;
 
 void FAnalyticsCognitiveVR::StartupModule()
 {
@@ -37,16 +38,21 @@ TSharedPtr<IAnalyticsProvider> FAnalyticsCognitiveVR::CreateAnalyticsProvider(co
 
 TSharedPtr<FAnalyticsProviderCognitiveVR> FAnalyticsCognitiveVR::GetCognitiveVRProvider() const
 {
-	//UE_LOG(CognitiveVR_Log, Log, TEXT("---------------------------------------------------FANALYTICS COGNITIVEVR GET COGNITIVE PROVIDER"));
-	TSharedPtr<FAnalyticsProviderCognitiveVR> prov = StaticCastSharedPtr<FAnalyticsProviderCognitiveVR>(CognitiveVRProvider);
-	return prov;
+	TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
+	if (Provider.IsValid())
+	{
+		//cognitivevrapi::CognitiveLog::Warning("FAnalyticsCognitiveVR::GetCognitiveVRProvider VALID ALL IS GOOD!");
+		TSharedPtr<FAnalyticsProviderCognitiveVR> prov = StaticCastSharedPtr<FAnalyticsProviderCognitiveVR>(CognitiveVRProvider);
+		return prov;
+	}
+	cognitivevrapi::CognitiveLog::Warning("FAnalyticsCognitiveVR::GetCognitiveVRProvider could not get provider!");
+	return NULL;
 }
 
 // Provider
 
 
 FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR() :
-	bHasSessionStarted(false),
 	Age(0)
 {
 	//UE_LOG(CognitiveVR_Log, Log, TEXT("---------------------------------------------------COGNITITVE PROVIDER CONSTUCTOR"));
@@ -68,16 +74,21 @@ void InitCallback(CognitiveVRResponse resp)
 	{
 		ThrowDummyResponseException("Failed to initialize CognitiveVR " + resp.GetErrorMessage());
 	}
+	bHasSessionStarted = true;
 	FJsonObject json = resp.GetContent();
 
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	if (cog == NULL)
+	{
+		CognitiveLog::Error("CognitiveVR InitCallback could not GetCognitiveVRProvider!");
+		return;
+	}
 	cog->transaction = new Transaction(cog);
 	cog->tuning = new Tuning(cog, json);
 	cog->thread_manager = new BufferManager(cog->network);
 	cog->core_utils = new CoreUtilities(cog);
 
 	cog->transaction->Begin("Session");
-	cog->bHasSessionStarted = true;
 	cog->bPendingInitRequest = false;
 }
 
