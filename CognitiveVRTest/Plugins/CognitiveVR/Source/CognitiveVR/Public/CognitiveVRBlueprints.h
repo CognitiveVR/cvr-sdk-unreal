@@ -27,33 +27,37 @@ class COGNITIVEVR_API UCognitiveVRBlueprints : public UBlueprintFunctionLibrary
 
 public:
 	
+	//Begin an extended Transaction with a unique ID
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Transaction")
-	static void BeginTransaction(FString Category, FString TransactionID);
-	
-	/*UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Transaction")
-	static void BeginTransactionWithAttributes(FString Category, FString TransactionID, const TArray<FAnalyticsEventAttribute>& Attributes);*/
+	static void BeginTransaction(FString Name, FString TransactionID);
 
-
+	//Update an extended Transaction with a unique ID
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Transaction")
-	static void UpdateTransaction(FString Category, FString TransactionID, float Progress);
+	static void UpdateTransaction(FString Name, FString TransactionID, float Progress);
 	
-
+	//End extended Transaction with a unique ID
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Transaction")
-	static void EndTransaction(FString Category, FString TransactionID);
+	static void EndTransaction(FString Name, FString TransactionID);
 	
-	/*UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Transaction")
-	static void EndTransactionWithAttributes(FString Category, FString TransactionID, const TArray<FAnalyticsEventAttribute>& Attributes);*/
+	
 
 
+	//Immediately Begin and End Transaction. This is the same as Analytics > RecordEvent
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Transaction")
-	static void BeginEndTransaction(FString Category);
-
-	/*UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Transaction")
-	static void BeginEndTransactionWithAttributes(FString Category, const TArray<FAnalyticsEventAttribute>& Attributes);*/
+	static void BeginEndTransaction(FString Name);
 	
+	//Update a Collection. Set the new Balance of the Collection, the change of this Collection and if this Collection should be displayed as currency
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Collection")
-	static void UpdateCollection(FString Name, int Balance, int Change, bool IsCurrency);
+	static void UpdateCollection(FString Name, float Balance, float Change, bool IsCurrency);
 	
+	//Request a Tuning Value by Key. If a Tuning Value is found, it is returned as a String
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Tuning", Meta = (ExpandEnumAsExecs = "Branches"))
 	static FString GetTuningValue(FString Key, ETuningValueReturn& Branches);
+
+	/*UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Transaction")
+	static void BeginTransactionWithAttributes(FString Category, FString TransactionID, const TArray<FAnalyticsEventAttribute>& Attributes);*/
+	/*UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Transaction")
+	static void EndTransactionWithAttributes(FString Category, FString TransactionID, const TArray<FAnalyticsEventAttribute>& Attributes);*/
+	/*UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Transaction")
+	static void BeginEndTransactionWithAttributes(FString Category, const TArray<FAnalyticsEventAttribute>& Attributes);*/
 };

@@ -73,7 +73,7 @@ void UCognitiveVRBlueprints::BeginEndTransaction(FString Category)
 
 //void UCognitiveVRBlueprints::BeginEndTransactionWithAttributes(FString Category, TArray<FAnalyticsEventAttribute>Attributes){}
 
-void UCognitiveVRBlueprints::UpdateCollection(FString Name, int Balance, int Change, bool IsCurrency)
+void UCognitiveVRBlueprints::UpdateCollection(FString Name, float Balance, float Change, bool IsCurrency)
 {
 	TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
