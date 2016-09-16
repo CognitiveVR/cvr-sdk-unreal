@@ -107,5 +107,14 @@ FString UCognitiveVRBlueprints::GetTuningValue(FString Key, ETuningValueReturn& 
 
 	FJsonObject json = response.GetContent();
 
-	return FString();
+	FString outString;
+	if (json.TryGetStringField(Key, outString))
+	{
+		Branches = ETuningValueReturn::Success;
+		return outString;
+	}
+
+	Branches = ETuningValueReturn::Failed;
+	outString = FString();
+	return outString;
 }

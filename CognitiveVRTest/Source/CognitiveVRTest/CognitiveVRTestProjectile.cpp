@@ -43,29 +43,26 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 		//generic analytics code
 
 		
-
-		TSharedPtr<FAnalyticsProviderCognitiveVR> cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-		auto resp = cognitive.Get()->tuning->GetValue("Hungry", "false");
-
-		if (resp.IsSuccessful())
+		/*bool myBool = false;
+		FAnalyticsProviderCognitiveVR *cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+		if (cognitive != NULL)
 		{
-			bool hungry = resp.GetContent().GetBoolField("Hungry");
-			if (hungry)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("hungry true"));
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("hungry false"));
-			}
-		}
+			CognitiveVRResponse resp = cognitive->tuning->GetValue("MyTuningBool", "false");
 
-		auto resp2 = cognitive.Get()->tuning->GetValue("MetresToTacoBell", "default");
+			if (resp.IsSuccessful() && resp.GetContent().TryGetBoolField("MyTuningBool",myBool))
+			{
+				UE_LOG(LogTemp, Log, TEXT("MyTuningBool is: %s"), myBool ? TEXT("true") : TEXT("false"));
+			}
+		}*/
+
+
+		/*
+		auto resp2 = cognitive.Get()->tuning->GetValue("MyTuningInt", "0");
 		if (resp2.IsSuccessful())
 		{
-			//FString val = resp2.GetContent().GetStringField("MetresToTacoBell");
+			//FString val = resp2.GetContent().GetStringField("MyTuningInt");
 			bool outBool;
-			if (resp2.GetContent().TryGetBoolField("MetresToTacoBell", outBool))
+			if (resp2.GetContent().TryGetBoolField("MyTuningInt", outBool))
 			{
 				//whatever out bool
 			}
@@ -74,16 +71,16 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 
 			FString outString;
 			int32 outInt;
-			if (resp2.GetContent().TryGetStringField("MetresToTacoBell", outString))
+			if (resp2.GetContent().TryGetStringField("MyTuningInt", outString))
 			{
 				//it's a string
 
 				outInt = FCString::Atoi(*outString);
-				UE_LOG(LogTemp, Warning, TEXT("MetresToTacoBell %d"), outInt);
+				UE_LOG(LogTemp, Warning, TEXT("MyTuningInt %d"), outInt);
 			}
 
-			//double metres = resp2.GetContent().GetNumberField("MetresToTacoBell");
-		}
+			//double metres = resp2.GetContent().GetNumberField("MyTuningInt");
+		}*/
 
 		/*
 		Analytics.Get()->StartSession();

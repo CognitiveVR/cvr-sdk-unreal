@@ -62,34 +62,7 @@ void Tuning::CacheValues(std::string entity_id, FJsonObject values, EntityType e
 		else {
 			devices_value_cache[entity_id][skey] = tval;
 		}
-
-
-
-		/*FJsonObject value = currJsonValue.Value.AsString();
-		std::string skey = TCHAR_TO_UTF8(*currJsonValue.Key);
-
-		TuningValue* tval = new TuningValue(value.asString(), cache_time);
-		if (entity_type == kEntityTypeUser) {
-			users_value_cache[entity_id][skey] = tval;
-		}
-		else {
-			devices_value_cache[entity_id][skey] = tval;
-		}*/
-
 	}
-
-    //for(FJsonObject::iterator it = values.begin(); it != values.end(); ++it)
-    {
-		/*FJsonObject value = (*it);
-        std::string skey = it.key().asString();
-
-        TuningValue* tval = new TuningValue(value.asString(), cache_time);
-        if(entity_type == kEntityTypeUser) {
-            users_value_cache[entity_id][skey] = tval;
-        } else {
-            devices_value_cache[entity_id][skey] = tval;
-        }*/
-    }
 }
 
 void Tuning::GetAllValues(std::string entity_id, EntityType entity_type)
@@ -163,26 +136,7 @@ CognitiveVRResponse Tuning::GetValue(std::string name, std::string default_value
 	FString selectedID;
 	EntityType entityType;
 
-	if (!device.IsEmpty())
-	{
-		entityType = EntityType::kEntityTypeDevice;
-		selectedID = device;
-	}
-	else if (!user.IsEmpty())
-	{
-		entityType = EntityType::kEntityTypeUser;
-		selectedID = user;
-	}
-	else
-	{
-		CognitiveLog::Warning("Tuning::GetValue no entity found!");
-		CognitiveVRResponse failresp(false);
-		return failresp;
-	}
 
-
-
-	/*
 	if (!user.IsEmpty())
 	{
 		entityType = EntityType::kEntityTypeUser;
@@ -198,7 +152,7 @@ CognitiveVRResponse Tuning::GetValue(std::string name, std::string default_value
 		CognitiveLog::Warning("Tuning::GetValue no entity found!");
 		CognitiveVRResponse failresp(false);
 		return failresp;
-	}*/
+	}
 
 	return GetValue(name, default_value, TCHAR_TO_UTF8(*selectedID), entityType);
 }
@@ -214,7 +168,7 @@ CognitiveVRResponse Tuning::GetValue(std::string name, std::string default_value
 		return failresp;
 	}
 
-    long curtime = Util::GetTimestamp();
+    //long curtime = Util::GetTimestamp();
     TuningValue* v = NULL;
     
 	if (entity_type == kEntityTypeUser) {
@@ -232,12 +186,14 @@ CognitiveVRResponse Tuning::GetValue(std::string name, std::string default_value
             }
         }
     }
-    long ttl = 0L;
+
+	//this seems to request the tuning variable after they 'expire'
+    /*long ttl = 0L;
 
     if (v != NULL) {
         ttl = v->GetTtl();
     }
-	/*
+	
     if (curtime >= ttl) {
         CognitiveLog::Info("Value cache has expired.");
 
@@ -275,26 +231,17 @@ CognitiveVRResponse Tuning::GetValue(std::string name, std::string default_value
         return resp;
     }
 	*/
-
-	CognitiveLog::Info("Value cache has NOT expired.");
 	
 	if (v != NULL)
 	{
-		CognitiveLog::Info("found the searched key!?!!!");
-
 		CognitiveVRResponse resp(true);
 		FJsonObject root;
 		root.SetStringField(name.c_str(), v->GetValue().c_str());
-
-		//root[name] = v->GetValue();
 		resp.SetContent(root);
 		return resp;
 	}
 
-	//CognitiveLog::Info("GET: " + Tuning::GetEntityTypeString(entity_type) + " " + resp.GetContent().Values.);
-    //CognitiveLog::Info("GET: " + Tuning::GetEntityTypeString(entity_type) + " " + resp.GetContent().toStyledString());
-
-	CognitiveLog::Info("tuning v == NULL");
+	CognitiveLog::Info("Tuning::GetValue could not find " + name);
 
 	CognitiveVRResponse resp(false);
 	return resp;
