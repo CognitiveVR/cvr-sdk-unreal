@@ -11,6 +11,10 @@
 	"EnabledByDefault": true,
 	"Modules": [
 		{
+			"Name" : "CognitiveVREditor",
+			"Type" : "Editor"
+		},
+		{
 			"Name": "CognitiveVR",
 			"Type" : "Runtime",
 			"LoadingPhase" : "Default"
