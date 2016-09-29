@@ -27,46 +27,45 @@ public:
 	UExportSceneTool();
 
 public:
+	//The threshold blender will decimate. Anything with a polygon count below this number will not be decimated
 	UPROPERTY(EditAnywhere, Config, Category = "Settings")
 	int32 MinPolygons = 500;
 	
+	//The upper threshold blender will decimate. Any mesh with a polygon count more than this number will be decimate to 10%
 	UPROPERTY(EditAnywhere, Config, Category = "Settings")
 	int32 MaxPolygons = 20000;
 	
-	UPROPERTY(EditAnywhere, Category = "Settings")
-	FString Directory;
+	//UPROPERTY(EditAnywhere, Category = "Settings")
+	//FString Directory;
 	
+	//Only export StaticMeshComponents with set to be non-movable
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	bool staticOnly = true;
 
+	//Ignore meshes with bounding size less than this value
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	float MinimumSize;
 
-	//UPROPERTY(EditAnywhere, Config, Category = "Settings")
-	//FString DebugCmdPath;
-	
-	//UPROPERTY(Config, Category = "Settings")
-	//FString DebugCmdParams;
-
+	//Select blender.exe. Used to reduce polygon count of the exported scene
 	UFUNCTION(Exec, Category = "Settings")
 	void SelectBlender();
 
+	//Select meshes that match settings - Above Minimum Size? Static?
 	UFUNCTION(Exec, Category = "Settings")
 	void SelectExportMeshes();
 
+	//Runs the built-in obj exporter with the selected meshses
 	UFUNCTION(Exec, Category = "Export")
 	void ExportScene();
 
+	//Runs a python script in blender to reduce the polygon count, clean up the mtl file and copy textures into a convient folder
 	UFUNCTION(Exec, Category = "Export")
 	void RunBlenderCleanup();
 	
-	bool PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
 
+	bool PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
 	void* ChooseParentWindowHandle();
 
-	//UPROPERTY(EditAnywhere, Config, Category = "Settings")
 	FString BlenderPath;
-
-	//UPROPERTY(EditAnywhere, Config, Category = "Settings")
 	FString ExportDirectory;
 };

@@ -3,7 +3,7 @@
 #include "PropertyEditorModule.h"
 #include "LevelEditor.h"
 #include "BaseEditorToolCustomization.h"
-#include "DemoCommands.h"
+
 #include "DemoStyle.h"
 
 #define LOCTEXT_NAMESPACE "DemoTools"
@@ -39,7 +39,7 @@ void FCognitiveVREditorModule::StartupModule()
 	FDemoStyle::Initialize();
 
 	// Register commands
-	FDemoCommands::Register();
+	//FDemoCommands::Register();
 	CommandList = MakeShareable(new FUICommandList);
 
 	{
@@ -89,7 +89,7 @@ void FCognitiveVREditorModule::StartupModule()
 
 void FCognitiveVREditorModule::ShutdownModule()
 {
-	FDemoCommands::Unregister();
+	//FDemoCommands::Unregister();
 	FDemoStyle::Shutdown();
 }
 

@@ -22,6 +22,12 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 	// Create a commands category
 	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(TEXT("Commands"));
 
+	//go through all the functions. hand code functions into an order
+
+	TArray<UFunction*> Functions;
+	//Functions.Init(UFunction&, 4);
+	Functions.SetNum(4, false);
+
 	for (UClass* Class : Classes)
 	{
 		for (TFieldIterator<UFunction> FuncIt(Class); FuncIt; ++FuncIt)
@@ -30,7 +36,25 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			if (Function->HasAnyFunctionFlags(FUNC_Exec) && (Function->NumParms == 0))
 			{
 				const FString FunctionName = Function->GetName();
-				const FText ButtonCaption = FText::FromString(FunctionName);
+
+				if (FunctionName == "SelectExportMeshes")
+				{
+					Functions[1] = Function;
+				}
+				if (FunctionName == "SelectBlender")
+				{
+					Functions[0] = Function;
+				}
+				if (FunctionName == "ExportScene")
+				{
+					Functions[2] = Function;
+				}
+				if (FunctionName == "RunBlenderCleanup")
+				{
+					Functions[3] = Function;
+				}
+
+				/*const FText ButtonCaption = FText::FromString(FunctionName);
 				const FString FilterString = FunctionName;
 
 				Category.AddCustomRow(FText::FromString(FilterString))
@@ -39,8 +63,24 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 					SNew(SButton)
 					.Text(ButtonCaption)
 					.OnClicked(FOnClicked::CreateStatic(&FBaseEditorToolCustomization::ExecuteToolCommand, &DetailBuilder, Function))
-				];
+				];*/
 			}
+		}
+		
+		for (auto& Function : Functions)
+		{
+			const FString FunctionName = Function->GetName();
+			const FText ButtonCaption = FText::FromString(FunctionName);
+			
+			const FString FilterString = FunctionName;
+
+			Category.AddCustomRow(FText::FromString(FilterString))
+				.ValueContent()
+				[
+					SNew(SButton)
+					.Text(ButtonCaption)
+					.OnClicked(FOnClicked::CreateStatic(&FBaseEditorToolCustomization::ExecuteToolCommand, &DetailBuilder, Function))
+				];
 		}
 	}
 }
