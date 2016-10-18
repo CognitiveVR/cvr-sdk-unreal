@@ -19,6 +19,7 @@ class COGNITIVEVR_API UPlayerTracker : public USceneComponent
 private:
 	float currentTime = 0;
 	TArray<TSharedPtr<FJsonObject>> snapshots;
+	TArray<TSharedPtr<FJsonObject>> events;
 	FHttpModule* Http;
 	
 
@@ -34,10 +35,11 @@ private:
 public:	
 	// Sets default values for this component's properties
 
-	TMap<FString,FString> SceneKeys;
-
 	//UPROPERTY(EditAnywhere)
 	UTextureRenderTarget2D* renderTarget;
+
+	float PlayerSnapshotInterval = 1;
+	int32 MaxSnapshots = 1000;
 
 	UPlayerTracker();
 	
@@ -45,10 +47,16 @@ public:
 	
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
-	//auto myworld = GetWorld()->GetMapName();
+	void SendData();
 	void SendData(FString sceneName);
+
+	FString GetSceneKey(FString sceneName);
 
 	FVector GetGazePoint();
 	float GetPixelDepth(float minvalue, float maxvalue);
 	
+	void AddJsonEvent(FJsonObject* newEvent);
+
+	FString GazeSnapshotsToString();
+	FString EventSnapshotsToString();
 };

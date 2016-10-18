@@ -2,6 +2,8 @@
 
 #include "CognitiveVR.h"
 #include "PlayerTracker.h"
+#include "CognitiveVRSettings.h"
+#include "Util.h"
 
 
 // Sets default values for this component's properties
@@ -11,13 +13,8 @@ UPlayerTracker::UPlayerTracker()
 	// off to improve performance if you don't need them.
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
-	//
-
-	// ...
 }
 
-
-// Called when the game starts
 void UPlayerTracker::BeginPlay()
 {
 	Super::BeginPlay();
@@ -27,24 +24,10 @@ void UPlayerTracker::BeginPlay()
 	scc = this->GetAttachmentRootActor()->FindComponentByClass<USceneCaptureComponent2D>();
 	if (scc == NULL)
 	{
-
-		//create a scenecaptureactor (should really just inherit from this)
-		//create a rendertarget
-		//renderTarget = NewObject<UTextureRenderTarget2D>();
-
 		renderTarget = NewObject<UTextureRenderTarget2D>();
-		//renderTarget->bHDR = bHDR;
 		renderTarget->ClearColor = FLinearColor::White;
-		//renderTarget->TargetGamma = Gamma;
 		renderTarget->InitAutoFormat(256, 256); //auto init from value bHDR
-
-		//FName sccName("SceneCaptureComponent");
-		//USceneCaptureComponent2D* scc = ConstructObject<USceneCaptureComponent2D>(CompClass, this, sccName);
 	
-		
-	
-
-
 		UE_LOG(LogTemp, Warning, TEXT("=====create new scene capture component"));
 		scc = NewObject<USceneCaptureComponent2D>();;
 		
@@ -64,26 +47,33 @@ void UPlayerTracker::BeginPlay()
 	}
 }
 
+void UPlayerTracker::AddJsonEvent(FJsonObject* newEvent)
+{
+	events.Add(MakeShareable(newEvent));
+}
 
 // Called every frame
 void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction )
 {
-	
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
-	//return;
 	
 	currentTime += DeltaTime;
-	if (currentTime > 1)
+	if (currentTime > PlayerSnapshotInterval)
 	{
 		
 		UE_LOG(LogTemp, Warning, TEXT("Player Tracker Tick"));
-		currentTime -= 1;
+		currentTime -= PlayerSnapshotInterval;
 		//write to json
 
 		TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
 
+		std::string ts = Util::GetTimestampStr();
+		FString fs(ts.c_str());
+		double time = FCString::Atod(*fs);
+
 		//time
-		snapObj->SetNumberField("time", 5);
+		snapObj->SetNumberField("time", time);
+		//UGameplayStatics::GetRealTimeSeconds(GetWorld()); //time since level start
 
 		//positions
 		TArray<TSharedPtr<FJsonValue>> posArray;
@@ -110,12 +100,11 @@ void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		snapObj->SetArrayField("g", gazeArray);
 
 		snapshots.Add(snapObj);
-		ticksTillSend--;
-		if (ticksTillSend <= 0)
+		if (snapshots.Num() > MaxSnapshots)
 		{
-			SendData(GetWorld()->GetMapName());
-			ticksTillSend = 10;
-			//should i clear the snapshots? meh, it's just a test
+			SendData();
+			snapshots.Empty();
+			events.Empty();
 		}
 	}
 }
@@ -147,10 +136,7 @@ float UPlayerTracker::GetPixelDepth(float minvalue, float maxvalue)
 #endif
 	Texture->SRGB = renderTarget->SRGB;
 
-	//return -1;
-
 	TArray<FColor> SurfData;
-	//rendertarget->GameThread_GetRenderTargetResource();	
 
 	FRenderTarget *RenderTarget = renderTarget->GameThread_GetRenderTargetResource();
 
@@ -160,8 +146,6 @@ float UPlayerTracker::GetPixelDepth(float minvalue, float maxvalue)
 	// Index formula
 
 	FIntPoint size = RenderTarget->GetSizeXY();
-
-	//int x = Texture->GetSizeX();
 
 	FColor PixelColor = SurfData[size.X / 2 + size.Y / 2 * renderTarget->SizeX];
 
@@ -189,30 +173,123 @@ FVector UPlayerTracker::GetGazePoint()
 	return returnVector;
 }
 
+void UPlayerTracker::SendData()
+{
+	FString currentSceneName = GetWorld()->GetMapName();
+	UPlayerTracker::SendData(currentSceneName);
+}
+
+FString UPlayerTracker::GetSceneKey(FString sceneName)
+{
+	TArray<TSharedPtr<FSceneKeyPair>> ListSceneKeys;
+
+	FConfigSection* ScenePairs = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
+	for (FConfigSection::TIterator It(*ScenePairs); It; ++It)
+	{
+		if (It.Key() == TEXT("SceneKeyPair"))
+		{
+			FName SceneName = NAME_None;
+			FName SceneKey;
+
+			if (FParse::Value(*It.Value().GetValue(), TEXT("SceneName="), SceneName))
+			{
+				if (FParse::Value(*It.Value().GetValue(), TEXT("SceneKey="), SceneKey))
+				{
+					if (!SceneKey.IsValid() || SceneKey == NAME_None)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("player tracker::get scene key - something wrong happened"));
+						//something wrong happened
+					}
+					else
+					{
+						if (FName(*sceneName) == SceneName)
+						{
+							//found match
+							UE_LOG(LogTemp, Warning, TEXT("player tracker::get scene key - FOUND A MATCH!!!!!!"));
+							return SceneKey.ToString();
+						}
+						else
+						{
+							UE_LOG(LogTemp, Warning, TEXT("player tracker::get scene key - not a match"));
+							//not a match
+						}
+					}
+				}
+			}
+		}
+	}
+
+	//no matches anywhere
+	UE_LOG(LogTemp, Warning, TEXT("player tracker::get scene key ------- no matches in ini"));
+	return "";
+}
 
 void UPlayerTracker::SendData(FString sceneName)
 {
-	//SceneKeys[sceneName]
-	if (SceneKeys.Contains(sceneName))
-	{
-		//load this from the ini file?
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("scene keys doesn't contain key for scene "));
-		return;
-	}
-
 	UE_LOG(LogTemp, Warning, TEXT("SEND"));
-	//{object}
-	//[array]
-	/*
-	{"userid":"somevalue",
-	"data":[{"time":123.45,"p":[12.31,45.61,78.91],"g":[12.31,45.61,78.91]}]}
-	*/
 
+	// = "5aab820a-d3df-4ec4-98cb-b8c80fc73722";
+	FString sceneKey = UPlayerTracker::GetSceneKey(sceneName);
+	UE_LOG(LogTemp, Warning, TEXT("SEND"));
+
+	FString url = "https://sceneexplorer.com/api/";
+
+	if (!sendToServer) { return; }
+
+
+	//GAZE
+
+	TSharedRef<IHttpRequest> RequestGaze = Http->CreateRequest();
+	FString GazeString = UPlayerTracker::GazeSnapshotsToString();
+	RequestGaze->SetContentAsString(GazeString);
+	UE_LOG(LogTemp, Warning, TEXT("URL is %s"), *url);
+	UE_LOG(LogTemp, Warning, TEXT("content is %s"), *GazeString);
+	RequestGaze->SetURL(url + "gaze/" + sceneKey);
+	RequestGaze->SetVerb("POST");
+	RequestGaze->SetHeader("Content-Type", TEXT("application/json"));
+	RequestGaze->ProcessRequest();
 	
-	
+	//EVENTS
+
+	TSharedRef<IHttpRequest> RequestEvents = Http->CreateRequest();
+	FString EventString = UPlayerTracker::EventSnapshotsToString();
+	RequestEvents->SetContentAsString(EventString);
+	UE_LOG(LogTemp, Warning, TEXT("URL is %s"), *url);
+	UE_LOG(LogTemp, Warning, TEXT("content is %s"), *EventString);
+	RequestEvents->SetURL(url+"events/"+sceneKey);
+	RequestEvents->SetVerb("POST");
+	RequestEvents->SetHeader("Content-Type", TEXT("application/json"));
+	RequestEvents->ProcessRequest();
+
+}
+
+FString UPlayerTracker::EventSnapshotsToString()
+{
+	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
+	TArray<TSharedPtr<FJsonValue>> dataArray;
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+
+	wholeObj->SetStringField("userid", cog->GetUserID());
+
+	for (int32 i = 0; i != events.Num(); ++i)
+	{
+		dataArray.Add(MakeShareable(new FJsonValueObject(snapshots[i])));
+	}
+
+	wholeObj->SetArrayField("data", dataArray);
+
+	FString OutputString;
+	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
+	return OutputString;
+}
+
+/*
+{"userid":"somevalue",
+"data":[{"time":123.45,"p":[12.31,45.61,78.91],"g":[12.31,45.61,78.91]}]}
+*/
+FString UPlayerTracker::GazeSnapshotsToString()
+{
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
@@ -231,24 +308,6 @@ void UPlayerTracker::SendData(FString sceneName)
 	FString OutputString;
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-
-	//ini or settings?
-	//FString sceneKey = "b80e3e3b-60ed-4586-b865-7420ea76543c";
-	FString sceneKey = "5aab820a-d3df-4ec4-98cb-b8c80fc73722";
-	FString url = "https://sceneexplorer.com/api/gaze/" + sceneKey;
-
-	UE_LOG(LogTemp, Warning, TEXT("URL is %s"), *url);
-	UE_LOG(LogTemp, Warning, TEXT("content is %s"), *OutputString);
-
-	if (!sendToServer) { return; }
-
-	TSharedRef<IHttpRequest> Request = Http->CreateRequest();
-	//Request->OnProcessRequestComplete().BindUObject(this, &AHttpActor::OnResponseReceived);
-	Request->SetContentAsString(OutputString);
-	Request->SetURL(url);
-	Request->SetVerb("POST");
-	Request->SetHeader("Content-Type", TEXT("application/json"));
-	Request->ProcessRequest();
-	
+	return OutputString;
 }
 

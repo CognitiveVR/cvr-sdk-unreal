@@ -8,6 +8,7 @@
 //#endif
 #include "AnalyticsSettings.h"
 #include "CognitiveVRSettings.h"
+#include "PlayerTracker.h"
 
 using namespace cognitivevrapi;
 
@@ -162,6 +163,12 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 void FAnalyticsProviderCognitiveVR::FlushEvents()
 {
 	//TODO flush batched calls
+
+	UPlayerTracker* up;
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	up = Cast<UPlayerTracker>(controllers[0]->GetComponentByClass(UPlayerTracker::StaticClass()));
+	up->SendData();
 
 	/*if (FileArchive != nullptr)
 	{

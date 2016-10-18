@@ -2,6 +2,7 @@
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #include "Private/api/transaction.h"
+#include "PlayerTracker.h"
 
 using namespace cognitivevrapi;
 
@@ -36,16 +37,35 @@ void Transaction::BeginPosition(std::string category, FVector Position, TSharedP
 
 	std::string ts = Util::GetTimestampStr();
 	FString fs(ts.c_str());
+	double time = FCString::Atod(*fs);
 	FString trans = FString("TXN");
 
-	Util::AppendToJsonArray(jsonArray, fs);
-	Util::AppendToJsonArray(jsonArray, fs);
+	Util::AppendToJsonArray(jsonArray, time);
+	Util::AppendToJsonArray(jsonArray, time);
 	s->AppendUD(jsonArray);
 	Util::AppendToJsonArray(jsonArray, category);
 	Util::AppendToJsonArray(jsonArray, trans);
 	Util::AppendToJsonArray(jsonArray, Config::kNetworkTimeout);
 	Util::AppendToJsonArray(jsonArray, transaction_id);
 	Util::AppendToJsonArray(jsonArray, properties);
+
+	UPlayerTracker* up;
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	up = Cast<UPlayerTracker>(controllers[0]->GetComponentByClass(UPlayerTracker::StaticClass()));
+	
+	TArray< TSharedPtr<FJsonValue> > pos;
+	pos.Add(MakeShareable(new FJsonValueNumber(Position.X)));
+	pos.Add(MakeShareable(new FJsonValueNumber(Position.Y)));
+	pos.Add(MakeShareable(new FJsonValueNumber(Position.Z)));
+
+	FJsonObject* eventObject = new FJsonObject;
+	eventObject->SetStringField("name", category.c_str());
+	eventObject->SetNumberField("time", time);
+	eventObject->SetArrayField("point", pos);
+	eventObject->SetObjectField("properties", properties);
+	
+	up->AddJsonEvent(eventObject);
 
 	s->thread_manager->PushTask(NULL, "datacollector_beginTransaction", jsonArray);
 }
@@ -73,14 +93,33 @@ void Transaction::UpdatePosition(std::string category, FVector Position, TShared
 
 	std::string ts = Util::GetTimestampStr();
 	FString fs(ts.c_str());
+	double time = FCString::Atod(*fs);
 
-	Util::AppendToJsonArray(jsonArray, fs);
-	Util::AppendToJsonArray(jsonArray, fs);
+	Util::AppendToJsonArray(jsonArray, time);
+	Util::AppendToJsonArray(jsonArray, time);
 	s->AppendUD(jsonArray);
 	Util::AppendToJsonArray(jsonArray, category);
 	Util::AppendToJsonArray(jsonArray, progress);
 	Util::AppendToJsonArray(jsonArray, transaction_id);
 	Util::AppendToJsonArray(jsonArray, properties);
+
+	UPlayerTracker* up;
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	up = Cast<UPlayerTracker>(controllers[0]->GetComponentByClass(UPlayerTracker::StaticClass()));
+
+	TArray< TSharedPtr<FJsonValue> > pos;
+	pos.Add(MakeShareable(new FJsonValueNumber(Position.X)));
+	pos.Add(MakeShareable(new FJsonValueNumber(Position.Y)));
+	pos.Add(MakeShareable(new FJsonValueNumber(Position.Z)));
+
+	FJsonObject* eventObject = new FJsonObject;
+	eventObject->SetStringField("name", category.c_str());
+	eventObject->SetNumberField("time", time);
+	eventObject->SetArrayField("point", pos);
+	eventObject->SetObjectField("properties", properties);
+
+	up->AddJsonEvent(eventObject);
 
 	s->thread_manager->PushTask(NULL, "datacollector_updateTransaction", jsonArray);
 }
@@ -108,14 +147,33 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 
 	std::string ts = Util::GetTimestampStr();
 	FString fs(ts.c_str());
+	double time = FCString::Atod(*fs);
 
-	Util::AppendToJsonArray(jsonArray, fs);
-	Util::AppendToJsonArray(jsonArray, fs);
+	Util::AppendToJsonArray(jsonArray, time);
+	Util::AppendToJsonArray(jsonArray, time);
 	s->AppendUD(jsonArray);
 	Util::AppendToJsonArray(jsonArray, category);
 	Util::AppendToJsonArray(jsonArray, result);
 	Util::AppendToJsonArray(jsonArray, transaction_id);
 	Util::AppendToJsonArray(jsonArray, properties);
+
+	UPlayerTracker* up;
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	up = Cast<UPlayerTracker>(controllers[0]->GetComponentByClass(UPlayerTracker::StaticClass()));
+
+	TArray< TSharedPtr<FJsonValue> > pos;
+	pos.Add(MakeShareable(new FJsonValueNumber(Position.X)));
+	pos.Add(MakeShareable(new FJsonValueNumber(Position.Y)));
+	pos.Add(MakeShareable(new FJsonValueNumber(Position.Z)));
+
+	FJsonObject* eventObject = new FJsonObject;
+	eventObject->SetStringField("name", category.c_str());
+	eventObject->SetNumberField("time", time);
+	eventObject->SetArrayField("point", pos);
+	eventObject->SetObjectField("properties", properties);
+
+	up->AddJsonEvent(eventObject);
 
 	s->thread_manager->PushTask(NULL, "datacollector_endTransaction", jsonArray);
 }
