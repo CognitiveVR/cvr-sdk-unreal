@@ -4,7 +4,7 @@
 	<ItemGroup>
 		<None Include="..\..\CognitiveVRTest.uproject" />
 		<Filter Include="Source">
-			<UniqueIdentifier>{9A5B5522-765F-4840-9BC3-5BD74C772DD5}</UniqueIdentifier>
+			<UniqueIdentifier>{001B28FD-D31E-4C2A-A4FF-CA77B065EA14}</UniqueIdentifier>
 		</Filter>
 		<None Include="..\..\Source\CognitiveVRTest.Target.cs">
 			<Filter>Source</Filter>
@@ -13,7 +13,7 @@
 			<Filter>Source</Filter>
 		</None >
 		<Filter Include="Config">
-			<UniqueIdentifier>{89B3471A-0668-4C4C-ADB3-CD34694F839C}</UniqueIdentifier>
+			<UniqueIdentifier>{00A58106-68D0-4B11-B4C9-E9CA620FE653}</UniqueIdentifier>
 		</Filter>
 		<None Include="..\..\Config\DefaultEditor.ini">
 			<Filter>Config</Filter>
@@ -31,115 +31,181 @@
 			<Filter>Config</Filter>
 		</None >
 		<Filter Include="Plugins">
-			<UniqueIdentifier>{1A6B183B-6044-4201-8B3C-E3A766B9B1E0}</UniqueIdentifier>
+			<UniqueIdentifier>{6E50574B-276B-468D-A00D-15007F8243A5}</UniqueIdentifier>
 		</Filter>
-		<Filter Include="Plugins\CognitiveVRAnalytics">
-			<UniqueIdentifier>{D0518E79-D6CF-43D7-8890-E31032D78D4F}</UniqueIdentifier>
+		<Filter Include="Plugins\CognitiveVR">
+			<UniqueIdentifier>{F81265BA-A3DF-4ED0-B43D-FBCE9B058CD4}</UniqueIdentifier>
 		</Filter>
-		<Filter Include="Plugins\CognitiveVRAnalytics\Source">
-			<UniqueIdentifier>{F96BD8FD-C386-46E2-8283-9C8E1CD67298}</UniqueIdentifier>
+		<Filter Include="Plugins\CognitiveVR\Source">
+			<UniqueIdentifier>{20E77E88-A4C3-49C2-8F67-6D8C80E8B529}</UniqueIdentifier>
 		</Filter>
-		<Filter Include="Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics">
-			<UniqueIdentifier>{42076310-2C70-4C6F-8E38-A540CDF44A05}</UniqueIdentifier>
+		<Filter Include="Plugins\CognitiveVR\Source\CognitiveVR">
+			<UniqueIdentifier>{BC0131C8-D451-4E54-B488-CC40D8E3E4D3}</UniqueIdentifier>
 		</Filter>
-		<None Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\CognitiveVRAnalytics.Build.cs">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics</Filter>
+		<None Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR</Filter>
 		</None >
-		<Filter Include="Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private">
-			<UniqueIdentifier>{432F7ECE-0F6A-4756-981B-9BBBF97C80C7}</UniqueIdentifier>
+		<Filter Include="Plugins\CognitiveVR\Source\CognitiveVR\Private">
+			<UniqueIdentifier>{53563787-6481-4076-ACBA-AB2590B40954}</UniqueIdentifier>
 		</Filter>
-		<ClCompile Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\CognitiveVRAnalytics.cpp">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private</Filter>
+		<ClCompile Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVR.cpp">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private</Filter>
 		</ClCompile >
-		<ClInclude Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\CognitiveVRAnalyticsPrivatePCH.h">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private</Filter>
+		<ClCompile Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVRBlueprints.cpp">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVRPrivatePCH.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private</Filter>
 		</ClInclude >
-		<Filter Include="Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\api">
-			<UniqueIdentifier>{A8CA9F61-EACE-41A2-8A94-E58D058B62E5}</UniqueIdentifier>
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVRProvider.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVRSettings.cpp">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVRSettings.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private</Filter>
+		</ClInclude >
+		<Filter Include="Plugins\CognitiveVR\Source\CognitiveVR\Private\api">
+			<UniqueIdentifier>{9F954ACD-8A34-4B44-B567-79DF1C035294}</UniqueIdentifier>
 		</Filter>
-		<None Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\api\transaction.cc">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\api</Filter>
+		<None Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\api\coreutilities.cc">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\api</Filter>
 		</None >
-		<ClInclude Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\api\transaction.h">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\api</Filter>
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\api\coreutilities.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\api</Filter>
 		</ClInclude >
-		<None Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\api\tuning.cc">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\api</Filter>
+		<None Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\api\transaction.cc">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\api</Filter>
 		</None >
-		<ClInclude Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\api\tuning.h">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\api</Filter>
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\api\transaction.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\api</Filter>
 		</ClInclude >
-		<Filter Include="Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\network">
-			<UniqueIdentifier>{702D68F3-9C7C-4226-AF82-25368F4AB552}</UniqueIdentifier>
+		<None Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\api\tuning.cc">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\api</Filter>
+		</None >
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\api\tuning.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\api</Filter>
+		</ClInclude >
+		<Filter Include="Plugins\CognitiveVR\Source\CognitiveVR\Private\network">
+			<UniqueIdentifier>{35D5A84D-D3B8-43DB-B066-64604531EBEA}</UniqueIdentifier>
 		</Filter>
-		<ClInclude Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\network\cognitivevr_response.h">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\network</Filter>
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\network\cognitivevr_response.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\network</Filter>
 		</ClInclude >
-		<ClInclude Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\network\http_interface.h">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\network</Filter>
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\network\http_interface.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\network</Filter>
 		</ClInclude >
-		<None Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\network\network.cc">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\network</Filter>
+		<None Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\network\network.cc">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\network</Filter>
 		</None >
-		<ClInclude Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\network\network.h">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\network</Filter>
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\network\network.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\network</Filter>
 		</ClInclude >
-		<Filter Include="Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\unreal">
-			<UniqueIdentifier>{EF8BB25C-D250-4785-B571-29451DF51BA0}</UniqueIdentifier>
+		<Filter Include="Plugins\CognitiveVR\Source\CognitiveVR\Private\unreal">
+			<UniqueIdentifier>{CF2B529D-6C27-45D9-842C-D0B8BF6556B6}</UniqueIdentifier>
 		</Filter>
-		<None Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\unreal\override_http_interface.cc">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\unreal</Filter>
+		<None Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\unreal\buffer_manager.cc">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\unreal</Filter>
 		</None >
-		<ClInclude Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\unreal\override_http_interface.h">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\unreal</Filter>
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\unreal\buffer_manager.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\unreal</Filter>
 		</ClInclude >
-		<None Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\unreal\thread_manager.cc">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\unreal</Filter>
+		<None Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\unreal\override_http_interface.cc">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\unreal</Filter>
 		</None >
-		<ClInclude Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\unreal\thread_manager.h">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\unreal</Filter>
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\unreal\override_http_interface.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\unreal</Filter>
 		</ClInclude >
-		<Filter Include="Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\util">
-			<UniqueIdentifier>{A42DF482-7DC9-4FAA-88D7-CA9D42379E29}</UniqueIdentifier>
+		<Filter Include="Plugins\CognitiveVR\Source\CognitiveVR\Private\util">
+			<UniqueIdentifier>{E76C61DB-6F4F-4387-95EB-02546D35F1D3}</UniqueIdentifier>
 		</Filter>
-		<ClInclude Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\util\cognitivevr_exception.h">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\util</Filter>
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\util\cognitivevr_exception.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\util</Filter>
 		</ClInclude >
-		<None Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\util\config.cc">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\util</Filter>
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\util\cognitive_log.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\util</Filter>
+		</ClInclude >
+		<None Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\util\config.cc">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\util</Filter>
 		</None >
-		<ClInclude Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\util\config.h">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\util</Filter>
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\util\config.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\util</Filter>
 		</ClInclude >
-		<None Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\util\log.cc">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\util</Filter>
+		<None Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\util\log.cc">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\util</Filter>
 		</None >
-		<ClInclude Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\util\log.h">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\util</Filter>
-		</ClInclude >
-		<None Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\util\util.cc">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\util</Filter>
+		<None Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\util\util.cc">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\util</Filter>
 		</None >
-		<ClInclude Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\util\util.h">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Private\util</Filter>
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Private\util\util.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Private\util</Filter>
 		</ClInclude >
-		<Filter Include="Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Public">
-			<UniqueIdentifier>{6CECE9EF-1951-4A37-B3D4-E3AD84AB852B}</UniqueIdentifier>
+		<Filter Include="Plugins\CognitiveVR\Source\CognitiveVR\Public">
+			<UniqueIdentifier>{A82FD78A-5920-44F8-AC84-BC6B16D1F6CC}</UniqueIdentifier>
 		</Filter>
-		<ClInclude Include="..\..\Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Public\CognitiveVRAnalytics.h">
-			<Filter>Plugins\CognitiveVRAnalytics\Source\CognitiveVRAnalytics\Public</Filter>
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Public\CognitiveVR.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Public</Filter>
 		</ClInclude >
-		<None Include="..\..\Plugins\CognitiveVRAnalytics\CognitiveVRAnalytics.uplugin">
-			<Filter>Plugins\CognitiveVRAnalytics</Filter>
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVR\Public\CognitiveVRBlueprints.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVR\Public</Filter>
+		</ClInclude >
+		<None Include="..\..\Plugins\CognitiveVR\CognitiveVR.uplugin">
+			<Filter>Plugins\CognitiveVR</Filter>
 		</None >
-		<Filter Include="Plugins\CognitiveVRAnalytics\Resources">
-			<UniqueIdentifier>{9B387BBB-6793-4472-A4AD-F70011968969}</UniqueIdentifier>
+		<Filter Include="Plugins\CognitiveVR\Resources">
+			<UniqueIdentifier>{E59F5BAB-BCD5-41E7-A4D1-9A80C9A4320C}</UniqueIdentifier>
 		</Filter>
-		<None Include="..\..\Plugins\CognitiveVRAnalytics\Resources\Icon128.png">
-			<Filter>Plugins\CognitiveVRAnalytics\Resources</Filter>
+		<None Include="..\..\Plugins\CognitiveVR\Resources\DecimateExportedScene.py">
+			<Filter>Plugins\CognitiveVR\Resources</Filter>
 		</None >
+		<None Include="..\..\Plugins\CognitiveVR\Resources\Icon128.png">
+			<Filter>Plugins\CognitiveVR\Resources</Filter>
+		</None >
+		<Filter Include="Plugins\CognitiveVR\Source\CognitiveVREditor">
+			<UniqueIdentifier>{0416510C-ED2B-4385-ABE5-64F2407EDDA2}</UniqueIdentifier>
+		</Filter>
+		<None Include="..\..\Plugins\CognitiveVR\Source\CognitiveVREditor\CognitiveVREditor.Build.cs">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVREditor</Filter>
+		</None >
+		<Filter Include="Plugins\CognitiveVR\Source\CognitiveVREditor\Private">
+			<UniqueIdentifier>{A621DAEA-DF0F-4FA8-99D8-A17A9A981F77}</UniqueIdentifier>
+		</Filter>
+		<ClCompile Include="..\..\Plugins\CognitiveVR\Source\CognitiveVREditor\Private\BaseEditorTool.cpp">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVREditor\Private</Filter>
+		</ClCompile >
+		<ClCompile Include="..\..\Plugins\CognitiveVR\Source\CognitiveVREditor\Private\BaseEditorToolCustomization.cpp">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVREditor\Private</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVREditor\Private\BaseEditorToolCustomization.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVREditor\Private</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.cpp">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVREditor\Private</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorPrivatePCH.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVREditor\Private</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DemoStyle.cpp">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVREditor\Private</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DemoStyle.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVREditor\Private</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Plugins\CognitiveVR\Source\CognitiveVREditor\Private\ExportSceneTool.cpp">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVREditor\Private</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVREditor\Private\ExportSceneTool.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVREditor\Private</Filter>
+		</ClInclude >
+		<Filter Include="Plugins\CognitiveVR\Source\CognitiveVREditor\Public">
+			<UniqueIdentifier>{F2AF96A3-1AD8-41B2-903A-B0F5619A01E0}</UniqueIdentifier>
+		</Filter>
+		<ClInclude Include="..\..\Plugins\CognitiveVR\Source\CognitiveVREditor\Public\BaseEditorTool.h">
+			<Filter>Plugins\CognitiveVR\Source\CognitiveVREditor\Public</Filter>
+		</ClInclude >
 		<Filter Include="Source\CognitiveVRTest">
-			<UniqueIdentifier>{D9AC01B3-F04B-4D85-BF23-60B3B4FF4538}</UniqueIdentifier>
+			<UniqueIdentifier>{94C6DA7A-80C5-49FD-AE39-ACB64E43AFAF}</UniqueIdentifier>
 		</Filter>
 		<ClCompile Include="..\..\Source\CognitiveVRTest\CognitiveVRInitializer.cpp">
 			<Filter>Source\CognitiveVRTest</Filter>

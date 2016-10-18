@@ -4,6 +4,7 @@
 
 //#include "Core.h"
 #include "IAnalyticsProvider.h"
+#include "Analytics.h"
 //#include "CognitiveVR.h"
 #include "CognitiveVRProvider.h"
 //#include "CognitiveVRSettings.h"

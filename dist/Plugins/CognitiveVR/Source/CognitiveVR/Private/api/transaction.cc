@@ -5,6 +5,8 @@
 
 using namespace cognitivevrapi;
 
+//bool bHasSessionStarted = false;
+
 Transaction::Transaction(FAnalyticsProviderCognitiveVR* sp)
 {
 	s = sp;
@@ -13,7 +15,7 @@ Transaction::Transaction(FAnalyticsProviderCognitiveVR* sp)
 
 void Transaction::Begin(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id)
 {
-	if (this == NULL)
+	if (!bHasSessionStarted)
 	{
 		CognitiveLog::Warning("Transaction::Begin - FAnalyticsProviderCognitiveVR is null!");
 		return;
@@ -45,7 +47,7 @@ void Transaction::Begin(std::string category, TSharedPtr<FJsonObject> properties
 
 void Transaction::Update(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, double progress)
 {
-	if (this == NULL)
+	if (!bHasSessionStarted)
 	{
 		CognitiveLog::Warning("Transaction::Update - CognitiveVR is null!");
 		return;
@@ -75,7 +77,7 @@ void Transaction::Update(std::string category, TSharedPtr<FJsonObject> propertie
 
 void Transaction::End(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, std::string result)
 {
-	if (this == NULL)
+	if (!bHasSessionStarted)
 	{
 		CognitiveLog::Warning("Transaction::End - FAnalyticsProviderCognitiveVR is null!");
 		return;
@@ -105,7 +107,7 @@ void Transaction::End(std::string category, TSharedPtr<FJsonObject> properties, 
 
 void Transaction::BeginEnd(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, std::string result)
 {
-	if (this == NULL) //does this ever happen? when called before transaction is constructed?
+	if (!bHasSessionStarted)
 	{
 		CognitiveLog::Warning("Transaction::BeginEnd - FAnalyticsProviderCognitiveVR is null!");
 		return;

@@ -42,7 +42,6 @@ public:
 		*/
 	static inline FAnalyticsCognitiveVR& Get()
 	{
-		UE_LOG(CognitiveVR_Log, Error, TEXT("FANALYTICS COGNITIVEVR GET"));
 		return FModuleManager::LoadModuleChecked< FAnalyticsCognitiveVR >( "CognitiveVR" );
 	}
 

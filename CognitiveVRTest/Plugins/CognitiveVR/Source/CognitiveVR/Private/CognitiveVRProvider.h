@@ -24,6 +24,8 @@
 #include "Private/api/transaction.h"
 #include "Private/api/coreutilities.h"
 
+extern bool bHasSessionStarted;
+
 	enum Error {
 		kErrorSuccess = 0,
 		kErrorGeneric = -1,
@@ -69,7 +71,6 @@
 
 	public:
 		/** True once server has responded. everything is initialized at this point */
-		bool bHasSessionStarted=false;
 		//TODO time out should set bPendingInitRequest to false
 		bool bPendingInitRequest=false;
 

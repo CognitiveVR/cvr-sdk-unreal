@@ -8,7 +8,7 @@
 		</ProjectConfiguration>
 	</ItemGroup>
 	<PropertyGroup Label="Globals">
-		<ProjectGuid>{EB86A97A-AFD3-4101-B1B4-4B2E0BD190FC}</ProjectGuid>
+		<ProjectGuid>{663C84F9-2471-46A2-9198-B8EB9071EE9E}</ProjectGuid>
 		<Keyword>MakeFileProj</Keyword>
 		<RootNamespace>UE4</RootNamespace>
        <PlatformToolset>v140</PlatformToolset>
@@ -8114,7 +8114,6 @@
 		<ClInclude Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Classes\Components\PrimitiveComponent.h" />
 		<ClInclude Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Classes\Components\ReflectionCaptureComponent.h" />
 		<ClInclude Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Classes\Components\SceneCaptureComponent.h" />
-		<ClInclude Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Classes\Components\SceneCaptureComponent2D.h" />
 		<ClInclude Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Classes\Components\SceneCaptureComponentCube.h" />
 		<ClInclude Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Classes\Components\SceneComponent.h" />
 		<ClInclude Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Classes\Components\ShapeComponent.h" />
@@ -9367,6 +9366,7 @@
 		<ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Private\Components\PawnMovementComponent.cpp" />
 		<ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Private\Components\PawnNoiseEmitterComponent.cpp" />
 		<ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Private\Components\PlatformEventsComponent.cpp" />
+		<ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Private\Components\PlayerTracker.cpp" />
 		<ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Private\Components\PointLightComponent.cpp" />
 		<ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Private\Components\PortalComponent.cpp" />
 		<ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Private\Components\PoseableMeshComponent.cpp" />
@@ -9375,7 +9375,6 @@
 		<ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Private\Components\ProjectileMovementComponent.cpp" />
 		<ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Private\Components\ReflectionCaptureComponent.cpp" />
 		<ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Private\Components\RotatingMovementComponent.cpp" />
-		<ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Private\Components\SceneCaptureComponent.cpp" />
 		<ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Private\Components\SceneComponent.cpp" />
 		<ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Private\Components\ShapeComponent.cpp" />
 		<ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Epic Games\4.12\Engine\Source\Runtime\Engine\Private\Components\SkeletalMeshComponent.cpp" />
