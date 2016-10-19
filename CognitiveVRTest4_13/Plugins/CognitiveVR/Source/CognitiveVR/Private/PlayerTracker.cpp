@@ -19,9 +19,10 @@ UPlayerTracker::UPlayerTracker()
 void UPlayerTracker::BeginPlay()
 {
 	UE_LOG(LogTemp, Warning, TEXT("player tracker begin play"));
-
 	Super::BeginPlay();
 	Http = &FHttpModule::Get();
+
+	//RegisterComponent();
 
 	USceneCaptureComponent2D* scc;
 	scc = this->GetAttachmentRootActor()->FindComponentByClass<USceneCaptureComponent2D>();
@@ -182,7 +183,22 @@ FVector UPlayerTracker::GetGazePoint()
 
 void UPlayerTracker::SendData()
 {
-	FString currentSceneName = GetWorld()->GetMapName();
+	UE_LOG(LogTemp, Warning, TEXT("SEND"));
+	UWorld* myworld = GetWorld();
+	
+	if (myworld == NULL) { UE_LOG(LogTemp, Warning, TEXT("NO WORLD")); return; }
+	
+	UE_LOG(LogTemp, Warning, TEXT("YES WORLD"));
+
+	//return;
+
+	FString currentSceneName = myworld->GetMapName();
+
+	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
+
+	//
+	UE_LOG(LogTemp, Warning, TEXT("PlayerTracker::SendData scene name %s"),*currentSceneName);	
+	
 	UPlayerTracker::SendData(currentSceneName);
 }
 
@@ -213,6 +229,7 @@ FString UPlayerTracker::GetSceneKey(FString sceneName)
 						{
 							//found match
 							UE_LOG(LogTemp, Warning, TEXT("player tracker::get scene key - FOUND A MATCH!!!!!!"));
+							UE_LOG(LogTemp, Warning, TEXT("PlayerTracker::scene key %s"), *SceneKey.ToString());
 							return SceneKey.ToString();
 						}
 						else
@@ -237,7 +254,8 @@ void UPlayerTracker::SendData(FString sceneName)
 
 	// = "5aab820a-d3df-4ec4-98cb-b8c80fc73722";
 	FString sceneKey = UPlayerTracker::GetSceneKey(sceneName);
-	UE_LOG(LogTemp, Warning, TEXT("SEND"));
+
+	UE_LOG(LogTemp, Warning, TEXT("PlayerTracker::SendData scene KEY %s"), *sceneKey);
 
 	FString url = "https://sceneexplorer.com/api/";
 

@@ -164,10 +164,9 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 {
 	//TODO flush batched calls
 
-	UPlayerTracker* up;
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
-	up = Cast<UPlayerTracker>(controllers[0]->GetComponentByClass(UPlayerTracker::StaticClass()));
+	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 	up->SendData();
 
 	/*if (FileArchive != nullptr)
