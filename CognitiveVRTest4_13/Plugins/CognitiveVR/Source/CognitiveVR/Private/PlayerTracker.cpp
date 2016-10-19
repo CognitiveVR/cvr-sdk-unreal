@@ -86,11 +86,11 @@ void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		//positions
 		TArray<TSharedPtr<FJsonValue>> posArray;
 		TSharedPtr<FJsonValueNumber> JsonValue;
-		JsonValue = MakeShareable(new FJsonValueNumber(-GetComponentLocation().X)); //right
+		JsonValue = MakeShareable(new FJsonValueNumber(-(int32)GetComponentLocation().X)); //right
 		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(GetComponentLocation().Z)); //up
+		JsonValue = MakeShareable(new FJsonValueNumber((int32)GetComponentLocation().Z)); //up
 		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(GetComponentLocation().Y));  //forward
+		JsonValue = MakeShareable(new FJsonValueNumber((int32)GetComponentLocation().Y));  //forward
 		posArray.Add(JsonValue);
 
 		snapObj->SetArrayField("p", posArray);
@@ -98,11 +98,11 @@ void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		//gaze
 		TArray<TSharedPtr<FJsonValue>> gazeArray;
 		FVector gazePoint = GetGazePoint();
-		JsonValue = MakeShareable(new FJsonValueNumber(-gazePoint.X));
+		JsonValue = MakeShareable(new FJsonValueNumber(-(int32)gazePoint.X));
 		gazeArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(gazePoint.Z));
+		JsonValue = MakeShareable(new FJsonValueNumber((int32)gazePoint.Z));
 		gazeArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(gazePoint.Y));
+		JsonValue = MakeShareable(new FJsonValueNumber((int32)gazePoint.Y));
 		gazeArray.Add(JsonValue);
 
 		snapObj->SetArrayField("g", gazeArray);
@@ -183,22 +183,11 @@ FVector UPlayerTracker::GetGazePoint()
 
 void UPlayerTracker::SendData()
 {
-	UE_LOG(LogTemp, Warning, TEXT("SEND"));
 	UWorld* myworld = GetWorld();
-	
-	if (myworld == NULL) { UE_LOG(LogTemp, Warning, TEXT("NO WORLD")); return; }
-	
-	UE_LOG(LogTemp, Warning, TEXT("YES WORLD"));
-
-	//return;
+	if (myworld == NULL) { return; }
 
 	FString currentSceneName = myworld->GetMapName();
-
 	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
-
-	//
-	UE_LOG(LogTemp, Warning, TEXT("PlayerTracker::SendData scene name %s"),*currentSceneName);	
-	
 	UPlayerTracker::SendData(currentSceneName);
 }
 
@@ -220,7 +209,7 @@ FString UPlayerTracker::GetSceneKey(FString sceneName)
 				{
 					if (!SceneKey.IsValid() || SceneKey == NAME_None)
 					{
-						UE_LOG(LogTemp, Warning, TEXT("player tracker::get scene key - something wrong happened"));
+						UE_LOG(LogTemp, Warning, TEXT("player tracker::get scene key - something very wrong happened"));
 						//something wrong happened
 					}
 					else
@@ -228,13 +217,11 @@ FString UPlayerTracker::GetSceneKey(FString sceneName)
 						if (FName(*sceneName) == SceneName)
 						{
 							//found match
-							UE_LOG(LogTemp, Warning, TEXT("player tracker::get scene key - FOUND A MATCH!!!!!!"));
-							UE_LOG(LogTemp, Warning, TEXT("PlayerTracker::scene key %s"), *SceneKey.ToString());
+							UE_LOG(LogTemp, Warning, TEXT("PlayerTracker::scene key match %s"), *SceneKey.ToString());
 							return SceneKey.ToString();
 						}
 						else
 						{
-							UE_LOG(LogTemp, Warning, TEXT("player tracker::get scene key - not a match"));
 							//not a match
 						}
 					}
@@ -298,7 +285,7 @@ FString UPlayerTracker::EventSnapshotsToString()
 
 	for (int32 i = 0; i != events.Num(); ++i)
 	{
-		dataArray.Add(MakeShareable(new FJsonValueObject(snapshots[i])));
+		dataArray.Add(MakeShareable(new FJsonValueObject(events[i])));
 	}
 
 	wholeObj->SetArrayField("data", dataArray);

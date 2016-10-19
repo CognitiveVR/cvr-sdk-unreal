@@ -54,15 +54,18 @@ void Transaction::BeginPosition(std::string category, FVector Position, TSharedP
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 	
 	TArray< TSharedPtr<FJsonValue> > pos;
-	pos.Add(MakeShareable(new FJsonValueNumber(Position.X)));
-	pos.Add(MakeShareable(new FJsonValueNumber(Position.Y)));
-	pos.Add(MakeShareable(new FJsonValueNumber(Position.Z)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.X)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Y)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Z)));
 
 	FJsonObject* eventObject = new FJsonObject;
 	eventObject->SetStringField("name", category.c_str());
 	eventObject->SetNumberField("time", time);
 	eventObject->SetArrayField("point", pos);
-	eventObject->SetObjectField("properties", properties);
+	if (properties.Get()->Values.Num() > 0)
+	{
+		eventObject->SetObjectField("properties", properties);
+	}
 	
 	up->AddJsonEvent(eventObject);
 
@@ -107,15 +110,18 @@ void Transaction::UpdatePosition(std::string category, FVector Position, TShared
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 
 	TArray< TSharedPtr<FJsonValue> > pos;
-	pos.Add(MakeShareable(new FJsonValueNumber(Position.X)));
-	pos.Add(MakeShareable(new FJsonValueNumber(Position.Y)));
-	pos.Add(MakeShareable(new FJsonValueNumber(Position.Z)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.X)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Y)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Z)));
 
 	FJsonObject* eventObject = new FJsonObject;
 	eventObject->SetStringField("name", category.c_str());
 	eventObject->SetNumberField("time", time);
 	eventObject->SetArrayField("point", pos);
-	eventObject->SetObjectField("properties", properties);
+	if (properties.Get()->Values.Num() > 0)
+	{
+		eventObject->SetObjectField("properties", properties);
+	}
 
 	up->AddJsonEvent(eventObject);
 
@@ -160,15 +166,20 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 
 	TArray< TSharedPtr<FJsonValue> > pos;
-	pos.Add(MakeShareable(new FJsonValueNumber(Position.X)));
-	pos.Add(MakeShareable(new FJsonValueNumber(Position.Y)));
-	pos.Add(MakeShareable(new FJsonValueNumber(Position.Z)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.X)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Y)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Z)));
 
 	FJsonObject* eventObject = new FJsonObject;
 	eventObject->SetStringField("name", category.c_str());
 	eventObject->SetNumberField("time", time);
 	eventObject->SetArrayField("point", pos);
-	eventObject->SetObjectField("properties", properties);
+	if (properties.Get()->Values.Num() > 0)
+	{
+		eventObject->SetObjectField("properties", properties);
+	}
+
+	
 
 	up->AddJsonEvent(eventObject);
 
