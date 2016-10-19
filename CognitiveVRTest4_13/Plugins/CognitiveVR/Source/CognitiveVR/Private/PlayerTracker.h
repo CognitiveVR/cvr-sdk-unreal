@@ -27,9 +27,6 @@ private:
 	UMaterial* SceneDepthMat;
 
 	UPROPERTY(editanywhere)
-	int ticksTillSend = 50;
-
-	UPROPERTY(editanywhere)
 	bool sendToServer;
 
 public:	

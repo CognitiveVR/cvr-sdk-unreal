@@ -13,10 +13,13 @@ UPlayerTracker::UPlayerTracker()
 	// off to improve performance if you don't need them.
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
+	UE_LOG(LogTemp, Warning, TEXT("player tracker constructor"));
 }
 
 void UPlayerTracker::BeginPlay()
 {
+	UE_LOG(LogTemp, Warning, TEXT("player tracker begin play"));
+
 	Super::BeginPlay();
 	Http = &FHttpModule::Get();
 
@@ -49,7 +52,11 @@ void UPlayerTracker::BeginPlay()
 
 void UPlayerTracker::AddJsonEvent(FJsonObject* newEvent)
 {
-	events.Add(MakeShareable(newEvent));
+	TSharedPtr<FJsonObject>snapObj = MakeShareable(newEvent);
+
+	UE_LOG(LogTemp, Warning, TEXT("add json event"));
+
+	events.Add(snapObj);
 }
 
 // Called every frame

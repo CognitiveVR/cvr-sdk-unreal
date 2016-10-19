@@ -49,10 +49,9 @@ void Transaction::BeginPosition(std::string category, FVector Position, TSharedP
 	Util::AppendToJsonArray(jsonArray, transaction_id);
 	Util::AppendToJsonArray(jsonArray, properties);
 
-	UPlayerTracker* up;
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
-	up = Cast<UPlayerTracker>(controllers[0]->GetComponentByClass(UPlayerTracker::StaticClass()));
+	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 	
 	TArray< TSharedPtr<FJsonValue> > pos;
 	pos.Add(MakeShareable(new FJsonValueNumber(Position.X)));
@@ -103,10 +102,9 @@ void Transaction::UpdatePosition(std::string category, FVector Position, TShared
 	Util::AppendToJsonArray(jsonArray, transaction_id);
 	Util::AppendToJsonArray(jsonArray, properties);
 
-	UPlayerTracker* up;
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
-	up = Cast<UPlayerTracker>(controllers[0]->GetComponentByClass(UPlayerTracker::StaticClass()));
+	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 
 	TArray< TSharedPtr<FJsonValue> > pos;
 	pos.Add(MakeShareable(new FJsonValueNumber(Position.X)));
@@ -157,10 +155,9 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 	Util::AppendToJsonArray(jsonArray, transaction_id);
 	Util::AppendToJsonArray(jsonArray, properties);
 
-	UPlayerTracker* up;
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
-	up = Cast<UPlayerTracker>(controllers[0]->GetComponentByClass(UPlayerTracker::StaticClass()));
+	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 
 	TArray< TSharedPtr<FJsonValue> > pos;
 	pos.Add(MakeShareable(new FJsonValueNumber(Position.X)));
