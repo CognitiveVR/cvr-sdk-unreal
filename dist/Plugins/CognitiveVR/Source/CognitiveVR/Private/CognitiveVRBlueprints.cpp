@@ -10,7 +10,19 @@ using namespace cognitivevrapi;
 
 extern bool bHasSessionStarted;
 
-void UCognitiveVRBlueprints::BeginTransaction(FString Category, FString TransactionID)
+
+void UCognitiveVRBlueprints::BeginTransaction(FString Category, FString TransactionID, const TArray<FAnalyticsEventAttr>& Attributes)
+{
+	FVector HMDPosition;
+
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	HMDPosition = controllers[0]->GetPawn()->GetActorTransform().GetLocation();
+
+	UCognitiveVRBlueprints::BeginTransactionPosition(Category, TransactionID, Attributes, HMDPosition);
+}
+
+void UCognitiveVRBlueprints::BeginTransactionPosition(FString Category, FString TransactionID, const TArray<FAnalyticsEventAttr>& Attributes, FVector Position)
 {
 	TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
@@ -21,13 +33,27 @@ void UCognitiveVRBlueprints::BeginTransaction(FString Category, FString Transact
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+	for (int i = 0; i < Attributes.Num(); i++)
+	{
+		properties.Get()->SetStringField(Attributes[i].Name, Attributes[i].Value);
+	}
 	
 	cog->transaction->Begin(TCHAR_TO_UTF8(*Category), properties, TCHAR_TO_UTF8(*TransactionID));
 }
 
 //void UCognitiveVRBlueprints::BeginTransactionWithAttributes(FString Category, FString TransactionID, TArray<FAnalyticsEventAttribute>Attributes){}
 
-void UCognitiveVRBlueprints::UpdateTransaction(FString Category, FString TransactionID, float Progress)
+void UCognitiveVRBlueprints::UpdateTransaction(FString Category, FString TransactionID, const TArray<FAnalyticsEventAttr>& Attributes, float Progress)
+{
+	FVector HMDPosition;
+
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	HMDPosition = controllers[0]->GetPawn()->GetActorTransform().GetLocation();
+	UCognitiveVRBlueprints::UpdateTransactionPosition(Category, TransactionID, Attributes, HMDPosition, Progress);
+}
+
+void UCognitiveVRBlueprints::UpdateTransactionPosition(FString Category, FString TransactionID, const TArray<FAnalyticsEventAttr>& Attributes, FVector Position, float Progress)
 {
 	TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
@@ -38,10 +64,24 @@ void UCognitiveVRBlueprints::UpdateTransaction(FString Category, FString Transac
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+	for (int i = 0; i < Attributes.Num(); i++)
+	{
+		properties.Get()->SetStringField(Attributes[i].Name, Attributes[i].Value);
+	}
 	FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->transaction->Update(TCHAR_TO_UTF8(*Category), properties, TCHAR_TO_UTF8(*TransactionID),Progress);
 }
 
-void UCognitiveVRBlueprints::EndTransaction(FString Category, FString TransactionID)
+void UCognitiveVRBlueprints::EndTransaction(FString Category, FString TransactionID, const TArray<FAnalyticsEventAttr>& Attributes)
+{
+	FVector HMDPosition;
+
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	HMDPosition = controllers[0]->GetPawn()->GetActorTransform().GetLocation();
+	UCognitiveVRBlueprints::EndTransactionPosition(Category, TransactionID, Attributes, HMDPosition);
+}
+
+void UCognitiveVRBlueprints::EndTransactionPosition(FString Category, FString TransactionID, const TArray<FAnalyticsEventAttr>& Attributes, FVector Position)
 {
 	TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
@@ -52,12 +92,26 @@ void UCognitiveVRBlueprints::EndTransaction(FString Category, FString Transactio
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+	for (int i = 0; i < Attributes.Num(); i++)
+	{
+		properties.Get()->SetStringField(Attributes[i].Name, Attributes[i].Value);
+	}
 	FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->transaction->End(TCHAR_TO_UTF8(*Category), properties, TCHAR_TO_UTF8(*TransactionID));
 }
 
 //void UCognitiveVRBlueprints::EndTransactionWithAttributes(FString Category, FString TransactionID, TArray<FAnalyticsEventAttribute>Attributes){}
 
-void UCognitiveVRBlueprints::BeginEndTransaction(FString Category)
+void UCognitiveVRBlueprints::BeginEndTransaction(FString Category, const TArray<FAnalyticsEventAttr>& Attributes)
+{
+	FVector HMDPosition;
+
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	HMDPosition = controllers[0]->GetPawn()->GetActorTransform().GetLocation();
+	UCognitiveVRBlueprints::BeginEndTransactionPosition(Category, Attributes, HMDPosition);
+}
+
+void UCognitiveVRBlueprints::BeginEndTransactionPosition(FString Category, const TArray<FAnalyticsEventAttr>& Attributes, FVector Position)
 {
 	TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
@@ -68,7 +122,12 @@ void UCognitiveVRBlueprints::BeginEndTransaction(FString Category)
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->transaction->BeginEnd(TCHAR_TO_UTF8(*Category));
+	for (int i = 0; i < Attributes.Num(); i++)
+	{
+		properties.Get()->SetStringField(Attributes[i].Name, Attributes[i].Value);
+	}
+	
+	FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->transaction->BeginEnd(TCHAR_TO_UTF8(*Category),properties);
 }
 
 //void UCognitiveVRBlueprints::BeginEndTransactionWithAttributes(FString Category, TArray<FAnalyticsEventAttribute>Attributes){}

@@ -19,6 +19,7 @@ void UCognitiveVRSettings::ReadConfigSettings()
 {
 	//FString ReadApiKey = FAnalytics::Get().GetConfigValueFromIni(GetIniName(), GetTestIniSection(), TEXT("CognitiveVRApiKey"), true);
 
+	/*
 	FString ReadApiKey = FAnalytics::Get().GetConfigValueFromIni("DefaultEngine", "Analytics", TEXT("CognitiveVRApiKey"), true);
 	CustomerID = ReadApiKey;
 
@@ -63,7 +64,7 @@ void UCognitiveVRSettings::ReadConfigSettings()
 void UCognitiveVRSettings::WriteConfigSettings()
 {
 	//FAnalytics::Get().WriteConfigValueToIni(GetIniName(), GetTestIniSection(), TEXT("CognitiveVRApiKey"), CustomerID);
-	FAnalytics::Get().WriteConfigValueToIni("DefaultEngine", "Analytics", TEXT("CognitiveVRApiKey"), CustomerID);
+	//FAnalytics::Get().WriteConfigValueToIni("DefaultEngine", "Analytics", TEXT("CognitiveVRApiKey"), CustomerID);
 
 	//full
 	if (EnableFullDebugLogging)

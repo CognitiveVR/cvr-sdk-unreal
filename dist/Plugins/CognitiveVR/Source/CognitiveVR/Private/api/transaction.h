@@ -25,7 +25,8 @@ class COGNITIVEVR_API Transaction
                 
             @throws CognitiveVR_exception
         */
-        void Begin(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "");
+		void Begin(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "");
+        void BeginPosition(std::string category, FVector Position, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "");
 
         /** Update an existing transaction.
 
@@ -36,7 +37,8 @@ class COGNITIVEVR_API Transaction
 
             @throws CognitiveVR_exception
         */
-        void Update(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", double progress = 0);
+		void Update(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", double progress = 0);
+        void UpdatePosition(std::string category, FVector Position, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", double progress = 0);
 
         /** End an existing transaction.
 
@@ -49,7 +51,8 @@ class COGNITIVEVR_API Transaction
 
             @throws cognitivevr_exception
         */
-        void End(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", std::string result = "");
+		void End(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", std::string result = "");
+        void EndPosition(std::string category, FVector Position, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", std::string result = "");
 
         /** Begin and end new transaction.
 
@@ -60,6 +63,7 @@ class COGNITIVEVR_API Transaction
 
             @throws cognitivevr_exception
         */
-        void BeginEnd(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", std::string result = "");
+		void BeginEnd(std::string category, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", std::string result = "");
+        void BeginEndPosition(std::string category, FVector Position, TSharedPtr<FJsonObject> properties = NULL, std::string transaction_id = "", std::string result = "");
 };
 #endif  // COGNITIVEVR_TRANSACTION_H_

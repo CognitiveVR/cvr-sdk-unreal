@@ -67,7 +67,10 @@ void Transaction::BeginPosition(std::string category, FVector Position, TSharedP
 		eventObject->SetObjectField("properties", properties);
 	}
 	
-	up->AddJsonEvent(eventObject);
+	if (up != nullptr)
+	{
+		up->AddJsonEvent(eventObject);
+	}
 
 	s->thread_manager->PushTask(NULL, "datacollector_beginTransaction", jsonArray);
 }
@@ -123,7 +126,10 @@ void Transaction::UpdatePosition(std::string category, FVector Position, TShared
 		eventObject->SetObjectField("properties", properties);
 	}
 
-	up->AddJsonEvent(eventObject);
+	if (up != nullptr)
+	{
+		up->AddJsonEvent(eventObject);
+	}
 
 	s->thread_manager->PushTask(NULL, "datacollector_updateTransaction", jsonArray);
 }
@@ -179,9 +185,10 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 		eventObject->SetObjectField("properties", properties);
 	}
 
-	
-
-	up->AddJsonEvent(eventObject);
+	if (up != nullptr)
+	{
+		up->AddJsonEvent(eventObject);
+	}
 
 	s->thread_manager->PushTask(NULL, "datacollector_endTransaction", jsonArray);
 }

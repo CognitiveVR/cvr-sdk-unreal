@@ -23,6 +23,7 @@
 #include "Private/api/tuning.h"
 #include "Private/api/transaction.h"
 #include "Private/api/coreutilities.h"
+#include "Engine.h"
 
 extern bool bHasSessionStarted;
 
@@ -119,7 +120,7 @@ extern bool bHasSessionStarted;
 		void SetDeviceID(const FString& InDeviceID);
 
 		void AppendUD(TSharedPtr<FJsonValueArray> &json);
-
+		FVector GetPlayerHMDPosition();
 
 
 	};

@@ -6,6 +6,28 @@
 #include "AnalyticsSettings.h"
 #include "CognitiveVRSettings.generated.h"
 
+USTRUCT()
+struct FSceneKeyPair
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere)
+		FString SceneName;
+	UPROPERTY(EditAnywhere)
+		FString SceneKey;
+
+	FSceneKeyPair()
+	{
+
+	}
+
+	FSceneKeyPair(const FString& InName, const FString& InKey)
+	{
+		SceneName = InName;
+		SceneKey = InKey;
+	}
+};
+
 UCLASS(config = Engine, defaultconfig)
 class UCognitiveVRSettings
 	: public UAnalyticsSettingsBase
@@ -13,16 +35,19 @@ class UCognitiveVRSettings
 	GENERATED_UCLASS_BODY()
 
 	/** Display all info, warning and error messages from cognitiveVR. */
-	UPROPERTY(config, EditAnywhere, Category = CognitiveVR, meta = (ConfigRestartRequired = true))
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	bool EnableFullDebugLogging;
 
 	/** Display only error messages from cognitiveVR. */
-	UPROPERTY(config, EditAnywhere, Category = CognitiveVR, meta = (ConfigRestartRequired = true))
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	bool EnableErrorDebugLogging;
 
 	/** The unique identifier for your company and product. 'companyname1234-productname-test' */
-	UPROPERTY(config, EditAnywhere, Category = CognitiveVR, meta = (ConfigRestartRequired = true))
-	FString CustomerID;
+	//UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	//FString CustomerID;
+
+	UPROPERTY(config, EditAnywhere, Category = "Scene Keys")
+	TArray<FSceneKeyPair> SceneKeyPair;
 
 	// UAnalyticsSettingsBase interface
 protected:

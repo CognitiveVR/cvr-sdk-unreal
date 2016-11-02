@@ -166,5 +166,5 @@ void CoreUtilities::RecordPurchase(std::string transaction_id, double price, std
 	properties->SetStringField("pointOfSale", point_of_sale.c_str());
 	properties->SetStringField("itemName", item_name.c_str());
 
-	s->transaction->BeginEnd("purchase", properties, transaction_id, result);
+	s->transaction->BeginEnd("datacollector_purchase", properties, transaction_id, result);
 }

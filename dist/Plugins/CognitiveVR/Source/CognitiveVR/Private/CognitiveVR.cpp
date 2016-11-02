@@ -8,6 +8,7 @@
 //#endif
 #include "AnalyticsSettings.h"
 #include "CognitiveVRSettings.h"
+#include "PlayerTracker.h"
 
 using namespace cognitivevrapi;
 
@@ -30,7 +31,7 @@ void FAnalyticsCognitiveVR::ShutdownModule()
 	}*/
 }
 
-TSharedPtr<IAnalyticsProvider> FAnalyticsCognitiveVR::CreateAnalyticsProvider(const FAnalytics::FProviderConfigurationDelegate& GetConfigValue) const
+TSharedPtr<IAnalyticsProvider> FAnalyticsCognitiveVR::CreateAnalyticsProvider(const FAnalyticsProviderConfigurationDelegate& GetConfigValue) const
 {
 	//UE_LOG(CognitiveVR_Log, Log, TEXT("---------------------------------------------------FANALYTICS COGNITIVEVR CREATE PROVIDER"));
 	return CognitiveVRProvider;
@@ -104,8 +105,6 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 	
-	
-
 	//get attributes
 	//userid
 	//deviceid
@@ -164,6 +163,11 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 void FAnalyticsProviderCognitiveVR::FlushEvents()
 {
 	//TODO flush batched calls
+
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
+	up->SendData();
 
 	/*if (FileArchive != nullptr)
 	{
@@ -467,4 +471,14 @@ void ThrowDummyResponseException(std::string s)
 	response.SetErrorMessage(s);
 	response.SetContent(FJsonObject());
 	CognitiveLog::Error("CognitiveVRAnalytics::ResponseException! " + s);
+}
+
+
+FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
+{
+	//TODO cache this
+
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	return controllers[0]->GetPawn()->GetActorTransform().GetLocation();
 }
