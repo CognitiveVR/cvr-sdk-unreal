@@ -5,8 +5,6 @@ namespace UnrealBuildTool.Rules
 	{
 		public CognitiveVR(TargetInfo Target)
 		{
-            //PCHUsage = PCHUsageMode.NoSharedPCHs;
-
             PublicIncludePathModuleNames.AddRange(
                 new string[] {
                     "Core",
@@ -16,37 +14,11 @@ namespace UnrealBuildTool.Rules
 					// ... add public include paths required here ...
 				}
 				);
-			PublicIncludePaths.AddRange(
-				new string[] {
-                    "Analytics",
-                    "CognitiveVR/Private",
-                    "CognitiveVR/Public",
-                    "Private",
-					"Public"
-					//"CognitiveVRAnalytics/Public",
-					// ... add other private include paths required here ...
-				}
-				);
 			
 			PrivateIncludePaths.AddRange(
 				new string[] {
-					"Runtime/CognitiveVRAnalytics/Private",
-					"Engine",
-					"HTTP",
-					"Private",
-					"Public",
-                    "Private/api",
-                    "Private/network",
-                    "Private/unreal",
-                    "Private/util",
-                    "Analytics",
-					"Settings",
-					"Private/unreal",
 					"CognitiveVR/Private",
                     "CognitiveVR/Public",
-                    "CognitiveVR/Private/api",
-					"CognitiveVR/Private/network",
-					"CognitiveVR/Private/unreal",
 					"CognitiveVR/Private/util"
 					// ... add other private include paths required here ...
 				}
@@ -68,15 +40,6 @@ namespace UnrealBuildTool.Rules
 					"JsonUtilities"
 				}
 				);
-
-
-			PrivateDependencyModuleNames.AddRange(
-				new string[]
-				{
-					"HTTP",                    
-					// ... add private dependencies that you statically link with here ...	
-				}
-			);
 		}
 	}
 }
