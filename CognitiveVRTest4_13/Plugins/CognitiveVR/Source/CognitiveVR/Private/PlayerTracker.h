@@ -21,7 +21,7 @@ private:
 	TArray<TSharedPtr<FJsonObject>> snapshots;
 	TArray<TSharedPtr<FJsonObject>> events;
 	FHttpModule* Http;
-	
+	float maxDistance = 8192;
 
 	UPROPERTY(editanywhere)
 	UMaterial* SceneDepthMat;
@@ -56,4 +56,7 @@ public:
 
 	FString GazeSnapshotsToString();
 	FString EventSnapshotsToString();
+
+	UFUNCTION()
+	void SendOnLevelLoaded();
 };

@@ -20,8 +20,9 @@ class COGNITIVEVR_API Transaction
         /** Begin a new transaction.
 
 			@param std::string category
-            @param std::string transaction_id - Optional.
+			@param FVector position - Optional.
             @param Json::Value properties - Optional.
+			@param std::string transaction_id - Optional.
                 
             @throws CognitiveVR_exception
         */
@@ -31,9 +32,10 @@ class COGNITIVEVR_API Transaction
         /** Update an existing transaction.
 
 			@param std::string category
-            @param std::string transaction_id - Optional.                
+			@param FVector position - Optional.
+			@param Json::Value properties - Optional.
+            @param std::string transaction_id - Optional.
             @param double progress - Optional.
-            @param Json::Value properties - Optional.
 
             @throws CognitiveVR_exception
         */
@@ -43,11 +45,10 @@ class COGNITIVEVR_API Transaction
         /** End an existing transaction.
 
 			@param std::string category
+			@param FVector position - Optional.
+			@param Json::Value properties - Optional.
             @param std::string transaction_id - Optional.
             @param std::string result - Optional.
-            @param std::string user_id - Optional.
-            @param std::string device_id - Optional.
-            @param Json::Value properties - Optional.
 
             @throws cognitivevr_exception
         */
@@ -57,9 +58,10 @@ class COGNITIVEVR_API Transaction
         /** Begin and end new transaction.
 
 			@param std::string category
+			@param FVector position - Optional.
+			@param Json::Value properties - Optional.
             @param std::string transaction_id - Optional.
             @param std::string result - Optional.
-            @param Json::Value properties - Optional.
 
             @throws cognitivevr_exception
         */

@@ -77,15 +77,6 @@ void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, bool &mybool)
 	json = MakeShareable(new FJsonValueArray(ValueArray));
 }
 
-void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, const char &mychar)
-{
-	//cognitivevrapi::CognitiveLog::Error("Util::AppendToJsonArray - char not supported!");
-	//FString fstring = mychar.c_str();
-	//TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueString(fstring));
-	//TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
-	//ValueArray.Emplace(tempVal);
-}
-
 void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, long &longValue)
 {
 	TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();

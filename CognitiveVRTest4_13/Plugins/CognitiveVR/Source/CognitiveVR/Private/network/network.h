@@ -9,45 +9,38 @@
 #include "CognitiveVRPrivatePCH.h"
 #include "cognitivevr_response.h"
 
-//namespace cognitivevrapi
-//{
-	class FAnalyticsProviderCognitiveVR;
-	class HttpInterface;
-	//typedef void(*NetworkCallback)(CognitiveVRResponse);
 
-    class Network
-    {
-        private:
-			FAnalyticsProviderCognitiveVR* s;
-            HttpInterface* httpint;
+class FAnalyticsProviderCognitiveVR;
+class HttpInterface;
+//typedef void(*NetworkCallback)(CognitiveVRResponse);
 
-        public:
-            Network(FAnalyticsProviderCognitiveVR* sp);
-            //~Network();
+class Network
+{
+    private:
+		FAnalyticsProviderCognitiveVR* s;
+        HttpInterface* httpint;
 
-			//FJsonObject InitCallback(CognitiveVRResponse response);
+    public:
+        Network(FAnalyticsProviderCognitiveVR* sp);
 
-            /** Initialize the networking class used to make calls to the CognitiveVR API and
-                send the initial application_init request.
+        /** Initialize the networking class used to make calls to the CognitiveVR API and
+            send the initial application_init request.
 
-                @param httpint - HttpInterface used for HTTP requests.
+            @param httpint - HttpInterface used for HTTP requests.
+        */
 
-                @return Json::Value
-            */
-			void Init(HttpInterface* http, NetworkCallback callback);
+		void Init(HttpInterface* http, NetworkCallback callback);
 
-            /** Make a call to the CognitiveVR API.
+        /** Make a call to the CognitiveVR API.
 
-                @param std::string sub_path - The path for the API call.
-                @param Json::Value content - JSON content sent to CognitiveVR.
-                @param std::string context - The context of the call.
+            @param std::string sub_path - The path for the API call.
+            @param Json::Value content - JSON content sent to CognitiveVR.
+			@param NetworkCallback callback - JSON content sent to CognitiveVR.
+        */
+		void Call(std::string path, TSharedPtr<FJsonValueArray> content, NetworkCallback callback = NULL);
 
-                @return CognitiveVRResponse - Object that contains error data or the JSON content.
-            */
-			void Call(std::string path, TSharedPtr<FJsonValueArray> content, NetworkCallback callback = NULL);
+        static CognitiveVRResponse ParseResponse(std::string str_response);
+        static std::string InterpretError(int code);
+};
 
-            static CognitiveVRResponse ParseResponse(std::string str_response);
-            static std::string InterpretError(int code);
-    };
-//}
 #endif  // COGNITIVEVR_NETWORK_H_

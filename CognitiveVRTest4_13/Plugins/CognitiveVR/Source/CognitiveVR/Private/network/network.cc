@@ -42,8 +42,6 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 	Util::AppendToJsonArray(jsonArray, fs);
 	Util::AppendToJsonArray(jsonArray, fs);
 	s->AppendUD(jsonArray);
-	//Util::AppendToJsonArray(jsonArray, user);
-	//Util::AppendToJsonArray(jsonArray, device);
 	Util::AppendToJsonArray(jsonArray, empty);
 
 	if (s->initProperties.Get() == NULL)
@@ -60,8 +58,6 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 	Util::AppendToJsonArray(jsonArrayDevice, fs);
 	Util::AppendToJsonArray(jsonArrayDevice, fs);
 	s->AppendUD(jsonArrayDevice);
-	//Util::AppendToJsonArray(jsonArrayDevice, user);
-	//Util::AppendToJsonArray(jsonArrayDevice, device);
 	Util::AppendToJsonArray(jsonArrayDevice, deviceProperties);
 
 
@@ -77,19 +73,15 @@ void Network::Call(std::string sub_path, TSharedPtr<FJsonValueArray> content, Ne
 		CognitiveLog::Warning("Network::Call - No HTTP implementation available. Did you call cognitivevr::Init()?");
     }
 
-	//UCognitiveVRSettings* Settings = GetMutableDefault<UCognitiveVRSettings>();
-
 	FString ValueReceived;
 
 	bool moduleIsAvailable = FAnalytics::IsAvailable();
 	if (!moduleIsAvailable)
 	{
 		//UE_LOG(CognitiveVR_Log, Warning, TEXT("Network::Call FAnalytics is not available! Ignore network call"));
-		//CognitiveLog::Warning("Network::Call FAnalytics is not available! Ignore network call");
 		return;
 	}
 
-	//ValueReceived = UCognitiveVRSettings:: ::Get().CustomerID;
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
 
 	std::string customerid(TCHAR_TO_UTF8(*ValueReceived));
@@ -117,7 +109,6 @@ void Network::Call(std::string sub_path, TSharedPtr<FJsonValueArray> content, Ne
     };
 
     std::string str_response = "";
-
 
 	FString OutputString;
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);

@@ -4,34 +4,30 @@
 #ifndef COGNITIVEVR_BUFFER_MANAGER_H_
 #define COGNITIVEVR_BUFFER_MANAGER_H_
 
-//#include "EngineMinimal.h"
-//#include "Http.h"
 #include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
 
-//namespace cognitivevrapi
-//{
-    class Network;
-	class CognitiveVRResponse;
-	typedef void(*NetworkCallback)(CognitiveVRResponse);
 
-	//TODO save these transactions in a buffer until a threshold is reached. send a batch of transactions at once, instead of as requested
+class Network;
+class CognitiveVRResponse;
+typedef void(*NetworkCallback)(CognitiveVRResponse);
 
-    class BufferManager
-    {
-        private:
-            Network* network;
+//TODO save these transactions in a buffer until a threshold is reached. send a batch of transactions at once, instead of as requested
 
-        public:
-			BufferManager(Network* n);
-            //~BufferManager(){}
+class BufferManager
+{
+    private:
+        Network* network;
 
-			/** Begin and end new transaction.
-				@param NetworkCallback
-				@param std::string sub_path (context)
-				@param std::string content (all send data)
-			*/
-            void PushTask(NetworkCallback callback, std::string sub_path, TSharedPtr<FJsonValueArray> content);
-    };
-//}
+    public:
+		BufferManager(Network* n);
+        //~BufferManager(){}
+
+		/** Begin and end new transaction.
+			@param NetworkCallback
+			@param std::string sub_path (context)
+			@param std::string content (all send data)
+		*/
+        void PushTask(NetworkCallback callback, std::string sub_path, TSharedPtr<FJsonValueArray> content);
+};
 #endif  // COGNITIVEVR_BUFFER_MANAGER_H_
