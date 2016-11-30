@@ -121,7 +121,7 @@ extern bool bHasSessionStarted;
 
 		void AppendUD(TSharedPtr<FJsonValueArray> &json);
 		FVector GetPlayerHMDPosition();
-
+		void SendDeviceInfo();
 
 	};
 

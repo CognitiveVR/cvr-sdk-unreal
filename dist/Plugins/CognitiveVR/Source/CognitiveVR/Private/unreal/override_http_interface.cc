@@ -2,7 +2,6 @@
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #include "override_http_interface.h"
-//#include "Engine.h" //only needed for eu_log
 
 using namespace cognitivevrapi;
 

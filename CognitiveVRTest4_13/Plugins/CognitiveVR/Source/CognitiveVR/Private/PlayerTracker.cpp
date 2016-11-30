@@ -13,12 +13,24 @@ UPlayerTracker::UPlayerTracker()
 	// off to improve performance if you don't need them.
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
-	UE_LOG(LogTemp, Warning, TEXT("player tracker constructor"));
+}
+
+void UPlayerTracker::InitializePlayerTracker()
+{
+	if (SceneDepthMat == NULL)
+	{
+		UMaterialInterface *materialInterface = Cast<UMaterialInterface>(StaticLoadObject(UMaterialInterface::StaticClass(), NULL, *materialPath));
+		if (materialInterface != NULL)
+		{
+			SceneDepthMat = materialInterface->GetMaterial();
+		}
+	}
 }
 
 void UPlayerTracker::BeginPlay()
 {
-	UE_LOG(LogTemp, Warning, TEXT("player tracker begin play"));
+	InitializePlayerTracker();
+
 	Super::BeginPlay();
 	Http = &FHttpModule::Get();
 
@@ -332,5 +344,21 @@ FString UPlayerTracker::GazeSnapshotsToString()
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 	return OutputString;
+}
+
+void UPlayerTracker::RequestSendData()
+{
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	if (controllers.Num() == 0)
+	{
+		return;
+	}
+	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
+	if (up == NULL)
+	{
+		return;
+	}
+	up->SendData();
 }
 

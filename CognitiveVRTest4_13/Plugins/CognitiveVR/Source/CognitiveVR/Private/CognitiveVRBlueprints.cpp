@@ -189,3 +189,8 @@ FString UCognitiveVRBlueprints::GetTuningValue(FString Key, ETuningValueReturn& 
 	outString = FString();
 	return outString;
 }
+
+void UCognitiveVRBlueprints::SendPlayerData()
+{
+	UPlayerTracker::RequestSendData();
+}

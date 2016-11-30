@@ -53,6 +53,7 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 
 	//device update
 
+	//TODO remove this - for debugging only. application_init does not display on dashboard, but does work correctly
 	TSharedPtr<FJsonValueArray> jsonArrayDevice = MakeShareable(new FJsonValueArray(ObjArray));
 	TSharedPtr<FJsonObject> jsonDevice = MakeShareable(new FJsonObject);
 	Util::AppendToJsonArray(jsonArrayDevice, fs);
@@ -60,9 +61,7 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 	s->AppendUD(jsonArrayDevice);
 	Util::AppendToJsonArray(jsonArrayDevice, deviceProperties);
 
-
 	Network::Call("datacollector_updateDeviceState", jsonArrayDevice, NULL);
-	//s->thread_manager->PushTask(NULL, "datacollector_updateDeviceState", jsonArray);
 }
 
 //'application_init' and json'd sendtimestamp, eventtimestamp, userid, deviceid, userprops, deviceprops
@@ -78,7 +77,6 @@ void Network::Call(std::string sub_path, TSharedPtr<FJsonValueArray> content, Ne
 	bool moduleIsAvailable = FAnalytics::IsAvailable();
 	if (!moduleIsAvailable)
 	{
-		//UE_LOG(CognitiveVR_Log, Warning, TEXT("Network::Call FAnalytics is not available! Ignore network call"));
 		return;
 	}
 

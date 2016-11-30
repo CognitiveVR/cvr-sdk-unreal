@@ -6,6 +6,7 @@
 //#include "ISettingsModule.h"
 //#include "ISettingsSection.h"
 //#endif
+#include "HeadMountedDisplay.h"
 #include "AnalyticsSettings.h"
 #include "CognitiveVRSettings.h"
 #include "PlayerTracker.h"
@@ -91,6 +92,50 @@ void InitCallback(CognitiveVRResponse resp)
 
 	cog->transaction->Begin("Session");
 	cog->bPendingInitRequest = false;
+
+	cog->SendDeviceInfo();
+}
+
+void FAnalyticsProviderCognitiveVR::SendDeviceInfo()
+{
+	//add a bunch of properties
+	if (GEngine->HMDDevice.IsValid())
+	{
+		auto hmd = GEngine->HMDDevice.Get();
+
+		//FName devicename = hmd->GetDeviceName();
+		EHMDDeviceType::Type devicetype = hmd->GetHMDDeviceType();
+
+		if (devicetype == EHMDDeviceType::DT_SteamVR)
+		{
+			TArray<FAnalyticsEventAttribute> EventAttributes;
+			FName deviceName = hmd->GetDeviceName();
+			EventAttributes.Add(FAnalyticsEventAttribute(TEXT("DeviceName"), deviceName.ToString()));
+			FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->RecordEvent("HMDDevice",EventAttributes);
+
+			UE_LOG(LogTemp, Warning, TEXT("LOGGING STEAMVR DEVICE DETAILS ------------------------------------------------------------------------------"));
+
+			//FAnalyticsCognitiveVR::Get()GetCognitiveVRProvider();// .RecordEvent("HMDDevice", EventAttributes);
+		}
+		else
+		{
+			hmd->RecordAnalytics();
+		}
+
+		//EHMDWornState::Type wornstate = hmd->GetHMDWornState();
+		//FString versionstring = hmd->GetVersionString();
+
+
+		//hmd->RecordAnalytics();
+		//record analytics is not overridden for steamvr?
+
+		//properties->SetStringField("cvr.hmd.name", devicename.ToString());
+		//properties->SetStringField("cvr.hmd.version", versionstring);
+		//properties->SetObjectField("cvr.hmd.type", result2);
+
+		//hmd->GetVersionString
+		//hmd->RecordAnalytics
+	}
 }
 
 bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAttribute>& Attributes)
@@ -98,7 +143,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	if (bPendingInitRequest) { return false; }
 	if (bHasSessionStarted)
 	{
-		EndSession();
+		return false;
 	}
 
 	SessionId = UserId + TEXT("-") + FDateTime::Now().ToString();
@@ -166,7 +211,15 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
+	if (controllers.Num() == 0)
+	{
+		return;
+	}
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
+	if (up == NULL)
+	{
+		return;
+	}
 	up->SendData();
 
 	/*if (FileArchive != nullptr)
@@ -239,9 +292,7 @@ void FAnalyticsProviderCognitiveVR::RecordEvent(const FString& EventName, const 
 			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
 		}
 
-		std::string temp(TCHAR_TO_UTF8(*EventName));
-
-		transaction->BeginEnd(temp, properties);
+		transaction->BeginEnd(TCHAR_TO_UTF8(*EventName), properties);
 	}
 	else
 	{
@@ -480,5 +531,9 @@ FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
+	if (controllers.Num() == 0)
+	{
+		return FVector();
+	}
 	return controllers[0]->GetPawn()->GetActorTransform().GetLocation();
 }

@@ -35,10 +35,13 @@ void UCognitiveVRBlueprints::BeginTransactionPosition(FString Category, FString 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 	for (int i = 0; i < Attributes.Num(); i++)
 	{
-		properties.Get()->SetStringField(Attributes[i].Name, Attributes[i].Value);
+		if (Attributes[i].Name.Len() > 0)
+		{
+			properties.Get()->SetStringField(Attributes[i].Name, Attributes[i].Value);
+		}
 	}
-	
-	cog->transaction->Begin(TCHAR_TO_UTF8(*Category), properties, TCHAR_TO_UTF8(*TransactionID));
+
+	cog->transaction->BeginPosition(TCHAR_TO_UTF8(*Category), Position, properties, TCHAR_TO_UTF8(*TransactionID));
 }
 
 //void UCognitiveVRBlueprints::BeginTransactionWithAttributes(FString Category, FString TransactionID, TArray<FAnalyticsEventAttribute>Attributes){}
@@ -66,9 +69,13 @@ void UCognitiveVRBlueprints::UpdateTransactionPosition(FString Category, FString
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 	for (int i = 0; i < Attributes.Num(); i++)
 	{
-		properties.Get()->SetStringField(Attributes[i].Name, Attributes[i].Value);
+		if (Attributes[i].Name.Len() > 0)
+		{
+			properties.Get()->SetStringField(Attributes[i].Name, Attributes[i].Value);
+		}
 	}
-	FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->transaction->Update(TCHAR_TO_UTF8(*Category), properties, TCHAR_TO_UTF8(*TransactionID),Progress);
+
+	cog->transaction->UpdatePosition(TCHAR_TO_UTF8(*Category), Position, properties, TCHAR_TO_UTF8(*TransactionID), Progress);
 }
 
 void UCognitiveVRBlueprints::EndTransaction(FString Category, FString TransactionID, const TArray<FAnalyticsEventAttr>& Attributes)
@@ -94,12 +101,14 @@ void UCognitiveVRBlueprints::EndTransactionPosition(FString Category, FString Tr
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 	for (int i = 0; i < Attributes.Num(); i++)
 	{
-		properties.Get()->SetStringField(Attributes[i].Name, Attributes[i].Value);
+		if (Attributes[i].Name.Len() > 0)
+		{
+			properties.Get()->SetStringField(Attributes[i].Name, Attributes[i].Value);
+		}
 	}
-	FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->transaction->End(TCHAR_TO_UTF8(*Category), properties, TCHAR_TO_UTF8(*TransactionID));
-}
 
-//void UCognitiveVRBlueprints::EndTransactionWithAttributes(FString Category, FString TransactionID, TArray<FAnalyticsEventAttribute>Attributes){}
+	cog->transaction->EndPosition(TCHAR_TO_UTF8(*Category), Position, properties, TCHAR_TO_UTF8(*TransactionID));
+}
 
 void UCognitiveVRBlueprints::BeginEndTransaction(FString Category, const TArray<FAnalyticsEventAttr>& Attributes)
 {
@@ -124,10 +133,13 @@ void UCognitiveVRBlueprints::BeginEndTransactionPosition(FString Category, const
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 	for (int i = 0; i < Attributes.Num(); i++)
 	{
-		properties.Get()->SetStringField(Attributes[i].Name, Attributes[i].Value);
+		if (Attributes[i].Name.Len() > 0)
+		{
+			properties.Get()->SetStringField(Attributes[i].Name, Attributes[i].Value);
+		}
 	}
 	
-	FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->transaction->BeginEnd(TCHAR_TO_UTF8(*Category),properties);
+	cog->transaction->BeginEndPosition(TCHAR_TO_UTF8(*Category),Position,properties);
 }
 
 //void UCognitiveVRBlueprints::BeginEndTransactionWithAttributes(FString Category, TArray<FAnalyticsEventAttribute>Attributes){}
@@ -142,7 +154,7 @@ void UCognitiveVRBlueprints::UpdateCollection(FString Name, float Balance, float
 		return;
 	}
 
-	FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->core_utils->UpdateCollection(TCHAR_TO_UTF8(*Name), Balance, Change, IsCurrency);
+	cog->core_utils->UpdateCollection(TCHAR_TO_UTF8(*Name), Balance, Change, IsCurrency);
 }
 
 FString UCognitiveVRBlueprints::GetTuningValue(FString Key, ETuningValueReturn& Branches)
@@ -155,7 +167,7 @@ FString UCognitiveVRBlueprints::GetTuningValue(FString Key, ETuningValueReturn& 
 		return FString();
 	}
 	
-	CognitiveVRResponse response = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->tuning->GetValue(TCHAR_TO_UTF8(*Key),"default");
+	CognitiveVRResponse response = cog->tuning->GetValue(TCHAR_TO_UTF8(*Key),"default");
 
 	if (!response.IsSuccessful())
 	{
@@ -176,4 +188,9 @@ FString UCognitiveVRBlueprints::GetTuningValue(FString Key, ETuningValueReturn& 
 	Branches = ETuningValueReturn::Failed;
 	outString = FString();
 	return outString;
+}
+
+void UCognitiveVRBlueprints::SendPlayerData()
+{
+	UPlayerTracker::RequestSendData();
 }

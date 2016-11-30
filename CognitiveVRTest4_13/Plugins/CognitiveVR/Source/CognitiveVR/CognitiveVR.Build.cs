@@ -19,11 +19,18 @@ namespace UnrealBuildTool.Rules
 				new string[] {
 					"CognitiveVR/Private",
                     "CognitiveVR/Public",
-					"CognitiveVR/Private/util"
+					"CognitiveVR/Private/util",
+                    "GearVR/Private"
 					// ... add other private include paths required here ...
 				}
 				);
 
+            PrivateDependencyModuleNames.AddRange(
+                new string[]
+                {
+                    "HeadMountedDisplay"
+                }
+                );
 
 			PublicDependencyModuleNames.AddRange(
 				new string[]
@@ -37,8 +44,8 @@ namespace UnrealBuildTool.Rules
 					"Projects",
 					"HTTP",
 					"Json",
-					"JsonUtilities"
-				}
+                    "JsonUtilities"
+                }
 				);
 		}
 	}

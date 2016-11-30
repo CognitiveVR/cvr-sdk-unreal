@@ -13,16 +13,26 @@ UPlayerTracker::UPlayerTracker()
 	// off to improve performance if you don't need them.
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
-	UE_LOG(LogTemp, Warning, TEXT("player tracker constructor"));
+}
+
+void UPlayerTracker::InitializePlayerTracker()
+{
+	if (SceneDepthMat == NULL)
+	{
+		UMaterialInterface *materialInterface = Cast<UMaterialInterface>(StaticLoadObject(UMaterialInterface::StaticClass(), NULL, *materialPath));
+		if (materialInterface != NULL)
+		{
+			SceneDepthMat = materialInterface->GetMaterial();
+		}
+	}
 }
 
 void UPlayerTracker::BeginPlay()
 {
-	UE_LOG(LogTemp, Warning, TEXT("player tracker begin play"));
+	InitializePlayerTracker();
+
 	Super::BeginPlay();
 	Http = &FHttpModule::Get();
-
-	//RegisterComponent();
 
 	USceneCaptureComponent2D* scc;
 	scc = this->GetAttachmentRootActor()->FindComponentByClass<USceneCaptureComponent2D>();
@@ -35,7 +45,6 @@ void UPlayerTracker::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("=====create new scene capture component"));
 		scc = NewObject<USceneCaptureComponent2D>();;
 		
-		//scc->SetupAttachment()
 		scc->SetupAttachment(this);
 		scc->SetRelativeLocation(FVector::ZeroVector);
 		scc->SetRelativeRotation(FQuat::Identity);
@@ -49,6 +58,28 @@ void UPlayerTracker::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("found scene capture component"));
 		renderTarget = scc->TextureTarget;
 	}
+	
+	// Also include all the streaming levels in the results
+	GLog->Log("this many streaming levels " + FString::FromInt(GetWorld()->StreamingLevels.Num()));
+
+	for (int32 LevelIndex = 0; LevelIndex < GetWorld()->StreamingLevels.Num(); ++LevelIndex)
+	{
+		ULevelStreaming* StreamingLevel = GetWorld()->StreamingLevels[LevelIndex];
+		if (StreamingLevel != NULL)
+		{
+			ULevel* Level = StreamingLevel->GetLoadedLevel();
+			GLog->Log("some value" + Level->GetName());
+		}
+	}
+	//GetWorld()->StreamingLevels[0]->OnLevelLoaded.AddDynamic(this, &UPlayerTracker::SendOnLevelLoaded);
+	
+	//ULevelStreaming::OnLevelLoaded.AddDynamic(this, &UPlayerTracker::SendOnLevelLoaded);
+	//ULevelStreaming::OnLevelLoaded.Add(SendOnLevelLoaded());
+}
+
+void UPlayerTracker::SendOnLevelLoaded()
+{
+	UE_LOG(LogTemp, Warning, TEXT("ONLEVELLOADED WOW"));
 }
 
 void UPlayerTracker::AddJsonEvent(FJsonObject* newEvent)
@@ -139,9 +170,6 @@ float UPlayerTracker::GetPixelDepth(float minvalue, float maxvalue)
 
 	}
 
-#if WITH_EDITORONLY_DATA
-	Texture->MipGenSettings = TMGS_NoMipmaps;
-#endif
 	Texture->SRGB = renderTarget->SRGB;
 
 	TArray<FColor> SurfData;
@@ -166,7 +194,7 @@ float UPlayerTracker::GetPixelDepth(float minvalue, float maxvalue)
 
 FVector UPlayerTracker::GetGazePoint()
 {
-	float distance = GetPixelDepth(0, 8192);
+	float distance = GetPixelDepth(0, maxDistance);
 	FRotator rot = GetComponentRotation();
 	FVector rotv = rot.Vector();
 	rotv *= distance;
@@ -239,7 +267,6 @@ void UPlayerTracker::SendData(FString sceneName)
 {
 	UE_LOG(LogTemp, Warning, TEXT("SEND"));
 
-	// = "5aab820a-d3df-4ec4-98cb-b8c80fc73722";
 	FString sceneKey = UPlayerTracker::GetSceneKey(sceneName);
 
 	UE_LOG(LogTemp, Warning, TEXT("PlayerTracker::SendData scene KEY %s"), *sceneKey);
@@ -296,10 +323,6 @@ FString UPlayerTracker::EventSnapshotsToString()
 	return OutputString;
 }
 
-/*
-{"userid":"somevalue",
-"data":[{"time":123.45,"p":[12.31,45.61,78.91],"g":[12.31,45.61,78.91]}]}
-*/
 FString UPlayerTracker::GazeSnapshotsToString()
 {
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
@@ -321,5 +344,21 @@ FString UPlayerTracker::GazeSnapshotsToString()
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 	return OutputString;
+}
+
+void UPlayerTracker::RequestSendData()
+{
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	if (controllers.Num() == 0)
+	{
+		return;
+	}
+	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
+	if (up == NULL)
+	{
+		return;
+	}
+	up->SendData();
 }
 

@@ -9,6 +9,7 @@
 	"CreatedByURL": "cognitivevr.co",
 	"DocsURL": "docs.cognitivevr.io",
 	"EnabledByDefault": true,
+	"CanContainContent":true,
 	"Modules": [
 		{
 			"Name" : "CognitiveVREditor",

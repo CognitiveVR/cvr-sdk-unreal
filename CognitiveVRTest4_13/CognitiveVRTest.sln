@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.22310.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Engine", "Engine", "{F1501F40-B9C6-48BF-81EA-6CF395DF4E1E}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Engine", "Engine", "{BE731AED-6C6C-4546-9630-B84799C85290}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Games", "Games", "{2F447817-DC3F-485F-ABC3-5FF6BE0A43AE}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Games", "Games", "{43D7B1F6-7505-4AC1-A2E8-216AFC7D2F0B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UE4", "Intermediate\ProjectFiles\UE4.vcxproj", "{1BB5A4AD-A464-488E-AFC5-6A59EC3020BF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UE4", "Intermediate\ProjectFiles\UE4.vcxproj", "{6D0A9CB7-FD09-4DBB-953B-9A42D93C91E5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CognitiveVRTest", "Intermediate\ProjectFiles\CognitiveVRTest.vcxproj", "{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CognitiveVRTest", "Intermediate\ProjectFiles\CognitiveVRTest.vcxproj", "{EABADF78-3A74-483C-9F39-19EDB118AF47}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,30 +25,30 @@ Global
 		Shipping|Win64 = Shipping|Win64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.DebugGame Editor|Win32.ActiveCfg = DebugGame_Editor|Win32
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.DebugGame Editor|Win64.ActiveCfg = DebugGame_Editor|x64
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.DebugGame Editor|Win64.Build.0 = DebugGame_Editor|x64
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.DebugGame|Win32.ActiveCfg = DebugGame_Game|Win32
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.DebugGame|Win32.Build.0 = DebugGame_Game|Win32
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.DebugGame|Win64.ActiveCfg = DebugGame_Game|x64
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.DebugGame|Win64.Build.0 = DebugGame_Game|x64
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.Development Editor|Win32.ActiveCfg = Development_Editor|Win32
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.Development Editor|Win64.ActiveCfg = Development_Editor|x64
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.Development Editor|Win64.Build.0 = Development_Editor|x64
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.Development|Win32.ActiveCfg = Development_Game|Win32
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.Development|Win32.Build.0 = Development_Game|Win32
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.Development|Win64.ActiveCfg = Development_Game|x64
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.Development|Win64.Build.0 = Development_Game|x64
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.Shipping|Win32.ActiveCfg = Shipping_Game|Win32
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.Shipping|Win32.Build.0 = Shipping_Game|Win32
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.Shipping|Win64.ActiveCfg = Shipping_Game|x64
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1}.Shipping|Win64.Build.0 = Shipping_Game|x64
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.DebugGame Editor|Win32.ActiveCfg = DebugGame_Editor|Win32
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.DebugGame Editor|Win64.ActiveCfg = DebugGame_Editor|x64
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.DebugGame Editor|Win64.Build.0 = DebugGame_Editor|x64
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.DebugGame|Win32.ActiveCfg = DebugGame_Game|Win32
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.DebugGame|Win32.Build.0 = DebugGame_Game|Win32
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.DebugGame|Win64.ActiveCfg = DebugGame_Game|x64
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.DebugGame|Win64.Build.0 = DebugGame_Game|x64
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.Development Editor|Win32.ActiveCfg = Development_Editor|Win32
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.Development Editor|Win64.ActiveCfg = Development_Editor|x64
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.Development Editor|Win64.Build.0 = Development_Editor|x64
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.Development|Win32.ActiveCfg = Development_Game|Win32
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.Development|Win32.Build.0 = Development_Game|Win32
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.Development|Win64.ActiveCfg = Development_Game|x64
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.Development|Win64.Build.0 = Development_Game|x64
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.Shipping|Win32.ActiveCfg = Shipping_Game|Win32
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.Shipping|Win32.Build.0 = Shipping_Game|Win32
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.Shipping|Win64.ActiveCfg = Shipping_Game|x64
+		{EABADF78-3A74-483C-9F39-19EDB118AF47}.Shipping|Win64.Build.0 = Shipping_Game|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{1BB5A4AD-A464-488E-AFC5-6A59EC3020BF} = {F1501F40-B9C6-48BF-81EA-6CF395DF4E1E}
-		{615D6791-EE8A-469C-BBCD-0C3CEFA6CFB1} = {2F447817-DC3F-485F-ABC3-5FF6BE0A43AE}
+		{6D0A9CB7-FD09-4DBB-953B-9A42D93C91E5} = {BE731AED-6C6C-4546-9630-B84799C85290}
+		{EABADF78-3A74-483C-9F39-19EDB118AF47} = {43D7B1F6-7505-4AC1-A2E8-216AFC7D2F0B}
 	EndGlobalSection
 EndGlobal

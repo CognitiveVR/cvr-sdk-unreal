@@ -7,41 +7,39 @@
 #include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
 
-//namespace cognitivevrapi
-//{
-    class CognitiveVRResponse
-    {
-        private:
-            bool success;
-            std::string error_message;
-			FJsonObject content;
 
-        public:
-			CognitiveVRResponse(bool s) {
-                success = s;
-				//content = FJsonValue::EMPTY_OBJECT;
-            }
+class CognitiveVRResponse
+{
+    private:
+        bool success;
+        std::string error_message;
+		FJsonObject content;
 
-            void SetErrorMessage(std::string err) {
-                error_message = err;
-            }
+    public:
+		CognitiveVRResponse(bool s) {
+            success = s;
+        }
 
-            void SetContent(FJsonObject c) {
-                content = c;
-            }
+        void SetErrorMessage(std::string err) {
+            error_message = err;
+        }
 
-            bool IsSuccessful() {
-                return success;
-            }
+        void SetContent(FJsonObject c) {
+            content = c;
+        }
 
-            std::string GetErrorMessage() {
-                return error_message;
-            }
+        bool IsSuccessful() {
+            return success;
+        }
 
-			FJsonObject GetContent() {
-                return content;
-            }
-    };
-	typedef void(*NetworkCallback)(CognitiveVRResponse);
-//}
+        std::string GetErrorMessage() {
+            return error_message;
+        }
+
+		FJsonObject GetContent() {
+            return content;
+        }
+};
+typedef void(*NetworkCallback)(CognitiveVRResponse);
+
 #endif  // COGNITIVEVR_NETWORK_DEFS_H_

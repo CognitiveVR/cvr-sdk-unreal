@@ -7,18 +7,11 @@
 #include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
 
-//#include <stdexcept>
-
-//#include "EngineMinimal.h"
 #include "Http.h"
 #include "Private/util/util.h"
 #include "Private/network/http_interface.h"
 #include "Private/network/network.h"
 
-//namespace cognitivevrapi
-//{
-//class HttpInterface;
-//class Network;
 class FAnalyticsProviderCognitiveVR;
 
 class OverrideHttpInterface : public HttpInterface
@@ -34,5 +27,4 @@ class OverrideHttpInterface : public HttpInterface
         //~OverrideHttpInterface(){}
         virtual std::string Post(std::string url, std::string path, std::string headers[], int header_count, std::string content, long timeout, NetworkCallback callback = NULL);
 };
-//}
 #endif  // COGNITIVEVR_UNREAL_HTTP_INTERFACE_H_

@@ -6,8 +6,6 @@
 
 using namespace cognitivevrapi;
 
-//bool bHasSessionStarted = false;
-
 Transaction::Transaction(FAnalyticsProviderCognitiveVR* sp)
 {
 	s = sp;

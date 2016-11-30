@@ -14,17 +14,8 @@ namespace cognitivevrapi
 			#pragma warning(push)
 			#pragma warning(disable:4251) //Disable DLL warning that does not apply in this context.
 
-            //Enables use of async calls.
-            //static bool kNetworkEnableThreading;
-
-            //Enables a graceful shutdown for thread task queue, if enabled the async thread will finish all tasks before stopping.
-            //static bool kNetworkEnableGracefulShutdown;
-
             //CognitiveVR API host. -- Only enterprise customers need this. Ex: https://data.cognitivevr.com
             static std::string kNetworkHost;
-
-			//Enable curl verify peer.
-			//static bool kNetworkEnableVerifyPeer;
 
             //SSF app. Ex: isos-personalization
             static std::string kSsfApp;

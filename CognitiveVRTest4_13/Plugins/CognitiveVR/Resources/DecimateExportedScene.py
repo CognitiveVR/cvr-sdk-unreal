@@ -105,8 +105,6 @@ print("=============================================deleted stuff")
 ops.import_scene.obj(filepath=exportPath+"/"+fileName+".obj", use_edges=True, use_smooth_groups=True, use_split_objects=True, use_split_groups=True, use_groups_as_vgroups=False, use_image_search=True, split_mode='ON', global_clamp_size=0, axis_forward='-Z', axis_up='Y')
 print("=============================================import complete")
 
-
-
 #bpy.context.window.screen = bpy.data.screens['UV Editing'] #uv window needs to be open?
 
 
@@ -293,5 +291,12 @@ nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
 nmo.writelines(finalmtlstrings)
 nmo.close()
 print("=============================================mtl fixed")
+
+f = open (os.path.join(exportPath,'settings.json'),'w')
+f.write('{\"scale\":10}')
+f.close()
+
+print("=============================================json write complete")
+
 exit()
 

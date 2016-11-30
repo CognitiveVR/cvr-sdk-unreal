@@ -47,8 +47,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Transaction")
 	static void EndTransactionPosition(FString Name, FString TransactionID, const TArray<FAnalyticsEventAttr>& Attributes, FVector Position);
-	
-	
 
 
 	//Immediately Begin and End Transaction. This is the same as Analytics > RecordEvent
@@ -65,4 +63,8 @@ public:
 	//Request a Tuning Value by Key. If a Tuning Value is found, it is returned as a String
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Tuning", Meta = (ExpandEnumAsExecs = "Branches"))
 	static FString GetTuningValue(FString Key, ETuningValueReturn& Branches);
+
+	//sends player gaze data and player events collected during this level to sceneexplorer.com
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Player Tracker")
+	static void SendPlayerData();
 };

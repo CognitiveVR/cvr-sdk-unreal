@@ -5,8 +5,6 @@
 
 using namespace cognitivevrapi;
 
-//bool bHasSessionStarted = false;
-
 Tuning::Tuning(FAnalyticsProviderCognitiveVR* sp, FJsonObject json)
 {
     s = sp;
@@ -15,14 +13,8 @@ Tuning::Tuning(FAnalyticsProviderCognitiveVR* sp, FJsonObject json)
 	CacheValues(TCHAR_TO_UTF8(*sp->GetDeviceID()), *json.GetObjectField("devicetuning").Get(), kEntityTypeDevice, true);
 }
 
-/*Tuning::~Tuning()
-{
-	CognitiveLog::Info("Freeing tuning memory.");
-}*/
-
 void Tuning::CacheValues(std::string entity_id, FJsonObject values, EntityType entity_type, bool getallc)
 {
-	//TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
 	if (!bHasSessionStarted)
 	{
 		CognitiveLog::Warning("Tuning::CacheValues provider is null!");

@@ -21,10 +21,12 @@ private:
 	TArray<TSharedPtr<FJsonObject>> snapshots;
 	TArray<TSharedPtr<FJsonObject>> events;
 	FHttpModule* Http;
-	
+	float maxDistance = 8192;
 
-	UPROPERTY(editanywhere)
+	//UPROPERTY(editanywhere)
 	UMaterial* SceneDepthMat;
+
+	FString materialPath = "/CognitiveVR/DepthPostProcessing";
 
 	UPROPERTY(editanywhere)
 	bool sendToServer;
@@ -42,10 +44,14 @@ public:
 	
 	virtual void BeginPlay() override;
 	
+	void InitializePlayerTracker();
+
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
 	void SendData();
 	void SendData(FString sceneName);
+
+	void static RequestSendData();
 
 	FString GetSceneKey(FString sceneName);
 
@@ -56,4 +62,7 @@ public:
 
 	FString GazeSnapshotsToString();
 	FString EventSnapshotsToString();
+
+	UFUNCTION()
+	void SendOnLevelLoaded();
 };
