@@ -2,14 +2,8 @@
 
 #pragma once
 
-//#include <cstdio>
-//#include <cstddef>
-//#include <stdexcept>
-//#include <ctime>
-
 #include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
-//#include "Runtime/Analytics/Analytics/Public/Interfaces/IAnalyticsProviderModule.h"
 
 #include "Private/unreal/override_http_interface.h"
 #include "Private/util/util.h"

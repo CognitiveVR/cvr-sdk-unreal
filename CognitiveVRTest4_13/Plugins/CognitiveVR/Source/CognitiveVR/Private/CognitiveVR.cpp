@@ -2,10 +2,6 @@
 
 #include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
-//#if WITH_EDITOR
-//#include "ISettingsModule.h"
-//#include "ISettingsSection.h"
-//#endif
 #include "HeadMountedDisplay.h"
 #include "AnalyticsSettings.h"
 #include "CognitiveVRSettings.h"
@@ -19,13 +15,11 @@ bool bHasSessionStarted = false;
 
 void FAnalyticsCognitiveVR::StartupModule()
 {
-	//UE_LOG(CognitiveVR_Log, Log, TEXT("---------------------------------------------------FANALYTICS COGNITIVEVR STARTUP"));
 	CognitiveVRProvider = MakeShareable(new FAnalyticsProviderCognitiveVR());
 }
 
 void FAnalyticsCognitiveVR::ShutdownModule()
 {
-	//UE_LOG(CognitiveVR_Log, Log, TEXT("---------------------------------------------------FANALYTICS COGNITIVEVR SHUTDOWN"));
 	/*if (CognitiveVRProvider.IsValid())
 	{
 		CognitiveVRProvider->EndSession();
@@ -34,7 +28,6 @@ void FAnalyticsCognitiveVR::ShutdownModule()
 
 TSharedPtr<IAnalyticsProvider> FAnalyticsCognitiveVR::CreateAnalyticsProvider(const FAnalyticsProviderConfigurationDelegate& GetConfigValue) const
 {
-	//UE_LOG(CognitiveVR_Log, Log, TEXT("---------------------------------------------------FANALYTICS COGNITIVEVR CREATE PROVIDER"));
 	return CognitiveVRProvider;
 }
 
@@ -43,7 +36,6 @@ TSharedPtr<FAnalyticsProviderCognitiveVR> FAnalyticsCognitiveVR::GetCognitiveVRP
 	TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
 	if (Provider.IsValid())
 	{
-		//cognitivevrapi::CognitiveLog::Warning("FAnalyticsCognitiveVR::GetCognitiveVRProvider VALID ALL IS GOOD!");
 		TSharedPtr<FAnalyticsProviderCognitiveVR> prov = StaticCastSharedPtr<FAnalyticsProviderCognitiveVR>(CognitiveVRProvider);
 		return prov;
 	}
@@ -57,7 +49,6 @@ TSharedPtr<FAnalyticsProviderCognitiveVR> FAnalyticsCognitiveVR::GetCognitiveVRP
 FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR() :
 	Age(0)
 {
-	//UE_LOG(CognitiveVR_Log, Log, TEXT("---------------------------------------------------COGNITITVE PROVIDER CONSTUCTOR"));
 	DeviceId = FPlatformMisc::GetUniqueDeviceId();
 }
 
@@ -103,7 +94,6 @@ void FAnalyticsProviderCognitiveVR::SendDeviceInfo()
 	{
 		auto hmd = GEngine->HMDDevice.Get();
 
-		//FName devicename = hmd->GetDeviceName();
 		EHMDDeviceType::Type devicetype = hmd->GetHMDDeviceType();
 
 		if (devicetype == EHMDDeviceType::DT_SteamVR)
@@ -112,29 +102,11 @@ void FAnalyticsProviderCognitiveVR::SendDeviceInfo()
 			FName deviceName = hmd->GetDeviceName();
 			EventAttributes.Add(FAnalyticsEventAttribute(TEXT("DeviceName"), deviceName.ToString()));
 			FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->RecordEvent("HMDDevice",EventAttributes);
-
-			UE_LOG(LogTemp, Warning, TEXT("LOGGING STEAMVR DEVICE DETAILS ------------------------------------------------------------------------------"));
-
-			//FAnalyticsCognitiveVR::Get()GetCognitiveVRProvider();// .RecordEvent("HMDDevice", EventAttributes);
 		}
 		else
 		{
 			hmd->RecordAnalytics();
 		}
-
-		//EHMDWornState::Type wornstate = hmd->GetHMDWornState();
-		//FString versionstring = hmd->GetVersionString();
-
-
-		//hmd->RecordAnalytics();
-		//record analytics is not overridden for steamvr?
-
-		//properties->SetStringField("cvr.hmd.name", devicename.ToString());
-		//properties->SetStringField("cvr.hmd.version", versionstring);
-		//properties->SetObjectField("cvr.hmd.type", result2);
-
-		//hmd->GetVersionString
-		//hmd->RecordAnalytics
 	}
 }
 
@@ -235,13 +207,11 @@ void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
 	{
 		UserId = InUserID;
 		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetUserID set user id");
-		//UE_LOG(CognitiveVR_Log, Display, TEXT("User is now (%s)"), *UserId);
 	}
 	else
 	{
 		// Log that we shouldn't switch users during a session
 		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SetUserID called while session is in progress. Ignoring");
-		//UE_LOG(CognitiveVR_Log, Warning, TEXT("FAnalyticsProviderFileLogging::SetUserID called while a session is in progress. Ignoring."));
 	}
 }
 
@@ -527,7 +497,7 @@ void ThrowDummyResponseException(std::string s)
 
 FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 {
-	//TODO cache this
+	//TODO cache this. are playercontrollers persisted across level changes?
 
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);

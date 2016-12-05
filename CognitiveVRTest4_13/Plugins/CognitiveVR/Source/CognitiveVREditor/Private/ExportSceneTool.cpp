@@ -9,7 +9,7 @@ UExportSceneTool::UExportSceneTool()
 	//MirrorPlane = FPlane(1.0, 0.0f, 0.0f, 0.0f);
 }
 
-void UExportSceneTool::ExportScene()
+void UExportSceneTool::Export_Scene()
 {
 	//SelectExportMeshes();
 
@@ -20,7 +20,7 @@ void UExportSceneTool::ExportScene()
 	//RunBlenderCleanup();
 }
 
-void UExportSceneTool::SelectExportMeshes()
+void UExportSceneTool::Select_Export_Meshes()
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
@@ -48,21 +48,20 @@ void UExportSceneTool::SelectExportMeshes()
 			if (sc->Mobility == EComponentMobility::Movable) { continue; }
 		}
 
-		//get static meshes above certain size
-		if (MinimumSize > 1)
+		//get meshes in size range
+		FVector origin;
+		FVector boxBounds;
+
+		ObstacleItr->GetActorBounds(false, origin, boxBounds);
+		double magnitude = FMath::Sqrt(boxBounds.X*boxBounds.X + boxBounds.Y*boxBounds.Y + boxBounds.Z*boxBounds.Z);
+
+		if (magnitude < MinimumSize)
 		{
-			FVector origin;
-			FVector boxBounds;
-
-			ObstacleItr->GetActorBounds(false, origin, boxBounds);
-
-			double magnitude = FMath::Sqrt(boxBounds.X*boxBounds.X + boxBounds.Y*boxBounds.Y + boxBounds.Z*boxBounds.Z);
-			//UE_LOG(LogTemp, Warning, TEXT("bounds magnitude %f"), magnitude);
-
-			if (magnitude < MinimumSize)
-			{
-				continue;
-			}
+			continue;
+		}
+		if (magnitude > MaximumSize)
+		{
+			continue;
 		}
 
 		//get the selectable bit
@@ -147,7 +146,7 @@ void UExportSceneTool::SelectExportMeshes()
 }*/
 
 //open fiel type
-void UExportSceneTool::SelectBlender()
+void UExportSceneTool::Select_Blender()
 {
 	FString title = "Select Blender.exe";
 	FString fileTypes = ".exe";
@@ -228,7 +227,7 @@ void* UExportSceneTool::ChooseParentWindowHandle()
 }
 
 //run this as the next step after exporting the scene
-void UExportSceneTool::RunBlenderCleanup()
+void UExportSceneTool::Reduce_Meshes()
 {
 	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("DecimateExportedScene.py");
 	const TCHAR* charPath = *pythonscriptpath;
@@ -284,7 +283,9 @@ void UExportSceneTool::RunBlenderCleanup()
 	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
 
-	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " " + MinPolyCount + " " + MaxPolyCount + " " + SceneName;
+	FString productID = GetProductID();
+
+	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " " + MinPolyCount + " " + MaxPolyCount + " " + SceneName + " " + productID;
 
 	FString stringParamSlashed = stringparams.Replace(TEXT("\\"),TEXT("/"));
 	
@@ -305,8 +306,20 @@ void UExportSceneTool::RunBlenderCleanup()
 	//TODO when procHandle is complete, upload exported files to sceneexplorer.com
 }
 
+FString UExportSceneTool::GetProductID()
+{
+	FString ValueReceived;
+	GConfig->GetString(
+		TEXT("Analytics"),
+		TEXT("CognitiveVRApiKey"),
+		ValueReceived,
+		GEngineIni
+	);
+	return ValueReceived;
+}
+
 //run this as the next step after exporting the scene
-void UExportSceneTool::ConvertTextures()
+void UExportSceneTool::Reduce_Textures()
 {
 	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("ConvertTextures.py");
 	const TCHAR* charPath = *pythonscriptpath;

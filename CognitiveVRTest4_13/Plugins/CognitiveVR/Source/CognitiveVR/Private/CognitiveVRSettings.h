@@ -36,7 +36,7 @@ class UCognitiveVRSettings
 
 	/** Display all info, warning and error messages from cognitiveVR. */
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-	bool EnableFullDebugLogging;
+	bool EnableFullDebugLogging = true;
 
 	/** Display only error messages from cognitiveVR. */
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)

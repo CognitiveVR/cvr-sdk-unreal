@@ -8,8 +8,6 @@
 
 void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {
-	IDetailCategoryBuilder& ForwardRenderingCategory = DetailBuilder.EditCategory(TEXT("Forward Rendering Overrides"));
-
 	TSet<UClass*> Classes;
 
 	TArray<TWeakObjectPtr<UObject>> ObjectsBeingCustomized;
@@ -22,6 +20,21 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			Classes.Add(Instance->GetClass());
 		}
 	}
+
+	/*IDetailCategoryBuilder& SetupCategory = DetailBuilder.EditCategory(TEXT("Stuff"));
+
+	SetupCategory.AddCustomRow(FText::FromString("Setup"))
+		.ValueContent()
+		[
+			SNew(STextBlock)
+			.ColorAndOpacity(FLinearColor::White)
+			.ShadowColorAndOpacity(FLinearColor::Black)
+			.ShadowOffset(FIntPoint(-1, 1))
+			//.Font(FSlateFontInfo("Arial", 26))
+			.Text(FText::FromString("Main Menu"))
+		];*/
+
+
 
 	//should be a struct/class with scene name and scene key
 
@@ -44,23 +57,23 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			{
 				const FString FunctionName = Function->GetName();
 
-				if (FunctionName == "SelectExportMeshes")
+				if (FunctionName == "Select_Export_Meshes")
 				{
 					Functions[1] = Function;
 				}
-				if (FunctionName == "SelectBlender")
+				if (FunctionName == "Select_Blender")
 				{
 					Functions[0] = Function;
 				}
-				if (FunctionName == "ExportScene")
+				if (FunctionName == "Export_Scene")
 				{
 					Functions[2] = Function;
 				}
-				if (FunctionName == "RunBlenderCleanup")
+				if (FunctionName == "Reduce_Meshes")
 				{
 					Functions[3] = Function;
 				}
-				if (FunctionName == "ConvertTextures")
+				if (FunctionName == "Reduce_Textures")
 				{
 					Functions[4] = Function;
 				}
@@ -81,8 +94,11 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		for (auto& Function : Functions)
 		{
 			const FString FunctionName = Function->GetName();
-			const FText ButtonCaption = FText::FromString(FunctionName);
-			
+			//const FText ButtonCaption = FText::FromString(FunctionName);
+
+			FString title = FunctionName;
+			const FText ButtonCaption = FText::FromString(title.Replace(TEXT("_"),TEXT(" ")));
+
 			const FString FilterString = FunctionName;
 
 			Category.AddCustomRow(FText::FromString(FilterString))

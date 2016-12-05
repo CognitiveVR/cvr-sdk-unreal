@@ -42,7 +42,6 @@ void UPlayerTracker::BeginPlay()
 		renderTarget->ClearColor = FLinearColor::White;
 		renderTarget->InitAutoFormat(256, 256); //auto init from value bHDR
 	
-		UE_LOG(LogTemp, Warning, TEXT("=====create new scene capture component"));
 		scc = NewObject<USceneCaptureComponent2D>();;
 		
 		scc->SetupAttachment(this);
@@ -55,38 +54,13 @@ void UPlayerTracker::BeginPlay()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("found scene capture component"));
 		renderTarget = scc->TextureTarget;
 	}
-	
-	// Also include all the streaming levels in the results
-	GLog->Log("this many streaming levels " + FString::FromInt(GetWorld()->StreamingLevels.Num()));
-
-	for (int32 LevelIndex = 0; LevelIndex < GetWorld()->StreamingLevels.Num(); ++LevelIndex)
-	{
-		ULevelStreaming* StreamingLevel = GetWorld()->StreamingLevels[LevelIndex];
-		if (StreamingLevel != NULL)
-		{
-			ULevel* Level = StreamingLevel->GetLoadedLevel();
-			GLog->Log("some value" + Level->GetName());
-		}
-	}
-	//GetWorld()->StreamingLevels[0]->OnLevelLoaded.AddDynamic(this, &UPlayerTracker::SendOnLevelLoaded);
-	
-	//ULevelStreaming::OnLevelLoaded.AddDynamic(this, &UPlayerTracker::SendOnLevelLoaded);
-	//ULevelStreaming::OnLevelLoaded.Add(SendOnLevelLoaded());
-}
-
-void UPlayerTracker::SendOnLevelLoaded()
-{
-	UE_LOG(LogTemp, Warning, TEXT("ONLEVELLOADED WOW"));
 }
 
 void UPlayerTracker::AddJsonEvent(FJsonObject* newEvent)
 {
 	TSharedPtr<FJsonObject>snapObj = MakeShareable(newEvent);
-
-	UE_LOG(LogTemp, Warning, TEXT("add json event"));
 
 	events.Add(snapObj);
 }
@@ -99,8 +73,6 @@ void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 	currentTime += DeltaTime;
 	if (currentTime > PlayerSnapshotInterval)
 	{
-		
-		UE_LOG(LogTemp, Warning, TEXT("Player Tracker Tick"));
 		currentTime -= PlayerSnapshotInterval;
 		//write to json
 
@@ -152,9 +124,7 @@ float UPlayerTracker::GetPixelDepth(float minvalue, float maxvalue)
 {
 	if (renderTarget == NULL)
 	{
-		if (renderTarget->SizeX <= 0)
-			UE_LOG(LogTemp, Warning, TEXT("render target size is 0"));
-		UE_LOG(LogTemp, Warning, TEXT("RENDER TARGET IS NULL"));
+		CognitiveLog::Warning("UPlayerTracker::GetPixelDepth render target size is null");
 
 		return -1;
 	}
@@ -164,7 +134,7 @@ float UPlayerTracker::GetPixelDepth(float minvalue, float maxvalue)
 
 	if (Texture == NULL)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("TEMP Texture IS NULL"));
+		CognitiveLog::Warning("UPlayerTracker::GetPixelDepth TEMP Texture IS NULL");
 
 		return -1;
 
@@ -221,8 +191,6 @@ void UPlayerTracker::SendData()
 
 FString UPlayerTracker::GetSceneKey(FString sceneName)
 {
-	TArray<TSharedPtr<FSceneKeyPair>> ListSceneKeys;
-
 	FConfigSection* ScenePairs = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
 	for (FConfigSection::TIterator It(*ScenePairs); It; ++It)
 	{
@@ -237,7 +205,7 @@ FString UPlayerTracker::GetSceneKey(FString sceneName)
 				{
 					if (!SceneKey.IsValid() || SceneKey == NAME_None)
 					{
-						UE_LOG(LogTemp, Warning, TEXT("player tracker::get scene key - something very wrong happened"));
+						CognitiveLog::Warning("UPlayerTracker::GetSceneKey - key is invalid or none");
 						//something wrong happened
 					}
 					else
@@ -245,7 +213,6 @@ FString UPlayerTracker::GetSceneKey(FString sceneName)
 						if (FName(*sceneName) == SceneName)
 						{
 							//found match
-							UE_LOG(LogTemp, Warning, TEXT("PlayerTracker::scene key match %s"), *SceneKey.ToString());
 							return SceneKey.ToString();
 						}
 						else
@@ -259,21 +226,16 @@ FString UPlayerTracker::GetSceneKey(FString sceneName)
 	}
 
 	//no matches anywhere
-	UE_LOG(LogTemp, Warning, TEXT("player tracker::get scene key ------- no matches in ini"));
+	CognitiveLog::Warning("UPlayerTracker::GetSceneKey ------- no matches in ini");
 	return "";
 }
 
 void UPlayerTracker::SendData(FString sceneName)
 {
-	UE_LOG(LogTemp, Warning, TEXT("SEND"));
-
+	CognitiveLog::Info("UPlayerTracker::SendData");
 	FString sceneKey = UPlayerTracker::GetSceneKey(sceneName);
 
-	UE_LOG(LogTemp, Warning, TEXT("PlayerTracker::SendData scene KEY %s"), *sceneKey);
-
 	FString url = "https://sceneexplorer.com/api/";
-
-	if (!sendToServer) { return; }
 
 
 	//GAZE
@@ -281,8 +243,6 @@ void UPlayerTracker::SendData(FString sceneName)
 	TSharedRef<IHttpRequest> RequestGaze = Http->CreateRequest();
 	FString GazeString = UPlayerTracker::GazeSnapshotsToString();
 	RequestGaze->SetContentAsString(GazeString);
-	UE_LOG(LogTemp, Warning, TEXT("URL is %s"), *url);
-	UE_LOG(LogTemp, Warning, TEXT("content is %s"), *GazeString);
 	RequestGaze->SetURL(url + "gaze/" + sceneKey);
 	RequestGaze->SetVerb("POST");
 	RequestGaze->SetHeader("Content-Type", TEXT("application/json"));
@@ -293,8 +253,6 @@ void UPlayerTracker::SendData(FString sceneName)
 	TSharedRef<IHttpRequest> RequestEvents = Http->CreateRequest();
 	FString EventString = UPlayerTracker::EventSnapshotsToString();
 	RequestEvents->SetContentAsString(EventString);
-	UE_LOG(LogTemp, Warning, TEXT("URL is %s"), *url);
-	UE_LOG(LogTemp, Warning, TEXT("content is %s"), *EventString);
 	RequestEvents->SetURL(url+"events/"+sceneKey);
 	RequestEvents->SetVerb("POST");
 	RequestEvents->SetHeader("Content-Type", TEXT("application/json"));

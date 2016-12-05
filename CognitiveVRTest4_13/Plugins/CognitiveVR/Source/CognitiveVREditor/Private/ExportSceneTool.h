@@ -27,48 +27,54 @@ public:
 	UExportSceneTool();
 
 public:
-	//The threshold blender will decimate. Anything with a polygon count below this number will not be decimated
-	UPROPERTY(EditAnywhere, Config, Category = "Settings")
+	//The threshold Blender will reduce. Anything with a polygon count below this number will not be reduced
+	UPROPERTY(EditAnywhere, Config, Category = "Selection Settings")
 	int32 MinPolygons = 500;
 	
-	//The upper threshold blender will decimate. Any mesh with a polygon count more than this number will be decimate to 10%
-	UPROPERTY(EditAnywhere, Config, Category = "Settings")
+	//The upper threshold Blender will reduce. Any mesh with a polygon count more than this number will be reduced to 10%
+	UPROPERTY(EditAnywhere, Config, Category = "Selection Settings")
 	int32 MaxPolygons = 20000;
 	
 	//UPROPERTY(EditAnywhere, Category = "Settings")
 	//FString Directory;
 	
 	//Only export StaticMeshComponents with set to be non-movable
-	UPROPERTY(EditAnywhere, Category = "Settings")
+	UPROPERTY(EditAnywhere, Category = "Selection Settings")
 	bool staticOnly = true;
 
 	//Ignore meshes with bounding size less than this value
-	UPROPERTY(EditAnywhere, Category = "Settings")
-	float MinimumSize;
+	UPROPERTY(EditAnywhere, Category = "Selection Settings")
+	float MinimumSize = 100;
 
-	//Select blender.exe. Used to reduce polygon count of the exported scene
+	//Ignore meshes with bounding size less than this value
+	UPROPERTY(EditAnywhere, Category = "Selection Settings")
+	float MaximumSize = 10000;
+
+	//Select Blender.exe. Used to reduce polygon count of the exported scene
 	UFUNCTION(Exec, Category = "Settings")
-	void SelectBlender();
+	void Select_Blender();
 
 	//Select meshes that match settings - Above Minimum Size? Static?
 	UFUNCTION(Exec, Category = "Settings")
-	void SelectExportMeshes();
+	void Select_Export_Meshes();
 
 	//Runs the built-in obj exporter with the selected meshses
 	UFUNCTION(Exec, Category = "Export")
-	void ExportScene();
+	void Export_Scene();
 
 	//Runs a python script in blender to reduce the polygon count, clean up the mtl file and copy textures into a convient folder
 	UFUNCTION(Exec, Category = "Export")
-	void RunBlenderCleanup();
+	void Reduce_Meshes();
 	
 	//Runs a python script in blender to reduce the polygon count, clean up the mtl file and copy textures into a convient folder
 	UFUNCTION(Exec, Category = "Export")
-	void ConvertTextures();
+	void Reduce_Textures();
 
 	bool PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
 	void* ChooseParentWindowHandle();
 
 	FString BlenderPath;
 	FString ExportDirectory;
+
+	FString GetProductID();
 };

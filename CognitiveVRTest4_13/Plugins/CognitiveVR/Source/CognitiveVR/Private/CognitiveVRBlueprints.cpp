@@ -44,8 +44,6 @@ void UCognitiveVRBlueprints::BeginTransactionPosition(FString Category, FString 
 	cog->transaction->BeginPosition(TCHAR_TO_UTF8(*Category), Position, properties, TCHAR_TO_UTF8(*TransactionID));
 }
 
-//void UCognitiveVRBlueprints::BeginTransactionWithAttributes(FString Category, FString TransactionID, TArray<FAnalyticsEventAttribute>Attributes){}
-
 void UCognitiveVRBlueprints::UpdateTransaction(FString Category, FString TransactionID, const TArray<FAnalyticsEventAttr>& Attributes, float Progress)
 {
 	FVector HMDPosition;
@@ -141,8 +139,6 @@ void UCognitiveVRBlueprints::BeginEndTransactionPosition(FString Category, const
 	
 	cog->transaction->BeginEndPosition(TCHAR_TO_UTF8(*Category),Position,properties);
 }
-
-//void UCognitiveVRBlueprints::BeginEndTransactionWithAttributes(FString Category, TArray<FAnalyticsEventAttribute>Attributes){}
 
 void UCognitiveVRBlueprints::UpdateCollection(FString Name, float Balance, float Change, bool IsCurrency)
 {

@@ -28,9 +28,6 @@ private:
 
 	FString materialPath = "/CognitiveVR/DepthPostProcessing";
 
-	UPROPERTY(editanywhere)
-	bool sendToServer;
-
 public:	
 	// Sets default values for this component's properties
 
@@ -62,7 +59,4 @@ public:
 
 	FString GazeSnapshotsToString();
 	FString EventSnapshotsToString();
-
-	UFUNCTION()
-	void SendOnLevelLoaded();
 };

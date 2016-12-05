@@ -47,7 +47,7 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 		//properties->SetStringField("MyStrin", "stringvalue");
 		//properties->SetNumberField("MyNumber", 5);
 		//properties->SetBoolField("MyBoolean", true);
-		cognitive.Get()->transaction->BeginEnd("boxhit", properties);
+		cognitive.Get()->transaction->BeginEndPosition("boxhit", this->GetActorLocation(), properties);
 		
 		/*bool myBool = false;
 		FAnalyticsProviderCognitiveVR *cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
