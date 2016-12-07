@@ -60,6 +60,7 @@ void Transaction::BeginPosition(std::string category, FVector Position, TSharedP
 	eventObject->SetStringField("name", category.c_str());
 	eventObject->SetNumberField("time", time);
 	eventObject->SetArrayField("point", pos);
+
 	if (properties.Get()->Values.Num() > 0)
 	{
 		eventObject->SetObjectField("properties", properties);
@@ -111,9 +112,9 @@ void Transaction::UpdatePosition(std::string category, FVector Position, TShared
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 
 	TArray< TSharedPtr<FJsonValue> > pos;
-	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.X)));
-	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Y)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)-Position.X)));
 	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Z)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Y)));
 
 	FJsonObject* eventObject = new FJsonObject;
 	eventObject->SetStringField("name", category.c_str());
@@ -170,9 +171,9 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 
 	TArray< TSharedPtr<FJsonValue> > pos;
-	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.X)));
-	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Y)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)-Position.X)));
 	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Z)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Y)));
 
 	FJsonObject* eventObject = new FJsonObject;
 	eventObject->SetStringField("name", category.c_str());
@@ -203,6 +204,6 @@ void Transaction::BeginEndPosition(std::string category, FVector Position, TShar
 		CognitiveLog::Warning("Transaction::BeginEnd - FAnalyticsProviderCognitiveVR is null!");
 		return;
 	}
-	this->BeginPosition(category, Position, properties, transaction_id);
+	//this->BeginPosition(category, Position, properties, transaction_id);
 	this->EndPosition(category, Position, properties, transaction_id, result);
 }

@@ -40,6 +40,15 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 
+		/*DrawDebugSphere(
+			GetWorld(),
+			this->GetActorLocation(),
+			24,  					//size
+			32,
+			FColor(255, 0, 255),
+			true
+		);*/
+
 		//generic analytics code
 
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
