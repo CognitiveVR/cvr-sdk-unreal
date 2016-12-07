@@ -34,34 +34,27 @@ void UPlayerTracker::BeginPlay()
 	Super::BeginPlay();
 	Http = &FHttpModule::Get();
 
-	USceneCaptureComponent2D* scc;
-	scc = this->GetAttachmentRootActor()->FindComponentByClass<USceneCaptureComponent2D>();
-	if (scc == NULL)
-	{
-		renderTarget = NewObject<UTextureRenderTarget2D>();
-		renderTarget->ClearColor = FLinearColor::White;
-		renderTarget->InitAutoFormat(256, 256); //auto init from value bHDR
-	
-		scc = NewObject<USceneCaptureComponent2D>();;
-		
-		scc->SetupAttachment(this);
-		scc->SetRelativeLocation(FVector::ZeroVector);
-		scc->SetRelativeRotation(FQuat::Identity);
-		scc->TextureTarget = renderTarget;
+	UTextureRenderTarget2D* renderTarget;
+	renderTarget = NewObject<UTextureRenderTarget2D>();
+	renderTarget->AddToRoot();
+	renderTarget->ClearColor = FLinearColor::White;
+	renderTarget->bHDR = false;
+	renderTarget->InitAutoFormat(256, 256); //auto init from value bHDR
 
-		scc->CaptureSource = SCS_FinalColorLDR;
-		scc->AddOrUpdateBlendable(SceneDepthMat); //TODO load this from project
-	}
-	else
-	{
-		renderTarget = scc->TextureTarget;
-	}
+	sceneCapture = NewObject<USceneCaptureComponent2D>(this);
+	sceneCapture->SetupAttachment(this);
+	sceneCapture->SetRelativeLocation(FVector::ZeroVector);
+	sceneCapture->SetRelativeRotation(FQuat::Identity);
+	sceneCapture->TextureTarget = renderTarget;
+	sceneCapture->RegisterComponent();
+	sceneCapture->CaptureSource = SCS_FinalColorLDR;
+
+	sceneCapture->PostProcessSettings.AddBlendable(SceneDepthMat, 1);
 }
 
 void UPlayerTracker::AddJsonEvent(FJsonObject* newEvent)
 {
 	TSharedPtr<FJsonObject>snapObj = MakeShareable(newEvent);
-
 	events.Add(snapObj);
 }
 
@@ -122,7 +115,7 @@ void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 float UPlayerTracker::GetPixelDepth(float minvalue, float maxvalue)
 {
-	if (renderTarget == NULL)
+	if (sceneCapture->TextureTarget == NULL)
 	{
 		CognitiveLog::Warning("UPlayerTracker::GetPixelDepth render target size is null");
 
@@ -130,22 +123,24 @@ float UPlayerTracker::GetPixelDepth(float minvalue, float maxvalue)
 	}
 
 	// Creates Texture2D to store TextureRenderTarget content
-	UTexture2D *Texture = UTexture2D::CreateTransient(renderTarget->SizeX, renderTarget->SizeY, PF_B8G8R8A8);
+	UTexture2D *Texture = UTexture2D::CreateTransient(sceneCapture->TextureTarget->SizeX, sceneCapture->TextureTarget->SizeY, PF_B8G8R8A8);
 
 	if (Texture == NULL)
 	{
 		CognitiveLog::Warning("UPlayerTracker::GetPixelDepth TEMP Texture IS NULL");
 
 		return -1;
-
 	}
 
-	Texture->SRGB = renderTarget->SRGB;
+	#if WITH_EDITORONLY_DATA
+		Texture->MipGenSettings = TMGS_NoMipmaps; //not sure if this is required
+	#endif
+
+	Texture->SRGB = sceneCapture->TextureTarget->SRGB;
 
 	TArray<FColor> SurfData;
 
-	FRenderTarget *RenderTarget = renderTarget->GameThread_GetRenderTargetResource();
-
+	FRenderTarget *RenderTarget = sceneCapture->TextureTarget->GameThread_GetRenderTargetResource();
 
 	RenderTarget->ReadPixels(SurfData);
 
@@ -153,15 +148,16 @@ float UPlayerTracker::GetPixelDepth(float minvalue, float maxvalue)
 
 	FIntPoint size = RenderTarget->GetSizeXY();
 
-	FColor PixelColor = SurfData[size.X / 2 + size.Y / 2 * renderTarget->SizeX];
+	FColor PixelColor = SurfData[size.X / 2 + size.Y / 2 * sceneCapture->TextureTarget->SizeX];
 
-	float nf = PixelColor.R / 255.0;
+	float nf = (double)PixelColor.R / 255.0;
 
 	float distance = FMath::Lerp(minvalue, maxvalue, nf);
 
 	return distance;
 }
 
+//puts together the world position of the player's gaze point. each tick
 FVector UPlayerTracker::GetGazePoint()
 {
 	float distance = GetPixelDepth(0, maxDistance);
@@ -173,7 +169,7 @@ FVector UPlayerTracker::GetGazePoint()
 	FVector loc = GetComponentLocation();
 	
 	FVector returnVector;
-	returnVector.X = loc.X + rotv.Y;
+	returnVector.X = loc.X + rotv.X;
 	returnVector.Y = loc.Y + rotv.Y;
 	returnVector.Z = loc.Z + rotv.Z;
 	return returnVector;

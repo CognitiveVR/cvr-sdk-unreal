@@ -23,7 +23,10 @@ private:
 	FHttpModule* Http;
 	float maxDistance = 8192;
 
+
+
 	//UPROPERTY(editanywhere)
+	//UTextureRenderTarget2D* manualTexture;
 	UMaterial* SceneDepthMat;
 
 	FString materialPath = "/CognitiveVR/DepthPostProcessing";
@@ -31,8 +34,9 @@ private:
 public:	
 	// Sets default values for this component's properties
 
-	//UPROPERTY(EditAnywhere)
-	UTextureRenderTarget2D* renderTarget;
+	
+	//UTextureRenderTarget2D* renderTarget;
+	USceneCaptureComponent2D* sceneCapture;
 
 	float PlayerSnapshotInterval = 1;
 	int32 MaxSnapshots = 1000;
