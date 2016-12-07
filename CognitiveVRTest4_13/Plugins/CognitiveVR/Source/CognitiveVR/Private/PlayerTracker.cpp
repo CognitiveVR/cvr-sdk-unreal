@@ -61,7 +61,6 @@ void UPlayerTracker::BeginPlay()
 void UPlayerTracker::AddJsonEvent(FJsonObject* newEvent)
 {
 	TSharedPtr<FJsonObject>snapObj = MakeShareable(newEvent);
-
 	events.Add(snapObj);
 }
 
