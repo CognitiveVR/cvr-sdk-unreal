@@ -11,8 +11,8 @@ scene = bpy.context.scene
 ops = bpy.ops
 args = sys.argv
 exportPath = args[3]
-minFaces = int(args[4])
-maxFaces = int(args[5])
+sizeFactor = int(args[4])
+ignore = int(args[5])
 if (len(args))<7:
  args.append('')
 fileName = args[6]
@@ -54,7 +54,7 @@ for file in onlyfiles:
 		image2.pixels = pixels
 		image2.file_format = 'PNG'
 		#image2.depth = '8'
-		image2.scale(image.size[0]//4,image.size[1]//4)
+		image2.scale(image.size[0]//sizeFactor,image.size[1]//sizeFactor)
 		image2.save()
 		os.remove(exportPath+"/"+file)
 		#i2 = bpy.data.images.new()

@@ -24,15 +24,15 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 	/*IDetailCategoryBuilder& SetupCategory = DetailBuilder.EditCategory(TEXT("Stuff"));
 
 	SetupCategory.AddCustomRow(FText::FromString("Setup"))
-		.ValueContent()
-		[
-			SNew(STextBlock)
-			.ColorAndOpacity(FLinearColor::White)
-			.ShadowColorAndOpacity(FLinearColor::Black)
-			.ShadowOffset(FIntPoint(-1, 1))
-			//.Font(FSlateFontInfo("Arial", 26))
-			.Text(FText::FromString("Main Menu"))
-		];*/
+	.ValueContent()
+	[
+	SNew(STextBlock)
+	.ColorAndOpacity(FLinearColor::White)
+	.ShadowColorAndOpacity(FLinearColor::Black)
+	.ShadowOffset(FIntPoint(-1, 1))
+	//.Font(FSlateFontInfo("Arial", 26))
+	.Text(FText::FromString("Main Menu"))
+	];*/
 
 
 
@@ -45,8 +45,7 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 	//go through all the functions. hand code functions into an order
 
 	TArray<UFunction*> Functions;
-	//Functions.Init(UFunction&, 4);
-	Functions.SetNum(5, false);
+	Functions.SetNum(6, false);
 
 	for (UClass* Class : Classes)
 	{
@@ -57,25 +56,29 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			{
 				const FString FunctionName = Function->GetName();
 
-				if (FunctionName == "Select_Export_Meshes")
-				{
-					Functions[1] = Function;
-				}
 				if (FunctionName == "Select_Blender")
 				{
 					Functions[0] = Function;
 				}
-				if (FunctionName == "Export_Scene")
+				if (FunctionName == "Select_Export_Meshes")
+				{
+					Functions[1] = Function;
+				}
+				if (FunctionName == "Export_Selected")
 				{
 					Functions[2] = Function;
 				}
-				if (FunctionName == "Reduce_Meshes")
+				if (FunctionName == "Export_All")
 				{
 					Functions[3] = Function;
 				}
-				if (FunctionName == "Reduce_Textures")
+				if (FunctionName == "Reduce_Meshes")
 				{
 					Functions[4] = Function;
+				}
+				if (FunctionName == "Reduce_Textures")
+				{
+					Functions[5] = Function;
 				}
 
 				/*const FText ButtonCaption = FText::FromString(FunctionName);
@@ -84,20 +87,20 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 				Category.AddCustomRow(FText::FromString(FilterString))
 				.ValueContent()
 				[
-					SNew(SButton)
-					.Text(ButtonCaption)
-					.OnClicked(FOnClicked::CreateStatic(&FBaseEditorToolCustomization::ExecuteToolCommand, &DetailBuilder, Function))
+				SNew(SButton)
+				.Text(ButtonCaption)
+				.OnClicked(FOnClicked::CreateStatic(&FBaseEditorToolCustomization::ExecuteToolCommand, &DetailBuilder, Function))
 				];*/
 			}
 		}
-		
+
 		for (auto& Function : Functions)
 		{
 			const FString FunctionName = Function->GetName();
 			//const FText ButtonCaption = FText::FromString(FunctionName);
 
 			FString title = FunctionName;
-			const FText ButtonCaption = FText::FromString(title.Replace(TEXT("_"),TEXT(" ")));
+			const FText ButtonCaption = FText::FromString(title.Replace(TEXT("_"), TEXT(" ")));
 
 			const FString FilterString = FunctionName;
 
@@ -106,7 +109,7 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 				[
 					SNew(SButton)
 					.Text(ButtonCaption)
-					.OnClicked(FOnClicked::CreateStatic(&FBaseEditorToolCustomization::ExecuteToolCommand, &DetailBuilder, Function))
+				.OnClicked(FOnClicked::CreateStatic(&FBaseEditorToolCustomization::ExecuteToolCommand, &DetailBuilder, Function))
 				];
 		}
 	}
