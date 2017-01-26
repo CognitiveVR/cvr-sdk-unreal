@@ -7,7 +7,8 @@ public class CognitiveVREditor : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-               "CognitiveVR"
+               "CognitiveVR",
+               "HTTP"
             });
 
         PrivateDependencyModuleNames.AddRange(

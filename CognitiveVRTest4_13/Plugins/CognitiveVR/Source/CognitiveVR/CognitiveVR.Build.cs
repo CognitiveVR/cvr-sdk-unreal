@@ -28,23 +28,7 @@ namespace UnrealBuildTool.Rules
             PrivateDependencyModuleNames.AddRange(
                 new string[]
                 {
-                    "HeadMountedDisplay",
-
-                    "Core",
-                    "CoreUObject",
-                    "DesktopPlatform",
-                    "AssetTools",
-                    "Engine",
-                    "Slate",
-                    "InputCore",
-                    "SlateCore",
-                    "PropertyEditor",
-                    "LevelEditor",
-                    "MeshUtilities",
-                    "MainFrame",
-                    "UnrealEd",
-                    "PluginBrowser",
-                    "Projects"
+                    "HeadMountedDisplay"
                 }
                 );
 
