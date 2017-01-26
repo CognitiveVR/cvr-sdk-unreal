@@ -1,8 +1,7 @@
+
 #include "CognitiveVREditorPrivatePCH.h"
 #include "BaseEditorToolCustomization.h"
-#include "PropertyEditing.h"
-//#include "DetailCustomizationsPrivatePCH.h"
-#include "PropertyCustomizationHelpers.h"
+
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
@@ -12,31 +11,18 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 
 	TArray<TWeakObjectPtr<UObject>> ObjectsBeingCustomized;
 	DetailBuilder.GetObjectsBeingCustomized(ObjectsBeingCustomized);
+	
+
+
 
 	for (auto WeakObject : ObjectsBeingCustomized)
 	{
 		if (UObject* Instance = WeakObject.Get())
 		{
 			Classes.Add(Instance->GetClass());
+			BlenderPathProperty = DetailBuilder.GetProperty("BlenderPath", Instance->GetClass());
 		}
 	}
-
-	/*IDetailCategoryBuilder& SetupCategory = DetailBuilder.EditCategory(TEXT("Stuff"));
-
-	SetupCategory.AddCustomRow(FText::FromString("Setup"))
-	.ValueContent()
-	[
-	SNew(STextBlock)
-	.ColorAndOpacity(FLinearColor::White)
-	.ShadowColorAndOpacity(FLinearColor::Black)
-	.ShadowOffset(FIntPoint(-1, 1))
-	//.Font(FSlateFontInfo("Arial", 26))
-	.Text(FText::FromString("Main Menu"))
-	];*/
-
-
-
-	//should be a struct/class with scene name and scene key
 
 
 	// Create a commands category
@@ -45,7 +31,7 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 	//go through all the functions. hand code functions into an order
 
 	TArray<UFunction*> Functions;
-	Functions.SetNum(6, false);
+	Functions.SetNum(7, false);
 
 	for (UClass* Class : Classes)
 	{
@@ -80,6 +66,10 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 				{
 					Functions[5] = Function;
 				}
+				if (FunctionName == "Http_Request")
+				{
+					Functions[6] = Function;
+				}
 
 				/*const FText ButtonCaption = FText::FromString(FunctionName);
 				const FString FilterString = FunctionName;
@@ -94,6 +84,29 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			}
 		}
 
+		BlenderPathProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, BlenderPath)); //i assume this is just fundamentally wrong
+
+		FText p = GetBlenderPath();
+		if (p.EqualTo(FText::FromString("")) && !HasSearchedForBlender)
+		{
+
+			HasSearchedForBlender = true;
+			UE_LOG(LogTemp, Warning, TEXT("blender path is empty. search for blender"));
+			SearchForBlender();
+		}
+
+
+		static FText propertyTextName;
+		Category.AddCustomRow(propertyTextName)
+		.WholeRowContent()
+		.HAlign(HAlign_Center)
+		[
+			SNew(STextBlock)
+			.Text(this, &FBaseEditorToolCustomization::GetBlenderPath)
+		];
+		
+		FName someName;
+
 		for (auto& Function : Functions)
 		{
 			const FString FunctionName = Function->GetName();
@@ -104,14 +117,60 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 
 			const FString FilterString = FunctionName;
 
-			Category.AddCustomRow(FText::FromString(FilterString))
-				.ValueContent()
-				[
-					SNew(SButton)
+			if (ButtonCaption.EqualTo(FText::FromString("Select Blender")))
+			{
+				Category.AddCustomRow(FText::FromString(FilterString))
+					.ValueContent()
+					[
+						SNew(SButton)
+						//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
+					.IsEnabled(true)
 					.Text(ButtonCaption)
-				.OnClicked(FOnClicked::CreateStatic(&FBaseEditorToolCustomization::ExecuteToolCommand, &DetailBuilder, Function))
-				];
+					.OnClicked(FOnClicked::CreateStatic(&FBaseEditorToolCustomization::ExecuteToolCommand, &DetailBuilder, Function))
+					];
+			}
+			else
+			{
+				Category.AddCustomRow(FText::FromString(FilterString))
+					.ValueContent()
+					[
+						SNew(SButton)
+						//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
+					.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlender)
+					.Text(ButtonCaption)
+					.OnClicked(FOnClicked::CreateStatic(&FBaseEditorToolCustomization::ExecuteToolCommand, &DetailBuilder, Function))
+					];
+			}
 		}
+	}
+}
+
+bool FBaseEditorToolCustomization::HasFoundBlender() const
+{
+	return FBaseEditorToolCustomization::GetBlenderPath().ToString().Contains("blender.exe");
+}
+
+FText FBaseEditorToolCustomization::GetBlenderPath() const
+{
+	FString blendPath = "";
+	BlenderPathProperty.Get()->GetValue(blendPath);
+	
+	return FText::FromString(blendPath);
+}
+
+void FBaseEditorToolCustomization::SearchForBlender()
+{
+	//try to find blender in program files
+	FString testApp = "C:/Program Files/Blender Foundation/Blender/blender.exe";
+
+	if (VerifyFileExists(testApp))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("found blender at program files"));
+		BlenderPathProperty.Get()->SetValue(testApp);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("didnt find blender at program files"));
 	}
 }
 
@@ -132,6 +191,7 @@ FReply FBaseEditorToolCustomization::ExecuteToolCommand(IDetailLayoutBuilder* De
 			Instance->CallFunctionByNameWithArguments(*MethodToExecute->GetName(), *GLog, nullptr, true);
 		}
 	}
+
 
 	return FReply::Handled();
 }
