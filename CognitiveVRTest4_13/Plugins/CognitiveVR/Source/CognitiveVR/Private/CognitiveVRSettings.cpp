@@ -43,4 +43,5 @@ void UCognitiveVRSettings::WriteConfigSettings()
 	GConfig->Flush(false, "DefaultEngine");
 }
 
+
 #undef LOCTEXT_NAMESPACE

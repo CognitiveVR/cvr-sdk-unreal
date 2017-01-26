@@ -59,4 +59,5 @@ protected:
 	* Provides a mechanism to save this object's properties to the section based ini values
 	*/
 	virtual void WriteConfigSettings();
+
 };
