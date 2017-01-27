@@ -30,75 +30,22 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 	// Create a commands category
 	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(TEXT("Commands"));
 
-	
-
-	//go through all the functions. hand code functions into an order
-
-	//TArray<UFunction*> Functions;
-	//Functions.SetNum(7, false);
-
-	
-
-	/*for (TFieldIterator<UFunction> FuncIt(Class); FuncIt; ++FuncIt)
-	{
-		UFunction* Function = *FuncIt;
-		if (Function->HasAnyFunctionFlags(FUNC_Exec) && (Function->NumParms == 0))
-		{
-			const FString FunctionName = Function->GetName();
-
-			if (FunctionName == "Select_Blender")
-			{
-				Functions[0] = Function;
-			}
-			if (FunctionName == "Select_Export_Meshes")
-			{
-				Functions[1] = Function;
-			}
-			if (FunctionName == "Export_Selected")
-			{
-				Functions[2] = Function;
-			}
-			if (FunctionName == "Export_All")
-			{
-				Functions[3] = Function;
-			}
-			if (FunctionName == "Reduce_Meshes")
-			{
-				Functions[4] = Function;
-			}
-			if (FunctionName == "Reduce_Textures")
-			{
-				Functions[5] = Function;
-			}
-			if (FunctionName == "Http_Request")
-			{
-				Functions[6] = Function;
-			}
-		}
-	}*/
-
-	//BlenderPathProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, BlenderPath)); //i assume this is just fundamentally wrong
-
 	FText p = GetBlenderPath();
 	if (p.EqualTo(FText::FromString("")) && !HasSearchedForBlender)
 	{
-
 		HasSearchedForBlender = true;
 		UE_LOG(LogTemp, Warning, TEXT("blender path is empty. search for blender"));
 		SearchForBlender();
 	}
 
 
-	static FText propertyTextName;
-	Category.AddCustomRow(propertyTextName)
+	Category.AddCustomRow(FText::FromString("Settings"))
 	.WholeRowContent()
 	.HAlign(HAlign_Center)
 	[
 		SNew(STextBlock)
 		.Text(this, &FBaseEditorToolCustomization::GetBlenderPath)
 	];
-		
-	FName someName;
 
 
 	//select blender
@@ -145,13 +92,31 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.OnClicked(this, &FBaseEditorToolCustomization::Export_All)
 		];
 
+	Category.AddCustomRow(FText::FromString("Settings"))
+		.WholeRowContent()
+		.HAlign(HAlign_Center)
+		[
+			SNew(STextBlock)
+			.Text(this, &FBaseEditorToolCustomization::GetExportDirectory)
+		];
+
+	//export selected scene
+	Category.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		[
+			SNew(SButton)
+			//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
+		.Text(FText::FromString("Select Export Directory"))
+		.OnClicked(this, &FBaseEditorToolCustomization::Select_Export_Directory)
+		];
+
 	//Reduce Meshes
 	Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
 		[
 			SNew(SButton)
 			//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlender)
+		.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlenderAndExportDir)
 		.Text(FText::FromString("Reduce Meshes"))
 		.OnClicked(this, &FBaseEditorToolCustomization::Reduce_Meshes)
 		];
@@ -162,15 +127,15 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		[
 			SNew(SButton)
 			//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlender)
+		.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlenderAndExportDir)
 		.Text(FText::FromString("Reduce Textures"))
 		.OnClicked(this, &FBaseEditorToolCustomization::Reduce_Textures)
 		];
 
-	//TODO show export folder here
+
 
 	//http request
-	Category.AddCustomRow(FText::FromString("Commands"))
+	/*Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
 		[
 			SNew(SButton)
@@ -178,7 +143,7 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.IsEnabled(true)
 		.Text(FText::FromString("http request"))
 		.OnClicked(this, &FBaseEditorToolCustomization::Http_Request)
-		];
+		];*/
 }
 
 
@@ -188,7 +153,7 @@ FReply FBaseEditorToolCustomization::Export_Selected()
 
 	FEditorFileUtils::Export(true);
 
-	//ExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+	ExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
 
 	//RunBlenderCleanup();
 	return FReply::Handled();
@@ -200,7 +165,7 @@ FReply FBaseEditorToolCustomization::Export_All()
 
 	FEditorFileUtils::Export(false);
 
-	//ExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+	ExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
 
 	//RunBlenderCleanup();
 	return FReply::Handled();
@@ -275,7 +240,7 @@ FReply FBaseEditorToolCustomization::Select_Blender()
 	FString lastPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
 	FString defaultfile = FString();
 	FString outFilename = FString();
-	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
+	if (PickFile(title, fileTypes, lastPath, defaultfile, outFilename))
 	{
 		BlenderPath = outFilename;
 		//UE_LOG(LogTemp, Warning, TEXT("selected blender at path: %s"), *BlenderPath);
@@ -283,7 +248,28 @@ FReply FBaseEditorToolCustomization::Select_Blender()
 	return FReply::Handled();
 }
 
-bool FBaseEditorToolCustomization::PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename)
+//open fiel type
+FReply FBaseEditorToolCustomization::Select_Export_Directory()
+{
+	FString title = "Select Export Directory";
+	FString fileTypes = ".exe";
+	FString lastPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+	FString defaultfile = FString();
+	FString outFilename = FString();
+	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("picked a directory"));
+		ExportDirectory = outFilename;
+		//UE_LOG(LogTemp, Warning, TEXT("selected blender at path: %s"), *BlenderPath);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("somehow failed to pick a directory"));
+	}
+	return FReply::Handled();
+}
+
+bool FBaseEditorToolCustomization::PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename)
 {
 	OutFilename = FString();
 
@@ -336,6 +322,35 @@ bool FBaseEditorToolCustomization::PickDirectory(const FString& Title, const FSt
 	return bFileChosen;
 }
 
+bool FBaseEditorToolCustomization::PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename)
+{
+	OutFilename = FString();
+
+	IDesktopPlatform* DesktopPlatform = FDesktopPlatformModule::Get();
+	bool directoryChosen = false;
+	TArray<FString> OutFilenames;
+	if (DesktopPlatform)
+	{
+		void* ParentWindowWindowHandle = ChooseParentWindowHandle();
+		
+		directoryChosen = DesktopPlatform->OpenDirectoryDialog(
+		ParentWindowWindowHandle,
+		Title,
+		InOutLastPath,
+		OutFilename
+		);
+	}
+
+	/*if (directoryChosen)
+	{
+		// User successfully chose a file; remember the path for the next time the dialog opens.
+		InOutLastPath = OutFilenames[0];
+		OutFilename = OutFilenames[0];
+	}*/
+
+	return directoryChosen;
+}
+
 void* FBaseEditorToolCustomization::ChooseParentWindowHandle()
 {
 	void* ParentWindowWindowHandle = NULL;
@@ -386,7 +401,7 @@ FReply FBaseEditorToolCustomization::Reduce_Meshes()
 
 	//const TCHAR* url = *stringurl;
 	FString SceneName = tempworld->GetMapName();
-	FString ObjPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+	FString ObjPath = ExportDirectory;
 
 	if (ObjPath.Len() == 0)
 	{
@@ -479,7 +494,7 @@ FReply FBaseEditorToolCustomization::Reduce_Textures()
 
 	//const TCHAR* url = *stringurl;
 	FString SceneName = tempworld->GetMapName();
-	FString ObjPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+	FString ObjPath = ExportDirectory;
 
 	if (ObjPath.Len() == 0)
 	{
@@ -571,6 +586,16 @@ bool FBaseEditorToolCustomization::HasFoundBlender() const
 	return FBaseEditorToolCustomization::GetBlenderPath().ToString().Contains("blender.exe");
 }
 
+bool FBaseEditorToolCustomization::HasFoundBlenderAndExportDir() const
+{
+	return FBaseEditorToolCustomization::GetBlenderPath().ToString().Contains("blender.exe") && !FBaseEditorToolCustomization::GetExportDirectory().EqualTo(FText::FromString(""));
+}
+
+bool FBaseEditorToolCustomization::HasSetExportDirectory() const
+{
+	return !FBaseEditorToolCustomization::GetExportDirectory().EqualTo(FText::FromString(""));
+}
+
 FText FBaseEditorToolCustomization::GetBlenderPath() const
 {
 	return FText::FromString(BlenderPath);
@@ -579,6 +604,11 @@ FText FBaseEditorToolCustomization::GetBlenderPath() const
 	//BlenderPathProperty.Get()->GetValue(blendPath);
 	
 	//return FText::FromString(blendPath);
+}
+
+FText FBaseEditorToolCustomization::GetExportDirectory() const
+{
+	return FText::FromString(ExportDirectory);
 }
 
 void FBaseEditorToolCustomization::SearchForBlender()

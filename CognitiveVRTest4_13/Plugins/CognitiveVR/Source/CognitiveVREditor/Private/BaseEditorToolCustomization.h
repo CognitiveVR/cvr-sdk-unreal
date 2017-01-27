@@ -36,12 +36,14 @@ public:
 	static FReply ExecuteToolCommand(IDetailLayoutBuilder* DetailBuilder, UFunction* MethodToExecute);
 
 private:
-	//TSharedPtr<IPropertyHandle> BlenderPathProperty;
-	bool HasSearchedForBlender = false; //to limit the searching directories
+	bool HasSearchedForBlender = false; //to limit the searching directories. possibly not required
 
 	void SearchForBlender();
 	bool HasFoundBlender() const;
-	FText GetBlenderPath() const; //returns the value of the property, nothing more
+	bool HasFoundBlenderAndExportDir() const;
+	bool HasSetExportDirectory() const;
+
+	FText GetBlenderPath() const;
 
 								  //The threshold Blender will reduce. Anything with a polygon count below this number will not be reduced
 	UPROPERTY(EditAnywhere, Config, Category = "Selection Settings")
@@ -50,9 +52,6 @@ private:
 	//The upper threshold Blender will reduce. Any mesh with a polygon count more than this number will be reduced to 10%
 	UPROPERTY(EditAnywhere, Config, Category = "Selection Settings")
 		int32 MaxPolygons = 20000;
-
-	//UPROPERTY(EditAnywhere, Category = "Settings")
-	//FString Directory;
 
 	//Only export StaticMeshComponents with set to be non-movable
 	UPROPERTY(EditAnywhere, Category = "Selection Settings")
@@ -100,6 +99,7 @@ private:
 	void OnYourFunctionCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	bool PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
+	bool PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
 	void* ChooseParentWindowHandle();
 
 	//UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional, meta = (DisplayName = "BlenderPath", ShowForTools = "SceneExport"))
@@ -107,7 +107,13 @@ private:
 		FString BlenderPath;
 	UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
 		FString ExportDirectory;
-	
+	FText GetExportDirectory() const;
+
+	UFUNCTION(Exec, Category = "Export")
+		FReply Select_Export_Directory();
+
+
+
 	FString GetProductID();
 
 	//If this function cannot find or create the directory, returns false.
