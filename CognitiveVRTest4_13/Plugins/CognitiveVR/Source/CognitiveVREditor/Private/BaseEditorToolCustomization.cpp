@@ -45,25 +45,29 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		SearchForBlender();
 	}
 
-
-	Category.AddCustomRow(FText::FromString("Settings"))
-	.WholeRowContent()
-	.HAlign(HAlign_Center)
-	[
-		SNew(STextBlock)
-		.Text(this, &FBaseEditorToolCustomization::GetBlenderPath)
-	];
-
-
-	//select blender
-	Category.AddCustomRow(FText::FromString("Commands"))
+	Category.AddCustomRow(FText::FromString("Select Blender Horizontal"))
 		.ValueContent()
+		.HAlign(HAlign_Fill)
 		[
-			SNew(SButton)
-			//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(true)
-		.Text(FText::FromString("Select Blender"))
-		.OnClicked(this, &FBaseEditorToolCustomization::Select_Blender)
+			SNew(SHorizontalBox)
+
+			+ SHorizontalBox::Slot()
+			//.HAlign(HAlign_Right)
+			.VAlign(VAlign_Center)
+			.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
+			[
+				SNew(SButton)
+				.IsEnabled(true)
+				.Text(FText::FromString("Select Blender"))
+				.OnClicked(this, &FBaseEditorToolCustomization::Select_Blender)
+			]
+
+			+ SHorizontalBox::Slot()
+			.Padding(FMargin(4.0f, 0.0f, 30.0f, 0.0f))
+			[
+				SNew(STextBlock)
+				.Text(this, &FBaseEditorToolCustomization::GetBlenderPath)
+			]
 		];
 
 	//select export meshes
@@ -99,22 +103,29 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.OnClicked(this, &FBaseEditorToolCustomization::Export_All)
 		];
 
-	Category.AddCustomRow(FText::FromString("Settings"))
-		.WholeRowContent()
-		.HAlign(HAlign_Center)
-		[
-			SNew(STextBlock)
-			.Text(this, &FBaseEditorToolCustomization::GetExportDirectory)
-		];
-
-	//export selected scene
-	Category.AddCustomRow(FText::FromString("Commands"))
+	Category.AddCustomRow(FText::FromString("Select Export Directory Horizontal"))
 		.ValueContent()
+		.HAlign(HAlign_Fill)
 		[
-			SNew(SButton)
-			//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.Text(FText::FromString("Select Export Directory"))
-		.OnClicked(this, &FBaseEditorToolCustomization::Select_Export_Directory)
+			SNew(SHorizontalBox)
+
+			+ SHorizontalBox::Slot()
+			//.HAlign(HAlign_Right)
+			.VAlign(VAlign_Center)
+			.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
+			[
+				SNew(SButton)
+				.IsEnabled(true)
+				.Text(FText::FromString("Select Export Directory"))
+				.OnClicked(this, &FBaseEditorToolCustomization::Select_Export_Directory)
+			]
+
+			+ SHorizontalBox::Slot()
+			.Padding(FMargin(4.0f, 0.0f, 30.0f, 0.0f))
+			[
+				SNew(STextBlock)
+				.Text(this, &FBaseEditorToolCustomization::GetExportDirectory)
+			]
 		];
 
 	//Reduce Meshes
