@@ -38,7 +38,8 @@ public:
 	//UTextureRenderTarget2D* renderTarget;
 	USceneCaptureComponent2D* sceneCapture;
 
-	float PlayerSnapshotInterval = 1;
+	UPROPERTY(EditAnywhere)
+	float PlayerSnapshotInterval = 0.1;
 	int32 MaxSnapshots = 1000;
 
 	UPlayerTracker();

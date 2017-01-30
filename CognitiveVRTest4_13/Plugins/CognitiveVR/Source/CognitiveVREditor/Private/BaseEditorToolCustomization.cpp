@@ -1,7 +1,7 @@
 
 #include "CognitiveVREditorPrivatePCH.h"
 #include "BaseEditorToolCustomization.h"
-
+#include "CognitiveVRSettings.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
@@ -11,9 +11,10 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 
 	TArray<TWeakObjectPtr<UObject>> ObjectsBeingCustomized;
 	DetailBuilder.GetObjectsBeingCustomized(ObjectsBeingCustomized);
-	
 
-	UClass* Class;
+	DetailLayoutPtr = &DetailBuilder;
+
+	UClass* Class = NULL;
 
 	for (auto WeakObject : ObjectsBeingCustomized)
 	{
@@ -21,11 +22,17 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		{
 			Class = Instance->GetClass();
 			break;
-			//Classes.Add(Instance->GetClass());
-			//BlenderPathProperty = DetailBuilder.GetProperty("BlenderPath", Instance->GetClass());
 		}
 	}
 
+	IDetailCategoryBuilder& SettingsCategory = DetailBuilder.EditCategory(TEXT("Selection Settings"));
+
+	MinPolygonProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MinPolygons));
+	MaxPolygonProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MaxPolygons));
+	StaticOnlyProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, staticOnly));
+	MinSizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MinimumSize));
+	MaxSizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MaximumSize));
+	TextureResizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, TextureResizeFactor));
 
 	// Create a commands category
 	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(TEXT("Commands"));
@@ -146,28 +153,62 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		];*/
 }
 
+float FBaseEditorToolCustomization::GetMinimumSize()
+{
+	float MinSize = 0;
+	MinSizeProperty->GetValue(MinSize);
+	return MinSize;
+}
+
+float FBaseEditorToolCustomization::GetMaximumSize()
+{
+	float MaxSize = 0;
+	MaxSizeProperty->GetValue(MaxSize);
+	return MaxSize;
+}
+
+bool FBaseEditorToolCustomization::GetStaticOnly()
+{
+	bool staticOnly = false;
+	StaticOnlyProperty->GetValue(staticOnly);
+	return staticOnly;
+}
+
+int FBaseEditorToolCustomization::GetMinPolygon()
+{
+	int MinCount = 0;
+	MinPolygonProperty->GetValue(MinCount);
+	return MinCount;
+}
+
+int FBaseEditorToolCustomization::GetMaxPolygon()
+{
+	int MaxCount = 0;
+	MaxPolygonProperty->GetValue(MaxCount);
+	return MaxCount;
+}
+
+int FBaseEditorToolCustomization::GetTextureRefacor()
+{
+	int TextureRefactor = 0;
+	TextureResizeProperty->GetValue(TextureRefactor);
+	return TextureRefactor;
+}
 
 FReply FBaseEditorToolCustomization::Export_Selected()
 {
-	//SelectExportMeshes();
-
 	FEditorFileUtils::Export(true);
 
 	ExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
-
-	//RunBlenderCleanup();
 	return FReply::Handled();
 }
 
 FReply FBaseEditorToolCustomization::Export_All()
 {
-	//SelectExportMeshes();
-
 	FEditorFileUtils::Export(false);
 
 	ExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
 
-	//RunBlenderCleanup();
 	return FReply::Handled();
 }
 
@@ -191,7 +232,7 @@ FReply FBaseEditorToolCustomization::Select_Export_Meshes()
 	for (TActorIterator<AStaticMeshActor> ObstacleItr(tempworld); ObstacleItr; ++ObstacleItr)
 	{
 		//get non-moveable static meshes only
-		if (staticOnly)
+		if (GetStaticOnly())
 		{
 			EComponentMobility::Type mobility = EComponentMobility::Static;
 			const USceneComponent* sc = Cast<USceneComponent>(ObstacleItr->GetStaticMeshComponent());
@@ -206,11 +247,12 @@ FReply FBaseEditorToolCustomization::Select_Export_Meshes()
 		ObstacleItr->GetActorBounds(false, origin, boxBounds);
 		double magnitude = FMath::Sqrt(boxBounds.X*boxBounds.X + boxBounds.Y*boxBounds.Y + boxBounds.Z*boxBounds.Z);
 
-		if (magnitude < MinimumSize)
+		if (magnitude < GetMinimumSize())
 		{
 			continue;
 		}
-		if (magnitude > MaximumSize)
+
+		if (magnitude > GetMaximumSize())
 		{
 			continue;
 		}
@@ -280,17 +322,6 @@ bool FBaseEditorToolCustomization::PickFile(const FString& Title, const FString&
 	{
 		void* ParentWindowWindowHandle = ChooseParentWindowHandle();
 
-		//opendirectorydialog
-		/*bFileChosen = DesktopPlatform->SaveFileDialog(
-		ParentWindowWindowHandle,
-		Title,
-		InOutLastPath,
-		DefaultFile,
-		FileTypes,
-		EFileDialogFlags::None,
-		OutFilenames
-		);*/
-
 		bFileChosen = DesktopPlatform->OpenFileDialog(
 			ParentWindowWindowHandle,
 			Title,
@@ -300,14 +331,6 @@ bool FBaseEditorToolCustomization::PickFile(const FString& Title, const FString&
 			EFileDialogFlags::None,
 			OutFilenames
 		);
-
-		/*
-		bFileChosen = DesktopPlatform->OpenDirectoryDialog(
-		ParentWindowWindowHandle,
-		Title,
-		InOutLastPath,
-		OutFilename
-		);*/
 	}
 
 	bFileChosen = (OutFilenames.Num() > 0);
@@ -340,13 +363,6 @@ bool FBaseEditorToolCustomization::PickDirectory(const FString& Title, const FSt
 		OutFilename
 		);
 	}
-
-	/*if (directoryChosen)
-	{
-		// User successfully chose a file; remember the path for the next time the dialog opens.
-		InOutLastPath = OutFilenames[0];
-		OutFilename = OutFilenames[0];
-	}*/
 
 	return directoryChosen;
 }
@@ -409,8 +425,8 @@ FReply FBaseEditorToolCustomization::Reduce_Meshes()
 		return FReply::Handled();
 	}
 
-	FString MinPolyCount = FString::FromInt(MinPolygons);
-	FString MaxPolyCount = FString::FromInt(MaxPolygons);
+	FString MinPolyCount = FString::FromInt(GetMinPolygon());
+	FString MaxPolyCount = FString::FromInt(GetMaxPolygon());
 
 	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
@@ -427,13 +443,6 @@ FReply FBaseEditorToolCustomization::Reduce_Meshes()
 	const TCHAR* params = *stringParamSlashed;
 	int32 priorityMod = 0;
 	FProcHandle procHandle = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
-
-	//FString cmdPath = "C:\\Windows\\System32\\cmd.exe";
-	//FString cmdPathS = "cmd.exe";
-	//FProcHandle procHandle = FPlatformProcess::CreateProc(*cmdPath, NULL, false, false, false, NULL, priorityMod, 0, nullptr);
-
-	//TODO can i just create a process and add parameters or do i need to run through cmd line??
-	//system("cmd.exe");
 
 	//TODO when procHandle is complete, upload exported files to sceneexplorer.com
 	return FReply::Handled();
@@ -464,11 +473,6 @@ FReply FBaseEditorToolCustomization::Reduce_Textures()
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
 	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
 
-	// Need to do this if running in the editor with -game to make sure that the assets in the following path are available
-	//TArray<FString> PathsToScan;
-	//FString path = pcd;// +"decimageall.py";
-	//PathsToScan.Add(path);
-	//AssetRegistry.ScanPathsSynchronous(PathsToScan);
 
 	TArray<FAssetData> ScriptList;
 	if (!AssetRegistry.GetAssetsByPath(FName(*pythonscriptpath), ScriptList))
@@ -502,9 +506,9 @@ FReply FBaseEditorToolCustomization::Reduce_Textures()
 		return FReply::Handled();
 	}
 
-	FString MaxPolyCount = FString::FromInt(MaxPolygons);
 
-	FString resizeFactor = FString::FromInt(TextureResizeFactor);
+	FString MaxPolyCount = FString::FromInt(0);
+	FString resizeFactor = FString::FromInt(GetTextureRefacor());
 
 	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
@@ -599,11 +603,6 @@ bool FBaseEditorToolCustomization::HasSetExportDirectory() const
 FText FBaseEditorToolCustomization::GetBlenderPath() const
 {
 	return FText::FromString(BlenderPath);
-
-	//FString blendPath = "";
-	//BlenderPathProperty.Get()->GetValue(blendPath);
-	
-	//return FText::FromString(blendPath);
 }
 
 FText FBaseEditorToolCustomization::GetExportDirectory() const
