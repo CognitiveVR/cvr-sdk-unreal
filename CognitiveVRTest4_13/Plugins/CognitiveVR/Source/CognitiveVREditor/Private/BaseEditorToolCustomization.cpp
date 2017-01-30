@@ -25,7 +25,7 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		}
 	}
 
-	IDetailCategoryBuilder& SettingsCategory = DetailBuilder.EditCategory(TEXT("Selection Settings"));
+	IDetailCategoryBuilder& SettingsCategory = DetailBuilder.EditCategory(TEXT("Export Settings"));
 
 	MinPolygonProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MinPolygons));
 	MaxPolygonProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MaxPolygons));
@@ -33,6 +33,13 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 	MinSizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MinimumSize));
 	MaxSizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MaximumSize));
 	TextureResizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, TextureResizeFactor));
+
+	SettingsCategory.AddProperty(MinPolygonProperty);
+	SettingsCategory.AddProperty(MaxPolygonProperty);
+	SettingsCategory.AddProperty(StaticOnlyProperty);
+	SettingsCategory.AddProperty(MinSizeProperty);
+	SettingsCategory.AddProperty(MaxSizeProperty);
+	SettingsCategory.AddProperty(TextureResizeProperty);
 
 	// Create a commands category
 	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(TEXT("Commands"));
@@ -162,6 +169,12 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.Text(FText::FromString("http request"))
 		.OnClicked(this, &FBaseEditorToolCustomization::Http_Request)
 		];*/
+
+	IDetailCategoryBuilder& SceneKeyCategory = DetailBuilder.EditCategory(TEXT("Scene Keys"));
+
+	SceneKeysProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, SceneKeyPair));
+
+	SceneKeyCategory.AddProperty(SceneKeysProperty);
 }
 
 float FBaseEditorToolCustomization::GetMinimumSize()

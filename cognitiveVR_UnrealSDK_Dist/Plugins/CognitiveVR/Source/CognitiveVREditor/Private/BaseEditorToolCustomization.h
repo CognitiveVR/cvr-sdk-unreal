@@ -62,6 +62,7 @@ private:
 	TSharedPtr<IPropertyHandle> MaxPolygonProperty;
 	TSharedPtr<IPropertyHandle> StaticOnlyProperty;
 	TSharedPtr<IPropertyHandle> TextureResizeProperty;
+	TSharedPtr<IPropertyHandle> SceneKeysProperty;
 
 	//Select Blender.exe. Used to reduce polygon count of the exported scene
 	UFUNCTION(Exec, Category = "Export")

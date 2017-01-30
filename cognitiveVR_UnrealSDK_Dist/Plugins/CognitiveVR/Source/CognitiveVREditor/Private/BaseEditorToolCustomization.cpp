@@ -25,7 +25,7 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		}
 	}
 
-	IDetailCategoryBuilder& SettingsCategory = DetailBuilder.EditCategory(TEXT("Selection Settings"));
+	IDetailCategoryBuilder& SettingsCategory = DetailBuilder.EditCategory(TEXT("Export Settings"));
 
 	MinPolygonProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MinPolygons));
 	MaxPolygonProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MaxPolygons));
@@ -33,6 +33,13 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 	MinSizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MinimumSize));
 	MaxSizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MaximumSize));
 	TextureResizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, TextureResizeFactor));
+
+	SettingsCategory.AddProperty(MinPolygonProperty);
+	SettingsCategory.AddProperty(MaxPolygonProperty);
+	SettingsCategory.AddProperty(StaticOnlyProperty);
+	SettingsCategory.AddProperty(MinSizeProperty);
+	SettingsCategory.AddProperty(MaxSizeProperty);
+	SettingsCategory.AddProperty(TextureResizeProperty);
 
 	// Create a commands category
 	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(TEXT("Commands"));
@@ -45,25 +52,29 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		SearchForBlender();
 	}
 
-
-	Category.AddCustomRow(FText::FromString("Settings"))
-	.WholeRowContent()
-	.HAlign(HAlign_Center)
-	[
-		SNew(STextBlock)
-		.Text(this, &FBaseEditorToolCustomization::GetBlenderPath)
-	];
-
-
-	//select blender
-	Category.AddCustomRow(FText::FromString("Commands"))
+	Category.AddCustomRow(FText::FromString("Select Blender Horizontal"))
 		.ValueContent()
+		.HAlign(HAlign_Fill)
 		[
-			SNew(SButton)
-			//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(true)
-		.Text(FText::FromString("Select Blender"))
-		.OnClicked(this, &FBaseEditorToolCustomization::Select_Blender)
+			SNew(SHorizontalBox)
+
+			+ SHorizontalBox::Slot()
+			//.HAlign(HAlign_Right)
+			.VAlign(VAlign_Center)
+			.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
+			[
+				SNew(SButton)
+				.IsEnabled(true)
+				.Text(FText::FromString("Select Blender"))
+				.OnClicked(this, &FBaseEditorToolCustomization::Select_Blender)
+			]
+
+			+ SHorizontalBox::Slot()
+			.Padding(FMargin(4.0f, 0.0f, 30.0f, 0.0f))
+			[
+				SNew(STextBlock)
+				.Text(this, &FBaseEditorToolCustomization::GetBlenderPath)
+			]
 		];
 
 	//select export meshes
@@ -99,22 +110,29 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.OnClicked(this, &FBaseEditorToolCustomization::Export_All)
 		];
 
-	Category.AddCustomRow(FText::FromString("Settings"))
-		.WholeRowContent()
-		.HAlign(HAlign_Center)
-		[
-			SNew(STextBlock)
-			.Text(this, &FBaseEditorToolCustomization::GetExportDirectory)
-		];
-
-	//export selected scene
-	Category.AddCustomRow(FText::FromString("Commands"))
+	Category.AddCustomRow(FText::FromString("Select Export Directory Horizontal"))
 		.ValueContent()
+		.HAlign(HAlign_Fill)
 		[
-			SNew(SButton)
-			//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.Text(FText::FromString("Select Export Directory"))
-		.OnClicked(this, &FBaseEditorToolCustomization::Select_Export_Directory)
+			SNew(SHorizontalBox)
+
+			+ SHorizontalBox::Slot()
+			//.HAlign(HAlign_Right)
+			.VAlign(VAlign_Center)
+			.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
+			[
+				SNew(SButton)
+				.IsEnabled(true)
+				.Text(FText::FromString("Select Export Directory"))
+				.OnClicked(this, &FBaseEditorToolCustomization::Select_Export_Directory)
+			]
+
+			+ SHorizontalBox::Slot()
+			.Padding(FMargin(4.0f, 0.0f, 30.0f, 0.0f))
+			[
+				SNew(STextBlock)
+				.Text(this, &FBaseEditorToolCustomization::GetExportDirectory)
+			]
 		];
 
 	//Reduce Meshes
@@ -151,6 +169,12 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.Text(FText::FromString("http request"))
 		.OnClicked(this, &FBaseEditorToolCustomization::Http_Request)
 		];*/
+
+	IDetailCategoryBuilder& SceneKeyCategory = DetailBuilder.EditCategory(TEXT("Scene Keys"));
+
+	SceneKeysProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, SceneKeyPair));
+
+	SceneKeyCategory.AddProperty(SceneKeysProperty);
 }
 
 float FBaseEditorToolCustomization::GetMinimumSize()
