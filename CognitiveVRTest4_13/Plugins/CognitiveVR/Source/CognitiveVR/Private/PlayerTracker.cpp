@@ -71,13 +71,13 @@ void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 		TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
 
-		std::string ts = Util::GetTimestampStr();
-		FString fs(ts.c_str());
-		double time = FCString::Atod(*fs);
+		long ts = Util::GetTimestamp();
+		double miliseconds = FDateTime::Now().GetMillisecond();
+
+		double finalTime = ts + miliseconds*0.001;
 
 		//time
-		snapObj->SetNumberField("time", time);
-		//UGameplayStatics::GetRealTimeSeconds(GetWorld()); //time since level start
+		snapObj->SetNumberField("time", finalTime);
 
 		//positions
 		TArray<TSharedPtr<FJsonValue>> posArray;

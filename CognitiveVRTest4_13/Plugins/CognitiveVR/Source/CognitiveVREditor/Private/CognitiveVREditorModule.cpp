@@ -30,10 +30,8 @@ public:
 void FCognitiveVREditorModule::StartupModule()
 {
 	// Register the details customizations
-	{
-		FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
-		PropertyModule.RegisterCustomClassLayout(TEXT("BaseEditorTool"), FOnGetDetailCustomizationInstance::CreateStatic(&FBaseEditorToolCustomization::MakeInstance));
-	}
+	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
+	PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FBaseEditorToolCustomization::MakeInstance));
 
 	// Register slate style ovverides
 	FDemoStyle::Initialize();
@@ -42,7 +40,7 @@ void FCognitiveVREditorModule::StartupModule()
 	//FDemoCommands::Register();
 	CommandList = MakeShareable(new FUICommandList);
 
-	{
+	//{
 		FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
 
 		CommandList->Append(LevelEditorModule.GetGlobalLevelEditorActions());
@@ -53,12 +51,12 @@ void FCognitiveVREditorModule::StartupModule()
 			FCanExecuteAction::CreateStatic(&FCognitiveVREditorModule::HandleTestCommandCanExcute)
 			);*/
 
-		struct Local
+		/*struct Local
 		{
-			/*static void AddToolbarCommands(FToolBarBuilder& ToolbarBuilder)
-			{
-				ToolbarBuilder.AddToolBarButton(FDemoCommands::Get().TestCommand);
-			}*/
+			//static void AddToolbarCommands(FToolBarBuilder& ToolbarBuilder)
+			//{
+			//	ToolbarBuilder.AddToolBarButton(FDemoCommands::Get().TestCommand);
+			//}
 
 			static void AddMenuCommands(FMenuBuilder& MenuBuilder)
 			{
@@ -75,7 +73,7 @@ void FCognitiveVREditorModule::StartupModule()
 			EExtensionHook::After,
 			CommandList.ToSharedRef(),
 			FMenuExtensionDelegate::CreateStatic(&Local::AddMenuCommands));
-		LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
+		LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);*/
 
 		/*TSharedRef<FExtender> ToolbarExtender(new FExtender());
 		ToolbarExtender->AddToolBarExtension(
@@ -84,7 +82,7 @@ void FCognitiveVREditorModule::StartupModule()
 			CommandList.ToSharedRef(),
 			FToolBarExtensionDelegate::CreateStatic(&Local::AddToolbarCommands));
 		LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);*/
-	}
+	//}
 }
 
 void FCognitiveVREditorModule::ShutdownModule()

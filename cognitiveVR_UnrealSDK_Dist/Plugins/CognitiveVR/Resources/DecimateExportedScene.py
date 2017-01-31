@@ -47,6 +47,7 @@ for temp in os.listdir(exportPath):
 		img_dirs.append(os.path.join(exportPath,temp))
 		print("============found dir: "+temp)
 
+#copy image files into root
 for tempPath, dirs, files in os.walk(exportPath):
 	for name in files:
 		if name.endswith(diffuse_ext):
@@ -80,10 +81,36 @@ outstrings.append('\n\n')
 
 #==========================replace mtl with png references to textures
 for line in readString.splitlines():
+
 	if line.endswith(diffuse_ext):
 		outstrings.append(line.replace(".bmp",".png")+'\n')
 	elif not line.endswith(other_img_ext):
 		outstrings.append(line.replace(".bmp",".png")+'\n'+'\n')
+
+#	if line.endswith(diffuse_ext):
+#		#remove references to bmp images that dont exist
+#		for sline in line.split(" "):
+#			#print (sline)
+#			if sline.endswith(".bmp"):
+#				print("full path to image "+ exportPath+"/"+sline)
+#				if os.path.isfile(exportPath+"/"+sline):
+#					outstrings.append(line.replace(".bmp",".png")+'\n')
+#					print ("========>FOUND this image file " + sline)
+#				else:
+#					print ("------------->image file doesnt exist " + sline)
+#	elif not line.endswith(other_img_ext):
+#		#remove references to bmp images that dont exist
+#		for sline in line.split(" "):
+#			#print (sline)
+#			if sline.endswith(".bmp"):
+#				print("full path to image "+ exportPath+"/"+sline)
+#				if os.path.isfile(exportPath+"/"+sline):
+#					outstrings.append(line.replace(".bmp",".png")+'\n'+'\n')
+#					print ("========>FOUND this image file " + sline)
+#				else:
+#					print ("------------->image file doesnt exist " + sline)
+#		outstrings.append(line.replace(".bmp",".png")+'\n'+'\n')
+
 		
 
 mo.close()
@@ -111,27 +138,38 @@ ops.import_scene.obj(filepath=exportPath+"/"+fileName+".obj", use_edges=True, us
 print("=============================================import complete")
 
 
-#decimate
+#decimate. remesh bsp
 for obj in scene.objects:
- if obj.type == 'MESH':
-  scene.objects.active = obj
-  mod = bpy.context.object.modifiers.new('Decimate','DECIMATE')
-  
-  faceCount = len(bpy.context.object.data.polygons)
-  ratio = 1.0
-  
-  ratio = (faceCount-minFaces)/maxFaces
-  
-  ratio = 1-ratio
-  
-  if ratio >= 1.0:
-   ratio = 1.0
-  if ratio <= 0.1:
-   ratio = 0.1
-  
-  mod.ratio = ratio
-  ops.object.modifier_apply(apply_as='DATA')
+	if obj.type == 'MESH':
+		scene.objects.active = obj
+		mod = bpy.context.object.modifiers.new('Decimate','DECIMATE')
+
+		faceCount = len(bpy.context.object.data.polygons)
+		ratio = 1.0
+
+		ratio = (faceCount-minFaces)/maxFaces
+
+		ratio = 1-ratio
+
+		if ratio >= 1.0:
+			ratio = 1.0
+		if ratio <= 0.1:
+			ratio = 0.1
+
+		mod.ratio = ratio
+		ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
+		if obj.name == 'BSP':
+			print("found bsp, recalc normals")			
+			ops.object.mode_set(mode='EDIT')
+			ops.mesh.remove_doubles(threshold=0.0001)
+			ops.mesh.normals_make_consistent(inside=False)
+			ops.object.mode_set(mode='OBJECT')
+			
+			mod = bpy.context.object.modifiers.new('Remesh','REMESH')
+			ops.object.modifier_apply(apply_as='DATA', modifier="Remesh")
+		
 print("=============================================decimate complete")
+
 
 
 #move this obj into a new folder called 'raw_model_old' or something
@@ -177,15 +215,32 @@ for line in readString.splitlines():
 	if line.startswith("map_Kd"):
 		temppath = line.replace("map_Kd ","")
 		head, tail = os.path.split(temppath)
-		finalmtlstrings.append("map_Kd " + tail+"\n")
-		print(">>>>>append map_kd as " + tail)
+		
+		#before actually appending this to the mtl, check if the .bmp image file exists
+		
+		print(">>>>>is this a file? "+exportPath+"/"+tail[:-4]+".bmp")
+		
+		if os.path.isfile(exportPath+"/"+tail[:-4]+".bmp"):
+			finalmtlstrings.append("map_Kd " + tail+"\n")
+			print(">>>>>append map_kd as " + tail)
+		else:
+			print("^^^^^^^^^^^ couldn't find file " + tail)
+	#	for sline in line.split(" "):
+	#		#print (sline)
+	#		if sline.endswith(".png"):
+	#			print("full path to image "+ exportPath+"/"+sline[:-4]+".bmp")
+	#			if os.path.isfile(exportPath+"/"+sline[:-4]+".bmp"): #at this point, it references a png and the file is bmp
+	#				print ("========>FOUND this image file " + sline)
+    #
+	#			else:
+	#				print ("------------->image file doesnt exist " + sline)
 	elif line.startswith("Ka"):
 		finalmtlstrings.append("Ka 0 0 0"+"\n")
 	elif line.startswith("Ks"):
 		finalmtlstrings.append("Ks 0 0 0"+"\n")
 	else:
 		finalmtlstrings.append(line+"\n")
-		print("????????unknown line as " + line)
+		#print("????????unknown line as " + line)
 		
 
 mo.close()

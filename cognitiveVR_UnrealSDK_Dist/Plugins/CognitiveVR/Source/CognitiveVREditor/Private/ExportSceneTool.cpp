@@ -9,11 +9,22 @@ UExportSceneTool::UExportSceneTool()
 	//MirrorPlane = FPlane(1.0, 0.0f, 0.0f, 0.0f);
 }
 
-void UExportSceneTool::Export_Scene()
+void UExportSceneTool::Export_Selected()
 {
 	//SelectExportMeshes();
 
 	FEditorFileUtils::Export(true);
+
+	//ExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+
+	//RunBlenderCleanup();
+}
+
+void UExportSceneTool::Export_All()
+{
+	//SelectExportMeshes();
+
+	FEditorFileUtils::Export(false);
 
 	//ExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
 
@@ -79,70 +90,70 @@ void UExportSceneTool::Select_Export_Meshes()
 
 /*void UExportSceneTool::ExportTexturesOnly()
 {
-	//get all the selected meshes
-	//GEditor->GetSelectedActors()->GetSelectedObjects
-	
-	//for (TActorIterator<AStaticMeshActor> ObstacleItr(GEditor->GetSelectedActorIterator()); ObstacleItr; ++ObstacleItr)
+//get all the selected meshes
+//GEditor->GetSelectedActors()->GetSelectedObjects
 
-	TArray<UTexture*> outTextures;
-	int32 texturesCount = 0;
-	TArray<UObject*> ObjectsToExport;
-	for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
-	{
-		AStaticMeshActor* sma = Cast<AStaticMeshActor>(*It);
-		if (!sma)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("selected is not a StaticMeshActor"));
-			continue;
-		}
-		UStaticMeshComponent* smc = sma->GetStaticMeshComponent();
-		if (!smc)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("selected missing StaticMeshComponent"));
-			continue;
-		}
-		UMaterialInterface* matint = smc->GetMaterial(0);
-		if (!matint)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("MaterialInterface[0] not found"));
-			continue;
-		}
-		UMaterial* mat = matint->GetMaterial();
-		
+//for (TActorIterator<AStaticMeshActor> ObstacleItr(GEditor->GetSelectedActorIterator()); ObstacleItr; ++ObstacleItr)
 
-		mat->GetUsedTextures(outTextures, EMaterialQualityLevel::Low, true, ERHIFeatureLevel::ES2, true);
-		
-		for (auto& tex : outTextures)
-		{
-			//auto Texture = UTexture2D::CreateTransient(SizeX, SizeY);
-			//FTexture2DMipMap& Mip = [Texture]->PlatformData->Mips[Level];
-			//void* Data = Mip.BulkData.Lock(LOCK_READ_WRITE);
-			//FMemory::Memcpy(Data, NewData, DataSize);
-			//Mip.BulkData.Unlock();
-			//Texture->UpdateResource();
+TArray<UTexture*> outTextures;
+int32 texturesCount = 0;
+TArray<UObject*> ObjectsToExport;
+for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
+{
+AStaticMeshActor* sma = Cast<AStaticMeshActor>(*It);
+if (!sma)
+{
+UE_LOG(LogTemp, Warning, TEXT("selected is not a StaticMeshActor"));
+continue;
+}
+UStaticMeshComponent* smc = sma->GetStaticMeshComponent();
+if (!smc)
+{
+UE_LOG(LogTemp, Warning, TEXT("selected missing StaticMeshComponent"));
+continue;
+}
+UMaterialInterface* matint = smc->GetMaterial(0);
+if (!matint)
+{
+UE_LOG(LogTemp, Warning, TEXT("MaterialInterface[0] not found"));
+continue;
+}
+UMaterial* mat = matint->GetMaterial();
 
 
-			//TArray<UObject*> TextureToExport;
-			//TextureToExport.Add(tex);
+mat->GetUsedTextures(outTextures, EMaterialQualityLevel::Low, true, ERHIFeatureLevel::ES2, true);
 
-			//ObjectTools::ExportObjects(TextureToExport, false, &ExportDirectory, true);
+for (auto& tex : outTextures)
+{
+//auto Texture = UTexture2D::CreateTransient(SizeX, SizeY);
+//FTexture2DMipMap& Mip = [Texture]->PlatformData->Mips[Level];
+//void* Data = Mip.BulkData.Lock(LOCK_READ_WRITE);
+//FMemory::Memcpy(Data, NewData, DataSize);
+//Mip.BulkData.Unlock();
+//Texture->UpdateResource();
 
 
+//TArray<UObject*> TextureToExport;
+//TextureToExport.Add(tex);
 
-			//UE_LOG(LogTemp, Warning, TEXT("exporting tex"));
-			ObjectsToExport.Add(tex);
-			texturesCount++;
-		}
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Found %d textures to Export"), texturesCount);
+//ObjectTools::ExportObjects(TextureToExport, false, &ExportDirectory, true);
 
 
 
-	if (ObjectsToExport.Num() > 0)
-	{
-		ObjectTools::ExportObjects(ObjectsToExport, false); //bPromptForEachFileName=false
-	}
+//UE_LOG(LogTemp, Warning, TEXT("exporting tex"));
+ObjectsToExport.Add(tex);
+texturesCount++;
+}
+}
+
+UE_LOG(LogTemp, Warning, TEXT("Found %d textures to Export"), texturesCount);
+
+
+
+if (ObjectsToExport.Num() > 0)
+{
+ObjectTools::ExportObjects(ObjectsToExport, false); //bPromptForEachFileName=false
+}
 }*/
 
 //open fiel type
@@ -173,16 +184,6 @@ bool UExportSceneTool::PickDirectory(const FString& Title, const FString& FileTy
 
 		//opendirectorydialog
 		/*bFileChosen = DesktopPlatform->SaveFileDialog(
-			ParentWindowWindowHandle,
-			Title,
-			InOutLastPath,
-			DefaultFile,
-			FileTypes,
-			EFileDialogFlags::None,
-			OutFilenames
-		);*/
-
-		bFileChosen = DesktopPlatform->OpenFileDialog(
 		ParentWindowWindowHandle,
 		Title,
 		InOutLastPath,
@@ -190,14 +191,24 @@ bool UExportSceneTool::PickDirectory(const FString& Title, const FString& FileTy
 		FileTypes,
 		EFileDialogFlags::None,
 		OutFilenames
-		);
-		
-		/*
-		bFileChosen = DesktopPlatform->OpenDirectoryDialog(
+		);*/
+
+		bFileChosen = DesktopPlatform->OpenFileDialog(
 			ParentWindowWindowHandle,
 			Title,
 			InOutLastPath,
-			OutFilename
+			DefaultFile,
+			FileTypes,
+			EFileDialogFlags::None,
+			OutFilenames
+		);
+
+		/*
+		bFileChosen = DesktopPlatform->OpenDirectoryDialog(
+		ParentWindowWindowHandle,
+		Title,
+		InOutLastPath,
+		OutFilename
 		);*/
 	}
 
@@ -209,7 +220,7 @@ bool UExportSceneTool::PickDirectory(const FString& Title, const FString& FileTy
 		InOutLastPath = OutFilenames[0];
 		OutFilename = OutFilenames[0];
 	}
-	
+
 	return bFileChosen;
 }
 
@@ -287,19 +298,19 @@ void UExportSceneTool::Reduce_Meshes()
 
 	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " " + MinPolyCount + " " + MaxPolyCount + " " + SceneName + " " + productID;
 
-	FString stringParamSlashed = stringparams.Replace(TEXT("\\"),TEXT("/"));
-	
-	UE_LOG(LogTemp, Warning, TEXT("Params: %s"),*stringParamSlashed);
+	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
+
+	UE_LOG(LogTemp, Warning, TEXT("Params: %s"), *stringParamSlashed);
 
 
 	const TCHAR* params = *stringParamSlashed;
 	int32 priorityMod = 0;
 	FProcHandle procHandle = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
-	
+
 	//FString cmdPath = "C:\\Windows\\System32\\cmd.exe";
 	//FString cmdPathS = "cmd.exe";
 	//FProcHandle procHandle = FPlatformProcess::CreateProc(*cmdPath, NULL, false, false, false, NULL, priorityMod, 0, nullptr);
-	
+
 	//TODO can i just create a process and add parameters or do i need to run through cmd line??
 	//system("cmd.exe");
 
@@ -369,13 +380,14 @@ void UExportSceneTool::Reduce_Textures()
 		return;
 	}
 
-	FString MinPolyCount = FString::FromInt(MinPolygons);
 	FString MaxPolyCount = FString::FromInt(MaxPolygons);
+
+	FString resizeFactor = FString::FromInt(TextureResizeFactor);
 
 	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
 
-	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " " + MinPolyCount + " " + MaxPolyCount + " " + SceneName;
+	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " " + resizeFactor + " " + MaxPolyCount + " " + SceneName;
 
 	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
 

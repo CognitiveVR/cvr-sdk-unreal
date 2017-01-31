@@ -42,12 +42,33 @@ class UCognitiveVRSettings
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	bool EnableErrorDebugLogging;
 
-	/** The unique identifier for your company and product. 'companyname1234-productname-test' */
-	//UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-	//FString CustomerID;
-
+public:
 	UPROPERTY(config, EditAnywhere, Category = "Scene Keys")
-	TArray<FSceneKeyPair> SceneKeyPair;
+		TArray<FSceneKeyPair> SceneKeyPair;
+
+	//The threshold Blender will reduce. Anything with a polygon count below this number will not be reduced
+	UPROPERTY(EditAnywhere, Config, Category = "Export Settings")
+		int32 MinPolygons = 500;
+
+	//The upper threshold Blender will reduce. Any mesh with a polygon count more than this number will be reduced to 10%
+	UPROPERTY(EditAnywhere, Config, Category = "Export Settings")
+		int32 MaxPolygons = 20000;
+
+	//Only export StaticMeshComponents with set to be non-movable
+	UPROPERTY(EditAnywhere, Category = "Export Settings")
+		bool staticOnly = true;
+
+	//Ignore meshes with bounding size less than this value
+	UPROPERTY(EditAnywhere, Category = "Export Settings")
+		float MinimumSize = 100;
+
+	//Ignore meshes with bounding size larger than this value
+	UPROPERTY(EditAnywhere, Category = "Export Settings")
+		float MaximumSize = 10000;
+
+	//Textures size is divided by this amount. MUST be a power of two greater than 0!
+	UPROPERTY(EditAnywhere, Config, Category = "Export Settings")
+		int32 TextureResizeFactor = 4;
 
 	// UAnalyticsSettingsBase interface
 protected:
@@ -59,4 +80,5 @@ protected:
 	* Provides a mechanism to save this object's properties to the section based ini values
 	*/
 	virtual void WriteConfigSettings();
+
 };
