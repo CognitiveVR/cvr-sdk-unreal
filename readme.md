@@ -2,7 +2,7 @@ The cognitiveVR SDK for Unreal
 =========
 Welcome!  This SDK allows you to integrate your Unreal games with cognitiveVR, which provides analytics and insights about your project.  In addition, cognitiveVR empowers you with the ability to take actions that will improve users' engagement with your experience.
 
-Last Updated: Dec 5, 2016
+Last Updated: Jan 30, 2017
 
 This package is still under heavy development. See [docs.cognitive.io](http://docs.cognitivevr.io/unreal/get-started/) for details about gettings started.
 
