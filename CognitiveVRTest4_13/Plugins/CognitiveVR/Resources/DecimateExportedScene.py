@@ -166,6 +166,7 @@ for obj in scene.objects:
 			ops.object.mode_set(mode='OBJECT')
 			
 			mod = bpy.context.object.modifiers.new('Remesh','REMESH')
+			mod.octree_depth = 6
 			ops.object.modifier_apply(apply_as='DATA', modifier="Remesh")
 		
 print("=============================================decimate complete")

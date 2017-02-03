@@ -33,13 +33,13 @@ void Transaction::BeginPosition(std::string category, FVector Position, TSharedP
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
-	double time = FCString::Atod(*fs);
+	double ts = Util::GetTimestamp();
+	//FString fs(ts.c_str());
+	//double time = FCString::Atod(*fs);
 	FString trans = FString("TXN");
 
-	Util::AppendToJsonArray(jsonArray, time);
-	Util::AppendToJsonArray(jsonArray, time);
+	Util::AppendToJsonArray(jsonArray, ts);
+	Util::AppendToJsonArray(jsonArray, ts);
 	s->AppendUD(jsonArray);
 	Util::AppendToJsonArray(jsonArray, category);
 	Util::AppendToJsonArray(jsonArray, trans);
@@ -52,13 +52,13 @@ void Transaction::BeginPosition(std::string category, FVector Position, TSharedP
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 	
 	TArray< TSharedPtr<FJsonValue> > pos;
-	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.X)));
-	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Y)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)-Position.X)));
 	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Z)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Y)));
 
 	FJsonObject* eventObject = new FJsonObject;
 	eventObject->SetStringField("name", category.c_str());
-	eventObject->SetNumberField("time", time);
+	eventObject->SetNumberField("time", ts);
 	eventObject->SetArrayField("point", pos);
 
 	if (properties.Get()->Values.Num() > 0)
@@ -95,12 +95,12 @@ void Transaction::UpdatePosition(std::string category, FVector Position, TShared
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
-	double time = FCString::Atod(*fs);
+	double ts = Util::GetTimestamp();
+	//FString fs(ts.c_str());
+	//double time = FCString::Atod(*fs);
 
-	Util::AppendToJsonArray(jsonArray, time);
-	Util::AppendToJsonArray(jsonArray, time);
+	Util::AppendToJsonArray(jsonArray, ts);
+	Util::AppendToJsonArray(jsonArray, ts);
 	s->AppendUD(jsonArray);
 	Util::AppendToJsonArray(jsonArray, category);
 	Util::AppendToJsonArray(jsonArray, progress);
@@ -118,7 +118,7 @@ void Transaction::UpdatePosition(std::string category, FVector Position, TShared
 
 	FJsonObject* eventObject = new FJsonObject;
 	eventObject->SetStringField("name", category.c_str());
-	eventObject->SetNumberField("time", time);
+	eventObject->SetNumberField("time", ts);
 	eventObject->SetArrayField("point", pos);
 	if (properties.Get()->Values.Num() > 0)
 	{
@@ -154,12 +154,12 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
-	double time = FCString::Atod(*fs);
+	double ts = Util::GetTimestamp();
+	//FString fs(ts.c_str());
+	//double time = FCString::Atod(*fs);
 
-	Util::AppendToJsonArray(jsonArray, time);
-	Util::AppendToJsonArray(jsonArray, time);
+	Util::AppendToJsonArray(jsonArray, ts);
+	Util::AppendToJsonArray(jsonArray, ts);
 	s->AppendUD(jsonArray);
 	Util::AppendToJsonArray(jsonArray, category);
 	Util::AppendToJsonArray(jsonArray, result);
@@ -177,7 +177,7 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 
 	FJsonObject* eventObject = new FJsonObject;
 	eventObject->SetStringField("name", category.c_str());
-	eventObject->SetNumberField("time", time);
+	eventObject->SetNumberField("time", ts);
 	eventObject->SetArrayField("point", pos);
 	if (properties.Get()->Values.Num() > 0)
 	{

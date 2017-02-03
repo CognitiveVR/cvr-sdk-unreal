@@ -25,7 +25,7 @@ void Tuning::CacheValues(std::string entity_id, FJsonObject values, EntityType e
         ThrowDummyResponseException("Invalid tuning cache TTL.");
     }
 
-    long cache_time = Util::GetTimestamp() + Config::kTuningCacheTtl;
+    long cache_time = Util::GetTimestampLong() + Config::kTuningCacheTtl;
 
     if (getallc) {
         Tuning::getallval_cache_ttl = cache_time;

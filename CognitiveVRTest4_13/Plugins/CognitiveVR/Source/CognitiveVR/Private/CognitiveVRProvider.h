@@ -113,6 +113,9 @@ extern bool bHasSessionStarted;
 		FString GetDeviceID() const;
 		void SetDeviceID(const FString& InDeviceID);
 
+		double SessionTimestamp;
+		double GetSessionTimestamp() const;
+
 		void AppendUD(TSharedPtr<FJsonValueArray> &json);
 		FVector GetPlayerHMDPosition();
 		void SendDeviceInfo();

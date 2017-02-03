@@ -7,15 +7,30 @@
 
 using namespace cognitivevrapi;
 
-long Util::GetTimestamp()
+double Util::GetTimestamp()
 {
 	#pragma warning(push)
 	#pragma warning(disable:4244) //Disable warning regarding loss of accuracy, no concern.
 
-	return time(0);
+	long ts = time(0);
+	double miliseconds = FDateTime::Now().GetMillisecond();
+	double finalTime = ts + miliseconds*0.001;
+
+	return finalTime;
 	//http://stackoverflow.com/questions/997946/how-to-get-current-time-and-date-in-c
 
 	#pragma warning(pop)
+}
+
+long Util::GetTimestampLong()
+{
+#pragma warning(push)
+#pragma warning(disable:4244) //Disable warning regarding loss of accuracy, no concern.
+
+	return time(0);
+	//http://stackoverflow.com/questions/997946/how-to-get-current-time-and-date-in-c
+
+#pragma warning(pop)
 }
 
 std::string Util::GetTimestampStr(long t)

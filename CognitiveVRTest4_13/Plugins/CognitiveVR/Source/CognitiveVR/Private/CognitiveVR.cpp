@@ -22,7 +22,7 @@ void FAnalyticsCognitiveVR::ShutdownModule()
 {
 	/*if (CognitiveVRProvider.IsValid())
 	{
-		CognitiveVRProvider->EndSession();
+	CognitiveVRProvider->EndSession();
 	}*/
 }
 
@@ -54,10 +54,10 @@ FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR() :
 
 /*FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
 {
-	if (bHasSessionStarted)
-	{
-		EndSession();
-	}
+if (bHasSessionStarted)
+{
+EndSession();
+}
 }*/
 
 void InitCallback(CognitiveVRResponse resp)
@@ -101,7 +101,7 @@ void FAnalyticsProviderCognitiveVR::SendDeviceInfo()
 			TArray<FAnalyticsEventAttribute> EventAttributes;
 			FName deviceName = hmd->GetDeviceName();
 			EventAttributes.Add(FAnalyticsEventAttribute(TEXT("DeviceName"), deviceName.ToString()));
-			FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->RecordEvent("HMDDevice",EventAttributes);
+			FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->RecordEvent("HMDDevice", EventAttributes);
 		}
 		else
 		{
@@ -118,10 +118,12 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		return false;
 	}
 
-	SessionId = UserId + TEXT("-") + FDateTime::Now().ToString();
+	SessionTimestamp = Util::GetTimestamp();
+	SessionId = FString::FromInt(Util::GetTimestampLong()) + TEXT("_") + DeviceId;
+
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	
+
 	//get attributes
 	//userid
 	//deviceid
@@ -196,8 +198,8 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 
 	/*if (FileArchive != nullptr)
 	{
-		FileArchive->Flush();
-		UE_LOG(CognitiveVR_Log, Display, TEXT("Analytics file flushed"));
+	FileArchive->Flush();
+	UE_LOG(CognitiveVR_Log, Display, TEXT("Analytics file flushed"));
 	}*/
 }
 
@@ -230,17 +232,23 @@ FString FAnalyticsProviderCognitiveVR::GetSessionID() const
 	return SessionId;
 }
 
+double FAnalyticsProviderCognitiveVR::GetSessionTimestamp() const
+{
+	return SessionTimestamp;
+}
+
 bool FAnalyticsProviderCognitiveVR::SetSessionID(const FString& InSessionID)
 {
 	if (!bHasSessionStarted)
 	{
-		SessionId = InSessionID;
+		//SessionId = InSessionID;
+		SessionTimestamp = Util::GetTimestamp();
 		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetSessionID set new session id");
-		
-		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-		properties->SetStringField("id", SessionId);
-		
-		transaction->Update("Session", properties);
+
+		//TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		//properties->SetStringField("id", SessionId);
+
+		//transaction->Update("Session", properties);
 	}
 	else
 	{
@@ -505,5 +513,9 @@ FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 	{
 		return FVector();
 	}
-	return controllers[0]->GetPawn()->GetActorTransform().GetLocation();
+
+	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
+	return up->ComponentToWorld.GetTranslation();
+
+	//return controllers[0]->GetPawn()->GetActorTransform().GetLocation();
 }

@@ -11,7 +11,7 @@ UPlayerTracker::UPlayerTracker()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	bWantsBeginPlay = true;
+	//bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
@@ -71,13 +71,12 @@ void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 		TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
 
-		long ts = Util::GetTimestamp();
-		double miliseconds = FDateTime::Now().GetMillisecond();
-
-		double finalTime = ts + miliseconds*0.001;
+		double ts = Util::GetTimestamp();
+		//double miliseconds = FDateTime::Now().GetMillisecond();
+		//double finalTime = ts + miliseconds*0.001;
 
 		//time
-		snapObj->SetNumberField("time", finalTime);
+		snapObj->SetNumberField("time", ts);
 
 		//positions
 		TArray<TSharedPtr<FJsonValue>> posArray;
@@ -102,6 +101,45 @@ void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		gazeArray.Add(JsonValue);
 
 		snapObj->SetArrayField("g", gazeArray);
+
+
+		//rotation
+		TArray<TSharedPtr<FJsonValue>> rotArray;
+
+		FQuat quat = GetComponentQuat();
+		FRotator rot = GetComponentToWorld().Rotator();
+		rot.Pitch = -rot.Pitch;
+		rot.Yaw += 90;
+		rot.Yaw = -rot.Yaw;
+		quat = rot.Quaternion();
+		//do some nonsense on this rotator?
+
+		//FQuat quatmult = FQuat(0.5, 0.5, 0.5, 0.5); //nearly good. any slight adjustment breaks everything
+		//FQuat quatdouble = FQuat(2, 2, 2, 2); //nope. head flipped dumbly
+		//quat = quat + FQuat(0,1,0,0);
+
+		JsonValue = MakeShareable(new FJsonValueNumber(quat.X)); //GetComponentToWorld().GetRotation().W
+		rotArray.Add(JsonValue);
+		JsonValue = MakeShareable(new FJsonValueNumber(quat.W));
+		rotArray.Add(JsonValue);
+		JsonValue = MakeShareable(new FJsonValueNumber(quat.Y));
+		rotArray.Add(JsonValue);
+		JsonValue = MakeShareable(new FJsonValueNumber(quat.Z));
+		rotArray.Add(JsonValue);
+
+
+
+		//wxyz = pitch, roll, yaw, upside down -90
+		//xwyz = -yaw, roll, -pitch, -90
+		//xywz = roll, yaw, pitch, upside down, 90
+		//xyzw = -roll, -pitch, yaw, 90
+
+		//-xzyw = yaw, pitch, -roll, 90
+		//-x-w-y-z = -yaw, roll, -pitch, -90
+
+
+		snapObj->SetArrayField("r", rotArray);
+
 
 		snapshots.Add(snapObj);
 		if (snapshots.Num() > MaxSnapshots)
@@ -262,7 +300,9 @@ FString UPlayerTracker::EventSnapshotsToString()
 	TArray<TSharedPtr<FJsonValue>> dataArray;
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
 
-	wholeObj->SetStringField("userid", cog->GetUserID());
+	wholeObj->SetStringField("userid", cog->GetDeviceID());
+	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
+	wholeObj->SetStringField("sessionId", cog->GetSessionID());
 
 	for (int32 i = 0; i != events.Num(); ++i)
 	{
@@ -283,7 +323,9 @@ FString UPlayerTracker::GazeSnapshotsToString()
 	TArray<TSharedPtr<FJsonValue>> dataArray;
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
 
-	wholeObj->SetStringField("userid", cog->GetUserID());
+	wholeObj->SetStringField("userid", cog->GetDeviceID());
+	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
+	wholeObj->SetStringField("sessionId", cog->GetSessionID());
 
 	for (int32 i = 0; i != snapshots.Num(); ++i)
 	{
