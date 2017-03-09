@@ -72,8 +72,6 @@ void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
 
 		double ts = Util::GetTimestamp();
-		//double miliseconds = FDateTime::Now().GetMillisecond();
-		//double finalTime = ts + miliseconds*0.001;
 
 		//time
 		snapObj->SetNumberField("time", ts);
@@ -108,35 +106,17 @@ void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 		FQuat quat = GetComponentQuat();
 		FRotator rot = GetComponentToWorld().Rotator();
-		rot.Pitch = -rot.Pitch;
-		rot.Yaw += 90;
-		rot.Yaw = -rot.Yaw;
+		rot.Yaw -= 90;
 		quat = rot.Quaternion();
-		//do some nonsense on this rotator?
 
-		//FQuat quatmult = FQuat(0.5, 0.5, 0.5, 0.5); //nearly good. any slight adjustment breaks everything
-		//FQuat quatdouble = FQuat(2, 2, 2, 2); //nope. head flipped dumbly
-		//quat = quat + FQuat(0,1,0,0);
-
-		JsonValue = MakeShareable(new FJsonValueNumber(quat.X)); //GetComponentToWorld().GetRotation().W
-		rotArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(quat.W));
-		rotArray.Add(JsonValue);
 		JsonValue = MakeShareable(new FJsonValueNumber(quat.Y));
 		rotArray.Add(JsonValue);
 		JsonValue = MakeShareable(new FJsonValueNumber(quat.Z));
 		rotArray.Add(JsonValue);
-
-
-
-		//wxyz = pitch, roll, yaw, upside down -90
-		//xwyz = -yaw, roll, -pitch, -90
-		//xywz = roll, yaw, pitch, upside down, 90
-		//xyzw = -roll, -pitch, yaw, 90
-
-		//-xzyw = yaw, pitch, -roll, 90
-		//-x-w-y-z = -yaw, roll, -pitch, -90
-
+		JsonValue = MakeShareable(new FJsonValueNumber(quat.X));
+		rotArray.Add(JsonValue);
+		JsonValue = MakeShareable(new FJsonValueNumber(quat.W));
+		rotArray.Add(JsonValue);
 
 		snapObj->SetArrayField("r", rotArray);
 
