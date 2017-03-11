@@ -37,7 +37,8 @@ class Network
             @param Json::Value content - JSON content sent to CognitiveVR.
 			@param NetworkCallback callback - JSON content sent to CognitiveVR.
         */
-		void Call(std::string path, TSharedPtr<FJsonValueArray> content, NetworkCallback callback = NULL);
+		void Call(std::string path, TArray<TSharedPtr<FJsonValue>> content, NetworkCallback callback = NULL);
+		void Call(std::string sub_path, TSharedPtr<FJsonValueArray> content, NetworkCallback callback = NULL);
 
         static CognitiveVRResponse ParseResponse(std::string str_response);
         static std::string InterpretError(int code);

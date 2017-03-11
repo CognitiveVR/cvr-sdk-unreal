@@ -22,7 +22,8 @@ private:
 	TArray<TSharedPtr<FJsonObject>> events;
 	FHttpModule* Http;
 	float maxDistance = 8192;
-
+	int jsonEventPart;
+	int jsonGazePart;
 
 
 	//UPROPERTY(editanywhere)
@@ -30,6 +31,7 @@ private:
 	UMaterial* SceneDepthMat;
 
 	FString materialPath = "/CognitiveVR/DepthPostProcessing";
+	TSharedPtr<FAnalyticsProviderCognitiveVR> s;
 
 public:	
 	// Sets default values for this component's properties

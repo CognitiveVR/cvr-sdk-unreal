@@ -254,7 +254,12 @@ void Tuning::RecordValueAsync(NetworkCallback callback, std::string name, std::s
 	Util::AppendToJsonArray(jsonArray, name);
 	Util::AppendToJsonArray(jsonArray, default_value);
 
-    s->thread_manager->PushTask(callback, "tuner_recordUsed", jsonArray);
+    //s->thread_manager->PushTask(callback, "tuner_recordUsed", jsonArray);
+	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
+	jsonObject.Get()->SetStringField("method", "tuner_recordUsed");
+	jsonObject.Get()->SetField("args", jsonArray);
+
+	s->thread_manager->AddJsonToBatch(jsonObject);
 }
 
 std::string Tuning::GetEntityTypeString(EntityType entity_type)

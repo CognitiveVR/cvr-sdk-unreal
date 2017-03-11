@@ -10,15 +10,50 @@ BufferManager::BufferManager(Network* n)
     this->network = n;
 }
 
-void BufferManager::PushTask(NetworkCallback callback, std::string sub_path, TSharedPtr<FJsonValueArray> content)
+void BufferManager::AddJsonToBatch(TSharedPtr<FJsonObject> json)
+{
+	CognitiveLog::Info("======add json to batch");
+	batchedJson.Add(json);
+	if (batchedJson.Num() >= 8) //TODO public batch size
+	{
+		BufferManager::SendBatch();
+	}
+}
+
+void BufferManager::SendBatch()
+{
+	CognitiveLog::Info("--------------------->>Batch > 8, SEND!");
+
+	BufferManager::PushTask(NULL, "datacollected_batch", batchedJson);
+
+	batchedJson.Empty();
+}
+
+void BufferManager::PushTask(NetworkCallback callback, std::string sub_path, TArray<TSharedPtr<FJsonObject>> content)
 {
 	if (this->network != NULL)
 	{
 		//TODO cache events and send them together
 		//TODO cache events sent before Init called
 
+		//turn all the content into one long string
+
+		TArray< TSharedPtr<FJsonValue> > ObjArray;
+		for (int i = 0; i < content.Num(); i++)
+		{
+			//ObjArray.Emplace(content[i]);
+
+			//TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
+			TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueObject(content[i]));
+			ObjArray.Emplace(tempVal);
+
+			//json = MakeShareable(new FJsonValueArray(ValueArray));
+		}
+
+		TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
+
 		//Threading is already handled by Unreal Engine, so we simply pass data along to the network class.
-		this->network->Call(sub_path, content, callback);
+		this->network->Call(sub_path, jsonArray, callback);
 	}
 	else
 	{

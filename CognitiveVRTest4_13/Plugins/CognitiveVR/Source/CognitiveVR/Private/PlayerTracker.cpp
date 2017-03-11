@@ -25,6 +25,7 @@ void UPlayerTracker::InitializePlayerTracker()
 			SceneDepthMat = materialInterface->GetMaterial();
 		}
 	}
+	s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 }
 
 void UPlayerTracker::BeginPlay()
@@ -262,6 +263,12 @@ void UPlayerTracker::SendData(FString sceneName)
 	RequestGaze->SetHeader("Content-Type", TEXT("application/json"));
 	RequestGaze->ProcessRequest();
 	
+	//batched transactions should be sent here
+
+	//BufferManager::SendBatch()
+	//FAnalyticsProviderCognitiveVR::thread_manager->SendBatch();// thread_manager
+	s->thread_manager->SendBatch();
+
 	//EVENTS
 
 	TSharedRef<IHttpRequest> RequestEvents = Http->CreateRequest();
@@ -283,6 +290,8 @@ FString UPlayerTracker::EventSnapshotsToString()
 	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionId", cog->GetSessionID());
+	wholeObj->SetNumberField("part", jsonEventPart);
+	jsonEventPart++;
 
 	for (int32 i = 0; i != events.Num(); ++i)
 	{
@@ -306,6 +315,19 @@ FString UPlayerTracker::GazeSnapshotsToString()
 	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionId", cog->GetSessionID());
+	wholeObj->SetNumberField("part", jsonGazePart);
+	jsonGazePart++;
+
+	FName DeviceName(NAME_None);
+	FString DeviceNameString = "unknown";
+
+	if (GEngine->HMDDevice.IsValid())
+	{
+		DeviceName = GEngine->HMDDevice->GetDeviceName();
+		DeviceNameString = cognitivevrapi::Util::GetDeviceName(DeviceName.ToString());
+	}
+
+	wholeObj->SetStringField("hmdtype", DeviceName.ToString());
 
 	for (int32 i = 0; i != snapshots.Num(); ++i)
 	{

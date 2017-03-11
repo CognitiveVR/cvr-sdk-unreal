@@ -64,8 +64,15 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 	Network::Call("datacollector_updateDeviceState", jsonArrayDevice, NULL);
 }
 
-//'application_init' and json'd sendtimestamp, eventtimestamp, userid, deviceid, userprops, deviceprops
 void Network::Call(std::string sub_path, TSharedPtr<FJsonValueArray> content, NetworkCallback callback)
+{
+	const TArray<TSharedPtr<FJsonValue>> arr = content.Get()->AsArray();
+
+	Network::Call(sub_path, arr, callback);
+}
+
+//'application_init' and json'd sendtimestamp, eventtimestamp, userid, deviceid, userprops, deviceprops
+void Network::Call(std::string sub_path, TArray<TSharedPtr<FJsonValue>> content, NetworkCallback callback)
 {
     if(!this->httpint)
 	{
@@ -84,7 +91,7 @@ void Network::Call(std::string sub_path, TSharedPtr<FJsonValueArray> content, Ne
 
 	std::string customerid(TCHAR_TO_UTF8(*ValueReceived));
 
-    std::string path = "/" + Config::kSsfApp + "/ws/interface/" + sub_path;
+	std::string path = "/" + Config::kSsfApp + "/ws/interface/datacollector_batch";// +sub_path;
 
     //Build query string.
     std::string query = "?";
@@ -110,7 +117,9 @@ void Network::Call(std::string sub_path, TSharedPtr<FJsonValueArray> content, Ne
 
 	FString OutputString;
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
-	FJsonSerializer::Serialize(content.Get()->AsArray(), Writer);
+	FJsonSerializer::Serialize(content, Writer);
+
+	OutputString = "[" + FString::SanitizeFloat(Util::GetTimestamp()) + "," + OutputString + "]";
 
 	str_response = this->httpint->Post(Config::kNetworkHost, path + query, headers, 2, TCHAR_TO_UTF8(*OutputString), Config::kNetworkTimeout, callback);
 }
