@@ -19,6 +19,7 @@ class BufferManager
     private:
         Network* network;
 		TArray<TSharedPtr<FJsonObject>> batchedJson;
+		int TransactionBatchSize = 16;
 
     public:
 		BufferManager(Network* n);

@@ -8,13 +8,27 @@ using namespace cognitivevrapi;
 BufferManager::BufferManager(Network* n)
 {
     this->network = n;
+
+	FString ValueReceived;
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "TransactionBatchSize", false);
+
+	if (ValueReceived.Len() > 0)
+	{
+
+		int32 transactionLimit = FCString::Atoi(*ValueReceived);
+		if (transactionLimit > 0)
+		{
+			TransactionBatchSize = transactionLimit;
+		}
+	}
 }
 
 void BufferManager::AddJsonToBatch(TSharedPtr<FJsonObject> json)
 {
 	CognitiveLog::Info("======add json to batch");
 	batchedJson.Add(json);
-	if (batchedJson.Num() >= 8) //TODO public batch size
+	if (batchedJson.Num() >= TransactionBatchSize)
 	{
 		BufferManager::SendBatch();
 	}
@@ -22,8 +36,6 @@ void BufferManager::AddJsonToBatch(TSharedPtr<FJsonObject> json)
 
 void BufferManager::SendBatch()
 {
-	CognitiveLog::Info("--------------------->>Batch > 8, SEND!");
-
 	BufferManager::PushTask(NULL, "datacollected_batch", batchedJson);
 
 	batchedJson.Empty();

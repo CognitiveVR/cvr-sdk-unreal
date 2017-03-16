@@ -52,13 +52,14 @@ FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR() :
 	DeviceId = FPlatformMisc::GetUniqueDeviceId();
 }
 
-/*FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
+FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
 {
+	UE_LOG(LogTemp, Warning, TEXT("shutdown cognitivevr module"));
 if (bHasSessionStarted)
 {
-EndSession();
+//EndSession();
 }
-}*/
+}
 
 void InitCallback(CognitiveVRResponse resp)
 {
@@ -116,7 +117,8 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	if (bPendingInitRequest) { return false; }
 	if (bHasSessionStarted)
 	{
-		return false;
+		EndSession();
+		//return false;
 	}
 
 	SessionTimestamp = Util::GetTimestamp();
@@ -157,7 +159,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 {
 	transaction->End("Session");
 
-	/*
+	
 	FlushEvents();
 	CognitiveLog::Info("Freeing CognitiveVR memory.");
 	delete thread_manager;
@@ -174,8 +176,11 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 	delete core_utils;
 	core_utils = NULL;
+
+	delete sensors;
+	sensors = NULL;
 	CognitiveLog::Info("CognitiveVR memory freed.");
-	*/
+	
 
 	bHasSessionStarted = false;
 }
@@ -196,12 +201,7 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 		return;
 	}
 	up->SendData();
-
-	/*if (FileArchive != nullptr)
-	{
-	FileArchive->Flush();
-	UE_LOG(CognitiveVR_Log, Display, TEXT("Analytics file flushed"));
-	}*/
+	sensors->SendData();
 }
 
 void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)

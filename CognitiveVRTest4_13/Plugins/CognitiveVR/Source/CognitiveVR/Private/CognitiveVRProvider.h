@@ -73,7 +73,7 @@ extern bool bHasSessionStarted;
 		bool bPendingInitRequest=false;
 
 		FAnalyticsProviderCognitiveVR();
-		//virtual ~FAnalyticsProviderCognitiveVR();
+		virtual ~FAnalyticsProviderCognitiveVR();
 
 		virtual bool StartSession(const TArray<FAnalyticsEventAttribute>& Attributes) override;
 		virtual void EndSession() override;

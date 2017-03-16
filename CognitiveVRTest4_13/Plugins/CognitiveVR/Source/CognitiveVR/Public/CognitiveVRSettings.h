@@ -42,9 +42,13 @@ class UCognitiveVRSettings
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	bool EnableErrorDebugLogging;
 
-	/** Display only error messages from cognitiveVR. */
+	/** The number of sensor data points that will be collected together before being sent to scene explorer */
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-		int SensorDataLimit;
+	int SensorDataLimit;
+
+	/** The number of transactions that will be collected together before being sent to analytics server and scene explorer*/
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	int TransactionBatchSize;
 
 public:
 	UPROPERTY(config, EditAnywhere, Category = "Scene Keys")
