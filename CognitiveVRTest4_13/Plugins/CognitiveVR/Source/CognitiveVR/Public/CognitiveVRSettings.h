@@ -42,6 +42,10 @@ class UCognitiveVRSettings
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	bool EnableErrorDebugLogging;
 
+	/** Display only error messages from cognitiveVR. */
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+		int SensorDataLimit;
+
 public:
 	UPROPERTY(config, EditAnywhere, Category = "Scene Keys")
 		TArray<FSceneKeyPair> SceneKeyPair;

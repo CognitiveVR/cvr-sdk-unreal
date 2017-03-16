@@ -245,40 +245,69 @@ FString UPlayerTracker::GetSceneKey(FString sceneName)
 	return "";
 }
 
-void UPlayerTracker::SendData(FString sceneName)
+void UPlayerTracker::SendJson(FString endpoint, FString json)
 {
-	CognitiveLog::Info("UPlayerTracker::SendData");
-	FString sceneKey = UPlayerTracker::GetSceneKey(sceneName);
+	//sensor data to string
+	//http send
+
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	if (controllers.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("no controllers"));
+		return;
+	}
+	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
+	if (up == NULL)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("no tracker"));
+		return;
+	}
+	
+	UWorld* myworld = up->GetWorld();
+	if (myworld == NULL)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("no world"));
+		return;
+	}
+
+	FString currentSceneName = myworld->GetMapName();
+	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
+
+	FString sceneKey = up->GetSceneKey(currentSceneName);
+
+	std::string stdjson(TCHAR_TO_UTF8(*json));
+	CognitiveLog::Info("sending json "+ stdjson);
 
 	FString url = "https://sceneexplorer.com/api/";
 
 
 	//GAZE
 
-	TSharedRef<IHttpRequest> RequestGaze = Http->CreateRequest();
-	FString GazeString = UPlayerTracker::GazeSnapshotsToString();
-	RequestGaze->SetContentAsString(GazeString);
-	RequestGaze->SetURL(url + "gaze/" + sceneKey);
+	TSharedRef<IHttpRequest> RequestGaze = up->Http->CreateRequest();
+	RequestGaze->SetContentAsString(json);
+	RequestGaze->SetURL(url + endpoint +"/" + sceneKey);
 	RequestGaze->SetVerb("POST");
 	RequestGaze->SetHeader("Content-Type", TEXT("application/json"));
 	RequestGaze->ProcessRequest();
-	
-	//batched transactions should be sent here
+}
 
-	//BufferManager::SendBatch()
-	//FAnalyticsProviderCognitiveVR::thread_manager->SendBatch();// thread_manager
+void UPlayerTracker::SendData(FString sceneName)
+{
+	CognitiveLog::Info("UPlayerTracker::SendData");
+	FString sceneKey = UPlayerTracker::GetSceneKey(sceneName);
+
+	//GAZE
+
+	FString GazeString = UPlayerTracker::GazeSnapshotsToString();
+	SendJson("gaze", GazeString);
+	
 	s->thread_manager->SendBatch();
 
 	//EVENTS
 
-	TSharedRef<IHttpRequest> RequestEvents = Http->CreateRequest();
 	FString EventString = UPlayerTracker::EventSnapshotsToString();
-	RequestEvents->SetContentAsString(EventString);
-	RequestEvents->SetURL(url+"events/"+sceneKey);
-	RequestEvents->SetVerb("POST");
-	RequestEvents->SetHeader("Content-Type", TEXT("application/json"));
-	RequestEvents->ProcessRequest();
-
+	SendJson("events", EventString);
 }
 
 FString UPlayerTracker::EventSnapshotsToString()

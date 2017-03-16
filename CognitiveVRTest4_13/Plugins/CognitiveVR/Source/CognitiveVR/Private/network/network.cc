@@ -45,7 +45,9 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 	Util::AppendToJsonArray(jsonArray, empty);
 
 	if (s->initProperties.Get() == NULL)
+	{
 		s->initProperties = MakeShareable(new FJsonObject);
+	}
 	TSharedPtr<FJsonObject>deviceProperties = Util::DeviceScraper(s->initProperties);
 	Util::AppendToJsonArray(jsonArray, deviceProperties);
 

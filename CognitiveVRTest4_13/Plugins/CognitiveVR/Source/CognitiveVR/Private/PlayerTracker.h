@@ -66,4 +66,6 @@ public:
 
 	FString GazeSnapshotsToString();
 	FString EventSnapshotsToString();
+
+	static void SendJson(FString endpoint, FString Json);
 };

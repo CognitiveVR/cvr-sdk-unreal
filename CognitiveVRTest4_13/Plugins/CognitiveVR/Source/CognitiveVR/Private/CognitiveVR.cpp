@@ -80,6 +80,7 @@ void InitCallback(CognitiveVRResponse resp)
 	cog->tuning = new Tuning(cog, json);
 	cog->thread_manager = new BufferManager(cog->network);
 	cog->core_utils = new CoreUtilities(cog);
+	cog->sensors = new Sensors(cog);
 
 	cog->transaction->Begin("Session");
 	cog->bPendingInitRequest = false;
