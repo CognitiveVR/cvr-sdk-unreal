@@ -91,6 +91,11 @@ private:
 	UFUNCTION(Exec, Category = "Export")
 		FReply Http_Request();
 
+	UFUNCTION(Exec, Category = "Export")
+		FReply UploadScene();
+
+	void OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
 	void OnYourFunctionCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	bool PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
@@ -107,7 +112,7 @@ private:
 	UFUNCTION(Exec, Category = "Export")
 		FReply Select_Export_Directory();
 
-
+	TArray<FString> GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension,const FString ignoreExtension);
 
 	FString GetProductID();
 

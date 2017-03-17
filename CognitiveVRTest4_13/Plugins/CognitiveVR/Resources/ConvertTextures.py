@@ -23,6 +23,7 @@ fileName = args[6]
 
 img_ext='.bmp'
 onlyfiles = [f for f in os.listdir(exportPath) if os.path.isfile(os.path.join(exportPath, f))]
+onlydirectories = [d for d in os.listdir(exportPath) if os.path.isdir(os.path.join(exportPath, d))]
 
 
 #bpy.context.window.screen = bpy.data.screens['UV Editing'] #uv window needs to be open?
@@ -59,6 +60,10 @@ for file in onlyfiles:
 		os.remove(exportPath+"/"+file)
 		#i2 = bpy.data.images.new()
 print("all files done")
+
+for dir in onlydirectories:
+	shutil.rmtree(os.path.join(exportPath,dir))
+
 exit()
 
 
