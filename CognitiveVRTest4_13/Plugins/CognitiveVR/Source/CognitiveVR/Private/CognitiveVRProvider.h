@@ -124,6 +124,8 @@ extern bool bHasSessionStarted;
 		FVector GetPlayerHMDPosition();
 		void SendDeviceInfo();
 
+		bool HasStartedSession();
+
 	};
 
 	void ThrowDummyResponseException(std::string s);

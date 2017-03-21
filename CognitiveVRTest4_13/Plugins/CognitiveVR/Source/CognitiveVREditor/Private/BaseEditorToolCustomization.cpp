@@ -456,7 +456,7 @@ FReply FBaseEditorToolCustomization::Reduce_Meshes()
 
 	FString productID = GetProductID();
 
-	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " " + MinPolyCount + " " + MaxPolyCount + " " + SceneName + " " + productID;
+	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " " + MinPolyCount + " " + MaxPolyCount + " " + SceneName + " " + productID + " " + COGNITIVEVR_SDK_VERSION;
 
 	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
 

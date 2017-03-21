@@ -53,7 +53,7 @@ private:
 	float GetMaximumSize();
 	int GetMinPolygon();
 	int GetMaxPolygon();
-	int GetTextureRefacor();
+	int32 GetTextureRefacor();
 	bool GetStaticOnly();
 
 	TSharedPtr<IPropertyHandle> MinSizeProperty;

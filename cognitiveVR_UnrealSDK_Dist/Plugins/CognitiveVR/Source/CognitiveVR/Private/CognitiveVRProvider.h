@@ -16,6 +16,7 @@
 #include "Private/network/network.h"
 #include "Private/api/tuning.h"
 #include "Private/api/transaction.h"
+#include "Private/api/sensor.h"
 #include "Private/api/coreutilities.h"
 #include "Engine.h"
 
@@ -40,6 +41,7 @@ extern bool bHasSessionStarted;
 	class CoreUtilities;
 	class OverrideHttpInterface;
 	class CognitiveVRResponse;
+	class Sensors;
 
 	class FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
 	{
@@ -49,8 +51,6 @@ extern bool bHasSessionStarted;
 		//bool bHasSessionStarted;
 		/** Whether an event was written before or not */
 		//bool bHasWrittenFirstEvent;
-		/** Id representing the user the analytics are recording for */
-		FString UserId;
 		/** Unique Id representing the session the analytics are recording for */
 		FString SessionId;
 		/** Holds the Age if set */
@@ -65,12 +65,15 @@ extern bool bHasSessionStarted;
 		//FArchive* FileArchive;
 
 	public:
+		/** Id representing the user the analytics are recording for */
+		FString UserId;
+
 		/** True once server has responded. everything is initialized at this point */
 		//TODO time out should set bPendingInitRequest to false
 		bool bPendingInitRequest=false;
 
 		FAnalyticsProviderCognitiveVR();
-		//virtual ~FAnalyticsProviderCognitiveVR();
+		virtual ~FAnalyticsProviderCognitiveVR();
 
 		virtual bool StartSession(const TArray<FAnalyticsEventAttribute>& Attributes) override;
 		virtual void EndSession() override;
@@ -109,13 +112,19 @@ extern bool bHasSessionStarted;
 		Network* network;
 		BufferManager* thread_manager;
 		CoreUtilities* core_utils;
+		Sensors* sensors;
 		TSharedPtr<FJsonObject> initProperties; //optional properties sent when initializing. platform, ram, etc
 		FString GetDeviceID() const;
 		void SetDeviceID(const FString& InDeviceID);
 
+		double SessionTimestamp;
+		double GetSessionTimestamp() const;
+
 		void AppendUD(TSharedPtr<FJsonValueArray> &json);
 		FVector GetPlayerHMDPosition();
 		void SendDeviceInfo();
+
+		bool HasStartedSession();
 
 	};
 

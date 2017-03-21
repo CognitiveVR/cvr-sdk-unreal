@@ -36,6 +36,12 @@ void BufferManager::AddJsonToBatch(TSharedPtr<FJsonObject> json)
 
 void BufferManager::SendBatch()
 {
+	if (network == NULL)
+	{
+		CognitiveLog::Warning("BufferManager::SendBatch network is null");
+		return;
+	}
+
 	BufferManager::PushTask(NULL, "datacollected_batch", batchedJson);
 
 	batchedJson.Empty();

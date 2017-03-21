@@ -33,13 +33,12 @@ void Transaction::BeginPosition(std::string category, FVector Position, TSharedP
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
-	double time = FCString::Atod(*fs);
+	double ts = Util::GetTimestamp();
+
 	FString trans = FString("TXN");
 
-	Util::AppendToJsonArray(jsonArray, time);
-	Util::AppendToJsonArray(jsonArray, time);
+	Util::AppendToJsonArray(jsonArray, ts);
+	Util::AppendToJsonArray(jsonArray, ts);
 	s->AppendUD(jsonArray);
 	Util::AppendToJsonArray(jsonArray, category);
 	Util::AppendToJsonArray(jsonArray, trans);
@@ -49,16 +48,19 @@ void Transaction::BeginPosition(std::string category, FVector Position, TSharedP
 
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
+	if (controllers.Num() == 0) { return; }
+	if (controllers[0]->GetPawn() == NULL) { return; }
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
+	if (up == NULL) { return; }
 	
 	TArray< TSharedPtr<FJsonValue> > pos;
-	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.X)));
-	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Y)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)-Position.X)));
 	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Z)));
+	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Y)));
 
 	FJsonObject* eventObject = new FJsonObject;
 	eventObject->SetStringField("name", category.c_str());
-	eventObject->SetNumberField("time", time);
+	eventObject->SetNumberField("time", ts);
 	eventObject->SetArrayField("point", pos);
 
 	if (properties.Get()->Values.Num() > 0)
@@ -71,7 +73,11 @@ void Transaction::BeginPosition(std::string category, FVector Position, TSharedP
 		up->AddJsonEvent(eventObject);
 	}
 
-	s->thread_manager->PushTask(NULL, "datacollector_beginTransaction", jsonArray);
+	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
+	jsonObject.Get()->SetStringField("method", "datacollector_beginTransaction");
+	jsonObject.Get()->SetField("args", jsonArray);
+
+	s->thread_manager->AddJsonToBatch(jsonObject);
 }
 
 void Transaction::Update(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, double progress)
@@ -95,12 +101,10 @@ void Transaction::UpdatePosition(std::string category, FVector Position, TShared
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
-	double time = FCString::Atod(*fs);
+	double ts = Util::GetTimestamp();
 
-	Util::AppendToJsonArray(jsonArray, time);
-	Util::AppendToJsonArray(jsonArray, time);
+	Util::AppendToJsonArray(jsonArray, ts);
+	Util::AppendToJsonArray(jsonArray, ts);
 	s->AppendUD(jsonArray);
 	Util::AppendToJsonArray(jsonArray, category);
 	Util::AppendToJsonArray(jsonArray, progress);
@@ -118,7 +122,7 @@ void Transaction::UpdatePosition(std::string category, FVector Position, TShared
 
 	FJsonObject* eventObject = new FJsonObject;
 	eventObject->SetStringField("name", category.c_str());
-	eventObject->SetNumberField("time", time);
+	eventObject->SetNumberField("time", ts);
 	eventObject->SetArrayField("point", pos);
 	if (properties.Get()->Values.Num() > 0)
 	{
@@ -130,11 +134,19 @@ void Transaction::UpdatePosition(std::string category, FVector Position, TShared
 		up->AddJsonEvent(eventObject);
 	}
 
-	s->thread_manager->PushTask(NULL, "datacollector_updateTransaction", jsonArray);
+	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
+	jsonObject.Get()->SetStringField("method", "datacollector_updateTransaction");
+	jsonObject.Get()->SetField("args", jsonArray);
+
+	s->thread_manager->AddJsonToBatch(jsonObject);
 }
 
 void Transaction::End(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, std::string result)
 {
+	if (s == NULL)
+	{
+		return;
+	}
 	Transaction::EndPosition(category, s->GetPlayerHMDPosition(), properties, transaction_id, result);
 }
 
@@ -154,12 +166,10 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
-	double time = FCString::Atod(*fs);
+	double ts = Util::GetTimestamp();
 
-	Util::AppendToJsonArray(jsonArray, time);
-	Util::AppendToJsonArray(jsonArray, time);
+	Util::AppendToJsonArray(jsonArray, ts);
+	Util::AppendToJsonArray(jsonArray, ts);
 	s->AppendUD(jsonArray);
 	Util::AppendToJsonArray(jsonArray, category);
 	Util::AppendToJsonArray(jsonArray, result);
@@ -168,6 +178,13 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
+
+	if (controllers.Num() == 0)
+	{
+		CognitiveLog::Warning("Transaction. local player controller count is 0! skip transaction");
+		return;
+	}
+
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 
 	TArray< TSharedPtr<FJsonValue> > pos;
@@ -177,7 +194,7 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 
 	FJsonObject* eventObject = new FJsonObject;
 	eventObject->SetStringField("name", category.c_str());
-	eventObject->SetNumberField("time", time);
+	eventObject->SetNumberField("time", ts);
 	eventObject->SetArrayField("point", pos);
 	if (properties.Get()->Values.Num() > 0)
 	{
@@ -189,8 +206,14 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 		up->AddJsonEvent(eventObject);
 	}
 
-	s->thread_manager->PushTask(NULL, "datacollector_endTransaction", jsonArray);
+	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
+	jsonObject.Get()->SetStringField("method", "datacollector_endTransaction");
+	jsonObject.Get()->SetField("args", jsonArray);
+
+	s->thread_manager->AddJsonToBatch(jsonObject);
 }
+
+//add to some list of json transactions
 
 void Transaction::BeginEnd(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, std::string result)
 {
@@ -204,6 +227,5 @@ void Transaction::BeginEndPosition(std::string category, FVector Position, TShar
 		CognitiveLog::Warning("Transaction::BeginEnd - FAnalyticsProviderCognitiveVR is null!");
 		return;
 	}
-	//this->BeginPosition(category, Position, properties, transaction_id);
 	this->EndPosition(category, Position, properties, transaction_id, result);
 }
