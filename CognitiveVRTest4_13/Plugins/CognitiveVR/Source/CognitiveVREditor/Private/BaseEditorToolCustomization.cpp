@@ -59,22 +59,22 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			SNew(SHorizontalBox)
 
 			+ SHorizontalBox::Slot()
-			//.HAlign(HAlign_Right)
-			.VAlign(VAlign_Center)
-			.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
-			[
-				SNew(SButton)
-				.IsEnabled(true)
-				.Text(FText::FromString("Select Blender"))
-				.OnClicked(this, &FBaseEditorToolCustomization::Select_Blender)
-			]
+		//.HAlign(HAlign_Right)
+		.VAlign(VAlign_Center)
+		.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
+		[
+			SNew(SButton)
+			.IsEnabled(true)
+		.Text(FText::FromString("Select Blender"))
+		.OnClicked(this, &FBaseEditorToolCustomization::Select_Blender)
+		]
 
-			+ SHorizontalBox::Slot()
-			.Padding(FMargin(4.0f, 0.0f, 30.0f, 0.0f))
-			[
-				SNew(STextBlock)
-				.Text(this, &FBaseEditorToolCustomization::GetBlenderPath)
-			]
+	+ SHorizontalBox::Slot()
+		.Padding(FMargin(4.0f, 0.0f, 30.0f, 0.0f))
+		[
+			SNew(STextBlock)
+			.Text(this, &FBaseEditorToolCustomization::GetBlenderPath)
+		]
 		];
 
 	//select export meshes
@@ -117,22 +117,22 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			SNew(SHorizontalBox)
 
 			+ SHorizontalBox::Slot()
-			//.HAlign(HAlign_Right)
-			.VAlign(VAlign_Center)
-			.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
-			[
-				SNew(SButton)
-				.IsEnabled(true)
-				.Text(FText::FromString("Select Export Directory"))
-				.OnClicked(this, &FBaseEditorToolCustomization::Select_Export_Directory)
-			]
+		//.HAlign(HAlign_Right)
+		.VAlign(VAlign_Center)
+		.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
+		[
+			SNew(SButton)
+			.IsEnabled(true)
+		.Text(FText::FromString("Select Export Directory"))
+		.OnClicked(this, &FBaseEditorToolCustomization::Select_Export_Directory)
+		]
 
-			+ SHorizontalBox::Slot()
-			.Padding(FMargin(4.0f, 0.0f, 30.0f, 0.0f))
-			[
-				SNew(STextBlock)
-				.Text(this, &FBaseEditorToolCustomization::GetExportDirectory)
-			]
+	+ SHorizontalBox::Slot()
+		.Padding(FMargin(4.0f, 0.0f, 30.0f, 0.0f))
+		[
+			SNew(STextBlock)
+			.Text(this, &FBaseEditorToolCustomization::GetExportDirectory)
+		]
 		];
 
 	//Reduce Meshes
@@ -160,14 +160,15 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 
 
 	//http request
-	Category.AddCustomRow(FText::FromString("Commands"))
+	//IN DEVELOPMENT
+	/*Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
 		[
 			SNew(SButton)
-		.IsEnabled(true)
+			.IsEnabled(true)
 		.Text(FText::FromString("Upload Scene"))
 		.OnClicked(this, &FBaseEditorToolCustomization::UploadScene)
-		];
+		];*/
 
 	IDetailCategoryBuilder& SceneKeyCategory = DetailBuilder.EditCategory(TEXT("Scene Keys"));
 
@@ -287,7 +288,7 @@ FReply FBaseEditorToolCustomization::Select_Export_Meshes()
 			continue;
 		}
 
-		
+
 
 		GEditor->SelectActor(tempactor, true, false, true);
 		ActorsExported++;
@@ -378,12 +379,12 @@ bool FBaseEditorToolCustomization::PickDirectory(const FString& Title, const FSt
 	if (DesktopPlatform)
 	{
 		void* ParentWindowWindowHandle = ChooseParentWindowHandle();
-		
+
 		directoryChosen = DesktopPlatform->OpenDirectoryDialog(
-		ParentWindowWindowHandle,
-		Title,
-		InOutLastPath,
-		OutFilename
+			ParentWindowWindowHandle,
+			Title,
+			InOutLastPath,
+			OutFilename
 		);
 	}
 
@@ -595,13 +596,13 @@ FReply FBaseEditorToolCustomization::UploadScene()
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
 	//FString fileExtensions = TEXT("obj");
-	TArray<FString> filesInDirectory = GetAllFilesInDirectory(ExportDirectory, true, filesStartingWith, filesStartingWith,pngextension);
+	TArray<FString> filesInDirectory = GetAllFilesInDirectory(ExportDirectory, true, filesStartingWith, filesStartingWith, pngextension);
 
-	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(ExportDirectory, true, filesStartingWith, pngextension,filesStartingWith);
-	
+	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(ExportDirectory, true, filesStartingWith, pngextension, filesStartingWith);
+
 	FString Content;
 
-	UE_LOG(LogTemp, Log, TEXT("image count%d"),imagesInDirectory.Num());
+	UE_LOG(LogTemp, Log, TEXT("image count%d"), imagesInDirectory.Num());
 	UE_LOG(LogTemp, Log, TEXT("file count%d"), filesInDirectory.Num());
 
 	for (int32 i = 0; i < filesInDirectory.Num(); i++)
@@ -614,16 +615,16 @@ FReply FBaseEditorToolCustomization::UploadScene()
 		if (FFileHelper::LoadFileToString(result, *filesInDirectory[i]))
 		{
 			//loaded the file
-			Content = Content.Append("\n\nboundary=--kdETdJKGXvWOQpWe1pJ9Qe43dYBmJJzcs39Zhqwa\n");
+			Content = Content.Append("\n--gc0p4Jq0M2Yt08jU534c0p");
 
 			FString left;
 			FString right;
 			filesInDirectory[i].Split(".", &left, &right);
 
-			Content = Content.Append("Cotent-Type: application/octet-stream\n");
-			Content = Content.Append("Content-Disposition: form-data; name=\"file\";filename=" + FPaths::GetCleanFilename(filesInDirectory[i]) +"\"\n");
-			Content = Content.Append(result);
+			Content = Content.Append("\ncontent-disposition: form-data; name=\"file\"; filename=\"" + FPaths::GetCleanFilename(filesInDirectory[i]) + "\"");
+			Content = Content.Append("\ncontent-type: application/octet-stream");
 			Content = Content.Append("\n");
+			Content = Content.Append(result);
 		}
 		else
 		{
@@ -631,41 +632,43 @@ FReply FBaseEditorToolCustomization::UploadScene()
 		}
 	}
 
-	for (int32 i = 0; i < imagesInDirectory.Num(); i++)
+	/*for (int32 i = 0; i < imagesInDirectory.Num(); i++)
 	{
-		FString result;
-		//const TCHAR* dirchars = *ExportDirectory;
-		//const TCHAR* filechars = *imagesInDirectory[i];
-		//const TCHAR* totalfilechars = *FPaths::Combine(dirchars, filechars);
-		if (FFileHelper::LoadFileToString(result, *imagesInDirectory[i]))
-		{
-			//loaded the file
-			Content = Content.Append("\n\nboundary=--kdETdJKGXvWOQpWe1pJ9Qe43dYBmJJzcs39Zhqwa\n");
+	FString result;
+	//const TCHAR* dirchars = *ExportDirectory;
+	//const TCHAR* filechars = *imagesInDirectory[i];
+	//const TCHAR* totalfilechars = *FPaths::Combine(dirchars, filechars);
+	if (FFileHelper::LoadFileToString(result, *imagesInDirectory[i]))
+	{
+	//loaded the file
+	Content = Content.Append("\n\n--kdETdJKGXvWOQpWe1pJ9Qe43dYBmJJzcs39Zhqwa\n");
 
-			FString left;
-			FString right;
-			imagesInDirectory[i].Split(".", &left, &right);
-			
+	FString left;
+	FString right;
+	imagesInDirectory[i].Split(".", &left, &right);
 
-			Content = Content.Append("Cotent-Type: image/png\n");
-			Content = Content.Append("Content-Disposition: form-data; name=\"file\";filename=" + FPaths::GetCleanFilename(imagesInDirectory[i]) + "\"\n");
-			Content = Content.Append(result);
-			Content = Content.Append("\n");
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("failed to load %s"), *imagesInDirectory[i]);
-		}
+
+	Content = Content.Append("Cotent-Type: image/png\n");
+	Content = Content.Append("Content-Disposition: form-data; name=\"file\";filename=" + FPaths::GetCleanFilename(imagesInDirectory[i]) + "\"\n");
+	Content = Content.Append(result);
+	Content = Content.Append("\n");
 	}
+	else
+	{
+	UE_LOG(LogTemp, Error, TEXT("failed to load %s"), *imagesInDirectory[i]);
+	}
+	}*/
 
-	Content = Content.Append("\nboundary=--kdETdJKGXvWOQpWe1pJ9Qe43dYBmJJzcs39Zhqwa--");
+	//FString finalContent = Content+"\n\n--kdETdJKGXvWOQpWe1pJ9Qe43dYBmJJzcs39Zhqwa--\n";
+	Content = Content.Append(FString("\n--gc0p4Jq0M2Yt08jU534c0p--"));
 
-
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *Content);
 
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-	HttpRequest->SetURL("https://sceneexplorer.com/api/scenes/");
 
-	HttpRequest->SetVerb("POST");
+	//HttpRequest->SetURL("https://sceneexplorer.com/api/scenes");
+
+
 
 
 	//set content as uint
@@ -682,20 +685,27 @@ FReply FBaseEditorToolCustomization::UploadScene()
 			OutBytes.Add(CharBytes[CharIdx]);
 		}
 	}
+
+
+	HttpRequest->SetURL("http://192.168.1.145:3000/api/scenes");
+	HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=gc0p4Jq0M2Yt08jU534c0p");
+	//HttpRequest->SetHeader("Content-Length", FString::FromInt(OutBytes.Num()));
+	HttpRequest->SetVerb("POST");
+	//HttpRequest->SetContentAsString(Content);
 	HttpRequest->SetContent(OutBytes);
 
+	UE_LOG(LogTemp, Warning, TEXT("%d"), HttpRequest->GetContentLength());
 
 	//set content as string
 
 	//HttpRequest->SetContentAsString(Content);
 
-	HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=--kdETdJKGXvWOQpWe1pJ9Qe43dYBmJJzcs39Zhqwa");
-	HttpRequest->SetHeader("Content-Length", FString::FromInt(OutBytes.Num()));
-	
+
+	//HttpRequest->SetHeader("Content-Length", FString::FromInt(Content.Len()));
 
 	HttpRequest->OnProcessRequestComplete().BindSP(this, &FBaseEditorToolCustomization::OnUploadSceneCompleted);
 
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *Content);
+
 
 	HttpRequest->ProcessRequest();
 	return FReply::Handled();
