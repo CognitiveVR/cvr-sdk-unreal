@@ -48,14 +48,14 @@ namespace cognitivevrapi
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, std::string &string);
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, long &longValue);
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, bool &mybool);
-			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, int &intValue);
+			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, int32 &intValue);
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, double &doubleValue);
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, TSharedPtr<FJsonObject> &object);
 
 			static void AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, std::string &stdstring);
 			static void AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, FString &fstring);
 			static void AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, bool &mybool);
-			static void AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, int &intValue);
+			static void AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, int32 &intValue);
 			static void AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, double &doubleValue);
     };
 }

@@ -48,7 +48,10 @@ void Transaction::BeginPosition(std::string category, FVector Position, TSharedP
 
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
+	if (controllers.Num() == 0) { return; }
+	if (controllers[0]->GetPawn() == NULL) { return; }
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
+	if (up == NULL) { return; }
 	
 	TArray< TSharedPtr<FJsonValue> > pos;
 	pos.Add(MakeShareable(new FJsonValueNumber((int32)-Position.X)));
@@ -140,6 +143,10 @@ void Transaction::UpdatePosition(std::string category, FVector Position, TShared
 
 void Transaction::End(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, std::string result)
 {
+	if (s == NULL)
+	{
+		return;
+	}
 	Transaction::EndPosition(category, s->GetPlayerHMDPosition(), properties, transaction_id, result);
 }
 
@@ -171,6 +178,13 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
+
+	if (controllers.Num() == 0)
+	{
+		CognitiveLog::Warning("Transaction. local player controller count is 0! skip transaction");
+		return;
+	}
+
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 
 	TArray< TSharedPtr<FJsonValue> > pos;

@@ -41,7 +41,7 @@ class Network
 		void Call(std::string sub_path, TSharedPtr<FJsonValueArray> content, NetworkCallback callback = NULL);
 
         static CognitiveVRResponse ParseResponse(std::string str_response);
-        static std::string InterpretError(int code);
+        static std::string InterpretError(int32 code);
 };
 
 #endif  // COGNITIVEVR_NETWORK_H_

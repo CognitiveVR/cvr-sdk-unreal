@@ -26,6 +26,11 @@ void FAnalyticsCognitiveVR::ShutdownModule()
 	}*/
 }
 
+bool FAnalyticsProviderCognitiveVR::HasStartedSession()
+{
+	return bHasSessionStarted;
+}
+
 TSharedPtr<IAnalyticsProvider> FAnalyticsCognitiveVR::CreateAnalyticsProvider(const FAnalyticsProviderConfigurationDelegate& GetConfigValue) const
 {
 	return CognitiveVRProvider;
@@ -55,10 +60,6 @@ FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR() :
 FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
 {
 	UE_LOG(LogTemp, Warning, TEXT("shutdown cognitivevr module"));
-if (bHasSessionStarted)
-{
-//EndSession();
-}
 }
 
 void InitCallback(CognitiveVRResponse resp)
@@ -117,7 +118,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	if (bPendingInitRequest) { return false; }
 	if (bHasSessionStarted)
 	{
-		EndSession();
+		//EndSession();
 		//return false;
 	}
 
@@ -157,9 +158,12 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 void FAnalyticsProviderCognitiveVR::EndSession()
 {
-	transaction->End("Session");
-
+	if (transaction == NULL)
+	{
+		return;
+	}
 	
+
 	FlushEvents();
 	CognitiveLog::Info("Freeing CognitiveVR memory.");
 	delete thread_manager;
@@ -516,7 +520,15 @@ FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 	}
 
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
-	return up->ComponentToWorld.GetTranslation();
+	if (up == NULL)
+	{
+		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition couldn't find UPlayerTracker. using player camera instead");
+		return controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	}
+	else
+	{
+		return up->ComponentToWorld.GetTranslation();
+	}
 
 	//return controllers[0]->GetPawn()->GetActorTransform().GetLocation();
 }

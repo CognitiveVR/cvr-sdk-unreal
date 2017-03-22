@@ -22,8 +22,13 @@ void FAnalyticsCognitiveVR::ShutdownModule()
 {
 	/*if (CognitiveVRProvider.IsValid())
 	{
-		CognitiveVRProvider->EndSession();
+	CognitiveVRProvider->EndSession();
 	}*/
+}
+
+bool FAnalyticsProviderCognitiveVR::HasStartedSession()
+{
+	return bHasSessionStarted;
 }
 
 TSharedPtr<IAnalyticsProvider> FAnalyticsCognitiveVR::CreateAnalyticsProvider(const FAnalyticsProviderConfigurationDelegate& GetConfigValue) const
@@ -52,13 +57,10 @@ FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR() :
 	DeviceId = FPlatformMisc::GetUniqueDeviceId();
 }
 
-/*FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
+FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
 {
-	if (bHasSessionStarted)
-	{
-		EndSession();
-	}
-}*/
+	UE_LOG(LogTemp, Warning, TEXT("shutdown cognitivevr module"));
+}
 
 void InitCallback(CognitiveVRResponse resp)
 {
@@ -80,6 +82,7 @@ void InitCallback(CognitiveVRResponse resp)
 	cog->tuning = new Tuning(cog, json);
 	cog->thread_manager = new BufferManager(cog->network);
 	cog->core_utils = new CoreUtilities(cog);
+	cog->sensors = new Sensors(cog);
 
 	cog->transaction->Begin("Session");
 	cog->bPendingInitRequest = false;
@@ -101,7 +104,7 @@ void FAnalyticsProviderCognitiveVR::SendDeviceInfo()
 			TArray<FAnalyticsEventAttribute> EventAttributes;
 			FName deviceName = hmd->GetDeviceName();
 			EventAttributes.Add(FAnalyticsEventAttribute(TEXT("DeviceName"), deviceName.ToString()));
-			FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->RecordEvent("HMDDevice",EventAttributes);
+			FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->RecordEvent("HMDDevice", EventAttributes);
 		}
 		else
 		{
@@ -115,13 +118,16 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	if (bPendingInitRequest) { return false; }
 	if (bHasSessionStarted)
 	{
-		return false;
+		//EndSession();
+		//return false;
 	}
 
-	SessionId = UserId + TEXT("-") + FDateTime::Now().ToString();
+	SessionTimestamp = Util::GetTimestamp();
+	SessionId = FString::FromInt(Util::GetTimestampLong()) + TEXT("_") + DeviceId;
+
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	
+
 	//get attributes
 	//userid
 	//deviceid
@@ -152,9 +158,12 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 void FAnalyticsProviderCognitiveVR::EndSession()
 {
-	transaction->End("Session");
+	if (transaction == NULL)
+	{
+		return;
+	}
+	
 
-	/*
 	FlushEvents();
 	CognitiveLog::Info("Freeing CognitiveVR memory.");
 	delete thread_manager;
@@ -171,8 +180,11 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 	delete core_utils;
 	core_utils = NULL;
+
+	delete sensors;
+	sensors = NULL;
 	CognitiveLog::Info("CognitiveVR memory freed.");
-	*/
+	
 
 	bHasSessionStarted = false;
 }
@@ -193,12 +205,7 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 		return;
 	}
 	up->SendData();
-
-	/*if (FileArchive != nullptr)
-	{
-		FileArchive->Flush();
-		UE_LOG(CognitiveVR_Log, Display, TEXT("Analytics file flushed"));
-	}*/
+	sensors->SendData();
 }
 
 void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
@@ -230,17 +237,23 @@ FString FAnalyticsProviderCognitiveVR::GetSessionID() const
 	return SessionId;
 }
 
+double FAnalyticsProviderCognitiveVR::GetSessionTimestamp() const
+{
+	return SessionTimestamp;
+}
+
 bool FAnalyticsProviderCognitiveVR::SetSessionID(const FString& InSessionID)
 {
 	if (!bHasSessionStarted)
 	{
-		SessionId = InSessionID;
+		//SessionId = InSessionID;
+		SessionTimestamp = Util::GetTimestamp();
 		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetSessionID set new session id");
-		
-		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-		properties->SetStringField("id", SessionId);
-		
-		transaction->Update("Session", properties);
+
+		//TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		//properties->SetStringField("id", SessionId);
+
+		//transaction->Update("Session", properties);
 	}
 	else
 	{
@@ -505,5 +518,9 @@ FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 	{
 		return FVector();
 	}
-	return controllers[0]->GetPawn()->GetActorTransform().GetLocation();
+
+	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
+	return up->ComponentToWorld.GetTranslation();
+
+	//return controllers[0]->GetPawn()->GetActorTransform().GetLocation();
 }

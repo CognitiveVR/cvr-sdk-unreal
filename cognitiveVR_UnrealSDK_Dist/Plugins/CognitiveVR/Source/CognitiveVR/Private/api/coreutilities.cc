@@ -21,7 +21,12 @@ void CoreUtilities::NewUser(std::string nuser_id)
 	Util::AppendToJsonArray(jsonArray, nuser_id);
 	Util::AppendToJsonArray(jsonArray, empty);
 
-	s->thread_manager->PushTask(NULL, "datacollector_newUser", jsonArray);
+	//s->thread_manager->PushTask(NULL, "datacollector_newUser", jsonArray);
+	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
+	jsonObject.Get()->SetStringField("method", "datacollector_newUser");
+	jsonObject.Get()->SetField("args", jsonArray);
+
+	s->thread_manager->AddJsonToBatch(jsonObject);
 }
 
 void CoreUtilities::NewDevice(std::string ndevice_id)
@@ -38,7 +43,12 @@ void CoreUtilities::NewDevice(std::string ndevice_id)
 	Util::AppendToJsonArray(jsonArray, empty);
 	Util::AppendToJsonArray(jsonArray, ndevice_id);
 
-	s->thread_manager->PushTask(NULL, "datacollector_newDevice", jsonArray);
+	//s->thread_manager->PushTask(NULL, "datacollector_newDevice", jsonArray);
+	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
+	jsonObject.Get()->SetStringField("method", "datacollector_newDevice");
+	jsonObject.Get()->SetField("args", jsonArray);
+
+	s->thread_manager->AddJsonToBatch(jsonObject);
 }
 
 void CoreUtilities::NewUserChecked(std::string nuser_id)
@@ -55,7 +65,12 @@ void CoreUtilities::NewUserChecked(std::string nuser_id)
 	Util::AppendToJsonArray(jsonArray, nuser_id);
 	Util::AppendToJsonArray(jsonArray, empty);
 
-	s->thread_manager->PushTask(NULL, "datacollector_newUserChecked", jsonArray);
+	//s->thread_manager->PushTask(NULL, "datacollector_newUserChecked", jsonArray);
+	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
+	jsonObject.Get()->SetStringField("method", "datacollector_newUserChecked");
+	jsonObject.Get()->SetField("args", jsonArray);
+
+	s->thread_manager->AddJsonToBatch(jsonObject);
 }
 
 void CoreUtilities::NewDeviceChecked(std::string ndevice_id)
@@ -72,7 +87,12 @@ void CoreUtilities::NewDeviceChecked(std::string ndevice_id)
 	Util::AppendToJsonArray(jsonArray, empty);
 	Util::AppendToJsonArray(jsonArray, ndevice_id);
 
-	s->thread_manager->PushTask(NULL, "datacollector_newDeviceChecked", jsonArray);
+	//s->thread_manager->PushTask(NULL, "datacollector_newDeviceChecked", jsonArray);
+	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
+	jsonObject.Get()->SetStringField("method", "datacollector_newDeviceChecked");
+	jsonObject.Get()->SetField("args", jsonArray);
+
+	s->thread_manager->AddJsonToBatch(jsonObject);
 }
 
 void CoreUtilities::UpdateUserState(std::string nuser_id, TSharedPtr<FJsonObject> nproperties)
@@ -95,7 +115,12 @@ void CoreUtilities::UpdateUserState(std::string nuser_id, TSharedPtr<FJsonObject
 	Util::AppendToJsonArray(jsonArray, empty);
 	Util::AppendToJsonArray(jsonArray, nproperties);
 
-	s->thread_manager->PushTask(NULL, "datacollector_updateUserState", jsonArray);
+	//s->thread_manager->PushTask(NULL, "datacollector_updateUserState", jsonArray);
+	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
+	jsonObject.Get()->SetStringField("method", "datacollector_updateUserState");
+	jsonObject.Get()->SetField("args", jsonArray);
+
+	s->thread_manager->AddJsonToBatch(jsonObject);
 }
 
 void CoreUtilities::UpdateDeviceState(std::string ndevice_id, TSharedPtr<FJsonObject> nproperties)
@@ -117,7 +142,12 @@ void CoreUtilities::UpdateDeviceState(std::string ndevice_id, TSharedPtr<FJsonOb
 	Util::AppendToJsonArray(jsonArray, ndevice_id); //device
 	Util::AppendToJsonArray(jsonArray, nproperties);
 
-	s->thread_manager->PushTask(NULL, "datacollector_updateDeviceState", jsonArray);
+	//s->thread_manager->PushTask(NULL, "datacollector_updateDeviceState", jsonArray);
+	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
+	jsonObject.Get()->SetStringField("method", "datacollector_updateDeviceState");
+	jsonObject.Get()->SetField("args", jsonArray);
+
+	s->thread_manager->AddJsonToBatch(jsonObject);
 }
 
 void CoreUtilities::UpdateCollection(std::string nname, double nbalance, double nbalance_delta, bool nis_currency)
@@ -144,7 +174,12 @@ void CoreUtilities::UpdateCollection(std::string nname, double nbalance, double 
 	Util::AppendToJsonArray(jsonArray, nbalance_delta);
 	Util::AppendToJsonArray(jsonArray, nis_currency);
 
-	s->thread_manager->PushTask(NULL, "datacollector_updateCollection", jsonArray);
+	//s->thread_manager->PushTask(NULL, "datacollector_updateCollection", jsonArray);
+	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
+	jsonObject.Get()->SetStringField("method", "datacollector_updateCollection");
+	jsonObject.Get()->SetField("args", jsonArray);
+
+	s->thread_manager->AddJsonToBatch(jsonObject);
 }
 
 void CoreUtilities::RecordPurchase(std::string transaction_id, double price, std::string currency_code, std::string result, std::string offer_id, std::string point_of_sale, std::string item_name)//, std::string nuser_id, std::string ndevice_id)

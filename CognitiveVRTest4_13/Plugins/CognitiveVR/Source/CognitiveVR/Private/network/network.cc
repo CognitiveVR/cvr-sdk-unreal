@@ -86,6 +86,7 @@ void Network::Call(std::string sub_path, TArray<TSharedPtr<FJsonValue>> content,
 	bool moduleIsAvailable = FAnalytics::IsAvailable();
 	if (!moduleIsAvailable)
 	{
+		CognitiveLog::Warning("Network::Call - analyticsModule is not available");
 		return;
 	}
 
