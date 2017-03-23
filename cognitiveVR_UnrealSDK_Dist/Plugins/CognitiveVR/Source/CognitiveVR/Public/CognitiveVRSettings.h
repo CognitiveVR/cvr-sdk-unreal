@@ -42,6 +42,18 @@ class UCognitiveVRSettings
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	bool EnableErrorDebugLogging;
 
+	/** The number of sensor data points that will be collected together before being sent to scene explorer */
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	int32 SensorDataLimit;
+
+	/** The number of transactions that will be collected together before being sent to analytics server and scene explorer*/
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	int32 TransactionBatchSize;
+
+	/** The number of player snapshots that will be collected together before being sent to analytics server and scene explorer*/
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+		int32 GazeBatchSize;
+
 public:
 	UPROPERTY(config, EditAnywhere, Category = "Scene Keys")
 		TArray<FSceneKeyPair> SceneKeyPair;

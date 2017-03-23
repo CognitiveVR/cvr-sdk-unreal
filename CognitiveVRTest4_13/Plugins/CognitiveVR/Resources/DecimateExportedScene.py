@@ -19,6 +19,9 @@ fileName = args[6]
 if (len(args))<8:
  args.append('')
 productid = args[7]
+if (len(args))<9:
+ args.append('')
+sdkVersion = args[8]
 
 #copy textures
 #fix mtl
@@ -166,6 +169,7 @@ for obj in scene.objects:
 			ops.object.mode_set(mode='OBJECT')
 			
 			mod = bpy.context.object.modifiers.new('Remesh','REMESH')
+			mod.octree_depth = 6
 			ops.object.modifier_apply(apply_as='DATA', modifier="Remesh")
 		
 print("=============================================decimate complete")
@@ -255,7 +259,7 @@ nmo.close()
 print("=============================================mtl fixed")
 
 f = open (os.path.join(exportPath,'settings.json'),'w')
-f.write('{\"scale\":100,"productId":"'+productid+'"}')
+f.write('{"scale":100,"customerId":"'+productid+'","sdkVersion":"'+sdkVersion+'"}')
 f.close()
 
 print("=============================================json write complete")

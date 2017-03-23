@@ -18,9 +18,15 @@ class BufferManager
 {
     private:
         Network* network;
+		TArray<TSharedPtr<FJsonObject>> batchedJson;
+		int32 TransactionBatchSize = 16;
 
     public:
 		BufferManager(Network* n);
+
+		void AddJsonToBatch(TSharedPtr<FJsonObject> json);
+		void SendBatch();
+
         //~BufferManager(){}
 
 		/** Begin and end new transaction.
@@ -28,6 +34,6 @@ class BufferManager
 			@param std::string sub_path (context)
 			@param std::string content (all send data)
 		*/
-        void PushTask(NetworkCallback callback, std::string sub_path, TSharedPtr<FJsonValueArray> content);
+        void PushTask(NetworkCallback callback, std::string sub_path, TArray<TSharedPtr<FJsonObject>> content);
 };
 #endif  // COGNITIVEVR_BUFFER_MANAGER_H_

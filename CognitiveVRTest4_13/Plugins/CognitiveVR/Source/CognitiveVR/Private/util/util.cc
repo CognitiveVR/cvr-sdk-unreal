@@ -7,15 +7,30 @@
 
 using namespace cognitivevrapi;
 
-long Util::GetTimestamp()
+double Util::GetTimestamp()
 {
 	#pragma warning(push)
 	#pragma warning(disable:4244) //Disable warning regarding loss of accuracy, no concern.
 
-	return time(0);
+	long ts = time(0);
+	double miliseconds = FDateTime::Now().GetMillisecond();
+	double finalTime = ts + miliseconds*0.001;
+
+	return finalTime;
 	//http://stackoverflow.com/questions/997946/how-to-get-current-time-and-date-in-c
 
 	#pragma warning(pop)
+}
+
+long Util::GetTimestampLong()
+{
+#pragma warning(push)
+#pragma warning(disable:4244) //Disable warning regarding loss of accuracy, no concern.
+
+	return time(0);
+	//http://stackoverflow.com/questions/997946/how-to-get-current-time-and-date-in-c
+
+#pragma warning(pop)
 }
 
 std::string Util::GetTimestampStr(long t)
@@ -34,23 +49,26 @@ template < typename T > std::string Util::ToString( const T& n )
     return stm.str() ;
 }
 
-/*inline const FString* HMDToString(EHMDDeviceType::Type v)
+FString Util::GetDeviceName(FString DeviceName)
 {
-	FString* returnString = new FString("somvalue");
-
-	//returnString = FString*("somevalue");
-	return returnString;
-
-	//switch (v)
-	//{
-	//	case EHMDDeviceType::DT_OculusRift:   return FString("Oculus Rift");
-	//	case EHMDDeviceType::DT_Morpheus:   return FString("PSVR");
-	//	case EHMDDeviceType::DT_ES2GenericStereoMesh:   return FString("Generic");
-	//	case EHMDDeviceType::DT_SteamVR:   return FString("HTC Vive");
-	//	case EHMDDeviceType::DT_GearVR:   return FString("Oculus GearVR");
-	//	default:      return FString("[Unknown HMD_Type]");
-	//}
-}*/
+	if (DeviceName == "OculusRift")
+	{
+		return "rift";
+	}
+	if (DeviceName == "OSVR")
+	{
+		return "rift";
+	}
+	if (DeviceName == "SimpleHMD")
+	{
+		return "rift";
+	}
+	if (DeviceName == "SteamVR")
+	{
+		return "vive";
+	}
+	return FString("unknown");
+}
 
 TSharedPtr<FJsonObject> Util::DeviceScraper(TSharedPtr<FJsonObject> properties)
 {
@@ -158,4 +176,35 @@ void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray>& json, TSharedPtr<FJson
 	ValueArray.Emplace(tempVal);
 
 	json = MakeShareable(new FJsonValueArray(ValueArray));
+}
+
+void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, std::string &stdstringValue)
+{
+	FString fstring = stdstringValue.c_str();
+	FString fkey = name.c_str();
+	json.Get()->SetStringField(fkey, fstring);
+}
+
+void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, FString &stringValue)
+{
+	FString fkey = name.c_str();
+	json.Get()->SetStringField(fkey, stringValue);
+}
+
+void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, bool &booleanValue)
+{
+	FString fkey = name.c_str();
+	json.Get()->SetBoolField(fkey, booleanValue);
+}
+
+void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, int &integerValue)
+{
+	FString fkey = name.c_str();
+	json.Get()->SetNumberField(fkey, integerValue);
+}
+
+void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, double &doubleValue)
+{
+	FString fkey = name.c_str();
+	json.Get()->SetNumberField(fkey, doubleValue);
 }

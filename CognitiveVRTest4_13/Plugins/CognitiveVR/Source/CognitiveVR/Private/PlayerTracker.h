@@ -22,7 +22,8 @@ private:
 	TArray<TSharedPtr<FJsonObject>> events;
 	FHttpModule* Http;
 	float maxDistance = 8192;
-
+	int32 jsonEventPart;
+	int32 jsonGazePart;
 
 
 	//UPROPERTY(editanywhere)
@@ -30,6 +31,7 @@ private:
 	UMaterial* SceneDepthMat;
 
 	FString materialPath = "/CognitiveVR/DepthPostProcessing";
+	TSharedPtr<FAnalyticsProviderCognitiveVR> s;
 
 public:	
 	// Sets default values for this component's properties
@@ -40,7 +42,7 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	float PlayerSnapshotInterval = 0.1;
-	int32 MaxSnapshots = 1000;
+	int32 GazeBatchSize = 100;
 
 	UPlayerTracker();
 	
@@ -50,10 +52,10 @@ public:
 
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
-	void SendData();
-	void SendData(FString sceneName);
+	void SendGazeEventDataToSceneExplorer();
+	void SendGazeEventDataToSceneExplorer(FString sceneName);
 
-	void static RequestSendData();
+	//void static BlueprintSendData();
 
 	FString GetSceneKey(FString sceneName);
 
@@ -64,4 +66,15 @@ public:
 
 	FString GazeSnapshotsToString();
 	FString EventSnapshotsToString();
+
+	///send json data to scene explorer
+	static void SendJson(FString endpoint, FString Json);
+
+	//UPROPERTY(EditAnywhere)
+	//bool SendDataOnEndPlay = true;
+
+	//UPROPERTY(EditAnywhere)
+	//bool EndSessionOnEndPlay = true;
+
+	//virtual void EndPlay(const EEndPlayReason::Type EndPlayReason);
 };

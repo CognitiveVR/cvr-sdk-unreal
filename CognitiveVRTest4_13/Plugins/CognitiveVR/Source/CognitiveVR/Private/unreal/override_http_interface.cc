@@ -14,7 +14,7 @@ void OverrideHttpInterface::OnResponseReceivedAsync(FHttpRequestPtr Request, FHt
 {
     FString UE4Str = Response->GetContentAsString();
 	std::string content(TCHAR_TO_UTF8(*UE4Str));
-	cognitivevrapi::CognitiveLog::Info("OverrideHttpInterface::OnResponseReceivedAsync - Response: " + content);
+	CognitiveLog::Info("OverrideHttpInterface::OnResponseReceivedAsync - Response: " + content);
         
 	CognitiveVRResponse response = Network::ParseResponse(content);
     callback(response);
@@ -26,8 +26,7 @@ std::string OverrideHttpInterface::Post(std::string url, std::string path, std::
     //Construct URL.
     std::string stdfull_url = url + path;
     FString full_url(stdfull_url.c_str());
-	cognitivevrapi::CognitiveLog::Info("POST URL " + stdfull_url);
-	cognitivevrapi::CognitiveLog::Info("POST CONTENT " + stdcontent);
+	CognitiveLog::Info("Override_Http_Interface::Post "+ stdfull_url+ "\n" + stdcontent);
 
     FString content(stdcontent.c_str());
 
