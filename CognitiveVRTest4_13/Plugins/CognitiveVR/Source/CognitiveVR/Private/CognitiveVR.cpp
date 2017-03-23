@@ -191,20 +191,41 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 void FAnalyticsProviderCognitiveVR::FlushEvents()
 {
-	//TODO flush batched calls
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	if (cog == NULL)
+	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents could not GetCognitiveVRProvider!");
+		return;
+	}
+
+	if (cog->thread_manager == NULL)
+	{
+		GLog->Log("thread manager is null");
+		return;
+	}
+
+	if (cog->HasStartedSession() == false)
+	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents CognitiveVRProvider has not started session!");
+		return;
+	}
+
+	cog->thread_manager->SendBatch();
 
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
 	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents number of controllers is zero!");
 		return;
 	}
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 	if (up == NULL)
 	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents couldn't find player tracker!");
 		return;
 	}
-	up->SendData();
+	up->SendGazeEventDataToSceneExplorer();
 	sensors->SendData();
 }
 

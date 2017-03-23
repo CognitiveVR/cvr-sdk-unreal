@@ -65,8 +65,8 @@ public:
 	static FString GetTuningValue(FString Key, ETuningValueReturn& Branches);
 
 	//sends player gaze data and player events collected during this level to sceneexplorer.com
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Player Tracker")
-	static void SendPlayerData();
+	//UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Player Tracker")
+	//static void SendPlayerData();
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Update")
 	static void UpdateDevice(const TArray<FAnalyticsEventAttr>& Attributes);

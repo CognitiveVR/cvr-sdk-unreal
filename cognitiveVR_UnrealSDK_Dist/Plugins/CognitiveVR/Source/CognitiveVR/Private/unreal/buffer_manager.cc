@@ -26,7 +26,6 @@ BufferManager::BufferManager(Network* n)
 
 void BufferManager::AddJsonToBatch(TSharedPtr<FJsonObject> json)
 {
-	CognitiveLog::Info("======add json to batch");
 	batchedJson.Add(json);
 	if (batchedJson.Num() >= TransactionBatchSize)
 	{
@@ -36,9 +35,24 @@ void BufferManager::AddJsonToBatch(TSharedPtr<FJsonObject> json)
 
 void BufferManager::SendBatch()
 {
-	return;
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	if (cog == NULL)
+	{
+		CognitiveLog::Error("BufferManager::SendBatch could not GetCognitiveVRProvider!");
+		return;
+	}
+	if (cog->HasStartedSession() == false)
+	{
+		CognitiveLog::Error("BufferManager::SendBatch CognitiveVRProvider has not started session!");
+		return;
+	}
 
-	if (network == NULL) { return; }
+
+	/*if (network == NULL)
+	{
+		CognitiveLog::Warning("BufferManager::SendBatch network is null");
+		return;
+	}*/
 
 	BufferManager::PushTask(NULL, "datacollected_batch", batchedJson);
 

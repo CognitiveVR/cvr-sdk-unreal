@@ -143,7 +143,7 @@ void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		snapshots.Add(snapObj);
 		if (snapshots.Num() > GazeBatchSize)
 		{
-			SendData();
+			SendGazeEventDataToSceneExplorer();
 			snapshots.Empty();
 			events.Empty();
 		}
@@ -212,19 +212,23 @@ FVector UPlayerTracker::GetGazePoint()
 	return returnVector;
 }
 
-void UPlayerTracker::SendData()
+void UPlayerTracker::SendGazeEventDataToSceneExplorer()
 {
 	UWorld* myworld = GetWorld();
 	if (myworld == NULL) { return; }
 
 	FString currentSceneName = myworld->GetMapName();
 	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
-	UPlayerTracker::SendData(currentSceneName);
+	UPlayerTracker::SendGazeEventDataToSceneExplorer(currentSceneName);
 }
 
 FString UPlayerTracker::GetSceneKey(FString sceneName)
 {
 	FConfigSection* ScenePairs = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
+	if (ScenePairs == NULL)
+	{
+		return "";
+	}
 	for (FConfigSection::TIterator It(*ScenePairs); It; ++It)
 	{
 		if (It.Key() == TEXT("SceneKeyPair"))
@@ -297,6 +301,10 @@ void UPlayerTracker::SendJson(FString endpoint, FString json)
 	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
 
 	FString sceneKey = up->GetSceneKey(currentSceneName);
+	if (sceneKey == "")
+	{
+		return;
+	}
 
 	std::string stdjson(TCHAR_TO_UTF8(*json));
 	std::string ep(TCHAR_TO_UTF8(*endpoint));
@@ -305,7 +313,7 @@ void UPlayerTracker::SendJson(FString endpoint, FString json)
 	FString url = "https://sceneexplorer.com/api/";
 
 
-	//GAZE
+	//json to scene endpoint
 
 	TSharedRef<IHttpRequest> RequestGaze = up->Http->CreateRequest();
 	RequestGaze->SetContentAsString(json);
@@ -315,8 +323,9 @@ void UPlayerTracker::SendJson(FString endpoint, FString json)
 	RequestGaze->ProcessRequest();
 }
 
-void UPlayerTracker::SendData(FString sceneName)
+void UPlayerTracker::SendGazeEventDataToSceneExplorer(FString sceneName)
 {
+	//second send events and gaze to scene explorer using the player tracker
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
@@ -337,33 +346,14 @@ void UPlayerTracker::SendData(FString sceneName)
 		CognitiveLog::Warning("PlayerTracker::SendJson no world");
 		return;
 	}
-
-	//GET THE COGNITIVEVRPROVIDER
-	if (s.Get() == NULL)
-	{
-		return;
-	}
-	if (s->thread_manager == NULL)
-	{
-		GLog->Log("thread manager is null");
-		return;
-	}
-	/*if (FAnalyticsCognitiveVR::GetCognitiveVRProvider().Get() == NULL)
-	{
-		GLog->Log("s is not null but cognitivevrprovider is!");
-		return;
-	}*/
-
 	CognitiveLog::Info("UPlayerTracker::SendData");
-	FString sceneKey = UPlayerTracker::GetSceneKey(sceneName);
+	//FString sceneKey = UPlayerTracker::GetSceneKey(sceneName);
 
 	//GAZE
 
 	FString GazeString = UPlayerTracker::GazeSnapshotsToString();
 	SendJson("gaze", GazeString);
 	
-	s->thread_manager->SendBatch();
-
 	//EVENTS
 
 	FString EventString = UPlayerTracker::EventSnapshotsToString();
@@ -433,22 +423,37 @@ FString UPlayerTracker::GazeSnapshotsToString()
 	return OutputString;
 }
 
-void UPlayerTracker::RequestSendData()
+/*
+void UPlayerTracker::BlueprintSendData()
 {
+	
+	TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	if (!Provider.IsValid() || !bHasSessionStarted || cog == NULL)
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::BeginEndTransaction could not get provider!");
+		return;
+	}
+
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
 	{
+		CognitiveLog::Info("UPlayerTracker::RequestSendData no player controllers");
 		return;
 	}
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 	if (up == NULL)
 	{
+		CognitiveLog::Warning("UPlayerTracker::RequestSendData No Player Tracker Component! cannot send data?!?....there's got to be a better way!");
 		return;
 	}
 	up->SendData();
+	
 }
+*/
 
+/*
 void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	
@@ -474,20 +479,34 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	CognitiveLog::Info("UPlayerTracker::EndPlay reason:" + reason);
 
 	//TODO this doesn't work, but it totally crashes when session has not been started
-	return;
-
-	if (SendDataOnEndPlay)
+	
+	if (s.Get() == NULL)
 	{
-		SendData();
-	}
-	if (EndSessionOnEndPlay)
-	{
-		s->EndSession();
+		CognitiveLog::Info("UPlayerTracker::EndPlay CognitiveVRProvider is null. do not send data on end play");
 	}
 	else
 	{
-		s->transaction->End("Session");
+		if (SendDataOnEndPlay)
+		{
+			s->FlushEvents();
+		}
+		if (EndSessionOnEndPlay)
+		{
+			s->EndSession();
+		}
+		else
+		{
+			if (s.Get()->transaction == NULL)
+			{
+				CognitiveLog::Info("UPlayerTracker::EndPlay transactions is null. cannot end session");
+			}
+			else
+			{
+				s->transaction->End("Session");
+			}
+		}
 	}
 
 	Super::EndPlay(EndPlayReason);
 }
+*/

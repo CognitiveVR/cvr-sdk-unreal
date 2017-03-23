@@ -190,11 +190,6 @@ FString UCognitiveVRBlueprints::GetTuningValue(FString Key, ETuningValueReturn& 
 	return outString;
 }
 
-void UCognitiveVRBlueprints::SendPlayerData()
-{
-	UPlayerTracker::RequestSendData();
-}
-
 void UCognitiveVRBlueprints::UpdateDevice(const TArray<FAnalyticsEventAttr>& Attributes)
 {
 	//SOME TRANSACTION OR SOMETHING

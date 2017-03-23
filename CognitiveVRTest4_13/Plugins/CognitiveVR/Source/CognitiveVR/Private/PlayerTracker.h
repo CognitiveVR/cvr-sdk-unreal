@@ -52,10 +52,10 @@ public:
 
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
-	void SendData();
-	void SendData(FString sceneName);
+	void SendGazeEventDataToSceneExplorer();
+	void SendGazeEventDataToSceneExplorer(FString sceneName);
 
-	void static RequestSendData();
+	//void static BlueprintSendData();
 
 	FString GetSceneKey(FString sceneName);
 
@@ -70,11 +70,11 @@ public:
 	///send json data to scene explorer
 	static void SendJson(FString endpoint, FString Json);
 
-	UPROPERTY(EditAnywhere)
-	bool SendDataOnEndPlay = true;
+	//UPROPERTY(EditAnywhere)
+	//bool SendDataOnEndPlay = true;
 
-	UPROPERTY(EditAnywhere)
-	bool EndSessionOnEndPlay = true;
+	//UPROPERTY(EditAnywhere)
+	//bool EndSessionOnEndPlay = true;
 
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason);
+	//virtual void EndPlay(const EEndPlayReason::Type EndPlayReason);
 };
