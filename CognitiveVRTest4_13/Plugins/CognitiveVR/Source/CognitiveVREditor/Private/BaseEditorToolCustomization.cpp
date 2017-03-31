@@ -135,6 +135,17 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		]
 		];
 
+	//List Materials
+	Category.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		[
+			SNew(SButton)
+			//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
+		.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlenderAndExportDir)
+		.Text(FText::FromString("Export Transparent Textures"))
+		.OnClicked(this, &FBaseEditorToolCustomization::List_Materials)
+		];
+
 	//Reduce Meshes
 	Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
@@ -160,15 +171,14 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 
 
 	//http request
-	//IN DEVELOPMENT
-	/*Category.AddCustomRow(FText::FromString("Commands"))
+	Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
 		[
 			SNew(SButton)
 			.IsEnabled(true)
 		.Text(FText::FromString("Upload Scene"))
 		.OnClicked(this, &FBaseEditorToolCustomization::UploadScene)
-		];*/
+		];
 
 	IDetailCategoryBuilder& SceneKeyCategory = DetailBuilder.EditCategory(TEXT("Scene Keys"));
 
@@ -404,6 +414,147 @@ void* FBaseEditorToolCustomization::ChooseParentWindowHandle()
 	return ParentWindowWindowHandle;
 }
 
+FReply FBaseEditorToolCustomization::List_Materials()
+{
+	//look at export directory. find mtl file
+
+	FString result;
+	FString Ext;
+	//get all files in the export directory
+	IFileManager& FileManager = IFileManager::Get();
+	TArray<FString> Files;
+
+	if (Ext == "")
+	{
+		Ext = "*.*";
+	}
+	else
+	{
+		Ext = (Ext.Left(1) == ".") ? "*" + Ext : "*." + Ext;
+	}
+
+	FString FinalPath = ExportDirectory + "/" + Ext;
+	FileManager.FindFiles(Files, *FinalPath, true, false);
+
+	TArray<FColor> colors;
+	FIntPoint point = FIntPoint(256, 256);
+
+	for (int32 i = 0; i < Files.Num(); i++)
+	{
+		if (Files[i].EndsWith(".mtl"))
+		{
+
+			FString fullPath = ExportDirectory + "/" + Files[i];
+			GLog->Log("MATERIAL " + fullPath);
+			FString contents;
+
+			if (FFileHelper::LoadFileToString(contents, *fullPath))
+			{
+				GLog->Log("loaded " + Files[i]);
+				GLog->Log(contents);
+			}
+			else
+			{
+				GLog->Log("failed to load " + Files[i]);
+			}
+			TArray<FString> lines;
+			int32 lineCount = contents.ParseIntoArray(lines, TEXT("\n"), true);
+
+			//GLog->Log("material line count " + lineCount);
+			for (int32 j = 0; j < lines.Num(); j++)
+			{
+				if (lines[j].Contains("newmtl"))
+				{
+					TArray<FString> matDirectories;
+					lines[j].RemoveFromStart("newmtl ");
+					lines[j].ParseIntoArray(matDirectories, TEXT("/"));
+
+					TArray<FString> lineParts;
+					matDirectories[matDirectories.Num() - 1].ParseIntoArray(lineParts, TEXT("_"));
+
+					int32 floor_count = FMath::FloorToInt(lineParts.Num() / (float)2);
+
+					FString trueMatName;
+					for (int32 k = 0; k < lineParts.Num(); k++)
+					{
+						if (k + 1 == floor_count)
+						{
+							trueMatName = trueMatName + lineParts[k] + ".";
+						}
+						else
+						{
+							trueMatName = trueMatName + lineParts[k] + "_";
+						}
+					}
+					trueMatName.RemoveFromEnd("_");
+
+					//GLog->Log("true material name " + trueMatName);
+
+					FString finalMatPath;
+					FString finalDirectory;
+					for (int32 l = 0; l < matDirectories.Num() - 1; l++)
+					{
+						finalMatPath = finalMatPath + matDirectories[l] + "/";
+						finalDirectory = finalMatPath + matDirectories[l] + "/";
+					}
+					finalMatPath = "/" + finalMatPath + trueMatName;
+					finalMatPath.RemoveAt(finalMatPath.Len() - 1);
+
+					FStringAssetReference assetRef = FStringAssetReference(finalMatPath);
+
+					UObject* assetRefLoaded = assetRef.TryLoad();
+
+					if (assetRefLoaded != NULL)
+					{
+						//GLog->Log("asset ref loaded! " + assetRef.ToString());
+						UMaterial* m = Cast<UMaterial>(assetRefLoaded);
+						UMaterialInstance* mi = Cast<UMaterialInstance>(assetRefLoaded);
+
+						if (m != NULL)
+						{
+							if (m->GetBlendMode() == EBlendMode::BLEND_Opaque)
+							{
+								//GLog->Log("opaque material should already have textures exported correctly");
+								continue;
+							}
+
+							//TODO export material property transparency
+							if (FMaterialUtilities::ExportMaterialProperty(m, EMaterialProperty::MP_BaseColor, point, colors))
+							{
+
+								FString BMPFilename = ExportDirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+
+								GLog->Log("++++++++++writing base color for material " + BMPFilename);
+								FFileHelper::CreateBitmap(*BMPFilename, point.X, point.Y, colors.GetData());
+							}
+						}
+						else
+						{
+							if (mi->GetBlendMode() == EBlendMode::BLEND_Opaque)
+							{
+								//GLog->Log("opaque material should already have textures exported correctly");
+								continue;
+							}
+
+							//TODO export material property transparency
+							if (FMaterialUtilities::ExportMaterialProperty(mi, EMaterialProperty::MP_BaseColor, point, colors))
+							{
+
+								FString BMPFilename = ExportDirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+
+								GLog->Log("++++++++++writing base color for material " + BMPFilename);
+								FFileHelper::CreateBitmap(*BMPFilename, point.X, point.Y, colors.GetData());
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return FReply::Handled();
+}
+
 //run this as the next step after exporting the scene
 FReply FBaseEditorToolCustomization::Reduce_Meshes()
 {
@@ -445,7 +596,7 @@ FReply FBaseEditorToolCustomization::Reduce_Meshes()
 
 	if (ObjPath.Len() == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No know export directory. Canceling"));
+		UE_LOG(LogTemp, Warning, TEXT("FBaseEditorToolCustomization::Reduce_Meshes No know export directory. Canceling"));
 		return FReply::Handled();
 	}
 
@@ -455,13 +606,30 @@ FReply FBaseEditorToolCustomization::Reduce_Meshes()
 	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
 
+	FString escapedExcludeMeshes = "";
+
+	FConfigSection* ExportSettings = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
+	if (ExportSettings != NULL)
+	{
+		for (FConfigSection::TIterator It(*ExportSettings); It; ++It)
+		{
+			if (It.Key() == TEXT("ExcludeMeshes"))
+			{
+				FName nameEscapedExcludeMeshes;
+				escapedExcludeMeshes = It.Value().GetValue();
+			}
+		}
+	}
+
+	escapedExcludeMeshes = escapedExcludeMeshes.Replace(TEXT(" "), TEXT("\" \""));
+
 	FString productID = GetProductID();
 
-	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " " + MinPolyCount + " " + MaxPolyCount + " " + SceneName + " " + productID + " " + COGNITIVEVR_SDK_VERSION;
+	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " " + MinPolyCount + " " + MaxPolyCount + " " + SceneName + " " + productID + " " + COGNITIVEVR_SDK_VERSION + " " + escapedExcludeMeshes;
 
 	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
 
-	UE_LOG(LogTemp, Warning, TEXT("Params: %s"), *stringParamSlashed);
+	UE_LOG(LogTemp, Warning, TEXT("FBaseEditorToolCustomization::Reduce_Meshes Params: %s"), *stringParamSlashed);
 
 
 	const TCHAR* params = *stringParamSlashed;
@@ -615,16 +783,16 @@ FReply FBaseEditorToolCustomization::UploadScene()
 		if (FFileHelper::LoadFileToString(result, *filesInDirectory[i]))
 		{
 			//loaded the file
-			Content = Content.Append("\n--gc0p4Jq0M2Yt08jU534c0p");
+			Content = Content.Append("\n--gc0p4Jq0M2Yt08jU534c0p5nk");
 
 			FString left;
 			FString right;
 			filesInDirectory[i].Split(".", &left, &right);
 
-			Content = Content.Append("\ncontent-disposition: form-data; name=\"file\"; filename=\"" + FPaths::GetCleanFilename(filesInDirectory[i]) + "\"");
-			Content = Content.Append("\ncontent-type: application/octet-stream");
-			Content = Content.Append("\n");
-			Content = Content.Append(result);
+			Content = Content.Append("\nContent-Type: application/octet-stream");
+			Content = Content.Append("\ncontent-disposition: form-data; name=\"fileUpload\"; filename=\"" + FPaths::GetCleanFilename(filesInDirectory[i]) + "\"");
+			Content = Content.Append("\n\n");
+			Content = Content.Append(*result);
 		}
 		else
 		{
@@ -632,26 +800,29 @@ FReply FBaseEditorToolCustomization::UploadScene()
 		}
 	}
 
+
+
 	/*for (int32 i = 0; i < imagesInDirectory.Num(); i++)
 	{
 	FString result;
+	TArray<uint8> byteResult;
 	//const TCHAR* dirchars = *ExportDirectory;
 	//const TCHAR* filechars = *imagesInDirectory[i];
 	//const TCHAR* totalfilechars = *FPaths::Combine(dirchars, filechars);
-	if (FFileHelper::LoadFileToString(result, *imagesInDirectory[i]))
+	if (FFileHelper::LoadFileToArray(byteResult, *imagesInDirectory[i]))
 	{
 	//loaded the file
-	Content = Content.Append("\n\n--kdETdJKGXvWOQpWe1pJ9Qe43dYBmJJzcs39Zhqwa\n");
+	Content = Content.Append(TCHAR_TO_UTF8(*FString("\n--gc0p4Jq0M2Yt08jU534c0p5nk")));
 
 	FString left;
 	FString right;
 	imagesInDirectory[i].Split(".", &left, &right);
 
 
-	Content = Content.Append("Cotent-Type: image/png\n");
-	Content = Content.Append("Content-Disposition: form-data; name=\"file\";filename=" + FPaths::GetCleanFilename(imagesInDirectory[i]) + "\"\n");
-	Content = Content.Append(result);
-	Content = Content.Append("\n");
+	Content = Content.Append(TCHAR_TO_UTF8(*FString("\nContent-Type: image/png")));
+	Content = Content.Append(TCHAR_TO_UTF8(*FString("\nContent-disposition: form-data; name=\"fileUpload\"; filename=\"" + FPaths::GetCleanFilename(imagesInDirectory[i]) + "\"")));
+	Content = Content.Append(TCHAR_TO_UTF8(*FString("\n\n")));
+	Content = Content.Append(BytesToString(byteResult.GetData(), byteResult.Num()));
 	}
 	else
 	{
@@ -660,13 +831,24 @@ FReply FBaseEditorToolCustomization::UploadScene()
 	}*/
 
 	//FString finalContent = Content+"\n\n--kdETdJKGXvWOQpWe1pJ9Qe43dYBmJJzcs39Zhqwa--\n";
-	Content = Content.Append(FString("\n--gc0p4Jq0M2Yt08jU534c0p--"));
+	Content = Content.Append("\n--gc0p4Jq0M2Yt08jU534c0p5nk--");
 
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *Content);
+	//Content = TCHAR_TO_UTF8(*Content);
+
+	//auto contenturf = TCHAR_TO_UTF8(*Content);
+	//auto ContentAnsi = TCHAR_TO_ANSI(*Content);
+
+	//Content = ANSI_TO_TCHAR(ContentAnsi); //NO
+	//Content = FString(contenturf); //NO
+	//Content = FString(ContentAnsi); //NO
+	//Content = TCHAR_TO_ANSI(*FString(contenturf)); //NO
+
+	//std::string contentutf(TCHAR_TO_UTF8(*Content));
+
+	//UE_LOG(LogTemp, Warning, TEXT("%s"), stdstring);
 
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 
-	//HttpRequest->SetURL("https://sceneexplorer.com/api/scenes");
 
 
 
@@ -687,14 +869,17 @@ FReply FBaseEditorToolCustomization::UploadScene()
 	}
 
 
-	HttpRequest->SetURL("http://192.168.1.145:3000/api/scenes");
-	HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=gc0p4Jq0M2Yt08jU534c0p");
+	//HttpRequest->SetURL("http://192.168.1.145:3000/api/scenes");
+	HttpRequest->SetURL("https://sceneexplorer.com/api/scenes");
+	HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=\"gc0p4Jq0M2Yt08jU534c0p5nk\"");
+	HttpRequest->SetHeader(TEXT("User-Agent"), "X-UnrealEngine-Agent");
+	//HttpRequest->SetHeader("Content-Type", "text/plain");
 	//HttpRequest->SetHeader("Content-Length", FString::FromInt(OutBytes.Num()));
 	HttpRequest->SetVerb("POST");
 	//HttpRequest->SetContentAsString(Content);
 	HttpRequest->SetContent(OutBytes);
 
-	UE_LOG(LogTemp, Warning, TEXT("%d"), HttpRequest->GetContentLength());
+	//UE_LOG(LogTemp, Warning, TEXT("%d"), HttpRequest->GetContentLength());
 
 	//set content as string
 
@@ -705,6 +890,23 @@ FReply FBaseEditorToolCustomization::UploadScene()
 
 	HttpRequest->OnProcessRequestComplete().BindSP(this, &FBaseEditorToolCustomization::OnUploadSceneCompleted);
 
+
+	FString SaveDirectory = FString("C:/Users/calder/Desktop");
+	FString FileName = FString("UploadContent.txt");
+
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+	// CreateDirectoryTree returns true if the destination
+	// directory existed prior to call or has been created
+	// during the call.
+	if (PlatformFile.CreateDirectoryTree(*SaveDirectory))
+	{
+		// Get absolute file path
+		FString AbsoluteFilePath = SaveDirectory + "/" + FileName;
+
+		//FFileHelper::SaveStringToFile(Content, *AbsoluteFilePath);
+		FFileHelper::SaveArrayToFile(OutBytes, *AbsoluteFilePath);
+	}
 
 
 	HttpRequest->ProcessRequest();

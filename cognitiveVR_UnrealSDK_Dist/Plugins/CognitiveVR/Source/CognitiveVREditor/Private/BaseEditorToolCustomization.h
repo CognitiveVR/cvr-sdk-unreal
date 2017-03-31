@@ -22,6 +22,7 @@
 #include "MainFrame.h"
 #include "IPluginManager.h"
 #include "AssetRegistryModule.h"
+#include "MaterialUtilities.h"
 //
 //#include "ExportSceneTool.generated.h"
 
@@ -93,6 +94,9 @@ private:
 
 	UFUNCTION(Exec, Category = "Export")
 		FReply UploadScene();
+
+	UFUNCTION(Exec, Category = "Export")
+		FReply List_Materials();
 
 	void OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 

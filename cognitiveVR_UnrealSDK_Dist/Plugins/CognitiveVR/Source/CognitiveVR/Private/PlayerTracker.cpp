@@ -368,7 +368,7 @@ FString UPlayerTracker::EventSnapshotsToString()
 
 	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionId", cog->GetSessionID());
+	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonEventPart);
 	jsonEventPart++;
 
@@ -393,7 +393,7 @@ FString UPlayerTracker::GazeSnapshotsToString()
 
 	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionId", cog->GetSessionID());
+	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonGazePart);
 	jsonGazePart++;
 

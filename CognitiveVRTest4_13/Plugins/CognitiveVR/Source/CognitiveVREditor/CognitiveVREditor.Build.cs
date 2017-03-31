@@ -24,6 +24,7 @@ public class CognitiveVREditor : ModuleRules
 				"PropertyEditor",
 				"LevelEditor",
                 "MeshUtilities",
+				"MaterialUtilities",
                 "MainFrame",
                 "UnrealEd",
                 "PluginBrowser",
