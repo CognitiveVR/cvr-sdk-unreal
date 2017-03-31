@@ -44,17 +44,21 @@ class UCognitiveVRSettings
 
 	/** The number of sensor data points that will be collected together before being sent to scene explorer */
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-	int32 SensorDataLimit;
+	int32 SensorDataLimit = 64;
 
 	/** The number of transactions that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-	int32 TransactionBatchSize;
+	int32 TransactionBatchSize = 64;
 
 	/** The number of player snapshots that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-		int32 GazeBatchSize;
+		int32 GazeBatchSize = 64;
 
 public:
+	//Mesh names separated by ','. These will be removed in the Reduce Meshes step
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+		FString ExcludeMeshes = "VRPawn,SkySphere,Camera";
+
 	UPROPERTY(config, EditAnywhere, Category = "Scene Keys")
 		TArray<FSceneKeyPair> SceneKeyPair;
 

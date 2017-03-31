@@ -171,14 +171,14 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 
 
 	//http request
-	Category.AddCustomRow(FText::FromString("Commands"))
+	/*Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
 		[
 			SNew(SButton)
 			.IsEnabled(true)
 		.Text(FText::FromString("Upload Scene"))
 		.OnClicked(this, &FBaseEditorToolCustomization::UploadScene)
-		];
+		];*/
 
 	IDetailCategoryBuilder& SceneKeyCategory = DetailBuilder.EditCategory(TEXT("Scene Keys"));
 
@@ -508,32 +508,43 @@ FReply FBaseEditorToolCustomization::List_Materials()
 					{
 						//GLog->Log("asset ref loaded! " + assetRef.ToString());
 						UMaterial* m = Cast<UMaterial>(assetRefLoaded);
+						UMaterialInstance* mi = Cast<UMaterialInstance>(assetRefLoaded);
 
-						//TODO could be a material instance
-						if (m == NULL)
+						if (m != NULL)
 						{
-							//GLog->Log("asset ref not a material! TODO check for material instances " + assetRef.ToString());
-							continue;
+							if (m->GetBlendMode() == EBlendMode::BLEND_Opaque)
+							{
+								//GLog->Log("opaque material should already have textures exported correctly");
+								continue;
+							}
+
+							//TODO export material property transparency
+							if (FMaterialUtilities::ExportMaterialProperty(m, EMaterialProperty::MP_BaseColor, point, colors))
+							{
+
+								FString BMPFilename = ExportDirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+
+								GLog->Log("++++++++++writing base color for material " + BMPFilename);
+								FFileHelper::CreateBitmap(*BMPFilename, point.X, point.Y, colors.GetData());
+							}
 						}
-
-						if (m->GetBlendMode() == EBlendMode::BLEND_Opaque)
+						else
 						{
-							//GLog->Log("opaque material should already have textures exported correctly");
-							continue;
-						}
+							if (mi->GetBlendMode() == EBlendMode::BLEND_Opaque)
+							{
+								//GLog->Log("opaque material should already have textures exported correctly");
+								continue;
+							}
 
-						TArray<UMaterialExpression> expressions;
-						//m->LogMaterialsAndTextures(GLog, 0);
-						//expressions = m->Expressions;
+							//TODO export material property transparency
+							if (FMaterialUtilities::ExportMaterialProperty(mi, EMaterialProperty::MP_BaseColor, point, colors))
+							{
 
-						//TODO export material property transparency
-						if (FMaterialUtilities::ExportMaterialProperty(m, EMaterialProperty::MP_BaseColor, point, colors))
-						{
+								FString BMPFilename = ExportDirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
 
-							FString BMPFilename = ExportDirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
-
-							GLog->Log("++++++++++writing base color for material " + BMPFilename);
-							FFileHelper::CreateBitmap(*BMPFilename, point.X, point.Y, colors.GetData());
+								GLog->Log("++++++++++writing base color for material " + BMPFilename);
+								FFileHelper::CreateBitmap(*BMPFilename, point.X, point.Y, colors.GetData());
+							}
 						}
 					}
 				}
@@ -595,15 +606,19 @@ FReply FBaseEditorToolCustomization::Reduce_Meshes()
 	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
 
-	FString escapedExcludeMeshes = "";
+	FString escapedExcludeMeshes = "IGNOREEXCLUDEMESHES";
 
 	FConfigSection* ExportSettings = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
-	for (FConfigSection::TIterator It(*ExportSettings); It; ++It)
+	if (ExportSettings != NULL)
 	{
-		if (It.Key() == TEXT("ExcludeMeshes"))
+		for (FConfigSection::TIterator It(*ExportSettings); It; ++It)
 		{
-			FName nameEscapedExcludeMeshes;
-			escapedExcludeMeshes = It.Value().GetValue();
+			if (It.Key() == TEXT("ExcludeMeshes"))
+			{
+				FName nameEscapedExcludeMeshes;
+				escapedExcludeMeshes = It.Value().GetValue();
+				break;
+			}
 		}
 	}
 

@@ -171,14 +171,14 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 
 
 	//http request
-	Category.AddCustomRow(FText::FromString("Commands"))
+	/*Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
 		[
 			SNew(SButton)
 			.IsEnabled(true)
 		.Text(FText::FromString("Upload Scene"))
 		.OnClicked(this, &FBaseEditorToolCustomization::UploadScene)
-		];
+		];*/
 
 	IDetailCategoryBuilder& SceneKeyCategory = DetailBuilder.EditCategory(TEXT("Scene Keys"));
 
@@ -606,7 +606,7 @@ FReply FBaseEditorToolCustomization::Reduce_Meshes()
 	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
 
-	FString escapedExcludeMeshes = "";
+	FString escapedExcludeMeshes = "IGNOREEXCLUDEMESHES";
 
 	FConfigSection* ExportSettings = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
 	if (ExportSettings != NULL)
@@ -617,6 +617,7 @@ FReply FBaseEditorToolCustomization::Reduce_Meshes()
 			{
 				FName nameEscapedExcludeMeshes;
 				escapedExcludeMeshes = It.Value().GetValue();
+				break;
 			}
 		}
 	}
