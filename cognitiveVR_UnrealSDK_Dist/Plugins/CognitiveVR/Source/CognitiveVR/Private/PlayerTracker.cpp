@@ -224,6 +224,30 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer()
 
 FString UPlayerTracker::GetSceneKey(FString sceneName)
 {
+	//TODO read through these settings, but must split up string as scenename|scenekey
+
+	TArray<FString> scenePairs;
+	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, GGameIni);
+
+	for (int32 i = 0; i < scenePairs.Num(); i++)
+	{
+		FString name;
+		FString key;
+		scenePairs[i].Split(TEXT(","), &name, &key);
+		if (*name == sceneName)
+		{
+			GLog->Log("-----> UPlayerTracker::GetSceneKey found key for scene " + name);
+			return key;
+		}
+		else
+		{
+			GLog->Log("UPlayerTracker::GetSceneKey found key for scene " + name);
+		}
+	}
+
+
+	/*
+	//GConfig->GetArray()
 	FConfigSection* ScenePairs = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
 	if (ScenePairs == NULL)
 	{
@@ -260,7 +284,7 @@ FString UPlayerTracker::GetSceneKey(FString sceneName)
 				}
 			}
 		}
-	}
+	}*/
 
 	//no matches anywhere
 	CognitiveLog::Warning("UPlayerTracker::GetSceneKey ------- no matches in ini");

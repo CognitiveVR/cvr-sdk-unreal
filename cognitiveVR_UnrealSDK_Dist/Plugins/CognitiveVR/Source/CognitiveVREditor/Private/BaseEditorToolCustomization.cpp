@@ -170,21 +170,31 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 
 
 
-	//http request
+	//upload scene
+	Category.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		[
+			SNew(SButton)
+			.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlenderAndExportDir)
+			.Text(FText::FromString("Upload Scene"))
+			.OnClicked(this, &FBaseEditorToolCustomization::UploadScene)
+		];
+
+	//upload scene
 	/*Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
 		[
 			SNew(SButton)
 			.IsEnabled(true)
-		.Text(FText::FromString("Upload Scene"))
-		.OnClicked(this, &FBaseEditorToolCustomization::UploadScene)
+			.Text(FText::FromString("Test Ini Write"))
+			.OnClicked(this, &FBaseEditorToolCustomization::DebugSendSceneData)
 		];*/
 
-	IDetailCategoryBuilder& SceneKeyCategory = DetailBuilder.EditCategory(TEXT("Scene Keys"));
+	//IDetailCategoryBuilder& SceneKeyCategory = DetailBuilder.EditCategory(TEXT("Scene Keys"));
 
-	SceneKeysProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, SceneKeyPair));
+	//SceneKeysProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, SceneKeyPair));
 
-	SceneKeyCategory.AddProperty(SceneKeysProperty);
+	//SceneKeyCategory.AddProperty(SceneKeysProperty);
 }
 
 float FBaseEditorToolCustomization::GetMinimumSize()
@@ -234,6 +244,9 @@ FReply FBaseEditorToolCustomization::Export_Selected()
 	FEditorFileUtils::Export(true);
 
 	ExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+
+	ExportDirectory = FPaths::ConvertRelativePathToFull(ExportDirectory);
+
 	return FReply::Handled();
 }
 
@@ -242,6 +255,8 @@ FReply FBaseEditorToolCustomization::Export_All()
 	FEditorFileUtils::Export(false);
 
 	ExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+
+	ExportDirectory = FPaths::ConvertRelativePathToFull(ExportDirectory);
 
 	return FReply::Handled();
 }
@@ -334,13 +349,8 @@ FReply FBaseEditorToolCustomization::Select_Export_Directory()
 	FString outFilename = FString();
 	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("picked a directory"));
+		UE_LOG(LogTemp, Warning, TEXT("FBaseEditorToolCustomization::Select_Export_Directory - picked a directory"));
 		ExportDirectory = outFilename;
-		//UE_LOG(LogTemp, Warning, TEXT("selected blender at path: %s"), *BlenderPath);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("somehow failed to pick a directory"));
 	}
 	return FReply::Handled();
 }
@@ -542,7 +552,6 @@ FReply FBaseEditorToolCustomization::List_Materials()
 
 								FString BMPFilename = ExportDirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
 
-								GLog->Log("++++++++++writing base color for material " + BMPFilename);
 								FFileHelper::CreateBitmap(*BMPFilename, point.X, point.Y, colors.GetData());
 							}
 						}
@@ -561,17 +570,13 @@ FReply FBaseEditorToolCustomization::Reduce_Meshes()
 	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("DecimateExportedScene.py");
 	const TCHAR* charPath = *pythonscriptpath;
 
-	//found something
-	UE_LOG(LogTemp, Warning, TEXT("Python script path: %s"), charPath);
-
-
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
 	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
 
 	TArray<FAssetData> ScriptList;
 	if (!AssetRegistry.GetAssetsByPath(FName(*pythonscriptpath), ScriptList))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Could not find decimateall.py script at path. Canceling"));
+		UE_LOG(LogTemp, Warning, TEXT("Reduce_Meshes - Could not find decimateall.py script at path. Canceling"));
 		return FReply::Handled();
 	}
 
@@ -579,14 +584,14 @@ FReply FBaseEditorToolCustomization::Reduce_Meshes()
 
 	if (BlenderPath.Len() == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No path set for Blender.exe. Canceling"));
+		UE_LOG(LogTemp, Warning, TEXT("Reduce_Meshes - No path set for Blender.exe. Canceling"));
 		return FReply::Handled();
 	}
 
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 	if (!tempworld)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("World is null. canceling"));
+		UE_LOG(LogTemp, Warning, TEXT("Reduce_Meshes - World is null. canceling"));
 		return FReply::Handled();
 	}
 
@@ -751,7 +756,7 @@ FReply FBaseEditorToolCustomization::Http_Request()
 	//HttpRequest->SetContentAsString(OutputString);
 
 	//HttpRequest->OnProcessRequestComplete().BindUObject(this, &FBaseEditorToolCustomization::OnYourFunctionCompleted);
-	HttpRequest->OnProcessRequestComplete().BindSP(this, &FBaseEditorToolCustomization::OnYourFunctionCompleted);
+	//HttpRequest->OnProcessRequestComplete().BindSP(this, &FBaseEditorToolCustomization::OnYourFunctionCompleted);
 
 	HttpRequest->ProcessRequest();
 	return FReply::Handled();
@@ -769,31 +774,38 @@ FReply FBaseEditorToolCustomization::UploadScene()
 
 	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(ExportDirectory, true, filesStartingWith, pngextension, filesStartingWith);
 
-	FString Content;
+	//FString httpbody;
+	//FString Content;
+	//TArray<uint8> ContentBytes;
+	TArray<FContentContainer> contentArray;
 
 	UE_LOG(LogTemp, Log, TEXT("image count%d"), imagesInDirectory.Num());
 	UE_LOG(LogTemp, Log, TEXT("file count%d"), filesInDirectory.Num());
 
 	for (int32 i = 0; i < filesInDirectory.Num(); i++)
 	{
+		FString Content;
+		FString temp;
 		FString result;
-		//FString filesStartingWith;
-		//const TCHAR* dirchars = *ExportDirectory;
-		//const TCHAR* filechars = *filesInDirectory[i];
-		//FString totalfilechars = FPaths::Combine(dirchars, filechars);
 		if (FFileHelper::LoadFileToString(result, *filesInDirectory[i]))
 		{
+			FContentContainer container = FContentContainer();
+			UE_LOG(LogTemp, Warning, TEXT("Loaded file %s"), *filesInDirectory[i]);
 			//loaded the file
-			Content = Content.Append("\n--gc0p4Jq0M2Yt08jU534c0p5nk");
 
-			FString left;
-			FString right;
-			filesInDirectory[i].Split(".", &left, &right);
+			Content = Content.Append(TEXT("\r\n"));
+			Content = Content.Append("--cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i");
+			Content = Content.Append(TEXT("\r\n"));
+			Content = Content.Append("Content-Type: application/octet-stream");
+			Content = Content.Append(TEXT("\r\n"));
+			Content = Content.Append("Content-disposition: form-data; name=\"file\"; filename=\"" + FPaths::GetCleanFilename(filesInDirectory[i]) + "\"");
+			Content = Content.Append(TEXT("\r\n"));
+			Content = Content.Append(TEXT("\r\n"));
 
-			Content = Content.Append("\nContent-Type: application/octet-stream");
-			Content = Content.Append("\ncontent-disposition: form-data; name=\"fileUpload\"; filename=\"" + FPaths::GetCleanFilename(filesInDirectory[i]) + "\"");
-			Content = Content.Append("\n\n");
-			Content = Content.Append(*result);
+			container.Headers = Content;
+			container.BodyText = *result;
+
+			contentArray.Add(container);
 		}
 		else
 		{
@@ -803,112 +815,111 @@ FReply FBaseEditorToolCustomization::UploadScene()
 
 
 
-	/*for (int32 i = 0; i < imagesInDirectory.Num(); i++)
+	for (int32 i = 0; i < imagesInDirectory.Num(); i++)
 	{
-	FString result;
-	TArray<uint8> byteResult;
-	//const TCHAR* dirchars = *ExportDirectory;
-	//const TCHAR* filechars = *imagesInDirectory[i];
-	//const TCHAR* totalfilechars = *FPaths::Combine(dirchars, filechars);
-	if (FFileHelper::LoadFileToArray(byteResult, *imagesInDirectory[i]))
-	{
-	//loaded the file
-	Content = Content.Append(TCHAR_TO_UTF8(*FString("\n--gc0p4Jq0M2Yt08jU534c0p5nk")));
+		FString Content;
+		TArray<uint8> byteResult;
+		if (FFileHelper::LoadFileToArray(byteResult, *imagesInDirectory[i]))
+		{
+			FContentContainer container = FContentContainer();
+			UE_LOG(LogTemp, Warning, TEXT("Loaded file %s"), *imagesInDirectory[i]);
+			//loaded the file
+			Content = Content.Append(TEXT("\r\n"));
+			Content = Content.Append("--cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i");
+			Content = Content.Append(TEXT("\r\n"));
+			Content = Content.Append("Content-Type: image/png");
+			Content = Content.Append(TEXT("\r\n"));
+			Content = Content.Append("Content-disposition: form-data; name=\"file\"; filename=\"" + FPaths::GetCleanFilename(imagesInDirectory[i]) + "\"");
+			Content = Content.Append(TEXT("\r\n"));
+			Content = Content.Append(TEXT("\r\n"));
 
-	FString left;
-	FString right;
-	imagesInDirectory[i].Split(".", &left, &right);
+			container.Headers = Content;
+			container.BodyBinary = byteResult;
 
-
-	Content = Content.Append(TCHAR_TO_UTF8(*FString("\nContent-Type: image/png")));
-	Content = Content.Append(TCHAR_TO_UTF8(*FString("\nContent-disposition: form-data; name=\"fileUpload\"; filename=\"" + FPaths::GetCleanFilename(imagesInDirectory[i]) + "\"")));
-	Content = Content.Append(TCHAR_TO_UTF8(*FString("\n\n")));
-	Content = Content.Append(BytesToString(byteResult.GetData(), byteResult.Num()));
+			contentArray.Add(container);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("failed to load image %s"), *imagesInDirectory[i]);
+		}
 	}
-	else
-	{
-	UE_LOG(LogTemp, Error, TEXT("failed to load %s"), *imagesInDirectory[i]);
-	}
-	}*/
-
-	//FString finalContent = Content+"\n\n--kdETdJKGXvWOQpWe1pJ9Qe43dYBmJJzcs39Zhqwa--\n";
-	Content = Content.Append("\n--gc0p4Jq0M2Yt08jU534c0p5nk--");
-
-	//Content = TCHAR_TO_UTF8(*Content);
-
-	//auto contenturf = TCHAR_TO_UTF8(*Content);
-	//auto ContentAnsi = TCHAR_TO_ANSI(*Content);
-
-	//Content = ANSI_TO_TCHAR(ContentAnsi); //NO
-	//Content = FString(contenturf); //NO
-	//Content = FString(ContentAnsi); //NO
-	//Content = TCHAR_TO_ANSI(*FString(contenturf)); //NO
-
-	//std::string contentutf(TCHAR_TO_UTF8(*Content));
-
-	//UE_LOG(LogTemp, Warning, TEXT("%s"), stdstring);
-
+	TArray<uint8> AllBytes;
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 
-
-
-
-
-	//set content as uint
-	TArray<uint8> OutBytes;
-	TArray<TCHAR> InStrCharArray = Content.GetCharArray();
-
-	for (int i = 0; i<Content.Len(); i++)
+	for (int32 i = 0; i < contentArray.Num(); i++)
 	{
-		uint8 CharBytes[sizeof(TCHAR)];
-		FMemory::Memcpy(&CharBytes[0], &InStrCharArray[i], sizeof(TCHAR));
+		//reference
+		//RequestPayload.SetNumUninitialized(Converter.Length());
+		//FMemory::Memcpy(RequestPayload.GetData(), (const uint8*)Converter.Get(), RequestPayload.Num());
 
-		for (int CharIdx = 0; CharIdx<sizeof(TCHAR); CharIdx++)
+
+		//headers
+		FTCHARToUTF8 Converter(*contentArray[i].Headers);
+		auto data = (const uint8*)Converter.Get();
+		AllBytes.Append(data, Converter.Length());
+
+		//content
+		if (contentArray[i].BodyText.Len() > 0)
 		{
-			OutBytes.Add(CharBytes[CharIdx]);
+			FTCHARToUTF8 ConverterBody(*contentArray[i].BodyText);
+			auto bodydata = (const uint8*)ConverterBody.Get();
+			//TArray<uint8> outbytes;
+			//StringToBytes((ANSI_TO_TCHAR(contentArray[i].BodyText*)), outbytes);
+
+			AllBytes.Append(bodydata, ConverterBody.Length());
+		}
+		else
+		{
+			AllBytes.Append(contentArray[i].BodyBinary);
 		}
 	}
 
 
+
+	TArray<uint8> EndBytes;
+	FString EndString;
+
+	EndString = TEXT("\r\n");
+	FTCHARToUTF8 ConverterEnd1(*EndString);
+	auto enddata1 = (const uint8*)ConverterEnd1.Get();
+	AllBytes.Append(enddata1, ConverterEnd1.Length());
+
+	EndString = TEXT("--cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i--");
+	FTCHARToUTF8 ConverterEnd2(*EndString);
+	auto enddata2 = (const uint8*)ConverterEnd2.Get();
+	AllBytes.Append(enddata2, ConverterEnd2.Length());
+
+	EndString = TEXT("\r\n");
+	FTCHARToUTF8 ConverterEnd3(*EndString);
+	auto enddata3 = (const uint8*)ConverterEnd3.Get();
+	AllBytes.Append(enddata3, ConverterEnd3.Length());
+
 	//HttpRequest->SetURL("http://192.168.1.145:3000/api/scenes");
 	HttpRequest->SetURL("https://sceneexplorer.com/api/scenes");
-	HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=\"gc0p4Jq0M2Yt08jU534c0p5nk\"");
-	HttpRequest->SetHeader(TEXT("User-Agent"), "X-UnrealEngine-Agent");
-	//HttpRequest->SetHeader("Content-Type", "text/plain");
-	//HttpRequest->SetHeader("Content-Length", FString::FromInt(OutBytes.Num()));
+	HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=\"cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i\"");
+	HttpRequest->SetHeader("Accept-Encoding", "identity");
 	HttpRequest->SetVerb("POST");
-	//HttpRequest->SetContentAsString(Content);
-	HttpRequest->SetContent(OutBytes);
-
-	//UE_LOG(LogTemp, Warning, TEXT("%d"), HttpRequest->GetContentLength());
-
-	//set content as string
-
-	//HttpRequest->SetContentAsString(Content);
-
-
-	//HttpRequest->SetHeader("Content-Length", FString::FromInt(Content.Len()));
+	HttpRequest->SetContent(AllBytes);
 
 	HttpRequest->OnProcessRequestComplete().BindSP(this, &FBaseEditorToolCustomization::OnUploadSceneCompleted);
 
+	//DEBUGGING write http request contents to file
+	/*
 
 	FString SaveDirectory = FString("C:/Users/calder/Desktop");
 	FString FileName = FString("UploadContent.txt");
 
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 
-	// CreateDirectoryTree returns true if the destination
-	// directory existed prior to call or has been created
-	// during the call.
 	if (PlatformFile.CreateDirectoryTree(*SaveDirectory))
 	{
 		// Get absolute file path
 		FString AbsoluteFilePath = SaveDirectory + "/" + FileName;
 
 		//FFileHelper::SaveStringToFile(Content, *AbsoluteFilePath);
-		FFileHelper::SaveArrayToFile(OutBytes, *AbsoluteFilePath);
+		FFileHelper::SaveArrayToFile(AllBytes, *AbsoluteFilePath);
 	}
-
+	*/
 
 	HttpRequest->ProcessRequest();
 	return FReply::Handled();
@@ -918,21 +929,81 @@ void FBaseEditorToolCustomization::OnUploadSceneCompleted(FHttpRequestPtr Reques
 {
 	if (bWasSuccessful)
 	{
-		//TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
+		UE_LOG(LogTemp, Warning, TEXT("Upload Scene Response is %s"), *Response->GetContentAsString());
 
-		//TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create();
+		UWorld* myworld = GWorld->GetWorld();
+		if (myworld == NULL)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Upload Scene - No world!"));
+			return;
+		}
 
-		//FJsonSerializer::Deserialize(JsonReader, JsonObject);
-		//Response->GetContentAsString()
-		UE_LOG(LogTemp, Warning, TEXT("Response is %s"), *Response->GetContentAsString());
+		FString currentSceneName = myworld->GetMapName();
+		currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
 
-		//SomeOtherVariable = JsonObject->GetStringField("some_response_field");
+		//FConfigSection* ScenePairs = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
+		//GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), *currentSceneName, *Response->GetContentAsString(), GEngineIni);
 
+
+		GLog->Log(currentSceneName + " scene set with SceneKey " + *Response->GetContentAsString());
+
+		FString responseNoQuotes = *Response->GetContentAsString().Replace(TEXT("\""), TEXT(""));
+
+		SaveSceneData(currentSceneName, responseNoQuotes);
 	}
-	else
+}
+
+FReply FBaseEditorToolCustomization::DebugSendSceneData()
+{
+	//+ FString::FromInt(FMath::Rand())
+	SaveSceneData("FirstPersonExampleMap", "1234-asdf-5678-hjkl");
+	return FReply::Handled();
+}
+
+void FBaseEditorToolCustomization::SaveSceneData(FString sceneName, FString sceneKey)
+{
+	FString keyValue = sceneName + "," + sceneKey;
+
+	GConfig->Flush(true, GGameIni);
+	TArray<FString> scenePairs;
+
+	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, GGameIni);
+
+	bool didSetKey = false;
+	for (int32 i = 0; i < scenePairs.Num(); i++)
 	{
-		// Handle error here
+		FString name;
+		FString key;
+		scenePairs[i].Split(TEXT(","), &name, &key);
+		if (*name == sceneName)
+		{
+			scenePairs[i] = keyValue;
+			didSetKey = true;
+			GLog->Log("FBaseEditorToolCustomization::SaveSceneData - found and replace key for scene " + name + " new value " + keyValue);
+			break;
+		}
 	}
+	if (!didSetKey)
+	{
+		scenePairs.Add(keyValue);
+		GLog->Log("FBaseEditorToolCustomization::SaveSceneData - added new scene value and key for " + sceneName);
+	}
+
+	//remove scene names that don't have keys!
+	for (int32 i = scenePairs.Num()-1; i >= 0; i--)
+	{
+		FString name;
+		FString key;
+		if (!scenePairs[i].Split(TEXT(","), &name, &key))
+		{
+			scenePairs.RemoveAt(i);
+		}
+	}
+
+
+	GConfig->SetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, GGameIni);
+
+	GConfig->Flush(false, GGameIni);
 }
 
 //https://answers.unrealengine.com/questions/212791/how-to-get-file-list-in-a-directory.html
@@ -992,27 +1063,6 @@ TArray<FString> FBaseEditorToolCustomization::GetAllFilesInDirectory(const FStri
 	return files;
 }
 
-void FBaseEditorToolCustomization::OnYourFunctionCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-{
-	if (bWasSuccessful)
-	{
-		//TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
-
-		//TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create();
-
-		//FJsonSerializer::Deserialize(JsonReader, JsonObject);
-		//Response->GetContentAsString()
-		UE_LOG(LogTemp, Warning, TEXT("Response is %s"), *Response->GetContentAsString());
-
-		//SomeOtherVariable = JsonObject->GetStringField("some_response_field");
-
-	}
-	else
-	{
-		// Handle error here
-	}
-}
-
 bool FBaseEditorToolCustomization::HasFoundBlender() const
 {
 	return FBaseEditorToolCustomization::GetBlenderPath().ToString().Contains("blender.exe");
@@ -1045,13 +1095,8 @@ void FBaseEditorToolCustomization::SearchForBlender()
 
 	if (VerifyFileExists(testApp))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("found blender at program files"));
+		UE_LOG(LogTemp, Warning, TEXT("SearchForBlender - Found Blender in Program Files"));
 		BlenderPath = testApp;
-		//BlenderPathProperty.Get()->SetValue(testApp);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("didnt find blender at program files"));
 	}
 }
 

@@ -59,11 +59,14 @@ for file in onlyfiles:
 		image2.save()
 		os.remove(exportPath+"/"+file)
 		#i2 = bpy.data.images.new()
-print("all files done")
+print("==================================all files done")
 
 for dir in onlydirectories:
-	shutil.rmtree(os.path.join(exportPath,dir))
+	print("==========remove directory "+exportPath+"/"+dir)
+	#shutil.rmtree(os.path.join(exportPath,dir))
+	shutil.rmtree(exportPath+'/'+dir)
 
+print("ALL DONE")
 exit()
 
 
@@ -88,7 +91,7 @@ exit()
 	#image.file_format = 'PNG'
 	#bpy.ops.image.save_as(override, filepath=exportPath+"/"+file.replace(".bmp",".png"),file_format='PNG')
 	#image.save()
-print("ALL DONE")
+
 
 
 
