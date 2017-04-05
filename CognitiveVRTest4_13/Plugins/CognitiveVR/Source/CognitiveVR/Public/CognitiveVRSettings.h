@@ -6,28 +6,6 @@
 #include "AnalyticsSettings.h"
 #include "CognitiveVRSettings.generated.h"
 
-USTRUCT()
-struct FSceneKeyPair
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere)
-		FString SceneName;
-	UPROPERTY(EditAnywhere)
-		FString SceneKey;
-
-	FSceneKeyPair()
-	{
-
-	}
-
-	FSceneKeyPair(const FString& InName, const FString& InKey)
-	{
-		SceneName = InName;
-		SceneKey = InKey;
-	}
-};
-
 UCLASS(config = Engine, defaultconfig)
 class UCognitiveVRSettings
 	: public UAnalyticsSettingsBase
@@ -58,9 +36,6 @@ public:
 	//Mesh names separated by ','. These will be removed in the Reduce Meshes step
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 		FString ExcludeMeshes = "VRPawn,SkySphere,Camera";
-
-	UPROPERTY(config, EditAnywhere, Category = "Scene Keys")
-		TArray<FSceneKeyPair> SceneKeyPair;
 
 	//The threshold Blender will reduce. Anything with a polygon count below this number will not be reduced
 	UPROPERTY(EditAnywhere, Config, Category = "Export Settings")

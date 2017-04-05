@@ -37,6 +37,8 @@ public:
 
 	static FReply ExecuteToolCommand(IDetailLayoutBuilder* DetailBuilder, UFunction* MethodToExecute);
 
+	void SaveSceneData(FString sceneName, FString sceneKey);
+
 private:
 	bool HasSearchedForBlender = false; //to limit the searching directories. possibly not required
 
@@ -100,8 +102,6 @@ private:
 
 	void OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	void OnYourFunctionCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
 	bool PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
 	bool PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
 	void* ChooseParentWindowHandle();
@@ -115,6 +115,11 @@ private:
 
 	UFUNCTION(Exec, Category = "Export")
 		FReply Select_Export_Directory();
+
+	UFUNCTION(Exec, Category = "Export")
+		FReply DebugSendSceneData();
+
+	
 
 	TArray<FString> GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension,const FString ignoreExtension);
 
@@ -156,4 +161,12 @@ private:
 		}
 		return false;
 	}
+};
+
+class FContentContainer
+{
+public:
+	FString Headers;
+	FString BodyText;
+	TArray<uint8> BodyBinary;
 };
