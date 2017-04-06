@@ -248,58 +248,8 @@ FString UPlayerTracker::GetSceneKey(FString sceneName)
 			{
 				GLog->Log("UPlayerTracker::GetSceneKey found key for scene " + name);
 			}
-			/*
-			FName SceneName = NAME_None;
-			FName SceneKey;
-
-			if (FParse::Value(*It.Value().GetValue(), TEXT("SceneName="), SceneName))
-			{
-				if (FParse::Value(*It.Value().GetValue(), TEXT("SceneKey="), SceneKey))
-				{
-					if (!SceneKey.IsValid() || SceneKey == NAME_None)
-					{
-						CognitiveLog::Warning("UPlayerTracker::GetSceneKey - key is invalid or none");
-						//something wrong happened
-					}
-					else
-					{
-						if (FName(*sceneName) == SceneName)
-						{
-							//found match
-							return SceneKey.ToString();
-						}
-						else
-						{
-							//not a match
-						}
-					}
-				}
-			}
-			*/
 		}
 	}
-
-
-	/*return "";
-	TArray<FString> scenePairs;
-	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, GEngineIni);
-	//there was a big stupid iterator over pairs
-
-	for (int32 i = 0; i < scenePairs.Num(); i++)
-	{
-		FString name;
-		FString key;
-		scenePairs[i].Split(TEXT(","), &name, &key);
-		if (*name == sceneName)
-		{
-			GLog->Log("-----> UPlayerTracker::GetSceneKey found key for scene " + name);
-			return key;
-		}
-		else
-		{
-			GLog->Log("UPlayerTracker::GetSceneKey found key for scene " + name);
-		}
-	}*/
 
 	//no matches anywhere
 	CognitiveLog::Warning("UPlayerTracker::GetSceneKey ------- no matches in ini");
@@ -348,7 +298,7 @@ void UPlayerTracker::SendJson(FString endpoint, FString json)
 
 	std::string stdjson(TCHAR_TO_UTF8(*json));
 	std::string ep(TCHAR_TO_UTF8(*endpoint));
-	CognitiveLog::Info("PlayerTracker::SendJson sending json to" + ep);// +": " + stdjson);
+	CognitiveLog::Info("PlayerTracker::SendJson sending json to" + ep +": " + stdjson);
 
 	FString url = "https://sceneexplorer.com/api/";
 

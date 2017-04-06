@@ -190,11 +190,9 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			.OnClicked(this, &FBaseEditorToolCustomization::DebugSendSceneData)
 		];*/
 
-	//IDetailCategoryBuilder& SceneKeyCategory = DetailBuilder.EditCategory(TEXT("Scene Keys"));
-
-	//SceneKeysProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, SceneKeyPair));
-
-	//SceneKeyCategory.AddProperty(SceneKeysProperty);
+	/*IDetailCategoryBuilder& SceneKeyCategory = DetailBuilder.EditCategory(TEXT("Scene Keys"));
+	SceneKeysProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, SceneKeyPair));
+	SceneKeyCategory.AddProperty(SceneKeysProperty);*/
 }
 
 float FBaseEditorToolCustomization::GetMinimumSize()
@@ -779,8 +777,8 @@ FReply FBaseEditorToolCustomization::UploadScene()
 	//TArray<uint8> ContentBytes;
 	TArray<FContentContainer> contentArray;
 
-	UE_LOG(LogTemp, Log, TEXT("image count%d"), imagesInDirectory.Num());
-	UE_LOG(LogTemp, Log, TEXT("file count%d"), filesInDirectory.Num());
+	UE_LOG(LogTemp, Log, TEXT("UploadScene image count%d"), imagesInDirectory.Num());
+	UE_LOG(LogTemp, Log, TEXT("UploadScene file count%d"), filesInDirectory.Num());
 
 	for (int32 i = 0; i < filesInDirectory.Num(); i++)
 	{
@@ -790,7 +788,7 @@ FReply FBaseEditorToolCustomization::UploadScene()
 		if (FFileHelper::LoadFileToString(result, *filesInDirectory[i]))
 		{
 			FContentContainer container = FContentContainer();
-			UE_LOG(LogTemp, Warning, TEXT("Loaded file %s"), *filesInDirectory[i]);
+			UE_LOG(LogTemp, Log, TEXT("Loaded file %s"), *filesInDirectory[i]);
 			//loaded the file
 
 			Content = Content.Append(TEXT("\r\n"));
@@ -822,7 +820,7 @@ FReply FBaseEditorToolCustomization::UploadScene()
 		if (FFileHelper::LoadFileToArray(byteResult, *imagesInDirectory[i]))
 		{
 			FContentContainer container = FContentContainer();
-			UE_LOG(LogTemp, Warning, TEXT("Loaded file %s"), *imagesInDirectory[i]);
+			UE_LOG(LogTemp, Log, TEXT("Loaded file %s"), *imagesInDirectory[i]);
 			//loaded the file
 			Content = Content.Append(TEXT("\r\n"));
 			Content = Content.Append("--cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i");
@@ -929,7 +927,7 @@ void FBaseEditorToolCustomization::OnUploadSceneCompleted(FHttpRequestPtr Reques
 {
 	if (bWasSuccessful)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Upload Scene Response is %s"), *Response->GetContentAsString());
+		//UE_LOG(LogTemp, Warning, TEXT("Upload Scene Response is %s"), *Response->GetContentAsString());
 
 		UWorld* myworld = GWorld->GetWorld();
 		if (myworld == NULL)
@@ -945,7 +943,7 @@ void FBaseEditorToolCustomization::OnUploadSceneCompleted(FHttpRequestPtr Reques
 		//GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), *currentSceneName, *Response->GetContentAsString(), GEngineIni);
 
 
-		GLog->Log(currentSceneName + " scene set with SceneKey " + *Response->GetContentAsString());
+		//GLog->Log(currentSceneName + " scene set with SceneKey " + *Response->GetContentAsString());
 
 		FString responseNoQuotes = *Response->GetContentAsString().Replace(TEXT("\""), TEXT(""));
 
@@ -963,11 +961,18 @@ FReply FBaseEditorToolCustomization::DebugSendSceneData()
 void FBaseEditorToolCustomization::SaveSceneData(FString sceneName, FString sceneKey)
 {
 	FString keyValue = sceneName + "," + sceneKey;
+	UE_LOG(LogTemp, Warning, TEXT("Upload complete! Add this into the SceneData array in Project Settings:      %s"),*keyValue);
 
-	GConfig->Flush(true, GGameIni);
+
+	//TODO why can't i save to an ini file that automatically gets included in a build? why is that so hard?
+	return;
+
+	//FString keyValue = sceneName + "," + sceneKey;
+
+	GConfig->Flush(true, "DefaultEngineIni");
 	TArray<FString> scenePairs;
 
-	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, GGameIni);
+	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, "DefaultEngineIni");
 
 	bool didSetKey = false;
 	for (int32 i = 0; i < scenePairs.Num(); i++)
@@ -1000,10 +1005,11 @@ void FBaseEditorToolCustomization::SaveSceneData(FString sceneName, FString scen
 		}
 	}
 
+	GConfig->SetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, "DefaultEngineIni");
 
-	GConfig->SetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, GGameIni);
-
-	GConfig->Flush(false, GGameIni);
+	GConfig->Flush(false, "DefaultEngineIni");
+	//GConfig->UnloadFile(GEngineIni);
+	//GConfig->LoadFile(GEngineIni);
 }
 
 //https://answers.unrealengine.com/questions/212791/how-to-get-file-list-in-a-directory.html

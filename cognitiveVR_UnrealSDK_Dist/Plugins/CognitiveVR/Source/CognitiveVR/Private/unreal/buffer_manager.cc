@@ -29,6 +29,7 @@ void BufferManager::AddJsonToBatch(TSharedPtr<FJsonObject> json)
 	batchedJson.Add(json);
 	if (batchedJson.Num() >= TransactionBatchSize)
 	{
+		CognitiveLog::Info("Batching reached threshold " + TransactionBatchSize);
 		BufferManager::SendBatch();
 	}
 }
@@ -69,8 +70,12 @@ void BufferManager::PushTask(NetworkCallback callback, std::string sub_path, TAr
 		//turn all the content into one long string
 
 		TArray< TSharedPtr<FJsonValue> > ObjArray;
+
+		CognitiveLog::Info(content.Num() + " :Batching this many transactions");
+
 		for (int i = 0; i < content.Num(); i++)
 		{
+			CognitiveLog::Info("---write a transaction to the batch!");
 			//ObjArray.Emplace(content[i]);
 
 			//TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();

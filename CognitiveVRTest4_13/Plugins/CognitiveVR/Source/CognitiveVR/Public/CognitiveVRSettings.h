@@ -58,7 +58,7 @@ class UCognitiveVRSettings
 
 public:
 	//Mesh names separated by ','. These will be removed in the Reduce Meshes step
-	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	UPROPERTY(config, EditAnywhere, Category = "Export Settings")
 		FString ExcludeMeshes = "VRPawn,SkySphere,Camera";
 
 	//The threshold Blender will reduce. Anything with a polygon count below this number will not be reduced
