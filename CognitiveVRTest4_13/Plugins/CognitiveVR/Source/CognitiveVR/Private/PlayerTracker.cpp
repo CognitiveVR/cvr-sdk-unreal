@@ -144,6 +144,7 @@ void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		if (snapshots.Num() > GazeBatchSize)
 		{
 			SendGazeEventDataToSceneExplorer();
+			//s->FlushEvents();
 			snapshots.Empty();
 			events.Empty();
 		}
@@ -224,39 +225,30 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer()
 
 FString UPlayerTracker::GetSceneKey(FString sceneName)
 {
-	//TODO read through these settings, but must split up string as scenename|scenekey
-
-	TArray<FString> scenePairs;
-	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, GGameIni);
-
-	for (int32 i = 0; i < scenePairs.Num(); i++)
-	{
-		FString name;
-		FString key;
-		scenePairs[i].Split(TEXT(","), &name, &key);
-		if (*name == sceneName)
-		{
-			GLog->Log("-----> UPlayerTracker::GetSceneKey found key for scene " + name);
-			return key;
-		}
-		else
-		{
-			GLog->Log("UPlayerTracker::GetSceneKey found key for scene " + name);
-		}
-	}
-
-
-	/*
+	
 	//GConfig->GetArray()
-	FConfigSection* ScenePairs = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
-	if (ScenePairs == NULL)
+	FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
+	if (Section == NULL)
 	{
 		return "";
 	}
-	for (FConfigSection::TIterator It(*ScenePairs); It; ++It)
+	for (FConfigSection::TIterator It(*Section); It; ++It)
 	{
-		if (It.Key() == TEXT("SceneKeyPair"))
+		if (It.Key() == TEXT("SceneData"))
 		{
+			FString name;
+			FString key;
+			It.Value().GetValue().Split(TEXT(","), &name, &key);
+			if (*name == sceneName)
+			{
+				GLog->Log("-----> UPlayerTracker::GetSceneKey found key for scene " + name);
+				return key;
+			}
+			else
+			{
+				GLog->Log("UPlayerTracker::GetSceneKey found key for scene " + name);
+			}
+			/*
 			FName SceneName = NAME_None;
 			FName SceneKey;
 
@@ -283,6 +275,29 @@ FString UPlayerTracker::GetSceneKey(FString sceneName)
 					}
 				}
 			}
+			*/
+		}
+	}
+
+
+	/*return "";
+	TArray<FString> scenePairs;
+	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, GEngineIni);
+	//there was a big stupid iterator over pairs
+
+	for (int32 i = 0; i < scenePairs.Num(); i++)
+	{
+		FString name;
+		FString key;
+		scenePairs[i].Split(TEXT(","), &name, &key);
+		if (*name == sceneName)
+		{
+			GLog->Log("-----> UPlayerTracker::GetSceneKey found key for scene " + name);
+			return key;
+		}
+		else
+		{
+			GLog->Log("UPlayerTracker::GetSceneKey found key for scene " + name);
 		}
 	}*/
 
@@ -327,12 +342,13 @@ void UPlayerTracker::SendJson(FString endpoint, FString json)
 	FString sceneKey = up->GetSceneKey(currentSceneName);
 	if (sceneKey == "")
 	{
+		CognitiveLog::Warning("UPlayerTracker::SendJson does not have scenekey. fail!");
 		return;
 	}
 
 	std::string stdjson(TCHAR_TO_UTF8(*json));
 	std::string ep(TCHAR_TO_UTF8(*endpoint));
-	CognitiveLog::Info("PlayerTracker::SendJson sending json to" + ep + ": " + stdjson);
+	CognitiveLog::Info("PlayerTracker::SendJson sending json to" + ep);// +": " + stdjson);
 
 	FString url = "https://sceneexplorer.com/api/";
 
@@ -371,10 +387,10 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer(FString sceneName)
 		return;
 	}
 	CognitiveLog::Info("UPlayerTracker::SendData");
-	//FString sceneKey = UPlayerTracker::GetSceneKey(sceneName);
 
 	//GAZE
 
+	//TODO where do i clear snapshots?
 	FString GazeString = UPlayerTracker::GazeSnapshotsToString();
 	SendJson("gaze", GazeString);
 	
