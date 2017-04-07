@@ -396,7 +396,7 @@ FString UPlayerTracker::GazeSnapshotsToString()
 		DeviceNameString = cognitivevrapi::Util::GetDeviceName(DeviceName.ToString());
 	}
 
-	wholeObj->SetStringField("hmdtype", DeviceName.ToString());
+	wholeObj->SetStringField("hmdtype", DeviceNameString);
 
 	for (int32 i = 0; i != snapshots.Num(); ++i)
 	{

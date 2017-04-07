@@ -281,7 +281,7 @@ f = open (os.path.join(exportPath,'settings.json'),'w')
 
 productid = productid[:-5]
 
-f.write('{\"scale\":100,"customerId":"'+productid+'","sdkVersion":"'+sdkVersion+'"}')
+f.write('{\"scale\":100,"customerId":"'+productid+'","sdkVersion":"'+sdkVersion+'","sceneName":"'+fileName+'"}')
 f.close()
 
 print("=============================================json write complete")
