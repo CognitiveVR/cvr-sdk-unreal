@@ -210,7 +210,6 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 		return;
 	}
 
-	CognitiveLog::Info("CognitiveVR Flush Transactions!");
 	cog->thread_manager->SendBatch();
 
 	TArray<APlayerController*, FDefaultAllocator> controllers;

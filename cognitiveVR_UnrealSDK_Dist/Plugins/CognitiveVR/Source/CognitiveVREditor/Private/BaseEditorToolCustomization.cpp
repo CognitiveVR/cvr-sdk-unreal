@@ -899,6 +899,8 @@ FReply FBaseEditorToolCustomization::UploadScene()
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetContent(AllBytes);
 
+	FHttpModule::Get().SetHttpTimeout(0);
+
 	HttpRequest->OnProcessRequestComplete().BindSP(this, &FBaseEditorToolCustomization::OnUploadSceneCompleted);
 
 	//DEBUGGING write http request contents to file
