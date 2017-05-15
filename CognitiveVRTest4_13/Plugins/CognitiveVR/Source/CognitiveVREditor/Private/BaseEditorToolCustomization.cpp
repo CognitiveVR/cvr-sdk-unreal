@@ -180,6 +180,38 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			.OnClicked(this, &FBaseEditorToolCustomization::UploadScene)
 		];
 
+	// Create a commands category
+	IDetailCategoryBuilder& DynamicsCategory = DetailBuilder.EditCategory(TEXT("Dynamic Objects"));
+
+	//export dynamics
+	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		[
+			SNew(SButton)
+			.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlender)
+		.Text(FText::FromString("Export Dynamic Objects"))
+		.OnClicked(this, &FBaseEditorToolCustomization::ExportDynamics)
+		];
+
+	//select dynamics
+	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		[
+			SNew(SButton)
+			.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlender)
+		.Text(FText::FromString("Select Dynamic Directory"))
+		.OnClicked(this, &FBaseEditorToolCustomization::SelectDynamicsDirectory)
+		];
+
+	//upload dynamics
+	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		[
+			SNew(SButton)
+			.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlenderAndDynamicExportDir)
+		.Text(FText::FromString("Upload Dynamic Objects"))
+		.OnClicked(this, &FBaseEditorToolCustomization::UploadDynamics)
+		];
 	//upload scene
 	/*Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
@@ -237,6 +269,332 @@ int FBaseEditorToolCustomization::GetTextureRefacor()
 	return TextureRefactor;
 }
 
+FReply FBaseEditorToolCustomization::ExportDynamics()
+{
+	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
+
+	if (!tempworld)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("world is null"));
+		return FReply::Handled();
+	}
+
+	//select an export directory
+	//FEditorFileUtils::Export(true);
+	//ExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+	//ExportDirectory = FPaths::ConvertRelativePathToFull(ExportDirectory);
+
+	// @todo: extend this to multiple levels.
+	UWorld* World = GWorld;
+	FString title = "Select Root Dynamic Directory";
+	FString fileTypes = "";
+	FString lastPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+	FString defaultfile = FString();
+	FString outFilename = FString();
+	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FBaseEditorToolCustomization::ExportDynamics - picked a directory"));
+		ExportDynamicsDirectory = outFilename;
+		//FEditorDirectories::Get().SetLastDirectory(ELastDirectory::UNR, FPaths::GetPath(ExportFilename)); // Save path as default for next time.
+	}
+	else
+	{
+		return FReply::Handled();
+	}
+
+	int32 ActorsExported = 0;
+
+	FVector originalLocation;
+	FRotator originalRotation;
+	FVector originalScale;
+
+	for (TActorIterator<AStaticMeshActor> ObstacleItr(tempworld); ObstacleItr; ++ObstacleItr)
+	{
+		GEditor->SelectNone(false, true, false);// ->GetSelectedActors()->DeselectAll();
+		//GEditor->GetSelectedObjects()->DeselectAll();
+
+		//get the selectable bit
+		AStaticMeshActor *tempactor = *ObstacleItr;
+		if (!tempactor)
+		{
+			continue;
+		}
+		UActorComponent* actorComponent = tempactor->GetComponentByClass(UDynamicObject::StaticClass());
+		if (actorComponent == NULL)
+		{
+			continue;
+		}
+		UDynamicObject* sceneComponent = Cast<UDynamicObject>(actorComponent);
+		if (sceneComponent == NULL)
+		{
+			continue;
+		}
+
+		originalLocation = tempactor->GetActorLocation();
+		originalRotation = tempactor->GetActorRotation();
+		//originalScale = tempactor->GetActorScale();
+
+		tempactor->SetActorLocation(FVector::ZeroVector);
+		tempactor->SetActorRotation(FQuat::Identity);
+		//tempactor->SetActorScale3D(originalScale*0.01);
+
+		FString ExportFilename = sceneComponent->MeshName +".obj";
+
+		GEditor->SelectActor(tempactor, true, false, true);
+		//ActorsExported++;
+
+		GLog->Log("root output directory " + ExportDynamicsDirectory);
+
+		ExportDynamicsDirectory += "/"+ sceneComponent->MeshName +"/"+sceneComponent->MeshName+".obj";
+
+		GLog->Log("dynamic output directory " + ExportDynamicsDirectory);
+
+		GLog->Log("exporting DynamicObject " + ExportFilename);
+		//GUnrealEd->ExportMap(World, *ExportFilename, true);
+
+		
+		// @todo: extend this to multiple levels.
+		//UWorld* World = GWorld;
+		const FString LevelFilename = sceneComponent->MeshName;// FileHelpers::GetFilename(World);//->GetOutermost()->GetName() );
+		//FString ExportFilename;
+		FString LastUsedPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+
+		//FString FilterString = TEXT("Object (*.obj)|*.obj|Unreal Text (*.t3d)|*.t3d|Stereo Litho (*.stl)|*.stl|LOD Export (*.lod.obj)|*.lod.obj");
+
+		GUnrealEd->ExportMap(World, *ExportDynamicsDirectory, true);
+
+		//exported
+		//move textures to root. want to do this in python, but whatever
+
+		//run python on them after everything is finished? need to convert texture anyway
+
+		ExportDynamicsDirectory.RemoveFromEnd("/" + sceneComponent->MeshName + "/" + sceneComponent->MeshName + ".obj");
+
+		tempactor->SetActorLocation(originalLocation);
+		tempactor->SetActorRotation(originalRotation);
+		//tempactor->SetActorScale3D(originalScale);
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Found %d Static Meshes for Export"), ActorsExported);
+
+
+	//TODO export transparent textures for dynamic objects
+	ConvertDynamicTextures();
+
+	return FReply::Handled();
+}
+
+FReply FBaseEditorToolCustomization::UploadDynamics()
+{	
+	FString filesStartingWith = TEXT("");
+	FString pngextension = TEXT("png");
+	//FString fileExtensions = TEXT("obj");
+	//TArray<FString> filesInDirectory = GetAllFilesInDirectory(ExportDynamicsDirectory, true, filesStartingWith, filesStartingWith, pngextension);
+
+	// Get all files in directory
+	TArray<FString> directoriesToSkip;
+	IPlatformFile &PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	
+	TArray<FString> DirectoriesToSkip;
+	TArray<FString> DirectoriesToNotRecurse;
+
+	// use the timestamp grabbing visitor (include directories)
+	FLocalTimestampDirectoryVisitor Visitor(PlatformFile, DirectoriesToSkip, DirectoriesToNotRecurse, true);
+	Visitor.Visit(*ExportDynamicsDirectory, true);
+
+	GLog->Log("UploadDynamics found this many files " + Visitor.FileTimes.Num());
+
+	FString sceneID = "";
+	FString currentSceneName = GWorld->GetMapName();
+	currentSceneName.RemoveFromStart(GWorld->StreamingLevelsPrefix);
+
+	//GConfig->GetArray()
+	FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
+	if (Section == NULL)
+	{
+		GLog->Log("can't upload dynamic objects. sceneid not set");
+		return FReply::Handled();
+	}
+	for (FConfigSection::TIterator It(*Section); It; ++It)
+	{
+		if (It.Key() == TEXT("SceneData"))
+		{
+			FString name;
+			FString key;
+			It.Value().GetValue().Split(TEXT(","), &name, &key);
+			if (*name == currentSceneName)
+			{
+				GLog->Log("-----> UPlayerTracker::GetSceneKey found key for scene " + name);
+				sceneID = key;
+				break;
+			}
+			else
+			{
+				GLog->Log("UPlayerTracker::GetSceneKey found key for scene " + name);
+			}
+		}
+	}
+
+
+
+	//no matches anywhere
+	//CognitiveLog::Warning("UPlayerTracker::GetSceneKey ------- no matches in ini");
+
+	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
+	{
+		const FString filePath = TimestampIt.Key();
+		const FString fileName = FPaths::GetCleanFilename(filePath);
+
+		if (ExportDynamicsDirectory == filePath)
+		{
+			GLog->Log("root found " + filePath);
+		}
+		else if (FPaths::DirectoryExists(filePath))
+		{
+			GLog->Log("directory found " + filePath);
+			FString url = "https://sceneexplorer.com/api/objects/"+sceneID+"/"+fileName;
+
+			UploadFromDirectory(url, filePath, "object");
+		}
+		else
+		{
+			//GLog->Log("file found " + filePath);
+		}
+	}
+
+	//PlatformFile.IterateDirectory(*ExportDynamicDirectory, myVisitor);
+
+	//FDirectoryStatVisitor dirVisitor;
+
+	//FLocalTimestampDirectoryVisitor Visitor(PlatformFile, directoriesToSkip, directoriesToSkip, false);
+	//PlatformFile.IterateDirectoryStat(*directory, Visitor);
+	//dirVisitor.Visit(*ExportDynamicsDirectory, true);
+	TArray<FString> files;
+	TArray<FString> directories;
+
+
+	/*
+	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor); TimestampIt; ++TimestampIt)
+	{
+		const FString filePath = TimestampIt.Key();
+		const FString fileName = FPaths::GetCleanFilename(filePath);
+		bool shouldAddFile = true;
+
+		// Check if filename starts with required characters
+		if (!onlyFilesStartingWith.IsEmpty())
+		{
+			const FString left = fileName.Left(onlyFilesStartingWith.Len());
+
+			if (!(fileName.Left(onlyFilesStartingWith.Len()).Equals(onlyFilesStartingWith)))
+				shouldAddFile = false;
+		}
+
+		// Check if file extension is required characters
+		if (!onlyFilesWithExtension.IsEmpty())
+		{
+			if (!(FPaths::GetExtension(fileName, false).Equals(onlyFilesWithExtension, ESearchCase::IgnoreCase)))
+				shouldAddFile = false;
+		}
+
+		if (!ignoreExtension.IsEmpty())
+		{
+			if ((FPaths::GetExtension(fileName, false).Equals(ignoreExtension, ESearchCase::IgnoreCase)))
+				shouldAddFile = false;
+		}
+
+		// Add full path to results
+		if (shouldAddFile)
+		{
+			files.Add(fullPath ? filePath : fileName);
+		}
+	}
+	*/
+
+	//root directory of dynamic objects
+
+
+
+	//get each subfolder
+	//foreach subfolder, create a http request
+	//get scene key
+	//call UploadFromDirectory(url,tempDir,whatever)
+
+	return FReply::Handled();
+}
+
+void FBaseEditorToolCustomization::ConvertDynamicTextures()
+{
+	//open blender and run a script
+	//TODO make openblender and run a script into a function, because this is used in a bunch of places
+
+	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("ConvertDynamicTextures.py");
+	const TCHAR* charPath = *pythonscriptpath;
+
+	//found something
+	UE_LOG(LogTemp, Warning, TEXT("Python script path: %s"), charPath);
+
+
+	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
+	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+
+
+	TArray<FAssetData> ScriptList;
+	if (!AssetRegistry.GetAssetsByPath(FName(*pythonscriptpath), ScriptList))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Could not find ConvertDynamicTextures.py script at path. Canceling"));
+		return;
+	}
+
+	FString stringurl = BlenderPath;
+
+	if (BlenderPath.Len() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No path set for Blender.exe. Canceling"));
+		return;
+	}
+
+	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
+	if (!tempworld)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("World is null. canceling"));
+		return;
+	}
+
+	//const TCHAR* url = *stringurl;
+	//FString SceneName = tempworld->GetMapName();
+	FString ObjPath = ExportDynamicsDirectory;
+
+	if (ObjPath.Len() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No know export directory. Canceling"));
+		return;
+	}
+
+
+	//FString MaxPolyCount = FString::FromInt(0);
+	//FString resizeFactor = FString::FromInt(GetTextureRefacor());
+
+	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
+	FString escapedTargetPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
+
+	FString stringparams = " -P " + escapedPythonPath + " " + escapedTargetPath;// +" " + resizeFactor + " " + MaxPolyCount + " " + SceneName;
+
+	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
+
+	UE_LOG(LogTemp, Warning, TEXT("Params: %s"), *stringParamSlashed);
+
+
+	const TCHAR* params = *stringParamSlashed;
+	int32 priorityMod = 0;
+	FProcHandle procHandle = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
+
+	//FString cmdPath = "C:\\Windows\\System32\\cmd.exe";
+	//FString cmdPathS = "cmd.exe";
+	//FProcHandle procHandle = FPlatformProcess::CreateProc(*cmdPath, NULL, false, false, false, NULL, priorityMod, 0, nullptr);
+
+	//TODO can i just create a process and add parameters or do i need to run through cmd line??
+	//system("cmd.exe");
+}
+
 FReply FBaseEditorToolCustomization::Export_Selected()
 {
 	FEditorFileUtils::Export(true);
@@ -271,8 +629,9 @@ FReply FBaseEditorToolCustomization::Select_Export_Meshes()
 
 	//also grab landscapes
 
-	GEditor->GetSelectedActors()->DeselectAll();
-	GEditor->GetSelectedObjects()->DeselectAll();
+	//GEditor->GetSelectedActors()->DeselectAll();
+	//GEditor->GetSelectedObjects()->DeselectAll();
+	GEditor->SelectNone(false, true, false);
 
 	int32 ActorsExported = 0;
 
@@ -310,8 +669,21 @@ FReply FBaseEditorToolCustomization::Select_Export_Meshes()
 		{
 			continue;
 		}
-
-
+		UActorComponent* actorComponent = tempactor->GetComponentByClass(UStaticMeshComponent::StaticClass());
+		if (actorComponent == NULL)
+		{
+			continue;
+		}
+		USceneComponent* sceneComponent = Cast<USceneComponent>(actorComponent);
+		if (sceneComponent == NULL)
+		{
+			continue;
+		}
+		if (!sceneComponent->bVisible || sceneComponent->bHiddenInGame)
+		{
+			continue;
+		}
+		
 
 		GEditor->SelectActor(tempactor, true, false, true);
 		ActorsExported++;
@@ -349,6 +721,22 @@ FReply FBaseEditorToolCustomization::Select_Export_Directory()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FBaseEditorToolCustomization::Select_Export_Directory - picked a directory"));
 		ExportDirectory = outFilename;
+	}
+	return FReply::Handled();
+}
+
+//open fiel type
+FReply FBaseEditorToolCustomization::SelectDynamicsDirectory()
+{
+	FString title = "Select Dynamc Export Root Directory";
+	FString fileTypes = ".exe";
+	FString lastPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+	FString defaultfile = FString();
+	FString outFilename = FString();
+	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FBaseEditorToolCustomization::SelectDynamicsDirectory - picked a directory"));
+		ExportDynamicsDirectory = outFilename;
 	}
 	return FReply::Handled();
 }
@@ -760,17 +1148,18 @@ FReply FBaseEditorToolCustomization::Http_Request()
 	return FReply::Handled();
 }
 
-FReply FBaseEditorToolCustomization::UploadScene()
+void FBaseEditorToolCustomization::UploadFromDirectory(FString url, FString directory, FString expectedResponseType)
 {
-	//TODO get all the exported files
-	//make a multipart form
-
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
 	//FString fileExtensions = TEXT("obj");
-	TArray<FString> filesInDirectory = GetAllFilesInDirectory(ExportDirectory, true, filesStartingWith, filesStartingWith, pngextension);
+	TArray<FString> filesInDirectory = GetAllFilesInDirectory(directory, true, filesStartingWith, filesStartingWith, pngextension);
 
-	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(ExportDirectory, true, filesStartingWith, pngextension, filesStartingWith);
+	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(directory, true, filesStartingWith, pngextension, filesStartingWith);
+
+	//UploadMultipartData(url, filesInDirectory, imagesInDirectory);
+
+	GLog->Log(url);
 
 	//FString httpbody;
 	//FString Content;
@@ -893,7 +1282,7 @@ FReply FBaseEditorToolCustomization::UploadScene()
 	AllBytes.Append(enddata3, ConverterEnd3.Length());
 
 	//HttpRequest->SetURL("http://192.168.1.145:3000/api/scenes");
-	HttpRequest->SetURL("https://sceneexplorer.com/api/scenes");
+	HttpRequest->SetURL(url);
 	HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=\"cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i\"");
 	HttpRequest->SetHeader("Accept-Encoding", "identity");
 	HttpRequest->SetVerb("POST");
@@ -901,7 +1290,14 @@ FReply FBaseEditorToolCustomization::UploadScene()
 
 	FHttpModule::Get().SetHttpTimeout(0);
 
-	HttpRequest->OnProcessRequestComplete().BindSP(this, &FBaseEditorToolCustomization::OnUploadSceneCompleted);
+	if (expectedResponseType == "scene")
+	{
+		HttpRequest->OnProcessRequestComplete().BindSP(this, &FBaseEditorToolCustomization::OnUploadSceneCompleted);
+	}
+	if (expectedResponseType == "object")
+	{
+		HttpRequest->OnProcessRequestComplete().BindSP(this, &FBaseEditorToolCustomization::OnUploadObjectCompleted);
+	}
 
 	//DEBUGGING write http request contents to file
 	/*
@@ -913,15 +1309,23 @@ FReply FBaseEditorToolCustomization::UploadScene()
 
 	if (PlatformFile.CreateDirectoryTree(*SaveDirectory))
 	{
-		// Get absolute file path
-		FString AbsoluteFilePath = SaveDirectory + "/" + FileName;
+	// Get absolute file path
+	FString AbsoluteFilePath = SaveDirectory + "/" + FileName;
 
-		//FFileHelper::SaveStringToFile(Content, *AbsoluteFilePath);
-		FFileHelper::SaveArrayToFile(AllBytes, *AbsoluteFilePath);
+	//FFileHelper::SaveStringToFile(Content, *AbsoluteFilePath);
+	FFileHelper::SaveArrayToFile(AllBytes, *AbsoluteFilePath);
 	}
 	*/
 
 	HttpRequest->ProcessRequest();
+}
+
+FReply FBaseEditorToolCustomization::UploadScene()
+{
+	FString url = "https://sceneexplorer.com/api/scenes";
+
+	UploadFromDirectory(url, ExportDirectory,"scene");
+
 	return FReply::Handled();
 }
 
@@ -950,6 +1354,36 @@ void FBaseEditorToolCustomization::OnUploadSceneCompleted(FHttpRequestPtr Reques
 		FString responseNoQuotes = *Response->GetContentAsString().Replace(TEXT("\""), TEXT(""));
 
 		SaveSceneData(currentSceneName, responseNoQuotes);
+	}
+}
+
+void FBaseEditorToolCustomization::OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (bWasSuccessful)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("Upload Scene Response is %s"), *Response->GetContentAsString());
+
+		UWorld* myworld = GWorld->GetWorld();
+		if (myworld == NULL)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Upload Scene - No world!"));
+			return;
+		}
+
+		FString currentSceneName = myworld->GetMapName();
+		currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
+
+		//FConfigSection* ScenePairs = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
+		//GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), *currentSceneName, *Response->GetContentAsString(), GEngineIni);
+
+
+		//GLog->Log(currentSceneName + " scene set with SceneKey " + *Response->GetContentAsString());
+
+		FString responseNoQuotes = *Response->GetContentAsString().Replace(TEXT("\""), TEXT(""));
+
+		GLog->Log("upload complete");
+
+		//SaveSceneData(currentSceneName, responseNoQuotes);
 	}
 }
 
@@ -1081,6 +1515,11 @@ bool FBaseEditorToolCustomization::HasFoundBlenderAndExportDir() const
 	return FBaseEditorToolCustomization::GetBlenderPath().ToString().Contains("blender.exe") && !FBaseEditorToolCustomization::GetExportDirectory().EqualTo(FText::FromString(""));
 }
 
+bool FBaseEditorToolCustomization::HasFoundBlenderAndDynamicExportDir() const
+{
+	return FBaseEditorToolCustomization::GetBlenderPath().ToString().Contains("blender.exe") && !FBaseEditorToolCustomization::GetDynamicExportDirectory().EqualTo(FText::FromString(""));
+}
+
 bool FBaseEditorToolCustomization::HasSetExportDirectory() const
 {
 	return !FBaseEditorToolCustomization::GetExportDirectory().EqualTo(FText::FromString(""));
@@ -1094,6 +1533,11 @@ FText FBaseEditorToolCustomization::GetBlenderPath() const
 FText FBaseEditorToolCustomization::GetExportDirectory() const
 {
 	return FText::FromString(ExportDirectory);
+}
+
+FText FBaseEditorToolCustomization::GetDynamicExportDirectory() const
+{
+	return FText::FromString(ExportDynamicsDirectory);
 }
 
 void FBaseEditorToolCustomization::SearchForBlender()

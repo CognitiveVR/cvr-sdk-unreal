@@ -73,7 +73,8 @@ void Sensors::SendData()
 	sensorDataCount = 0;
 	if (out != "")
 	{
-		UPlayerTracker::SendJson("sensors", out);
+		//FAnalyticsProviderCognitiveVR::SendJson("sensors", out);
+		s->SendJson("sensors", out);
 	}
 }
 
@@ -84,7 +85,7 @@ FString Sensors::SensorDataToString()
 	TArray< TSharedPtr<FJsonValue> > DataArray;
 
 	wholeObj->SetStringField("name", s->GetDeviceID());
-	wholeObj->SetNumberField("timestamp", s->GetSessionTimestamp());
+	wholeObj->SetNumberField("timestamp", (int32)s->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionid", s->GetSessionID());
 	wholeObj->SetNumberField("part", jsonPart);
 	jsonPart++;

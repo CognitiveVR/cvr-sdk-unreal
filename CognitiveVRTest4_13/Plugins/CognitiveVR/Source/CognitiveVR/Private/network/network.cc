@@ -30,40 +30,51 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
-	TSharedPtr<FJsonObject> json = MakeShareable(new FJsonObject);
+	//TSharedPtr<FJsonObject> json = MakeShareable(new FJsonObject);
 
 	std::string ts = Util::GetTimestampStr();
 	FString fs(ts.c_str());
-	FString empty;
+	FString empty = "";
 
-	FString user = s->GetUserID();
-	FString device = s->GetDeviceID();
+	//FString user = s->GetUserID();
+	//FString device = s->GetDeviceID();
 
 	Util::AppendToJsonArray(jsonArray, fs);
 	Util::AppendToJsonArray(jsonArray, fs);
 	s->AppendUD(jsonArray);
 	Util::AppendToJsonArray(jsonArray, empty);
 
+	TSharedPtr<FJsonObject>deviceProperties = Util::DeviceScraper(s->initProperties);
+	if (s == NULL)
+	{
+		GLog->Log("network::init cognitive provider is null");
+		return;
+	}
 	if (s->initProperties.Get() == NULL)
 	{
-		s->initProperties = MakeShareable(new FJsonObject);
+		GLog->Log("network::init cognitive provider init properties is null");
+		return;
 	}
-	TSharedPtr<FJsonObject>deviceProperties = Util::DeviceScraper(s->initProperties);
 	Util::AppendToJsonArray(jsonArray, deviceProperties);
 
-	Network::Call("application_init", jsonArray, callback);
+	//TODO something about application_init is broken. returns invalid responses
+	//Network::Call("application_init", jsonArray, callback);
+
+	TArray<TSharedPtr<FJsonValue>> arr = jsonArray.Get()->AsArray();
+
+	Network::DirectCall("application_init", arr, callback);
 
 	//device update
 
 	//TODO remove this - for debugging only. application_init does not display on dashboard, but does work correctly
-	TSharedPtr<FJsonValueArray> jsonArrayDevice = MakeShareable(new FJsonValueArray(ObjArray));
+	/*TSharedPtr<FJsonValueArray> jsonArrayDevice = MakeShareable(new FJsonValueArray(ObjArray));
 	TSharedPtr<FJsonObject> jsonDevice = MakeShareable(new FJsonObject);
 	Util::AppendToJsonArray(jsonArrayDevice, fs);
 	Util::AppendToJsonArray(jsonArrayDevice, fs);
 	s->AppendUD(jsonArrayDevice);
 	Util::AppendToJsonArray(jsonArrayDevice, deviceProperties);
 
-	Network::Call("datacollector_updateDeviceState", jsonArrayDevice, NULL);
+	Network::Call("datacollector_updateDeviceState", jsonArrayDevice, NULL);*/
 }
 
 void Network::Call(std::string sub_path, TSharedPtr<FJsonValueArray> content, NetworkCallback callback)
@@ -123,6 +134,60 @@ void Network::Call(std::string sub_path, TArray<TSharedPtr<FJsonValue>> content,
 	FJsonSerializer::Serialize(content, Writer);
 
 	OutputString = "[" + FString::SanitizeFloat(Util::GetTimestamp()) + "," + OutputString + "]";
+
+	str_response = this->httpint->Post(Config::kNetworkHost, path + query, headers, 2, TCHAR_TO_UTF8(*OutputString), Config::kNetworkTimeout, callback);
+}
+
+//'application_init' and json'd sendtimestamp, eventtimestamp, userid, deviceid, userprops, deviceprops
+void Network::DirectCall(std::string sub_path, TArray<TSharedPtr<FJsonValue>> content, NetworkCallback callback)
+{
+	if (!this->httpint)
+	{
+		CognitiveLog::Warning("Network::Call - No HTTP implementation available. Did you call cognitivevr::Init()?");
+	}
+
+	FString ValueReceived;
+
+	bool moduleIsAvailable = FAnalytics::IsAvailable();
+	if (!moduleIsAvailable)
+	{
+		CognitiveLog::Warning("Network::Call - analyticsModule is not available");
+		return;
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
+
+	std::string customerid(TCHAR_TO_UTF8(*ValueReceived));
+
+	std::string path = "/" + Config::kSsfApp + "/ws/interface/"+sub_path;
+
+																				   //Build query string.
+	std::string query = "?";
+	query.append("&ssf_output=");
+	query.append(Config::kSsfOutput);
+	query.append("&ssf_cust_id=");
+	query.append(customerid);
+	query.append("&ssf_ws_version=");
+	query.append(Config::kSsfVersion);
+	query.append("&ssf_sdk=");
+	query.append(COGNITIVEVR_SDK_NAME);
+	query.append("&ssf_sdk_version=");
+	query.append(COGNITIVEVR_SDK_VERSION);
+	//query.append("&ssf_sdk_contextname=");
+	//query.append("defaultContext"); //context is rarely/never used?
+
+	std::string headers[] = {
+		"ssf-use-positional-post-params: true",
+		"ssf-contents-not-url-encoded: true"
+	};
+
+	std::string str_response = "";
+
+	FString OutputString;
+	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+	FJsonSerializer::Serialize(content, Writer);
+
+	//OutputString = "[" + FString::SanitizeFloat(Util::GetTimestamp()) + "," + OutputString + "]";
 
 	str_response = this->httpint->Post(Config::kNetworkHost, path + query, headers, 2, TCHAR_TO_UTF8(*OutputString), Config::kNetworkTimeout, callback);
 }

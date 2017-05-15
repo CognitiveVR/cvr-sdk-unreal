@@ -26,6 +26,12 @@ BufferManager::BufferManager(Network* n)
 
 void BufferManager::AddJsonToBatch(TSharedPtr<FJsonObject> json)
 {
+	if (json.Get() == NULL)
+	{
+		GLog->Log("Batching null json!");
+		return;
+	}
+
 	batchedJson.Add(json);
 	if (batchedJson.Num() >= TransactionBatchSize)
 	{

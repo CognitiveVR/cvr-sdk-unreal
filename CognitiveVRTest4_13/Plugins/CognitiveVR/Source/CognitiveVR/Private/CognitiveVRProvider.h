@@ -18,7 +18,10 @@
 #include "Private/api/transaction.h"
 #include "Private/api/sensor.h"
 #include "Private/api/coreutilities.h"
+//#include "DynamicObject.h"
 #include "Engine.h"
+
+DECLARE_MULTICAST_DELEGATE(FCognitiveSendData);
 
 extern bool bHasSessionStarted;
 
@@ -42,6 +45,7 @@ extern bool bHasSessionStarted;
 	class OverrideHttpInterface;
 	class CognitiveVRResponse;
 	class Sensors;
+	//class UDynamicObject;
 
 	class FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
 	{
@@ -106,6 +110,12 @@ extern bool bHasSessionStarted;
 
 
 		//custom cognitive
+
+		void SendJson(FString endpoint, FString Json);
+		FString GetSceneKey(FString sceneName);
+
+		UPROPERTY(BlueprintAssignable)
+			FCognitiveSendData OnSendData;
 		FString DeviceId;
 		Transaction* transaction;
 		Tuning* tuning;

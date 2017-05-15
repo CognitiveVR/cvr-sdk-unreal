@@ -11,6 +11,7 @@
 //#include "EngineAnalytics.h"
 #include "Runtime/Analytics/Analytics/Public/AnalyticsEventAttribute.h"
 //#include "IAnalyticsProvider.h"
+//#include "DynamicObject.h"
 #include "CognitiveVRBlueprints.generated.h"
 
 UENUM(BlueprintType)
