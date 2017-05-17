@@ -111,7 +111,7 @@ extern bool bHasSessionStarted;
 
 		//custom cognitive
 
-		void SendJson(FString endpoint, FString Json);
+		bool SendJson(FString endpoint, FString Json);
 		FString GetSceneKey(FString sceneName);
 
 		UPROPERTY(BlueprintAssignable)

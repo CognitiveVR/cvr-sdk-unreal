@@ -425,6 +425,8 @@ void UDynamicObject::SendData(FString sceneName)
 		TSharedPtr<FJsonObject> ManifestObject = UDynamicObject::DynamicObjectManifestToString();
 		wholeObj->SetObjectField("manifest", ManifestObject);
 		newManifest.Empty();
+
+		CognitiveLog::Warning("sending new object manifest");
 	}
 	
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
@@ -439,8 +441,10 @@ void UDynamicObject::SendData(FString sceneName)
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 	
-	cog->SendJson("dynamics", OutputString);
-	snapshots.Empty();
+	if (cog->SendJson("dynamics", OutputString))
+	{
+		snapshots.Empty();
+	}
 }
 
 TSharedPtr<FJsonObject> UDynamicObject::DynamicObjectManifestToString()
@@ -510,7 +514,7 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	if (EndPlayReason == EEndPlayReason::EndPlayInEditor)
 	{
-		manifest.Empty();
+		//manifest.Empty();
 		snapshots.Empty();
 	}
 }

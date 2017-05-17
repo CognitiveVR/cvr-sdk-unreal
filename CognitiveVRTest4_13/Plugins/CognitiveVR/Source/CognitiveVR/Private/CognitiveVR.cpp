@@ -88,8 +88,6 @@ void InitCallback(CognitiveVRResponse resp)
 		GLog->Log("cognitivevr init netowork == null");
 	}
 
-	Http = &FHttpModule::Get();
-
 	cog->thread_manager = new BufferManager(cog->network);
 	cog->core_utils = new CoreUtilities(cog);
 	cog->sensors = new Sensors(cog);
@@ -140,6 +138,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	SessionTimestamp = Util::GetTimestamp();
 	SessionId = FString::FromInt(Util::GetTimestampLong()) + TEXT("_") + DeviceId;
 
+	Http = &FHttpModule::Get();
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 
@@ -573,12 +572,7 @@ FString FAnalyticsProviderCognitiveVR::GetSceneKey(FString sceneName)
 			It.Value().GetValue().Split(TEXT(","), &name, &key);
 			if (*name == sceneName)
 			{
-				GLog->Log("-----> UPlayerTracker::GetSceneKey found key for scene " + name);
 				return key;
-			}
-			else
-			{
-				GLog->Log("UPlayerTracker::GetSceneKey found key for scene " + name);
 			}
 		}
 	}
@@ -588,29 +582,26 @@ FString FAnalyticsProviderCognitiveVR::GetSceneKey(FString sceneName)
 	return "";
 }
 
-void FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
+bool FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
 {
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
 	if (cog == NULL)
 	{
 		CognitiveLog::Warning("UPlayerTRacker::SendJson CognitiveVRProvider has not started a session!");
-		GLog->Log("UPlayerTRacker::SendJson CognitiveVRProvider has not started a session!");
-		return;
+		return false;
 	}
 
 	if (Http == NULL)
 	{
 		CognitiveLog::Warning("Cognitive Provider::SendJson Http module not initialized! likely hasn't started session");
-		GLog->Log("Cognitive Provider::SendJson Http module not initialized! likely hasn't started session");
-		return;
+		return false;
 	}
 
 	UWorld* myworld = GWorld->GetWorld();
 	if (myworld == NULL)
 	{
 		CognitiveLog::Warning("PlayerTracker::SendJson no world");
-		GLog->Log("PlayerTracker::SendJson no world");
-		return;
+		return false;
 	}
 
 	FString currentSceneName = myworld->GetMapName();
@@ -620,16 +611,11 @@ void FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
 	if (sceneKey == "")
 	{
 		CognitiveLog::Warning("UPlayerTracker::SendJson does not have scenekey. fail!");
-		GLog->Log("UPlayerTracker::SendJson does not have scenekey. fail!");
-		return;
+		return false;
 	}
-	GLog->Log("Scene Key " + sceneKey);
 
 	std::string stdjson(TCHAR_TO_UTF8(*json));
-	std::string ep(TCHAR_TO_UTF8(*endpoint));
-	//CognitiveLog::Info(stdjson);
-
-	GLog->Log(json);
+	CognitiveLog::Info(stdjson);
 
 	FString url = "https://sceneexplorer.com/api/" + endpoint + "/" + sceneKey;
 
@@ -642,6 +628,7 @@ void FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->ProcessRequest();
+	return true;
 }
 
 FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
