@@ -11,7 +11,7 @@ scene = bpy.context.scene
 ops = bpy.ops
 args = sys.argv
 exportPath = args[3] #C:/Users/calder/Desktop/RootDynamics
-sizeFactor = 1
+sizeFactor = int(args[4])
 
 #foreach directory in targetpath.directories
  #foreach BMP in find all in subdirectories
@@ -24,7 +24,6 @@ mtl_ext='.mtl'
 onlydirectories = [d for d in os.listdir(exportPath) if os.path.isdir(os.path.join(exportPath, d))]
 #onlyfiles = [f for f in os.listdir(exportPath+"/"+dir) if os.path.isfile(os.path.join(exportPath+"/"+dir, f))]
 print("==================================ROOT " + exportPath)
-
 
 for dir in onlydirectories:
 	print("==========found directory "+exportPath+"/"+dir)

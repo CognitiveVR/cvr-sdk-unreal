@@ -146,15 +146,83 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 		snapObj->SetArrayField("p", posArray);
 
+
+
+		//look at dynamic object
+		
+		FCollisionQueryParams Params; // You can use this to customize various properties about the trace
+		Params.AddIgnoredActor(GetOwner()); // Ignore the player's pawn
+
+		
+		FHitResult Hit; // The hit result gets populated by the line trace
+
+		// Raycast out from the camera, only collide with pawns (they are on the ECC_Pawn collision channel)
+		FVector Start = captureLocation;
+		FVector End = captureLocation + captureRotation.Vector() * 10000.0f;
+		bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Pawn, Params);
+
 		//gaze
 		TArray<TSharedPtr<FJsonValue>> gazeArray;
-		FVector gazePoint = GetGazePoint(captureLocation, captureRotation);
-		JsonValue = MakeShareable(new FJsonValueNumber(-(int32)gazePoint.X));
-		gazeArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)gazePoint.Z));
-		gazeArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)gazePoint.Y));
-		gazeArray.Add(JsonValue);
+
+		bool hitDynamic = false;
+		if (bHit)
+		{
+			// Hit.Actor contains a weak pointer to the Actor that the trace hit
+			//return Cast<APawn>(Hit.Actor.Get());
+			//GLog->Log("hit "+Hit.Actor.Get()->GetName());
+			UActorComponent* hitActorComponent = Hit.Actor.Get()->GetComponentByClass(UDynamicObject::StaticClass());
+			if (hitActorComponent != NULL)
+			{
+				UDynamicObject* hitDynamicObject = Cast<UDynamicObject>(hitActorComponent);
+				if (hitDynamicObject != NULL && hitDynamicObject->TrackGaze)
+				{
+					hitDynamic = true;
+
+					FVector localHitPosition = hitDynamicObject->GetOwner()->GetActorTransform().InverseTransformPosition(Hit.ImpactPoint);
+
+					localHitPosition *= hitDynamicObject->GetOwner()->GetActorTransform().GetScale3D();
+
+					DrawDebugLine(
+						GetWorld(),
+						hitDynamicObject->GetOwner()->GetActorLocation() + localHitPosition,
+						hitDynamicObject->GetOwner()->GetActorLocation() + localHitPosition + FVector::UpVector * 100,
+						FColor(255, 0, 0),
+						false, 3, 0,
+						3
+					);
+
+					DrawDebugLine(
+						GetWorld(),
+						Hit.ImpactPoint,
+						Hit.ImpactPoint + FVector::UpVector * 50,
+						FColor(0, 255, 0),
+						false, 3, 0,
+						3
+					);
+
+					snapObj->SetNumberField("o", hitDynamicObject->GetObjectId().Id);
+
+					//FVector gazePoint = GetGazePoint(captureLocation, captureRotation);
+					JsonValue = MakeShareable(new FJsonValueNumber(-(int32)localHitPosition.X));
+					gazeArray.Add(JsonValue);
+					JsonValue = MakeShareable(new FJsonValueNumber((int32)localHitPosition.Z));
+					gazeArray.Add(JsonValue);
+					JsonValue = MakeShareable(new FJsonValueNumber((int32)localHitPosition.Y));
+					gazeArray.Add(JsonValue);
+				}
+			}
+		}
+
+		if (!hitDynamic)
+		{
+			FVector gazePoint = GetGazePoint(captureLocation, captureRotation);
+			JsonValue = MakeShareable(new FJsonValueNumber(-(int32)gazePoint.X));
+			gazeArray.Add(JsonValue);
+			JsonValue = MakeShareable(new FJsonValueNumber((int32)gazePoint.Z));
+			gazeArray.Add(JsonValue);
+			JsonValue = MakeShareable(new FJsonValueNumber((int32)gazePoint.Y));
+			gazeArray.Add(JsonValue);
+		}
 
 		//DrawDebugLine(GetWorld(), finalPos, gazePoint, FColor(100, 0, 100), true, 10);
 		//DrawDebugPoint(GetWorld(), gazePoint, 20, FColor(255, 0, 255), true, 10);

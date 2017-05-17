@@ -18,6 +18,7 @@ public:
 	int32 Id;
 	FString Name;
 	FString MeshName;
+	TMap<FString, FString> StringProperties;
 
 	FDynamicObjectManifestEntry(int32 id, FString name, FString mesh)
 	{
@@ -25,6 +26,26 @@ public:
 		Name = name;
 		MeshName = mesh;
 	}
+	
+	FDynamicObjectManifestEntry(){}
+
+	FDynamicObjectManifestEntry* SetProperty(FString key, FString value);
+};
+
+class FDynamicObjectId
+{
+public:
+	int32 Id;
+	bool Used = true;
+	FString MeshName;
+
+	FDynamicObjectId(int32 id, FString meshName)
+	{
+		Id = id;
+		MeshName = meshName;
+	}
+
+	FDynamicObjectId() {}
 };
 
 USTRUCT()
@@ -62,7 +83,7 @@ private:
 	float currentTime = 0;
 	bool tickEnabled = true;
 	TSharedPtr<FAnalyticsProviderCognitiveVR> s;
-	int32 ObjectID;
+	FDynamicObjectId ObjectID;
 	FVector LastPosition;
 	FVector LastForward;
 
@@ -71,6 +92,22 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	FString MeshName;
+
+	/*UPROPERTY(EditAnywhere)
+		float ExtraPitch;
+	UPROPERTY(EditAnywhere)
+		float ExtraYaw;
+	UPROPERTY(EditAnywhere)
+		float ExtraRoll;
+
+	UPROPERTY(EditAnywhere)
+		int32 XPos = 0;
+	UPROPERTY(EditAnywhere)
+		int32 YPos = 2;
+	UPROPERTY(EditAnywhere)
+		int32 ZPos = 1;
+	UPROPERTY(EditAnywhere)
+		int32 WPos = 3;*/
 
 	UPROPERTY(EditAnywhere)
 		bool SnapshotOnEnable = true;
@@ -84,11 +121,16 @@ public:
 	//group and id
 
 	UPROPERTY(EditAnywhere)
+	bool UseCustomId;
+
+	UPROPERTY(EditAnywhere)
 	int32 CustomId = -1;
 
 	UPROPERTY(EditAnywhere)
 	FString GroupName;
 
+	UPROPERTY(EditAnywhere)
+	bool TrackGaze = false;
 
 	//snapshots
 
@@ -107,7 +149,8 @@ public:
 	
 	virtual void BeginPlay() override;
 
-	int32 GetUniqueId();
+	FDynamicObjectId GetUniqueId(FString meshName);
+	FDynamicObjectId GetObjectId();
 
 	FDynamicObjectSnapshot MakeSnapshot();
 	static TSharedPtr<FJsonValueObject> WriteSnapshotToJson(FDynamicObjectSnapshot snapshot);
@@ -136,4 +179,7 @@ public:
 	
 	//UFUNCTION(BlueprintCallable, Category = "Rendering", meta = (DisplayName = "Set Actor Hidden In Game", Keywords = "Visible Hidden Show Hide"))
 	//void SetActorHiddenInGame(bool bNewHidden);
+
+	void EndPlay(const EEndPlayReason::Type EndPlayReason);
+
 };

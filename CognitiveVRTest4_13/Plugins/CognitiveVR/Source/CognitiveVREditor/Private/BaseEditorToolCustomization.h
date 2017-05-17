@@ -114,6 +114,12 @@ private:
 	UFUNCTION(Exec, Category = "Dynamics")
 		FReply ExportDynamics();
 
+	//Runs the built-in obj exporter with selected meshes
+	UFUNCTION(Exec, Category = "Dynamics")
+		FReply ExportSelectedDynamics();
+	
+	void ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
+
 	//uploads each dynamic object using its directory to the current scene
 	UFUNCTION(Exec, Category = "Dynamics")
 		FReply SelectDynamicsDirectory();

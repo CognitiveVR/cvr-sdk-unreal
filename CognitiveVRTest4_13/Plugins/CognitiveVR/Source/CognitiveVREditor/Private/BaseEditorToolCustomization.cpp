@@ -183,14 +183,24 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 	// Create a commands category
 	IDetailCategoryBuilder& DynamicsCategory = DetailBuilder.EditCategory(TEXT("Dynamic Objects"));
 
-	//export dynamics
+	//export all dynamics
 	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
 		[
 			SNew(SButton)
 			.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlender)
-		.Text(FText::FromString("Export Dynamic Objects"))
+		.Text(FText::FromString("Export All Dynamic Objects"))
 		.OnClicked(this, &FBaseEditorToolCustomization::ExportDynamics)
+		];
+
+	//export selected dynamics
+	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		[
+			SNew(SButton)
+			.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlender)
+		.Text(FText::FromString("Export Selected Dynamic Objects"))
+		.OnClicked(this, &FBaseEditorToolCustomization::ExportSelectedDynamics)
 		];
 
 	//select dynamics
@@ -302,76 +312,119 @@ FReply FBaseEditorToolCustomization::ExportDynamics()
 		return FReply::Handled();
 	}
 
-	int32 ActorsExported = 0;
+	TArray<UDynamicObject*> exportObjects;
+	for (TObjectIterator<UDynamicObject> It; It; ++It)
+	{
+		UDynamicObject* TempObject = *It;
+		if (TempObject != NULL)
+		{
+			exportObjects.Add(TempObject);
+		}
+	}
 
+	ExportDynamicObjectArray(exportObjects);
+
+	return FReply::Handled();
+}
+
+FReply FBaseEditorToolCustomization::ExportSelectedDynamics()
+{
+	UWorld* World = GWorld;
+	FString title = "Select Root Dynamic Directory";
+	FString fileTypes = "";
+	FString lastPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+	FString defaultfile = FString();
+	FString outFilename = FString();
+	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FBaseEditorToolCustomization::ExportDynamics - picked a directory"));
+		ExportDynamicsDirectory = outFilename;
+		//FEditorDirectories::Get().SetLastDirectory(ELastDirectory::UNR, FPaths::GetPath(ExportFilename)); // Save path as default for next time.
+	}
+	else
+	{
+		return FReply::Handled();
+	}
+
+	TArray<UDynamicObject*> SelectionSetCache;
+	for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
+	{
+		if (AActor* Actor = Cast<AActor>(*It))
+		{
+			//SelectionSetCache.Add(Actor);
+			UActorComponent* actorComponent = Actor->GetComponentByClass(UDynamicObject::StaticClass());
+			if (actorComponent == NULL)
+			{
+				continue;
+			}
+			UDynamicObject* sceneComponent = Cast<UDynamicObject>(actorComponent);
+			if (sceneComponent == NULL)
+			{
+				continue;
+			}
+			SelectionSetCache.Add(sceneComponent);
+		}
+	}
+
+	ExportDynamicObjectArray(SelectionSetCache);
+
+	return FReply::Handled();
+}
+
+void FBaseEditorToolCustomization::ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects)
+{
 	FVector originalLocation;
 	FRotator originalRotation;
 	FVector originalScale;
+	int32 ActorsExported = 0;
 
-	for (TActorIterator<AStaticMeshActor> ObstacleItr(tempworld); ObstacleItr; ++ObstacleItr)
+	for (int32 i = 0; i < exportObjects.Num(); i++)
 	{
 		GEditor->SelectNone(false, true, false);// ->GetSelectedActors()->DeselectAll();
-		//GEditor->GetSelectedObjects()->DeselectAll();
 
-		//get the selectable bit
-		AStaticMeshActor *tempactor = *ObstacleItr;
-		if (!tempactor)
-		{
-			continue;
-		}
-		UActorComponent* actorComponent = tempactor->GetComponentByClass(UDynamicObject::StaticClass());
-		if (actorComponent == NULL)
-		{
-			continue;
-		}
-		UDynamicObject* sceneComponent = Cast<UDynamicObject>(actorComponent);
-		if (sceneComponent == NULL)
-		{
-			continue;
-		}
 
-		originalLocation = tempactor->GetActorLocation();
-		originalRotation = tempactor->GetActorRotation();
+		originalLocation = exportObjects[i]->GetOwner()->GetActorLocation();
+		originalRotation = exportObjects[i]->GetOwner()->GetActorRotation();
 		//originalScale = tempactor->GetActorScale();
 
-		tempactor->SetActorLocation(FVector::ZeroVector);
-		tempactor->SetActorRotation(FQuat::Identity);
+		exportObjects[i]->GetOwner()->SetActorLocation(FVector::ZeroVector);
+		exportObjects[i]->GetOwner()->SetActorRotation(FQuat::Identity);
 		//tempactor->SetActorScale3D(originalScale*0.01);
 
-		FString ExportFilename = sceneComponent->MeshName +".obj";
+		FString ExportFilename = exportObjects[i]->MeshName + ".obj";
 
-		GEditor->SelectActor(tempactor, true, false, true);
+		GEditor->SelectActor(exportObjects[i]->GetOwner(), true, false, true);
 		//ActorsExported++;
 
 		GLog->Log("root output directory " + ExportDynamicsDirectory);
 
-		ExportDynamicsDirectory += "/"+ sceneComponent->MeshName +"/"+sceneComponent->MeshName+".obj";
+		ExportDynamicsDirectory += "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
 
 		GLog->Log("dynamic output directory " + ExportDynamicsDirectory);
 
 		GLog->Log("exporting DynamicObject " + ExportFilename);
 		//GUnrealEd->ExportMap(World, *ExportFilename, true);
 
-		
+
 		// @todo: extend this to multiple levels.
 		//UWorld* World = GWorld;
-		const FString LevelFilename = sceneComponent->MeshName;// FileHelpers::GetFilename(World);//->GetOutermost()->GetName() );
-		//FString ExportFilename;
+		const FString LevelFilename = exportObjects[i]->MeshName;// FileHelpers::GetFilename(World);//->GetOutermost()->GetName() );
+															   //FString ExportFilename;
 		FString LastUsedPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
 
 		//FString FilterString = TEXT("Object (*.obj)|*.obj|Unreal Text (*.t3d)|*.t3d|Stereo Litho (*.stl)|*.stl|LOD Export (*.lod.obj)|*.lod.obj");
 
-		GUnrealEd->ExportMap(World, *ExportDynamicsDirectory, true);
+		GUnrealEd->ExportMap(GWorld, *ExportDynamicsDirectory, true);
 
 		//exported
 		//move textures to root. want to do this in python, but whatever
 
 		//run python on them after everything is finished? need to convert texture anyway
 
-		ExportDynamicsDirectory.RemoveFromEnd("/" + sceneComponent->MeshName + "/" + sceneComponent->MeshName + ".obj");
+		ExportDynamicsDirectory.RemoveFromEnd("/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj");
 
-		tempactor->SetActorLocation(originalLocation);
-		tempactor->SetActorRotation(originalRotation);
+		exportObjects[i]->GetOwner()->SetActorLocation(originalLocation);
+		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
 		//tempactor->SetActorScale3D(originalScale);
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Found %d Static Meshes for Export"), ActorsExported);
@@ -379,8 +432,6 @@ FReply FBaseEditorToolCustomization::ExportDynamics()
 
 	//TODO export transparent textures for dynamic objects
 	ConvertDynamicTextures();
-
-	return FReply::Handled();
 }
 
 FReply FBaseEditorToolCustomization::UploadDynamics()
@@ -571,12 +622,12 @@ void FBaseEditorToolCustomization::ConvertDynamicTextures()
 
 
 	//FString MaxPolyCount = FString::FromInt(0);
-	//FString resizeFactor = FString::FromInt(GetTextureRefacor());
+	FString resizeFactor = FString::FromInt(GetTextureRefacor());
 
 	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
 	FString escapedTargetPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
 
-	FString stringparams = " -P " + escapedPythonPath + " " + escapedTargetPath;// +" " + resizeFactor + " " + MaxPolyCount + " " + SceneName;
+	FString stringparams = " -P " + escapedPythonPath + " " + escapedTargetPath + " " + resizeFactor;// +" " + MaxPolyCount + " " + SceneName;
 
 	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
 

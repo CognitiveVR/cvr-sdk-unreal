@@ -18,7 +18,8 @@ void UCognitiveVRBlueprints::BeginTransaction(FString Category, FString Transact
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	//HMDPosition = controllers[0]->GetPawn()->GetActorTransform().GetLocation();
-	HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	//HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	HMDPosition = controllers[0]->PlayerCameraManager->GetCameraLocation();
 
 	UCognitiveVRBlueprints::BeginTransactionPosition(Category, TransactionID, Attributes, HMDPosition);
 }
@@ -52,7 +53,8 @@ void UCognitiveVRBlueprints::UpdateTransaction(FString Category, FString Transac
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	//HMDPosition = controllers[0]->GetPawn()->GetActorTransform().GetLocation();
-	HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	//HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	HMDPosition = controllers[0]->PlayerCameraManager->GetCameraLocation();
 	UCognitiveVRBlueprints::UpdateTransactionPosition(Category, TransactionID, Attributes, HMDPosition, Progress);
 }
 
@@ -85,7 +87,8 @@ void UCognitiveVRBlueprints::EndTransaction(FString Category, FString Transactio
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	//HMDPosition = controllers[0]->GetPawn()->GetActorTransform().GetLocation();
-	HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	//HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	HMDPosition = controllers[0]->PlayerCameraManager->GetCameraLocation();
 	UCognitiveVRBlueprints::EndTransactionPosition(Category, TransactionID, Attributes, HMDPosition);
 }
 
@@ -118,7 +121,8 @@ void UCognitiveVRBlueprints::BeginEndTransaction(FString Category, const TArray<
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	//HMDPosition = controllers[0]->GetPawn()->GetActorTransform().GetLocation();
-	HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	//HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	HMDPosition = controllers[0]->PlayerCameraManager->GetCameraLocation();
 	UCognitiveVRBlueprints::BeginEndTransactionPosition(Category, Attributes, HMDPosition);
 }
 

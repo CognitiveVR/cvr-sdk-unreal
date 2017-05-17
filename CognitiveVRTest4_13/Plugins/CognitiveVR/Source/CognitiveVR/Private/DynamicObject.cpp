@@ -8,6 +8,7 @@
 TArray<FDynamicObjectSnapshot> snapshots;
 TArray<FDynamicObjectManifestEntry> manifest;
 TArray<FDynamicObjectManifestEntry> newManifest;
+TArray<FDynamicObjectId> allObjectIds;
 int32 jsonPart = 1;
 int32 MaxSnapshots = 64;
 
@@ -27,15 +28,6 @@ void UDynamicObject::BeginPlay()
 
 	LastPosition = GetOwner()->GetActorLocation();
 	LastForward = GetOwner()->GetActorForwardVector();
-
-	ObjectID = GetUniqueId();
-
-	newManifest.Add(FDynamicObjectManifestEntry(ObjectID, GetOwner()->GetName(), MeshName));
-
-	if (ObjectID == 1)
-	{
-		s->OnSendData.AddStatic(SendData);
-	}
 
 	if (SnapshotOnEnable)
 	{
@@ -68,11 +60,19 @@ FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, do
 	return this;
 }
 
-int32 UDynamicObject::GetUniqueId()
+FDynamicObjectId UDynamicObject::GetUniqueId(FString meshName)
 {
-	static int32 id = 0;
-	id++;
-	return id;
+	FDynamicObjectId freeId;
+	static int32 originalId = 1000;
+	originalId++;
+
+	freeId = FDynamicObjectId(originalId, meshName);
+	return freeId;
+}
+
+FDynamicObjectId UDynamicObject::GetObjectId()
+{
+	return ObjectID;
 }
 
 // Called every frame
@@ -152,8 +152,6 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 		snapshots.Add(snapObj);
 
-		//TODO add 
-
 		if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
 		{
 			SendData();
@@ -163,23 +161,136 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 {
-	FDynamicObjectSnapshot snapshot = FDynamicObjectSnapshot();
+	bool needObjectId = false;
+	if (ObjectID.Id == -1)
+	{
+		needObjectId = true;
+	}
+	else
+	{
+		FDynamicObjectManifestEntry entry;
+		bool foundEntry = false;
+		for (int32 i = 0; i < manifest.Num(); i++)
+		{
+			if (manifest[i].Id == ObjectID.Id)
+			{
+				foundEntry = true;
+				break;
+			}
+		}
+		if (!foundEntry)
+		{
+			needObjectId = true;
+		}
+	}
 
-	//TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
+	if (needObjectId)
+	{
+		if (!UseCustomId)
+		{
+			FDynamicObjectId recycledId;
+			bool foundRecycleId = false;
+			for (int32 i = 0; i < allObjectIds.Num(); i++)
+			{
+				if (!allObjectIds[i].Used && allObjectIds[i].MeshName == MeshName)
+				{
+					foundRecycleId = true;
+					recycledId = allObjectIds[i];
+					break;
+				}
+			}
+			if (foundRecycleId)
+			{
+				ObjectID = recycledId;
+				ObjectID.Used = true;
+			}
+			else
+			{
+				ObjectID = GetUniqueId(MeshName);
+
+				FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID.Id, GetOwner()->GetName(), MeshName);
+				if (!GroupName.IsEmpty())
+				{
+					//entry.
+					entry.SetProperty("groupname", GroupName);
+				}
+				manifest.Add(entry);
+				newManifest.Add(entry);
+			}
+		}
+		else
+		{
+			ObjectID = FDynamicObjectId(CustomId, MeshName);
+			FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID.Id, GetOwner()->GetName(), MeshName);
+			if (!GroupName.IsEmpty())
+			{
+				//entry.
+				entry.SetProperty("groupname", GroupName);
+			}
+			manifest.Add(entry);
+			newManifest.Add(entry);
+		}
+
+		if (manifest.Num() == 1)
+		{
+			GLog->Log("==================Register send data with manifest");
+			s->OnSendData.AddStatic(SendData);
+		}
+	}
+
+	FDynamicObjectSnapshot snapshot = FDynamicObjectSnapshot();
 
 	double ts = Util::GetTimestamp();
 
 	snapshot.time = ts;
-	snapshot.id = ObjectID;
+	snapshot.id = ObjectID.Id;
 	snapshot.position = FVector(-(int32)GetOwner()->GetActorLocation().X, (int32)GetOwner()->GetActorLocation().Z, (int32)GetOwner()->GetActorLocation().Y);
 	
 
 	FQuat quat;
 	FRotator rot = GetOwner()->GetActorRotation();
-	rot.Yaw -= 90;
+	//rot.Pitch += ExtraPitch;
+	//rot.Yaw += ExtraYaw;
+	//rot.Roll += ExtraRoll;
 	quat = rot.Quaternion();
+	/*
+	if (XPos == 0)
+		snapshot.rotation.X = quat.X;
+	if (XPos == 1)
+		snapshot.rotation.Y = quat.X;
+	if (XPos == 2)
+		snapshot.rotation.Z = quat.X;
+	if (XPos == 3)
+		snapshot.rotation.W = quat.X;
 
-	snapshot.rotation = FQuat(quat.Y, quat.Z, quat.X, quat.W);
+	if (YPos == 0)
+		snapshot.rotation.X = quat.Y;
+	if (YPos == 1)
+		snapshot.rotation.Y = quat.Y;
+	if (YPos == 2)
+		snapshot.rotation.Z = quat.Y;
+	if (YPos == 3)
+		snapshot.rotation.W = quat.Y;
+
+	if (ZPos == 0)
+		snapshot.rotation.X = quat.Z;
+	if (ZPos == 1)
+		snapshot.rotation.Y = quat.Z;
+	if (ZPos == 2)
+		snapshot.rotation.Z = quat.Z;
+	if (ZPos == 3)
+		snapshot.rotation.W = quat.Z;
+
+	if (WPos == 0)
+		snapshot.rotation.X = quat.W;
+	if (WPos == 1)
+		snapshot.rotation.Y = quat.W;
+	if (WPos == 2)
+		snapshot.rotation.Z = quat.W;
+	if (WPos == 3)
+		snapshot.rotation.W = quat.W;
+	*/
+	snapshot.rotation = FQuat(quat.X, quat.Z, quat.Y, quat.W);
 
 	return snapshot;
 }
@@ -211,7 +322,7 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 	//rotation
 	TArray<TSharedPtr<FJsonValue>> rotArray;
 
-	JsonValue = MakeShareable(new FJsonValueNumber(snapshot.rotation.X));
+	JsonValue = MakeShareable(new FJsonValueNumber(-snapshot.rotation.X));
 	rotArray.Add(JsonValue);
 	JsonValue = MakeShareable(new FJsonValueNumber(snapshot.rotation.Y));
 	rotArray.Add(JsonValue);
@@ -295,7 +406,7 @@ void UDynamicObject::SendData(FString sceneName)
 
 	CognitiveLog::Info("UDynamicObject::SendData for dynamics");
 
-	TSharedPtr<FJsonObject> ManifestObject = UDynamicObject::DynamicObjectManifestToString();
+	
 	
 	TArray<TSharedPtr<FJsonValueObject>> EventArray = UDynamicObject::DynamicSnapshotsToString();
 
@@ -311,6 +422,7 @@ void UDynamicObject::SendData(FString sceneName)
 
 	if (newManifest.Num() > 0)
 	{
+		TSharedPtr<FJsonObject> ManifestObject = UDynamicObject::DynamicObjectManifestToString();
 		wholeObj->SetObjectField("manifest", ManifestObject);
 		newManifest.Empty();
 	}
@@ -342,7 +454,6 @@ TSharedPtr<FJsonObject> UDynamicObject::DynamicObjectManifestToString()
 		entry->SetStringField("mesh", newManifest[i].MeshName);
 
 		manifestObject->SetObjectField(FString::FromInt(newManifest[i].Id), entry);
-		manifest.Add(newManifest[i]);
 	}
 
 	return manifestObject;
@@ -388,4 +499,24 @@ FDynamicObjectSnapshot UDynamicObject::SnapshotIntegerProperty(FDynamicObjectSna
 {
 	snapshot.SnapshotProperty(key, intValue);
 	return snapshot;
+}
+
+void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (ReleaseIdOnDestroy && !TrackGaze)
+	{
+		ObjectID.Used = false;
+	}
+
+	if (EndPlayReason == EEndPlayReason::EndPlayInEditor)
+	{
+		manifest.Empty();
+		snapshots.Empty();
+	}
+}
+
+FDynamicObjectManifestEntry* FDynamicObjectManifestEntry::SetProperty(FString key, FString value)
+{
+	this->StringProperties.Add(key, value);
+	return this;
 }

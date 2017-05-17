@@ -9,6 +9,7 @@
 #include "Engine/Texture2D.h"
 #include "SceneView.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "DynamicObject.h"
 #include "PlayerTracker.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
