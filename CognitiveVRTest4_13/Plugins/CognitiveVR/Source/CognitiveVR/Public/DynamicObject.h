@@ -81,7 +81,6 @@ private:
 	//extern int32 MaxSnapshots = 64;
 
 	float currentTime = 0;
-	bool tickEnabled = true;
 	TSharedPtr<FAnalyticsProviderCognitiveVR> s;
 	FDynamicObjectId ObjectID;
 	FVector LastPosition;
@@ -113,7 +112,7 @@ public:
 		bool SnapshotOnEnable = true;
 
 	UPROPERTY(EditAnywhere)
-	bool UpdateTickOnEnable = true;
+	bool UpdateOnTick = true;
 
 	UPROPERTY(EditAnywhere)
 	bool ReleaseIdOnDestroy = true;
@@ -138,10 +137,10 @@ public:
 	float SnapshotInterval = 0.1;
 
 	UPROPERTY(EditAnywhere)
-	float PositionThreshold = 1;
+	float PositionThreshold = 2;
 
 	UPROPERTY(EditAnywhere)
-	float RotationThreshold = 30;
+	float RotationThreshold = 10;
 
 
 

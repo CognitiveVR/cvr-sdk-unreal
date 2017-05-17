@@ -75,11 +75,12 @@ FDynamicObjectId UDynamicObject::GetObjectId()
 	return ObjectID;
 }
 
-// Called every frame
 void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction )
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
-	
+
+	if (!UpdateOnTick) { return; }
+
 	currentTime += DeltaTime;
 	if (currentTime > SnapshotInterval)
 	{
@@ -91,7 +92,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 		FVector currentForward = GetOwner()->GetActorForwardVector();
 
-		DrawDebugLine(
+		/*DrawDebugLine(
 			GetWorld(),
 			GetOwner()->GetActorLocation(),
 			GetOwner()->GetActorLocation() + LastForward*100, //this isn't right. 
@@ -107,7 +108,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 			FColor(0, 255, 0),
 			false, 3, 0,
 			3
-		);
+		);*/
 
 
 		//lastRot.Normalize();
