@@ -8,6 +8,7 @@
 //#include "DetailCustomizationsPrivatePCH.h"
 #include "PropertyCustomizationHelpers.h"
 
+#include "UnrealEd.h"
 #include "Engine.h"
 #include "Editor.h"
 #include "FileHelpers.h"
@@ -23,6 +24,8 @@
 #include "IPluginManager.h"
 #include "AssetRegistryModule.h"
 #include "MaterialUtilities.h"
+#include "DynamicObject.h"
+#include "GenericPlatformFile.h"
 //
 //#include "ExportSceneTool.generated.h"
 
@@ -46,6 +49,9 @@ private:
 	bool HasFoundBlender() const;
 	bool HasFoundBlenderAndExportDir() const;
 	bool HasSetExportDirectory() const;
+	bool HasFoundBlenderAndDynamicExportDir() const;
+	bool HasSetDynamicExportDirectory() const;
+
 
 	FText GetBlenderPath() const;
 
@@ -97,10 +103,35 @@ private:
 	UFUNCTION(Exec, Category = "Export")
 		FReply UploadScene();
 
+	void UploadMultipartData(FString url, TArray<FString> files, TArray<FString> images);
+	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
+
 	UFUNCTION(Exec, Category = "Export")
 		FReply List_Materials();
 
+	//dynamic objects
+	//Runs the built-in obj exporter with all meshses
+	UFUNCTION(Exec, Category = "Dynamics")
+		FReply ExportDynamics();
+
+	//Runs the built-in obj exporter with selected meshes
+	UFUNCTION(Exec, Category = "Dynamics")
+		FReply ExportSelectedDynamics();
+	
+	void ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
+
+	//uploads each dynamic object using its directory to the current scene
+	UFUNCTION(Exec, Category = "Dynamics")
+		FReply SelectDynamicsDirectory();
+
+	void ConvertDynamicTextures();
+
+	//uploads each dynamic object using its directory to the current scene
+	UFUNCTION(Exec, Category = "Dynamics")
+		FReply UploadDynamics();
+
 	void OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	bool PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
 	bool PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
@@ -111,7 +142,10 @@ private:
 		FString BlenderPath;
 	UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
 		FString ExportDirectory;
+	UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
+		FString ExportDynamicsDirectory;
 	FText GetExportDirectory() const;
+	FText GetDynamicExportDirectory() const;
 
 	UFUNCTION(Exec, Category = "Export")
 		FReply Select_Export_Directory();

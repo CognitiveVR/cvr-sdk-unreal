@@ -6,12 +6,14 @@
 #include "AnalyticsSettings.h"
 #include "CognitiveVRSettings.h"
 #include "PlayerTracker.h"
+#include "DynamicObject.h"
 
 using namespace cognitivevrapi;
 
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
 bool bHasSessionStarted = false;
+FHttpModule* Http;
 
 void FAnalyticsCognitiveVR::StartupModule()
 {
@@ -80,10 +82,17 @@ void InitCallback(CognitiveVRResponse resp)
 	}
 	cog->transaction = new Transaction(cog);
 	cog->tuning = new Tuning(cog, json);
+
+	if (cog->network == NULL)
+	{
+		GLog->Log("cognitivevr init netowork == null");
+	}
+
 	cog->thread_manager = new BufferManager(cog->network);
 	cog->core_utils = new CoreUtilities(cog);
 	cog->sensors = new Sensors(cog);
 
+	CognitiveLog::Info("------------------CognitiveVR InitCallback send session start transaction!");
 	cog->transaction->Begin("Session");
 	cog->bPendingInitRequest = false;
 
@@ -115,7 +124,11 @@ void FAnalyticsProviderCognitiveVR::SendDeviceInfo()
 
 bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAttribute>& Attributes)
 {
-	if (bPendingInitRequest) { return false; }
+	if (bPendingInitRequest)
+	{
+		CognitiveLog::Info("------------------>>>>>>pending init");
+		return false;
+	}
 	if (bHasSessionStarted)
 	{
 		//EndSession();
@@ -125,6 +138,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	SessionTimestamp = Util::GetTimestamp();
 	SessionId = FString::FromInt(Util::GetTimestampLong()) + TEXT("_") + DeviceId;
 
+	Http = &FHttpModule::Get();
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 
@@ -153,6 +167,8 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	network->Init(httpint, &InitCallback);
 	bPendingInitRequest = true;
 
+	CognitiveLog::Info("------------------>>>>>>CognitiveVR FAnalyticsProviderCognitiveVR::StartSession!");
+
 	return bHasSessionStarted;
 }
 
@@ -162,7 +178,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	{
 		return;
 	}
-	
+
 
 	FlushEvents();
 	CognitiveLog::Info("Freeing CognitiveVR memory.");
@@ -184,7 +200,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	delete sensors;
 	sensors = NULL;
 	CognitiveLog::Info("CognitiveVR memory freed.");
-	
+
 
 	bHasSessionStarted = false;
 }
@@ -225,8 +241,18 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents couldn't find player tracker!");
 		return;
 	}
-	up->SendGazeEventDataToSceneExplorer();
+	else
+	{
+		up->SendGazeEventDataToSceneExplorer();
+	}
+
 	sensors->SendData();
+
+	UDynamicObject::SendData();
+
+	//OnSendData.Broadcast();
+
+	//delegate calls 'SendData'. dynamic objects connected to this
 }
 
 void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
@@ -528,6 +554,82 @@ void ThrowDummyResponseException(std::string s)
 	CognitiveLog::Error("CognitiveVRAnalytics::ResponseException! " + s);
 }
 
+FString FAnalyticsProviderCognitiveVR::GetSceneKey(FString sceneName)
+{
+
+	//GConfig->GetArray()
+	FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
+	if (Section == NULL)
+	{
+		return "";
+	}
+	for (FConfigSection::TIterator It(*Section); It; ++It)
+	{
+		if (It.Key() == TEXT("SceneData"))
+		{
+			FString name;
+			FString key;
+			It.Value().GetValue().Split(TEXT(","), &name, &key);
+			if (*name == sceneName)
+			{
+				return key;
+			}
+		}
+	}
+
+	//no matches anywhere
+	CognitiveLog::Warning("UPlayerTracker::GetSceneKey ------- no matches in ini");
+	return "";
+}
+
+bool FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
+{
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	if (cog == NULL)
+	{
+		CognitiveLog::Warning("UPlayerTRacker::SendJson CognitiveVRProvider has not started a session!");
+		return false;
+	}
+
+	if (Http == NULL)
+	{
+		CognitiveLog::Warning("Cognitive Provider::SendJson Http module not initialized! likely hasn't started session");
+		return false;
+	}
+
+	UWorld* myworld = GWorld->GetWorld();
+	if (myworld == NULL)
+	{
+		CognitiveLog::Warning("PlayerTracker::SendJson no world");
+		return false;
+	}
+
+	FString currentSceneName = myworld->GetMapName();
+	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
+
+	FString sceneKey = cog->GetSceneKey(currentSceneName);
+	if (sceneKey == "")
+	{
+		CognitiveLog::Warning("UPlayerTracker::SendJson does not have scenekey. fail!");
+		return false;
+	}
+
+	std::string stdjson(TCHAR_TO_UTF8(*json));
+	CognitiveLog::Info(stdjson);
+
+	FString url = "https://sceneexplorer.com/api/" + endpoint + "/" + sceneKey;
+
+
+	//json to scene endpoint
+
+	TSharedRef<IHttpRequest> HttpRequest = Http->CreateRequest();
+	HttpRequest->SetContentAsString(json);
+	HttpRequest->SetURL(url);
+	HttpRequest->SetVerb("POST");
+	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
+	HttpRequest->ProcessRequest();
+	return true;
+}
 
 FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 {
@@ -537,19 +639,46 @@ FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
 	{
+		CognitiveLog::Info("--------------------------no controllers");
 		return FVector();
 	}
 
+	return controllers[0]->PlayerCameraManager->GetCameraLocation();
+	/*
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 	if (up == NULL)
 	{
-		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition couldn't find UPlayerTracker. using player camera instead");
-		return controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	if (controllers[0] == NULL) { CognitiveLog::Info("--------------------------controller0 is null"); return FVector(); }
+
+	if (controllers[0]->PlayerCameraManager->HasActiveCameraComponent())
+	{
+	CognitiveLog::Info("--------------------------controllers[0]->PlayerCameraManager->HasActiveCameraComponent() TRUE TRUE TRUE TRUE");
+	return FVector();
+	}
+
+	//there is no camera component! never has been, never will be. playertracker also isn't a component that needs to be put into the scene
+
+	//FVector loc;
+	//FRotator rot;
+	//controllers[0]->GetPlayerViewPoint(loc, rot);
+
+
+
+
+	//if (controllers[0]->GetPawn() == NULL) { CognitiveLog::Info("-------------------------------------controller0 pawn is null"); return FVector(); }
+
+	//if (controllers[0]->player FindComponentByClass<UCameraComponent>() == NULL) { CognitiveLog::Info("----------------------------------controller0 cameracomponent is null"); return FVector(); }
+
+	if (controllers[0]->FindComponentByClass<UCameraComponent>() == NULL) { CognitiveLog::Info("----------------------------------controller0 cameracomponent is null"); return FVector(); }
+
+	CognitiveLog::Info("-------------------------------FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition couldn't find UPlayerTracker. using player camera instead");
+	return controllers[0]->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
 	}
 	else
 	{
-		return up->ComponentToWorld.GetTranslation();
-	}
+	CognitiveLog::Info("--------------------------use playertracker component");
+	return up->ComponentToWorld.GetTranslation();
+	}*/
 
 	//return controllers[0]->GetPawn()->GetActorTransform().GetLocation();
 }

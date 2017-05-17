@@ -43,10 +43,12 @@ void UPlayerTracker::InitializePlayerTracker()
 
 void UPlayerTracker::BeginPlay()
 {
+	FlushPersistentDebugLines(GetWorld());
+
 	InitializePlayerTracker();
 
 	Super::BeginPlay();
-	Http = &FHttpModule::Get();
+	//Http = &FHttpModule::Get();
 
 	UTextureRenderTarget2D* renderTarget;
 	renderTarget = NewObject<UTextureRenderTarget2D>();
@@ -55,15 +57,23 @@ void UPlayerTracker::BeginPlay()
 	renderTarget->bHDR = false;
 	renderTarget->InitAutoFormat(256, 256); //auto init from value bHDR
 
-	sceneCapture = NewObject<USceneCaptureComponent2D>(this);
-	sceneCapture->SetupAttachment(this);
-	sceneCapture->SetRelativeLocation(FVector::ZeroVector);
-	sceneCapture->SetRelativeRotation(FQuat::Identity);
+	SceneCaptureActor = GetWorld()->SpawnActor<AActor>(FVector::ZeroVector, FRotator::ZeroRotator);
+	//SceneCaptureActor->SetActorLabel("Scene Capture Actor");
+
+	transformComponent = NewObject<USceneComponent>(SceneCaptureActor);
+
+	sceneCapture = NewObject<USceneCaptureComponent2D>(transformComponent);
+	//sceneCapture->SetupAttachment(this);
+	//sceneCapture->SetRelativeLocation(FVector::ZeroVector);
+	//sceneCapture->SetRelativeRotation(FQuat::Identity);
 	sceneCapture->TextureTarget = renderTarget;
 	sceneCapture->RegisterComponent();
 	sceneCapture->CaptureSource = SCS_FinalColorLDR;
+	//sceneCapture->
 
 	sceneCapture->PostProcessSettings.AddBlendable(SceneDepthMat, 1);
+	//sceneCapture->bCaptureEveryFrame = false;
+	//sceneCapture->bCaptureOnMovement = false;
 }
 
 void UPlayerTracker::AddJsonEvent(FJsonObject* newEvent)
@@ -73,19 +83,48 @@ void UPlayerTracker::AddJsonEvent(FJsonObject* newEvent)
 }
 
 // Called every frame
-void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction )
+void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	if (s.Get() == NULL)
 	{
 		return;
 	}
 
-	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
-	
-	currentTime += DeltaTime;
-	if (currentTime > PlayerSnapshotInterval)
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	framesTillRender--;
+
+	if (waitingForDeferred && framesTillRender < 0)
 	{
-		currentTime -= PlayerSnapshotInterval;
+		waitingForDeferred = false;
+
+		TArray<APlayerController*, FDefaultAllocator> controllers;
+		GEngine->GetAllLocalPlayerControllers(controllers);
+		if (controllers.Num() == 0)
+		{
+			CognitiveLog::Info("--------------------------no controllers");
+			//return FVector();
+			return;
+		}
+		/*
+		//FVector finalLoc;
+		FVector loc;
+		FRotator rot;
+
+		controllers[0]->GetPlayerViewPoint(loc, rot);
+
+		FTransform camManTransform = controllers[0]->PlayerCameraManager->GetActorTransform();
+		//FVector camManForward = controllers[0]->PlayerCameraManager->GetActorForwardVector();
+
+		FRotator hmdrot;
+		FVector hmdpos;
+		UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition(hmdrot, hmdpos);
+
+		FVector finalPos = camManTransform.TransformPosition(hmdrot.UnrotateVector(hmdpos));
+		//sceneCapture->SetWorldRotation(rot);
+		//sceneCapture->SetWorldLocation(finalPos);
+		*/
+		//CognitiveLog::Info("--------------------------TICK");
 		//write to json
 
 		TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
@@ -98,35 +137,105 @@ void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		//positions
 		TArray<TSharedPtr<FJsonValue>> posArray;
 		TSharedPtr<FJsonValueNumber> JsonValue;
-		JsonValue = MakeShareable(new FJsonValueNumber(-(int32)GetComponentLocation().X)); //right
+		JsonValue = MakeShareable(new FJsonValueNumber(-(int32)captureLocation.X)); //right
 		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)GetComponentLocation().Z)); //up
+		JsonValue = MakeShareable(new FJsonValueNumber((int32)captureLocation.Z)); //up
 		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)GetComponentLocation().Y));  //forward
+		JsonValue = MakeShareable(new FJsonValueNumber((int32)captureLocation.Y));  //forward
 		posArray.Add(JsonValue);
 
 		snapObj->SetArrayField("p", posArray);
 
+
+
+		//look at dynamic object
+		
+		FCollisionQueryParams Params; // You can use this to customize various properties about the trace
+		Params.AddIgnoredActor(GetOwner()); // Ignore the player's pawn
+
+		
+		FHitResult Hit; // The hit result gets populated by the line trace
+
+		// Raycast out from the camera, only collide with pawns (they are on the ECC_Pawn collision channel)
+		FVector Start = captureLocation;
+		FVector End = captureLocation + captureRotation.Vector() * 10000.0f;
+		bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Pawn, Params);
+
 		//gaze
 		TArray<TSharedPtr<FJsonValue>> gazeArray;
-		FVector gazePoint = GetGazePoint();
-		JsonValue = MakeShareable(new FJsonValueNumber(-(int32)gazePoint.X));
-		gazeArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)gazePoint.Z));
-		gazeArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)gazePoint.Y));
-		gazeArray.Add(JsonValue);
+
+		bool hitDynamic = false;
+		if (bHit)
+		{
+			// Hit.Actor contains a weak pointer to the Actor that the trace hit
+			//return Cast<APawn>(Hit.Actor.Get());
+			//GLog->Log("hit "+Hit.Actor.Get()->GetName());
+			UActorComponent* hitActorComponent = Hit.Actor.Get()->GetComponentByClass(UDynamicObject::StaticClass());
+			if (hitActorComponent != NULL)
+			{
+				UDynamicObject* hitDynamicObject = Cast<UDynamicObject>(hitActorComponent);
+				if (hitDynamicObject != NULL && hitDynamicObject->TrackGaze)
+				{
+					hitDynamic = true;
+
+					FVector localHitPosition = hitDynamicObject->GetOwner()->GetActorTransform().InverseTransformPosition(Hit.ImpactPoint);
+
+					localHitPosition *= hitDynamicObject->GetOwner()->GetActorTransform().GetScale3D();
+
+					DrawDebugLine(
+						GetWorld(),
+						hitDynamicObject->GetOwner()->GetActorLocation() + localHitPosition,
+						hitDynamicObject->GetOwner()->GetActorLocation() + localHitPosition + FVector::UpVector * 100,
+						FColor(255, 0, 0),
+						false, 3, 0,
+						3
+					);
+
+					DrawDebugLine(
+						GetWorld(),
+						Hit.ImpactPoint,
+						Hit.ImpactPoint + FVector::UpVector * 50,
+						FColor(0, 255, 0),
+						false, 3, 0,
+						3
+					);
+
+					snapObj->SetNumberField("o", hitDynamicObject->GetObjectId().Id);
+
+					//FVector gazePoint = GetGazePoint(captureLocation, captureRotation);
+					JsonValue = MakeShareable(new FJsonValueNumber(-(int32)localHitPosition.X));
+					gazeArray.Add(JsonValue);
+					JsonValue = MakeShareable(new FJsonValueNumber((int32)localHitPosition.Z));
+					gazeArray.Add(JsonValue);
+					JsonValue = MakeShareable(new FJsonValueNumber((int32)localHitPosition.Y));
+					gazeArray.Add(JsonValue);
+				}
+			}
+		}
+
+		if (!hitDynamic)
+		{
+			FVector gazePoint = GetGazePoint(captureLocation, captureRotation);
+			JsonValue = MakeShareable(new FJsonValueNumber(-(int32)gazePoint.X));
+			gazeArray.Add(JsonValue);
+			JsonValue = MakeShareable(new FJsonValueNumber((int32)gazePoint.Z));
+			gazeArray.Add(JsonValue);
+			JsonValue = MakeShareable(new FJsonValueNumber((int32)gazePoint.Y));
+			gazeArray.Add(JsonValue);
+		}
+
+		//DrawDebugLine(GetWorld(), finalPos, gazePoint, FColor(100, 0, 100), true, 10);
+		//DrawDebugPoint(GetWorld(), gazePoint, 20, FColor(255, 0, 255), true, 10);
 
 		snapObj->SetArrayField("g", gazeArray);
-
 
 		//rotation
 		TArray<TSharedPtr<FJsonValue>> rotArray;
 
-		FQuat quat = GetComponentQuat();
-		FRotator rot = GetComponentToWorld().Rotator();
-		rot.Yaw -= 90;
-		quat = rot.Quaternion();
+		FQuat quat;
+		FRotator adjustedRot = captureRotation;
+		adjustedRot.Yaw -= 90;
+		quat = adjustedRot.Quaternion();
 
 		JsonValue = MakeShareable(new FJsonValueNumber(quat.Y));
 		rotArray.Add(JsonValue);
@@ -149,6 +258,48 @@ void UPlayerTracker::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 			events.Empty();
 		}
 	}
+
+	currentTime += DeltaTime;
+	if (currentTime > PlayerSnapshotInterval)
+	{
+		currentTime -= PlayerSnapshotInterval;
+
+		TArray<APlayerController*, FDefaultAllocator> controllers;
+		GEngine->GetAllLocalPlayerControllers(controllers);
+		if (controllers.Num() == 0)
+		{
+			CognitiveLog::Info("--------------------------no controllers");
+			//return FVector();
+			return;
+		}
+
+		//FVector finalLoc;
+		FVector loc;
+		FRotator rot;
+
+		controllers[0]->GetPlayerViewPoint(loc, rot);
+
+		FTransform camManTransform = controllers[0]->PlayerCameraManager->GetActorTransform();
+		//FVector camManForward = controllers[0]->PlayerCameraManager->GetActorForwardVector();
+
+		FRotator hmdrot;
+		FVector hmdpos;
+		UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition(hmdrot, hmdpos);
+
+		FVector finalPos = camManTransform.TransformPosition(hmdrot.UnrotateVector(hmdpos));
+		sceneCapture->SetWorldRotation(rot);
+		sceneCapture->SetWorldLocation(finalPos);
+
+		captureLocation = finalPos;
+		captureRotation = rot;
+
+		//UE_LOG(LogTemp, Warning, TEXT("SceneCaptureActor Location is %s"), *SceneCaptureActor->GetActorLocation().ToString());
+
+		sceneCapture->CaptureSceneDeferred();
+		//sceneCapture->CaptureScene();
+		waitingForDeferred = true;
+		framesTillRender = 1;
+	}
 }
 
 float UPlayerTracker::GetPixelDepth(float minvalue, float maxvalue)
@@ -170,9 +321,9 @@ float UPlayerTracker::GetPixelDepth(float minvalue, float maxvalue)
 		return -1;
 	}
 
-	#if WITH_EDITORONLY_DATA
-		Texture->MipGenSettings = TMGS_NoMipmaps; //not sure if this is required
-	#endif
+#if WITH_EDITORONLY_DATA
+	Texture->MipGenSettings = TMGS_NoMipmaps; //not sure if this is required
+#endif
 
 	Texture->SRGB = sceneCapture->TextureTarget->SRGB;
 
@@ -192,126 +343,45 @@ float UPlayerTracker::GetPixelDepth(float minvalue, float maxvalue)
 
 	float distance = FMath::Lerp(minvalue, maxvalue, nf);
 
+	//CognitiveLog::Info("--------------------------PlayerTracker::GetPixelDepth %d");
+	//UE_LOG(LogTemp, Warning, TEXT("--------------------------PlayerTracker::GetPixelDepth %f"), distance);
+
 	return distance;
 }
 
 //puts together the world position of the player's gaze point. each tick
-FVector UPlayerTracker::GetGazePoint()
+FVector UPlayerTracker::GetGazePoint(FVector location, FRotator rotator)
 {
 	float distance = GetPixelDepth(0, maxDistance);
-	FRotator rot = GetComponentRotation();
-	FVector rotv = rot.Vector();
+	//FRotator rot = GetComponentRotation();
+	FVector rotv = rotator.Vector();
 	rotv *= distance;
 
 	//add location
-	FVector loc = GetComponentLocation();
-	
+	//FVector loc = location;
+
 	FVector returnVector;
-	returnVector.X = loc.X + rotv.X;
-	returnVector.Y = loc.Y + rotv.Y;
-	returnVector.Z = loc.Z + rotv.Z;
+	returnVector.X = location.X + rotv.X;
+	returnVector.Y = location.Y + rotv.Y;
+	returnVector.Z = location.Z + rotv.Z;
 	return returnVector;
 }
 
 void UPlayerTracker::SendGazeEventDataToSceneExplorer()
 {
 	UWorld* myworld = GetWorld();
-	if (myworld == NULL) { return; }
+	if (myworld == NULL)
+	{
+		CognitiveLog::Info("--------------------------WORLD DOESNT EXIST");
+		return;
+	}
 
 	FString currentSceneName = myworld->GetMapName();
 	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
 	UPlayerTracker::SendGazeEventDataToSceneExplorer(currentSceneName);
 }
 
-FString UPlayerTracker::GetSceneKey(FString sceneName)
-{
-	
-	//GConfig->GetArray()
-	FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
-	if (Section == NULL)
-	{
-		return "";
-	}
-	for (FConfigSection::TIterator It(*Section); It; ++It)
-	{
-		if (It.Key() == TEXT("SceneData"))
-		{
-			FString name;
-			FString key;
-			It.Value().GetValue().Split(TEXT(","), &name, &key);
-			if (*name == sceneName)
-			{
-				GLog->Log("-----> UPlayerTracker::GetSceneKey found key for scene " + name);
-				return key;
-			}
-			else
-			{
-				GLog->Log("UPlayerTracker::GetSceneKey found key for scene " + name);
-			}
-		}
-	}
 
-	//no matches anywhere
-	CognitiveLog::Warning("UPlayerTracker::GetSceneKey ------- no matches in ini");
-	return "";
-}
-
-void UPlayerTracker::SendJson(FString endpoint, FString json)
-{
-	if (!FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get()->HasStartedSession())
-	{
-		CognitiveLog::Warning("UPlayerTRacker::SendJson CognitiveVRProvider has not started a session!");
-		return;
-	}
-	//TODO should not send data if cognitivevrprovider has not initialized itself
-
-	TArray<APlayerController*, FDefaultAllocator> controllers;
-	GEngine->GetAllLocalPlayerControllers(controllers);
-	if (controllers.Num() == 0)
-	{
-		CognitiveLog::Warning("PlayerTracker::SendJson no local player controllers");
-		return;
-	}
-	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
-	if (up == NULL)
-	{
-		CognitiveLog::Warning("PlayerTracker::SendJson no player tracker component");
-		return;
-	}
-	
-	UWorld* myworld = up->GetWorld();
-	if (myworld == NULL)
-	{
-		CognitiveLog::Warning("PlayerTracker::SendJson no world");
-		return;
-	}
-
-	FString currentSceneName = myworld->GetMapName();
-	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
-
-	FString sceneKey = up->GetSceneKey(currentSceneName);
-	if (sceneKey == "")
-	{
-		CognitiveLog::Warning("UPlayerTracker::SendJson does not have scenekey. fail!");
-		return;
-	}
-
-	std::string stdjson(TCHAR_TO_UTF8(*json));
-	std::string ep(TCHAR_TO_UTF8(*endpoint));
-	CognitiveLog::Info("PlayerTracker::SendJson sending json to" + ep +": " + stdjson);
-
-	FString url = "https://sceneexplorer.com/api/";
-
-
-	//json to scene endpoint
-
-	TSharedRef<IHttpRequest> RequestGaze = up->Http->CreateRequest();
-	RequestGaze->SetContentAsString(json);
-	RequestGaze->SetURL(url + endpoint +"/" + sceneKey);
-	RequestGaze->SetVerb("POST");
-	RequestGaze->SetHeader("Content-Type", TEXT("application/json"));
-	RequestGaze->ProcessRequest();
-}
 
 void UPlayerTracker::SendGazeEventDataToSceneExplorer(FString sceneName)
 {
@@ -342,12 +412,13 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer(FString sceneName)
 
 	//TODO where do i clear snapshots?
 	FString GazeString = UPlayerTracker::GazeSnapshotsToString();
-	SendJson("gaze", GazeString);
-	
+	//FAnalyticsProviderCognitiveVR::SendJson("gaze", GazeString);
+	s->SendJson("gaze", GazeString);
 	//EVENTS
 
 	FString EventString = UPlayerTracker::EventSnapshotsToString();
-	SendJson("events", EventString);
+	//FAnalyticsProviderCognitiveVR::SendJson("events", EventString);
+	s->SendJson("events", EventString);
 }
 
 FString UPlayerTracker::EventSnapshotsToString()
@@ -357,7 +428,7 @@ FString UPlayerTracker::EventSnapshotsToString()
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
 
 	wholeObj->SetStringField("userid", cog->GetDeviceID());
-	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
+	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonEventPart);
 	jsonEventPart++;
@@ -382,7 +453,7 @@ FString UPlayerTracker::GazeSnapshotsToString()
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
 
 	wholeObj->SetStringField("userid", cog->GetDeviceID());
-	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
+	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonGazePart);
 	jsonGazePart++;
@@ -416,87 +487,87 @@ FString UPlayerTracker::GazeSnapshotsToString()
 /*
 void UPlayerTracker::BlueprintSendData()
 {
-	
-	TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
-	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
-	if (!Provider.IsValid() || !bHasSessionStarted || cog == NULL)
-	{
-		CognitiveLog::Error("UCognitiveVRBlueprints::BeginEndTransaction could not get provider!");
-		return;
-	}
 
-	TArray<APlayerController*, FDefaultAllocator> controllers;
-	GEngine->GetAllLocalPlayerControllers(controllers);
-	if (controllers.Num() == 0)
-	{
-		CognitiveLog::Info("UPlayerTracker::RequestSendData no player controllers");
-		return;
-	}
-	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
-	if (up == NULL)
-	{
-		CognitiveLog::Warning("UPlayerTracker::RequestSendData No Player Tracker Component! cannot send data?!?....there's got to be a better way!");
-		return;
-	}
-	up->SendData();
-	
+TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
+FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+if (!Provider.IsValid() || !bHasSessionStarted || cog == NULL)
+{
+CognitiveLog::Error("UCognitiveVRBlueprints::BeginEndTransaction could not get provider!");
+return;
+}
+
+TArray<APlayerController*, FDefaultAllocator> controllers;
+GEngine->GetAllLocalPlayerControllers(controllers);
+if (controllers.Num() == 0)
+{
+CognitiveLog::Info("UPlayerTracker::RequestSendData no player controllers");
+return;
+}
+UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
+if (up == NULL)
+{
+CognitiveLog::Warning("UPlayerTracker::RequestSendData No Player Tracker Component! cannot send data?!?....there's got to be a better way!");
+return;
+}
+up->SendData();
+
 }
 */
 
 /*
 void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	
-	std::string reason;
-	switch (EndPlayReason)
-	{
-	case EEndPlayReason::Destroyed: reason = "destroyed";
-			break;
-	case EEndPlayReason::EndPlayInEditor: reason = "end PIE";
-		break;
-	case EEndPlayReason::LevelTransition: reason = "level transition";
-		break;
-	case EEndPlayReason::Quit: reason = "quit";
-		break;
-	case EEndPlayReason::RemovedFromWorld: reason = "removed from world";
-		break;
-	default:
-		reason = "default";
-			break;
-	}
+
+std::string reason;
+switch (EndPlayReason)
+{
+case EEndPlayReason::Destroyed: reason = "destroyed";
+break;
+case EEndPlayReason::EndPlayInEditor: reason = "end PIE";
+break;
+case EEndPlayReason::LevelTransition: reason = "level transition";
+break;
+case EEndPlayReason::Quit: reason = "quit";
+break;
+case EEndPlayReason::RemovedFromWorld: reason = "removed from world";
+break;
+default:
+reason = "default";
+break;
+}
 
 
-	CognitiveLog::Info("UPlayerTracker::EndPlay reason:" + reason);
+CognitiveLog::Info("UPlayerTracker::EndPlay reason:" + reason);
 
-	//TODO this doesn't work, but it totally crashes when session has not been started
-	
-	if (s.Get() == NULL)
-	{
-		CognitiveLog::Info("UPlayerTracker::EndPlay CognitiveVRProvider is null. do not send data on end play");
-	}
-	else
-	{
-		if (SendDataOnEndPlay)
-		{
-			s->FlushEvents();
-		}
-		if (EndSessionOnEndPlay)
-		{
-			s->EndSession();
-		}
-		else
-		{
-			if (s.Get()->transaction == NULL)
-			{
-				CognitiveLog::Info("UPlayerTracker::EndPlay transactions is null. cannot end session");
-			}
-			else
-			{
-				s->transaction->End("Session");
-			}
-		}
-	}
+//TODO this doesn't work, but it totally crashes when session has not been started
 
-	Super::EndPlay(EndPlayReason);
+if (s.Get() == NULL)
+{
+CognitiveLog::Info("UPlayerTracker::EndPlay CognitiveVRProvider is null. do not send data on end play");
+}
+else
+{
+if (SendDataOnEndPlay)
+{
+s->FlushEvents();
+}
+if (EndSessionOnEndPlay)
+{
+s->EndSession();
+}
+else
+{
+if (s.Get()->transaction == NULL)
+{
+CognitiveLog::Info("UPlayerTracker::EndPlay transactions is null. cannot end session");
+}
+else
+{
+s->transaction->End("Session");
+}
+}
+}
+
+Super::EndPlay(EndPlayReason);
 }
 */

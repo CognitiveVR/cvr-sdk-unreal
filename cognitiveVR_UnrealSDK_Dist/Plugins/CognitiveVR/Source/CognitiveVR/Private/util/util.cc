@@ -169,6 +169,14 @@ void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray>& json, double &doubleVa
 
 	json = MakeShareable(new FJsonValueArray(ValueArray));
 }
+void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray>& json)
+{
+	TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
+	TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueNumber(NULL));
+	ValueArray.Emplace(tempVal);
+
+	json = MakeShareable(new FJsonValueArray(ValueArray));
+}
 void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray>& json, TSharedPtr<FJsonObject> & object)
 {
 	TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
