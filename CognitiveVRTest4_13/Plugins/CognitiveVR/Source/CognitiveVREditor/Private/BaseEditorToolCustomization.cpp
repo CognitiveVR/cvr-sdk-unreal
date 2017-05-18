@@ -426,12 +426,15 @@ void FBaseEditorToolCustomization::ExportDynamicObjectArray(TArray<UDynamicObjec
 		exportObjects[i]->GetOwner()->SetActorLocation(originalLocation);
 		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
 		//tempactor->SetActorScale3D(originalScale);
+
+		List_MaterialArgs(exportObjects[i]->MeshName, ExportDynamicsDirectory);
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Found %d Static Meshes for Export"), ActorsExported);
 
 
 	//TODO export transparent textures for dynamic objects
 	ConvertDynamicTextures();
+	ReexportDynamicMeshes(ExportDynamicsDirectory);
 }
 
 FReply FBaseEditorToolCustomization::UploadDynamics()
@@ -570,6 +573,80 @@ FReply FBaseEditorToolCustomization::UploadDynamics()
 	//call UploadFromDirectory(url,tempDir,whatever)
 
 	return FReply::Handled();
+}
+
+void FBaseEditorToolCustomization::ReexportDynamicMeshes(FString directory)
+{
+	//open blender and run a script
+	//TODO make openblender and run a script into a function, because this is used in a bunch of places
+
+	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("ExportDynamicMesh.py");
+	const TCHAR* charPath = *pythonscriptpath;
+
+	//found something
+	UE_LOG(LogTemp, Warning, TEXT("Python script path: %s"), charPath);
+
+
+	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
+	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+
+
+	TArray<FAssetData> ScriptList;
+	if (!AssetRegistry.GetAssetsByPath(FName(*pythonscriptpath), ScriptList))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Could not find ExportDynamicMesh.py script at path. Canceling"));
+		return;
+	}
+
+	FString stringurl = BlenderPath;
+
+	if (BlenderPath.Len() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No path set for Blender.exe. Canceling"));
+		return;
+	}
+
+	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
+	if (!tempworld)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("World is null. canceling"));
+		return;
+	}
+
+	//const TCHAR* url = *stringurl;
+	//FString SceneName = tempworld->GetMapName();
+	FString ObjPath = directory;
+
+	if (ObjPath.Len() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No know export directory. Canceling"));
+		return;
+	}
+
+
+	//FString MaxPolyCount = FString::FromInt(0);
+	FString resizeFactor = FString::FromInt(GetTextureRefacor());
+
+	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
+	FString escapedTargetPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
+
+	FString stringparams = " -P " + escapedPythonPath + " " + escapedTargetPath;// +" " + resizeFactor;// +" " + MaxPolyCount + " " + SceneName;
+
+	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
+
+	UE_LOG(LogTemp, Warning, TEXT("Params: %s"), *stringParamSlashed);
+
+
+	const TCHAR* params = *stringParamSlashed;
+	int32 priorityMod = 0;
+	FProcHandle procHandle = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
+
+	//FString cmdPath = "C:\\Windows\\System32\\cmd.exe";
+	//FString cmdPathS = "cmd.exe";
+	//FProcHandle procHandle = FPlatformProcess::CreateProc(*cmdPath, NULL, false, false, false, NULL, priorityMod, 0, nullptr);
+
+	//TODO can i just create a process and add parameters or do i need to run through cmd line??
+	//system("cmd.exe");
 }
 
 void FBaseEditorToolCustomization::ConvertDynamicTextures()
@@ -863,6 +940,12 @@ void* FBaseEditorToolCustomization::ChooseParentWindowHandle()
 
 FReply FBaseEditorToolCustomization::List_Materials()
 {
+	List_MaterialArgs("",ExportDirectory);
+	return FReply::Handled();
+}
+
+void FBaseEditorToolCustomization::List_MaterialArgs(FString subdirectory, FString searchDirectory)
+{
 	//look at export directory. find mtl file
 
 	FString result;
@@ -880,7 +963,16 @@ FReply FBaseEditorToolCustomization::List_Materials()
 		Ext = (Ext.Left(1) == ".") ? "*" + Ext : "*." + Ext;
 	}
 
-	FString FinalPath = ExportDirectory + "/" + Ext;
+	FString FinalPath = searchDirectory;
+
+	if (!subdirectory.IsEmpty())
+	{
+		FinalPath += "/"+subdirectory;
+	}
+	FinalPath += "/" + Ext;
+
+	GLog->Log("find mtl in " + FinalPath);
+
 	FileManager.FindFiles(Files, *FinalPath, true, false);
 
 	TArray<FColor> colors;
@@ -891,7 +983,7 @@ FReply FBaseEditorToolCustomization::List_Materials()
 		if (Files[i].EndsWith(".mtl"))
 		{
 
-			FString fullPath = ExportDirectory + "/" + Files[i];
+			FString fullPath = searchDirectory+ "/" + subdirectory + "/" + Files[i];
 			GLog->Log("MATERIAL " + fullPath);
 			FString contents;
 
@@ -968,8 +1060,15 @@ FReply FBaseEditorToolCustomization::List_Materials()
 							//TODO export material property transparency
 							if (FMaterialUtilities::ExportMaterialProperty(m, EMaterialProperty::MP_BaseColor, point, colors))
 							{
-
-								FString BMPFilename = ExportDirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+								FString BMPFilename;
+								if (subdirectory.IsEmpty())
+								{
+									BMPFilename = searchDirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+								}
+								else
+								{
+									BMPFilename = searchDirectory+"/"+subdirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+								}
 
 								GLog->Log("++++++++++writing base color for material " + BMPFilename);
 								FFileHelper::CreateBitmap(*BMPFilename, point.X, point.Y, colors.GetData());
@@ -987,7 +1086,15 @@ FReply FBaseEditorToolCustomization::List_Materials()
 							if (FMaterialUtilities::ExportMaterialProperty(mi, EMaterialProperty::MP_BaseColor, point, colors))
 							{
 
-								FString BMPFilename = ExportDirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+								FString BMPFilename;
+								if (subdirectory.IsEmpty())
+								{
+									BMPFilename = searchDirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+								}
+								else
+								{
+									BMPFilename = searchDirectory + "/" + subdirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+								}
 
 								FFileHelper::CreateBitmap(*BMPFilename, point.X, point.Y, colors.GetData());
 							}
@@ -997,8 +1104,6 @@ FReply FBaseEditorToolCustomization::List_Materials()
 			}
 		}
 	}
-
-	return FReply::Handled();
 }
 
 //run this as the next step after exporting the scene

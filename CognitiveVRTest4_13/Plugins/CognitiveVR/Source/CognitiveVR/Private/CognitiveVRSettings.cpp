@@ -20,6 +20,8 @@ void UCognitiveVRSettings::ReadConfigSettings()
 
 void UCognitiveVRSettings::WriteConfigSettings()
 {
+	return;
+
 	//exclude meshes
 	FAnalytics::Get().WriteConfigValueToIni("DefaultEngine", "Analytics", TEXT("ExcludeMeshes"), ExcludeMeshes);
 

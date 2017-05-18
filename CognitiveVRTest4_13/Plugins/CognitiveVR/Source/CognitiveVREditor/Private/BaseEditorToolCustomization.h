@@ -108,6 +108,8 @@ private:
 
 	UFUNCTION(Exec, Category = "Export")
 		FReply List_Materials();
+	void List_MaterialArgs(FString subdirectory,FString searchDirectory);
+	void ReexportDynamicMeshes(FString directory);
 
 	//dynamic objects
 	//Runs the built-in obj exporter with all meshses
