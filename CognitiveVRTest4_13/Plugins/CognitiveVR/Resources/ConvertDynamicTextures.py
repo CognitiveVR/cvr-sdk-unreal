@@ -13,28 +13,41 @@ args = sys.argv
 exportPath = args[3] #C:/Users/calder/Desktop/RootDynamics
 sizeFactor = int(args[4])
 
-#foreach directory in targetpath.directories
- #foreach BMP in find all in subdirectories
-  #save image as png next to obj
-  #remove sub directory
+#foreach dynamic object
+#copy mtl
+#import + export obj
+#write mtl
+#downsize textures
+#move textures to base directory
 
-img_ext='_D.bmp'
-mtl_ext='.mtl'
+diffuse_ext='_D.bmp'
+other_img_ext='.bmp'
+dynamics=[]
 
-onlydirectories = [d for d in os.listdir(exportPath) if os.path.isdir(os.path.join(exportPath, d))]
+subdirectories = [d for d in os.listdir(exportPath) if os.path.isdir(os.path.join(exportPath, d))]
 #onlyfiles = [f for f in os.listdir(exportPath+"/"+dir) if os.path.isfile(os.path.join(exportPath+"/"+dir, f))]
 print("==================================ROOT " + exportPath)
 
-for dir in onlydirectories:
+for dir in subdirectories:
 	print("==========found directory "+exportPath+"/"+dir)
 	#dir = large_cube
 	#dir = not_a_sphere
+	
+	#select all
+	for ob in scene.objects:
+		ob.select = True
+	ops.object.delete()
+	print("=============================================deleted stuff")
+	
+	objpath=""
+	outstrings=[]
+	outstrings.append('\n\n')
 	
 	for root, dirs, files in os.walk(exportPath+"/"+dir):
 	
 		for file in files:
 			print ("walk file name " + file)
-			if (file.endswith(img_ext)):
+			if (file.endswith(diffuse_ext)):
 				image = bpy.data.images.load(root+"/"+file)
 				#bpy.ops.image.open(filepath=exportPath+"/"+file)
 				#bpy.ops.image.save_as(override,file_format='PNG',filepath=exportPath+"/"+file.replace(".bmp",".png"))
@@ -61,18 +74,82 @@ for dir in onlydirectories:
 				image2.save()
 				#os.remove(root+"/"+file)
 				#i2 = bpy.data.images.new()
+			if (file.endswith('.obj')):
+				objpath = root+"/"+file
 			if (file.endswith('.mtl')):
 				mtlpath = root+"/"+file
-		#print(root, "consumes", end=" ")
-		#print(sum(getsize(join(root, name)) for name in files), end=" ")
-		#print("bytes in", len(files), "non-directory files")
-		#if 'CVS' in dirs:
-			#dirs.remove('CVS')  # don't visit CVS directories
+				#==========================add a space at the beginning of the mtl
+				mo = open(mtlpath, encoding='utf-8-sig')
+				readString = mo.read()
+				
+				#==========================replace mtl with png references to textures
+				for line in readString.splitlines():
+
+					if line.endswith(diffuse_ext):
+						outstrings.append(line.replace(".bmp",".png")+'\n')
+					elif not line.endswith(other_img_ext):
+						outstrings.append(line.replace(".bmp",".png")+'\n'+'\n')
+				
+				
+				#new. fix mtl
+				finalmtlstrings=[]
+				print("=============================================mtl start")
+				#==========================replace mtl with png references to textures
+				for line in readString.splitlines():
+					print("original line " + line)
+					if line.startswith("map_Kd"):
+						temppath = line.replace("map_Kd ","")
+						head, tail = os.path.split(temppath)
+						
+						#before actually appending this to the mtl, check if the .bmp image file exists
+						
+						print(">>>>>is this a file? "+exportPath+"/"+tail[:-4]+".bmp")
+						
+						if os.path.isfile(exportPath+"/"+tail[:-4]+".bmp"):
+							finalmtlstrings.append("map_Kd " + tail+"\n")
+							print(">>>>>append map_kd as " + tail)
+						else:
+							print("^^^^^^^^^^^ couldn't find file " + tail)
+					#	for sline in line.split(" "):
+					#		#print (sline)
+					#		if sline.endswith(".png"):
+					#			print("full path to image "+ exportPath+"/"+sline[:-4]+".bmp")
+					#			if os.path.isfile(exportPath+"/"+sline[:-4]+".bmp"): #at this point, it references a png and the file is bmp
+					#				print ("========>FOUND this image file " + sline)
+					#
+					#			else:
+					#				print ("------------->image file doesnt exist " + sline)
+					elif line.startswith("Ka"):
+						finalmtlstrings.append("Ka 0 0 0"+"\n")
+					elif line.startswith("Ks"):
+						finalmtlstrings.append("Ks 0 0 0"+"\n")
+					else:
+						finalmtlstrings.append(line+"\n")
+						#print("????????unknown line as " + line)
+
+				mo.close()
+
+				#remove the mtl
+				os.remove(mtlpath)
+
 
 	
-	#dir = large_cube
-	#dir = not_a_sphere
-	#etc
+	#import and export obj
+	ops.import_scene.obj(filepath=objpath, use_edges=True, use_smooth_groups=True, use_split_objects=True, use_split_groups=True, use_groups_as_vgroups=False, use_image_search=True, split_mode='ON', global_clamp_size=0, axis_forward='-Z', axis_up='Y')
+	print("=============================================import complete")
+	
+	ops.export_scene.obj(filepath=objpath, use_edges=False, path_mode='RELATIVE')
+	print("=============================================export complete")
+	
+	#write mtl to new file
+	nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
+	nmo.writelines(outstrings)
+	nmo.close()
+	print("=============================================mtl fixed")
+	
+	
+	
+	
 	
 	subdirectories = [d for d in os.listdir(exportPath+"/"+dir) if os.path.isdir(os.path.join(exportPath+"/"+dir, d))]
 	for subdir in subdirectories:
@@ -80,34 +157,7 @@ for dir in onlydirectories:
 		#shutil.rmtree(os.path.join(exportPath,dir))
 		shutil.rmtree(exportPath+"/"+dir+"/"+subdir)
 	
-	#==========================add a space at the beginning of the mtl
-	mo = open(mtlpath, encoding='utf-8-sig')
-	readString = mo.read()
-
-	outstrings=[]
-	outstrings.append('\n\n')
 	
-	diffuse_ext='_D.bmp'
-	other_img_ext='.bmp'
-	
-	#==========================replace mtl with png references to textures
-	for line in readString.splitlines():
-
-		if line.endswith(diffuse_ext):
-			outstrings.append(line.replace(".bmp",".png")+'\n')
-		elif not line.endswith(other_img_ext):
-			outstrings.append(line.replace(".bmp",".png")+'\n'+'\n')
-
-	mo.close()
-
-	#remove the mtl
-	os.remove(mtlpath)
-
-	#write to new file (BMP)
-	nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
-	nmo.writelines(outstrings)
-	nmo.close()
-	print("=============================================mtl fixed")
 	
 	#shutil.rmtree(os.path.join(exportPath,dir))
 	#shutil.rmtree(exportPath+'/'+dir)

@@ -202,6 +202,27 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.Text(FText::FromString("Export Selected Dynamic Objects"))
 		.OnClicked(this, &FCognitiveToolsCustomization::ExportSelectedDynamics)
 		];
+	/*
+	//export dynamic textures
+	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		[
+			SNew(SButton)
+			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndDynamicExportDir)
+		.Text(FText::FromString("Export Dynamic Textures"))
+		.OnClicked(this, &FCognitiveToolsCustomization::ExportDynamicTextures)
+		];
+
+	//export dynamic textures
+	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		[
+			SNew(SButton)
+			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndDynamicExportDir)
+		.Text(FText::FromString("Reexport Meshes"))
+		.OnClicked(this, &FCognitiveToolsCustomization::ReexportDynamicMeshesCmd)
+		];*/
+
 
 	//select dynamics
 	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
@@ -312,13 +333,18 @@ FReply FCognitiveToolsCustomization::ExportDynamics()
 		return FReply::Handled();
 	}
 
+	TArray<FString> meshNames;
 	TArray<UDynamicObject*> exportObjects;
 	for (TObjectIterator<UDynamicObject> It; It; ++It)
 	{
 		UDynamicObject* TempObject = *It;
 		if (TempObject != NULL)
 		{
-			exportObjects.Add(TempObject);
+			if (!meshNames.Contains(TempObject->MeshName))
+			{
+				exportObjects.Add(TempObject);
+				meshNames.Add(TempObject->MeshName);
+			}
 		}
 	}
 
@@ -346,6 +372,7 @@ FReply FCognitiveToolsCustomization::ExportSelectedDynamics()
 		return FReply::Handled();
 	}
 
+	TArray<FString> meshNames;
 	TArray<UDynamicObject*> SelectionSetCache;
 	for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
 	{
@@ -362,7 +389,11 @@ FReply FCognitiveToolsCustomization::ExportSelectedDynamics()
 			{
 				continue;
 			}
-			SelectionSetCache.Add(sceneComponent);
+			if (!meshNames.Contains(sceneComponent->MeshName))
+			{
+				SelectionSetCache.Add(sceneComponent);
+				meshNames.Add(sceneComponent->MeshName);
+			}
 		}
 	}
 
@@ -433,7 +464,14 @@ void FCognitiveToolsCustomization::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 
 	//TODO export transparent textures for dynamic objects
+	//
+	ConvertDynamicTextures();
+}
+
+FReply FCognitiveToolsCustomization::ReexportDynamicMeshesCmd()
+{
 	ReexportDynamicMeshes(ExportDynamicsDirectory);
+	return FReply::Handled();
 }
 
 FReply FCognitiveToolsCustomization::ExportDynamicTextures()
