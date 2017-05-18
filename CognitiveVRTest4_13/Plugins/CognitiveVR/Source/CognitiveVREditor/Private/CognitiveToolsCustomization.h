@@ -31,7 +31,7 @@
 
 class UCognitiveVRSettings;
 
-class FBaseEditorToolCustomization : public IDetailCustomization
+class FCognitiveToolsCustomization : public IDetailCustomization
 {
 public:
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
@@ -115,6 +115,9 @@ private:
 	//Runs the built-in obj exporter with all meshses
 	UFUNCTION(Exec, Category = "Dynamics")
 		FReply ExportDynamics();
+
+	UFUNCTION(Exec, Category = "Dynamics")
+		FReply ExportDynamicTextures();
 
 	//Runs the built-in obj exporter with selected meshes
 	UFUNCTION(Exec, Category = "Dynamics")

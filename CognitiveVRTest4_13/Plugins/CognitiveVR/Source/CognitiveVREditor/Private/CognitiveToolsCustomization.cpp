@@ -1,11 +1,11 @@
 
 #include "CognitiveVREditorPrivatePCH.h"
-#include "BaseEditorToolCustomization.h"
+#include "CognitiveToolsCustomization.h"
 #include "CognitiveVRSettings.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
-void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
+void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {
 	TSet<UClass*> Classes;
 
@@ -66,14 +66,14 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			SNew(SButton)
 			.IsEnabled(true)
 		.Text(FText::FromString("Select Blender"))
-		.OnClicked(this, &FBaseEditorToolCustomization::Select_Blender)
+		.OnClicked(this, &FCognitiveToolsCustomization::Select_Blender)
 		]
 
 	+ SHorizontalBox::Slot()
 		.Padding(FMargin(4.0f, 0.0f, 30.0f, 0.0f))
 		[
 			SNew(STextBlock)
-			.Text(this, &FBaseEditorToolCustomization::GetBlenderPath)
+			.Text(this, &FCognitiveToolsCustomization::GetBlenderPath)
 		]
 		];
 
@@ -82,10 +82,10 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.ValueContent()
 		[
 			SNew(SButton)
-			//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlender)
+			//.IsEnabled(&FCognitiveToolsCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
+		.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
 		.Text(FText::FromString("Select Export Meshes"))
-		.OnClicked(this, &FBaseEditorToolCustomization::Select_Export_Meshes)
+		.OnClicked(this, &FCognitiveToolsCustomization::Select_Export_Meshes)
 		];
 
 	//export selected scene
@@ -93,10 +93,10 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.ValueContent()
 		[
 			SNew(SButton)
-			//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlender)
+			//.IsEnabled(&FCognitiveToolsCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
+		.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
 		.Text(FText::FromString("Export Selected"))
-		.OnClicked(this, &FBaseEditorToolCustomization::Export_Selected)
+		.OnClicked(this, &FCognitiveToolsCustomization::Export_Selected)
 		];
 
 	//export whole scene
@@ -104,10 +104,10 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.ValueContent()
 		[
 			SNew(SButton)
-			//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlender)
+			//.IsEnabled(&FCognitiveToolsCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
+		.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
 		.Text(FText::FromString("Export All"))
-		.OnClicked(this, &FBaseEditorToolCustomization::Export_All)
+		.OnClicked(this, &FCognitiveToolsCustomization::Export_All)
 		];
 
 	Category.AddCustomRow(FText::FromString("Select Export Directory Horizontal"))
@@ -124,14 +124,14 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			SNew(SButton)
 			.IsEnabled(true)
 		.Text(FText::FromString("Select Export Directory"))
-		.OnClicked(this, &FBaseEditorToolCustomization::Select_Export_Directory)
+		.OnClicked(this, &FCognitiveToolsCustomization::Select_Export_Directory)
 		]
 
 	+ SHorizontalBox::Slot()
 		.Padding(FMargin(4.0f, 0.0f, 30.0f, 0.0f))
 		[
 			SNew(STextBlock)
-			.Text(this, &FBaseEditorToolCustomization::GetExportDirectory)
+			.Text(this, &FCognitiveToolsCustomization::GetExportDirectory)
 		]
 		];
 
@@ -140,10 +140,10 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.ValueContent()
 		[
 			SNew(SButton)
-			//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlenderAndExportDir)
+			//.IsEnabled(&FCognitiveToolsCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
+		.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndExportDir)
 		.Text(FText::FromString("Export Transparent Textures"))
-		.OnClicked(this, &FBaseEditorToolCustomization::List_Materials)
+		.OnClicked(this, &FCognitiveToolsCustomization::List_Materials)
 		];
 
 	//Reduce Meshes
@@ -151,10 +151,10 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.ValueContent()
 		[
 			SNew(SButton)
-			//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlenderAndExportDir)
+			//.IsEnabled(&FCognitiveToolsCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
+		.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndExportDir)
 		.Text(FText::FromString("Reduce Meshes"))
-		.OnClicked(this, &FBaseEditorToolCustomization::Reduce_Meshes)
+		.OnClicked(this, &FCognitiveToolsCustomization::Reduce_Meshes)
 		];
 
 	//Reduce Textures
@@ -162,10 +162,10 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.ValueContent()
 		[
 			SNew(SButton)
-			//.IsEnabled(&FBaseEditorToolCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlenderAndExportDir)
+			//.IsEnabled(&FCognitiveToolsCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
+		.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndExportDir)
 		.Text(FText::FromString("Reduce Textures"))
-		.OnClicked(this, &FBaseEditorToolCustomization::Reduce_Textures)
+		.OnClicked(this, &FCognitiveToolsCustomization::Reduce_Textures)
 		];
 
 
@@ -175,9 +175,9 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.ValueContent()
 		[
 			SNew(SButton)
-			.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlenderAndExportDir)
+			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndExportDir)
 			.Text(FText::FromString("Upload Scene"))
-			.OnClicked(this, &FBaseEditorToolCustomization::UploadScene)
+			.OnClicked(this, &FCognitiveToolsCustomization::UploadScene)
 		];
 
 	// Create a commands category
@@ -188,9 +188,9 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.ValueContent()
 		[
 			SNew(SButton)
-			.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlender)
+			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
 		.Text(FText::FromString("Export All Dynamic Objects"))
-		.OnClicked(this, &FBaseEditorToolCustomization::ExportDynamics)
+		.OnClicked(this, &FCognitiveToolsCustomization::ExportDynamics)
 		];
 
 	//export selected dynamics
@@ -198,9 +198,9 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.ValueContent()
 		[
 			SNew(SButton)
-			.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlender)
+			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
 		.Text(FText::FromString("Export Selected Dynamic Objects"))
-		.OnClicked(this, &FBaseEditorToolCustomization::ExportSelectedDynamics)
+		.OnClicked(this, &FCognitiveToolsCustomization::ExportSelectedDynamics)
 		];
 
 	//select dynamics
@@ -208,9 +208,9 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.ValueContent()
 		[
 			SNew(SButton)
-			.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlender)
+			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
 		.Text(FText::FromString("Select Dynamic Directory"))
-		.OnClicked(this, &FBaseEditorToolCustomization::SelectDynamicsDirectory)
+		.OnClicked(this, &FCognitiveToolsCustomization::SelectDynamicsDirectory)
 		];
 
 	//upload dynamics
@@ -218,9 +218,9 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.ValueContent()
 		[
 			SNew(SButton)
-			.IsEnabled(this, &FBaseEditorToolCustomization::HasFoundBlenderAndDynamicExportDir)
+			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndDynamicExportDir)
 		.Text(FText::FromString("Upload Dynamic Objects"))
-		.OnClicked(this, &FBaseEditorToolCustomization::UploadDynamics)
+		.OnClicked(this, &FCognitiveToolsCustomization::UploadDynamics)
 		];
 	//upload scene
 	/*Category.AddCustomRow(FText::FromString("Commands"))
@@ -229,7 +229,7 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			SNew(SButton)
 			.IsEnabled(true)
 			.Text(FText::FromString("Test Ini Write"))
-			.OnClicked(this, &FBaseEditorToolCustomization::DebugSendSceneData)
+			.OnClicked(this, &FCognitiveToolsCustomization::DebugSendSceneData)
 		];*/
 
 	/*IDetailCategoryBuilder& SceneKeyCategory = DetailBuilder.EditCategory(TEXT("Scene Keys"));
@@ -237,49 +237,49 @@ void FBaseEditorToolCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 	SceneKeyCategory.AddProperty(SceneKeysProperty);*/
 }
 
-float FBaseEditorToolCustomization::GetMinimumSize()
+float FCognitiveToolsCustomization::GetMinimumSize()
 {
 	float MinSize = 0;
 	MinSizeProperty->GetValue(MinSize);
 	return MinSize;
 }
 
-float FBaseEditorToolCustomization::GetMaximumSize()
+float FCognitiveToolsCustomization::GetMaximumSize()
 {
 	float MaxSize = 0;
 	MaxSizeProperty->GetValue(MaxSize);
 	return MaxSize;
 }
 
-bool FBaseEditorToolCustomization::GetStaticOnly()
+bool FCognitiveToolsCustomization::GetStaticOnly()
 {
 	bool staticOnly = false;
 	StaticOnlyProperty->GetValue(staticOnly);
 	return staticOnly;
 }
 
-int FBaseEditorToolCustomization::GetMinPolygon()
+int FCognitiveToolsCustomization::GetMinPolygon()
 {
 	int MinCount = 0;
 	MinPolygonProperty->GetValue(MinCount);
 	return MinCount;
 }
 
-int FBaseEditorToolCustomization::GetMaxPolygon()
+int FCognitiveToolsCustomization::GetMaxPolygon()
 {
 	int MaxCount = 0;
 	MaxPolygonProperty->GetValue(MaxCount);
 	return MaxCount;
 }
 
-int FBaseEditorToolCustomization::GetTextureRefacor()
+int FCognitiveToolsCustomization::GetTextureRefacor()
 {
 	int TextureRefactor = 0;
 	TextureResizeProperty->GetValue(TextureRefactor);
 	return TextureRefactor;
 }
 
-FReply FBaseEditorToolCustomization::ExportDynamics()
+FReply FCognitiveToolsCustomization::ExportDynamics()
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
@@ -303,7 +303,7 @@ FReply FBaseEditorToolCustomization::ExportDynamics()
 	FString outFilename = FString();
 	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FBaseEditorToolCustomization::ExportDynamics - picked a directory"));
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveToolsCustomization::ExportDynamics - picked a directory"));
 		ExportDynamicsDirectory = outFilename;
 		//FEditorDirectories::Get().SetLastDirectory(ELastDirectory::UNR, FPaths::GetPath(ExportFilename)); // Save path as default for next time.
 	}
@@ -327,7 +327,7 @@ FReply FBaseEditorToolCustomization::ExportDynamics()
 	return FReply::Handled();
 }
 
-FReply FBaseEditorToolCustomization::ExportSelectedDynamics()
+FReply FCognitiveToolsCustomization::ExportSelectedDynamics()
 {
 	UWorld* World = GWorld;
 	FString title = "Select Root Dynamic Directory";
@@ -337,7 +337,7 @@ FReply FBaseEditorToolCustomization::ExportSelectedDynamics()
 	FString outFilename = FString();
 	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FBaseEditorToolCustomization::ExportDynamics - picked a directory"));
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveToolsCustomization::ExportDynamics - picked a directory"));
 		ExportDynamicsDirectory = outFilename;
 		//FEditorDirectories::Get().SetLastDirectory(ELastDirectory::UNR, FPaths::GetPath(ExportFilename)); // Save path as default for next time.
 	}
@@ -371,7 +371,7 @@ FReply FBaseEditorToolCustomization::ExportSelectedDynamics()
 	return FReply::Handled();
 }
 
-void FBaseEditorToolCustomization::ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects)
+void FCognitiveToolsCustomization::ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects)
 {
 	FVector originalLocation;
 	FRotator originalRotation;
@@ -433,11 +433,16 @@ void FBaseEditorToolCustomization::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 
 	//TODO export transparent textures for dynamic objects
-	ConvertDynamicTextures();
 	ReexportDynamicMeshes(ExportDynamicsDirectory);
 }
 
-FReply FBaseEditorToolCustomization::UploadDynamics()
+FReply FCognitiveToolsCustomization::ExportDynamicTextures()
+{
+	ConvertDynamicTextures();
+	return FReply::Handled();
+}
+
+FReply FCognitiveToolsCustomization::UploadDynamics()
 {	
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
@@ -575,7 +580,7 @@ FReply FBaseEditorToolCustomization::UploadDynamics()
 	return FReply::Handled();
 }
 
-void FBaseEditorToolCustomization::ReexportDynamicMeshes(FString directory)
+void FCognitiveToolsCustomization::ReexportDynamicMeshes(FString directory)
 {
 	//open blender and run a script
 	//TODO make openblender and run a script into a function, because this is used in a bunch of places
@@ -649,7 +654,7 @@ void FBaseEditorToolCustomization::ReexportDynamicMeshes(FString directory)
 	//system("cmd.exe");
 }
 
-void FBaseEditorToolCustomization::ConvertDynamicTextures()
+void FCognitiveToolsCustomization::ConvertDynamicTextures()
 {
 	//open blender and run a script
 	//TODO make openblender and run a script into a function, because this is used in a bunch of places
@@ -723,7 +728,7 @@ void FBaseEditorToolCustomization::ConvertDynamicTextures()
 	//system("cmd.exe");
 }
 
-FReply FBaseEditorToolCustomization::Export_Selected()
+FReply FCognitiveToolsCustomization::Export_Selected()
 {
 	FEditorFileUtils::Export(true);
 
@@ -734,7 +739,7 @@ FReply FBaseEditorToolCustomization::Export_Selected()
 	return FReply::Handled();
 }
 
-FReply FBaseEditorToolCustomization::Export_All()
+FReply FCognitiveToolsCustomization::Export_All()
 {
 	FEditorFileUtils::Export(false);
 
@@ -745,7 +750,7 @@ FReply FBaseEditorToolCustomization::Export_All()
 	return FReply::Handled();
 }
 
-FReply FBaseEditorToolCustomization::Select_Export_Meshes()
+FReply FCognitiveToolsCustomization::Select_Export_Meshes()
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
@@ -822,7 +827,7 @@ FReply FBaseEditorToolCustomization::Select_Export_Meshes()
 
 
 //open fiel type
-FReply FBaseEditorToolCustomization::Select_Blender()
+FReply FCognitiveToolsCustomization::Select_Blender()
 {
 	FString title = "Select Blender.exe";
 	FString fileTypes = ".exe";
@@ -838,7 +843,7 @@ FReply FBaseEditorToolCustomization::Select_Blender()
 }
 
 //open fiel type
-FReply FBaseEditorToolCustomization::Select_Export_Directory()
+FReply FCognitiveToolsCustomization::Select_Export_Directory()
 {
 	FString title = "Select Export Directory";
 	FString fileTypes = ".exe";
@@ -847,14 +852,14 @@ FReply FBaseEditorToolCustomization::Select_Export_Directory()
 	FString outFilename = FString();
 	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FBaseEditorToolCustomization::Select_Export_Directory - picked a directory"));
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveToolsCustomization::Select_Export_Directory - picked a directory"));
 		ExportDirectory = outFilename;
 	}
 	return FReply::Handled();
 }
 
 //open fiel type
-FReply FBaseEditorToolCustomization::SelectDynamicsDirectory()
+FReply FCognitiveToolsCustomization::SelectDynamicsDirectory()
 {
 	FString title = "Select Dynamc Export Root Directory";
 	FString fileTypes = ".exe";
@@ -863,13 +868,13 @@ FReply FBaseEditorToolCustomization::SelectDynamicsDirectory()
 	FString outFilename = FString();
 	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FBaseEditorToolCustomization::SelectDynamicsDirectory - picked a directory"));
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveToolsCustomization::SelectDynamicsDirectory - picked a directory"));
 		ExportDynamicsDirectory = outFilename;
 	}
 	return FReply::Handled();
 }
 
-bool FBaseEditorToolCustomization::PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename)
+bool FCognitiveToolsCustomization::PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename)
 {
 	OutFilename = FString();
 
@@ -903,7 +908,7 @@ bool FBaseEditorToolCustomization::PickFile(const FString& Title, const FString&
 	return bFileChosen;
 }
 
-bool FBaseEditorToolCustomization::PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename)
+bool FCognitiveToolsCustomization::PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename)
 {
 	OutFilename = FString();
 
@@ -925,7 +930,7 @@ bool FBaseEditorToolCustomization::PickDirectory(const FString& Title, const FSt
 	return directoryChosen;
 }
 
-void* FBaseEditorToolCustomization::ChooseParentWindowHandle()
+void* FCognitiveToolsCustomization::ChooseParentWindowHandle()
 {
 	void* ParentWindowWindowHandle = NULL;
 	IMainFrameModule& MainFrameModule = FModuleManager::LoadModuleChecked<IMainFrameModule>(TEXT("MainFrame"));
@@ -938,13 +943,13 @@ void* FBaseEditorToolCustomization::ChooseParentWindowHandle()
 	return ParentWindowWindowHandle;
 }
 
-FReply FBaseEditorToolCustomization::List_Materials()
+FReply FCognitiveToolsCustomization::List_Materials()
 {
 	List_MaterialArgs("",ExportDirectory);
 	return FReply::Handled();
 }
 
-void FBaseEditorToolCustomization::List_MaterialArgs(FString subdirectory, FString searchDirectory)
+void FCognitiveToolsCustomization::List_MaterialArgs(FString subdirectory, FString searchDirectory)
 {
 	//look at export directory. find mtl file
 
@@ -1107,7 +1112,7 @@ void FBaseEditorToolCustomization::List_MaterialArgs(FString subdirectory, FStri
 }
 
 //run this as the next step after exporting the scene
-FReply FBaseEditorToolCustomization::Reduce_Meshes()
+FReply FCognitiveToolsCustomization::Reduce_Meshes()
 {
 	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("DecimateExportedScene.py");
 	const TCHAR* charPath = *pythonscriptpath;
@@ -1143,7 +1148,7 @@ FReply FBaseEditorToolCustomization::Reduce_Meshes()
 
 	if (ObjPath.Len() == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FBaseEditorToolCustomization::Reduce_Meshes No know export directory. Canceling"));
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveToolsCustomization::Reduce_Meshes No know export directory. Canceling"));
 		return FReply::Handled();
 	}
 
@@ -1177,7 +1182,7 @@ FReply FBaseEditorToolCustomization::Reduce_Meshes()
 
 	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
 
-	UE_LOG(LogTemp, Warning, TEXT("FBaseEditorToolCustomization::Reduce_Meshes Params: %s"), *stringParamSlashed);
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveToolsCustomization::Reduce_Meshes Params: %s"), *stringParamSlashed);
 
 
 	const TCHAR* params = *stringParamSlashed;
@@ -1188,7 +1193,7 @@ FReply FBaseEditorToolCustomization::Reduce_Meshes()
 	return FReply::Handled();
 }
 
-FString FBaseEditorToolCustomization::GetProductID()
+FString FCognitiveToolsCustomization::GetProductID()
 {
 	FString ValueReceived;
 	GConfig->GetString(
@@ -1201,7 +1206,7 @@ FString FBaseEditorToolCustomization::GetProductID()
 }
 
 //run this as the next step after exporting the scene
-FReply FBaseEditorToolCustomization::Reduce_Textures()
+FReply FCognitiveToolsCustomization::Reduce_Textures()
 {
 	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("ConvertTextures.py");
 	const TCHAR* charPath = *pythonscriptpath;
@@ -1275,7 +1280,7 @@ FReply FBaseEditorToolCustomization::Reduce_Textures()
 	return FReply::Handled();
 }
 
-FReply FBaseEditorToolCustomization::Http_Request()
+FReply FCognitiveToolsCustomization::Http_Request()
 {
 	//TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
 
@@ -1297,14 +1302,14 @@ FReply FBaseEditorToolCustomization::Http_Request()
 
 	//HttpRequest->SetContentAsString(OutputString);
 
-	//HttpRequest->OnProcessRequestComplete().BindUObject(this, &FBaseEditorToolCustomization::OnYourFunctionCompleted);
-	//HttpRequest->OnProcessRequestComplete().BindSP(this, &FBaseEditorToolCustomization::OnYourFunctionCompleted);
+	//HttpRequest->OnProcessRequestComplete().BindUObject(this, &FCognitiveToolsCustomization::OnYourFunctionCompleted);
+	//HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveToolsCustomization::OnYourFunctionCompleted);
 
 	HttpRequest->ProcessRequest();
 	return FReply::Handled();
 }
 
-void FBaseEditorToolCustomization::UploadFromDirectory(FString url, FString directory, FString expectedResponseType)
+void FCognitiveToolsCustomization::UploadFromDirectory(FString url, FString directory, FString expectedResponseType)
 {
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
@@ -1448,11 +1453,11 @@ void FBaseEditorToolCustomization::UploadFromDirectory(FString url, FString dire
 
 	if (expectedResponseType == "scene")
 	{
-		HttpRequest->OnProcessRequestComplete().BindSP(this, &FBaseEditorToolCustomization::OnUploadSceneCompleted);
+		HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveToolsCustomization::OnUploadSceneCompleted);
 	}
 	if (expectedResponseType == "object")
 	{
-		HttpRequest->OnProcessRequestComplete().BindSP(this, &FBaseEditorToolCustomization::OnUploadObjectCompleted);
+		HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveToolsCustomization::OnUploadObjectCompleted);
 	}
 
 	//DEBUGGING write http request contents to file
@@ -1476,7 +1481,7 @@ void FBaseEditorToolCustomization::UploadFromDirectory(FString url, FString dire
 	HttpRequest->ProcessRequest();
 }
 
-FReply FBaseEditorToolCustomization::UploadScene()
+FReply FCognitiveToolsCustomization::UploadScene()
 {
 	FString url = "https://sceneexplorer.com/api/scenes";
 
@@ -1485,7 +1490,7 @@ FReply FBaseEditorToolCustomization::UploadScene()
 	return FReply::Handled();
 }
 
-void FBaseEditorToolCustomization::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveToolsCustomization::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{
@@ -1513,7 +1518,7 @@ void FBaseEditorToolCustomization::OnUploadSceneCompleted(FHttpRequestPtr Reques
 	}
 }
 
-void FBaseEditorToolCustomization::OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveToolsCustomization::OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{
@@ -1534,23 +1539,22 @@ void FBaseEditorToolCustomization::OnUploadObjectCompleted(FHttpRequestPtr Reque
 
 
 		//GLog->Log(currentSceneName + " scene set with SceneKey " + *Response->GetContentAsString());
-
 		FString responseNoQuotes = *Response->GetContentAsString().Replace(TEXT("\""), TEXT(""));
 
-		GLog->Log("upload complete");
+		GLog->Log("Upload Dynamic Complete " + Request->GetURL());
 
 		//SaveSceneData(currentSceneName, responseNoQuotes);
 	}
 }
 
-FReply FBaseEditorToolCustomization::DebugSendSceneData()
+FReply FCognitiveToolsCustomization::DebugSendSceneData()
 {
 	//+ FString::FromInt(FMath::Rand())
 	SaveSceneData("FirstPersonExampleMap", "1234-asdf-5678-hjkl");
 	return FReply::Handled();
 }
 
-void FBaseEditorToolCustomization::SaveSceneData(FString sceneName, FString sceneKey)
+void FCognitiveToolsCustomization::SaveSceneData(FString sceneName, FString sceneKey)
 {
 	FString keyValue = sceneName + "," + sceneKey;
 	UE_LOG(LogTemp, Warning, TEXT("Upload complete! Add this into the SceneData array in Project Settings:      %s"),*keyValue);
@@ -1576,14 +1580,14 @@ void FBaseEditorToolCustomization::SaveSceneData(FString sceneName, FString scen
 		{
 			scenePairs[i] = keyValue;
 			didSetKey = true;
-			GLog->Log("FBaseEditorToolCustomization::SaveSceneData - found and replace key for scene " + name + " new value " + keyValue);
+			GLog->Log("FCognitiveToolsCustomization::SaveSceneData - found and replace key for scene " + name + " new value " + keyValue);
 			break;
 		}
 	}
 	if (!didSetKey)
 	{
 		scenePairs.Add(keyValue);
-		GLog->Log("FBaseEditorToolCustomization::SaveSceneData - added new scene value and key for " + sceneName);
+		GLog->Log("FCognitiveToolsCustomization::SaveSceneData - added new scene value and key for " + sceneName);
 	}
 
 	//remove scene names that don't have keys!
@@ -1613,7 +1617,7 @@ Gets all the files in a given directory.
 @param onlyFilesEndingWith Will only return filenames ending with this string (it looks at the extension as well!). Also applies onlyFilesStartingWith if specified.
 @return A list of files (including the extension).
 */
-TArray<FString> FBaseEditorToolCustomization::GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension)
+TArray<FString> FCognitiveToolsCustomization::GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension)
 {
 	// Get all files in directory
 	TArray<FString> directoriesToSkip;
@@ -1661,42 +1665,42 @@ TArray<FString> FBaseEditorToolCustomization::GetAllFilesInDirectory(const FStri
 	return files;
 }
 
-bool FBaseEditorToolCustomization::HasFoundBlender() const
+bool FCognitiveToolsCustomization::HasFoundBlender() const
 {
-	return FBaseEditorToolCustomization::GetBlenderPath().ToString().Contains("blender.exe");
+	return FCognitiveToolsCustomization::GetBlenderPath().ToString().Contains("blender.exe");
 }
 
-bool FBaseEditorToolCustomization::HasFoundBlenderAndExportDir() const
+bool FCognitiveToolsCustomization::HasFoundBlenderAndExportDir() const
 {
-	return FBaseEditorToolCustomization::GetBlenderPath().ToString().Contains("blender.exe") && !FBaseEditorToolCustomization::GetExportDirectory().EqualTo(FText::FromString(""));
+	return FCognitiveToolsCustomization::GetBlenderPath().ToString().Contains("blender.exe") && !FCognitiveToolsCustomization::GetExportDirectory().EqualTo(FText::FromString(""));
 }
 
-bool FBaseEditorToolCustomization::HasFoundBlenderAndDynamicExportDir() const
+bool FCognitiveToolsCustomization::HasFoundBlenderAndDynamicExportDir() const
 {
-	return FBaseEditorToolCustomization::GetBlenderPath().ToString().Contains("blender.exe") && !FBaseEditorToolCustomization::GetDynamicExportDirectory().EqualTo(FText::FromString(""));
+	return FCognitiveToolsCustomization::GetBlenderPath().ToString().Contains("blender.exe") && !FCognitiveToolsCustomization::GetDynamicExportDirectory().EqualTo(FText::FromString(""));
 }
 
-bool FBaseEditorToolCustomization::HasSetExportDirectory() const
+bool FCognitiveToolsCustomization::HasSetExportDirectory() const
 {
-	return !FBaseEditorToolCustomization::GetExportDirectory().EqualTo(FText::FromString(""));
+	return !FCognitiveToolsCustomization::GetExportDirectory().EqualTo(FText::FromString(""));
 }
 
-FText FBaseEditorToolCustomization::GetBlenderPath() const
+FText FCognitiveToolsCustomization::GetBlenderPath() const
 {
 	return FText::FromString(BlenderPath);
 }
 
-FText FBaseEditorToolCustomization::GetExportDirectory() const
+FText FCognitiveToolsCustomization::GetExportDirectory() const
 {
 	return FText::FromString(ExportDirectory);
 }
 
-FText FBaseEditorToolCustomization::GetDynamicExportDirectory() const
+FText FCognitiveToolsCustomization::GetDynamicExportDirectory() const
 {
 	return FText::FromString(ExportDynamicsDirectory);
 }
 
-void FBaseEditorToolCustomization::SearchForBlender()
+void FCognitiveToolsCustomization::SearchForBlender()
 {
 	//try to find blender in program files
 	FString testApp = "C:/Program Files/Blender Foundation/Blender/blender.exe";
@@ -1708,12 +1712,12 @@ void FBaseEditorToolCustomization::SearchForBlender()
 	}
 }
 
-TSharedRef<IDetailCustomization> FBaseEditorToolCustomization::MakeInstance()
+TSharedRef<IDetailCustomization> FCognitiveToolsCustomization::MakeInstance()
 {
-	return MakeShareable(new FBaseEditorToolCustomization);
+	return MakeShareable(new FCognitiveToolsCustomization);
 }
 
-FReply FBaseEditorToolCustomization::ExecuteToolCommand(IDetailLayoutBuilder* DetailBuilder, UFunction* MethodToExecute)
+FReply FCognitiveToolsCustomization::ExecuteToolCommand(IDetailLayoutBuilder* DetailBuilder, UFunction* MethodToExecute)
 {
 	TArray<TWeakObjectPtr<UObject>> ObjectsBeingCustomized;
 	DetailBuilder->GetObjectsBeingCustomized(ObjectsBeingCustomized);
