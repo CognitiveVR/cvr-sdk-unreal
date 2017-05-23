@@ -146,6 +146,7 @@ public:
 
 	UDynamicObject();
 	
+	virtual void OnComponentCreated() override;
 	virtual void BeginPlay() override;
 
 	FDynamicObjectId GetUniqueId(FString meshName);

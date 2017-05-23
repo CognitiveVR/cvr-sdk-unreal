@@ -18,6 +18,8 @@ FHttpModule* Http;
 void FAnalyticsCognitiveVR::StartupModule()
 {
 	CognitiveVRProvider = MakeShareable(new FAnalyticsProviderCognitiveVR());
+	//if (Http == NULL)
+		//Http = &FHttpModule::Get();
 }
 
 void FAnalyticsCognitiveVR::ShutdownModule()
@@ -135,10 +137,14 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		//return false;
 	}
 
-	SessionTimestamp = Util::GetTimestamp();
-	SessionId = FString::FromInt(Util::GetTimestampLong()) + TEXT("_") + DeviceId;
+	GetSessionTimestamp();
+	//SessionTimestamp = Util::GetTimestamp();
+	GetSessionID();
+	//if (SessionId.IsEmpty())
+	//	SessionId = FString::FromInt(Util::GetTimestampLong()) + TEXT("_") + DeviceId;
 
-	Http = &FHttpModule::Get();
+	if (Http == NULL)
+		Http = &FHttpModule::Get();
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 
@@ -284,9 +290,20 @@ FString FAnalyticsProviderCognitiveVR::GetSessionID() const
 	return SessionId;
 }
 
-double FAnalyticsProviderCognitiveVR::GetSessionTimestamp() const
+double FAnalyticsProviderCognitiveVR::GetSessionTimestamp()
 {
+	if (SessionTimestamp < 0)
+	{
+		SessionTimestamp = Util::GetTimestamp();
+	}
 	return SessionTimestamp;
+}
+
+FString FAnalyticsProviderCognitiveVR::GetCognitiveSessionID()
+{
+	if (SessionId.IsEmpty())
+		SessionId = FString::FromInt(Util::GetTimestampLong()) + TEXT("_") + DeviceId;
+	return SessionId;
 }
 
 bool FAnalyticsProviderCognitiveVR::SetSessionID(const FString& InSessionID)
@@ -294,13 +311,11 @@ bool FAnalyticsProviderCognitiveVR::SetSessionID(const FString& InSessionID)
 	if (!bHasSessionStarted)
 	{
 		//SessionId = InSessionID;
-		SessionTimestamp = Util::GetTimestamp();
+		if (SessionTimestamp < 0)
+		{
+			SessionTimestamp = Util::GetTimestamp();
+		}
 		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetSessionID set new session id");
-
-		//TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-		//properties->SetStringField("id", SessionId);
-
-		//transaction->Update("Session", properties);
 	}
 	else
 	{
@@ -536,8 +551,8 @@ void FAnalyticsProviderCognitiveVR::SetDeviceID(const FString& InDeviceID)
 {
 	if (!bHasSessionStarted)
 	{
-		DeviceId = InDeviceID;
-		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetDeviceID set device id");
+		//DeviceId = InDeviceID;
+		//CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetDeviceID set device id");
 	}
 	else
 	{
@@ -589,6 +604,11 @@ bool FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
 	{
 		CognitiveLog::Warning("UPlayerTRacker::SendJson CognitiveVRProvider has not started a session!");
 		return false;
+	}
+
+	if (Http == NULL)
+	{
+		Http = &FHttpModule::Get();
 	}
 
 	if (Http == NULL)

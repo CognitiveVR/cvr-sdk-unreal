@@ -128,7 +128,8 @@ extern bool bHasSessionStarted;
 		void SetDeviceID(const FString& InDeviceID);
 
 		double SessionTimestamp;
-		double GetSessionTimestamp() const;
+		double GetSessionTimestamp();
+		FString GetCognitiveSessionID();
 
 		void AppendUD(TSharedPtr<FJsonValueArray> &json);
 		FVector GetPlayerHMDPosition();

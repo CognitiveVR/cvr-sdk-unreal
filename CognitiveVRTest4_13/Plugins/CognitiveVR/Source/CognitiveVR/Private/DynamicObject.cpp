@@ -21,6 +21,27 @@ UDynamicObject::UDynamicObject()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
+void UDynamicObject::OnComponentCreated()
+{
+	if (MeshName.IsEmpty())
+	{
+		UActorComponent* actorComponent = GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
+		if (actorComponent == NULL)
+		{
+			return;
+		}
+		UStaticMeshComponent* sceneComponent = Cast<UStaticMeshComponent>(actorComponent);
+		if (sceneComponent == NULL)
+		{
+			return;
+		}
+		if (sceneComponent->StaticMesh == NULL)
+		{
+			return;
+		}
+		MeshName = sceneComponent->StaticMesh->GetName();
+	}
+}
 
 void UDynamicObject::BeginPlay()
 {
@@ -34,6 +55,11 @@ void UDynamicObject::BeginPlay()
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot();
 		initSnapshot.SnapshotProperty("enabled", true);
 		snapshots.Add(initSnapshot);
+
+		if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
+		{
+			SendData();
+		}
 	}
 
 	Super::BeginPlay();
@@ -145,7 +171,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		LastPosition = GetOwner()->GetActorLocation();
 
 		LastForward = GetOwner()->GetActorForwardVector();
-
+		
 		FDynamicObjectSnapshot snapObj = MakeSnapshot();
 
 		//TODO add properties to the data, especially enabled = true
@@ -299,13 +325,14 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectSnapshot snapshot)
 {
 	TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
-	
 
 	//id
 	snapObj->SetNumberField("id", snapshot.id);
 
 	//time
 	snapObj->SetNumberField("time", snapshot.time);
+
+	//return MakeShareable(new FJsonValueObject(snapObj));
 
 	//positions
 	TArray<TSharedPtr<FJsonValue>> posArray;
@@ -334,32 +361,35 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 
 	snapObj->SetArrayField("r", rotArray);
 	
+	
+
 	TArray<TSharedPtr<FJsonValueObject>> properties;
 
+	TSharedPtr<FJsonObject> tempProperty = MakeShareable(new FJsonObject);
 	for (auto& Elem : snapshot.BoolProperties)
 	{
-		TSharedPtr<FJsonObject> tempProperty = MakeShareable(new FJsonObject);
+		tempProperty.Get()->Values.Empty();
 		tempProperty->SetBoolField(Elem.Key, Elem.Value);
 		TSharedPtr< FJsonValueObject > propertiesValue = MakeShareable(new FJsonValueObject(tempProperty));
 		properties.Add(propertiesValue);
 	}
 	for (auto& Elem : snapshot.IntegerProperties)
 	{
-		TSharedPtr<FJsonObject> tempProperty = MakeShareable(new FJsonObject);
+		tempProperty.Get()->Values.Empty();
 		tempProperty->SetNumberField(Elem.Key, Elem.Value);
 		TSharedPtr< FJsonValueObject > propertiesValue = MakeShareable(new FJsonValueObject(tempProperty));
 		properties.Add(propertiesValue);
 	}
 	for (auto& Elem : snapshot.DoubleProperties)
 	{
-		TSharedPtr<FJsonObject> tempProperty = MakeShareable(new FJsonObject);
+		tempProperty.Get()->Values.Empty();
 		tempProperty->SetNumberField(Elem.Key, Elem.Value);
 		TSharedPtr< FJsonValueObject > propertiesValue = MakeShareable(new FJsonValueObject(tempProperty));
 		properties.Add(propertiesValue);
 	}
 	for (auto& Elem : snapshot.StringProperties)
 	{
-		TSharedPtr<FJsonObject> tempProperty = MakeShareable(new FJsonObject);
+		tempProperty.Get()->Values.Empty();
 		tempProperty->SetStringField(Elem.Key, Elem.Value);
 		TSharedPtr< FJsonValueObject > propertiesValue = MakeShareable(new FJsonValueObject(tempProperty));
 		properties.Add(propertiesValue);
@@ -376,9 +406,9 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 		snapObj->SetArrayField("properties", ObjArray);
 	}
 
-	TSharedPtr< FJsonValueObject > outValue = MakeShareable(new FJsonValueObject(snapObj));
+	//TSharedPtr< FJsonValueObject > outValue = MakeShareable(new FJsonValueObject(snapObj));
 
-	return outValue;
+	return MakeShareable(new FJsonValueObject(snapObj));
 }
 
 void UDynamicObject::SendData()
@@ -391,7 +421,6 @@ void UDynamicObject::SendData()
 	}
 
 	//TODO only combine 64 entries, prioritizing the manifest
-
 	FString currentSceneName = myworld->GetMapName();
 	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
 	UDynamicObject::SendData(currentSceneName);
@@ -417,9 +446,11 @@ void UDynamicObject::SendData(FString sceneName)
 
 	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionId", cog->GetSessionID());
+	wholeObj->SetStringField("sessionId", cog->GetCognitiveSessionID());
 	wholeObj->SetNumberField("part", jsonPart);
 	jsonPart++;
+
+	
 
 	if (newManifest.Num() > 0)
 	{
@@ -429,7 +460,7 @@ void UDynamicObject::SendData(FString sceneName)
 
 		CognitiveLog::Warning("sending new object manifest");
 	}
-	
+
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	for (int32 i = 0; i < EventArray.Num(); i++)
 	{
@@ -441,11 +472,9 @@ void UDynamicObject::SendData(FString sceneName)
 	FString OutputString;
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-	
-	if (cog->SendJson("dynamics", OutputString))
-	{
-		snapshots.Empty();
-	}
+	cog->SendJson("dynamics", OutputString);
+
+	snapshots.Empty();
 }
 
 TSharedPtr<FJsonObject> UDynamicObject::DynamicObjectManifestToString()

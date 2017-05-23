@@ -217,6 +217,7 @@ for tempPath, dirs, files in os.walk(exportPath):
 		if name.endswith("_unrealdec.mtl"):
 			mtlpath = os.path.join(tempPath, name)
 
+#does nothing
 for line in readString.splitlines():
 	if line.endswith(diffuse_ext):
 		outstrings.append(line.replace(".bmp",".png")+'\n')

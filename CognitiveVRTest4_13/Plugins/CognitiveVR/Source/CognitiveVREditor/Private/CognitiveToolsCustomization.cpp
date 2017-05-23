@@ -316,7 +316,6 @@ FReply FCognitiveToolsCustomization::ExportDynamics()
 	//ExportDirectory = FPaths::ConvertRelativePathToFull(ExportDirectory);
 
 	// @todo: extend this to multiple levels.
-	UWorld* World = GWorld;
 	FString title = "Select Root Dynamic Directory";
 	FString fileTypes = "";
 	FString lastPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
@@ -335,6 +334,30 @@ FReply FCognitiveToolsCustomization::ExportDynamics()
 
 	TArray<FString> meshNames;
 	TArray<UDynamicObject*> exportObjects;
+
+	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AStaticMeshActor *Mesh = *ActorItr;
+		
+		UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+		if (actorComponent == NULL)
+		{
+			continue;
+		}
+		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
+		if (dynamic == NULL)
+		{
+			continue;
+		}
+		if (!meshNames.Contains(dynamic->MeshName))
+		{
+			exportObjects.Add(dynamic);
+			meshNames.Add(dynamic->MeshName);
+		}
+	}
+
+
 	for (TObjectIterator<UDynamicObject> It; It; ++It)
 	{
 		UDynamicObject* TempObject = *It;
