@@ -12,6 +12,119 @@
 #include "DynamicObject.h"
 #include "PlayerTracker.generated.h"
 
+USTRUCT(BlueprintType)
+struct FExitPollScaleRange
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadOnly)
+		int32 start;
+	UPROPERTY(BlueprintReadOnly)
+		int32 end;
+};
+
+USTRUCT(BlueprintType)
+struct FExitPollMultipleChoice
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadOnly)
+		FString answer;
+	UPROPERTY(BlueprintReadOnly)
+		bool icon;
+};
+
+USTRUCT(BlueprintType)
+struct FExitPollQuestion
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadOnly)
+		FString title;
+	UPROPERTY(BlueprintReadOnly)
+		FString type;
+
+	//voice
+	UPROPERTY(BlueprintReadOnly)
+		int32 maxResponseLength;
+
+	//scale
+	UPROPERTY(BlueprintReadOnly)
+		FString minLabel;
+	UPROPERTY(BlueprintReadOnly)
+		FString maxLabel;
+	UPROPERTY(BlueprintReadOnly)
+		FExitPollScaleRange range;
+
+	//multple choice
+	UPROPERTY(BlueprintReadOnly)
+		TArray<FExitPollMultipleChoice> answers;
+};
+
+USTRUCT(BlueprintType)
+struct FExitPollQuestionSet
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadOnly)
+		FString customerId;
+	UPROPERTY(BlueprintReadOnly)
+		FString id;
+	UPROPERTY(BlueprintReadOnly)
+		FString name;
+	UPROPERTY(BlueprintReadOnly)
+		int32 version;
+	UPROPERTY(BlueprintReadOnly)
+		FString title;
+	UPROPERTY(BlueprintReadOnly)
+		FString status;
+	UPROPERTY(BlueprintReadOnly)
+		TArray<FExitPollQuestion> questions;
+};
+
+USTRUCT(BlueprintType)
+struct FExitPollAnswer
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FString type; //question type
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FString value; //string bool, int value
+};
+
+USTRUCT(BlueprintType)
+struct FExitPollResponses
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FString user;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FString questionSetId;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FString sessionId;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FString hook;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<FExitPollAnswer> answers;
+};
+
+
+
+//DECLARE_DYNAMIC_DELEGATE_OneParam(FExitPollQuestionHookRequestDelegate, FExitPollQuestionSet, QuestionSet);
+//static FExitPollQuestionSet ExitPollRequestDelegate;
+
+//DECLARE_DYNAMIC_DELEGATE_OneParam(FOnlineUserImageRetrievedDelegate, UTexture2D*, Texture);
+
+DECLARE_DYNAMIC_DELEGATE_OneParam(FCognitiveExitPollResponse, FExitPollQuestionSet, QuestionSet);
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class COGNITIVEVR_API UPlayerTracker : public UActorComponent
 {
@@ -36,7 +149,9 @@ private:
 
 public:
 	// Sets default values for this component's properties
+	//static FExitPollQuestionHookRequestDelegate SomeDelegate;
 
+	FCognitiveExitPollResponse OnExitPollResponse;
 
 	//UTextureRenderTarget2D* renderTarget;
 	AActor* SceneCaptureActor;

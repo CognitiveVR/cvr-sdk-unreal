@@ -44,7 +44,6 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 	s->AppendUD(jsonArray);
 	Util::AppendToJsonArray(jsonArray, empty);
 
-	TSharedPtr<FJsonObject>deviceProperties = Util::DeviceScraper(s->initProperties);
 	if (s == NULL)
 	{
 		GLog->Log("network::init cognitive provider is null");
@@ -55,6 +54,8 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 		GLog->Log("network::init cognitive provider init properties is null");
 		return;
 	}
+	TSharedPtr<FJsonObject>deviceProperties = Util::DeviceScraper(s->initProperties);
+
 	Util::AppendToJsonArray(jsonArray, deviceProperties);
 
 	//TODO something about application_init is broken. returns invalid responses

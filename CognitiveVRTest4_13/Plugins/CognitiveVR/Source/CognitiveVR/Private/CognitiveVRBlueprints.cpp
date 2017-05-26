@@ -296,3 +296,56 @@ void UCognitiveVRBlueprints::RecordSensor(const FString Name, const float Value)
 
 	cog->sensors->RecordSensor(Name, Value);
 }
+
+/*void UCognitiveVRBlueprints::GetRequestLatent(const FString Hook, struct FLatentActionInfo LatentInfo)
+{
+	float Duration = 5;
+
+	//http request
+	//add callback from http request
+
+	FLatentActionManager& LatentActionManager = GWorld->GetLatentActionManager();
+	if (LatentActionManager.FindExistingAction<FExitPollLatentAction>(LatentInfo.CallbackTarget, LatentInfo.UUID) == NULL)
+	{
+		LatentActionManager.AddNewAction(LatentInfo.CallbackTarget, LatentInfo.UUID, new FExitPollLatentAction(Duration, LatentInfo));
+	}
+
+	ExitPoll::MakeQuestionSetRequest(Hook); //callback goes here?
+}
+
+void HttpExitPollRequestCallback(FExitPollQuestionSet questionSet, struct FLatentActionInfo LatentInfo)
+{
+	//save question set to exitpoll
+
+	//find latent action manager. remove exitpoll latent action
+	FLatentActionManager& LatentActionManager = GWorld->GetLatentActionManager();
+	if (LatentActionManager.FindExistingAction<FExitPollLatentAction>(LatentInfo.CallbackTarget, LatentInfo.UUID) != NULL)
+	{
+		LatentActionManager.RemoveActionsForObject(LatentInfo.CallbackTarget);
+	}
+}
+
+*/
+
+void UCognitiveVRBlueprints::GetRequestDelegate(const FString Hook, const FCognitiveExitPollResponse response)
+{
+	ExitPoll::MakeQuestionSetRequest(Hook, response);
+}
+
+FExitPollQuestionSet UCognitiveVRBlueprints::GetCurrentExitPollQuestionSet(EResponseValueReturn& Out)
+{
+	return FExitPollQuestionSet();// FExitPoll::GetQuestionSet(Hook);
+}
+
+void UCognitiveVRBlueprints::SendExitPollResponse(FExitPollResponses Responses)
+{
+	/*TMap<FString, FString> answers;
+
+	for (int32 i = 0; i < Responses.answers.Num(); i++)
+	{
+		answers.Add(Responses.answers[i].type, Responses.answers[i].value);
+	}
+	ExitPoll::SendQuestionResponses(Responses.user,Responses.questionSetId,Responses.sessionId,Responses.hook,answers);*/
+	ExitPoll::SendQuestionResponses(Responses);
+}
+

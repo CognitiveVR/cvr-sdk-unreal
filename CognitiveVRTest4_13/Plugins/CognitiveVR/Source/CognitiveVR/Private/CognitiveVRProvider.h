@@ -22,6 +22,7 @@
 #include "Engine.h"
 
 DECLARE_MULTICAST_DELEGATE(FCognitiveSendData);
+//DECLARE_DELEGATE_OneParam(FCognitiveExitPollResponse, FExitPollQuestionSet);
 
 extern bool bHasSessionStarted;
 
@@ -37,6 +38,7 @@ extern bool bHasSessionStarted;
 	};
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
+	//everything here is referenced from headers. why is this being forward declared?
 	class Network;
 	class Transaction;
 	class Tuning;
@@ -45,6 +47,7 @@ extern bool bHasSessionStarted;
 	class OverrideHttpInterface;
 	class CognitiveVRResponse;
 	class Sensors;
+	//class ExitPoll;
 	//class UDynamicObject;
 
 	class FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
@@ -115,7 +118,8 @@ extern bool bHasSessionStarted;
 		FString GetSceneKey(FString sceneName);
 
 		UPROPERTY(BlueprintAssignable)
-			FCognitiveSendData OnSendData;
+		FCognitiveSendData OnSendData;
+
 		FString DeviceId;
 		Transaction* transaction;
 		Tuning* tuning;
