@@ -279,23 +279,23 @@ bool FCognitiveToolsCustomization::GetStaticOnly()
 	return staticOnly;
 }
 
-int FCognitiveToolsCustomization::GetMinPolygon()
+int32 FCognitiveToolsCustomization::GetMinPolygon()
 {
-	int MinCount = 0;
+	int32 MinCount = 0;
 	MinPolygonProperty->GetValue(MinCount);
 	return MinCount;
 }
 
-int FCognitiveToolsCustomization::GetMaxPolygon()
+int32 FCognitiveToolsCustomization::GetMaxPolygon()
 {
-	int MaxCount = 0;
+	int32 MaxCount = 0;
 	MaxPolygonProperty->GetValue(MaxCount);
 	return MaxCount;
 }
 
-int FCognitiveToolsCustomization::GetTextureRefacor()
+int32 FCognitiveToolsCustomization::GetTextureRefacor()
 {
-	int TextureRefactor = 0;
+	int32 TextureRefactor = 0;
 	TextureResizeProperty->GetValue(TextureRefactor);
 	return TextureRefactor;
 }

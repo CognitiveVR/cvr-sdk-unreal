@@ -153,7 +153,7 @@ void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, long &longValue)
 
 	json = MakeShareable(new FJsonValueArray(ValueArray));
 }
-void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, int &intValue)
+void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, int32 &intValue)
 {
 	TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
 	TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueNumber(intValue));
@@ -205,7 +205,7 @@ void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, 
 	json.Get()->SetBoolField(fkey, booleanValue);
 }
 
-void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, int &integerValue)
+void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, int32 &integerValue)
 {
 	FString fkey = name.c_str();
 	json.Get()->SetNumberField(fkey, integerValue);

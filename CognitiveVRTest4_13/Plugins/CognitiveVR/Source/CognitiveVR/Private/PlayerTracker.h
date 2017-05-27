@@ -73,8 +73,10 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 		FString customerId;
 	UPROPERTY(BlueprintReadOnly)
+		//question set id
 		FString id;
 	UPROPERTY(BlueprintReadOnly)
+		//question set name
 		FString name;
 	UPROPERTY(BlueprintReadOnly)
 		int32 version;
@@ -86,6 +88,14 @@ public:
 		TArray<FExitPollQuestion> questions;
 };
 
+UENUM(BlueprintType)
+enum class EAnswerValueTypeReturn : uint8
+{
+	Number,
+	Bool,
+	Null
+};
+
 USTRUCT(BlueprintType)
 struct FExitPollAnswer
 {
@@ -95,7 +105,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FString type; //question type
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		FString value; //string bool, int value
+		EAnswerValueTypeReturn AnswerValueType;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 numberValue;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool boolValue; //converted to 0 or 1
 };
 
 USTRUCT(BlueprintType)
@@ -158,7 +172,7 @@ public:
 
 	USceneCaptureComponent2D* sceneCapture;
 	bool waitingForDeferred = false;
-	int framesTillRender = 0;
+	int32 framesTillRender = 0;
 	FVector captureLocation;
 	FRotator captureRotation;
 

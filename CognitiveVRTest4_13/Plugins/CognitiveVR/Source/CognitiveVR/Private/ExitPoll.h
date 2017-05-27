@@ -11,15 +11,12 @@
 #include "PlayerTracker.h"
 #include "Http.h"
 
-
 class COGNITIVEVR_API ExitPoll
 {
 private:
-	static TSharedPtr<FAnalyticsProviderCognitiveVR> s;
 
 public:
 	
-	void Initialize();
 	//static FExitPollQuestionSet GetQuestionSet(FString hookName);
 	
 	static FCognitiveExitPollResponse& ResponseDelegate;
@@ -29,5 +26,7 @@ public:
 	static void SendQuestionResponses(FExitPollResponses responses);
 
 	static void OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
+	static FExitPollQuestionSet GetCurrentQuestionSet();
 	
 };

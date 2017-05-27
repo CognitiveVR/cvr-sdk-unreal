@@ -35,7 +35,7 @@ void UCognitiveVRBlueprints::BeginTransactionPosition(FString Category, FString 
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	for (int i = 0; i < Attributes.Num(); i++)
+	for (int32 i = 0; i < Attributes.Num(); i++)
 	{
 		if (Attributes[i].Name.Len() > 0)
 		{
@@ -69,7 +69,7 @@ void UCognitiveVRBlueprints::UpdateTransactionPosition(FString Category, FString
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	for (int i = 0; i < Attributes.Num(); i++)
+	for (int32 i = 0; i < Attributes.Num(); i++)
 	{
 		if (Attributes[i].Name.Len() > 0)
 		{
@@ -103,7 +103,7 @@ void UCognitiveVRBlueprints::EndTransactionPosition(FString Category, FString Tr
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	for (int i = 0; i < Attributes.Num(); i++)
+	for (int32 i = 0; i < Attributes.Num(); i++)
 	{
 		if (Attributes[i].Name.Len() > 0)
 		{
@@ -137,7 +137,7 @@ void UCognitiveVRBlueprints::BeginEndTransactionPosition(FString Category, const
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	for (int i = 0; i < Attributes.Num(); i++)
+	for (int32 i = 0; i < Attributes.Num(); i++)
 	{
 		if (Attributes[i].Name.Len() > 0)
 		{
@@ -206,7 +206,7 @@ void UCognitiveVRBlueprints::UpdateDevice(const TArray<FAnalyticsEventAttr>& Att
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	for (int i = 0; i < Attributes.Num(); i++)
+	for (int32 i = 0; i < Attributes.Num(); i++)
 	{
 		if (Attributes[i].Name.Len() > 0)
 		{
@@ -253,7 +253,7 @@ void UCognitiveVRBlueprints::UpdateUser(const TArray<FAnalyticsEventAttr>& Attri
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	for (int i = 0; i < Attributes.Num(); i++)
+	for (int32 i = 0; i < Attributes.Num(); i++)
 	{
 		if (Attributes[i].Name.Len() > 0)
 		{
@@ -334,7 +334,7 @@ void UCognitiveVRBlueprints::GetRequestDelegate(const FString Hook, const FCogni
 
 FExitPollQuestionSet UCognitiveVRBlueprints::GetCurrentExitPollQuestionSet(EResponseValueReturn& Out)
 {
-	return FExitPollQuestionSet();// FExitPoll::GetQuestionSet(Hook);
+	return ExitPoll::GetCurrentQuestionSet();
 }
 
 void UCognitiveVRBlueprints::SendExitPollResponse(FExitPollResponses Responses)

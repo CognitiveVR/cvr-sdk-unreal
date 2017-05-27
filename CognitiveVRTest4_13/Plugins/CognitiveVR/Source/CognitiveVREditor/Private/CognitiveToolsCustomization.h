@@ -60,8 +60,8 @@ private:
 
 	float GetMinimumSize();
 	float GetMaximumSize();
-	int GetMinPolygon();
-	int GetMaxPolygon();
+	int32 GetMinPolygon();
+	int32 GetMaxPolygon();
 	int32 GetTextureRefacor();
 	bool GetStaticOnly();
 

@@ -75,7 +75,7 @@ void BufferManager::PushTask(NetworkCallback callback, std::string sub_path, TAr
 		//turn all the content into one long string
 
 		TArray< TSharedPtr<FJsonValue> > ObjArray;
-		for (int i = 0; i < content.Num(); i++)
+		for (int32 i = 0; i < content.Num(); i++)
 		{
 			//ObjArray.Emplace(content[i]);
 
