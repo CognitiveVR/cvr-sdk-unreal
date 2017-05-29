@@ -32,8 +32,7 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 	//TSharedPtr<FJsonObject> json = MakeShareable(new FJsonObject);
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
+	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
 	FString empty = "";
 
 	//FString user = s->GetUserID();

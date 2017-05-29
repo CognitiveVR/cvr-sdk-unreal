@@ -305,7 +305,7 @@ double FAnalyticsProviderCognitiveVR::GetSessionTimestamp()
 FString FAnalyticsProviderCognitiveVR::GetCognitiveSessionID()
 {
 	if (SessionId.IsEmpty())
-		SessionId = FString::FromInt(Util::GetTimestampLong()) + TEXT("_") + DeviceId;
+		SessionId = FString::FromInt(GetSessionTimestamp()) + TEXT("_") + DeviceId;
 	return SessionId;
 }
 

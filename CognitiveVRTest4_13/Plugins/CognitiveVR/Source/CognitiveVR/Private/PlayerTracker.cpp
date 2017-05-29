@@ -200,7 +200,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 						3
 					);
 
-					snapObj->SetNumberField("o", hitDynamicObject->GetObjectId().Id);
+					snapObj->SetNumberField("o", hitDynamicObject->GetObjectId()->Id);
 
 					//FVector gazePoint = GetGazePoint(captureLocation, captureRotation);
 					JsonValue = MakeShareable(new FJsonValueNumber(-(int32)localHitPosition.X));

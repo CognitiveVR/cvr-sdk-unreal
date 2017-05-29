@@ -22,26 +22,6 @@ double Util::GetTimestamp()
 	#pragma warning(pop)
 }
 
-long Util::GetTimestampLong()
-{
-#pragma warning(push)
-#pragma warning(disable:4244) //Disable warning regarding loss of accuracy, no concern.
-
-	return time(0);
-	//http://stackoverflow.com/questions/997946/how-to-get-current-time-and-date-in-c
-
-#pragma warning(pop)
-}
-
-std::string Util::GetTimestampStr(long t)
-{
-    if (t == 0) {
-        t = Util::GetTimestamp();
-    }
-
-    return Util::ToString(t);
-}
-
 template < typename T > std::string Util::ToString( const T& n )
 {
     std::ostringstream stm ;

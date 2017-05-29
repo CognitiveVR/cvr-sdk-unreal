@@ -8,7 +8,7 @@
 TArray<FDynamicObjectSnapshot> snapshots;
 TArray<FDynamicObjectManifestEntry> manifest;
 TArray<FDynamicObjectManifestEntry> newManifest;
-TArray<FDynamicObjectId> allObjectIds;
+TArray<TSharedPtr<FDynamicObjectId>> allObjectIds;
 int32 jsonPart = 1;
 int32 MaxSnapshots = 64;
 
@@ -86,17 +86,17 @@ FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, do
 	return this;
 }
 
-FDynamicObjectId UDynamicObject::GetUniqueId(FString meshName)
+TSharedPtr<FDynamicObjectId> UDynamicObject::GetUniqueId(FString meshName)
 {
-	FDynamicObjectId freeId;
+	TSharedPtr<FDynamicObjectId> freeId;
 	static int32 originalId = 1000;
 	originalId++;
 
-	freeId = FDynamicObjectId(originalId, meshName);
+	freeId = MakeShareable(new FDynamicObjectId(originalId, meshName));
 	return freeId;
 }
 
-FDynamicObjectId UDynamicObject::GetObjectId()
+TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
 {
 	return ObjectID;
 }
@@ -117,25 +117,6 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		//write to json
 
 		FVector currentForward = GetOwner()->GetActorForwardVector();
-
-		/*DrawDebugLine(
-			GetWorld(),
-			GetOwner()->GetActorLocation(),
-			GetOwner()->GetActorLocation() + LastForward*100, //this isn't right. 
-			FColor(255, 0, 0),
-			false, 3, 0,
-			3
-		);
-
-		DrawDebugLine(
-			GetWorld(),
-			GetOwner()->GetActorLocation(),
-			GetOwner()->GetActorLocation() + GetOwner()->GetActorForwardVector()*100,
-			FColor(0, 255, 0),
-			false, 3, 0,
-			3
-		);*/
-
 
 		//lastRot.Normalize();
 		currentForward.Normalize();
@@ -188,8 +169,9 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 {
+	//decide if the object needs a new entry in the manifest
 	bool needObjectId = false;
-	if (ObjectID.Id == -1)
+	if (!ObjectID.IsValid() || ObjectID->Id == -1)
 	{
 		needObjectId = true;
 	}
@@ -199,7 +181,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 		bool foundEntry = false;
 		for (int32 i = 0; i < manifest.Num(); i++)
 		{
-			if (manifest[i].Id == ObjectID.Id)
+			if (manifest[i].Id == ObjectID->Id)
 			{
 				foundEntry = true;
 				break;
@@ -215,11 +197,12 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 	{
 		if (!UseCustomId)
 		{
-			FDynamicObjectId recycledId;
+			TSharedPtr<FDynamicObjectId> recycledId;
 			bool foundRecycleId = false;
+
 			for (int32 i = 0; i < allObjectIds.Num(); i++)
 			{
-				if (!allObjectIds[i].Used && allObjectIds[i].MeshName == MeshName)
+				if (!allObjectIds[i]->Used && allObjectIds[i]->MeshName == MeshName)
 				{
 					foundRecycleId = true;
 					recycledId = allObjectIds[i];
@@ -229,13 +212,15 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 			if (foundRecycleId)
 			{
 				ObjectID = recycledId;
-				ObjectID.Used = true;
+				ObjectID->Used = true;
 			}
 			else
 			{
 				ObjectID = GetUniqueId(MeshName);
 
-				FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID.Id, GetOwner()->GetName(), MeshName);
+				allObjectIds.Add(ObjectID);
+
+				FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
 				if (!GroupName.IsEmpty())
 				{
 					//entry.
@@ -247,8 +232,8 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 		}
 		else
 		{
-			ObjectID = FDynamicObjectId(CustomId, MeshName);
-			FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID.Id, GetOwner()->GetName(), MeshName);
+			ObjectID = MakeShareable(new FDynamicObjectId(CustomId, MeshName));
+			FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
 			if (!GroupName.IsEmpty())
 			{
 				//entry.
@@ -270,7 +255,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 	double ts = Util::GetTimestamp();
 
 	snapshot.time = ts;
-	snapshot.id = ObjectID.Id;
+	snapshot.id = ObjectID->Id;
 	snapshot.position = FVector(-(int32)GetOwner()->GetActorLocation().X, (int32)GetOwner()->GetActorLocation().Z, (int32)GetOwner()->GetActorLocation().Y);
 	
 
@@ -539,7 +524,12 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (ReleaseIdOnDestroy && !TrackGaze)
 	{
-		ObjectID.Used = false;
+		//GLog->Log("-------------------------------------------------------> release object id");
+		FDynamicObjectSnapshot initSnapshot = MakeSnapshot();
+		initSnapshot.SnapshotProperty("enabled", false);
+		snapshots.Add(initSnapshot);
+
+		ObjectID->Used = false;
 	}
 
 	if (EndPlayReason == EEndPlayReason::EndPlayInEditor)

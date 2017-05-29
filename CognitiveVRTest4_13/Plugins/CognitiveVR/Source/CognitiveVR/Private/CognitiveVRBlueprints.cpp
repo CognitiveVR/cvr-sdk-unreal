@@ -219,8 +219,7 @@ void UCognitiveVRBlueprints::UpdateDevice(const TArray<FAnalyticsEventAttr>& Att
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
+	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
 	FString empty;
 
 	Util::AppendToJsonArray(jsonArray, fs);
@@ -266,8 +265,7 @@ void UCognitiveVRBlueprints::UpdateUser(const TArray<FAnalyticsEventAttr>& Attri
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
+	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
 	FString empty;
 
 	Util::AppendToJsonArray(jsonArray, fs);
