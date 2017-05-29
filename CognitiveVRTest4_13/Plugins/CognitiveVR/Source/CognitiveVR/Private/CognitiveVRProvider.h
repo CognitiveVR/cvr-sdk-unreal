@@ -131,7 +131,7 @@ extern bool bHasSessionStarted;
 		FString GetDeviceID() const;
 		void SetDeviceID(const FString& InDeviceID);
 
-		double SessionTimestamp;
+		double SessionTimestamp = -1;
 		double GetSessionTimestamp();
 		FString GetCognitiveSessionID();
 

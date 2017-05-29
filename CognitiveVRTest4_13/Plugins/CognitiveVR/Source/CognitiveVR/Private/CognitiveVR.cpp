@@ -188,6 +188,9 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 		return;
 	}
 
+	GLog->Log("END SESSION END SESSION END SESSION END SESSION");
+
+	transaction->End("Session");
 
 	FlushEvents();
 	CognitiveLog::Info("Freeing CognitiveVR memory.");
@@ -210,6 +213,8 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	sensors = NULL;
 	CognitiveLog::Info("CognitiveVR memory freed.");
 
+	SessionTimestamp = -1;
+	SessionId = "";
 
 	bHasSessionStarted = false;
 }

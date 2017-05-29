@@ -214,5 +214,5 @@ public:
 	//UPROPERTY(EditAnywhere)
 	//bool EndSessionOnEndPlay = true;
 
-	//virtual void EndPlay(const EEndPlayReason::Type EndPlayReason);
+	void EndPlay(const EEndPlayReason::Type EndPlayReason);
 };

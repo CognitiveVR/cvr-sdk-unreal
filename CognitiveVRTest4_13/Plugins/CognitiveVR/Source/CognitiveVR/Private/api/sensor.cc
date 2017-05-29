@@ -86,7 +86,7 @@ FString Sensors::SensorDataToString()
 
 	wholeObj->SetStringField("name", s->GetDeviceID());
 	wholeObj->SetNumberField("timestamp", (int32)s->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", s->GetSessionID());
+	wholeObj->SetStringField("sessionid", s->GetCognitiveSessionID());
 	wholeObj->SetNumberField("part", jsonPart);
 	jsonPart++;
 	

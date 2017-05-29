@@ -429,7 +429,7 @@ FString UPlayerTracker::EventSnapshotsToString()
 
 	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", cog->GetSessionID());
+	wholeObj->SetStringField("sessionid", cog->GetCognitiveSessionID());
 	wholeObj->SetNumberField("part", jsonEventPart);
 	jsonEventPart++;
 
@@ -454,7 +454,7 @@ FString UPlayerTracker::GazeSnapshotsToString()
 
 	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", cog->GetSessionID());
+	wholeObj->SetStringField("sessionid", cog->GetCognitiveSessionID());
 	wholeObj->SetNumberField("part", jsonGazePart);
 	jsonGazePart++;
 
@@ -514,28 +514,34 @@ up->SendData();
 }
 */
 
-/*
 void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	FString reason;
+	switch (EndPlayReason)
+	{
+	case EEndPlayReason::Destroyed: reason = "destroyed";
+		break;
+	case EEndPlayReason::EndPlayInEditor: reason = "end PIE";
+		break;
+	case EEndPlayReason::LevelTransition: reason = "level transition";
+		break;
+	case EEndPlayReason::Quit: reason = "quit";
+		break;
+	case EEndPlayReason::RemovedFromWorld: reason = "removed from world";
+		break;
+	default:
+		reason = "default";
+		break;
+	}
 
-std::string reason;
-switch (EndPlayReason)
-{
-case EEndPlayReason::Destroyed: reason = "destroyed";
-break;
-case EEndPlayReason::EndPlayInEditor: reason = "end PIE";
-break;
-case EEndPlayReason::LevelTransition: reason = "level transition";
-break;
-case EEndPlayReason::Quit: reason = "quit";
-break;
-case EEndPlayReason::RemovedFromWorld: reason = "removed from world";
-break;
-default:
-reason = "default";
-break;
+	GLog->Log("player tracker end play reason " + reason);
+	if (s.Get() != NULL)
+	{
+		GLog->Log("PLAYER TRACKER END PLAY. END SESSION TOO");
+		s->EndSession();
+	}
 }
-
+/*
 
 CognitiveLog::Info("UPlayerTracker::EndPlay reason:" + reason);
 

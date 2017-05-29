@@ -26,7 +26,7 @@ std::string OverrideHttpInterface::Post(std::string url, std::string path, std::
     //Construct URL.
     std::string stdfull_url = url + path;
     FString full_url(stdfull_url.c_str());
-	CognitiveLog::Warning("Override_Http_Interface::Post "+ stdfull_url+ "\n" + stdcontent);
+	CognitiveLog::Info("Override_Http_Interface::Post "+ stdfull_url+ "\n" + stdcontent);
 
     FString content(stdcontent.c_str());
 
