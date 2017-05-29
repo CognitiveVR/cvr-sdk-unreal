@@ -242,6 +242,10 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 
 	cog->thread_manager->SendBatch();
 
+	sensors->SendData();
+
+	UDynamicObject::SendData();
+
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
@@ -249,6 +253,12 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents number of controllers is zero!");
 		return;
 	}
+	if (controllers[0]->GetPawn() == NULL)
+	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents controller0 has no pawn!");
+		return;
+	}
+
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 	if (up == NULL)
 	{
@@ -259,14 +269,6 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 	{
 		up->SendGazeEventDataToSceneExplorer();
 	}
-
-	sensors->SendData();
-
-	UDynamicObject::SendData();
-
-	//OnSendData.Broadcast();
-
-	//delegate calls 'SendData'. dynamic objects connected to this
 }
 
 void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
@@ -642,8 +644,9 @@ bool FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
 		return false;
 	}
 
-	std::string stdjson(TCHAR_TO_UTF8(*json));
-	CognitiveLog::Info(stdjson);
+	std::string stdjson(TCHAR_TO_UTF8(*endpoint));
+	//CognitiveLog::Info(stdjson);
+	CognitiveLog::Info("send json to "+ stdjson);
 
 	FString url = "https://sceneexplorer.com/api/" + endpoint + "/" + sceneKey;
 
@@ -667,7 +670,7 @@ FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
 	{
-		CognitiveLog::Info("--------------------------no controllers");
+		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition--------------------------no controllers skip");
 		return FVector();
 	}
 

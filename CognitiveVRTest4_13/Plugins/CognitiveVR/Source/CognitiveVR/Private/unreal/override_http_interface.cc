@@ -26,7 +26,7 @@ std::string OverrideHttpInterface::Post(std::string url, std::string path, std::
     //Construct URL.
     std::string stdfull_url = url + path;
     FString full_url(stdfull_url.c_str());
-	CognitiveLog::Info("Override_Http_Interface::Post "+ stdfull_url+ "\n" + stdcontent);
+	CognitiveLog::Info("Override_Http_Interface::Post " + stdfull_url);// +"\n" + stdcontent);
 
     FString content(stdcontent.c_str());
 
@@ -66,40 +66,4 @@ std::string OverrideHttpInterface::Post(std::string url, std::string path, std::
 
 	this->http_response = "";
 	return this->http_response;
-	/*
-    if (process_result) {
-        double ntimeout = FPlatformTime::Seconds() + timeout;
-        double last_tick = FPlatformTime::Seconds();
-        while (!this->response_received) {
-            double cur_timestamp = FPlatformTime::Seconds();
-            double delta =  cur_timestamp - last_tick;
-
-            last_tick = FPlatformTime::Seconds();
-            FHttpModule::Get().GetHttpManager().Tick(delta);
-
-            if (cur_timestamp >= ntimeout) {
-				UE_LOG(LogTemp, Warning, TEXT("override_http_int.cc::HTTP request timed out"));
-                throw std::runtime_error("HTTP request timed out.");
-            }
-        }
-    }
-
-    if (!this->response_valid || this->http_response.empty()) {
-		if (this->http_response.empty())
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("override_http_int.cc::empty http response"));
-		}
-		if (!this->response_valid)
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("override_http_int.cc::invalid http response"));
-		}
-			
-        throw std::runtime_error("Invalid or Empty HTTP response.");
-    }
-
-    this->response_received = false;
-
-    return th
-	is->http_response;
-	*/
 }
