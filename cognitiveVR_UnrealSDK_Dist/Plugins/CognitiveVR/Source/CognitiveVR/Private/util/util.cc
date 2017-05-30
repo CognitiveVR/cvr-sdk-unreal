@@ -22,26 +22,6 @@ double Util::GetTimestamp()
 	#pragma warning(pop)
 }
 
-long Util::GetTimestampLong()
-{
-#pragma warning(push)
-#pragma warning(disable:4244) //Disable warning regarding loss of accuracy, no concern.
-
-	return time(0);
-	//http://stackoverflow.com/questions/997946/how-to-get-current-time-and-date-in-c
-
-#pragma warning(pop)
-}
-
-std::string Util::GetTimestampStr(long t)
-{
-    if (t == 0) {
-        t = Util::GetTimestamp();
-    }
-
-    return Util::ToString(t);
-}
-
 template < typename T > std::string Util::ToString( const T& n )
 {
     std::ostringstream stm ;
@@ -153,7 +133,7 @@ void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, long &longValue)
 
 	json = MakeShareable(new FJsonValueArray(ValueArray));
 }
-void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, int &intValue)
+void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, int32 &intValue)
 {
 	TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
 	TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueNumber(intValue));
@@ -205,7 +185,7 @@ void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, 
 	json.Get()->SetBoolField(fkey, booleanValue);
 }
 
-void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, int &integerValue)
+void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, int32 &integerValue)
 {
 	FString fkey = name.c_str();
 	json.Get()->SetNumberField(fkey, integerValue);

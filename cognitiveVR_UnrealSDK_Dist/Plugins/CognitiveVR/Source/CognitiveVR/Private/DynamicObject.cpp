@@ -8,7 +8,7 @@
 TArray<FDynamicObjectSnapshot> snapshots;
 TArray<FDynamicObjectManifestEntry> manifest;
 TArray<FDynamicObjectManifestEntry> newManifest;
-TArray<FDynamicObjectId> allObjectIds;
+TArray<TSharedPtr<FDynamicObjectId>> allObjectIds;
 int32 jsonPart = 1;
 int32 MaxSnapshots = 64;
 
@@ -21,6 +21,27 @@ UDynamicObject::UDynamicObject()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
+void UDynamicObject::OnComponentCreated()
+{
+	if (MeshName.IsEmpty())
+	{
+		UActorComponent* actorComponent = GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
+		if (actorComponent == NULL)
+		{
+			return;
+		}
+		UStaticMeshComponent* sceneComponent = Cast<UStaticMeshComponent>(actorComponent);
+		if (sceneComponent == NULL)
+		{
+			return;
+		}
+		if (sceneComponent->StaticMesh == NULL)
+		{
+			return;
+		}
+		MeshName = sceneComponent->StaticMesh->GetName();
+	}
+}
 
 void UDynamicObject::BeginPlay()
 {
@@ -34,6 +55,11 @@ void UDynamicObject::BeginPlay()
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot();
 		initSnapshot.SnapshotProperty("enabled", true);
 		snapshots.Add(initSnapshot);
+
+		if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
+		{
+			SendData();
+		}
 	}
 
 	Super::BeginPlay();
@@ -60,17 +86,17 @@ FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, do
 	return this;
 }
 
-FDynamicObjectId UDynamicObject::GetUniqueId(FString meshName)
+TSharedPtr<FDynamicObjectId> UDynamicObject::GetUniqueId(FString meshName)
 {
-	FDynamicObjectId freeId;
+	TSharedPtr<FDynamicObjectId> freeId;
 	static int32 originalId = 1000;
 	originalId++;
 
-	freeId = FDynamicObjectId(originalId, meshName);
+	freeId = MakeShareable(new FDynamicObjectId(originalId, meshName));
 	return freeId;
 }
 
-FDynamicObjectId UDynamicObject::GetObjectId()
+TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
 {
 	return ObjectID;
 }
@@ -91,25 +117,6 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		//write to json
 
 		FVector currentForward = GetOwner()->GetActorForwardVector();
-
-		/*DrawDebugLine(
-			GetWorld(),
-			GetOwner()->GetActorLocation(),
-			GetOwner()->GetActorLocation() + LastForward*100, //this isn't right. 
-			FColor(255, 0, 0),
-			false, 3, 0,
-			3
-		);
-
-		DrawDebugLine(
-			GetWorld(),
-			GetOwner()->GetActorLocation(),
-			GetOwner()->GetActorLocation() + GetOwner()->GetActorForwardVector()*100,
-			FColor(0, 255, 0),
-			false, 3, 0,
-			3
-		);*/
-
 
 		//lastRot.Normalize();
 		currentForward.Normalize();
@@ -145,7 +152,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		LastPosition = GetOwner()->GetActorLocation();
 
 		LastForward = GetOwner()->GetActorForwardVector();
-
+		
 		FDynamicObjectSnapshot snapObj = MakeSnapshot();
 
 		//TODO add properties to the data, especially enabled = true
@@ -162,8 +169,9 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 {
+	//decide if the object needs a new entry in the manifest
 	bool needObjectId = false;
-	if (ObjectID.Id == -1)
+	if (!ObjectID.IsValid() || ObjectID->Id == -1)
 	{
 		needObjectId = true;
 	}
@@ -173,7 +181,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 		bool foundEntry = false;
 		for (int32 i = 0; i < manifest.Num(); i++)
 		{
-			if (manifest[i].Id == ObjectID.Id)
+			if (manifest[i].Id == ObjectID->Id)
 			{
 				foundEntry = true;
 				break;
@@ -189,11 +197,12 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 	{
 		if (!UseCustomId)
 		{
-			FDynamicObjectId recycledId;
+			TSharedPtr<FDynamicObjectId> recycledId;
 			bool foundRecycleId = false;
+
 			for (int32 i = 0; i < allObjectIds.Num(); i++)
 			{
-				if (!allObjectIds[i].Used && allObjectIds[i].MeshName == MeshName)
+				if (!allObjectIds[i]->Used && allObjectIds[i]->MeshName == MeshName)
 				{
 					foundRecycleId = true;
 					recycledId = allObjectIds[i];
@@ -203,13 +212,15 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 			if (foundRecycleId)
 			{
 				ObjectID = recycledId;
-				ObjectID.Used = true;
+				ObjectID->Used = true;
 			}
 			else
 			{
 				ObjectID = GetUniqueId(MeshName);
 
-				FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID.Id, GetOwner()->GetName(), MeshName);
+				allObjectIds.Add(ObjectID);
+
+				FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
 				if (!GroupName.IsEmpty())
 				{
 					//entry.
@@ -221,8 +232,8 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 		}
 		else
 		{
-			ObjectID = FDynamicObjectId(CustomId, MeshName);
-			FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID.Id, GetOwner()->GetName(), MeshName);
+			ObjectID = MakeShareable(new FDynamicObjectId(CustomId, MeshName));
+			FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
 			if (!GroupName.IsEmpty())
 			{
 				//entry.
@@ -244,7 +255,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 	double ts = Util::GetTimestamp();
 
 	snapshot.time = ts;
-	snapshot.id = ObjectID.Id;
+	snapshot.id = ObjectID->Id;
 	snapshot.position = FVector(-(int32)GetOwner()->GetActorLocation().X, (int32)GetOwner()->GetActorLocation().Z, (int32)GetOwner()->GetActorLocation().Y);
 	
 
@@ -299,13 +310,14 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectSnapshot snapshot)
 {
 	TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
-	
 
 	//id
 	snapObj->SetNumberField("id", snapshot.id);
 
 	//time
 	snapObj->SetNumberField("time", snapshot.time);
+
+	//return MakeShareable(new FJsonValueObject(snapObj));
 
 	//positions
 	TArray<TSharedPtr<FJsonValue>> posArray;
@@ -334,32 +346,35 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 
 	snapObj->SetArrayField("r", rotArray);
 	
+	
+
 	TArray<TSharedPtr<FJsonValueObject>> properties;
 
+	TSharedPtr<FJsonObject> tempProperty = MakeShareable(new FJsonObject);
 	for (auto& Elem : snapshot.BoolProperties)
 	{
-		TSharedPtr<FJsonObject> tempProperty = MakeShareable(new FJsonObject);
+		tempProperty.Get()->Values.Empty();
 		tempProperty->SetBoolField(Elem.Key, Elem.Value);
 		TSharedPtr< FJsonValueObject > propertiesValue = MakeShareable(new FJsonValueObject(tempProperty));
 		properties.Add(propertiesValue);
 	}
 	for (auto& Elem : snapshot.IntegerProperties)
 	{
-		TSharedPtr<FJsonObject> tempProperty = MakeShareable(new FJsonObject);
+		tempProperty.Get()->Values.Empty();
 		tempProperty->SetNumberField(Elem.Key, Elem.Value);
 		TSharedPtr< FJsonValueObject > propertiesValue = MakeShareable(new FJsonValueObject(tempProperty));
 		properties.Add(propertiesValue);
 	}
 	for (auto& Elem : snapshot.DoubleProperties)
 	{
-		TSharedPtr<FJsonObject> tempProperty = MakeShareable(new FJsonObject);
+		tempProperty.Get()->Values.Empty();
 		tempProperty->SetNumberField(Elem.Key, Elem.Value);
 		TSharedPtr< FJsonValueObject > propertiesValue = MakeShareable(new FJsonValueObject(tempProperty));
 		properties.Add(propertiesValue);
 	}
 	for (auto& Elem : snapshot.StringProperties)
 	{
-		TSharedPtr<FJsonObject> tempProperty = MakeShareable(new FJsonObject);
+		tempProperty.Get()->Values.Empty();
 		tempProperty->SetStringField(Elem.Key, Elem.Value);
 		TSharedPtr< FJsonValueObject > propertiesValue = MakeShareable(new FJsonValueObject(tempProperty));
 		properties.Add(propertiesValue);
@@ -376,9 +391,9 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 		snapObj->SetArrayField("properties", ObjArray);
 	}
 
-	TSharedPtr< FJsonValueObject > outValue = MakeShareable(new FJsonValueObject(snapObj));
+	//TSharedPtr< FJsonValueObject > outValue = MakeShareable(new FJsonValueObject(snapObj));
 
-	return outValue;
+	return MakeShareable(new FJsonValueObject(snapObj));
 }
 
 void UDynamicObject::SendData()
@@ -391,7 +406,6 @@ void UDynamicObject::SendData()
 	}
 
 	//TODO only combine 64 entries, prioritizing the manifest
-
 	FString currentSceneName = myworld->GetMapName();
 	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
 	UDynamicObject::SendData(currentSceneName);
@@ -417,9 +431,11 @@ void UDynamicObject::SendData(FString sceneName)
 
 	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionId", cog->GetSessionID());
+	wholeObj->SetStringField("sessionId", cog->GetCognitiveSessionID());
 	wholeObj->SetNumberField("part", jsonPart);
 	jsonPart++;
+
+	
 
 	if (newManifest.Num() > 0)
 	{
@@ -429,7 +445,7 @@ void UDynamicObject::SendData(FString sceneName)
 
 		CognitiveLog::Warning("sending new object manifest");
 	}
-	
+
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	for (int32 i = 0; i < EventArray.Num(); i++)
 	{
@@ -441,11 +457,9 @@ void UDynamicObject::SendData(FString sceneName)
 	FString OutputString;
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-	
-	if (cog->SendJson("dynamics", OutputString))
-	{
-		snapshots.Empty();
-	}
+	cog->SendJson("dynamics", OutputString);
+
+	snapshots.Empty();
 }
 
 TSharedPtr<FJsonObject> UDynamicObject::DynamicObjectManifestToString()
@@ -510,7 +524,12 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (ReleaseIdOnDestroy && !TrackGaze)
 	{
-		ObjectID.Used = false;
+		//GLog->Log("-------------------------------------------------------> release object id");
+		FDynamicObjectSnapshot initSnapshot = MakeSnapshot();
+		initSnapshot.SnapshotProperty("enabled", false);
+		snapshots.Add(initSnapshot);
+
+		ObjectID->Used = false;
 	}
 
 	if (EndPlayReason == EEndPlayReason::EndPlayInEditor)

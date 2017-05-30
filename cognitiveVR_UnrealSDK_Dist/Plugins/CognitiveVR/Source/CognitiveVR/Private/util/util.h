@@ -21,8 +21,6 @@ namespace cognitivevrapi
     {
         public:
             static double GetTimestamp();
-			static long GetTimestampLong();
-            static std::string GetTimestampStr(long t = 0);
             template < typename T >
             static std::string ToString( const T& n );
 

@@ -18,6 +18,7 @@ namespace cognitivevrapi
     class CognitiveLog
     {
         public:
+			static void Init();
             static void Info(std::string s, bool newline = true);
             static void Warning(std::string s, bool newline = true);
             static void Error(std::string s, bool newline = true);

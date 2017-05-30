@@ -185,6 +185,12 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 		return;
 	}
 
+	if (controllers[0]->GetPawn() == NULL)
+	{
+		CognitiveLog::Warning("Transaction. local player controller does not have pawn! skip transaction");
+		return;
+	}
+
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 
 	TArray< TSharedPtr<FJsonValue> > pos;

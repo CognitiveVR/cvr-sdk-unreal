@@ -82,7 +82,7 @@ private:
 
 	float currentTime = 0;
 	TSharedPtr<FAnalyticsProviderCognitiveVR> s;
-	FDynamicObjectId ObjectID;
+	TSharedPtr<FDynamicObjectId> ObjectID;
 	FVector LastPosition;
 	FVector LastForward;
 
@@ -146,10 +146,11 @@ public:
 
 	UDynamicObject();
 	
+	virtual void OnComponentCreated() override;
 	virtual void BeginPlay() override;
 
-	FDynamicObjectId GetUniqueId(FString meshName);
-	FDynamicObjectId GetObjectId();
+	TSharedPtr<FDynamicObjectId> GetUniqueId(FString meshName);
+	TSharedPtr<FDynamicObjectId> GetObjectId();
 
 	FDynamicObjectSnapshot MakeSnapshot();
 	static TSharedPtr<FJsonValueObject> WriteSnapshotToJson(FDynamicObjectSnapshot snapshot);

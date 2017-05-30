@@ -18,6 +18,8 @@ FHttpModule* Http;
 void FAnalyticsCognitiveVR::StartupModule()
 {
 	CognitiveVRProvider = MakeShareable(new FAnalyticsProviderCognitiveVR());
+	//if (Http == NULL)
+		//Http = &FHttpModule::Get();
 }
 
 void FAnalyticsCognitiveVR::ShutdownModule()
@@ -124,6 +126,8 @@ void FAnalyticsProviderCognitiveVR::SendDeviceInfo()
 
 bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAttribute>& Attributes)
 {
+	CognitiveLog::Init();
+
 	if (bPendingInitRequest)
 	{
 		CognitiveLog::Info("------------------>>>>>>pending init");
@@ -135,10 +139,14 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		//return false;
 	}
 
-	SessionTimestamp = Util::GetTimestamp();
-	SessionId = FString::FromInt(Util::GetTimestampLong()) + TEXT("_") + DeviceId;
+	GetSessionTimestamp();
+	//SessionTimestamp = Util::GetTimestamp();
+	GetSessionID();
+	//if (SessionId.IsEmpty())
+	//	SessionId = FString::FromInt(Util::GetTimestampLong()) + TEXT("_") + DeviceId;
 
-	Http = &FHttpModule::Get();
+	if (Http == NULL)
+		Http = &FHttpModule::Get();
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 
@@ -161,6 +169,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	initProperties = properties;
 
+	CustomerId = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
 
 	OverrideHttpInterface* httpint = new OverrideHttpInterface();
 	network = new Network(this);
@@ -179,6 +188,9 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 		return;
 	}
 
+	GLog->Log("END SESSION END SESSION END SESSION END SESSION");
+
+	transaction->End("Session");
 
 	FlushEvents();
 	CognitiveLog::Info("Freeing CognitiveVR memory.");
@@ -201,6 +213,8 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	sensors = NULL;
 	CognitiveLog::Info("CognitiveVR memory freed.");
 
+	SessionTimestamp = -1;
+	SessionId = "";
 
 	bHasSessionStarted = false;
 }
@@ -228,6 +242,10 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 
 	cog->thread_manager->SendBatch();
 
+	sensors->SendData();
+
+	UDynamicObject::SendData();
+
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
@@ -235,6 +253,12 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents number of controllers is zero!");
 		return;
 	}
+	if (controllers[0]->GetPawn() == NULL)
+	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents controller0 has no pawn!");
+		return;
+	}
+
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 	if (up == NULL)
 	{
@@ -245,14 +269,6 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 	{
 		up->SendGazeEventDataToSceneExplorer();
 	}
-
-	sensors->SendData();
-
-	UDynamicObject::SendData();
-
-	//OnSendData.Broadcast();
-
-	//delegate calls 'SendData'. dynamic objects connected to this
 }
 
 void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
@@ -284,9 +300,20 @@ FString FAnalyticsProviderCognitiveVR::GetSessionID() const
 	return SessionId;
 }
 
-double FAnalyticsProviderCognitiveVR::GetSessionTimestamp() const
+double FAnalyticsProviderCognitiveVR::GetSessionTimestamp()
 {
+	if (SessionTimestamp < 0)
+	{
+		SessionTimestamp = Util::GetTimestamp();
+	}
 	return SessionTimestamp;
+}
+
+FString FAnalyticsProviderCognitiveVR::GetCognitiveSessionID()
+{
+	if (SessionId.IsEmpty())
+		SessionId = FString::FromInt(GetSessionTimestamp()) + TEXT("_") + DeviceId;
+	return SessionId;
 }
 
 bool FAnalyticsProviderCognitiveVR::SetSessionID(const FString& InSessionID)
@@ -294,13 +321,11 @@ bool FAnalyticsProviderCognitiveVR::SetSessionID(const FString& InSessionID)
 	if (!bHasSessionStarted)
 	{
 		//SessionId = InSessionID;
-		SessionTimestamp = Util::GetTimestamp();
+		if (SessionTimestamp < 0)
+		{
+			SessionTimestamp = Util::GetTimestamp();
+		}
 		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetSessionID set new session id");
-
-		//TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-		//properties->SetStringField("id", SessionId);
-
-		//transaction->Update("Session", properties);
 	}
 	else
 	{
@@ -330,7 +355,7 @@ void FAnalyticsProviderCognitiveVR::RecordEvent(const FString& EventName, const 
 	}
 }
 
-void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, const FString& Currency, int PerItemCost, int ItemQuantity)
+void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, const FString& Currency, int32 PerItemCost, int32 ItemQuantity)
 {
 	if (bHasSessionStarted)
 	{
@@ -348,7 +373,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, co
 	}
 }
 
-void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCurrencyType, int GameCurrencyAmount, const FString& RealCurrencyType, float RealMoneyCost, const FString& PaymentProvider)
+void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCurrencyType, int32 GameCurrencyAmount, const FString& RealCurrencyType, float RealMoneyCost, const FString& PaymentProvider)
 {
 	if (bHasSessionStarted)
 	{
@@ -367,7 +392,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 	}
 }
 
-void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurrencyType, int GameCurrencyAmount)
+void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurrencyType, int32 GameCurrencyAmount)
 {
 	if (bHasSessionStarted)
 	{
@@ -446,7 +471,7 @@ void FAnalyticsProviderCognitiveVR::RecordProgress(const FString& ProgressType, 
 	}
 }
 
-void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, int ItemQuantity, const TArray<FAnalyticsEventAttribute>& Attributes)
+void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, int32 ItemQuantity, const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	if (bHasSessionStarted)
 	{
@@ -467,7 +492,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, in
 	}
 }
 
-void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCurrencyType, int GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& Attributes)
+void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCurrencyType, int32 GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	if (bHasSessionStarted)
 	{
@@ -488,7 +513,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 	}
 }
 
-void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurrencyType, int GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& Attributes)
+void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurrencyType, int32 GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	if (bHasSessionStarted)
 	{
@@ -536,8 +561,8 @@ void FAnalyticsProviderCognitiveVR::SetDeviceID(const FString& InDeviceID)
 {
 	if (!bHasSessionStarted)
 	{
-		DeviceId = InDeviceID;
-		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetDeviceID set device id");
+		//DeviceId = InDeviceID;
+		//CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetDeviceID set device id");
 	}
 	else
 	{
@@ -593,6 +618,11 @@ bool FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
 
 	if (Http == NULL)
 	{
+		Http = &FHttpModule::Get();
+	}
+
+	if (Http == NULL)
+	{
 		CognitiveLog::Warning("Cognitive Provider::SendJson Http module not initialized! likely hasn't started session");
 		return false;
 	}
@@ -614,8 +644,9 @@ bool FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
 		return false;
 	}
 
-	std::string stdjson(TCHAR_TO_UTF8(*json));
-	CognitiveLog::Info(stdjson);
+	std::string stdjson(TCHAR_TO_UTF8(*endpoint));
+	//CognitiveLog::Info(stdjson);
+	CognitiveLog::Info("send json to "+ stdjson);
 
 	FString url = "https://sceneexplorer.com/api/" + endpoint + "/" + sceneKey;
 
@@ -639,7 +670,7 @@ FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
 	{
-		CognitiveLog::Info("--------------------------no controllers");
+		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition--------------------------no controllers skip");
 		return FVector();
 	}
 

@@ -102,7 +102,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		GEngine->GetAllLocalPlayerControllers(controllers);
 		if (controllers.Num() == 0)
 		{
-			CognitiveLog::Info("--------------------------no controllers");
+			CognitiveLog::Info("UPlayerTracker::TickComponent--------------------------no controllers. skip");
 			//return FVector();
 			return;
 		}
@@ -200,7 +200,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 						3
 					);
 
-					snapObj->SetNumberField("o", hitDynamicObject->GetObjectId().Id);
+					snapObj->SetNumberField("o", hitDynamicObject->GetObjectId()->Id);
 
 					//FVector gazePoint = GetGazePoint(captureLocation, captureRotation);
 					JsonValue = MakeShareable(new FJsonValueNumber(-(int32)localHitPosition.X));
@@ -268,7 +268,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		GEngine->GetAllLocalPlayerControllers(controllers);
 		if (controllers.Num() == 0)
 		{
-			CognitiveLog::Info("--------------------------no controllers");
+			CognitiveLog::Info("UPlayerTracker::TickComponent--------------------------no controllers skip");
 			//return FVector();
 			return;
 		}
@@ -386,7 +386,7 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer()
 void UPlayerTracker::SendGazeEventDataToSceneExplorer(FString sceneName)
 {
 	//second send events and gaze to scene explorer using the player tracker
-	TArray<APlayerController*, FDefaultAllocator> controllers;
+	/*TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
 	{
@@ -406,7 +406,7 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer(FString sceneName)
 		CognitiveLog::Warning("PlayerTracker::SendJson no world");
 		return;
 	}
-	CognitiveLog::Info("UPlayerTracker::SendData");
+	CognitiveLog::Info("UPlayerTracker::SendData");*/
 
 	//GAZE
 
@@ -429,7 +429,7 @@ FString UPlayerTracker::EventSnapshotsToString()
 
 	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", cog->GetSessionID());
+	wholeObj->SetStringField("sessionid", cog->GetCognitiveSessionID());
 	wholeObj->SetNumberField("part", jsonEventPart);
 	jsonEventPart++;
 
@@ -454,7 +454,7 @@ FString UPlayerTracker::GazeSnapshotsToString()
 
 	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", cog->GetSessionID());
+	wholeObj->SetStringField("sessionid", cog->GetCognitiveSessionID());
 	wholeObj->SetNumberField("part", jsonGazePart);
 	jsonGazePart++;
 
@@ -514,60 +514,45 @@ up->SendData();
 }
 */
 
-/*
 void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	//this does nothing. by the time EndPlay is called, pawns are already cleared, so this doesn't know where to 
 
-std::string reason;
-switch (EndPlayReason)
-{
-case EEndPlayReason::Destroyed: reason = "destroyed";
-break;
-case EEndPlayReason::EndPlayInEditor: reason = "end PIE";
-break;
-case EEndPlayReason::LevelTransition: reason = "level transition";
-break;
-case EEndPlayReason::Quit: reason = "quit";
-break;
-case EEndPlayReason::RemovedFromWorld: reason = "removed from world";
-break;
-default:
-reason = "default";
-break;
-}
+	FString reason;
+	bool shouldEndSession = true;
+	switch (EndPlayReason)
+	{
+	case EEndPlayReason::Destroyed: reason = "destroyed";
+		//this should never be destroyed, only when changing level. pro tips - doesn't actually use the 'level transition' reason for endplay
+		shouldEndSession = false;
+		break;
+	case EEndPlayReason::EndPlayInEditor: reason = "end PIE";
+		break;
+	case EEndPlayReason::LevelTransition: reason = "level transition";
+		shouldEndSession = false;
+		break;
+	case EEndPlayReason::Quit: reason = "quit";
+		break;
+	case EEndPlayReason::RemovedFromWorld: reason = "removed from world";
+		break;
+	default:
+		reason = "default";
+		break;
+	}
 
-
-CognitiveLog::Info("UPlayerTracker::EndPlay reason:" + reason);
-
-//TODO this doesn't work, but it totally crashes when session has not been started
-
-if (s.Get() == NULL)
-{
-CognitiveLog::Info("UPlayerTracker::EndPlay CognitiveVRProvider is null. do not send data on end play");
+	GLog->Log("player tracker end play reason " + reason);
+	if (s.Get() != NULL)
+	{
+		if (shouldEndSession)
+		{
+			GLog->Log("PLAYER TRACKER END PLAY. END SESSION TOO");
+			SendGazeEventDataToSceneExplorer();
+			s->EndSession();
+		}
+		else
+		{
+			//s->FlushEvents();
+		}
+	}
+	Super::EndPlay(EndPlayReason);
 }
-else
-{
-if (SendDataOnEndPlay)
-{
-s->FlushEvents();
-}
-if (EndSessionOnEndPlay)
-{
-s->EndSession();
-}
-else
-{
-if (s.Get()->transaction == NULL)
-{
-CognitiveLog::Info("UPlayerTracker::EndPlay transactions is null. cannot end session");
-}
-else
-{
-s->transaction->End("Session");
-}
-}
-}
-
-Super::EndPlay(EndPlayReason);
-}
-*/

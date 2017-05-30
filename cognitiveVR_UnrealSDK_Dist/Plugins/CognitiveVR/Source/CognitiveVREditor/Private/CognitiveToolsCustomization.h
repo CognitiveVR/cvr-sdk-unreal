@@ -31,7 +31,7 @@
 
 class UCognitiveVRSettings;
 
-class FBaseEditorToolCustomization : public IDetailCustomization
+class FCognitiveToolsCustomization : public IDetailCustomization
 {
 public:
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
@@ -60,8 +60,8 @@ private:
 
 	float GetMinimumSize();
 	float GetMaximumSize();
-	int GetMinPolygon();
-	int GetMaxPolygon();
+	int32 GetMinPolygon();
+	int32 GetMaxPolygon();
 	int32 GetTextureRefacor();
 	bool GetStaticOnly();
 
@@ -108,11 +108,19 @@ private:
 
 	UFUNCTION(Exec, Category = "Export")
 		FReply List_Materials();
+	void List_MaterialArgs(FString subdirectory,FString searchDirectory);
+	void ReexportDynamicMeshes(FString directory);
+
+	UFUNCTION(Exec, Category = "Export")
+	FReply ReexportDynamicMeshesCmd();
 
 	//dynamic objects
 	//Runs the built-in obj exporter with all meshses
 	UFUNCTION(Exec, Category = "Dynamics")
 		FReply ExportDynamics();
+
+	UFUNCTION(Exec, Category = "Dynamics")
+		FReply ExportDynamicTextures();
 
 	//Runs the built-in obj exporter with selected meshes
 	UFUNCTION(Exec, Category = "Dynamics")

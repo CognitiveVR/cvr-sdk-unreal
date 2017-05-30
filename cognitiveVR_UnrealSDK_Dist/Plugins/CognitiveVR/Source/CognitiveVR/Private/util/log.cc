@@ -6,36 +6,56 @@
 
 using namespace cognitivevrapi;
 
+bool EnableInfoMessages;
+bool EnableErrorMessages;
+
+void CognitiveLog::Init()
+{
+	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "EnableFullDebugLogging", false);
+	if (ValueReceived.Len() == 4)
+	{
+		EnableInfoMessages = true;
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "EnableErrorDebugLogging", false);
+	if (ValueReceived.Len() == 4)
+	{
+		EnableErrorMessages = true;
+	}
+}
+
 void CognitiveLog::Info(std::string s, bool newline)
 {
-	FString ValueReceived;
+	if (!EnableInfoMessages) { return; }
+	//FString ValueReceived;
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRDebugAll", false);
-
-	if (ValueReceived.Len() == 0) { return; }
+	//ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "EnableFullDebugLogging", false);
+	//if (ValueReceived.Len() != 4) { return; }
 	UE_LOG(CognitiveVR_Log, Log, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
 }
 
 void CognitiveLog::Warning(std::string s, bool newline)
 {
-	FString ValueReceived;
+	if (!EnableInfoMessages) { return; }
+	//FString ValueReceived;
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRDebugAll", false);
-
-	if (ValueReceived.Len() == 0) { return; }
+	//ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "EnableFullDebugLogging", false);
+	//if (ValueReceived.Len() != 4) { return; }
 	UE_LOG(CognitiveVR_Log, Warning, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
 }
 
 void CognitiveLog::Error(std::string s, bool newline)
 {
-	FString ValueReceived;
+	if (!EnableInfoMessages && !EnableErrorMessages) { return; }
+	//FString ValueReceived;
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRDebugAll", false);
+	//ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "EnableFullDebugLogging", false);
+	//if (ValueReceived.Len() != 4) { return; }
 
-	FString ValueReceivedE;
+	//FString ValueReceivedE;
 
-	ValueReceivedE = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRDebugError", false);
+	//ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "EnableErrorDebugLogging", false);
+	//if (ValueReceived.Len() != 4) { return; }
 
-	if (ValueReceived.Len() + ValueReceivedE.Len() == 0) { return; }
 	UE_LOG(CognitiveVR_Log, Error, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
 }

@@ -32,8 +32,7 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 	//TSharedPtr<FJsonObject> json = MakeShareable(new FJsonObject);
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
+	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
 	FString empty = "";
 
 	//FString user = s->GetUserID();
@@ -44,7 +43,6 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 	s->AppendUD(jsonArray);
 	Util::AppendToJsonArray(jsonArray, empty);
 
-	TSharedPtr<FJsonObject>deviceProperties = Util::DeviceScraper(s->initProperties);
 	if (s == NULL)
 	{
 		GLog->Log("network::init cognitive provider is null");
@@ -55,6 +53,8 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 		GLog->Log("network::init cognitive provider init properties is null");
 		return;
 	}
+	TSharedPtr<FJsonObject>deviceProperties = Util::DeviceScraper(s->initProperties);
+
 	Util::AppendToJsonArray(jsonArray, deviceProperties);
 
 	//TODO something about application_init is broken. returns invalid responses
@@ -101,7 +101,7 @@ void Network::Call(std::string sub_path, TArray<TSharedPtr<FJsonValue>> content,
 		return;
 	}
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
+	ValueReceived = s->CustomerId;// FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
 
 	std::string customerid(TCHAR_TO_UTF8(*ValueReceived));
 
@@ -155,7 +155,7 @@ void Network::DirectCall(std::string sub_path, TArray<TSharedPtr<FJsonValue>> co
 		return;
 	}
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
+	ValueReceived = s->CustomerId;// = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
 
 	std::string customerid(TCHAR_TO_UTF8(*ValueReceived));
 
@@ -199,7 +199,8 @@ CognitiveVRResponse Network::ParseResponse(std::string str_response)
 
 	if (FJsonSerializer::Deserialize(reader,root))
 	{
-		int error_code = root.Get()->GetIntegerField("error");
+		//TODO where is this used? what data does it expect with "error" and "data" json fields?
+		int32 error_code = root.Get()->GetIntegerField("error");
 		bool success = (error_code == kErrorSuccess);
 
 		CognitiveVRResponse response(success);
@@ -269,7 +270,7 @@ CognitiveVRResponse Network::ParseResponse(std::string str_response)
 	return resp;
 }
 
-std::string Network::InterpretError(int code)
+std::string Network::InterpretError(int32 code)
 {
     switch (code) {
         case kErrorSuccess:

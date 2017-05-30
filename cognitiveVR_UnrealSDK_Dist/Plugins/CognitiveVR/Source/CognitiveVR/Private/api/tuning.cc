@@ -25,7 +25,7 @@ void Tuning::CacheValues(std::string entity_id, FJsonObject values, EntityType e
         ThrowDummyResponseException("Invalid tuning cache TTL.");
     }
 
-    long cache_time = Util::GetTimestampLong() + Config::kTuningCacheTtl;
+    long cache_time = Util::GetTimestamp() + Config::kTuningCacheTtl;
 
     if (getallc) {
         Tuning::getallval_cache_ttl = cache_time;
@@ -104,8 +104,7 @@ void Tuning::GetAllValues(std::string entity_id, EntityType entity_type)
 
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
+	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
 	FString empty;
 	std::string entityType = Tuning::GetEntityTypeString(entity_type);
 
@@ -245,8 +244,7 @@ void Tuning::RecordValueAsync(NetworkCallback callback, std::string name, std::s
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
+	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
 
 	Util::AppendToJsonArray(jsonArray, fs);
 	Util::AppendToJsonArray(jsonArray, fs);

@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "0.3.1",
+	"VersionName": "0.3.2",
 	"FriendlyName": "cognitiveVR Analytics",
 	"Description": "cognitiveVR Analytics for Unreal",
 	"Category": "Analytics",

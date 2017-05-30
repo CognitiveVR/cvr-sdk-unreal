@@ -21,12 +21,12 @@ void OverrideHttpInterface::OnResponseReceivedAsync(FHttpRequestPtr Request, FHt
 }
 
 //TODO remove this return value. never anything useful!
-std::string OverrideHttpInterface::Post(std::string url, std::string path, std::string headers[], int header_count, std::string stdcontent, long timeout, NetworkCallback callback)
+std::string OverrideHttpInterface::Post(std::string url, std::string path, std::string headers[], int32 header_count, std::string stdcontent, long timeout, NetworkCallback callback)
 {
     //Construct URL.
     std::string stdfull_url = url + path;
     FString full_url(stdfull_url.c_str());
-	CognitiveLog::Warning("Override_Http_Interface::Post "+ stdfull_url+ "\n" + stdcontent);
+	CognitiveLog::Info("Override_Http_Interface::Post " + stdfull_url);// +"\n" + stdcontent);
 
     FString content(stdcontent.c_str());
 
@@ -36,10 +36,10 @@ std::string OverrideHttpInterface::Post(std::string url, std::string path, std::
     HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/x-www-form-urlencoded"));
 
     //Add headers.
-    for (int i=0; i<header_count; i++) {
+    for (int32 i=0; i<header_count; i++) {
         std::string header = headers[i];
 
-        int del_pos = header.find(":");
+        int32 del_pos = header.find(":");
         std::string key = header.substr(0, del_pos);
         key = Util::Trim(key);
         std::string value = header.substr(del_pos + 1, header.size());
@@ -66,40 +66,4 @@ std::string OverrideHttpInterface::Post(std::string url, std::string path, std::
 
 	this->http_response = "";
 	return this->http_response;
-	/*
-    if (process_result) {
-        double ntimeout = FPlatformTime::Seconds() + timeout;
-        double last_tick = FPlatformTime::Seconds();
-        while (!this->response_received) {
-            double cur_timestamp = FPlatformTime::Seconds();
-            double delta =  cur_timestamp - last_tick;
-
-            last_tick = FPlatformTime::Seconds();
-            FHttpModule::Get().GetHttpManager().Tick(delta);
-
-            if (cur_timestamp >= ntimeout) {
-				UE_LOG(LogTemp, Warning, TEXT("override_http_int.cc::HTTP request timed out"));
-                throw std::runtime_error("HTTP request timed out.");
-            }
-        }
-    }
-
-    if (!this->response_valid || this->http_response.empty()) {
-		if (this->http_response.empty())
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("override_http_int.cc::empty http response"));
-		}
-		if (!this->response_valid)
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("override_http_int.cc::invalid http response"));
-		}
-			
-        throw std::runtime_error("Invalid or Empty HTTP response.");
-    }
-
-    this->response_received = false;
-
-    return th
-	is->http_response;
-	*/
 }
