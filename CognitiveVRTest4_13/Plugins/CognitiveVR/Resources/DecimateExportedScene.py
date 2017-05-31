@@ -22,6 +22,9 @@ productid = args[7]
 if (len(args))<9:
  args.append('')
 sdkVersion = args[8]
+if (len(args))<10:
+ args.append('ABSOLUTELYNOTHING3475236148265')
+excludeMeshes = args[9]
 
 #copy textures
 #fix mtl
@@ -41,8 +44,11 @@ mtl_ext='.mtl'
 mtlpath=''
 objPath=''
 obj_ext='.obj'
+excludeMeshArray = excludeMeshes.split(',')
 
 copymtlstring='\n'
+
+print("---------------exclude meshes " + excludeMeshes);
 
 for temp in os.listdir(exportPath):
 	print("============found file/dir: "+os.path.join(exportPath,temp))
@@ -140,7 +146,6 @@ print("=============================================deleted stuff")
 ops.import_scene.obj(filepath=exportPath+"/"+fileName+".obj", use_edges=True, use_smooth_groups=True, use_split_objects=True, use_split_groups=True, use_groups_as_vgroups=False, use_image_search=True, split_mode='ON', global_clamp_size=0, axis_forward='-Z', axis_up='Y')
 print("=============================================import complete")
 
-
 #decimate. remesh bsp
 for obj in scene.objects:
 	if obj.type == 'MESH':
@@ -167,14 +172,28 @@ for obj in scene.objects:
 			ops.mesh.remove_doubles(threshold=0.0001)
 			ops.mesh.normals_make_consistent(inside=False)
 			ops.object.mode_set(mode='OBJECT')
+			#TODO box uv unwrap and put some checker pattern on it
 			
 			mod = bpy.context.object.modifiers.new('Remesh','REMESH')
-			mod.octree_depth = 6
 			ops.object.modifier_apply(apply_as='DATA', modifier="Remesh")
-		
+
+
 print("=============================================decimate complete")
 
+bpy.ops.object.select_all(action='DESELECT')
 
+# select objects by type
+for o in scene.objects:
+	for excludeMesh in excludeMeshArray:
+		print("=============================================checking if " + o.name + " contained in " + excludeMesh)
+	
+		if excludeMesh in o.name:
+			print("=============================================delete " + o.name)
+			o.select = True
+		
+# call the operator once
+bpy.ops.object.delete()
+print("=============================================delete all exclude meshes")
 
 #move this obj into a new folder called 'raw_model_old' or something
 if not os.path.exists(os.path.join(exportPath,"raw_model_old/")):
@@ -198,6 +217,7 @@ for tempPath, dirs, files in os.walk(exportPath):
 		if name.endswith("_unrealdec.mtl"):
 			mtlpath = os.path.join(tempPath, name)
 
+#does nothing
 for line in readString.splitlines():
 	if line.endswith(diffuse_ext):
 		outstrings.append(line.replace(".bmp",".png")+'\n')
@@ -259,7 +279,10 @@ nmo.close()
 print("=============================================mtl fixed")
 
 f = open (os.path.join(exportPath,'settings.json'),'w')
-f.write('{"scale":100,"customerId":"'+productid+'","sdkVersion":"'+sdkVersion+'"}')
+
+productid = productid[:-5]
+
+f.write('{\"scale\":100,"customerId":"'+productid+'","sdkVersion":"'+sdkVersion+'","sceneName":"'+fileName+'"}')
 f.close()
 
 print("=============================================json write complete")

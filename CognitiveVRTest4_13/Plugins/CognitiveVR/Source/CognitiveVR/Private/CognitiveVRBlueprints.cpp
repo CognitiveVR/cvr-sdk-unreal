@@ -18,7 +18,8 @@ void UCognitiveVRBlueprints::BeginTransaction(FString Category, FString Transact
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	//HMDPosition = controllers[0]->GetPawn()->GetActorTransform().GetLocation();
-	HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	//HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	HMDPosition = controllers[0]->PlayerCameraManager->GetCameraLocation();
 
 	UCognitiveVRBlueprints::BeginTransactionPosition(Category, TransactionID, Attributes, HMDPosition);
 }
@@ -34,7 +35,7 @@ void UCognitiveVRBlueprints::BeginTransactionPosition(FString Category, FString 
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	for (int i = 0; i < Attributes.Num(); i++)
+	for (int32 i = 0; i < Attributes.Num(); i++)
 	{
 		if (Attributes[i].Name.Len() > 0)
 		{
@@ -52,7 +53,8 @@ void UCognitiveVRBlueprints::UpdateTransaction(FString Category, FString Transac
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	//HMDPosition = controllers[0]->GetPawn()->GetActorTransform().GetLocation();
-	HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	//HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	HMDPosition = controllers[0]->PlayerCameraManager->GetCameraLocation();
 	UCognitiveVRBlueprints::UpdateTransactionPosition(Category, TransactionID, Attributes, HMDPosition, Progress);
 }
 
@@ -67,7 +69,7 @@ void UCognitiveVRBlueprints::UpdateTransactionPosition(FString Category, FString
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	for (int i = 0; i < Attributes.Num(); i++)
+	for (int32 i = 0; i < Attributes.Num(); i++)
 	{
 		if (Attributes[i].Name.Len() > 0)
 		{
@@ -85,7 +87,8 @@ void UCognitiveVRBlueprints::EndTransaction(FString Category, FString Transactio
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	//HMDPosition = controllers[0]->GetPawn()->GetActorTransform().GetLocation();
-	HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	//HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	HMDPosition = controllers[0]->PlayerCameraManager->GetCameraLocation();
 	UCognitiveVRBlueprints::EndTransactionPosition(Category, TransactionID, Attributes, HMDPosition);
 }
 
@@ -100,7 +103,7 @@ void UCognitiveVRBlueprints::EndTransactionPosition(FString Category, FString Tr
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	for (int i = 0; i < Attributes.Num(); i++)
+	for (int32 i = 0; i < Attributes.Num(); i++)
 	{
 		if (Attributes[i].Name.Len() > 0)
 		{
@@ -118,7 +121,8 @@ void UCognitiveVRBlueprints::BeginEndTransaction(FString Category, const TArray<
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	//HMDPosition = controllers[0]->GetPawn()->GetActorTransform().GetLocation();
-	HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	//HMDPosition = controllers[0]->GetPawn()->FindComponentByClass<UCameraComponent>()->ComponentToWorld.GetTranslation();
+	HMDPosition = controllers[0]->PlayerCameraManager->GetCameraLocation();
 	UCognitiveVRBlueprints::BeginEndTransactionPosition(Category, Attributes, HMDPosition);
 }
 
@@ -133,7 +137,7 @@ void UCognitiveVRBlueprints::BeginEndTransactionPosition(FString Category, const
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	for (int i = 0; i < Attributes.Num(); i++)
+	for (int32 i = 0; i < Attributes.Num(); i++)
 	{
 		if (Attributes[i].Name.Len() > 0)
 		{
@@ -202,7 +206,7 @@ void UCognitiveVRBlueprints::UpdateDevice(const TArray<FAnalyticsEventAttr>& Att
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	for (int i = 0; i < Attributes.Num(); i++)
+	for (int32 i = 0; i < Attributes.Num(); i++)
 	{
 		if (Attributes[i].Name.Len() > 0)
 		{
@@ -215,8 +219,7 @@ void UCognitiveVRBlueprints::UpdateDevice(const TArray<FAnalyticsEventAttr>& Att
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
+	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
 	FString empty;
 
 	Util::AppendToJsonArray(jsonArray, fs);
@@ -249,7 +252,7 @@ void UCognitiveVRBlueprints::UpdateUser(const TArray<FAnalyticsEventAttr>& Attri
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	for (int i = 0; i < Attributes.Num(); i++)
+	for (int32 i = 0; i < Attributes.Num(); i++)
 	{
 		if (Attributes[i].Name.Len() > 0)
 		{
@@ -262,8 +265,7 @@ void UCognitiveVRBlueprints::UpdateUser(const TArray<FAnalyticsEventAttr>& Attri
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
+	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
 	FString empty;
 
 	Util::AppendToJsonArray(jsonArray, fs);
@@ -292,3 +294,56 @@ void UCognitiveVRBlueprints::RecordSensor(const FString Name, const float Value)
 
 	cog->sensors->RecordSensor(Name, Value);
 }
+
+/*void UCognitiveVRBlueprints::GetRequestLatent(const FString Hook, struct FLatentActionInfo LatentInfo)
+{
+	float Duration = 5;
+
+	//http request
+	//add callback from http request
+
+	FLatentActionManager& LatentActionManager = GWorld->GetLatentActionManager();
+	if (LatentActionManager.FindExistingAction<FExitPollLatentAction>(LatentInfo.CallbackTarget, LatentInfo.UUID) == NULL)
+	{
+		LatentActionManager.AddNewAction(LatentInfo.CallbackTarget, LatentInfo.UUID, new FExitPollLatentAction(Duration, LatentInfo));
+	}
+
+	ExitPoll::MakeQuestionSetRequest(Hook); //callback goes here?
+}
+
+void HttpExitPollRequestCallback(FExitPollQuestionSet questionSet, struct FLatentActionInfo LatentInfo)
+{
+	//save question set to exitpoll
+
+	//find latent action manager. remove exitpoll latent action
+	FLatentActionManager& LatentActionManager = GWorld->GetLatentActionManager();
+	if (LatentActionManager.FindExistingAction<FExitPollLatentAction>(LatentInfo.CallbackTarget, LatentInfo.UUID) != NULL)
+	{
+		LatentActionManager.RemoveActionsForObject(LatentInfo.CallbackTarget);
+	}
+}
+
+*/
+
+void UCognitiveVRBlueprints::GetRequestDelegate(const FString Hook, const FCognitiveExitPollResponse response)
+{
+	ExitPoll::MakeQuestionSetRequest(Hook, response);
+}
+
+FExitPollQuestionSet UCognitiveVRBlueprints::GetCurrentExitPollQuestionSet(EResponseValueReturn& Out)
+{
+	return ExitPoll::GetCurrentQuestionSet();
+}
+
+void UCognitiveVRBlueprints::SendExitPollResponse(FExitPollResponses Responses)
+{
+	/*TMap<FString, FString> answers;
+
+	for (int32 i = 0; i < Responses.answers.Num(); i++)
+	{
+		answers.Add(Responses.answers[i].type, Responses.answers[i].value);
+	}
+	ExitPoll::SendQuestionResponses(Responses.user,Responses.questionSetId,Responses.sessionId,Responses.hook,answers);*/
+	ExitPoll::SendQuestionResponses(Responses);
+}
+

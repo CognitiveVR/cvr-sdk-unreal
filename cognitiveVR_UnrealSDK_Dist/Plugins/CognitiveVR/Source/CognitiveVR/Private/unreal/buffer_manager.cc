@@ -26,6 +26,12 @@ BufferManager::BufferManager(Network* n)
 
 void BufferManager::AddJsonToBatch(TSharedPtr<FJsonObject> json)
 {
+	if (json.Get() == NULL)
+	{
+		CognitiveLog::Info("BufferManager::AddJsonToBatch json is empty");
+		return;
+	}
+
 	batchedJson.Add(json);
 	if (batchedJson.Num() >= TransactionBatchSize)
 	{
@@ -63,21 +69,13 @@ void BufferManager::PushTask(NetworkCallback callback, std::string sub_path, TAr
 {
 	if (this->network != NULL)
 	{
-		//TODO cache events and send them together
-		//TODO cache events sent before Init called
-
 		//turn all the content into one long string
 
 		TArray< TSharedPtr<FJsonValue> > ObjArray;
-		for (int i = 0; i < content.Num(); i++)
+		for (int32 i = 0; i < content.Num(); i++)
 		{
-			//ObjArray.Emplace(content[i]);
-
-			//TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
 			TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueObject(content[i]));
 			ObjArray.Emplace(tempVal);
-
-			//json = MakeShareable(new FJsonValueArray(ValueArray));
 		}
 
 		TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
@@ -87,6 +85,6 @@ void BufferManager::PushTask(NetworkCallback callback, std::string sub_path, TAr
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("BufferManager::Network is null - probably not initialized yet!"));
+		CognitiveLog::Warning("BufferManager::Network is null - probably not initialized yet!");
 	}
 }

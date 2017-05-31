@@ -18,7 +18,11 @@
 #include "Private/api/transaction.h"
 #include "Private/api/sensor.h"
 #include "Private/api/coreutilities.h"
+//#include "DynamicObject.h"
 #include "Engine.h"
+
+DECLARE_MULTICAST_DELEGATE(FCognitiveSendData);
+//DECLARE_DELEGATE_OneParam(FCognitiveExitPollResponse, FExitPollQuestionSet);
 
 extern bool bHasSessionStarted;
 
@@ -34,6 +38,7 @@ extern bool bHasSessionStarted;
 	};
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
+	//everything here is referenced from headers. why is this being forward declared?
 	class Network;
 	class Transaction;
 	class Tuning;
@@ -42,6 +47,8 @@ extern bool bHasSessionStarted;
 	class OverrideHttpInterface;
 	class CognitiveVRResponse;
 	class Sensors;
+	//class ExitPoll;
+	//class UDynamicObject;
 
 	class FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
 	{
@@ -87,25 +94,32 @@ extern bool bHasSessionStarted;
 
 		virtual void RecordEvent(const FString& EventName, const TArray<FAnalyticsEventAttribute>& Attributes) override;
 
-		virtual void RecordItemPurchase(const FString& ItemId, const FString& Currency, int PerItemCost, int ItemQuantity) override;
+		virtual void RecordItemPurchase(const FString& ItemId, const FString& Currency, int32 PerItemCost, int32 ItemQuantity) override;
 
-		virtual void RecordCurrencyPurchase(const FString& GameCurrencyType, int GameCurrencyAmount, const FString& RealCurrencyType, float RealMoneyCost, const FString& PaymentProvider) override;
+		virtual void RecordCurrencyPurchase(const FString& GameCurrencyType, int32 GameCurrencyAmount, const FString& RealCurrencyType, float RealMoneyCost, const FString& PaymentProvider) override;
 
-		virtual void RecordCurrencyGiven(const FString& GameCurrencyType, int GameCurrencyAmount) override;
+		virtual void RecordCurrencyGiven(const FString& GameCurrencyType, int32 GameCurrencyAmount) override;
 
 		virtual void SetBuildInfo(const FString& InBuildInfo) override;
 		virtual void SetGender(const FString& InGender) override;
 		virtual void SetLocation(const FString& InLocation) override;
 		virtual void SetAge(const int32 InAge) override;
 
-		virtual void RecordItemPurchase(const FString& ItemId, int ItemQuantity, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
-		virtual void RecordCurrencyPurchase(const FString& GameCurrencyType, int GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
-		virtual void RecordCurrencyGiven(const FString& GameCurrencyType, int GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
+		virtual void RecordItemPurchase(const FString& ItemId, int32 ItemQuantity, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
+		virtual void RecordCurrencyPurchase(const FString& GameCurrencyType, int32 GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
+		virtual void RecordCurrencyGiven(const FString& GameCurrencyType, int32 GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		virtual void RecordError(const FString& Error, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		virtual void RecordProgress(const FString& ProgressType, const FString& ProgressHierarchy, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 
 
 		//custom cognitive
+
+		bool SendJson(FString endpoint, FString Json);
+		FString GetSceneKey(FString sceneName);
+
+		UPROPERTY(BlueprintAssignable)
+		FCognitiveSendData OnSendData;
+
 		FString DeviceId;
 		Transaction* transaction;
 		Tuning* tuning;
@@ -117,8 +131,9 @@ extern bool bHasSessionStarted;
 		FString GetDeviceID() const;
 		void SetDeviceID(const FString& InDeviceID);
 
-		double SessionTimestamp;
-		double GetSessionTimestamp() const;
+		double SessionTimestamp = -1;
+		double GetSessionTimestamp();
+		FString GetCognitiveSessionID();
 
 		void AppendUD(TSharedPtr<FJsonValueArray> &json);
 		FVector GetPlayerHMDPosition();
@@ -126,6 +141,7 @@ extern bool bHasSessionStarted;
 
 		bool HasStartedSession();
 
+		FString CustomerId;
 	};
 
 	void ThrowDummyResponseException(std::string s);

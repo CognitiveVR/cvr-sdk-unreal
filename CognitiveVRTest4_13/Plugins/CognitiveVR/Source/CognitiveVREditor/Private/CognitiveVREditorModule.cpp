@@ -2,7 +2,7 @@
 #include "BaseEditorTool.h"
 #include "PropertyEditorModule.h"
 #include "LevelEditor.h"
-#include "BaseEditorToolCustomization.h"
+#include "CognitiveToolsCustomization.h"
 
 #include "DemoStyle.h"
 
@@ -31,7 +31,7 @@ void FCognitiveVREditorModule::StartupModule()
 {
 	// Register the details customizations
 	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
-	PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FBaseEditorToolCustomization::MakeInstance));
+	PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FCognitiveToolsCustomization::MakeInstance));
 
 	// Register slate style ovverides
 	FDemoStyle::Initialize();

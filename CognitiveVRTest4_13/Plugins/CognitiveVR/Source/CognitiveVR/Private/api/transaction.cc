@@ -9,7 +9,6 @@ using namespace cognitivevrapi;
 Transaction::Transaction(FAnalyticsProviderCognitiveVR* sp)
 {
 	s = sp;
-	CognitiveLog::Warning("Transaction::Transaction - INITIALIZED");
 }
 
 void Transaction::Begin(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id)
@@ -46,6 +45,14 @@ void Transaction::BeginPosition(std::string category, FVector Position, TSharedP
 	Util::AppendToJsonArray(jsonArray, transaction_id);
 	Util::AppendToJsonArray(jsonArray, properties);
 
+	//dashboard
+	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
+	jsonObject.Get()->SetStringField("method", "datacollector_beginTransaction");
+	jsonObject.Get()->SetField("args", jsonArray);
+
+	s->thread_manager->AddJsonToBatch(jsonObject);
+
+	//scene explorer
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0) { return; }
@@ -72,12 +79,6 @@ void Transaction::BeginPosition(std::string category, FVector Position, TSharedP
 	{
 		up->AddJsonEvent(eventObject);
 	}
-
-	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
-	jsonObject.Get()->SetStringField("method", "datacollector_beginTransaction");
-	jsonObject.Get()->SetField("args", jsonArray);
-
-	s->thread_manager->AddJsonToBatch(jsonObject);
 }
 
 void Transaction::Update(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, double progress)
@@ -111,9 +112,20 @@ void Transaction::UpdatePosition(std::string category, FVector Position, TShared
 	Util::AppendToJsonArray(jsonArray, transaction_id);
 	Util::AppendToJsonArray(jsonArray, properties);
 
+	//dashboard
+	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
+	jsonObject.Get()->SetStringField("method", "datacollector_updateTransaction");
+	jsonObject.Get()->SetField("args", jsonArray);
+
+	s->thread_manager->AddJsonToBatch(jsonObject);
+
+	//scene explorer
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
+	if (controllers.Num() == 0) { return; }
+	if (controllers[0]->GetPawn() == NULL) { return; }
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
+	if (up == NULL) { return; }
 
 	TArray< TSharedPtr<FJsonValue> > pos;
 	pos.Add(MakeShareable(new FJsonValueNumber((int32)-Position.X)));
@@ -133,12 +145,6 @@ void Transaction::UpdatePosition(std::string category, FVector Position, TShared
 	{
 		up->AddJsonEvent(eventObject);
 	}
-
-	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
-	jsonObject.Get()->SetStringField("method", "datacollector_updateTransaction");
-	jsonObject.Get()->SetField("args", jsonArray);
-
-	s->thread_manager->AddJsonToBatch(jsonObject);
 }
 
 void Transaction::End(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, std::string result)
@@ -179,9 +185,21 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 
+	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
+	jsonObject.Get()->SetStringField("method", "datacollector_endTransaction");
+	jsonObject.Get()->SetField("args", jsonArray);
+
+	s->thread_manager->AddJsonToBatch(jsonObject);
+
 	if (controllers.Num() == 0)
 	{
-		CognitiveLog::Warning("Transaction. local player controller count is 0! skip transaction");
+		CognitiveLog::Warning("Transaction. local player controller count is 0. skip transaction on scene explorer");
+		return;
+	}
+
+	if (controllers[0]->GetPawn() == NULL)
+	{
+		CognitiveLog::Warning("Transaction. local player controller does not have pawn. skip transaction on scene explorer");
 		return;
 	}
 
@@ -205,12 +223,6 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 	{
 		up->AddJsonEvent(eventObject);
 	}
-
-	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
-	jsonObject.Get()->SetStringField("method", "datacollector_endTransaction");
-	jsonObject.Get()->SetField("args", jsonArray);
-
-	s->thread_manager->AddJsonToBatch(jsonObject);
 }
 
 //add to some list of json transactions

@@ -21,8 +21,6 @@ namespace cognitivevrapi
     {
         public:
             static double GetTimestamp();
-			static long GetTimestampLong();
-            static std::string GetTimestampStr(long t = 0);
             template < typename T >
             static std::string ToString( const T& n );
 
@@ -51,6 +49,7 @@ namespace cognitivevrapi
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, int32 &intValue);
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, double &doubleValue);
 			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, TSharedPtr<FJsonObject> &object);
+			static void AppendToJsonArray(TSharedPtr<FJsonValueArray> &json);
 
 			static void AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, std::string &stdstring);
 			static void AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, FString &fstring);

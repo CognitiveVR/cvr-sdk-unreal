@@ -8,6 +8,7 @@
 //#include "DetailCustomizationsPrivatePCH.h"
 #include "PropertyCustomizationHelpers.h"
 
+#include "UnrealEd.h"
 #include "Engine.h"
 #include "Editor.h"
 #include "FileHelpers.h"
@@ -22,12 +23,15 @@
 #include "MainFrame.h"
 #include "IPluginManager.h"
 #include "AssetRegistryModule.h"
+#include "MaterialUtilities.h"
+#include "DynamicObject.h"
+#include "GenericPlatformFile.h"
 //
 //#include "ExportSceneTool.generated.h"
 
 class UCognitiveVRSettings;
 
-class FBaseEditorToolCustomization : public IDetailCustomization
+class FCognitiveToolsCustomization : public IDetailCustomization
 {
 public:
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
@@ -36,6 +40,8 @@ public:
 
 	static FReply ExecuteToolCommand(IDetailLayoutBuilder* DetailBuilder, UFunction* MethodToExecute);
 
+	void SaveSceneData(FString sceneName, FString sceneKey);
+
 private:
 	bool HasSearchedForBlender = false; //to limit the searching directories. possibly not required
 
@@ -43,6 +49,9 @@ private:
 	bool HasFoundBlender() const;
 	bool HasFoundBlenderAndExportDir() const;
 	bool HasSetExportDirectory() const;
+	bool HasFoundBlenderAndDynamicExportDir() const;
+	bool HasSetDynamicExportDirectory() const;
+
 
 	FText GetBlenderPath() const;
 
@@ -51,8 +60,8 @@ private:
 
 	float GetMinimumSize();
 	float GetMaximumSize();
-	int GetMinPolygon();
-	int GetMaxPolygon();
+	int32 GetMinPolygon();
+	int32 GetMaxPolygon();
 	int32 GetTextureRefacor();
 	bool GetStaticOnly();
 
@@ -94,9 +103,43 @@ private:
 	UFUNCTION(Exec, Category = "Export")
 		FReply UploadScene();
 
-	void OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void UploadMultipartData(FString url, TArray<FString> files, TArray<FString> images);
+	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
 
-	void OnYourFunctionCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	UFUNCTION(Exec, Category = "Export")
+		FReply List_Materials();
+	void List_MaterialArgs(FString subdirectory,FString searchDirectory);
+	void ReexportDynamicMeshes(FString directory);
+
+	UFUNCTION(Exec, Category = "Export")
+	FReply ReexportDynamicMeshesCmd();
+
+	//dynamic objects
+	//Runs the built-in obj exporter with all meshses
+	UFUNCTION(Exec, Category = "Dynamics")
+		FReply ExportDynamics();
+
+	UFUNCTION(Exec, Category = "Dynamics")
+		FReply ExportDynamicTextures();
+
+	//Runs the built-in obj exporter with selected meshes
+	UFUNCTION(Exec, Category = "Dynamics")
+		FReply ExportSelectedDynamics();
+	
+	void ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
+
+	//uploads each dynamic object using its directory to the current scene
+	UFUNCTION(Exec, Category = "Dynamics")
+		FReply SelectDynamicsDirectory();
+
+	void ConvertDynamicTextures();
+
+	//uploads each dynamic object using its directory to the current scene
+	UFUNCTION(Exec, Category = "Dynamics")
+		FReply UploadDynamics();
+
+	void OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	bool PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
 	bool PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
@@ -107,10 +150,18 @@ private:
 		FString BlenderPath;
 	UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
 		FString ExportDirectory;
+	UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
+		FString ExportDynamicsDirectory;
 	FText GetExportDirectory() const;
+	FText GetDynamicExportDirectory() const;
 
 	UFUNCTION(Exec, Category = "Export")
 		FReply Select_Export_Directory();
+
+	UFUNCTION(Exec, Category = "Export")
+		FReply DebugSendSceneData();
+
+	
 
 	TArray<FString> GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension,const FString ignoreExtension);
 
@@ -152,4 +203,12 @@ private:
 		}
 		return false;
 	}
+};
+
+class FContentContainer
+{
+public:
+	FString Headers;
+	FString BodyText;
+	TArray<uint8> BodyBinary;
 };

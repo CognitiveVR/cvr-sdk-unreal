@@ -12,8 +12,7 @@ void CoreUtilities::NewUser(std::string nuser_id)
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
+	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
 	FString empty;
 
 	Util::AppendToJsonArray(jsonArray, fs);
@@ -34,8 +33,7 @@ void CoreUtilities::NewDevice(std::string ndevice_id)
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
+	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
 	FString empty;
 
 	Util::AppendToJsonArray(jsonArray, fs);
@@ -56,8 +54,7 @@ void CoreUtilities::NewUserChecked(std::string nuser_id)
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
+	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
 	FString empty;
 
 	Util::AppendToJsonArray(jsonArray, fs);
@@ -78,8 +75,7 @@ void CoreUtilities::NewDeviceChecked(std::string ndevice_id)
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
+	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
 	FString empty;
 
 	Util::AppendToJsonArray(jsonArray, fs);
@@ -100,8 +96,7 @@ void CoreUtilities::UpdateUserState(std::string nuser_id, TSharedPtr<FJsonObject
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
+	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
 	FString empty;
 
 	if (nproperties.Get() == NULL)
@@ -128,8 +123,7 @@ void CoreUtilities::UpdateDeviceState(std::string ndevice_id, TSharedPtr<FJsonOb
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
+	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
 	FString empty;
 
 	if (nproperties.Get() == NULL)
@@ -161,8 +155,7 @@ void CoreUtilities::UpdateCollection(std::string nname, double nbalance, double 
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	std::string ts = Util::GetTimestampStr();
-	FString fs(ts.c_str());
+	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
 	FString empty;
 
 	Util::AppendToJsonArray(jsonArray, fs);
@@ -196,5 +189,5 @@ void CoreUtilities::RecordPurchase(std::string transaction_id, double price, std
 	properties->SetStringField("pointOfSale", point_of_sale.c_str());
 	properties->SetStringField("itemName", item_name.c_str());
 
-	s->transaction->BeginEnd("datacollector_purchase", properties, transaction_id, result);
+	s->transaction->BeginEnd("cvr.purchase", properties, transaction_id, result);
 }

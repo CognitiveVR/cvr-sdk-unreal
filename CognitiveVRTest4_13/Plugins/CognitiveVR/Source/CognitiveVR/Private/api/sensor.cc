@@ -14,7 +14,6 @@ public:
 Sensors::Sensors(FAnalyticsProviderCognitiveVR* sp)
 {
 	s = sp;
-	CognitiveLog::Warning("Sensor::Sensor - INITIALIZED");
 
 	FString ValueReceived;
 
@@ -22,7 +21,6 @@ Sensors::Sensors(FAnalyticsProviderCognitiveVR* sp)
 
 	if (ValueReceived.Len() > 0)
 	{
-
 		int32 sensorLimit = FCString::Atoi(*ValueReceived);
 		if (sensorLimit > 0)
 		{
@@ -40,9 +38,10 @@ void Sensors::RecordSensor(FString Name, float value)
 	else
 	{
 		somedatapoints.Emplace(Name, "[" + FString::SanitizeFloat(Util::GetTimestamp()) + "," + FString::SanitizeFloat(value) + "]");
-	}	
+	}
+	
 
-	TArray<FJsonValueNumber> sensorData;
+	/*TArray<FJsonValueNumber> sensorData;
 	sensorData.Init(0, 2);
 	sensorData[0] = Util::GetTimestamp();
 	sensorData[1] = value;
@@ -57,7 +56,7 @@ void Sensors::RecordSensor(FString Name, float value)
 	else
 	{
 		sensorDataJson.Emplace(Name).Add(sensorData);
-	}
+	}*/
 
 	sensorDataCount ++;
 	if (sensorDataCount >= SensorThreshold)
@@ -70,10 +69,12 @@ void Sensors::SendData()
 {
 	FString out = SensorDataToString();
 	somedatapoints.Empty();
-	sensorDataJson.Empty();
 	sensorDataCount = 0;
-
-	UPlayerTracker::SendJson("sensors", out);
+	if (out != "")
+	{
+		//FAnalyticsProviderCognitiveVR::SendJson("sensors", out);
+		s->SendJson("sensors", out);
+	}
 }
 
 FString Sensors::SensorDataToString()
@@ -83,38 +84,10 @@ FString Sensors::SensorDataToString()
 	TArray< TSharedPtr<FJsonValue> > DataArray;
 
 	wholeObj->SetStringField("name", s->GetDeviceID());
-	wholeObj->SetNumberField("timestamp", s->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", s->GetSessionID());
+	wholeObj->SetNumberField("timestamp", (int32)s->GetSessionTimestamp());
+	wholeObj->SetStringField("sessionid", s->GetCognitiveSessionID());
 	wholeObj->SetNumberField("part", jsonPart);
 	jsonPart++;
-
-	/*for (const auto& Entry : sensorDataJson)
-	{
-		TSharedPtr< FJsonObject > JsonObj = MakeShareable(new FJsonObject);
-		TSharedRef< FJsonValueObject > JsonValueObj = MakeShareable(new FJsonValueObject(JsonObj));
-
-		//data samples. twitchiness at x,y,z
-		TArray<TSharedPtr<FJsonValue>> sensorDataArray;
-
-		FString key = Entry.Key;
-
-		JsonObj->SetStringField("name", key);
-
-		for (auto& Data : Entry.Value)
-		{
-			for (auto& Data2 : Data)
-			{
-				TSharedPtr<FJsonValueNumber> tempvalue = MakeShareable(new FJsonValueNumber(Data2));
-				sensorDataArray.Add(tempvalue);
-			}
-		}
-
-		const TArray<TSharedPtr<FJsonValue>> constArray = sensorDataArray;
-
-		JsonObj->SetArrayField("data", constArray);
-		
-		DataArray.Add(JsonValueObj);
-	}*/
 	
 	wholeObj->SetStringField("data", "SENSORDATAHERE");
 
@@ -124,6 +97,10 @@ FString Sensors::SensorDataToString()
 
 	//TODO use ustruct with array to format this to json instead of doing it manually
 	FString allData;
+	if (somedatapoints.Num() == 0)
+	{
+		return "";
+	}
 	for (const auto& Entry : somedatapoints)
 	{
 		allData = allData.Append("{\"name\":\""+Entry.Key + "\",\"data\":[" + Entry.Value + "]},");

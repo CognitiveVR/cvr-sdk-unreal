@@ -14,7 +14,6 @@ class COGNITIVEVR_API Sensors
     private:
 		FAnalyticsProviderCognitiveVR* s;
 
-		TMap<FString, TArray<TArray<FJsonValueNumber>>> sensorDataJson;
 		TMap<FString, FString> somedatapoints;
 		
 		FString SensorDataToString();

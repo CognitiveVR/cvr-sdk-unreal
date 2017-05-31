@@ -52,6 +52,7 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 		//generic analytics code
 
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+		//cognitive->FlushEvents();
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 		//properties->SetStringField("MyStrin", "stringvalue");
 		//properties->SetNumberField("MyNumber", 5);
