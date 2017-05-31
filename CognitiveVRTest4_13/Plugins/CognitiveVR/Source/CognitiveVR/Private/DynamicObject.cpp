@@ -67,10 +67,10 @@ void UDynamicObject::BeginPlay()
 		}
 	}
 
-	if (SnapshotOnEnable)
+	if (SnapshotOnBeginPlay)
 	{
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot();
-		initSnapshot.SnapshotProperty("enabled", true);
+		SnapshotBoolProperty(initSnapshot, "enable", true);
 		snapshots.Add(initSnapshot);
 
 		if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
@@ -82,7 +82,7 @@ void UDynamicObject::BeginPlay()
 	Super::BeginPlay();
 }
 
-FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, FString value)
+/*FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, FString value)
 {
 	this->StringProperties.Add(key, value);	
 	return this;
@@ -101,7 +101,7 @@ FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, do
 {
 	this->DoubleProperties.Add(key, value);
 	return this;
-}
+}*/
 
 TSharedPtr<FDynamicObjectId> UDynamicObject::GetUniqueId(FString meshName)
 {
@@ -326,7 +326,7 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 		TSharedPtr< FJsonValueObject > propertiesValue = MakeShareable(new FJsonValueObject(tempProperty));
 		properties.Add(propertiesValue);
 	}
-	for (auto& Elem : snapshot.DoubleProperties)
+	for (auto& Elem : snapshot.FloatProperties)
 	{
 		tempProperty.Get()->Values.Empty();
 		tempProperty->SetNumberField(Elem.Key, Elem.Value);
@@ -444,34 +444,34 @@ TArray<TSharedPtr<FJsonValueObject>> UDynamicObject::DynamicSnapshotsToString()
 	return dataArray;
 }
 
-FDynamicObjectSnapshot UDynamicObject::NewSnapshot()
+/*FDynamicObjectSnapshot UDynamicObject::NewSnapshot()
 {
 	FDynamicObjectSnapshot initSnapshot = MakeSnapshot();
 	snapshots.Add(initSnapshot);
 	return initSnapshot;
-}
+}*/
 
 FDynamicObjectSnapshot UDynamicObject::SnapshotStringProperty(FDynamicObjectSnapshot snapshot, FString key, FString stringValue)
 {
-	snapshot.SnapshotProperty(key, stringValue);
+	snapshot.StringProperties.Add(key, stringValue);
 	return snapshot;
 }
 
 FDynamicObjectSnapshot UDynamicObject::SnapshotBoolProperty(FDynamicObjectSnapshot snapshot, FString key, bool boolValue)
 {
-	snapshot.SnapshotProperty(key, boolValue);
+	snapshot.BoolProperties.Add(key, boolValue);
 	return snapshot;
 }
 
 FDynamicObjectSnapshot UDynamicObject::SnapshotFloatProperty(FDynamicObjectSnapshot snapshot, FString key, float floatValue)
 {
-	snapshot.SnapshotProperty(key, floatValue);
+	snapshot.FloatProperties.Add(key, floatValue);
 	return snapshot;
 }
 
 FDynamicObjectSnapshot UDynamicObject::SnapshotIntegerProperty(FDynamicObjectSnapshot snapshot, FString key, int32 intValue)
 {
-	snapshot.SnapshotProperty(key, intValue);
+	snapshot.IntegerProperties.Add(key, intValue);
 	return snapshot;
 }
 
@@ -481,7 +481,7 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		//GLog->Log("release object id");
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot();
-		initSnapshot.SnapshotProperty("enabled", false);
+		SnapshotBoolProperty(initSnapshot, "enable", false);
 		snapshots.Add(initSnapshot);
 
 		ObjectID->Used = false;

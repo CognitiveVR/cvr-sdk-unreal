@@ -366,15 +366,15 @@ FReply FCognitiveToolsCustomization::ExportSelectedDynamics()
 			{
 				continue;
 			}
-			UDynamicObject* sceneComponent = Cast<UDynamicObject>(actorComponent);
-			if (sceneComponent == NULL)
+			UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+			if (dynamicComponent == NULL)
 			{
 				continue;
 			}
-			if (!meshNames.Contains(sceneComponent->MeshName))
+			if (!meshNames.Contains(dynamicComponent->MeshName))
 			{
-				SelectionSetCache.Add(sceneComponent);
-				meshNames.Add(sceneComponent->MeshName);
+				SelectionSetCache.Add(dynamicComponent);
+				meshNames.Add(dynamicComponent->MeshName);
 			}
 		}
 	}
