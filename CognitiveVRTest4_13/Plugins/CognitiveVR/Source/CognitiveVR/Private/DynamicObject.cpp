@@ -30,16 +30,12 @@ void UDynamicObject::OnComponentCreated()
 		{
 			return;
 		}
-		UStaticMeshComponent* sceneComponent = Cast<UStaticMeshComponent>(actorComponent);
-		if (sceneComponent == NULL)
+		UStaticMeshComponent* staticmeshComponent = Cast<UStaticMeshComponent>(actorComponent);
+		if (staticmeshComponent == NULL || staticmeshComponent->StaticMesh == NULL)
 		{
 			return;
 		}
-		if (sceneComponent->StaticMesh == NULL)
-		{
-			return;
-		}
-		MeshName = sceneComponent->StaticMesh->GetName();
+		MeshName = staticmeshComponent->StaticMesh->GetName();
 	}
 }
 
@@ -49,6 +45,27 @@ void UDynamicObject::BeginPlay()
 
 	LastPosition = GetOwner()->GetActorLocation();
 	LastForward = GetOwner()->GetActorForwardVector();
+
+	if (!UseCustomMeshName)
+	{
+		UseCustomMeshName = true;
+		if (CommonMeshName == ECommonMeshName::OculusTouchLeft)
+		{
+			MeshName = "oculustouchleft";
+		}
+		else if (CommonMeshName == ECommonMeshName::OculusTouchRight)
+		{
+			MeshName = "oculustouchright";
+		}
+		else if (CommonMeshName == ECommonMeshName::ViveController)
+		{
+			MeshName = "vivecontroller";
+		}
+		else if (CommonMeshName == ECommonMeshName::ViveTracker)
+		{
+			MeshName = "vivetracker";
+		}
+	}
 
 	if (SnapshotOnEnable)
 	{
@@ -244,47 +261,8 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 
 	FQuat quat;
 	FRotator rot = GetOwner()->GetActorRotation();
-	//rot.Pitch += ExtraPitch;
-	//rot.Yaw += ExtraYaw;
-	//rot.Roll += ExtraRoll;
 	quat = rot.Quaternion();
-	/*
-	if (XPos == 0)
-		snapshot.rotation.X = quat.X;
-	if (XPos == 1)
-		snapshot.rotation.Y = quat.X;
-	if (XPos == 2)
-		snapshot.rotation.Z = quat.X;
-	if (XPos == 3)
-		snapshot.rotation.W = quat.X;
 
-	if (YPos == 0)
-		snapshot.rotation.X = quat.Y;
-	if (YPos == 1)
-		snapshot.rotation.Y = quat.Y;
-	if (YPos == 2)
-		snapshot.rotation.Z = quat.Y;
-	if (YPos == 3)
-		snapshot.rotation.W = quat.Y;
-
-	if (ZPos == 0)
-		snapshot.rotation.X = quat.Z;
-	if (ZPos == 1)
-		snapshot.rotation.Y = quat.Z;
-	if (ZPos == 2)
-		snapshot.rotation.Z = quat.Z;
-	if (ZPos == 3)
-		snapshot.rotation.W = quat.Z;
-
-	if (WPos == 0)
-		snapshot.rotation.X = quat.W;
-	if (WPos == 1)
-		snapshot.rotation.Y = quat.W;
-	if (WPos == 2)
-		snapshot.rotation.Z = quat.W;
-	if (WPos == 3)
-		snapshot.rotation.W = quat.W;
-	*/
 	snapshot.rotation = FQuat(quat.X, quat.Z, quat.Y, quat.W);
 
 	return snapshot;

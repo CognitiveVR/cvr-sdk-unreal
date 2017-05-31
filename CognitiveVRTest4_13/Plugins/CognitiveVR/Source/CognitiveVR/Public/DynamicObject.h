@@ -12,6 +12,15 @@
 //#include "KismetMathLibrary.h"
 #include "DynamicObject.generated.h"
 
+UENUM(BlueprintType)
+enum class ECommonMeshName : uint8
+{
+	ViveController,
+	OculusTouchLeft,
+	OculusTouchRight,
+	ViveTracker
+};
+
 class FDynamicObjectManifestEntry
 {
 public:
@@ -89,27 +98,17 @@ private:
 public:	
 	// Sets default values for this component's properties
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ECommonMeshName CommonMeshName;
+
+	UPROPERTY(EditAnywhere)
+	bool UseCustomMeshName = true;
+
 	UPROPERTY(EditAnywhere)
 	FString MeshName;
 
-	/*UPROPERTY(EditAnywhere)
-		float ExtraPitch;
 	UPROPERTY(EditAnywhere)
-		float ExtraYaw;
-	UPROPERTY(EditAnywhere)
-		float ExtraRoll;
-
-	UPROPERTY(EditAnywhere)
-		int32 XPos = 0;
-	UPROPERTY(EditAnywhere)
-		int32 YPos = 2;
-	UPROPERTY(EditAnywhere)
-		int32 ZPos = 1;
-	UPROPERTY(EditAnywhere)
-		int32 WPos = 3;*/
-
-	UPROPERTY(EditAnywhere)
-		bool SnapshotOnEnable = true;
+	bool SnapshotOnEnable = true;
 
 	UPROPERTY(EditAnywhere)
 	bool UpdateOnTick = true;
@@ -141,8 +140,6 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	float RotationThreshold = 10;
-
-
 
 	UDynamicObject();
 	
@@ -176,9 +173,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		FDynamicObjectSnapshot SnapshotFloatProperty(FDynamicObjectSnapshot target, FString key, float floatValue);
-	
-	//UFUNCTION(BlueprintCallable, Category = "Rendering", meta = (DisplayName = "Set Actor Hidden In Game", Keywords = "Visible Hidden Show Hide"))
-	//void SetActorHiddenInGame(bool bNewHidden);
 
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);
 

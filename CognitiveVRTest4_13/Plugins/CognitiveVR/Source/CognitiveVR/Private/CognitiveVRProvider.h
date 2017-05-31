@@ -142,6 +142,8 @@ extern bool bHasSessionStarted;
 		bool HasStartedSession();
 
 		FString CustomerId;
+
+		void OnLevelLoaded();
 	};
 
 	void ThrowDummyResponseException(std::string s);
