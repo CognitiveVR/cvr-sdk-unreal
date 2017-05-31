@@ -38,43 +38,31 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 	//FString user = s->GetUserID();
 	//FString device = s->GetDeviceID();
 
+	if (s == NULL)
+	{
+		CognitiveLog::Warning("CognitiveVR::Network Init cannot find provider");
+		return;
+	}
+
 	Util::AppendToJsonArray(jsonArray, fs);
 	Util::AppendToJsonArray(jsonArray, fs);
 	s->AppendUD(jsonArray);
 	Util::AppendToJsonArray(jsonArray, empty);
 
-	if (s == NULL)
-	{
-		GLog->Log("network::init cognitive provider is null");
-		return;
-	}
 	if (s->initProperties.Get() == NULL)
 	{
-		GLog->Log("network::init cognitive provider init properties is null");
+		CognitiveLog::Warning("CognitiveVR::Network Init initproperties is null");
 		return;
 	}
 	TSharedPtr<FJsonObject>deviceProperties = Util::DeviceScraper(s->initProperties);
 
 	Util::AppendToJsonArray(jsonArray, deviceProperties);
 
-	//TODO something about application_init is broken. returns invalid responses
-	//Network::Call("application_init", jsonArray, callback);
+	//TODO application_init returns invalid responses?
 
 	TArray<TSharedPtr<FJsonValue>> arr = jsonArray.Get()->AsArray();
 
 	Network::DirectCall("application_init", arr, callback);
-
-	//device update
-
-	//TODO remove this - for debugging only. application_init does not display on dashboard, but does work correctly
-	/*TSharedPtr<FJsonValueArray> jsonArrayDevice = MakeShareable(new FJsonValueArray(ObjArray));
-	TSharedPtr<FJsonObject> jsonDevice = MakeShareable(new FJsonObject);
-	Util::AppendToJsonArray(jsonArrayDevice, fs);
-	Util::AppendToJsonArray(jsonArrayDevice, fs);
-	s->AppendUD(jsonArrayDevice);
-	Util::AppendToJsonArray(jsonArrayDevice, deviceProperties);
-
-	Network::Call("datacollector_updateDeviceState", jsonArrayDevice, NULL);*/
 }
 
 void Network::Call(std::string sub_path, TSharedPtr<FJsonValueArray> content, NetworkCallback callback)

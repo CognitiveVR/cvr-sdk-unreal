@@ -148,26 +148,19 @@ private:
 	float currentTime = 0;
 	TArray<TSharedPtr<FJsonObject>> snapshots;
 	TArray<TSharedPtr<FJsonObject>> events;
-	//FHttpModule* Http;
+
 	float maxDistance = 8192;
 	int32 jsonEventPart;
 	int32 jsonGazePart;
 
-
-	//UPROPERTY(editanywhere)
-	//UTextureRenderTarget2D* manualTexture;
 	UMaterial* SceneDepthMat;
 
 	FString materialPath = "/CognitiveVR/DepthPostProcessing";
 	TSharedPtr<FAnalyticsProviderCognitiveVR> s;
 
 public:
-	// Sets default values for this component's properties
-	//static FExitPollQuestionHookRequestDelegate SomeDelegate;
-
 	FCognitiveExitPollResponse OnExitPollResponse;
 
-	//UTextureRenderTarget2D* renderTarget;
 	AActor* SceneCaptureActor;
 
 	USceneCaptureComponent2D* sceneCapture;
@@ -193,10 +186,6 @@ public:
 	void SendGazeEventDataToSceneExplorer();
 	void SendGazeEventDataToSceneExplorer(FString sceneName);
 
-	//void static BlueprintSendData();
-
-	
-
 	FVector GetGazePoint(FVector location, FRotator rotator);
 	float GetPixelDepth(float minvalue, float maxvalue);
 
@@ -204,15 +193,6 @@ public:
 
 	FString GazeSnapshotsToString();
 	FString EventSnapshotsToString();
-
-	///send json data to scene explorer
-	
-
-	//UPROPERTY(EditAnywhere)
-	//bool SendDataOnEndPlay = true;
-
-	//UPROPERTY(EditAnywhere)
-	//bool EndSessionOnEndPlay = true;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 };

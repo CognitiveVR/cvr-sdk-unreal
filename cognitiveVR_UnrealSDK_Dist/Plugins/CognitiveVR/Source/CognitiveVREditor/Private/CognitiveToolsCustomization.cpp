@@ -42,7 +42,7 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 	SettingsCategory.AddProperty(TextureResizeProperty);
 
 	// Create a commands category
-	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(TEXT("Commands"));
+	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(TEXT("Scene Commands"));
 
 	FText p = GetBlenderPath();
 	if (p.EqualTo(FText::FromString("")) && !HasSearchedForBlender)
@@ -181,7 +181,7 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		];
 
 	// Create a commands category
-	IDetailCategoryBuilder& DynamicsCategory = DetailBuilder.EditCategory(TEXT("Dynamic Objects"));
+	IDetailCategoryBuilder& DynamicsCategory = DetailBuilder.EditCategory(TEXT("Dynamic Object Commands"));
 
 	//export all dynamics
 	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
@@ -202,26 +202,6 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.Text(FText::FromString("Export Selected Dynamic Objects"))
 		.OnClicked(this, &FCognitiveToolsCustomization::ExportSelectedDynamics)
 		];
-	/*
-	//export dynamic textures
-	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndDynamicExportDir)
-		.Text(FText::FromString("Export Dynamic Textures"))
-		.OnClicked(this, &FCognitiveToolsCustomization::ExportDynamicTextures)
-		];
-
-	//export dynamic textures
-	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndDynamicExportDir)
-		.Text(FText::FromString("Reexport Meshes"))
-		.OnClicked(this, &FCognitiveToolsCustomization::ReexportDynamicMeshesCmd)
-		];*/
 
 
 	//select dynamics
@@ -243,19 +223,6 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.Text(FText::FromString("Upload Dynamic Objects"))
 		.OnClicked(this, &FCognitiveToolsCustomization::UploadDynamics)
 		];
-	//upload scene
-	/*Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		[
-			SNew(SButton)
-			.IsEnabled(true)
-			.Text(FText::FromString("Test Ini Write"))
-			.OnClicked(this, &FCognitiveToolsCustomization::DebugSendSceneData)
-		];*/
-
-	/*IDetailCategoryBuilder& SceneKeyCategory = DetailBuilder.EditCategory(TEXT("Scene Keys"));
-	SceneKeysProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, SceneKeyPair));
-	SceneKeyCategory.AddProperty(SceneKeysProperty);*/
 }
 
 float FCognitiveToolsCustomization::GetMinimumSize()
@@ -310,12 +277,6 @@ FReply FCognitiveToolsCustomization::ExportDynamics()
 		return FReply::Handled();
 	}
 
-	//select an export directory
-	//FEditorFileUtils::Export(true);
-	//ExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
-	//ExportDirectory = FPaths::ConvertRelativePathToFull(ExportDirectory);
-
-	// @todo: extend this to multiple levels.
 	FString title = "Select Root Dynamic Directory";
 	FString fileTypes = "";
 	FString lastPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
@@ -325,7 +286,6 @@ FReply FCognitiveToolsCustomization::ExportDynamics()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FCognitiveToolsCustomization::ExportDynamics - picked a directory"));
 		ExportDynamicsDirectory = outFilename;
-		//FEditorDirectories::Get().SetLastDirectory(ELastDirectory::UNR, FPaths::GetPath(ExportFilename)); // Save path as default for next time.
 	}
 	else
 	{
@@ -388,7 +348,6 @@ FReply FCognitiveToolsCustomization::ExportSelectedDynamics()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FCognitiveToolsCustomization::ExportDynamics - picked a directory"));
 		ExportDynamicsDirectory = outFilename;
-		//FEditorDirectories::Get().SetLastDirectory(ELastDirectory::UNR, FPaths::GetPath(ExportFilename)); // Save path as default for next time.
 	}
 	else
 	{
@@ -581,63 +540,6 @@ FReply FCognitiveToolsCustomization::UploadDynamics()
 		}
 	}
 
-	//PlatformFile.IterateDirectory(*ExportDynamicDirectory, myVisitor);
-
-	//FDirectoryStatVisitor dirVisitor;
-
-	//FLocalTimestampDirectoryVisitor Visitor(PlatformFile, directoriesToSkip, directoriesToSkip, false);
-	//PlatformFile.IterateDirectoryStat(*directory, Visitor);
-	//dirVisitor.Visit(*ExportDynamicsDirectory, true);
-	TArray<FString> files;
-	TArray<FString> directories;
-
-
-	/*
-	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor); TimestampIt; ++TimestampIt)
-	{
-		const FString filePath = TimestampIt.Key();
-		const FString fileName = FPaths::GetCleanFilename(filePath);
-		bool shouldAddFile = true;
-
-		// Check if filename starts with required characters
-		if (!onlyFilesStartingWith.IsEmpty())
-		{
-			const FString left = fileName.Left(onlyFilesStartingWith.Len());
-
-			if (!(fileName.Left(onlyFilesStartingWith.Len()).Equals(onlyFilesStartingWith)))
-				shouldAddFile = false;
-		}
-
-		// Check if file extension is required characters
-		if (!onlyFilesWithExtension.IsEmpty())
-		{
-			if (!(FPaths::GetExtension(fileName, false).Equals(onlyFilesWithExtension, ESearchCase::IgnoreCase)))
-				shouldAddFile = false;
-		}
-
-		if (!ignoreExtension.IsEmpty())
-		{
-			if ((FPaths::GetExtension(fileName, false).Equals(ignoreExtension, ESearchCase::IgnoreCase)))
-				shouldAddFile = false;
-		}
-
-		// Add full path to results
-		if (shouldAddFile)
-		{
-			files.Add(fullPath ? filePath : fileName);
-		}
-	}
-	*/
-
-	//root directory of dynamic objects
-
-
-
-	//get each subfolder
-	//foreach subfolder, create a http request
-	//get scene key
-	//call UploadFromDirectory(url,tempDir,whatever)
-
 	return FReply::Handled();
 }
 
@@ -821,10 +723,8 @@ FReply FCognitiveToolsCustomization::Select_Export_Meshes()
 		return FReply::Handled();
 	}
 
-	//also grab landscapes
+	//TODO also grab landscapes
 
-	//GEditor->GetSelectedActors()->DeselectAll();
-	//GEditor->GetSelectedObjects()->DeselectAll();
 	GEditor->SelectNone(false, true, false);
 
 	int32 ActorsExported = 0;
@@ -1050,13 +950,11 @@ void FCognitiveToolsCustomization::List_MaterialArgs(FString subdirectory, FStri
 		{
 
 			FString fullPath = searchDirectory+ "/" + subdirectory + "/" + Files[i];
-			GLog->Log("MATERIAL " + fullPath);
 			FString contents;
 
 			if (FFileHelper::LoadFileToString(contents, *fullPath))
 			{
-				GLog->Log("loaded " + Files[i]);
-				GLog->Log(contents);
+				GLog->Log("loaded " + Files[i] + "\n" = contents);
 			}
 			else
 			{
@@ -1136,7 +1034,7 @@ void FCognitiveToolsCustomization::List_MaterialArgs(FString subdirectory, FStri
 									BMPFilename = searchDirectory+"/"+subdirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
 								}
 
-								GLog->Log("++++++++++writing base color for material " + BMPFilename);
+								GLog->Log("writing base color for transparent material " + BMPFilename);
 								FFileHelper::CreateBitmap(*BMPFilename, point.X, point.Y, colors.GetData());
 							}
 						}
@@ -1162,6 +1060,7 @@ void FCognitiveToolsCustomization::List_MaterialArgs(FString subdirectory, FStri
 									BMPFilename = searchDirectory + "/" + subdirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
 								}
 
+								GLog->Log("writing base color for transparent material instance " + BMPFilename);
 								FFileHelper::CreateBitmap(*BMPFilename, point.X, point.Y, colors.GetData());
 							}
 						}
@@ -1381,7 +1280,7 @@ void FCognitiveToolsCustomization::UploadFromDirectory(FString url, FString dire
 
 	//UploadMultipartData(url, filesInDirectory, imagesInDirectory);
 
-	GLog->Log(url);
+	GLog->Log("url " + url);
 
 	//FString httpbody;
 	//FString Content;

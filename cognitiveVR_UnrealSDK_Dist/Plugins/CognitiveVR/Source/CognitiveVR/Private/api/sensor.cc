@@ -14,7 +14,6 @@ public:
 Sensors::Sensors(FAnalyticsProviderCognitiveVR* sp)
 {
 	s = sp;
-	CognitiveLog::Warning("Sensor::Sensor - INITIALIZED");
 
 	FString ValueReceived;
 
@@ -100,7 +99,6 @@ FString Sensors::SensorDataToString()
 	FString allData;
 	if (somedatapoints.Num() == 0)
 	{
-		CognitiveLog::Info("Sensors::SensorDataToString 0 datapoints to write!");
 		return "";
 	}
 	for (const auto& Entry : somedatapoints)

@@ -36,7 +36,6 @@ void ExitPoll::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr
 	FString UE4Str = Response->GetContentAsString();
 	std::string content(TCHAR_TO_UTF8(*UE4Str));
 	CognitiveLog::Info("ExitPoll::OnResponseReceivedAsync - Response: " + content);
-	//GLog->Log(UE4Str);
 
 	//CognitiveVRResponse response = Network::ParseResponse(content);
 

@@ -167,8 +167,6 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		bool hitDynamic = false;
 		if (bHit)
 		{
-			// Hit.Actor contains a weak pointer to the Actor that the trace hit
-			//return Cast<APawn>(Hit.Actor.Get());
 			//GLog->Log("hit "+Hit.Actor.Get()->GetName());
 			UActorComponent* hitActorComponent = Hit.Actor.Get()->GetComponentByClass(UDynamicObject::StaticClass());
 			if (hitActorComponent != NULL)
@@ -293,10 +291,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		captureLocation = finalPos;
 		captureRotation = rot;
 
-		//UE_LOG(LogTemp, Warning, TEXT("SceneCaptureActor Location is %s"), *SceneCaptureActor->GetActorLocation().ToString());
-
 		sceneCapture->CaptureSceneDeferred();
-		//sceneCapture->CaptureScene();
 		waitingForDeferred = true;
 		framesTillRender = 1;
 	}
@@ -343,9 +338,6 @@ float UPlayerTracker::GetPixelDepth(float minvalue, float maxvalue)
 
 	float distance = FMath::Lerp(minvalue, maxvalue, nf);
 
-	//CognitiveLog::Info("--------------------------PlayerTracker::GetPixelDepth %d");
-	//UE_LOG(LogTemp, Warning, TEXT("--------------------------PlayerTracker::GetPixelDepth %f"), distance);
-
 	return distance;
 }
 
@@ -353,12 +345,8 @@ float UPlayerTracker::GetPixelDepth(float minvalue, float maxvalue)
 FVector UPlayerTracker::GetGazePoint(FVector location, FRotator rotator)
 {
 	float distance = GetPixelDepth(0, maxDistance);
-	//FRotator rot = GetComponentRotation();
 	FVector rotv = rotator.Vector();
 	rotv *= distance;
-
-	//add location
-	//FVector loc = location;
 
 	FVector returnVector;
 	returnVector.X = location.X + rotv.X;
@@ -372,7 +360,7 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer()
 	UWorld* myworld = GetWorld();
 	if (myworld == NULL)
 	{
-		CognitiveLog::Info("--------------------------WORLD DOESNT EXIST");
+		CognitiveLog::Info("PlayerTracker::SendGazeEventDataToSceneExplorer WORLD DOESNT EXIST");
 		return;
 	}
 
@@ -385,29 +373,6 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer()
 
 void UPlayerTracker::SendGazeEventDataToSceneExplorer(FString sceneName)
 {
-	//second send events and gaze to scene explorer using the player tracker
-	/*TArray<APlayerController*, FDefaultAllocator> controllers;
-	GEngine->GetAllLocalPlayerControllers(controllers);
-	if (controllers.Num() == 0)
-	{
-		CognitiveLog::Warning("PlayerTracker::SendJson no local player controllers");
-		return;
-	}
-	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
-	if (up == NULL)
-	{
-		CognitiveLog::Warning("PlayerTracker::SendJson no player tracker component");
-		return;
-	}
-
-	UWorld* myworld = up->GetWorld();
-	if (myworld == NULL)
-	{
-		CognitiveLog::Warning("PlayerTracker::SendJson no world");
-		return;
-	}
-	CognitiveLog::Info("UPlayerTracker::SendData");*/
-
 	//GAZE
 
 	//TODO where do i clear snapshots?
@@ -484,40 +449,9 @@ FString UPlayerTracker::GazeSnapshotsToString()
 	return OutputString;
 }
 
-/*
-void UPlayerTracker::BlueprintSendData()
-{
-
-TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
-FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
-if (!Provider.IsValid() || !bHasSessionStarted || cog == NULL)
-{
-CognitiveLog::Error("UCognitiveVRBlueprints::BeginEndTransaction could not get provider!");
-return;
-}
-
-TArray<APlayerController*, FDefaultAllocator> controllers;
-GEngine->GetAllLocalPlayerControllers(controllers);
-if (controllers.Num() == 0)
-{
-CognitiveLog::Info("UPlayerTracker::RequestSendData no player controllers");
-return;
-}
-UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
-if (up == NULL)
-{
-CognitiveLog::Warning("UPlayerTracker::RequestSendData No Player Tracker Component! cannot send data?!?....there's got to be a better way!");
-return;
-}
-up->SendData();
-
-}
-*/
 
 void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	//this does nothing. by the time EndPlay is called, pawns are already cleared, so this doesn't know where to 
-
 	FString reason;
 	bool shouldEndSession = true;
 	switch (EndPlayReason)
@@ -540,18 +474,15 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		break;
 	}
 
-	GLog->Log("player tracker end play reason " + reason);
 	if (s.Get() != NULL)
 	{
 		if (shouldEndSession)
 		{
-			GLog->Log("PLAYER TRACKER END PLAY. END SESSION TOO");
+			//this will send gaze and event data to scene explorer from THIS playertracker
 			SendGazeEventDataToSceneExplorer();
+
+			//cognitivevr manager can't find playercontroller0, but will send events to dash and dynamics+sensors to SE
 			s->EndSession();
-		}
-		else
-		{
-			//s->FlushEvents();
 		}
 	}
 	Super::EndPlay(EndPlayReason);

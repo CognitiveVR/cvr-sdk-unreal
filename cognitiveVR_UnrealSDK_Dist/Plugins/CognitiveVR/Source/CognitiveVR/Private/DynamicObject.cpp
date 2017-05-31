@@ -112,26 +112,13 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 	{
 		currentTime -= SnapshotInterval;
 
-		//if the object has not moved the minimum amount, return
-
-		//write to json
-
 		FVector currentForward = GetOwner()->GetActorForwardVector();
 
-		//lastRot.Normalize();
 		currentForward.Normalize();
 		
 		float dotRot = FVector::DotProduct(LastForward, currentForward);
 
-		//GLog->Log("rotations  last " + lastRot.ToString() + " currentRot  " + currentRot.ToString());
-
-		//float dotDegrees = (180.f) / PI * FMath::Acos(dotRot);
-
-		//FRotator newRot((LastRotation - GetOwner()->GetActorRotation()) - (GetOwner()->GetActorRotation()));
-
 		float actualDegrees = FMath::Acos(FMath::Clamp<float>(dotRot, -1.0, 1.0)) * 57.29578;
-		
-		//GLog->Log("dot " + FString::SanitizeFloat(dotRot) +"       "+FString::SanitizeFloat(actualDegrees) + " degrees");
 
 		if ((LastPosition - GetOwner()->GetActorLocation()).Size() > PositionThreshold)
 		{
@@ -141,7 +128,6 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		else if (actualDegrees > RotationThreshold) //rotator stuff
 		{
 			//GLog->Log("rotated " + GetOwner()->GetName());
-			//GLog->Log("rotated "+ FString::SanitizeFloat(dotDegrees) + "   " + GetOwner()->GetName());
 			//rotated
 		}
 		else
@@ -150,13 +136,10 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 			return;
 		}
 		LastPosition = GetOwner()->GetActorLocation();
-
 		LastForward = GetOwner()->GetActorForwardVector();
 		
 		FDynamicObjectSnapshot snapObj = MakeSnapshot();
 
-		//TODO add properties to the data, especially enabled = true
-		//array of objects
 
 		snapshots.Add(snapObj);
 
@@ -245,7 +228,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 
 		if (manifest.Num() == 1)
 		{
-			GLog->Log("==================Register send data with manifest");
+			CognitiveLog::Info("DynamicObject::MakeSnapshot Register Provider->OnSendData for Dynamics");
 			s->OnSendData.AddStatic(SendData);
 		}
 	}
@@ -417,11 +400,7 @@ void UDynamicObject::SendData(FString sceneName)
 	{
 		CognitiveLog::Info("UDynamicObject::SendData no objects or data to send!");
 		return;
-	}
-
-	CognitiveLog::Info("UDynamicObject::SendData for dynamics");
-
-	
+	}	
 	
 	TArray<TSharedPtr<FJsonValueObject>> EventArray = UDynamicObject::DynamicSnapshotsToString();
 
@@ -442,8 +421,6 @@ void UDynamicObject::SendData(FString sceneName)
 		TSharedPtr<FJsonObject> ManifestObject = UDynamicObject::DynamicObjectManifestToString();
 		wholeObj->SetObjectField("manifest", ManifestObject);
 		newManifest.Empty();
-
-		CognitiveLog::Warning("sending new object manifest");
 	}
 
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
@@ -524,7 +501,7 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (ReleaseIdOnDestroy && !TrackGaze)
 	{
-		//GLog->Log("-------------------------------------------------------> release object id");
+		//GLog->Log("release object id");
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot();
 		initSnapshot.SnapshotProperty("enabled", false);
 		snapshots.Add(initSnapshot);
@@ -534,7 +511,6 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	if (EndPlayReason == EEndPlayReason::EndPlayInEditor)
 	{
-		//manifest.Empty();
 		snapshots.Empty();
 	}
 }

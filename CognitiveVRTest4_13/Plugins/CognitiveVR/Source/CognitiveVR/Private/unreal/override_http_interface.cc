@@ -20,7 +20,6 @@ void OverrideHttpInterface::OnResponseReceivedAsync(FHttpRequestPtr Request, FHt
     callback(response);
 }
 
-//TODO remove this return value. never anything useful!
 std::string OverrideHttpInterface::Post(std::string url, std::string path, std::string headers[], int32 header_count, std::string stdcontent, long timeout, NetworkCallback callback)
 {
     //Construct URL.
