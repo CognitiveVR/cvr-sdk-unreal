@@ -12,6 +12,15 @@
 //#include "KismetMathLibrary.h"
 #include "DynamicObject.generated.h"
 
+UENUM(BlueprintType)
+enum class ECommonMeshName : uint8
+{
+	ViveController,
+	OculusTouchLeft,
+	OculusTouchRight,
+	ViveTracker
+};
+
 class FDynamicObjectManifestEntry
 {
 public:
@@ -60,13 +69,13 @@ public:
 	int32 id;
 	TMap<FString, FString> StringProperties;
 	TMap<FString, int32> IntegerProperties;
-	TMap<FString, double> DoubleProperties;
+	TMap<FString, float> FloatProperties;
 	TMap<FString, bool> BoolProperties;
 
-	FDynamicObjectSnapshot* SnapshotProperty(FString key, FString value);
+	/*FDynamicObjectSnapshot* SnapshotProperty(FString key, FString value);
 	FDynamicObjectSnapshot* SnapshotProperty(FString key, bool value);
 	FDynamicObjectSnapshot* SnapshotProperty(FString key, int32 value);
-	FDynamicObjectSnapshot* SnapshotProperty(FString key, double value);
+	FDynamicObjectSnapshot* SnapshotProperty(FString key, double value);*/
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -89,29 +98,19 @@ private:
 public:	
 	// Sets default values for this component's properties
 
+	UPROPERTY(EditAnywhere)// , BlueprintReadWrite)
+	ECommonMeshName CommonMeshName;
+
+	UPROPERTY(EditAnywhere)
+	bool UseCustomMeshName = true;
+
 	UPROPERTY(EditAnywhere)
 	FString MeshName;
 
-	/*UPROPERTY(EditAnywhere)
-		float ExtraPitch;
 	UPROPERTY(EditAnywhere)
-		float ExtraYaw;
-	UPROPERTY(EditAnywhere)
-		float ExtraRoll;
+	bool SnapshotOnBeginPlay = true;
 
-	UPROPERTY(EditAnywhere)
-		int32 XPos = 0;
-	UPROPERTY(EditAnywhere)
-		int32 YPos = 2;
-	UPROPERTY(EditAnywhere)
-		int32 ZPos = 1;
-	UPROPERTY(EditAnywhere)
-		int32 WPos = 3;*/
-
-	UPROPERTY(EditAnywhere)
-		bool SnapshotOnEnable = true;
-
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool UpdateOnTick = true;
 
 	UPROPERTY(EditAnywhere)
@@ -142,8 +141,6 @@ public:
 	UPROPERTY(EditAnywhere)
 	float RotationThreshold = 10;
 
-
-
 	UDynamicObject();
 	
 	virtual void OnComponentCreated() override;
@@ -152,7 +149,9 @@ public:
 	TSharedPtr<FDynamicObjectId> GetUniqueId(FString meshName);
 	TSharedPtr<FDynamicObjectId> GetObjectId();
 
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 	FDynamicObjectSnapshot MakeSnapshot();
+
 	static TSharedPtr<FJsonValueObject> WriteSnapshotToJson(FDynamicObjectSnapshot snapshot);
 
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
@@ -162,8 +161,8 @@ public:
 	static TArray<TSharedPtr<FJsonValueObject>> DynamicSnapshotsToString();
 	static TSharedPtr<FJsonObject> DynamicObjectManifestToString();
 
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
-	FDynamicObjectSnapshot NewSnapshot();
+	
+	//FDynamicObjectSnapshot NewSnapshot();
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 	FDynamicObjectSnapshot SnapshotStringProperty(FDynamicObjectSnapshot target, FString key, FString stringValue);
@@ -176,9 +175,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		FDynamicObjectSnapshot SnapshotFloatProperty(FDynamicObjectSnapshot target, FString key, float floatValue);
-	
-	//UFUNCTION(BlueprintCallable, Category = "Rendering", meta = (DisplayName = "Set Actor Hidden In Game", Keywords = "Visible Hidden Show Hide"))
-	//void SetActorHiddenInGame(bool bNewHidden);
 
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);
 

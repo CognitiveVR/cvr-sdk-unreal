@@ -57,115 +57,116 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		.HAlign(HAlign_Fill)
 		[
 			SNew(SHorizontalBox)
+				//button
+				+ SHorizontalBox::Slot()
+				.HAlign(HAlign_Left)
+				.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
+				[
+					SNew(SButton)
+					.IsEnabled(true)
+					.Text(FText::FromString("Select Blender"))
+					.OnClicked(this, &FCognitiveToolsCustomization::Select_Blender)
+				]
 
-			+ SHorizontalBox::Slot()
-		//.HAlign(HAlign_Right)
-		.VAlign(VAlign_Center)
-		.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
-		[
-			SNew(SButton)
-			.IsEnabled(true)
-		.Text(FText::FromString("Select Blender"))
-		.OnClicked(this, &FCognitiveToolsCustomization::Select_Blender)
-		]
-
-	+ SHorizontalBox::Slot()
-		.Padding(FMargin(4.0f, 0.0f, 30.0f, 0.0f))
-		[
-			SNew(STextBlock)
-			.Text(this, &FCognitiveToolsCustomization::GetBlenderPath)
-		]
+				+ SHorizontalBox::Slot()
+				.HAlign(HAlign_Right)
+				.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+				[
+					SNew(STextBlock)
+					.Text(this, &FCognitiveToolsCustomization::GetBlenderPath)
+				]
 		];
 
 	//select export meshes
 	Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
+		.MinDesiredWidth(256)
 		[
 			SNew(SButton)
-			//.IsEnabled(&FCognitiveToolsCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
-		.Text(FText::FromString("Select Export Meshes"))
-		.OnClicked(this, &FCognitiveToolsCustomization::Select_Export_Meshes)
+			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
+			.Text(FText::FromString("Select Export Meshes"))
+			.OnClicked(this, &FCognitiveToolsCustomization::Select_Export_Meshes)
 		];
 
 	//export selected scene
 	Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
+		.MinDesiredWidth(256)
 		[
 			SNew(SButton)
-			//.IsEnabled(&FCognitiveToolsCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
-		.Text(FText::FromString("Export Selected"))
-		.OnClicked(this, &FCognitiveToolsCustomization::Export_Selected)
+			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
+			.Text(FText::FromString("Export Selected"))
+			.OnClicked(this, &FCognitiveToolsCustomization::Export_Selected)
 		];
 
 	//export whole scene
 	Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
+		.MinDesiredWidth(256)
 		[
 			SNew(SButton)
-			//.IsEnabled(&FCognitiveToolsCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
-		.Text(FText::FromString("Export All"))
-		.OnClicked(this, &FCognitiveToolsCustomization::Export_All)
+			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
+			.Text(FText::FromString("Export All"))
+			.OnClicked(this, &FCognitiveToolsCustomization::Export_All)
 		];
 
-	Category.AddCustomRow(FText::FromString("Select Export Directory Horizontal"))
+
+	Category.AddCustomRow(FText::FromString("Select Export Directory"))
 		.ValueContent()
 		.HAlign(HAlign_Fill)
 		[
 			SNew(SHorizontalBox)
+			//button
+			+ SHorizontalBox::Slot()
+			.HAlign(HAlign_Left)
+			.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
+			[
+				SNew(SButton)
+				.IsEnabled(true)
+				.Text(FText::FromString("Select Export Directory"))
+				.OnClicked(this, &FCognitiveToolsCustomization::Select_Export_Directory)
+			]
 
 			+ SHorizontalBox::Slot()
-		//.HAlign(HAlign_Right)
-		.VAlign(VAlign_Center)
-		.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
-		[
-			SNew(SButton)
-			.IsEnabled(true)
-		.Text(FText::FromString("Select Export Directory"))
-		.OnClicked(this, &FCognitiveToolsCustomization::Select_Export_Directory)
-		]
-
-	+ SHorizontalBox::Slot()
-		.Padding(FMargin(4.0f, 0.0f, 30.0f, 0.0f))
-		[
-			SNew(STextBlock)
-			.Text(this, &FCognitiveToolsCustomization::GetExportDirectory)
-		]
+			.HAlign(HAlign_Right)
+			.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+			[
+				SNew(STextBlock)
+				.Text(this, &FCognitiveToolsCustomization::GetExportDirectory)
+			]
 		];
 
 	//List Materials
 	Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
+		.MinDesiredWidth(256)
 		[
 			SNew(SButton)
-			//.IsEnabled(&FCognitiveToolsCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndExportDir)
-		.Text(FText::FromString("Export Transparent Textures"))
-		.OnClicked(this, &FCognitiveToolsCustomization::List_Materials)
+			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndExportDir)
+			.Text(FText::FromString("Export Transparent Textures"))
+			.OnClicked(this, &FCognitiveToolsCustomization::List_Materials)
 		];
 
 	//Reduce Meshes
 	Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
+		.MinDesiredWidth(256)
 		[
 			SNew(SButton)
-			//.IsEnabled(&FCognitiveToolsCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndExportDir)
-		.Text(FText::FromString("Reduce Meshes"))
-		.OnClicked(this, &FCognitiveToolsCustomization::Reduce_Meshes)
+			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndExportDir)
+			.Text(FText::FromString("Reduce Meshes"))
+			.OnClicked(this, &FCognitiveToolsCustomization::Reduce_Meshes)
 		];
 
 	//Reduce Textures
 	Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
+		.MinDesiredWidth(256)
 		[
 			SNew(SButton)
-			//.IsEnabled(&FCognitiveToolsCustomization::HasFoundBlender.Get() || ButtonCaption.EqualTo(FText::FromString("Select Blender")))
-		.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndExportDir)
-		.Text(FText::FromString("Reduce Textures"))
-		.OnClicked(this, &FCognitiveToolsCustomization::Reduce_Textures)
+			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndExportDir)
+			.Text(FText::FromString("Reduce Textures"))
+			.OnClicked(this, &FCognitiveToolsCustomization::Reduce_Textures)
 		];
 
 
@@ -173,6 +174,7 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 	//upload scene
 	Category.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
+		.MinDesiredWidth(256)
 		[
 			SNew(SButton)
 			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndExportDir)
@@ -186,42 +188,60 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 	//export all dynamics
 	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
+		.MinDesiredWidth(256)
 		[
 			SNew(SButton)
 			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
-		.Text(FText::FromString("Export All Dynamic Objects"))
-		.OnClicked(this, &FCognitiveToolsCustomization::ExportDynamics)
+			.Text(FText::FromString("Export All Dynamic Objects"))
+			.OnClicked(this, &FCognitiveToolsCustomization::ExportDynamics)
 		];
 
 	//export selected dynamics
 	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
+		.MinDesiredWidth(256)
 		[
 			SNew(SButton)
 			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
-		.Text(FText::FromString("Export Selected Dynamic Objects"))
-		.OnClicked(this, &FCognitiveToolsCustomization::ExportSelectedDynamics)
+			.Text(FText::FromString("Export Selected Dynamic Objects"))
+			.OnClicked(this, &FCognitiveToolsCustomization::ExportSelectedDynamics)
 		];
 
-
-	//select dynamics
-	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
+	//select dynamic export directory
+	DynamicsCategory.AddCustomRow(FText::FromString("Select Dynamic Directory"))
 		.ValueContent()
+		.HAlign(HAlign_Fill)
 		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
-		.Text(FText::FromString("Select Dynamic Directory"))
-		.OnClicked(this, &FCognitiveToolsCustomization::SelectDynamicsDirectory)
+			SNew(SHorizontalBox)
+			//button
+			+ SHorizontalBox::Slot()
+			.HAlign(HAlign_Left)
+			.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
+			[
+				SNew(SButton)
+				.IsEnabled(true)
+				.Text(FText::FromString("Select Dynamic Directory"))
+				.OnClicked(this, &FCognitiveToolsCustomization::SelectDynamicsDirectory)
+			]
+
+			+ SHorizontalBox::Slot()
+			.HAlign(HAlign_Right)
+			.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+			[
+				SNew(STextBlock)
+				.Text(this, &FCognitiveToolsCustomization::GetDynamicExportDirectory)
+			]
 		];
 
 	//upload dynamics
 	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
+		.MinDesiredWidth(256)
 		[
 			SNew(SButton)
-			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndDynamicExportDir)
-		.Text(FText::FromString("Upload Dynamic Objects"))
-		.OnClicked(this, &FCognitiveToolsCustomization::UploadDynamics)
+			.IsEnabled(this, &FCognitiveToolsCustomization::HasSetDynamicExportDirectory)
+			.Text(FText::FromString("Upload Dynamic Objects"))
+			.OnClicked(this, &FCognitiveToolsCustomization::UploadDynamics)
 		];
 }
 
@@ -366,15 +386,15 @@ FReply FCognitiveToolsCustomization::ExportSelectedDynamics()
 			{
 				continue;
 			}
-			UDynamicObject* sceneComponent = Cast<UDynamicObject>(actorComponent);
-			if (sceneComponent == NULL)
+			UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+			if (dynamicComponent == NULL)
 			{
 				continue;
 			}
-			if (!meshNames.Contains(sceneComponent->MeshName))
+			if (!meshNames.Contains(dynamicComponent->MeshName))
 			{
-				SelectionSetCache.Add(sceneComponent);
-				meshNames.Add(sceneComponent->MeshName);
+				SelectionSetCache.Add(dynamicComponent);
+				meshNames.Add(dynamicComponent->MeshName);
 			}
 		}
 	}
@@ -1643,6 +1663,11 @@ bool FCognitiveToolsCustomization::HasFoundBlenderAndDynamicExportDir() const
 bool FCognitiveToolsCustomization::HasSetExportDirectory() const
 {
 	return !FCognitiveToolsCustomization::GetExportDirectory().EqualTo(FText::FromString(""));
+}
+
+bool FCognitiveToolsCustomization::HasSetDynamicExportDirectory() const
+{
+	return !FCognitiveToolsCustomization::GetDynamicExportDirectory().EqualTo(FText::FromString(""));
 }
 
 FText FCognitiveToolsCustomization::GetBlenderPath() const

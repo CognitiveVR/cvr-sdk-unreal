@@ -40,6 +40,36 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 
+		//GetOwner()->GetComponentByClass<UDynamicObject>()
+
+		TArray<UDynamicObject*> Comps;
+		GetComponents(Comps);
+		if (Comps.Num() > 0)
+		{
+			UDynamicObject* FoundComp = Comps[0];
+			FDynamicObjectSnapshot snapshot = FoundComp->MakeSnapshot();
+			FoundComp->SnapshotFloatProperty(snapshot, "initproperty", 5.0);
+			GLog->Log("sent c++ snapshot");
+		}
+
+		//crash
+		/*auto actorcomponent = GetOwner()->GetComponentByClass(UDynamicObject::StaticClass());
+		if (actorcomponent != NULL)
+		{
+			UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorcomponent);
+			if (dynamicComponent != NULL)
+			{
+				//crash
+			}
+		}*/
+
+
+		//UDynamicObject* MyComp = GetOwner()->FindComponentByClass<UDynamicObject>();
+		//if (MyComp != NULL)
+		//{
+			//MyComp->MakeSnapshot();
+		//}
+
 		/*DrawDebugSphere(
 			GetWorld(),
 			this->GetActorLocation(),

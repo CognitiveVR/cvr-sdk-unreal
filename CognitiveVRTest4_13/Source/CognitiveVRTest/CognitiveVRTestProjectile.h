@@ -1,6 +1,7 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 #pragma once
 #include "GameFramework/Actor.h"
+#include "DynamicObject.h"
 #include "CognitiveVRTestProjectile.generated.h"
 
 UCLASS(config=Game)

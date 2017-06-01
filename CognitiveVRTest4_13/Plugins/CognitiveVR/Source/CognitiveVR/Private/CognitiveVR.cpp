@@ -175,8 +175,25 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	bPendingInitRequest = true;
 
 	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::StartSession");
+	
+
+	// Also include all the streaming levels in the results
+	/*for (int32 LevelIndex = 0; LevelIndex < GWorld->StreamingLevels.Num(); ++LevelIndex)
+	{
+		ULevelStreaming* StreamingLevel = GWorld->StreamingLevels[LevelIndex];
+		if (StreamingLevel != NULL)
+		{
+			//StreamingLevel->OnLevelLoaded.Add(this,&FAnalyticsProviderCognitiveVR::OnLevelLoaded);
+			//TODO clear objectid list when persistent scene unloads
+		}
+	}*/
 
 	return bHasSessionStarted;
+}
+
+void FAnalyticsProviderCognitiveVR::OnLevelLoaded()
+{
+
 }
 
 void FAnalyticsProviderCognitiveVR::EndSession()

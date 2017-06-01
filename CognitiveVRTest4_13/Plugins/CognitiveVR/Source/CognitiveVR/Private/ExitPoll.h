@@ -23,7 +23,8 @@ public:
 
 	static void MakeQuestionSetRequest(const FString Hook, const FCognitiveExitPollResponse& response);
 
-	static void SendQuestionResponses(FExitPollResponses responses);
+	static void SendQuestionResponse(FExitPollResponse responses);
+	static void SendQuestionAnswers(const TArray<FExitPollAnswer>& Answers);
 
 	static void OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 

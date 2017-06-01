@@ -180,7 +180,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 					localHitPosition *= hitDynamicObject->GetOwner()->GetActorTransform().GetScale3D();
 
-					DrawDebugLine(
+					/*DrawDebugLine(
 						GetWorld(),
 						hitDynamicObject->GetOwner()->GetActorLocation() + localHitPosition,
 						hitDynamicObject->GetOwner()->GetActorLocation() + localHitPosition + FVector::UpVector * 100,
@@ -196,7 +196,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 						FColor(0, 255, 0),
 						false, 3, 0,
 						3
-					);
+					);*/
 
 					snapObj->SetNumberField("o", hitDynamicObject->GetObjectId()->Id);
 
