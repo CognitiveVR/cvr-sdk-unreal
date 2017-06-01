@@ -62,13 +62,6 @@ enum class ETuningValueReturn : uint8
 	Failed
 };
 
-UENUM(BlueprintType)
-enum class EResponseValueReturn : uint8
-{
-	Success,
-	Fail
-};
-
 UCLASS()
 class COGNITIVEVR_API UCognitiveVRBlueprints : public UBlueprintFunctionLibrary
 {
@@ -131,11 +124,14 @@ public:
 	//static void GetRequestLatent(const FString Hook, struct FLatentActionInfo LatentInfo);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Exit Poll")
-	static void GetRequestDelegate(const FString Hook, const FCognitiveExitPollResponse response);
+	static void GetQuestionSet(const FString Hook, const FCognitiveExitPollResponse response);
+
+	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics|Exit Poll")
+	static FExitPollQuestionSet GetCurrentExitPollQuestionSet();
+
+	//UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Exit Poll")
+	//static void SendExitPollResponse(const FExitPollResponses Responses);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Exit Poll")
-	static FExitPollQuestionSet GetCurrentExitPollQuestionSet(EResponseValueReturn& Out);
-
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Exit Poll")
-	static void SendExitPollResponse(const FExitPollResponses Responses);
+	static void SendExitPollAnswers(const TArray<FExitPollAnswer>& Answers);
 };

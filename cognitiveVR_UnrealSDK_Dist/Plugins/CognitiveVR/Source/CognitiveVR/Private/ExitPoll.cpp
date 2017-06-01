@@ -128,7 +128,7 @@ FExitPollQuestionSet ExitPoll::GetCurrentQuestionSet()
 	return currentSet;
 }
 
-void ExitPoll::SendQuestionResponses(FExitPollResponses Responses)
+void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 {
 	if (s.Get() == NULL)
 	{
@@ -152,7 +152,7 @@ void ExitPoll::SendQuestionResponses(FExitPollResponses Responses)
 	for (int32 i = 0; i < Responses.answers.Num(); i++)
 	{
 		TSharedPtr<FJsonObject> answerObject = MakeShareable(new FJsonObject);
-		//answerObject->SetStringField("type",Responses.answers[i].type);
+		answerObject->SetStringField("type",Responses.answers[i].type);
 		if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::Number)
 		{
 			answerObject->SetNumberField("value", Responses.answers[i].numberValue);
@@ -229,6 +229,17 @@ void ExitPoll::SendQuestionResponses(FExitPollResponses Responses)
 
 	//then flush transactions
 	s.Get()->FlushEvents();
+}
+
+void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
+{
+	auto questionSet = GetCurrentQuestionSet();
+	FExitPollResponse responses = FExitPollResponse();
+	responses.hook = lastHook;
+	responses.questionSetId = questionSet.id;
+	responses.sessionId = s->GetCognitiveSessionID();
+	responses.answers = answers;
+	SendQuestionResponse(responses);
 }
 
 /*FExitPollQuestionSet FExitPoll::GetExitPollQuestionSet(EResponseValueReturn& Out, FString Hook)

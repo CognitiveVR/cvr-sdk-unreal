@@ -113,7 +113,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FExitPollResponses
+struct FExitPollResponse
 {
 	GENERATED_BODY()
 

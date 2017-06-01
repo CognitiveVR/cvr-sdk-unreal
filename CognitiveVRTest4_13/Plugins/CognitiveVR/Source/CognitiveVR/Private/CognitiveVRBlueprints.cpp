@@ -325,18 +325,18 @@ void HttpExitPollRequestCallback(FExitPollQuestionSet questionSet, struct FLaten
 
 */
 
-void UCognitiveVRBlueprints::GetRequestDelegate(const FString Hook, const FCognitiveExitPollResponse response)
+void UCognitiveVRBlueprints::GetQuestionSet(const FString Hook, const FCognitiveExitPollResponse response)
 {
 	ExitPoll::MakeQuestionSetRequest(Hook, response);
 }
 
-FExitPollQuestionSet UCognitiveVRBlueprints::GetCurrentExitPollQuestionSet(EResponseValueReturn& Out)
+FExitPollQuestionSet UCognitiveVRBlueprints::GetCurrentExitPollQuestionSet()
 {
 	return ExitPoll::GetCurrentQuestionSet();
 }
 
-void UCognitiveVRBlueprints::SendExitPollResponse(FExitPollResponses Responses)
-{
+//void UCognitiveVRBlueprints::SendExitPollResponse(FExitPollResponses Responses)
+//{
 	/*TMap<FString, FString> answers;
 
 	for (int32 i = 0; i < Responses.answers.Num(); i++)
@@ -344,6 +344,11 @@ void UCognitiveVRBlueprints::SendExitPollResponse(FExitPollResponses Responses)
 		answers.Add(Responses.answers[i].type, Responses.answers[i].value);
 	}
 	ExitPoll::SendQuestionResponses(Responses.user,Responses.questionSetId,Responses.sessionId,Responses.hook,answers);*/
-	ExitPoll::SendQuestionResponses(Responses);
+//	ExitPoll::SendQuestionResponses(Responses);
+//}
+
+void UCognitiveVRBlueprints::SendExitPollAnswers(const TArray<FExitPollAnswer>& Answers)
+{
+	ExitPoll::SendQuestionAnswers(Answers);
 }
 
