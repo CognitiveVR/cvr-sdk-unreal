@@ -60,7 +60,7 @@ public:
 		FExitPollScaleRange range;
 
 	//multple choice
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadWrite)
 		TArray<FExitPollMultipleChoice> answers;
 };
 

@@ -74,7 +74,7 @@ void ExitPoll::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr
 				q.minLabel = minLabel;
 			}
 			FString maxLabel;
-			if (qobject->TryGetStringField(TEXT("maxLabel"), minLabel))
+			if (qobject->TryGetStringField(TEXT("maxLabel"), maxLabel))
 			{
 				q.maxLabel = maxLabel;
 			}
@@ -82,12 +82,12 @@ void ExitPoll::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr
 			if (qobject->TryGetObjectField(TEXT("range"), range))
 			{
 				int32 start = 0;
-				if (range->Get()->TryGetNumberField(TEXT("maxLabel"), start))
+				if (range->Get()->TryGetNumberField(TEXT("start"), start))
 				{
 					
 				}
 				int32 end = 10;
-				if (range->Get()->TryGetNumberField(TEXT("maxLabel"), end))
+				if (range->Get()->TryGetNumberField(TEXT("end"), end))
 				{
 					
 				}
@@ -101,13 +101,13 @@ void ExitPoll::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr
 			const TArray<TSharedPtr<FJsonValue>>* answers;
 			if (qobject->TryGetArrayField(TEXT("answers"), answers))
 			{
-				for (int32 j = 0; j < answers->Num(); j++)
-				{
-					FExitPollMultipleChoice choice = FExitPollMultipleChoice();
-					choice.answer = (*answers)[i]->AsObject()->GetStringField(TEXT("answer"));
-					choice.icon = (*answers)[i]->AsObject()->GetBoolField(TEXT("icon"));
-					q.answers.Add(choice);
-				}
+					for (int32 j = 0; j < answers->Num(); j++)
+					{
+						FExitPollMultipleChoice choice = FExitPollMultipleChoice();
+						choice.answer = (*answers)[j]->AsObject()->GetStringField(TEXT("answer"));
+						//choice.icon = (*answers)[j]->AsObject()->GetBoolField(TEXT("icon"));
+						q.answers.Add(choice);
+					}
 			}
 
 			set.questions.Add(q);
@@ -225,6 +225,12 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 		}
 	}
 
+	if (!s.IsValid() || !bHasSessionStarted)
+	{
+		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		return;
+	}
+	
 	s.Get()->transaction->BeginEnd("cvr.exitpoll", properties);
 
 	//then flush transactions

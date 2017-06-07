@@ -151,6 +151,7 @@ void Transaction::End(std::string category, TSharedPtr<FJsonObject> properties, 
 {
 	if (s == NULL)
 	{
+		CognitiveLog::Warning("Transaction::End - FAnalyticsProviderCognitiveVR is null!");
 		return;
 	}
 	Transaction::EndPosition(category, s->GetPlayerHMDPosition(), properties, transaction_id, result);
@@ -229,6 +230,11 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 
 void Transaction::BeginEnd(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, std::string result)
 {
+	if (s == NULL)
+	{
+		CognitiveLog::Warning("Transaction::BeginEnd - FAnalyticsProviderCognitiveVR is null!");
+		return;
+	}
 	Transaction::BeginEndPosition(category, s->GetPlayerHMDPosition(), properties, transaction_id, result);
 }
 
