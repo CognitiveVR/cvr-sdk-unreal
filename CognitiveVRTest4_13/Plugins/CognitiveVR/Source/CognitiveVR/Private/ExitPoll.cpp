@@ -114,8 +114,10 @@ void ExitPoll::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr
 		}
 
 		currentSet = set;
-
-		r.Execute(currentSet);
+		if (r.IsBound())
+		{
+			r.Execute(currentSet);
+		}
 	}
 	else
 	{
