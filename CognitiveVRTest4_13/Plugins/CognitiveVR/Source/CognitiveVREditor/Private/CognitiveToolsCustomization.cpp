@@ -415,6 +415,10 @@ void FCognitiveToolsCustomization::ExportDynamicObjectArray(TArray<UDynamicObjec
 	{
 		GEditor->SelectNone(false, true, false);// ->GetSelectedActors()->DeselectAll();
 
+		if (!exportObjects[i] == NULL)
+		{
+			continue;
+		}
 
 		originalLocation = exportObjects[i]->GetOwner()->GetActorLocation();
 		originalRotation = exportObjects[i]->GetOwner()->GetActorRotation();
