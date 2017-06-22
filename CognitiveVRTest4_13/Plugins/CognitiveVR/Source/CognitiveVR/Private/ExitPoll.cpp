@@ -144,7 +144,7 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 	//ResponseObject->SetStringField("sessionId", s->GetSessionID());
 	//ResponseObject->SetStringField("hook", lastHook);
 
-	ResponseObject->SetStringField("user", Responses.user);
+	ResponseObject->SetStringField("userId", Responses.user);
 	ResponseObject->SetStringField("questionSetId", Responses.questionSetId);
 	ResponseObject->SetStringField("sessionId", Responses.sessionId);
 	ResponseObject->SetStringField("hook", Responses.hook);
@@ -155,7 +155,11 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 	{
 		TSharedPtr<FJsonObject> answerObject = MakeShareable(new FJsonObject);
 		answerObject->SetStringField("type",Responses.answers[i].type);
-		if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::Number)
+		if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::String)
+		{
+			answerObject->SetStringField("value", Responses.answers[i].stringValue);
+		}
+		else if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::Number)
 		{
 			answerObject->SetNumberField("value", Responses.answers[i].numberValue);
 		}
@@ -244,6 +248,7 @@ void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 	auto questionSet = GetCurrentQuestionSet();
 	FExitPollResponse responses = FExitPollResponse();
 	responses.hook = lastHook;
+	responses.user = s->GetUserID();
 	responses.questionSetId = questionSet.id;
 	responses.sessionId = s->GetCognitiveSessionID();
 	responses.answers = answers;
