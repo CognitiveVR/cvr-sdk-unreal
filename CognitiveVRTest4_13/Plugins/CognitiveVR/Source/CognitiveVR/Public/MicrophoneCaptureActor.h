@@ -50,6 +50,7 @@ public:
 	UPROPERTY()
 	TArray<uint8> VoiceCaptureBuffer;
 	//uint32 VoiceCaptureReadBytes;
+	uint32 TotalRecordedBytes;
 	
 	//UFUNCTION()
 	//void VoiceCaptureTick();
