@@ -13,6 +13,11 @@ Transaction::Transaction(FAnalyticsProviderCognitiveVR* sp)
 
 void Transaction::Begin(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id)
 {
+	if (!bHasSessionStarted || s == NULL)
+	{
+		CognitiveLog::Warning("Transaction::Begin - FAnalyticsProviderCognitiveVR is null!");
+		return;
+	}
 	Transaction::BeginPosition(category, s->GetPlayerHMDPosition(), properties, transaction_id);
 }
 
@@ -50,7 +55,14 @@ void Transaction::BeginPosition(std::string category, FVector Position, TSharedP
 	jsonObject.Get()->SetStringField("method", "datacollector_beginTransaction");
 	jsonObject.Get()->SetField("args", jsonArray);
 
-	s->thread_manager->AddJsonToBatch(jsonObject);
+	if (s->thread_manager.IsValid())
+	{
+		s->thread_manager->AddJsonToBatch(jsonObject);
+	}
+	else
+	{
+		CognitiveLog::Error("Transaction::BeginPosition buffer is not valid!");
+	}
 
 	//scene explorer
 	TArray<APlayerController*, FDefaultAllocator> controllers;
@@ -83,6 +95,11 @@ void Transaction::BeginPosition(std::string category, FVector Position, TSharedP
 
 void Transaction::Update(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, double progress)
 {
+	if (!bHasSessionStarted || s == NULL)
+	{
+		CognitiveLog::Warning("Transaction::Update - CognitiveVR is null!");
+		return;
+	}
 	Transaction::UpdatePosition(category, s->GetPlayerHMDPosition(), properties, transaction_id, progress);
 }
 
@@ -117,7 +134,14 @@ void Transaction::UpdatePosition(std::string category, FVector Position, TShared
 	jsonObject.Get()->SetStringField("method", "datacollector_updateTransaction");
 	jsonObject.Get()->SetField("args", jsonArray);
 
-	s->thread_manager->AddJsonToBatch(jsonObject);
+	if (s->thread_manager.IsValid())
+	{
+		s->thread_manager->AddJsonToBatch(jsonObject);
+	}
+	else
+	{
+		CognitiveLog::Error("Transaction::UpdatePosition buffer is not valid!");
+	}
 
 	//scene explorer
 	TArray<APlayerController*, FDefaultAllocator> controllers;
@@ -149,8 +173,9 @@ void Transaction::UpdatePosition(std::string category, FVector Position, TShared
 
 void Transaction::End(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, std::string result)
 {
-	if (s == NULL)
+	if (!bHasSessionStarted || s == NULL)
 	{
+		CognitiveLog::Warning("Transaction::End - FAnalyticsProviderCognitiveVR is null!");
 		return;
 	}
 	Transaction::EndPosition(category, s->GetPlayerHMDPosition(), properties, transaction_id, result);
@@ -189,7 +214,14 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 	jsonObject.Get()->SetStringField("method", "datacollector_endTransaction");
 	jsonObject.Get()->SetField("args", jsonArray);
 
-	s->thread_manager->AddJsonToBatch(jsonObject);
+	if (s->thread_manager.IsValid())
+	{
+		s->thread_manager->AddJsonToBatch(jsonObject);
+	}
+	else
+	{
+		CognitiveLog::Error("Transaction::EndPosition buffer is not valid!");
+	}
 
 	if (controllers.Num() == 0)
 	{
@@ -229,6 +261,11 @@ void Transaction::EndPosition(std::string category, FVector Position, TSharedPtr
 
 void Transaction::BeginEnd(std::string category, TSharedPtr<FJsonObject> properties, std::string transaction_id, std::string result)
 {
+	if (!bHasSessionStarted || s == NULL)
+	{
+		CognitiveLog::Warning("Transaction::BeginEnd - FAnalyticsProviderCognitiveVR is null!");
+		return;
+	}
 	Transaction::BeginEndPosition(category, s->GetPlayerHMDPosition(), properties, transaction_id, result);
 }
 

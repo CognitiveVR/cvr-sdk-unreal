@@ -415,7 +415,7 @@ void FCognitiveToolsCustomization::ExportDynamicObjectArray(TArray<UDynamicObjec
 	{
 		GEditor->SelectNone(false, true, false);// ->GetSelectedActors()->DeselectAll();
 
-		if (!exportObjects[i] == NULL)
+		if (exportObjects[i] == NULL)
 		{
 			continue;
 		}

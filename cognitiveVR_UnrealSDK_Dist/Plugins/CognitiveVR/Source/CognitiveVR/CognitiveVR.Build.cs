@@ -44,7 +44,10 @@ namespace UnrealBuildTool.Rules
 					"Projects",
 					"HTTP",
 					"Json",
-                    "JsonUtilities"
+                    "JsonUtilities",
+					"OnlineSubsystem",
+					"OnlineSubsystemUtils",
+					"Voice"
                 }
 				);
 		}

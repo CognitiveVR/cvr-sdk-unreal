@@ -106,6 +106,9 @@ void AMicrophoneCaptureActor::QueueAudio(const uint8* AudioData, const int32 Buf
 
 void AMicrophoneCaptureActor::EndRecording()
 {
+	if (!VoiceCapture.IsValid())
+		return;
+
 	VoiceCapture->Stop();
 
 	TArray<uint8> wavData = EncodeToWav(QueuedAudio);

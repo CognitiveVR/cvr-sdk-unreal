@@ -12,7 +12,8 @@ OverrideHttpInterface::OverrideHttpInterface()
 
 void OverrideHttpInterface::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, NetworkCallback callback)
 {
-    FString UE4Str = Response->GetContentAsString();
+	if (!Response.IsValid()) { return; }
+    FString UE4Str = Response->GetContentAsString(); //try repo for very rare crash bug. sharedpointer exception. this only fires if callback != null, so only on init?
 	std::string content(TCHAR_TO_UTF8(*UE4Str));
 	CognitiveLog::Info("OverrideHttpInterface::OnResponseReceivedAsync - Response: " + content);
         
