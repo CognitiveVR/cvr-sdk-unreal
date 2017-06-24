@@ -121,15 +121,16 @@ extern bool bHasSessionStarted;
 		FCognitiveSendData OnSendData;
 
 		FString DeviceId;
-		Transaction* transaction;
-		Tuning* tuning;
-		Network* network;
-		BufferManager* thread_manager;
-		CoreUtilities* core_utils;
-		Sensors* sensors;
+		TSharedPtr<Transaction> transaction;
+		TSharedPtr<Tuning> tuning;
+		TSharedPtr<Network> network;
+		TSharedPtr<BufferManager> thread_manager;
+		TSharedPtr<CoreUtilities> core_utils;
+		TSharedPtr<Sensors> sensors;
 		TSharedPtr<FJsonObject> initProperties; //optional properties sent when initializing. platform, ram, etc
 		FString GetDeviceID() const;
 		void SetDeviceID(const FString& InDeviceID);
+		double LastSesisonTimestamp = 1;
 
 		double SessionTimestamp = -1;
 		double GetSessionTimestamp();
@@ -144,6 +145,7 @@ extern bool bHasSessionStarted;
 		FString CustomerId;
 
 		void OnLevelLoaded();
+		void SetWorld(UWorld* world);
 	};
 
 	void ThrowDummyResponseException(std::string s);

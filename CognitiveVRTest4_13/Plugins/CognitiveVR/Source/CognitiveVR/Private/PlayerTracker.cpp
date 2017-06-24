@@ -445,6 +445,8 @@ FString UPlayerTracker::GazeSnapshotsToString()
 		dataArray.Add(snapshotValue);
 	}
 
+	wholeObj->SetNumberField("interval", PlayerSnapshotInterval);
+
 	wholeObj->SetArrayField("data", dataArray);
 
 	FString OutputString;

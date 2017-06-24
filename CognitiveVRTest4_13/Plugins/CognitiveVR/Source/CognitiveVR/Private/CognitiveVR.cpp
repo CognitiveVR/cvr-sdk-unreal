@@ -104,6 +104,21 @@ void InitCallback(CognitiveVRResponse resp)
 	cog->core_utils = MakeShareable(new CoreUtilities(cog));
 	cog->sensors = MakeShareable(new Sensors(cog));
 
+
+	//send new user / new device messages if necessary
+
+	auto dataObject = resp.GetContent();
+	if (dataObject.GetBoolField("usernew"))
+	{
+		cog->core_utils->NewUser(TCHAR_TO_UTF8(*cog->GetUserID()));
+		//new device
+	}
+	if (dataObject.GetBoolField("devicenew"))
+	{
+		cog->core_utils->NewDevice(TCHAR_TO_UTF8(*cog->GetDeviceID()));
+		//new device
+	}
+
 	cog->transaction->Begin("cvr.session");
 	cog->bPendingInitRequest = false;
 
@@ -194,6 +209,12 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	if (Location.Len() > 0)
 	{
 		properties->SetStringField("Location", Location);
+	}
+
+	if (GetUserID().IsEmpty())
+	{
+		GLog->Log("FAnalyticsProviderCognitiveVR::StartSession user id is empty!");
+		SetUserID("anonymous");
 	}
 
 	initProperties = properties;

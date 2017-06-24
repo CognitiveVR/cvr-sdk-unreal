@@ -43,6 +43,11 @@ void UDynamicObject::BeginPlay()
 {
 	s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 
+	if (!s->HasStartedSession())
+	{
+		return;
+	}
+
 	LastPosition = GetOwner()->GetActorLocation();
 	LastForward = GetOwner()->GetActorForwardVector();
 
@@ -71,7 +76,10 @@ void UDynamicObject::BeginPlay()
 	{
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot();
 		SnapshotBoolProperty(initSnapshot, "enable", true);
-		snapshots.Add(initSnapshot);
+		if (initSnapshot.time > 1)
+		{
+			snapshots.Add(initSnapshot);
+		}
 
 		if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
 		{
@@ -124,6 +132,11 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 	if (!UpdateOnTick) { return; }
 
+	if (!s->HasStartedSession())
+	{
+		return;
+	}
+
 	currentTime += DeltaTime;
 	if (currentTime > SnapshotInterval)
 	{
@@ -157,8 +170,10 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		
 		FDynamicObjectSnapshot snapObj = MakeSnapshot();
 
-
-		snapshots.Add(snapObj);
+		if (snapObj.time > 1)
+		{
+			snapshots.Add(snapObj);
+		}
 
 		if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
 		{
@@ -169,6 +184,19 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 {
+	if (!s.IsValid())
+	{
+		//can't stop snapshots here. at beginning of the game, the manager might not be finished setting up
+		CognitiveLog::Error("DynamicObject::MakeSnapshot provider is null. finding provider");
+		s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	}
+
+	if (Util::GetTimestamp() < s->LastSesisonTimestamp)
+	{
+		FDynamicObjectSnapshot snapshot = FDynamicObjectSnapshot();
+		return snapshot;
+	}
+
 	//decide if the object needs a new entry in the manifest
 	bool needObjectId = false;
 	if (!ObjectID.IsValid() || ObjectID->Id == -1)
@@ -213,22 +241,25 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 			{
 				ObjectID = recycledId;
 				ObjectID->Used = true;
+				std::string MyStdString(TCHAR_TO_UTF8(*MeshName));
+				CognitiveLog::Info("UDynamicObject::Recycle ObjectID! " + MyStdString);
 			}
 			else
 			{
+				std::string MyStdString(TCHAR_TO_UTF8(*MeshName));
+				CognitiveLog::Info("UDynamicObject::Get new ObjectID! " + MyStdString);
 				ObjectID = GetUniqueId(MeshName);
 
 				allObjectIds.Add(ObjectID);
-
-				FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
-				if (!GroupName.IsEmpty())
-				{
-					//entry.
-					entry.SetProperty("groupname", GroupName);
-				}
-				manifest.Add(entry);
-				newManifest.Add(entry);
 			}
+
+			FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
+			if (!GroupName.IsEmpty())
+			{
+				entry.SetProperty("groupname", GroupName);
+			}
+			manifest.Add(entry);
+			newManifest.Add(entry);
 		}
 		else
 		{
@@ -451,28 +482,33 @@ TArray<TSharedPtr<FJsonValueObject>> UDynamicObject::DynamicSnapshotsToString()
 	return initSnapshot;
 }*/
 
-FDynamicObjectSnapshot UDynamicObject::SnapshotStringProperty(FDynamicObjectSnapshot snapshot, FString key, FString stringValue)
+FDynamicObjectSnapshot UDynamicObject::SnapshotStringProperty(UPARAM(ref)FDynamicObjectSnapshot& snapshot, FString key, FString stringValue)
 {
 	snapshot.StringProperties.Add(key, stringValue);
 	return snapshot;
 }
 
-FDynamicObjectSnapshot UDynamicObject::SnapshotBoolProperty(FDynamicObjectSnapshot snapshot, FString key, bool boolValue)
+FDynamicObjectSnapshot UDynamicObject::SnapshotBoolProperty(UPARAM(ref) FDynamicObjectSnapshot& snapshot, FString key, bool boolValue)
 {
 	snapshot.BoolProperties.Add(key, boolValue);
 	return snapshot;
 }
 
-FDynamicObjectSnapshot UDynamicObject::SnapshotFloatProperty(FDynamicObjectSnapshot snapshot, FString key, float floatValue)
+FDynamicObjectSnapshot UDynamicObject::SnapshotFloatProperty(UPARAM(ref)FDynamicObjectSnapshot& snapshot, FString key, float floatValue)
 {
 	snapshot.FloatProperties.Add(key, floatValue);
 	return snapshot;
 }
 
-FDynamicObjectSnapshot UDynamicObject::SnapshotIntegerProperty(FDynamicObjectSnapshot snapshot, FString key, int32 intValue)
+FDynamicObjectSnapshot UDynamicObject::SnapshotIntegerProperty(UPARAM(ref)FDynamicObjectSnapshot& snapshot, FString key, int32 intValue)
 {
 	snapshot.IntegerProperties.Add(key, intValue);
 	return snapshot;
+}
+
+void UDynamicObject::SendDynamicObjectSnapshot(UPARAM(ref)FDynamicObjectSnapshot& snapshot)
+{
+	snapshots.Add(snapshot);
 }
 
 void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -482,7 +518,11 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		//GLog->Log("release object id");
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot();
 		SnapshotBoolProperty(initSnapshot, "enable", false);
-		snapshots.Add(initSnapshot);
+		
+		if (initSnapshot.time > 1)
+		{
+			snapshots.Add(initSnapshot);
+		}
 
 		ObjectID->Used = false;
 	}
@@ -490,6 +530,10 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	if (EndPlayReason == EEndPlayReason::EndPlayInEditor)
 	{
 		snapshots.Empty();
+		allObjectIds.Empty();
+		manifest.Empty();
+		newManifest.Empty();
+		jsonPart = 1;
 	}
 }
 
