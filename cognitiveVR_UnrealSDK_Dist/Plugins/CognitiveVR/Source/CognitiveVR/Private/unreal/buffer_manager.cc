@@ -5,7 +5,7 @@
 
 using namespace cognitivevrapi;
 
-BufferManager::BufferManager(Network* n)
+BufferManager::BufferManager(TSharedPtr<Network> n)
 {
     this->network = n;
 
@@ -24,16 +24,27 @@ BufferManager::BufferManager(Network* n)
 	}
 }
 
+void BufferManager::ReleaseNetwork()
+{
+	network = NULL;
+}
+
 void BufferManager::AddJsonToBatch(TSharedPtr<FJsonObject> json)
 {
-	if (json.Get() == NULL)
+	if (!json.IsValid())
 	{
 		CognitiveLog::Info("BufferManager::AddJsonToBatch json is empty");
 		return;
 	}
 
-	batchedJson.Add(json);
-	if (batchedJson.Num() >= TransactionBatchSize)
+	if (this == NULL)
+	{
+		CognitiveLog::Error("BufferManager::AddJsonToBatch Buffer Manager is NULL!!");
+		return;
+	}
+
+	this->batchedJson.Add(json);
+	if (this->batchedJson.Num() >= TransactionBatchSize)
 	{
 		BufferManager::SendBatch();
 	}
@@ -53,11 +64,15 @@ void BufferManager::SendBatch()
 		return;
 	}
 
+	if (batchedJson.Num() == 0)
+	{
+		return;
+	}
 
 	/*if (network == NULL)
 	{
-		CognitiveLog::Warning("BufferManager::SendBatch network is null");
-		return;
+	CognitiveLog::Warning("BufferManager::SendBatch network is null");
+	return;
 	}*/
 
 	BufferManager::PushTask(NULL, "datacollected_batch", batchedJson);
@@ -67,7 +82,7 @@ void BufferManager::SendBatch()
 
 void BufferManager::PushTask(NetworkCallback callback, std::string sub_path, TArray<TSharedPtr<FJsonObject>> content)
 {
-	if (this->network != NULL)
+	if (this->network.IsValid())
 	{
 		//turn all the content into one long string
 

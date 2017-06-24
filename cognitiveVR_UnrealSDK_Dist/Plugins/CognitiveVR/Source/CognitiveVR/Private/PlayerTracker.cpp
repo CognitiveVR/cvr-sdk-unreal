@@ -47,6 +47,8 @@ void UPlayerTracker::BeginPlay()
 
 	InitializePlayerTracker();
 
+	s->SetWorld(GetWorld());
+
 	Super::BeginPlay();
 	//Http = &FHttpModule::Get();
 
@@ -172,7 +174,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 			if (hitActorComponent != NULL)
 			{
 				UDynamicObject* hitDynamicObject = Cast<UDynamicObject>(hitActorComponent);
-				if (hitDynamicObject != NULL && hitDynamicObject->TrackGaze)
+				if (hitDynamicObject != NULL && hitDynamicObject->TrackGaze && hitDynamicObject->GetObjectId().IsValid())
 				{
 					hitDynamic = true;
 
@@ -197,6 +199,8 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 						false, 3, 0,
 						3
 					);*/
+
+
 
 					snapObj->SetNumberField("o", hitDynamicObject->GetObjectId()->Id);
 
@@ -432,7 +436,7 @@ FString UPlayerTracker::GazeSnapshotsToString()
 		DeviceNameString = cognitivevrapi::Util::GetDeviceName(DeviceName.ToString());
 	}
 
-	wholeObj->SetStringField("hmdtype", DeviceName.ToString());
+	wholeObj->SetStringField("hmdtype", DeviceNameString);
 
 	for (int32 i = 0; i != snapshots.Num(); ++i)
 	{
@@ -440,6 +444,8 @@ FString UPlayerTracker::GazeSnapshotsToString()
 		snapshotValue = MakeShareable(new FJsonValueObject(snapshots[i]));
 		dataArray.Add(snapshotValue);
 	}
+
+	wholeObj->SetNumberField("interval", PlayerSnapshotInterval);
 
 	wholeObj->SetArrayField("data", dataArray);
 

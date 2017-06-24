@@ -60,7 +60,7 @@ public:
 		FExitPollScaleRange range;
 
 	//multple choice
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadWrite)
 		TArray<FExitPollMultipleChoice> answers;
 };
 
@@ -93,6 +93,7 @@ enum class EAnswerValueTypeReturn : uint8
 {
 	Number,
 	Bool,
+	String, //used for voice
 	Null
 };
 
@@ -110,6 +111,8 @@ public:
 		int32 numberValue;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool boolValue; //converted to 0 or 1
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FString stringValue; //for base64 voice
 };
 
 USTRUCT(BlueprintType)

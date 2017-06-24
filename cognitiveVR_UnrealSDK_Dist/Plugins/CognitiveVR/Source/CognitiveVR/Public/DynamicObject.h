@@ -165,16 +165,19 @@ public:
 	//FDynamicObjectSnapshot NewSnapshot();
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
-	FDynamicObjectSnapshot SnapshotStringProperty(FDynamicObjectSnapshot target, FString key, FString stringValue);
+		FDynamicObjectSnapshot SnapshotStringProperty(UPARAM(ref) FDynamicObjectSnapshot& target, FString key, FString stringValue);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
-		FDynamicObjectSnapshot SnapshotBoolProperty(FDynamicObjectSnapshot target, FString key, bool boolValue);
+		FDynamicObjectSnapshot SnapshotBoolProperty(UPARAM(ref) FDynamicObjectSnapshot& target, FString key, bool boolValue);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
-		FDynamicObjectSnapshot SnapshotIntegerProperty(FDynamicObjectSnapshot target, FString key, int32 intValue);
+		FDynamicObjectSnapshot SnapshotIntegerProperty(UPARAM(ref) FDynamicObjectSnapshot& target, FString key, int32 intValue);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
-		FDynamicObjectSnapshot SnapshotFloatProperty(FDynamicObjectSnapshot target, FString key, float floatValue);
+		FDynamicObjectSnapshot SnapshotFloatProperty(UPARAM(ref) FDynamicObjectSnapshot& target, FString key, float floatValue);
+
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
+		void SendDynamicObjectSnapshot(UPARAM(ref) FDynamicObjectSnapshot& target);
 
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);
 

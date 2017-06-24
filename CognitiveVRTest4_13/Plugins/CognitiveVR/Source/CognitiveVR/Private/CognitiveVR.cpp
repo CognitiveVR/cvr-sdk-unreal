@@ -67,9 +67,17 @@ FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
 	UE_LOG(LogTemp, Warning, TEXT("shutdown cognitivevr module"));
 }
 
+UWorld* currentWorld;
+void FAnalyticsProviderCognitiveVR::SetWorld(UWorld* world)
+{
+	currentWorld = world;
+	UE_LOG(LogTemp, Warning, TEXT("set current world"));
+}
+
 void InitCallback(CognitiveVRResponse resp)
 {
 	CognitiveLog::Info("CognitiveVR InitCallback Response");
+
 	if (!resp.IsSuccessful())
 	{
 		ThrowDummyResponseException("Failed to initialize CognitiveVR " + resp.GetErrorMessage());
@@ -83,21 +91,59 @@ void InitCallback(CognitiveVRResponse resp)
 		CognitiveLog::Error("CognitiveVR InitCallback could not GetCognitiveVRProvider!");
 		return;
 	}
-	cog->transaction = new Transaction(cog);
-	cog->tuning = new Tuning(cog, json);
+	cog->transaction = MakeShareable(new Transaction(cog));// new Transaction(cog);
+	cog->tuning = MakeShareable(new Tuning(cog, json));
 
-	if (cog->network == NULL)
+	if (!cog->network.IsValid())
 	{
 		CognitiveLog::Warning("CognitiveVRProvider InitCallback network is null");
 		return;
 	}
 
-	cog->thread_manager = new BufferManager(cog->network);
-	cog->core_utils = new CoreUtilities(cog);
-	cog->sensors = new Sensors(cog);
+	cog->thread_manager = MakeShareable(new BufferManager(cog->network));
+	cog->core_utils = MakeShareable(new CoreUtilities(cog));
+	cog->sensors = MakeShareable(new Sensors(cog));
+
+
+	//send new user / new device messages if necessary
+
+	auto dataObject = resp.GetContent();
+	if (dataObject.GetBoolField("usernew"))
+	{
+		cog->core_utils->NewUser(TCHAR_TO_UTF8(*cog->GetUserID()));
+		//new device
+	}
+	if (dataObject.GetBoolField("devicenew"))
+	{
+		cog->core_utils->NewDevice(TCHAR_TO_UTF8(*cog->GetDeviceID()));
+		//new device
+	}
 
 	cog->transaction->Begin("cvr.session");
 	cog->bPendingInitRequest = false;
+
+	//get all dynamic objects
+
+	if (currentWorld != NULL)
+	{
+		for (TActorIterator<AStaticMeshActor> ActorItr(currentWorld); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			AStaticMeshActor *Mesh = *ActorItr;
+
+			UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+			if (actorComponent == NULL)
+			{
+				continue;
+			}
+			UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
+			if (dynamic == NULL)
+			{
+				continue;
+			}
+			dynamic->BeginPlay();
+		}
+	}
 
 	cog->SendDeviceInfo();
 }
@@ -146,7 +192,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	if (Http == NULL)
 		Http = &FHttpModule::Get();
 
-	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
 
 	//get attributes
 	//userid
@@ -165,12 +211,18 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		properties->SetStringField("Location", Location);
 	}
 
+	if (GetUserID().IsEmpty())
+	{
+		GLog->Log("FAnalyticsProviderCognitiveVR::StartSession user id is empty!");
+		SetUserID("anonymous");
+	}
+
 	initProperties = properties;
 
 	CustomerId = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
 
 	OverrideHttpInterface* httpint = new OverrideHttpInterface();
-	network = new Network(this);
+	network = MakeShareable(new Network(this));
 	network->Init(httpint, &InitCallback);
 	bPendingInitRequest = true;
 
@@ -198,12 +250,14 @@ void FAnalyticsProviderCognitiveVR::OnLevelLoaded()
 
 void FAnalyticsProviderCognitiveVR::EndSession()
 {
-	if (transaction == NULL)
+	if (!transaction.IsValid())
 	{
 		return;
 	}
 
 	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::EndSession");
+
+	bPendingInitRequest = false;
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 	properties->SetNumberField("sessionlength", Util::GetTimestamp() - GetSessionTimestamp());
@@ -212,22 +266,26 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 	FlushEvents();
 	CognitiveLog::Info("Freeing CognitiveVR memory.");
-	delete thread_manager;
+	//delete thread_manager;
+	if (thread_manager.IsValid())
+	{
+		thread_manager.Get()->ReleaseNetwork();
+	}
 	thread_manager = NULL;
 
-	delete network;
+	//delete network;
 	network = NULL;
 
-	delete transaction;
+	//delete transaction;
 	transaction = NULL;
 
-	delete tuning;
+	//delete tuning;
 	tuning = NULL;
 
-	delete core_utils;
+	//delete core_utils;
 	core_utils = NULL;
 
-	delete sensors;
+	//delete sensors;
 	sensors = NULL;
 	CognitiveLog::Info("CognitiveVR memory freed.");
 
@@ -235,6 +293,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	SessionId = "";
 
 	bHasSessionStarted = false;
+	LastSesisonTimestamp = Util::GetTimestamp() + 1;
 }
 
 void FAnalyticsProviderCognitiveVR::FlushEvents()
@@ -246,7 +305,7 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 		return;
 	}
 
-	if (cog->thread_manager == NULL)
+	if (!cog->thread_manager.IsValid())
 	{
 		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents batch manager is null!");
 		return;
@@ -645,7 +704,7 @@ bool FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
 		return false;
 	}
 
-	UWorld* myworld = GWorld->GetWorld();
+	UWorld* myworld = currentWorld;
 	if (myworld == NULL)
 	{
 		CognitiveLog::Warning("PlayerTracker::SendJson no world");

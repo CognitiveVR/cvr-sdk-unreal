@@ -16,7 +16,7 @@
 DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);
 
 #define COGNITIVEVR_SDK_NAME "unreal"
-#define COGNITIVEVR_SDK_VERSION "0.3.5"
+#define COGNITIVEVR_SDK_VERSION "0.4.0"
 
 class IAnalyticsProvider;
 class FAnalyticsProviderCognitiveVR;
