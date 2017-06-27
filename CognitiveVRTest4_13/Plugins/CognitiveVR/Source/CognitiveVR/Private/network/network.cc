@@ -64,6 +64,17 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 
 	Network::DirectCall("application_init", arr, callback);
 
+	//TSharedPtr<FJsonValueArray> jsonArrayDevice = MakeShareable(new FJsonValueArray(ObjArray));
+	//TSharedPtr<FJsonObject> jsonDevice = MakeShareable(new FJsonObject);
+	//Util::AppendToJsonArray(jsonArrayDevice, fs);
+	//Util::AppendToJsonArray(jsonArrayDevice, fs);
+	//s->AppendUD(jsonArrayDevice);
+	//Util::AppendToJsonArray(jsonArrayDevice, deviceProperties);
+
+	//Network::Call("datacollector_updateDeviceState", jsonArrayDevice, NULL);
+	
+
+	/*
 	TSharedPtr<FJsonValueArray> jsonArrayDevice = MakeShareable(new FJsonValueArray(ObjArray));
 	TSharedPtr<FJsonObject> jsonDevice = MakeShareable(new FJsonObject);
 	Util::AppendToJsonArray(jsonArrayDevice, fs);
@@ -71,7 +82,7 @@ void Network::Init(HttpInterface* a, NetworkCallback callback)
 	s->AppendUD(jsonArrayDevice);
 	Util::AppendToJsonArray(jsonArrayDevice, deviceProperties);
 
-	Network::Call("datacollector_updateDeviceState", jsonArrayDevice, NULL);
+	Network::Call("datacollector_updateDeviceState", jsonArrayDevice, NULL);*/
 }
 
 void Network::Call(std::string sub_path, TSharedPtr<FJsonValueArray> content, NetworkCallback callback)

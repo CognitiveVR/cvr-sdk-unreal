@@ -104,6 +104,8 @@ void InitCallback(CognitiveVRResponse resp)
 	cog->core_utils = MakeShareable(new CoreUtilities(cog));
 	cog->sensors = MakeShareable(new Sensors(cog));
 
+	TSharedPtr<FJsonObject>deviceProperties = Util::DeviceScraper(cog->initProperties);
+	cog->core_utils->UpdateDeviceState(TCHAR_TO_UTF8(*cog->GetDeviceID()), deviceProperties);
 
 	//send new user / new device messages if necessary
 
