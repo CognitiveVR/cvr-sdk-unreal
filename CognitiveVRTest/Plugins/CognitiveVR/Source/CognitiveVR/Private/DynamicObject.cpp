@@ -10,7 +10,7 @@ TArray<FDynamicObjectManifestEntry> manifest;
 TArray<FDynamicObjectManifestEntry> newManifest;
 TArray<TSharedPtr<FDynamicObjectId>> allObjectIds;
 int32 jsonPart = 1;
-int32 MaxSnapshots = 64;
+int32 MaxSnapshots = -1;
 
 // Sets default values for this component's properties
 UDynamicObject::UDynamicObject()
@@ -31,17 +31,34 @@ void UDynamicObject::OnComponentCreated()
 			return;
 		}
 		UStaticMeshComponent* staticmeshComponent = Cast<UStaticMeshComponent>(actorComponent);
-		if (staticmeshComponent == NULL || staticmeshComponent->StaticMesh == NULL)
+		if (staticmeshComponent == NULL || staticmeshComponent->GetStaticMesh() == NULL)
 		{
 			return;
 		}
-		MeshName = staticmeshComponent->StaticMesh->GetName();
+		MeshName = staticmeshComponent->GetStaticMesh()->GetName();
 	}
 }
 
 void UDynamicObject::BeginPlay()
 {
 	s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+
+	if (MaxSnapshots < 0)
+	{
+		MaxSnapshots = 16;
+		FString ValueReceived;
+
+		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicDataLimit", false);
+
+		if (ValueReceived.Len() > 0)
+		{
+			int32 dynamicLimit = FCString::Atoi(*ValueReceived);
+			if (dynamicLimit > 0)
+			{
+				MaxSnapshots = dynamicLimit;
+			}
+		}
+	}
 
 	if (!s->HasStartedSession())
 	{

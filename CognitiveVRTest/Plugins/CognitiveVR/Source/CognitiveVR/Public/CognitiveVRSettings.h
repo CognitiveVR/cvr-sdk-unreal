@@ -48,6 +48,10 @@ class UCognitiveVRSettings
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	int32 SensorDataLimit = 64;
 
+	/** The number of dynamic object snapshots that will be collected together before being sent to scene explorer */
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+		int32 DynamicDataLimit = 64;
+
 	/** The number of transactions that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	int32 TransactionBatchSize = 64;

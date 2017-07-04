@@ -8,17 +8,17 @@
 FCognitiveExitPollResponse r;
 FExitPollQuestionSet currentSet;
 FString lastHook;
-TSharedPtr<FAnalyticsProviderCognitiveVR> s;
+TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider;
 
 void ExitPoll::MakeQuestionSetRequest(const FString Hook, const FCognitiveExitPollResponse& response)
 {
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 
-	if (s.Get() == NULL)
+	if (cogProvider.Get() == NULL)
 	{
-		s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	}
-	FString ValueReceived = s->CustomerId;// = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
+	FString ValueReceived = cogProvider->CustomerId;// = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
 
 	FString url = "https://api.cognitivevr.io/products/"+ ValueReceived +"/questionSetHooks/"+ Hook+"/questionSet";
 	HttpRequest->SetURL(url);
@@ -31,6 +31,17 @@ void ExitPoll::MakeQuestionSetRequest(const FString Hook, const FCognitiveExitPo
 
 void ExitPoll::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
+	if (!Response.IsValid())
+	{
+		CognitiveLog::Error("ExitPoll::OnResponseReceivedAsync - No valid Response. Check internet connection");
+
+		if (r.IsBound())
+		{
+			r.Execute(FExitPollQuestionSet());
+		}
+		return;
+	}
+
 	currentSet = FExitPollQuestionSet();
 
 	FString UE4Str = Response->GetContentAsString();
@@ -132,9 +143,9 @@ FExitPollQuestionSet ExitPoll::GetCurrentQuestionSet()
 
 void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 {
-	if (s.Get() == NULL)
+	if (cogProvider.Get() == NULL)
 	{
-		s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	}
 
 	TSharedPtr<FJsonObject> ResponseObject = MakeShareable(new FJsonObject);
@@ -174,12 +185,12 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 				answerObject->SetNumberField("value", 0);
 			}
 		}
-		else //skipped. Null
+		else if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::Null)
 		{
-			answerObject->SetField("null", MakeShareable(new FJsonValueNull()));
+			answerObject->SetField("value", MakeShareable(new FJsonValueNull()));
 		}
-		TSharedPtr<FJsonValueObject> vo = MakeShareable(new FJsonValueObject(answerObject));
-		answerValues.Add(vo);
+		TSharedPtr<FJsonValueObject> ao = MakeShareable(new FJsonValueObject(answerObject));
+		answerValues.Add(ao);
 	}
 	ResponseObject->SetArrayField("answers", answerValues);
 
@@ -191,7 +202,7 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 	
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 
-	FString ValueReceived = s->CustomerId;// = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
+	FString ValueReceived = cogProvider->CustomerId;// = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
 	FString url = "https://api.cognitivevr.io/products/" + ValueReceived + "/questionSets/" + currentSet.name + "/" + FString::FromInt(currentSet.version) + "/responses";
 
 	HttpRequest->SetURL(url);
@@ -231,16 +242,16 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 		}
 	}
 
-	if (!s.IsValid() || !bHasSessionStarted)
+	if (!cogProvider.IsValid() || !bHasSessionStarted)
 	{
 		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	
-	s.Get()->transaction->BeginEnd("cvr.exitpoll", properties);
+	cogProvider.Get()->transaction->BeginEnd("cvr.exitpoll", properties);
 
 	//then flush transactions
-	s.Get()->FlushEvents();
+	cogProvider.Get()->FlushEvents();
 }
 
 void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
@@ -248,9 +259,9 @@ void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 	auto questionSet = GetCurrentQuestionSet();
 	FExitPollResponse responses = FExitPollResponse();
 	responses.hook = lastHook;
-	responses.user = s->GetUserID();
+	responses.user = cogProvider->GetUserID();
 	responses.questionSetId = questionSet.id;
-	responses.sessionId = s->GetCognitiveSessionID();
+	responses.sessionId = cogProvider->GetCognitiveSessionID();
 	responses.answers = answers;
 	SendQuestionResponse(responses);
 }

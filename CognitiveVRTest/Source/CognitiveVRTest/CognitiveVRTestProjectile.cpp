@@ -81,13 +81,13 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 
 		//generic analytics code
 
-		TSharedPtr<FAnalyticsProviderCognitiveVR> cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+		//TSharedPtr<FAnalyticsProviderCognitiveVR> cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 		//cognitive->FlushEvents();
-		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+		//TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 		//properties->SetStringField("MyStrin", "stringvalue");
 		//properties->SetNumberField("MyNumber", 5);
 		//properties->SetBoolField("MyBoolean", true);
-		cognitive.Get()->transaction->BeginEndPosition("boxhit", this->GetActorLocation(), properties);
+		//cognitive.Get()->transaction->BeginEndPosition("boxhit", this->GetActorLocation(), properties);
 		
 		/*bool myBool = false;
 		FAnalyticsProviderCognitiveVR *cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
