@@ -376,10 +376,11 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer(FString sceneName)
 {
 	//GAZE
 
-	//TODO where do i clear snapshots?
+	//snapshots are cleared in TickComponent after snapshots are sent to SE
 	FString GazeString = UPlayerTracker::GazeSnapshotsToString();
 	//FAnalyticsProviderCognitiveVR::SendJson("gaze", GazeString);
 	s->SendJson("gaze", GazeString);
+
 	//EVENTS
 
 	FString EventString = UPlayerTracker::EventSnapshotsToString();

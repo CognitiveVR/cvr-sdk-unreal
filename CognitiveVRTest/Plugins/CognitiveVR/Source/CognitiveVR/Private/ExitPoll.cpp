@@ -187,7 +187,7 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 		}
 		else if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::Null)
 		{
-			answerObject->SetField("value", MakeShareable(new FJsonValueNull()));
+			answerObject->SetNumberField("value", -32768);
 		}
 		TSharedPtr<FJsonValueObject> ao = MakeShareable(new FJsonValueObject(answerObject));
 		answerValues.Add(ao);
@@ -209,8 +209,11 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 	HttpRequest->SetHeader("Content-Type", "application/json");
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetContentAsString(OutputString);
+	//HttpRequest->OnProcessRequestComplete().BindStatic(ExitPoll::OnQuestionResponse);
 	HttpRequest->ProcessRequest();
 
+	//GLog->Log(url);
+	//GLog->Log(OutputString);
 
 	//send this as a transaction too
 
@@ -229,7 +232,7 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 		{
 			properties->SetNumberField("Answer" + FString::FromInt(i), Responses.answers[i].numberValue);
 		}
-		else //bool as number
+		else if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::Bool) //bool as number
 		{
 			if (Responses.answers[i].boolValue == true)
 			{
@@ -239,6 +242,16 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 			{
 				properties->SetNumberField("Answer" + FString::FromInt(i), 0);
 			}
+		}
+		else if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::Null)
+		{
+			//skipped answer
+			properties->SetNumberField("Answer" + FString::FromInt(i), -32768);
+		}
+		else if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::String)
+		{
+			//voice answer. don't display on dashboard, but not skipped
+			properties->SetNumberField("Answer" + FString::FromInt(i), 0);
 		}
 	}
 
@@ -252,6 +265,17 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 
 	//then flush transactions
 	cogProvider.Get()->FlushEvents();
+}
+
+//for debugging responses from exitpoll microservice
+void ExitPoll::OnQuestionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (!Response.IsValid())
+	{
+		CognitiveLog::Error("ExitPoll::OnQuestionResponse - No valid Response. Check internet connection");
+		return;
+	}
+	GLog->Log("ExitPoll::OnQuestionResponse: " + Response->GetContentAsString());
 }
 
 void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)

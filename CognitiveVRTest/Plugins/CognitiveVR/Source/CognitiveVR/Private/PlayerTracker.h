@@ -176,6 +176,7 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		float PlayerSnapshotInterval = 0.1;
+
 	int32 GazeBatchSize = 100;
 
 	UPlayerTracker();
