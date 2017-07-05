@@ -40,6 +40,9 @@ bool AMicrophoneCaptureActor::BeginRecording(float RecordingDurationSec)
 		//normally wrapped in try/catch, but ue4 doesnt like exceptions
 	}
 
+	// Convert input gain decibels into linear scale
+	InputGain = FMath::Pow(10.0f, GainDB / 20.0f);
+
 	if (!ADC.getDeviceInfo((int32)ADC.getDefaultInputDevice()).isDefaultInput)
 	{
 		CognitiveLog::Warning("MicrophoneCaptureActor BeginRecording no default input source!");
@@ -127,6 +130,16 @@ void AMicrophoneCaptureActor::EndRecording()
 
 			// If our sample rate isn't 44100, then we need to do a SampleRateConvert
 			PCMDataToSerialize = &CurrentRecordedPCMData;
+
+			// Scale by the linear gain if it's been set to something (0.0f is ctor default and impossible to set by dB)
+			if (InputGain != 0.0f)
+			{
+				for (int32 i = 0; i < NumRecordedSamples; ++i)
+				{
+					// Scale by input gain, clamp to prevent integer overflow when casting back to int16. Will still clip.
+					(*PCMDataToSerialize)[i] = (int16)FMath::Clamp(InputGain * (float)(*PCMDataToSerialize)[i], -32767.0f, 32767.0f);
+				}
+			}
 
 			// Get the raw data
 			const uint8* RawData = (const uint8*)PCMDataToSerialize->GetData();

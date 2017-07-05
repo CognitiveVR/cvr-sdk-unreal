@@ -42,6 +42,9 @@ private:
 	// Whether or not we have an error
 	//uint32 bError : 1;
 
+	float GainDB = 21;
+	float InputGain;
+
 	// Number of overflows detected while recording
 	int32 NumOverflowsDetected;
 
