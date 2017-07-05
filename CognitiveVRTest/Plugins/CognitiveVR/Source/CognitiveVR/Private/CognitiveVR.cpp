@@ -216,7 +216,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	if (GetUserID().IsEmpty())
 	{
 		GLog->Log("FAnalyticsProviderCognitiveVR::StartSession user id is empty!");
-		SetUserID("anonymous");
+		SetUserID("anonymous_"+DeviceId);
 	}
 
 	initProperties = properties;

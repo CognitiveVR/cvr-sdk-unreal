@@ -61,7 +61,6 @@ TSharedPtr<FJsonObject> Util::DeviceScraper(TSharedPtr<FJsonObject> properties)
 	properties->SetStringField("cvr.app.version", appVersion);
 
 
-	//include nightmare to access gearvr class
 	/*IHeadMountedDisplay* HMD = GEngine->HMDDevice.Get();
 	if (HMD && HMD->GetHMDDeviceType() == EHMDDeviceType::DT_GearVR)
 	{

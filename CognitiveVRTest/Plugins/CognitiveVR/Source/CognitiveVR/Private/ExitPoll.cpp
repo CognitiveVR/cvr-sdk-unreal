@@ -55,6 +55,16 @@ void ExitPoll::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr
 	TSharedRef< TJsonReader<> > Reader = TJsonReaderFactory<>::Create(UE4Str);
 	if (FJsonSerializer::Deserialize(Reader, jobject))
 	{
+		if (!jobject->HasField(TEXT("customerId")))
+		{
+			CognitiveLog::Info("ExitPoll::OnResponseReceivedAsync - no customerId in response - fail");
+			if (r.IsBound())
+			{
+				r.Execute(FExitPollQuestionSet());
+			}
+			return;
+		}
+
 		set.customerId = jobject->GetStringField(TEXT("customerId"));
 		set.id = jobject->GetStringField(TEXT("id"));
 		set.name = jobject->GetStringField(TEXT("name"));
@@ -112,13 +122,13 @@ void ExitPoll::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr
 			const TArray<TSharedPtr<FJsonValue>>* answers;
 			if (qobject->TryGetArrayField(TEXT("answers"), answers))
 			{
-					for (int32 j = 0; j < answers->Num(); j++)
-					{
-						FExitPollMultipleChoice choice = FExitPollMultipleChoice();
-						choice.answer = (*answers)[j]->AsObject()->GetStringField(TEXT("answer"));
-						//choice.icon = (*answers)[j]->AsObject()->GetBoolField(TEXT("icon"));
-						q.answers.Add(choice);
-					}
+				for (int32 j = 0; j < answers->Num(); j++)
+				{
+					FExitPollMultipleChoice choice = FExitPollMultipleChoice();
+					choice.answer = (*answers)[j]->AsObject()->GetStringField(TEXT("answer"));
+					//choice.icon = (*answers)[j]->AsObject()->GetBoolField(TEXT("icon"));
+					q.answers.Add(choice);
+				}
 			}
 
 			set.questions.Add(q);
