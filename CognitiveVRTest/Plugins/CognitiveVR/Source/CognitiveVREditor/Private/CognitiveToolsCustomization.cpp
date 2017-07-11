@@ -243,6 +243,28 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			.Text(FText::FromString("Upload Dynamic Objects"))
 			.OnClicked(this, &FCognitiveToolsCustomization::UploadDynamics)
 		];
+
+	//upload dynamics
+	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		.MinDesiredWidth(256)
+		[
+			SNew(SButton)
+			.IsEnabled(true)
+			.Text(FText::FromString("Set Unique Dynamic Ids"))
+			.OnClicked(this, &FCognitiveToolsCustomization::SetUniqueDynamicIds)
+		];
+	
+	//upload dynamics manifest for aggregation
+	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		.MinDesiredWidth(256)
+		[
+			SNew(SButton)
+			.IsEnabled(true)
+			.Text(FText::FromString("Upload Dynamic Manifest"))
+			.OnClicked(this, &FCognitiveToolsCustomization::UploadDynamicsManifest)
+		];
 }
 
 float FCognitiveToolsCustomization::GetMinimumSize()
@@ -486,6 +508,208 @@ FReply FCognitiveToolsCustomization::ExportDynamicTextures()
 	return FReply::Handled();
 }
 
+FReply FCognitiveToolsCustomization::SetUniqueDynamicIds()
+{
+	//loop thorugh all dynamics in the scene
+	TArray<UDynamicObject*> dynamics;
+
+	//make a list of all the used objectids
+
+	TArray<FDynamicObjectId> usedIds;
+
+	//get all the dynamic objects in the scene
+	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AStaticMeshActor *Mesh = *ActorItr;
+
+		UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+		if (actorComponent == NULL)
+		{
+			continue;
+		}
+		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
+		if (dynamic == NULL)
+		{
+			continue;
+		}
+		dynamics.Add(dynamic);
+	}
+
+	//create objectids for each dynamic
+	for (auto& dynamic : dynamics)
+	{
+		if (dynamic->CustomId != 0)
+		{
+			FString finalMeshName = dynamic->MeshName;
+			if (!dynamic->UseCustomMeshName)
+			{
+				if (dynamic->CommonMeshName == ECommonMeshName::ViveController) {finalMeshName = "ViveController";}
+				if (dynamic->CommonMeshName == ECommonMeshName::ViveTracker) { finalMeshName = "ViveTracker"; }
+				if (dynamic->CommonMeshName == ECommonMeshName::OculusTouchRight) { finalMeshName = "OculusTouchRight"; }
+				if (dynamic->CommonMeshName == ECommonMeshName::OculusTouchLeft) { finalMeshName = "OculusTouchLeft"; }
+			}
+
+			usedIds.Add(FDynamicObjectId(dynamic->CustomId,dynamic->MeshName));
+		}
+	}
+
+	int32 currentUniqueId = 1;
+	int32 changedDynamics = 0;
+
+	//assign unused ids to dynamics
+	for (auto& dynamic : dynamics)
+	{
+		if (dynamic->CustomId == -1)
+		{
+			for (currentUniqueId; currentUniqueId < 1000; currentUniqueId++)
+			{
+				//find some unused id number
+				FDynamicObjectId* FoundId = usedIds.FindByPredicate([currentUniqueId](const FDynamicObjectId& InItem)
+				{
+					return InItem.Id == currentUniqueId;
+				});
+
+				if (FoundId == NULL)
+				{
+					dynamic->CustomId = currentUniqueId;
+					dynamic->UseCustomId = true;
+					currentUniqueId++;
+					changedDynamics++;
+					break;
+				}
+			}
+		}
+	}
+
+	GLog->Log("CognitiveVR Tools set " + FString::FromInt(changedDynamics) + " dynamic ids");
+
+
+	GWorld->MarkPackageDirty();
+	//save the scene? mark the scene as changed?
+
+	return FReply::Handled();
+}
+
+FReply FCognitiveToolsCustomization::UploadDynamicsManifest()
+{
+	TArray<UDynamicObject*> dynamics;
+
+	//get all the dynamic objects in the scene
+	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AStaticMeshActor *Mesh = *ActorItr;
+
+		UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+		if (actorComponent == NULL)
+		{
+			continue;
+		}
+		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
+		if (dynamic == NULL)
+		{
+			continue;
+		}
+		dynamics.Add(dynamic);
+	}
+
+	GLog->Log("CognitiveVR Tools uploading manifest for " +FString::FromInt(dynamics.Num())+ " objects");
+
+	//why is there an object iterator as well as finding all the actors in the gameworld?
+	/*for (TObjectIterator<UDynamicObject> It; It; ++It)
+	{
+		UDynamicObject* TempObject = *It;
+		if (TempObject != NULL)
+		{
+			if (!meshNames.Contains(TempObject->MeshName))
+			{
+				exportObjects.Add(TempObject);
+				meshNames.Add(TempObject->MeshName);
+			}
+		}
+	}*/
+
+
+	bool wroteAnyObjects = false;
+	FString objectManifest = "{\"Objects\":[";
+	//write preset customids to manifest
+	for (int32 i = 0; i < dynamics.Num(); i++)
+	{
+		//if they have a customid -> add them to the objectmanifest string
+		if (dynamics[i]->UseCustomId && dynamics[i]->CustomId != 0)
+		{
+			wroteAnyObjects = true;
+			objectManifest += "{";
+			objectManifest += "\"id\":\"" + FString::FromInt(dynamics[i]->CustomId) + "\",";
+			objectManifest += "\"mesh\":\"" + dynamics[i]->MeshName + "\",";
+			objectManifest += "\"name\":\"" + dynamics[i]->GetOwner()->GetName() + "\"";
+			objectManifest += "},";
+		}
+	}
+	if (!wroteAnyObjects)
+	{
+		GLog->Log("couldn't find any dynamic objects to put into the aggregation manifest!");
+		return FReply::Handled();
+	}
+	//remove last comma
+	objectManifest.RemoveFromEnd(",");
+	//add ]}
+	objectManifest += "]}";
+
+
+	//get scene id
+	FString sceneID = "";
+	FString currentSceneName = GWorld->GetMapName();
+	currentSceneName.RemoveFromStart(GWorld->StreamingLevelsPrefix);
+
+	//GConfig->GetArray()
+	FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
+	if (Section == NULL)
+	{
+		GLog->Log("can't upload dynamic objects. sceneid not set");
+		return FReply::Handled();
+	}
+	for (FConfigSection::TIterator It(*Section); It; ++It)
+	{
+		if (It.Key() == TEXT("SceneData"))
+		{
+			FString name;
+			FString key;
+			It.Value().GetValue().Split(TEXT(","), &name, &key);
+			if (*name == currentSceneName)
+			{
+				GLog->Log("-----> CognitiveToolsCustomization::UploadDynamicsManifest found key for scene " + name);
+				sceneID = key;
+				break;
+			}
+		}
+	}
+	if (sceneID == "")
+	{
+		GLog->Log("CognitiveToolsCustomization::UploadDynamicsManifest couldn't find sceneid for " + currentSceneName);
+		return FReply::Handled();
+	}
+
+	FString url = "sceneexplorer.com/api/objects/" + sceneID + "?version=1";
+
+	//send manifest to api/objects/sceneid
+
+	GLog->Log(url);
+	GLog->Log("CognitiveVR Tools send dynamic object aggregation manifest");
+	GLog->Log(objectManifest);
+
+	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
+	HttpRequest->SetURL(url);
+	HttpRequest->SetVerb("POST");
+	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
+	HttpRequest->SetContentAsString(objectManifest);
+
+	HttpRequest->ProcessRequest();
+
+	return FReply::Handled();
+}
+
 FReply FCognitiveToolsCustomization::UploadDynamics()
 {	
 	FString filesStartingWith = TEXT("");
@@ -526,13 +750,13 @@ FReply FCognitiveToolsCustomization::UploadDynamics()
 			It.Value().GetValue().Split(TEXT(","), &name, &key);
 			if (*name == currentSceneName)
 			{
-				GLog->Log("-----> UPlayerTracker::GetSceneKey found key for scene " + name);
+				GLog->Log("-----> CognitiveToolsCustomization::UploadDynamics found key for scene " + name);
 				sceneID = key;
 				break;
 			}
 			else
 			{
-				GLog->Log("UPlayerTracker::GetSceneKey found key for scene " + name);
+				//GLog->Log("UPlayerTracker::GetSceneKey found key for scene " + name);
 			}
 		}
 	}

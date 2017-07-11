@@ -138,6 +138,13 @@ private:
 	UFUNCTION(Exec, Category = "Dynamics")
 		FReply UploadDynamics();
 
+	//this is for aggregating dynamic objects
+	UFUNCTION(Exec, Category = "Dynamics")
+		FReply UploadDynamicsManifest();
+
+	UFUNCTION(Exec, Category = "Dynamics")
+		FReply SetUniqueDynamicIds();
+
 	void OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
