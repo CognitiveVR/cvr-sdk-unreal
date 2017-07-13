@@ -244,8 +244,10 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			.OnClicked(this, &FCognitiveToolsCustomization::UploadDynamics)
 		];
 
+	IDetailCategoryBuilder& DynamicsManifestCategory = DetailBuilder.EditCategory(TEXT("Dynamic Object Manifest"));
+
 	//upload dynamics
-	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
+	DynamicsManifestCategory.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
 		.MinDesiredWidth(256)
 		[
@@ -256,7 +258,7 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		];
 	
 	//upload dynamics manifest for aggregation
-	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
+	DynamicsManifestCategory.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
 		.MinDesiredWidth(256)
 		[
@@ -536,10 +538,10 @@ FReply FCognitiveToolsCustomization::SetUniqueDynamicIds()
 		dynamics.Add(dynamic);
 	}
 
-	//create objectids for each dynamic
+	//create objectids for each dynamic that's already set
 	for (auto& dynamic : dynamics)
 	{
-		if (dynamic->CustomId != 0)
+		if (dynamic->CustomId >= 0)
 		{
 			FString finalMeshName = dynamic->MeshName;
 			if (!dynamic->UseCustomMeshName)
@@ -560,7 +562,7 @@ FReply FCognitiveToolsCustomization::SetUniqueDynamicIds()
 	//assign unused ids to dynamics
 	for (auto& dynamic : dynamics)
 	{
-		if (dynamic->CustomId == -1)
+		if (dynamic->CustomId < 0)
 		{
 			for (currentUniqueId; currentUniqueId < 1000; currentUniqueId++)
 			{
@@ -616,23 +618,8 @@ FReply FCognitiveToolsCustomization::UploadDynamicsManifest()
 
 	GLog->Log("CognitiveVR Tools uploading manifest for " +FString::FromInt(dynamics.Num())+ " objects");
 
-	//why is there an object iterator as well as finding all the actors in the gameworld?
-	/*for (TObjectIterator<UDynamicObject> It; It; ++It)
-	{
-		UDynamicObject* TempObject = *It;
-		if (TempObject != NULL)
-		{
-			if (!meshNames.Contains(TempObject->MeshName))
-			{
-				exportObjects.Add(TempObject);
-				meshNames.Add(TempObject->MeshName);
-			}
-		}
-	}*/
-
-
 	bool wroteAnyObjects = false;
-	FString objectManifest = "{\"Objects\":[";
+	FString objectManifest = "{\"objects\":[";
 	//write preset customids to manifest
 	for (int32 i = 0; i < dynamics.Num(); i++)
 	{
@@ -649,7 +636,7 @@ FReply FCognitiveToolsCustomization::UploadDynamicsManifest()
 	}
 	if (!wroteAnyObjects)
 	{
-		GLog->Log("couldn't find any dynamic objects to put into the aggregation manifest!");
+		GLog->Log("Couldn't find any dynamic objects to put into the aggregation manifest!");
 		return FReply::Handled();
 	}
 	//remove last comma
@@ -691,24 +678,37 @@ FReply FCognitiveToolsCustomization::UploadDynamicsManifest()
 		return FReply::Handled();
 	}
 
-	FString url = "sceneexplorer.com/api/objects/" + sceneID + "?version=1";
+	FString url = "sceneexplorer.com/api/objects/" + sceneID;
 
 	//send manifest to api/objects/sceneid
 
-	GLog->Log(url);
 	GLog->Log("CognitiveVR Tools send dynamic object aggregation manifest");
+	GLog->Log(url);
 	GLog->Log(objectManifest);
 
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
+	//HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveToolsCustomization::OnUploadManifestCompleted);
 	HttpRequest->SetContentAsString(objectManifest);
 
 	HttpRequest->ProcessRequest();
 
 	return FReply::Handled();
 }
+
+void FCognitiveToolsCustomization::OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	GLog->Log(Response->GetContentAsString());
+	GLog->Log(FString::FromInt(Response->GetResponseCode()));
+
+	if (bWasSuccessful)
+	{
+		GLog->Log("success!");
+	}
+}
+
 
 FReply FCognitiveToolsCustomization::UploadDynamics()
 {	
