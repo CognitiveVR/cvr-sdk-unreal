@@ -44,7 +44,7 @@ void UPlayerTracker::BeginPlay()
 
 	InitializePlayerTracker();
 
-	s->SetWorld(GetWorld());
+	//s->SetWorld(GetWorld());
 
 	Super::BeginPlay();
 	//Http = &FHttpModule::Get();

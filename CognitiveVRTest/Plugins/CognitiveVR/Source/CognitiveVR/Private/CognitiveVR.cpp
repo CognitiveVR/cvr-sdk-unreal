@@ -691,7 +691,7 @@ bool FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
 	if (cog == NULL)
 	{
-		CognitiveLog::Warning("UPlayerTRacker::SendJson CognitiveVRProvider has not started a session!");
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
 		return false;
 	}
 
@@ -709,8 +709,9 @@ bool FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
 	UWorld* myworld = currentWorld;
 	if (myworld == NULL)
 	{
-		CognitiveLog::Warning("PlayerTracker::SendJson no world");
-		return false;
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson no world");
+		//return false;
+		myworld = GWorld->GetWorld();
 	}
 
 	FString currentSceneName = myworld->GetMapName();
