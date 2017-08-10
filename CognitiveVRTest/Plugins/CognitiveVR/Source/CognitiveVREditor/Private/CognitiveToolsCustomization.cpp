@@ -48,7 +48,6 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 	if (p.EqualTo(FText::FromString("")) && !HasSearchedForBlender)
 	{
 		HasSearchedForBlender = true;
-		UE_LOG(LogTemp, Warning, TEXT("blender path is empty. search for blender"));
 		SearchForBlender();
 	}
 
@@ -317,7 +316,7 @@ FReply FCognitiveToolsCustomization::ExportDynamics()
 
 	if (!tempworld)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("world is null"));
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveToolsCustomization::ExportDynamics world is null"));
 		return FReply::Handled();
 	}
 
@@ -967,7 +966,7 @@ FReply FCognitiveToolsCustomization::Select_Export_Meshes()
 
 	if (!tempworld)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("world is null"));
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveToolsCustomization::Select_Export_Meshes world is null"));
 		return FReply::Handled();
 	}
 
@@ -1046,7 +1045,6 @@ FReply FCognitiveToolsCustomization::Select_Blender()
 	if (PickFile(title, fileTypes, lastPath, defaultfile, outFilename))
 	{
 		BlenderPath = outFilename;
-		//UE_LOG(LogTemp, Warning, TEXT("selected blender at path: %s"), *BlenderPath);
 	}
 	return FReply::Handled();
 }

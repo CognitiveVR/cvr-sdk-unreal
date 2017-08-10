@@ -11,14 +11,23 @@ bool MuteErrorMessages;
 
 void CognitiveLog::Init()
 {
+	MuteInfoMessages = false;
+	MuteErrorMessages = false;
 	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteInfoMessages", false);
-	if (ValueReceived.Len() == 4 && ValueReceived == "true")
+	if (ValueReceived.Len()>0 && ValueReceived == "true")
 	{
 		MuteInfoMessages = true;
 	}
+	else
+	{
+		Warning("==========================");
+		Warning("See 'Project Settings > cognitiveVR' for preferences and to toggle logging");
+		Warning("https://docs.cognitivevr.io/unreal/troubleshooting/ for help");
+		Warning("==========================");
+	}
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteErrorMessages", false);
-	if (ValueReceived.Len() == 4 && ValueReceived == "true")
+	if (ValueReceived.Len()>0 && ValueReceived == "true")
 	{
 		MuteErrorMessages = true;
 	}

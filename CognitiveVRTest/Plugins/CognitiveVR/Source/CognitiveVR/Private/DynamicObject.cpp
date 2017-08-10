@@ -169,12 +169,10 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 		if ((LastPosition - GetOwner()->GetActorLocation()).Size() > PositionThreshold)
 		{
-			//GLog->Log("moved " + GetOwner()->GetName());
 			//moved
 		}
 		else if (actualDegrees > RotationThreshold) //rotator stuff
 		{
-			//GLog->Log("rotated " + GetOwner()->GetName());
 			//rotated
 		}
 		else
@@ -532,7 +530,6 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (ReleaseIdOnDestroy && !TrackGaze)
 	{
-		//GLog->Log("release object id");
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot();
 		SnapshotBoolProperty(initSnapshot, "enable", false);
 		

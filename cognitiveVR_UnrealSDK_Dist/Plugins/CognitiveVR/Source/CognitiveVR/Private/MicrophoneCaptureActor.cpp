@@ -5,150 +5,185 @@
 #include "Private/CognitiveVRPrivatePCH.h"
 #include "MicrophoneCaptureActor.h"
 
+static int32 OnAudioCaptureCallback(void *OutBuffer, void* InBuffer, uint32 InBufferFrames, double StreamTime, RtAudioStreamStatus AudioStreamStatus, void* InUserData)
+{
+	// Cast the user data to the mic recorder
+	AMicrophoneCaptureActor* MicrophoneCaptureActor = (AMicrophoneCaptureActor*)InUserData;
 
-// Sets default values
+	// Call the OnAudioCapture function
+	return MicrophoneCaptureActor->OnAudioCapture(InBuffer, InBufferFrames, StreamTime, AudioStreamStatus == RTAUDIO_INPUT_OVERFLOW);
+}
+
 AMicrophoneCaptureActor::AMicrophoneCaptureActor()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-// Called when the game starts or when spawned
 void AMicrophoneCaptureActor::BeginPlay()
 {
 	Super::BeginPlay();	
 }
 
-//microphone input 'processed' every tick
 void AMicrophoneCaptureActor::Tick( float DeltaTime )
 {
 	Super::Tick( DeltaTime );
-
-	if (!VoiceCapture.IsValid())
-		return;
-
-	uint32 VoiceCaptureBytesAvailable = 0;
-	EVoiceCaptureState::Type CaptureState = VoiceCapture->GetCaptureState(VoiceCaptureBytesAvailable);
-	
-	//UE_LOG(LogTemp, Warning, TEXT("capture state is %s"), EVoiceCaptureState::ToString(CaptureState));
-
-	VoiceCaptureBuffer.Reset();
-	
-	//VoiceCaptureBytesAvailable = 16000 / DeltaTime;
-
-	//UE_LOG(LogTemp, Warning, TEXT("record bytes %d"), (int32)VoiceCaptureBytesAvailable);
-
-	//quiet sections sometimes trigger the NoData capture state
-	if (CaptureState == EVoiceCaptureState::Ok && VoiceCaptureBytesAvailable > 0)
-	{
-		//could fake voicecapturereadbytes? set it to 16000 * deltatime and force it to read even if empty. NOPE
-		uint32 VoiceCaptureReadBytes;
-		//float VoiceCaptureTotalSquared = 0;
-	
-		VoiceCaptureBuffer.SetNumUninitialized(VoiceCaptureBytesAvailable);
-	
-		VoiceCapture->GetVoiceData(VoiceCaptureBuffer.GetData(), VoiceCaptureBytesAvailable, VoiceCaptureReadBytes);
-
-		//VoiceCaptureReadBytes = VoiceCaptureBytesAvailable/2; //repeats recorded sections, but includes pauses
-
-		QueueAudio(VoiceCaptureBuffer.GetData(), VoiceCaptureReadBytes);
-
-		TotalRecordedBytes += VoiceCaptureReadBytes;
-
-		//all volume level stuff
-		/*
-		//TotalRecordedBytes += VoiceCaptureReadBytes;
-		for (uint32 i = 0; i < (VoiceCaptureReadBytes / 2); i++)
-		{
-			VoiceCaptureSample = (VoiceCaptureBuffer[i * 2 + 1] << 8) | VoiceCaptureBuffer[i * 2];
-			VoiceCaptureTotalSquared += ((float) VoiceCaptureSample * (float) VoiceCaptureSample);
-		}
-
-		//VoiceCaptureReadBytes = VoiceCaptureBytesAvailable;
-	
-		float VoiceCaptureMeanSquare = (2 * (VoiceCaptureTotalSquared / VoiceCaptureBuffer.Num()));
-		float VoiceCaptureRms = FMath::Sqrt(VoiceCaptureMeanSquare);
-		float VoiceCaptureFinalVolume = ((VoiceCaptureRms / 32768.0) * 200.f);
-	
-		VoiceCaptureVolume = VoiceCaptureFinalVolume;*/	
-
-		//DEBUG puts audio
-		//VoiceCaptureSoundWaveProcedural->QueueAudio(VoiceCaptureBuffer.GetData(), VoiceCaptureReadBytes);
-	}
 }
 
-bool AMicrophoneCaptureActor::BeginRecording()
+bool AMicrophoneCaptureActor::BeginRecording(float RecordingDurationSec)
 {
-	VoiceCapture = FVoiceModule::Get().CreateVoiceCapture();
-	if (!VoiceCapture.IsValid())
+	// If we have a stream open close it (reusing streams can cause a blip of previous recordings audio)
+	if (ADC.isStreamOpen())
+	{
+
+		ADC.stopStream();
+		ADC.closeStream();
+		//normally wrapped in try/catch, but ue4 doesnt like exceptions
+	}
+
+	// Convert input gain decibels into linear scale
+	InputGain = FMath::Pow(10.0f, GainDB / 20.0f);
+
+	if (!ADC.getDeviceInfo((int32)ADC.getDefaultInputDevice()).isDefaultInput)
+	{
+		CognitiveLog::Warning("MicrophoneCaptureActor BeginRecording no default input source!");
 		return false;
-	VoiceCapture->Start();
+	}
+
+	if (RecordingDurationSec == 0)
+	{
+		CognitiveLog::Warning("MicrophoneCaptureActor BeginRecording duration is 0 seconds!");
+		return false;
+	}
+
+	RtAudio::DeviceInfo Info = ADC.getDeviceInfo(StreamParams.deviceId);
+	RecordingSampleRate = 16000;// Info.preferredSampleRate;
+	NumInputChannels = 1;// Info.inputChannels;
+
+	int32 NumSamplesToReserve = RecordingDurationSec * RecordingSampleRate * NumInputChannels;
+	CurrentRecordedPCMData.Reset(NumSamplesToReserve);
+
+	NumRecordedSamples = 0;
+	NumOverflowsDetected = 0;
+
+	NumFramesToRecord = RecordingSampleRate * RecordingDurationSec;
+
+	// Publish to the mic input thread that we're ready to record...
+	bRecording = true;
+
+	StreamParams.deviceId = ADC.getDefaultInputDevice(); // Only use the default input device for now
+
+	StreamParams.nChannels = NumInputChannels;
+	StreamParams.firstChannel = 0;
+
+	uint32 BufferFrames = FMath::Max(RecordingBlockSize, 256);
+
+	//UE_LOG(LogTemp, Log, TEXT("AMyActor::BeginRecording Initialized mic recording manager at %d hz sample rate, %d channels, and %d Recording Block Size"), (int32)RecordingSampleRate, StreamParams.nChannels, BufferFrames);
+
+	// RtAudio uses exceptions for error handling
+	ADC.openStream(nullptr, &StreamParams, RTAUDIO_SINT16, RecordingSampleRate, &BufferFrames, &OnAudioCaptureCallback, this);
+	//try catch exceptions
+	ADC.startStream();
+
 	return true;
 }
 
-//this enqueues 1 tick lengths of audio bytes (16000*deltatime). stitch these together at the end to get all the recorded bytes
-void AMicrophoneCaptureActor::QueueAudio(const uint8* AudioData, const int32 BufferSize)
+//from OnAudioCaptureCallback, used in BeginRecording ADC.openStream
+int32 AMicrophoneCaptureActor::OnAudioCapture(void* InBuffer, uint32 InBufferFrames, double StreamTime, bool bOverflow)
 {
-	if (BufferSize == 0 || !ensure((BufferSize % sizeof(int16)) == 0))
+	FScopeLock Lock(&CriticalSection);
+
+	if (bRecording)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("QUEUE AUDIO BUFFER SIZE IS ZERO"));
-		return;
+		if (bOverflow)
+			++NumOverflowsDetected;
+
+		CurrentRecordedPCMData.Append((int16*)InBuffer, InBufferFrames * NumInputChannels);
+		return 0;
 	}
 
-	TArray<uint8> NewAudioBuffer;
-	NewAudioBuffer.AddUninitialized(BufferSize);
-	FMemory::Memcpy(NewAudioBuffer.GetData(), AudioData, BufferSize);
-	//QueuedAudio.Enqueue(NewAudioBuffer);
-	QueuedAudio.Append(NewAudioBuffer);
-
-	AvailableByteCount.Add(BufferSize);
+	return 1;
 }
+
+
+//static void SampleRateConvert(float CurrentSR, float TargetSR, int32 NumChannels, const TArray<int16>& CurrentRecordedPCMData, int32 NumSamplesToConvert, TArray<int16>& OutConverted){}
 
 void AMicrophoneCaptureActor::EndRecording()
 {
-	if (!VoiceCapture.IsValid())
-		return;
+	FScopeLock Lock(&CriticalSection);
 
-	VoiceCapture->Stop();
-
-	TArray<uint8> wavData = EncodeToWav(QueuedAudio);
-
-	wav64string = FBase64::Encode(wavData);
-
-	//DEBUG save wav to disk
-	if (false)
+	// If we're currently recording, stop the recording
+	if (bRecording)
 	{
-		FString SaveDirectory = FString("C:/Users/calder/Desktop");
-		FString FileName = FString("recordedAudio.wav");
+		bRecording = false;
 
-		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-
-		if (PlatformFile.CreateDirectoryTree(*SaveDirectory))
+		if (CurrentRecordedPCMData.Num() > 0)
 		{
-			// Get absolute file path
-			FString AbsoluteFilePath = SaveDirectory + "/" + FileName;
+			NumRecordedSamples = FMath::Min(NumFramesToRecord * NumInputChannels, CurrentRecordedPCMData.Num());
 
-			//FFileHelper::SaveStringToFile(Content, *AbsoluteFilePath);
-			FFileHelper::SaveArrayToFile(wavData, *AbsoluteFilePath);
+			/*UE_LOG(LogTemp, Log, TEXT("Stopping mic recording. Recorded %d frames of audio (%.4f seconds). Detected %d buffer overflows."),
+				NumRecordedSamples,
+				(float)NumRecordedSamples / RecordingSampleRate,
+				NumOverflowsDetected);*/
+
+			// Get a ptr to the buffer we're actually going to serialize
+			TArray<int16>* PCMDataToSerialize = nullptr;
+
+			// If our sample rate isn't 44100, then we need to do a SampleRateConvert
+			PCMDataToSerialize = &CurrentRecordedPCMData;
+
+			// Scale by the linear gain if it's been set to something (0.0f is ctor default and impossible to set by dB)
+			if (InputGain != 0.0f)
+			{
+				for (int32 i = 0; i < NumRecordedSamples; ++i)
+				{
+					// Scale by input gain, clamp to prevent integer overflow when casting back to int16. Will still clip.
+					(*PCMDataToSerialize)[i] = (int16)FMath::Clamp(InputGain * (float)(*PCMDataToSerialize)[i], -32767.0f, 32767.0f);
+				}
+			}
+
+			// Get the raw data
+			const uint8* RawData = (const uint8*)PCMDataToSerialize->GetData();
+			int32 NumBytes = NumRecordedSamples * sizeof(int16);
+
+			// Create a raw .wav file to stuff the raw PCM data in so when we create the sound wave asset it's identical to a normal imported asset
+			//SerializeWaveFile(RawWaveData, RawData, NumBytes);
+			EncodeToWav(RawWaveData, RawData, NumBytes);
+
+
+			//DEBUG save wav to disk
+			/*
+			FString SaveDirectory = FString("C:/Users/calder/Desktop");
+			FString FileName = FString("recordedAudio" + FString::FromInt(NumBytes) + ".wav");
+
+			IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+			if (PlatformFile.CreateDirectoryTree(*SaveDirectory))
+			{
+				// Get absolute file path
+				FString AbsoluteFilePath = SaveDirectory + "/" + FileName;
+
+				//FFileHelper::SaveStringToFile(Content, *AbsoluteFilePath);
+				FFileHelper::SaveArrayToFile(RawWaveData, *AbsoluteFilePath);
+				//UE_LOG(LogTemp, Warning, TEXT("AMicrophoneCaptureActor::EndRecording saved wav file to desktop"));
+			}*/
 		}
-		UE_LOG(LogTemp, Warning, TEXT("AMicrophoneCaptureActor::EndRecording saved wav file to desktop"));
-	}
-
-	//DEBUG playback
-	if (false)
-	{
-		VoiceCaptureAudioComponent->SetSound(VoiceCaptureSoundWaveProcedural);
-		VoiceCaptureAudioComponent->Play();
 	}
 }
 
-TArray<uint8> AMicrophoneCaptureActor::EncodeToWav(TArray<uint8> rawData)
-{
-	TArray<uint8> finaldata;
+//static void WriteUInt32ToByteArrayLE(TArray<uint8>& InByteArray, int32& Index, const uint32 Value){}
 
+//static void WriteUInt16ToByteArrayLE(TArray<uint8>& InByteArray, int32& Index, const uint16 Value) {}
+
+//void AMicrophoneCaptureActor::SerializeWaveFile(TArray<uint8>& OutWaveFileData, const uint8* InPCMData, const int32 NumBytes){}
+
+void AMicrophoneCaptureActor::EncodeToWav(TArray<uint8>& OutWaveFileData, const uint8* InPCMData, const int32 NumBytes)
+{
 	uint8 bytes[4];
 	uint8 twobytes[2];
 	unsigned long n = 0;
+
+	OutWaveFileData.Empty(NumBytes + 44);
+	//OutWaveFileData.AddZeroed(NumBytes + 44);
 
 	///RIFF
 
@@ -156,21 +191,21 @@ TArray<uint8> AMicrophoneCaptureActor::EncodeToWav(TArray<uint8> rawData)
 	FString riff = "RIFF";
 	FTCHARToUTF8 Converter1(*riff);
 	auto riffdata = (const uint8*)Converter1.Get();
-	finaldata.Append(riffdata, 4);
+	OutWaveFileData.Append(riffdata, 4);
 
 	//chunk size (little)
-	n = rawData.Num() - (int32)8;
+	n = NumBytes + 36;
 	bytes[3] = (n >> 24) & 0xFF;
 	bytes[2] = (n >> 16) & 0xFF;
 	bytes[1] = (n >> 8) & 0xFF;
 	bytes[0] = n & 0xFF;
-	finaldata.Append(bytes, 4);
+	OutWaveFileData.Append(bytes, 4);
 
 	//format (big)
 	FString wave = "WAVE";
 	FTCHARToUTF8 Converter2(*wave);
 	auto wavedata = (const uint8*)Converter2.Get();
-	finaldata.Append(wavedata, 4);
+	OutWaveFileData.Append(wavedata, 4);
 
 	///fmt sub-chunk
 
@@ -178,7 +213,7 @@ TArray<uint8> AMicrophoneCaptureActor::EncodeToWav(TArray<uint8> rawData)
 	FString fmt = "fmt ";
 	FTCHARToUTF8 Converter3(*fmt);
 	auto fmtdata = (const uint8*)Converter3.Get();
-	finaldata.Append(fmtdata, 4);
+	OutWaveFileData.Append(fmtdata, 4);
 
 	//subchunk 1 size (little)
 	n = 16;
@@ -186,75 +221,70 @@ TArray<uint8> AMicrophoneCaptureActor::EncodeToWav(TArray<uint8> rawData)
 	bytes[2] = (n >> 16) & 0xFF;
 	bytes[1] = (n >> 8) & 0xFF;
 	bytes[0] = n & 0xFF;
-	finaldata.Append(bytes, 4);
+	OutWaveFileData.Append(bytes, 4);
 
 	//audio format (little)
 	n = 1;
 	twobytes[1] = (n >> 8) & 0xFF;
 	twobytes[0] = n & 0xFF;
-	finaldata.Append(twobytes, 2);
+	OutWaveFileData.Append(twobytes, 2);
 
 	//num channels (little)
-	n = 1;
+	n = NumInputChannels;
 	twobytes[1] = (n >> 8) & 0xFF;
 	twobytes[0] = n & 0xFF;
-	finaldata.Append(twobytes, 2);
+	OutWaveFileData.Append(twobytes, 2);
 
 	//sample rate (little)
-	n = 16000;
+	n = WAVE_FILE_SAMPLERATE;
 	bytes[3] = (n >> 24) & 0xFF;
 	bytes[2] = (n >> 16) & 0xFF;
 	bytes[1] = (n >> 8) & 0xFF;
 	bytes[0] = n & 0xFF;
-	finaldata.Append(bytes, 4);
+	OutWaveFileData.Append(bytes, 4);
 
 	//byte rate (little)
-	n = 32000;
+	n = WAVE_FILE_SAMPLERATE * NumInputChannels * 2;
 	bytes[3] = (n >> 24) & 0xFF;
 	bytes[2] = (n >> 16) & 0xFF;
 	bytes[1] = (n >> 8) & 0xFF;
 	bytes[0] = n & 0xFF;
-	finaldata.Append(bytes, 4);
+	OutWaveFileData.Append(bytes, 4);
 
 	//block align (little)
 	n = 2;
 	twobytes[1] = (n >> 8) & 0xFF;
 	twobytes[0] = n & 0xFF;
-	finaldata.Append(twobytes, 2);
+	OutWaveFileData.Append(twobytes, 2);
 
 	//bits per sample (little)
 	n = 16;
 	twobytes[1] = (n >> 8) & 0xFF;
 	twobytes[0] = n & 0xFF;
-	finaldata.Append(twobytes, 2);
+	OutWaveFileData.Append(twobytes, 2);
 
 	/// data subchunk
-	
+
 	//subchunk2 id (big)
 	FString data = "data";
 	FTCHARToUTF8 Converter4(*data);
 	auto datadata = (const uint8*)Converter4.Get();
-	finaldata.Append(datadata, 4);
+	OutWaveFileData.Append(datadata, 4);
 
 	//subchunk2 size (little)
-	n = rawData.Num() * 2 * 2;
+	n = NumBytes;
 	bytes[3] = (n >> 24) & 0xFF;
 	bytes[2] = (n >> 16) & 0xFF;
 	bytes[1] = (n >> 8) & 0xFF;
 	bytes[0] = n & 0xFF;
-	finaldata.Append(bytes, 4);
+	OutWaveFileData.Append(bytes, 4);
 
-	//data (little)
-	for (int32 i = 0; i < rawData.Num(); i++)
-	{
-		finaldata.Add(rawData[i]);
-	}
+	OutWaveFileData.Append(InPCMData, NumBytes);
 
-	return finaldata;
+	wav64string = FBase64::Encode(OutWaveFileData);
 }
 
-FString AMicrophoneCaptureActor::GetMicrophoneRecording()
+FString& AMicrophoneCaptureActor::GetMicrophoneRecording()
 {
-	//UE_LOG(LogTemp, Log, TEXT("wav file contents %s"), *wav64string);
 	return wav64string;
 }

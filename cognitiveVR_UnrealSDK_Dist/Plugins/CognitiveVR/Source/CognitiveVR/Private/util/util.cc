@@ -13,7 +13,7 @@ double Util::GetTimestamp()
 	#pragma warning(disable:4244) //Disable warning regarding loss of accuracy, no concern.
 
 	long ts = time(0);
-	double miliseconds = FDateTime::Now().GetMillisecond();
+	double miliseconds = FDateTime::UtcNow().GetMillisecond();
 	double finalTime = ts + miliseconds*0.001;
 
 	return finalTime;
@@ -61,7 +61,6 @@ TSharedPtr<FJsonObject> Util::DeviceScraper(TSharedPtr<FJsonObject> properties)
 	properties->SetStringField("cvr.app.version", appVersion);
 
 
-	//include nightmare to access gearvr class
 	/*IHeadMountedDisplay* HMD = GEngine->HMDDevice.Get();
 	if (HMD && HMD->GetHMDDeviceType() == EHMDDeviceType::DT_GearVR)
 	{

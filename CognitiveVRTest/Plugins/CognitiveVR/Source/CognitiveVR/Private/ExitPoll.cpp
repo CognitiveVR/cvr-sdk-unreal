@@ -222,9 +222,6 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 	//HttpRequest->OnProcessRequestComplete().BindStatic(ExitPoll::OnQuestionResponse);
 	HttpRequest->ProcessRequest();
 
-	//GLog->Log(url);
-	//GLog->Log(OutputString);
-
 	//send this as a transaction too
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
@@ -285,7 +282,9 @@ void ExitPoll::OnQuestionResponse(FHttpRequestPtr Request, FHttpResponsePtr Resp
 		CognitiveLog::Error("ExitPoll::OnQuestionResponse - No valid Response. Check internet connection");
 		return;
 	}
-	GLog->Log("ExitPoll::OnQuestionResponse: " + Response->GetContentAsString());
+
+	FString UE4Str = "ExitPoll::OnQuestionResponse: " + Response->GetContentAsString();
+	CognitiveLog::Info(TCHAR_TO_UTF8(*UE4Str));
 }
 
 void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)

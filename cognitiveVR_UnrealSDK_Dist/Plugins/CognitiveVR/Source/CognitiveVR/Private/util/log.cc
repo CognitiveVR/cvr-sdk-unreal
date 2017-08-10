@@ -6,38 +6,47 @@
 
 using namespace cognitivevrapi;
 
-bool EnableInfoMessages;
-bool EnableErrorMessages;
+bool MuteInfoMessages;
+bool MuteErrorMessages;
 
 void CognitiveLog::Init()
 {
-	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "EnableFullDebugLogging", false);
-	if (ValueReceived.Len() == 4)
+	MuteInfoMessages = false;
+	MuteErrorMessages = false;
+	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteInfoMessages", false);
+	if (ValueReceived.Len()>0 && ValueReceived == "true")
 	{
-		EnableInfoMessages = true;
+		MuteInfoMessages = true;
+	}
+	else
+	{
+		Warning("==========================");
+		Warning("See 'Project Settings > cognitiveVR' for preferences and to toggle logging");
+		Warning("https://docs.cognitivevr.io/unreal/troubleshooting/ for help");
+		Warning("==========================");
 	}
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "EnableErrorDebugLogging", false);
-	if (ValueReceived.Len() == 4)
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteErrorMessages", false);
+	if (ValueReceived.Len()>0 && ValueReceived == "true")
 	{
-		EnableErrorMessages = true;
+		MuteErrorMessages = true;
 	}
 }
 
 void CognitiveLog::Info(std::string s, bool newline)
 {
-	if (!EnableInfoMessages) { return; }
+	if (MuteInfoMessages) { return; }
 	UE_LOG(CognitiveVR_Log, Log, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
 }
 
 void CognitiveLog::Warning(std::string s, bool newline)
 {
-	if (!EnableInfoMessages) { return; }
+	if (MuteInfoMessages) { return; }
 	UE_LOG(CognitiveVR_Log, Warning, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
 }
 
 void CognitiveLog::Error(std::string s, bool newline)
 {
-	if (!EnableInfoMessages && !EnableErrorMessages) { return; }
+	if (MuteErrorMessages) { return; }
 	UE_LOG(CognitiveVR_Log, Error, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
 }

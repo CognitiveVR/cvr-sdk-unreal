@@ -27,6 +27,8 @@ public:
 	static void SendQuestionAnswers(const TArray<FExitPollAnswer>& Answers);
 
 	static void OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	static void OnQuestionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	
 
 	static FExitPollQuestionSet GetCurrentQuestionSet();
 	
