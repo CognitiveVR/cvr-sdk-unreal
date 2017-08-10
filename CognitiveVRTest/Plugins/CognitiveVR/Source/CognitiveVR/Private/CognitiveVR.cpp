@@ -71,7 +71,6 @@ UWorld* currentWorld;
 void FAnalyticsProviderCognitiveVR::SetWorld(UWorld* world)
 {
 	currentWorld = world;
-	UE_LOG(LogTemp, Warning, TEXT("set current world"));
 }
 
 void InitCallback(CognitiveVRResponse resp)
@@ -126,7 +125,7 @@ void InitCallback(CognitiveVRResponse resp)
 
 	//get all dynamic objects
 
-	if (currentWorld != NULL)
+	/*if (currentWorld != NULL)
 	{
 		for (TActorIterator<AStaticMeshActor> ActorItr(currentWorld); ActorItr; ++ActorItr)
 		{
@@ -145,7 +144,7 @@ void InitCallback(CognitiveVRResponse resp)
 			}
 			dynamic->BeginPlay();
 		}
-	}
+	}*/
 
 	cog->SendDeviceInfo();
 }
@@ -215,7 +214,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	if (GetUserID().IsEmpty())
 	{
-		GLog->Log("FAnalyticsProviderCognitiveVR::StartSession user id is empty!");
+		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::StartSession user id is empty!");
 		SetUserID("anonymous_"+DeviceId);
 	}
 
@@ -706,12 +705,15 @@ bool FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
 		return false;
 	}
 
+	
+
 	UWorld* myworld = currentWorld;
+	//UWorld* myworld = AActor::GetWorld();
 	if (myworld == NULL)
 	{
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson no world");
-		//return false;
-		myworld = GWorld->GetWorld();
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson no world - use GWorld->GetWorld");
+		currentWorld = GWorld->GetWorld();
+		myworld = currentWorld;
 	}
 
 	FString currentSceneName = myworld->GetMapName();

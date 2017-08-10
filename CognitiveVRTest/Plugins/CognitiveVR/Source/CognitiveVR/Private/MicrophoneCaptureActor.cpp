@@ -77,7 +77,7 @@ bool AMicrophoneCaptureActor::BeginRecording(float RecordingDurationSec)
 
 	uint32 BufferFrames = FMath::Max(RecordingBlockSize, 256);
 
-	UE_LOG(LogTemp, Log, TEXT("AMyActor::BeginRecording Initialized mic recording manager at %d hz sample rate, %d channels, and %d Recording Block Size"), (int32)RecordingSampleRate, StreamParams.nChannels, BufferFrames);
+	//UE_LOG(LogTemp, Log, TEXT("AMyActor::BeginRecording Initialized mic recording manager at %d hz sample rate, %d channels, and %d Recording Block Size"), (int32)RecordingSampleRate, StreamParams.nChannels, BufferFrames);
 
 	// RtAudio uses exceptions for error handling
 	ADC.openStream(nullptr, &StreamParams, RTAUDIO_SINT16, RecordingSampleRate, &BufferFrames, &OnAudioCaptureCallback, this);
@@ -120,10 +120,10 @@ void AMicrophoneCaptureActor::EndRecording()
 		{
 			NumRecordedSamples = FMath::Min(NumFramesToRecord * NumInputChannels, CurrentRecordedPCMData.Num());
 
-			UE_LOG(LogTemp, Log, TEXT("Stopping mic recording. Recorded %d frames of audio (%.4f seconds). Detected %d buffer overflows."),
+			/*UE_LOG(LogTemp, Log, TEXT("Stopping mic recording. Recorded %d frames of audio (%.4f seconds). Detected %d buffer overflows."),
 				NumRecordedSamples,
 				(float)NumRecordedSamples / RecordingSampleRate,
-				NumOverflowsDetected);
+				NumOverflowsDetected);*/
 
 			// Get a ptr to the buffer we're actually going to serialize
 			TArray<int16>* PCMDataToSerialize = nullptr;
@@ -151,24 +151,21 @@ void AMicrophoneCaptureActor::EndRecording()
 
 
 			//DEBUG save wav to disk
-			if (true)
+			/*
+			FString SaveDirectory = FString("C:/Users/calder/Desktop");
+			FString FileName = FString("recordedAudio" + FString::FromInt(NumBytes) + ".wav");
+
+			IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+			if (PlatformFile.CreateDirectoryTree(*SaveDirectory))
 			{
-				FString SaveDirectory = FString("C:/Users/calder/Desktop");
-				FString FileName = FString("recordedAudio"+FString::FromInt(NumBytes)+".wav");
+				// Get absolute file path
+				FString AbsoluteFilePath = SaveDirectory + "/" + FileName;
 
-				IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-
-				if (PlatformFile.CreateDirectoryTree(*SaveDirectory))
-				{
-					// Get absolute file path
-					FString AbsoluteFilePath = SaveDirectory + "/" + FileName;
-
-					//FFileHelper::SaveStringToFile(Content, *AbsoluteFilePath);
-					FFileHelper::SaveArrayToFile(RawWaveData, *AbsoluteFilePath);
-					UE_LOG(LogTemp, Warning, TEXT("AMicrophoneCaptureActor::EndRecording saved wav file to desktop"));
-				}
-				
-			}
+				//FFileHelper::SaveStringToFile(Content, *AbsoluteFilePath);
+				FFileHelper::SaveArrayToFile(RawWaveData, *AbsoluteFilePath);
+				//UE_LOG(LogTemp, Warning, TEXT("AMicrophoneCaptureActor::EndRecording saved wav file to desktop"));
+			}*/
 		}
 	}
 }
@@ -289,6 +286,5 @@ void AMicrophoneCaptureActor::EncodeToWav(TArray<uint8>& OutWaveFileData, const 
 
 FString& AMicrophoneCaptureActor::GetMicrophoneRecording()
 {
-	//UE_LOG(LogTemp, Log, TEXT("wav file contents %s"), *wav64string);
 	return wav64string;
 }

@@ -49,7 +49,6 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 			//UDynamicObject* FoundComp = Comps[0];
 			//FDynamicObjectSnapshot snapshot = FoundComp->MakeSnapshot();
 			//FoundComp->SnapshotFloatProperty(snapshot, "initproperty", 5.0);
-			//GLog->Log("sent c++ snapshot");
 		//}
 
 		//crash

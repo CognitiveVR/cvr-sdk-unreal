@@ -36,17 +36,21 @@ class UCognitiveVRSettings
 
 
 
-	/** Display all info, warning and error messages from cognitiveVR. */
+	/** Mute all info and warning messages from cognitiveVR. */
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-	bool EnableFullDebugLogging = true;
+	bool MuteInfoMessages = false;
 
-	/** Display only error messages from cognitiveVR. */
+	/** Mute error messages from cognitiveVR. */
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-	bool EnableErrorDebugLogging;
+	bool MuteErrorMessages = false;
 
 	/** The number of sensor data points that will be collected together before being sent to scene explorer */
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	int32 SensorDataLimit = 64;
+
+	/** The number of dynamic object snapshots that will be collected together before being sent to scene explorer */
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+		int32 DynamicDataLimit = 64;
 
 	/** The number of transactions that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
@@ -55,6 +59,12 @@ class UCognitiveVRSettings
 	/** The number of player snapshots that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 		int32 GazeBatchSize = 64;
+
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	bool GazeFromPhysicsRaycast = false;
+
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	bool GazeFromVisualRaycast = true;
 
 public:
 	//Mesh names separated by ','. These will be removed in the Reduce Meshes step

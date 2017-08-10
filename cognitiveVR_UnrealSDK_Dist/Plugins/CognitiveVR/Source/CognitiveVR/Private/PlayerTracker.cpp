@@ -9,15 +9,12 @@
 // Sets default values for this component's properties
 UPlayerTracker::UPlayerTracker()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
 
 	FString ValueReceived;
 
+	//gaze batch size
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "GazeBatchSize", false);
-
 	if (ValueReceived.Len() > 0)
 	{
 		int32 sensorLimit = FCString::Atoi(*ValueReceived);
@@ -25,6 +22,24 @@ UPlayerTracker::UPlayerTracker()
 		{
 			GazeBatchSize = sensorLimit;
 		}
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "GazeFromVisualRaycast", false);
+	if (ValueReceived.Len() > 0)
+	{
+		if (ValueReceived == "false")
+			GazeFromVisualRaycast = false;
+		else
+			GazeFromVisualRaycast = true;
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "GazeFromPhysicsRaycast", false);
+	if (ValueReceived.Len() > 0)
+	{
+		if (ValueReceived == "false")
+			GazeFromPhysicsRaycast = false;
+		else
+			GazeFromPhysicsRaycast = true;
 	}
 }
 
@@ -47,7 +62,8 @@ void UPlayerTracker::BeginPlay()
 
 	InitializePlayerTracker();
 
-	s->SetWorld(GetWorld());
+	FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->SetWorld(GetWorld());
+	//s->SetWorld(GetWorld());
 
 	Super::BeginPlay();
 	//Http = &FHttpModule::Get();
@@ -94,82 +110,82 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	framesTillRender--;
-
-	if (waitingForDeferred && framesTillRender < 0)
+	currentTime += DeltaTime;
+	if (currentTime < PlayerSnapshotInterval)
 	{
-		waitingForDeferred = false;
+		return;
+	}
 
-		TArray<APlayerController*, FDefaultAllocator> controllers;
-		GEngine->GetAllLocalPlayerControllers(controllers);
-		if (controllers.Num() == 0)
+	currentTime -= PlayerSnapshotInterval;
+
+	FVector pos;
+	FVector gaze;
+	FRotator rot;
+	double time = Util::GetTimestamp();
+	int32 objectid = -1;
+
+
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	if (controllers.Num() == 0)
+	{
+		CognitiveLog::Info("UPlayerTracker::TickComponent--------------------------no controllers. skip");
+		//return FVector();
+		return;
+	}
+
+	//FVector finalLoc;
+
+	controllers[0]->GetPlayerViewPoint(pos, rot);
+
+	FTransform camManTransform = controllers[0]->PlayerCameraManager->GetActorTransform();
+	//FVector camManForward = controllers[0]->PlayerCameraManager->GetActorForwardVector();
+
+	FRotator temphmdrot;
+	FVector temphmdpos;
+	UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition(temphmdrot, temphmdpos);
+
+	FVector finalPos = camManTransform.TransformPosition(temphmdrot.UnrotateVector(temphmdpos));
+	captureLocation = finalPos;
+	pos = finalPos;
+
+	captureRotation = rot;
+
+	//look at dynamic object
+
+	FCollisionQueryParams Params; // You can use this to customize various properties about the trace
+	Params.AddIgnoredActor(GetOwner()); // Ignore the player's pawn
+
+
+	FHitResult Hit; // The hit result gets populated by the line trace
+
+	FVector Start = captureLocation;
+	FVector End = captureLocation + captureRotation.Vector() * 10000.0f;
+	
+	bool bHit = false;
+	if (GazeFromVisualRaycast)
+	{
+		FCollisionQueryParams params = FCollisionQueryParams(FName(), true);
+		bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, params);
+	}
+	else if (GazeFromPhysicsRaycast)
+	{
+		FCollisionObjectQueryParams params = FCollisionObjectQueryParams();
+		params.AddObjectTypesToQuery(ECC_WorldStatic);
+		params.AddObjectTypesToQuery(ECC_WorldDynamic);
+		//FCollisionResponseParams otherParams = FCollisionResponseParams();
+
+		bHit = GetWorld()->LineTraceSingleByObjectType(Hit, Start, End, params);
+		//bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Pawn,params,otherParams);
+	}
+
+	bool hitDynamic = false;
+	if (bHit)
+	{
+		gaze = Hit.ImpactPoint;
+
+		if (Hit.Actor.IsValid())
 		{
-			CognitiveLog::Info("UPlayerTracker::TickComponent--------------------------no controllers. skip");
-			//return FVector();
-			return;
-		}
-		/*
-		//FVector finalLoc;
-		FVector loc;
-		FRotator rot;
-
-		controllers[0]->GetPlayerViewPoint(loc, rot);
-
-		FTransform camManTransform = controllers[0]->PlayerCameraManager->GetActorTransform();
-		//FVector camManForward = controllers[0]->PlayerCameraManager->GetActorForwardVector();
-
-		FRotator hmdrot;
-		FVector hmdpos;
-		UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition(hmdrot, hmdpos);
-
-		FVector finalPos = camManTransform.TransformPosition(hmdrot.UnrotateVector(hmdpos));
-		//sceneCapture->SetWorldRotation(rot);
-		//sceneCapture->SetWorldLocation(finalPos);
-		*/
-		//CognitiveLog::Info("--------------------------TICK");
-		//write to json
-
-		TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
-
-		double ts = Util::GetTimestamp();
-
-		//time
-		snapObj->SetNumberField("time", ts);
-
-		//positions
-		TArray<TSharedPtr<FJsonValue>> posArray;
-		TSharedPtr<FJsonValueNumber> JsonValue;
-		JsonValue = MakeShareable(new FJsonValueNumber(-(int32)captureLocation.X)); //right
-		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)captureLocation.Z)); //up
-		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)captureLocation.Y));  //forward
-		posArray.Add(JsonValue);
-
-		snapObj->SetArrayField("p", posArray);
-
-
-
-		//look at dynamic object
-		
-		FCollisionQueryParams Params; // You can use this to customize various properties about the trace
-		Params.AddIgnoredActor(GetOwner()); // Ignore the player's pawn
-
-		
-		FHitResult Hit; // The hit result gets populated by the line trace
-
-		// Raycast out from the camera, only collide with pawns (they are on the ECC_Pawn collision channel)
-		FVector Start = captureLocation;
-		FVector End = captureLocation + captureRotation.Vector() * 10000.0f;
-		bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Pawn, Params);
-
-		//gaze
-		TArray<TSharedPtr<FJsonValue>> gazeArray;
-
-		bool hitDynamic = false;
-		if (bHit)
-		{
-			//GLog->Log("hit "+Hit.Actor.Get()->GetName());
 			UActorComponent* hitActorComponent = Hit.Actor.Get()->GetComponentByClass(UDynamicObject::StaticClass());
 			if (hitActorComponent != NULL)
 			{
@@ -182,181 +198,28 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 					localHitPosition *= hitDynamicObject->GetOwner()->GetActorTransform().GetScale3D();
 
-					/*DrawDebugLine(
-						GetWorld(),
-						hitDynamicObject->GetOwner()->GetActorLocation() + localHitPosition,
-						hitDynamicObject->GetOwner()->GetActorLocation() + localHitPosition + FVector::UpVector * 100,
-						FColor(255, 0, 0),
-						false, 3, 0,
-						3
-					);
-
-					DrawDebugLine(
-						GetWorld(),
-						Hit.ImpactPoint,
-						Hit.ImpactPoint + FVector::UpVector * 50,
-						FColor(0, 255, 0),
-						false, 3, 0,
-						3
-					);*/
-
-
-
-					snapObj->SetNumberField("o", hitDynamicObject->GetObjectId()->Id);
-
-					//FVector gazePoint = GetGazePoint(captureLocation, captureRotation);
-					JsonValue = MakeShareable(new FJsonValueNumber(-(int32)localHitPosition.X));
-					gazeArray.Add(JsonValue);
-					JsonValue = MakeShareable(new FJsonValueNumber((int32)localHitPosition.Z));
-					gazeArray.Add(JsonValue);
-					JsonValue = MakeShareable(new FJsonValueNumber((int32)localHitPosition.Y));
-					gazeArray.Add(JsonValue);
+					objectid = hitDynamicObject->GetObjectId()->Id;
+					gaze.X = localHitPosition.X;
+					gaze.Y = localHitPosition.Y;
+					gaze.Z = localHitPosition.Z;
 				}
 			}
+			else
+			{
+				//hit an actor that is not a dynamic object
+			}
 		}
-
-		if (!hitDynamic)
+		else
 		{
-			FVector gazePoint = GetGazePoint(captureLocation, captureRotation);
-			JsonValue = MakeShareable(new FJsonValueNumber(-(int32)gazePoint.X));
-			gazeArray.Add(JsonValue);
-			JsonValue = MakeShareable(new FJsonValueNumber((int32)gazePoint.Z));
-			gazeArray.Add(JsonValue);
-			JsonValue = MakeShareable(new FJsonValueNumber((int32)gazePoint.Y));
-			gazeArray.Add(JsonValue);
+			//hit some csg or something that is not an actor
 		}
-
-		//DrawDebugLine(GetWorld(), finalPos, gazePoint, FColor(100, 0, 100), true, 10);
-		//DrawDebugPoint(GetWorld(), gazePoint, 20, FColor(255, 0, 255), true, 10);
-
-		snapObj->SetArrayField("g", gazeArray);
-
-		//rotation
-		TArray<TSharedPtr<FJsonValue>> rotArray;
-
-		FQuat quat;
-		FRotator adjustedRot = captureRotation;
-		adjustedRot.Yaw -= 90;
-		quat = adjustedRot.Quaternion();
-
-		JsonValue = MakeShareable(new FJsonValueNumber(quat.Y));
-		rotArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(quat.Z));
-		rotArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(quat.X));
-		rotArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(quat.W));
-		rotArray.Add(JsonValue);
-
-		snapObj->SetArrayField("r", rotArray);
-
-
-		snapshots.Add(snapObj);
-		if (snapshots.Num() > GazeBatchSize)
-		{
-			SendGazeEventDataToSceneExplorer();
-			//s->FlushEvents();
-			snapshots.Empty();
-			events.Empty();
-		}
+		BuildSnapshot(captureLocation, gaze, captureRotation, time, objectid);
 	}
-
-	currentTime += DeltaTime;
-	if (currentTime > PlayerSnapshotInterval)
+	else
 	{
-		currentTime -= PlayerSnapshotInterval;
-
-		TArray<APlayerController*, FDefaultAllocator> controllers;
-		GEngine->GetAllLocalPlayerControllers(controllers);
-		if (controllers.Num() == 0)
-		{
-			CognitiveLog::Info("UPlayerTracker::TickComponent--------------------------no controllers skip");
-			//return FVector();
-			return;
-		}
-
-		//FVector finalLoc;
-		FVector loc;
-		FRotator rot;
-
-		controllers[0]->GetPlayerViewPoint(loc, rot);
-
-		FTransform camManTransform = controllers[0]->PlayerCameraManager->GetActorTransform();
-		//FVector camManForward = controllers[0]->PlayerCameraManager->GetActorForwardVector();
-
-		FRotator hmdrot;
-		FVector hmdpos;
-		UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition(hmdrot, hmdpos);
-
-		FVector finalPos = camManTransform.TransformPosition(hmdrot.UnrotateVector(hmdpos));
-		sceneCapture->SetWorldRotation(rot);
-		sceneCapture->SetWorldLocation(finalPos);
-
-		captureLocation = finalPos;
-		captureRotation = rot;
-
-		sceneCapture->CaptureSceneDeferred();
-		waitingForDeferred = true;
-		framesTillRender = 1;
+		//hit nothing. use position and rotation only
+		BuildSnapshot(captureLocation, captureRotation, time);
 	}
-}
-
-float UPlayerTracker::GetPixelDepth(float minvalue, float maxvalue)
-{
-	if (sceneCapture->TextureTarget == NULL)
-	{
-		CognitiveLog::Warning("UPlayerTracker::GetPixelDepth render target size is null");
-
-		return -1;
-	}
-
-	// Creates Texture2D to store TextureRenderTarget content
-	UTexture2D *Texture = UTexture2D::CreateTransient(sceneCapture->TextureTarget->SizeX, sceneCapture->TextureTarget->SizeY, PF_B8G8R8A8);
-
-	if (Texture == NULL)
-	{
-		CognitiveLog::Warning("UPlayerTracker::GetPixelDepth TEMP Texture IS NULL");
-
-		return -1;
-	}
-
-#if WITH_EDITORONLY_DATA
-	Texture->MipGenSettings = TMGS_NoMipmaps; //not sure if this is required
-#endif
-
-	Texture->SRGB = sceneCapture->TextureTarget->SRGB;
-
-	TArray<FColor> SurfData;
-
-	FRenderTarget *RenderTarget = sceneCapture->TextureTarget->GameThread_GetRenderTargetResource();
-
-	RenderTarget->ReadPixels(SurfData);
-
-	// Index formula
-
-	FIntPoint size = RenderTarget->GetSizeXY();
-
-	FColor PixelColor = SurfData[size.X / 2 + size.Y / 2 * sceneCapture->TextureTarget->SizeX];
-
-	float nf = (double)PixelColor.R / 255.0;
-
-	float distance = FMath::Lerp(minvalue, maxvalue, nf);
-
-	return distance;
-}
-
-//puts together the world position of the player's gaze point. each tick
-FVector UPlayerTracker::GetGazePoint(FVector location, FRotator rotator)
-{
-	float distance = GetPixelDepth(0, maxDistance);
-	FVector rotv = rotator.Vector();
-	rotv *= distance;
-
-	FVector returnVector;
-	returnVector.X = location.X + rotv.X;
-	returnVector.Y = location.Y + rotv.Y;
-	returnVector.Z = location.Z + rotv.Z;
-	return returnVector;
 }
 
 void UPlayerTracker::SendGazeEventDataToSceneExplorer()
@@ -373,16 +236,124 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer()
 	UPlayerTracker::SendGazeEventDataToSceneExplorer(currentSceneName);
 }
 
+void UPlayerTracker::BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, int32 objectId)
+{
+	TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
 
+	snapObj->SetNumberField("time", time);
+
+	//positions
+	TArray<TSharedPtr<FJsonValue>> posArray;
+	TSharedPtr<FJsonValueNumber> JsonValue;
+	JsonValue = MakeShareable(new FJsonValueNumber(-(int32)position.X)); //right
+	posArray.Add(JsonValue);
+	JsonValue = MakeShareable(new FJsonValueNumber((int32)position.Z)); //up
+	posArray.Add(JsonValue);
+	JsonValue = MakeShareable(new FJsonValueNumber((int32)position.Y));  //forward
+	posArray.Add(JsonValue);
+
+	snapObj->SetArrayField("p", posArray);
+
+	if (objectId >= 0)
+	{
+		snapObj->SetNumberField("o", objectId);
+	}
+
+	TArray<TSharedPtr<FJsonValue>> gazeArray;
+	JsonValue = MakeShareable(new FJsonValueNumber(-(int32)gaze.X));
+	gazeArray.Add(JsonValue);
+	JsonValue = MakeShareable(new FJsonValueNumber((int32)gaze.Z));
+	gazeArray.Add(JsonValue);
+	JsonValue = MakeShareable(new FJsonValueNumber((int32)gaze.Y));
+	gazeArray.Add(JsonValue);
+
+	snapObj->SetArrayField("g", gazeArray);
+
+	//rotation
+	TArray<TSharedPtr<FJsonValue>> rotArray;
+
+	FQuat quat;
+	FRotator adjustedRot = rotation;
+	adjustedRot.Yaw -= 90;
+	quat = adjustedRot.Quaternion();
+
+	JsonValue = MakeShareable(new FJsonValueNumber(quat.Y));
+	rotArray.Add(JsonValue);
+	JsonValue = MakeShareable(new FJsonValueNumber(quat.Z));
+	rotArray.Add(JsonValue);
+	JsonValue = MakeShareable(new FJsonValueNumber(quat.X));
+	rotArray.Add(JsonValue);
+	JsonValue = MakeShareable(new FJsonValueNumber(quat.W));
+	rotArray.Add(JsonValue);
+
+	snapObj->SetArrayField("r", rotArray);
+
+	snapshots.Add(snapObj);
+	if (snapshots.Num() > GazeBatchSize)
+	{
+		SendGazeEventDataToSceneExplorer();
+		//s->FlushEvents();
+		snapshots.Empty();
+		events.Empty();
+	}
+}
+
+void UPlayerTracker::BuildSnapshot(FVector position, FRotator rotation, double time)
+{
+	TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
+
+	snapObj->SetNumberField("time", time);
+
+	//positions
+	TArray<TSharedPtr<FJsonValue>> posArray;
+	TSharedPtr<FJsonValueNumber> JsonValue;
+	JsonValue = MakeShareable(new FJsonValueNumber(-(int32)position.X)); //right
+	posArray.Add(JsonValue);
+	JsonValue = MakeShareable(new FJsonValueNumber((int32)position.Z)); //up
+	posArray.Add(JsonValue);
+	JsonValue = MakeShareable(new FJsonValueNumber((int32)position.Y));  //forward
+	posArray.Add(JsonValue);
+
+	snapObj->SetArrayField("p", posArray);
+
+	//rotation
+	TArray<TSharedPtr<FJsonValue>> rotArray;
+
+	FQuat quat;
+	FRotator adjustedRot = rotation;
+	adjustedRot.Yaw -= 90;
+	quat = adjustedRot.Quaternion();
+
+	JsonValue = MakeShareable(new FJsonValueNumber(quat.Y));
+	rotArray.Add(JsonValue);
+	JsonValue = MakeShareable(new FJsonValueNumber(quat.Z));
+	rotArray.Add(JsonValue);
+	JsonValue = MakeShareable(new FJsonValueNumber(quat.X));
+	rotArray.Add(JsonValue);
+	JsonValue = MakeShareable(new FJsonValueNumber(quat.W));
+	rotArray.Add(JsonValue);
+
+	snapObj->SetArrayField("r", rotArray);
+
+	snapshots.Add(snapObj);
+	if (snapshots.Num() > GazeBatchSize)
+	{
+		SendGazeEventDataToSceneExplorer();
+		//s->FlushEvents();
+		snapshots.Empty();
+		events.Empty();
+	}
+}
 
 void UPlayerTracker::SendGazeEventDataToSceneExplorer(FString sceneName)
 {
 	//GAZE
 
-	//TODO where do i clear snapshots?
+	//snapshots are cleared in TickComponent after snapshots are sent to SE
 	FString GazeString = UPlayerTracker::GazeSnapshotsToString();
 	//FAnalyticsProviderCognitiveVR::SendJson("gaze", GazeString);
 	s->SendJson("gaze", GazeString);
+
 	//EVENTS
 
 	FString EventString = UPlayerTracker::EventSnapshotsToString();

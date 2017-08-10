@@ -160,6 +160,8 @@ private:
 
 	FString materialPath = "/CognitiveVR/DepthPostProcessing";
 	TSharedPtr<FAnalyticsProviderCognitiveVR> s;
+	void BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, int32 objectId = -1);
+	void BuildSnapshot(FVector position, FRotator rotation, double time);
 
 public:
 	FCognitiveExitPollResponse OnExitPollResponse;
@@ -176,7 +178,10 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		float PlayerSnapshotInterval = 0.1;
+
 	int32 GazeBatchSize = 100;
+	bool GazeFromVisualRaycast = true;
+	bool GazeFromPhysicsRaycast = false;
 
 	UPlayerTracker();
 
@@ -188,10 +193,7 @@ public:
 
 	void SendGazeEventDataToSceneExplorer();
 	void SendGazeEventDataToSceneExplorer(FString sceneName);
-
-	FVector GetGazePoint(FVector location, FRotator rotator);
-	float GetPixelDepth(float minvalue, float maxvalue);
-
+	
 	void AddJsonEvent(FJsonObject* newEvent);
 
 	FString GazeSnapshotsToString();
