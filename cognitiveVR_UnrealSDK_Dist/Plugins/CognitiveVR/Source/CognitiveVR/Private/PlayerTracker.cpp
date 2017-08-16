@@ -146,8 +146,8 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition(temphmdrot, temphmdpos);
 
 	FVector finalPos = camManTransform.TransformPosition(temphmdrot.UnrotateVector(temphmdpos));
-	captureLocation = finalPos;
-	pos = finalPos;
+	captureLocation = finalPos - temphmdpos;
+	pos = finalPos - temphmdpos;
 
 	captureRotation = rot;
 
