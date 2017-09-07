@@ -27,7 +27,7 @@ DECLARE_EVENT_OneParam(FAnalyticsProviderCognitiveVR, FCognitiveInitResponse, bo
 
 extern bool bHasSessionStarted;
 
-	enum Error {
+	enum CognitiveVRError {
 		kErrorSuccess = 0,
 		kErrorGeneric = -1,
 		kErrorNotInitialized = -2,

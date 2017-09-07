@@ -211,6 +211,7 @@ public:
 		static void EndEngagement(UDynamicObject* target, FString engagementType);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
+		///this does not directly send a snapshot - it stores it until Flush is called or the number of stored dynamic snapshots reaches its limit
 		void SendDynamicObjectSnapshot(UPARAM(ref) FDynamicObjectSnapshot& target);
 
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);

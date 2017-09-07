@@ -41,7 +41,7 @@ void UDynamicObject::OnComponentCreated()
 
 void UDynamicObject::BeginPlay()
 {
-	GLog->Log("######### BeginPlay " + GetOwner()->GetName());
+	Super::BeginPlay();
 
 	s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 
@@ -73,7 +73,6 @@ void UDynamicObject::BeginPlay()
 
 		FString UE4Str = GetOwner()->GetName();
 		std::string MyStdString(TCHAR_TO_UTF8(*UE4Str));
-		CognitiveLog::Info("BIND DYNAMIC TO INIT RESPONSE EVENT: " + MyStdString);
 
 		//s->OnInitResponse.Bind(this, BeginPlayCallback);
 
@@ -83,7 +82,6 @@ void UDynamicObject::BeginPlay()
 	BeginPlayCallback(true);
 	FString UE4Str2 = GetOwner()->GetName();
 	std::string MyStdString3(TCHAR_TO_UTF8(*UE4Str2));
-	CognitiveLog::Info("IMMEDIATELY CALL --------- WRITE DYNAMIC OR WHATEVER" + MyStdString3);
 }
 
 void UDynamicObject::BeginPlayCallback(bool successful)
@@ -126,8 +124,6 @@ void UDynamicObject::BeginPlayCallback(bool successful)
 			SendData();
 		}
 	}
-
-	Super::BeginPlay();
 }
 
 /*FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, FString value)
@@ -502,6 +498,9 @@ void UDynamicObject::SendData(FString sceneName)
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 	cog->SendJson("dynamics", OutputString);
 
+	GLog->Log("send dynmaic snapshots ======================================");
+	GLog->Log(OutputString);
+
 	snapshots.Empty();
 }
 
@@ -566,6 +565,10 @@ FDynamicObjectSnapshot UDynamicObject::SnapshotIntegerProperty(UPARAM(ref)FDynam
 void UDynamicObject::SendDynamicObjectSnapshot(UPARAM(ref)FDynamicObjectSnapshot& snapshot)
 {
 	snapshots.Add(snapshot);
+	if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
+	{
+		SendData();
+	}
 }
 
 void UDynamicObject::BeginEngagement(UDynamicObject* target, FString engagementType)
