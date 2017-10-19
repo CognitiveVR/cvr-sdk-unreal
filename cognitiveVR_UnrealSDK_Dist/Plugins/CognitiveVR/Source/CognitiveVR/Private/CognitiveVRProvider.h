@@ -22,11 +22,12 @@
 #include "Engine.h"
 
 DECLARE_MULTICAST_DELEGATE(FCognitiveSendData);
+DECLARE_EVENT_OneParam(FAnalyticsProviderCognitiveVR, FCognitiveInitResponse, bool);
 //DECLARE_DELEGATE_OneParam(FCognitiveExitPollResponse, FExitPollQuestionSet);
 
 extern bool bHasSessionStarted;
 
-	enum Error {
+	enum CognitiveVRError {
 		kErrorSuccess = 0,
 		kErrorGeneric = -1,
 		kErrorNotInitialized = -2,
@@ -70,6 +71,8 @@ extern bool bHasSessionStarted;
 		FString BuildInfo;
 		/** The file archive used to write the data */
 		//FArchive* FileArchive;
+
+		FCognitiveInitResponse InitResponseEvent;
 
 	public:
 		/** Id representing the user the analytics are recording for */
@@ -119,6 +122,8 @@ extern bool bHasSessionStarted;
 
 		UPROPERTY(BlueprintAssignable)
 		FCognitiveSendData OnSendData;
+
+		FCognitiveInitResponse& OnInitResponse() { return InitResponseEvent; }
 
 		FString DeviceId;
 		TSharedPtr<Transaction> transaction;

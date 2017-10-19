@@ -5,10 +5,9 @@
 
 using namespace cognitivevrapi;
 
-BufferManager::BufferManager(TSharedPtr<Network> n)
+BufferManager::BufferManager(FAnalyticsProviderCognitiveVR* cog)
 {
-    this->network = n;
-
+	cvr = cog;
 	FString ValueReceived;
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "TransactionBatchSize", false);
@@ -26,39 +25,40 @@ BufferManager::BufferManager(TSharedPtr<Network> n)
 
 void BufferManager::ReleaseNetwork()
 {
-	network = NULL;
+	//network = NULL;
 }
 
 void BufferManager::AddJsonToBatch(TSharedPtr<FJsonObject> json)
 {
+	if (cvr == nullptr) { return; }
+
 	if (!json.IsValid())
 	{
 		CognitiveLog::Info("BufferManager::AddJsonToBatch json is empty");
 		return;
 	}
 
-	if (this == NULL)
+	/*if (this == NULL)
 	{
-		CognitiveLog::Error("BufferManager::AddJsonToBatch Buffer Manager is NULL!!");
-		return;
-	}
+	CognitiveLog::Error("BufferManager::AddJsonToBatch Buffer Manager is NULL!!");
+	return;
+	}*/
 
-	this->batchedJson.Add(json);
-	if (this->batchedJson.Num() >= TransactionBatchSize)
+	batchedJson.Add(json);
+	if (batchedJson.Num() >= TransactionBatchSize)
 	{
-		BufferManager::SendBatch();
+		SendBatch();
 	}
 }
 
 void BufferManager::SendBatch()
 {
-	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
-	if (cog == NULL)
+	if (cvr == nullptr)
 	{
 		CognitiveLog::Error("BufferManager::SendBatch could not GetCognitiveVRProvider!");
 		return;
 	}
-	if (cog->HasStartedSession() == false)
+	if (cvr->HasStartedSession() == false)
 	{
 		CognitiveLog::Error("BufferManager::SendBatch CognitiveVRProvider has not started session!");
 		return;
@@ -66,6 +66,7 @@ void BufferManager::SendBatch()
 
 	if (batchedJson.Num() == 0)
 	{
+		CognitiveLog::Warning("BufferManager::SendBatch has no batched json to send");
 		return;
 	}
 
@@ -82,7 +83,9 @@ void BufferManager::SendBatch()
 
 void BufferManager::PushTask(NetworkCallback callback, std::string sub_path, TArray<TSharedPtr<FJsonObject>> content)
 {
-	if (this->network.IsValid())
+	if (cvr == nullptr) { return; }
+
+	if (cvr->network.IsValid())
 	{
 		//turn all the content into one long string
 
@@ -96,10 +99,10 @@ void BufferManager::PushTask(NetworkCallback callback, std::string sub_path, TAr
 		TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
 		//Threading is already handled by Unreal Engine, so we simply pass data along to the network class.
-		this->network->Call(sub_path, jsonArray, callback);
+		cvr->network->Call(sub_path, jsonArray, callback);
 	}
 	else
 	{
-		CognitiveLog::Warning("BufferManager::Network is null - probably not initialized yet!");
+		CognitiveLog::Error("BufferManager::Network is null - probably not initialized yet!");
 	}
 }

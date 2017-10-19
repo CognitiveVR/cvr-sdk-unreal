@@ -41,6 +41,8 @@ void UDynamicObject::OnComponentCreated()
 
 void UDynamicObject::BeginPlay()
 {
+	Super::BeginPlay();
+
 	s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 
 	if (MaxSnapshots < 0)
@@ -62,9 +64,28 @@ void UDynamicObject::BeginPlay()
 
 	if (!s->HasStartedSession())
 	{
+		//TODO this should set a callback when session becomes started
+
+		//s->OnInitResponse.AddSP(this, &UDynamicObject::BeginPlayCallback); //multicast delegate style
+
+		//s->OnInitResponse().
+		s->OnInitResponse().AddUObject(this, &UDynamicObject::BeginPlayCallback);
+
+		FString UE4Str = GetOwner()->GetName();
+		std::string MyStdString(TCHAR_TO_UTF8(*UE4Str));
+
+		//s->OnInitResponse.Bind(this, BeginPlayCallback);
+
 		return;
 	}
 
+	BeginPlayCallback(true);
+	FString UE4Str2 = GetOwner()->GetName();
+	std::string MyStdString3(TCHAR_TO_UTF8(*UE4Str2));
+}
+
+void UDynamicObject::BeginPlayCallback(bool successful)
+{
 	LastPosition = GetOwner()->GetActorLocation();
 	LastForward = GetOwner()->GetActorForwardVector();
 
@@ -103,8 +124,6 @@ void UDynamicObject::BeginPlay()
 			SendData();
 		}
 	}
-
-	Super::BeginPlay();
 }
 
 /*FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, FString value)
@@ -352,8 +371,8 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 	rotArray.Add(JsonValue);
 
 	snapObj->SetArrayField("r", rotArray);
-	
-	
+
+
 
 	TArray<TSharedPtr<FJsonValueObject>> properties;
 
@@ -398,6 +417,25 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 		snapObj->SetArrayField("properties", ObjArray);
 	}
 
+	if (snapshot.Engagements.Num() > 0)
+	{
+		TArray< TSharedPtr<FJsonValue> > engagements;
+
+		for (auto& Elem : snapshot.Engagements)
+		{
+			TSharedPtr<FJsonObject>engagement = MakeShareable(new FJsonObject);
+
+			engagement->SetNumberField("engagementparent", Elem.Parent);
+			engagement->SetNumberField("engagement_time", Elem.EngagementTime);
+			engagement->SetNumberField("engagement_count", Elem.EngagementNumber);
+
+			TSharedPtr< FJsonValueObject > engagementValue = MakeShareable(new FJsonValueObject(engagement));
+			engagements.Add(engagementValue);
+		}
+		CognitiveLog::Warning("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<write engagement");
+		snapObj->SetArrayField("engagements", engagements);
+	}
+
 	//TSharedPtr< FJsonValueObject > outValue = MakeShareable(new FJsonValueObject(snapObj));
 
 	return MakeShareable(new FJsonValueObject(snapObj));
@@ -434,7 +472,7 @@ void UDynamicObject::SendData(FString sceneName)
 
 	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionId", cog->GetCognitiveSessionID());
+	wholeObj->SetStringField("sessionid", cog->GetCognitiveSessionID());
 	wholeObj->SetNumberField("part", jsonPart);
 	jsonPart++;
 
@@ -459,6 +497,9 @@ void UDynamicObject::SendData(FString sceneName)
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 	cog->SendJson("dynamics", OutputString);
+
+	GLog->Log("send dynmaic snapshots ======================================");
+	GLog->Log(OutputString);
 
 	snapshots.Empty();
 }
@@ -524,6 +565,95 @@ FDynamicObjectSnapshot UDynamicObject::SnapshotIntegerProperty(UPARAM(ref)FDynam
 void UDynamicObject::SendDynamicObjectSnapshot(UPARAM(ref)FDynamicObjectSnapshot& snapshot)
 {
 	snapshots.Add(snapshot);
+	if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
+	{
+		SendData();
+	}
+}
+
+void UDynamicObject::BeginEngagement(UDynamicObject* target, FString engagementType)
+{
+	if (target != nullptr)
+	{
+		if (target->ObjectID.IsValid())
+		{
+			target->BeginEngagementId(engagementType, target->ObjectID->Id);
+		}
+		else
+		{
+			CognitiveLog::Info("=======================================target id is invalid!");
+		}
+	}
+	else
+	{
+		CognitiveLog::Info("=======================================No target!");
+	}
+}
+
+void UDynamicObject::BeginEngagementId(FString engagementName, int32 parentObjectId)
+{
+	bool didFindEvent = false;
+	int32 previousEngagementCount = 0;
+
+	for (auto& e : Engagements)
+	{
+		if (e.EngagementType == engagementName)
+		{
+			previousEngagementCount++;
+			//foundEvent = &e;
+		}
+	}
+
+	FEngagementEvent newEngagement = FEngagementEvent(engagementName, parentObjectId, previousEngagementCount + 1);
+	DirtyEngagements.Add(newEngagement);
+	CognitiveLog::Warning(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>new engagement");
+	Engagements.Add(newEngagement);
+}
+
+void UDynamicObject::EndEngagement(UDynamicObject* target, FString engagementType)
+{
+	if (target != nullptr)
+	{
+		if (target->ObjectID.IsValid())
+		{
+			target->EndEngagementId(engagementType, target->ObjectID->Id);
+		}
+	}
+}
+
+void UDynamicObject::EndEngagementId(FString engagementName, int32 parentObjectId)
+{
+	FEngagementEvent* foundEvent = NULL;
+	for (auto& e : DirtyEngagements)
+	{
+		if (e.EngagementType == engagementName && (e.Parent == parentObjectId || parentObjectId == -1))
+		{
+			foundEvent = &e;
+			break;
+		}
+	}
+
+	if (foundEvent != nullptr)
+	{
+		foundEvent->Active = false;
+	}
+	else
+	{
+		int32 previousEngagementCount = 0;
+		for (auto& e : Engagements)
+		{
+			if (e.EngagementType == engagementName)
+			{
+				previousEngagementCount++;
+				//foundEvent = &e;
+			}
+		}
+
+		FEngagementEvent newEngagement = FEngagementEvent(engagementName, parentObjectId, previousEngagementCount + 1);
+		newEngagement.Active = false;
+		DirtyEngagements.Add(newEngagement);
+		Engagements.Add(newEngagement);
+	}
 }
 
 void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)

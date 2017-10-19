@@ -21,6 +21,23 @@ enum class ECommonMeshName : uint8
 	ViveTracker
 };
 
+class FEngagementEvent
+{
+public:
+	bool Active = true;
+	FString EngagementType;
+	int32 Parent = -1;
+	float EngagementTime;
+	int32 EngagementNumber;
+
+	FEngagementEvent(FString name, int32 parent, int engagementNumber)
+	{
+		EngagementType = name;
+		Parent = parent;
+		EngagementNumber = engagementNumber;
+	}
+};
+
 class FDynamicObjectManifestEntry
 {
 public:
@@ -71,6 +88,8 @@ public:
 	TMap<FString, int32> IntegerProperties;
 	TMap<FString, float> FloatProperties;
 	TMap<FString, bool> BoolProperties;
+
+	TArray<FEngagementEvent> Engagements;
 
 	/*FDynamicObjectSnapshot* SnapshotProperty(FString key, FString value);
 	FDynamicObjectSnapshot* SnapshotProperty(FString key, bool value);
@@ -143,8 +162,17 @@ public:
 
 	UDynamicObject();
 	
+	//engagements
+	TArray<FEngagementEvent> DirtyEngagements;
+	TArray<FEngagementEvent> Engagements;
+	void BeginEngagementId(FString engagementName, int32 parentDynamicObjectId);
+	void EndEngagementId(FString engagementName, int32 parentDynamicObjectId);
+
+
 	virtual void OnComponentCreated() override;
 	virtual void BeginPlay() override;
+
+	void BeginPlayCallback(bool successful);
 
 	TSharedPtr<FDynamicObjectId> GetUniqueId(FString meshName);
 	TSharedPtr<FDynamicObjectId> GetObjectId();
@@ -177,6 +205,13 @@ public:
 		FDynamicObjectSnapshot SnapshotFloatProperty(UPARAM(ref) FDynamicObjectSnapshot& target, FString key, float floatValue);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
+		static void BeginEngagement(UDynamicObject* target, FString engagementType);
+
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
+		static void EndEngagement(UDynamicObject* target, FString engagementType);
+
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
+		///this does not directly send a snapshot - it stores it until Flush is called or the number of stored dynamic snapshots reaches its limit
 		void SendDynamicObjectSnapshot(UPARAM(ref) FDynamicObjectSnapshot& target);
 
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);
