@@ -540,51 +540,68 @@ FReply FCognitiveToolsCustomization::SetUniqueDynamicIds()
 	//create objectids for each dynamic that's already set
 	for (auto& dynamic : dynamics)
 	{
-		if (dynamic->CustomId >= 0)
+		FString finalMeshName = dynamic->MeshName;
+		if (!dynamic->UseCustomMeshName)
 		{
-			FString finalMeshName = dynamic->MeshName;
-			if (!dynamic->UseCustomMeshName)
-			{
-				if (dynamic->CommonMeshName == ECommonMeshName::ViveController) {finalMeshName = "ViveController";}
-				if (dynamic->CommonMeshName == ECommonMeshName::ViveTracker) { finalMeshName = "ViveTracker"; }
-				if (dynamic->CommonMeshName == ECommonMeshName::OculusTouchRight) { finalMeshName = "OculusTouchRight"; }
-				if (dynamic->CommonMeshName == ECommonMeshName::OculusTouchLeft) { finalMeshName = "OculusTouchLeft"; }
-			}
-
-			usedIds.Add(FDynamicObjectId(dynamic->CustomId,dynamic->MeshName));
+			if (dynamic->CommonMeshName == ECommonMeshName::ViveController) { finalMeshName = "ViveController"; }
+			if (dynamic->CommonMeshName == ECommonMeshName::ViveTracker) { finalMeshName = "ViveTracker"; }
+			if (dynamic->CommonMeshName == ECommonMeshName::OculusTouchRight) { finalMeshName = "OculusTouchRight"; }
+			if (dynamic->CommonMeshName == ECommonMeshName::OculusTouchLeft) { finalMeshName = "OculusTouchLeft"; }
 		}
 	}
 
 	int32 currentUniqueId = 1;
 	int32 changedDynamics = 0;
 
-	//assign unused ids to dynamics
+	//unassigned or invalid numbers
+	TArray<UDynamicObject*> UnassignedDynamics;
+
+	//try to put all ids back where they were
 	for (auto& dynamic : dynamics)
 	{
-		if (dynamic->CustomId < 0)
-		{
-			for (currentUniqueId; currentUniqueId < 1000; currentUniqueId++)
-			{
-				//find some unused id number
-				FDynamicObjectId* FoundId = usedIds.FindByPredicate([currentUniqueId](const FDynamicObjectId& InItem)
-				{
-					return InItem.Id == currentUniqueId;
-				});
+		//id dynamic custom id is not in usedids - add it
 
-				if (FoundId == NULL)
-				{
-					dynamic->CustomId = currentUniqueId;
-					dynamic->UseCustomId = true;
-					currentUniqueId++;
-					changedDynamics++;
-					break;
-				}
+		int32 findId = dynamic->CustomId;
+
+		FDynamicObjectId* FoundId = usedIds.FindByPredicate([findId](const FDynamicObjectId& InItem)
+		{
+			return InItem.Id == findId;
+		});
+
+		if (FoundId == NULL)
+		{
+			usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
+		}
+		else
+		{
+			//assign a new and unused id
+			UnassignedDynamics.Add(dynamic);
+		}
+	}
+
+	for (auto& dynamic : UnassignedDynamics)
+	{
+		for (currentUniqueId; currentUniqueId < 1000; currentUniqueId++)
+		{
+			//find some unused id number
+			FDynamicObjectId* FoundId = usedIds.FindByPredicate([currentUniqueId](const FDynamicObjectId& InItem)
+			{
+				return InItem.Id == currentUniqueId;
+			});
+
+			if (FoundId == NULL)
+			{
+				dynamic->CustomId = currentUniqueId;
+				dynamic->UseCustomId = true;
+				changedDynamics++;
+				currentUniqueId++;
+				usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
+				break;
 			}
 		}
 	}
 
 	GLog->Log("CognitiveVR Tools set " + FString::FromInt(changedDynamics) + " dynamic ids");
-
 
 	GWorld->MarkPackageDirty();
 	//save the scene? mark the scene as changed?
