@@ -194,11 +194,25 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		{
 			//rotated
 		}
+		else if (DirtyEngagements.Num() > 0)
+		{
+			//dirty engagements are written an inactive ones are removed in MakeSnapshot()
+		}
 		else
 		{
 			//hasn't moved enough
 			return;
 		}
+
+		if (DirtyEngagements.Num() > 0)
+		{
+			//engagement update
+			for (auto& element : DirtyEngagements)
+			{
+				element.EngagementTime += SnapshotInterval;
+			}
+		}
+
 		LastPosition = GetOwner()->GetActorLocation();
 		LastForward = GetOwner()->GetActorForwardVector();
 		
@@ -330,6 +344,19 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 
 	snapshot.rotation = FQuat(quat.X, quat.Z, quat.Y, quat.W);
 
+	//TODO snapshot properties. eg size, color, texture
+
+	for (auto& element : DirtyEngagements)
+	{
+		//copying event because it could be removed below if inactive
+		auto engage = FEngagementEvent(element.EngagementType, element.Parent, element.EngagementNumber);
+		engage.EngagementTime = element.EngagementTime;
+
+		snapshot.Engagements.Add(engage);
+	}
+
+	DirtyEngagements.RemoveAll([=](const FEngagementEvent& engage) { return engage.Active == false; });
+
 	return snapshot;
 }
 
@@ -432,7 +459,6 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 			TSharedPtr< FJsonValueObject > engagementValue = MakeShareable(new FJsonValueObject(engagement));
 			engagements.Add(engagementValue);
 		}
-		CognitiveLog::Warning("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<write engagement");
 		snapObj->SetArrayField("engagements", engagements);
 	}
 
@@ -450,12 +476,12 @@ void UDynamicObject::SendData()
 		return;
 	}
 
-	//TODO only combine 64 entries, prioritizing the manifest
 	FString currentSceneName = myworld->GetMapName();
 	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
 	UDynamicObject::SendData(currentSceneName);
 }
 
+//TODO only combine 64 entries, prioritizing the manifest
 void UDynamicObject::SendData(FString sceneName)
 {
 	if (newManifest.Num() + snapshots.Num() == 0)
@@ -497,9 +523,6 @@ void UDynamicObject::SendData(FString sceneName)
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 	cog->SendJson("dynamics", OutputString);
-
-	GLog->Log("send dynmaic snapshots ======================================");
-	GLog->Log(OutputString);
 
 	snapshots.Empty();
 }
@@ -579,14 +602,6 @@ void UDynamicObject::BeginEngagement(UDynamicObject* target, FString engagementT
 		{
 			target->BeginEngagementId(engagementType, target->ObjectID->Id);
 		}
-		else
-		{
-			CognitiveLog::Info("=======================================target id is invalid!");
-		}
-	}
-	else
-	{
-		CognitiveLog::Info("=======================================No target!");
 	}
 }
 
@@ -603,10 +618,8 @@ void UDynamicObject::BeginEngagementId(FString engagementName, int32 parentObjec
 			//foundEvent = &e;
 		}
 	}
-
 	FEngagementEvent newEngagement = FEngagementEvent(engagementName, parentObjectId, previousEngagementCount + 1);
 	DirtyEngagements.Add(newEngagement);
-	CognitiveLog::Warning(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>new engagement");
 	Engagements.Add(newEngagement);
 }
 
