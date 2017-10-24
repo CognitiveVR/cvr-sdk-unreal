@@ -25,10 +25,10 @@ class FEngagementEvent
 {
 public:
 	bool Active = true;
-	FString EngagementType;
+	FString EngagementType = "";
 	int32 Parent = -1;
-	float EngagementTime;
-	int32 EngagementNumber;
+	float EngagementTime = 0;
+	int32 EngagementNumber = 0;
 
 	FEngagementEvent(FString name, int32 parent, int engagementNumber)
 	{
@@ -41,9 +41,9 @@ public:
 class FDynamicObjectManifestEntry
 {
 public:
-	int32 Id;
-	FString Name;
-	FString MeshName;
+	int32 Id = 0;
+	FString Name = "";
+	FString MeshName = "";
 	TMap<FString, FString> StringProperties;
 
 	FDynamicObjectManifestEntry(int32 id, FString name, FString mesh)
@@ -61,9 +61,9 @@ public:
 class FDynamicObjectId
 {
 public:
-	int32 Id;
+	int32 Id = 0;
 	bool Used = true;
-	FString MeshName;
+	FString MeshName = "";
 
 	FDynamicObjectId(int32 id, FString meshName)
 	{
@@ -80,10 +80,10 @@ struct FDynamicObjectSnapshot
 	GENERATED_BODY()
 
 public:
-	FVector position;
-	FQuat rotation;
-	double time;
-	int32 id;
+	FVector position = FVector(0, 0, 0);
+	FQuat rotation = FQuat(0, 0, 0, 1);
+	double time = 0;
+	int32 id = 0;
 	TMap<FString, FString> StringProperties;
 	TMap<FString, int32> IntegerProperties;
 	TMap<FString, float> FloatProperties;
