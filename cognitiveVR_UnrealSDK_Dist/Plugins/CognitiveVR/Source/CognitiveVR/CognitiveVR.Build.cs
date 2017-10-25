@@ -19,8 +19,7 @@ namespace UnrealBuildTool.Rules
 				new string[] {
 					"CognitiveVR/Private",
                     "CognitiveVR/Public",
-					"CognitiveVR/Private/util",
-                    "GearVR/Private"
+					"CognitiveVR/Private/util"
 					// ... add other private include paths required here ...
 				}
 				);
