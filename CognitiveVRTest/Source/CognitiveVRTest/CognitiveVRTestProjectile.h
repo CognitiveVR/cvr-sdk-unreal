@@ -2,6 +2,7 @@
 #pragma once
 #include "GameFramework/Actor.h"
 #include "DynamicObject.h"
+#include "Public/CognitiveVR.h"
 #include "CognitiveVRTestProjectile.generated.h"
 
 UCLASS(config=Game)

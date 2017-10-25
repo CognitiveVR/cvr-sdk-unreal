@@ -152,13 +152,9 @@ private:
 	TArray<TSharedPtr<FJsonObject>> snapshots;
 	TArray<TSharedPtr<FJsonObject>> events;
 
-	float maxDistance = 8192;
-	int32 jsonEventPart;
-	int32 jsonGazePart;
+	int32 jsonEventPart = 1;
+	int32 jsonGazePart = 1;
 
-	UMaterial* SceneDepthMat;
-
-	FString materialPath = "/CognitiveVR/DepthPostProcessing";
 	TSharedPtr<FAnalyticsProviderCognitiveVR> s;
 	void BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, int32 objectId = -1);
 	void BuildSnapshot(FVector position, FRotator rotation, double time);
@@ -166,11 +162,6 @@ private:
 public:
 	FCognitiveExitPollResponse OnExitPollResponse;
 
-	AActor* SceneCaptureActor;
-
-	USceneCaptureComponent2D* sceneCapture;
-	bool waitingForDeferred = false;
-	int32 framesTillRender = 0;
 	FVector captureLocation;
 	FRotator captureRotation;
 
@@ -186,8 +177,6 @@ public:
 	UPlayerTracker();
 
 	virtual void BeginPlay() override;
-
-	void InitializePlayerTracker();
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 

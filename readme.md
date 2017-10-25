@@ -6,4 +6,4 @@ See [docs.cognitive.io](http://docs.cognitivevr.io/unreal/get-started/) for deta
 
 This SDK supports both C++ and Blueprints.
 
-This has been tested on Vive and Oculus Rift on Windows 10. This requires Unreal 4.14.3 or newer.
+This has been tested on Vive and Oculus Rift on Windows 10. This plugin has been tested with Unreal verion 4.14.3. Newer versions may require additional steps to integrate.

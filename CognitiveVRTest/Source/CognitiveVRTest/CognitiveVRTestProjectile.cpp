@@ -32,6 +32,7 @@ ACognitiveVRTestProjectile::ACognitiveVRTestProjectile()
 }
 
 int ACognitiveVRTestProjectile::boxesHit = 0;
+UDynamicObject* blank;
 
 void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
@@ -40,7 +41,10 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 
-		//GetOwner()->GetComponentByClass<UDynamicObject>()
+		OtherActor->GetComponentByClass(UDynamicObject::StaticClass());
+
+		//if (true)
+			//auto actorcomponent = GetOwner()->GetComponentByClass(UDynamicObject::StaticClass());
 
 		//TArray<UDynamicObject*> Comps;
 		//GetComponents(Comps);

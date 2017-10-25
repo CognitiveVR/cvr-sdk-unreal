@@ -17,12 +17,13 @@ typedef void(*NetworkCallback)(CognitiveVRResponse);
 class BufferManager
 {
     private:
-        TSharedPtr<Network> network;
+        //TSharedPtr<Network> network;
 		TArray<TSharedPtr<FJsonObject>> batchedJson;
 		int32 TransactionBatchSize = 16;
+		FAnalyticsProviderCognitiveVR* cvr;
 
-    public:
-		BufferManager(TSharedPtr<Network> n);
+	public:
+		BufferManager(FAnalyticsProviderCognitiveVR* cog);
 		void ReleaseNetwork();
 
 		void AddJsonToBatch(TSharedPtr<FJsonObject> json);

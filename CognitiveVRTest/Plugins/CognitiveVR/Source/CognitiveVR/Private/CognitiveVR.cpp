@@ -80,6 +80,9 @@ void InitCallback(CognitiveVRResponse resp)
 	if (!resp.IsSuccessful())
 	{
 		ThrowDummyResponseException("Failed to initialize CognitiveVR " + resp.GetErrorMessage());
+
+		CognitiveLog::Info("Init callback not successful!");
+		return;
 	}
 	bHasSessionStarted = true;
 	FJsonObject json = resp.GetContent();
@@ -99,12 +102,19 @@ void InitCallback(CognitiveVRResponse resp)
 		return;
 	}
 
-	cog->thread_manager = MakeShareable(new BufferManager(cog->network));
+	cog->thread_manager = MakeShareable(new BufferManager(cog));
 	cog->core_utils = MakeShareable(new CoreUtilities(cog));
 	cog->sensors = MakeShareable(new Sensors(cog));
 
 	TSharedPtr<FJsonObject>deviceProperties = Util::DeviceScraper(cog->initProperties);
-	cog->core_utils->UpdateDeviceState(TCHAR_TO_UTF8(*cog->GetDeviceID()), deviceProperties);
+	if (deviceProperties.IsValid())
+	{
+		cog->core_utils->UpdateDeviceState(TCHAR_TO_UTF8(*cog->GetDeviceID()), deviceProperties);
+	}
+	else
+	{
+		CognitiveLog::Error("Cognitive InitCallback could not find device properties!");
+	}
 
 	//send new user / new device messages if necessary
 
@@ -125,7 +135,9 @@ void InitCallback(CognitiveVRResponse resp)
 
 	//get all dynamic objects
 
-	/*if (currentWorld != NULL)
+	cog->OnInitResponse().Broadcast(resp.IsSuccessful());
+
+	if (currentWorld != NULL)
 	{
 		for (TActorIterator<AStaticMeshActor> ActorItr(currentWorld); ActorItr; ++ActorItr)
 		{
@@ -142,9 +154,18 @@ void InitCallback(CognitiveVRResponse resp)
 			{
 				continue;
 			}
-			dynamic->BeginPlay();
+			if (dynamic->GetObjectId().IsValid())
+			{
+				continue;
+			}
+			CognitiveLog::Warning("InitCallback Dynamic Special startup!");
+			dynamic->BeginPlayCallback(resp.IsSuccessful());
 		}
-	}*/
+	}
+	else
+	{
+		CognitiveLog::Error("InitCallback current world is null");
+	}
 
 	cog->SendDeviceInfo();
 }
@@ -268,10 +289,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	FlushEvents();
 	CognitiveLog::Info("Freeing CognitiveVR memory.");
 	//delete thread_manager;
-	if (thread_manager.IsValid())
-	{
-		thread_manager.Get()->ReleaseNetwork();
-	}
+
 	thread_manager = NULL;
 
 	//delete network;

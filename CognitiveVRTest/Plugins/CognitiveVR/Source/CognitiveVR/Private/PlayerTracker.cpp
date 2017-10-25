@@ -43,55 +43,16 @@ UPlayerTracker::UPlayerTracker()
 	}
 }
 
-void UPlayerTracker::InitializePlayerTracker()
-{
-	if (SceneDepthMat == NULL)
-	{
-		UMaterialInterface *materialInterface = Cast<UMaterialInterface>(StaticLoadObject(UMaterialInterface::StaticClass(), NULL, *materialPath));
-		if (materialInterface != NULL)
-		{
-			SceneDepthMat = materialInterface->GetMaterial();
-		}
-	}
-	s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-}
-
 void UPlayerTracker::BeginPlay()
 {
 	FlushPersistentDebugLines(GetWorld());
 
-	InitializePlayerTracker();
+	s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 
 	FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->SetWorld(GetWorld());
 	//s->SetWorld(GetWorld());
 
 	Super::BeginPlay();
-	//Http = &FHttpModule::Get();
-
-	UTextureRenderTarget2D* renderTarget;
-	renderTarget = NewObject<UTextureRenderTarget2D>();
-	renderTarget->AddToRoot();
-	renderTarget->ClearColor = FLinearColor::White;
-	renderTarget->bHDR = false;
-	renderTarget->InitAutoFormat(256, 256); //auto init from value bHDR
-
-	SceneCaptureActor = GetWorld()->SpawnActor<AActor>(FVector::ZeroVector, FRotator::ZeroRotator);
-	//SceneCaptureActor->SetActorLabel("Scene Capture Actor");
-
-	transformComponent = NewObject<USceneComponent>(SceneCaptureActor);
-
-	sceneCapture = NewObject<USceneCaptureComponent2D>(transformComponent);
-	//sceneCapture->SetupAttachment(this);
-	//sceneCapture->SetRelativeLocation(FVector::ZeroVector);
-	//sceneCapture->SetRelativeRotation(FQuat::Identity);
-	sceneCapture->TextureTarget = renderTarget;
-	sceneCapture->RegisterComponent();
-	sceneCapture->CaptureSource = SCS_FinalColorLDR;
-	//sceneCapture->
-
-	sceneCapture->PostProcessSettings.AddBlendable(SceneDepthMat, 1);
-	//sceneCapture->bCaptureEveryFrame = false;
-	//sceneCapture->bCaptureOnMovement = false;
 }
 
 void UPlayerTracker::AddJsonEvent(FJsonObject* newEvent)
@@ -351,18 +312,26 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer(FString sceneName)
 
 	//snapshots are cleared in TickComponent after snapshots are sent to SE
 	FString GazeString = UPlayerTracker::GazeSnapshotsToString();
-	//FAnalyticsProviderCognitiveVR::SendJson("gaze", GazeString);
-	s->SendJson("gaze", GazeString);
+	if (GazeString.Len() > 0)
+	{
+		//FAnalyticsProviderCognitiveVR::SendJson("gaze", GazeString);
+		s->SendJson("gaze", GazeString);
+	}
 
 	//EVENTS
 
 	FString EventString = UPlayerTracker::EventSnapshotsToString();
-	//FAnalyticsProviderCognitiveVR::SendJson("events", EventString);
-	s->SendJson("events", EventString);
+	if (EventString.Len() > 0)
+	{
+		//FAnalyticsProviderCognitiveVR::SendJson("events", EventString);
+		s->SendJson("events", EventString);
+	}
 }
 
 FString UPlayerTracker::EventSnapshotsToString()
 {
+	if (events.Num() == 0) { return ""; }
+
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
@@ -388,6 +357,8 @@ FString UPlayerTracker::EventSnapshotsToString()
 
 FString UPlayerTracker::GazeSnapshotsToString()
 {
+	if (snapshots.Num() == 0) { return ""; }
+
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
