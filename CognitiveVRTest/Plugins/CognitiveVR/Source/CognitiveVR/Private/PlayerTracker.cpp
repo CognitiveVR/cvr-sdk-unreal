@@ -315,7 +315,9 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer(FString sceneName)
 	if (GazeString.Len() > 0)
 	{
 		//FAnalyticsProviderCognitiveVR::SendJson("gaze", GazeString);
-		s->SendJson("gaze", GazeString);
+		//s->SendJson("gaze", GazeString);
+		FString sceneid = s->GetCurrentSceneId();
+		s->SendJson(Config::PostGazeData(sceneid, 1), GazeString);
 	}
 
 	//EVENTS
@@ -324,7 +326,9 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer(FString sceneName)
 	if (EventString.Len() > 0)
 	{
 		//FAnalyticsProviderCognitiveVR::SendJson("events", EventString);
-		s->SendJson("events", EventString);
+		//s->SendJson("events", EventString);
+		FString sceneid = s->GetCurrentSceneId();
+		s->SendJson(Config::PostEventData(sceneid, 1), EventString);
 	}
 }
 

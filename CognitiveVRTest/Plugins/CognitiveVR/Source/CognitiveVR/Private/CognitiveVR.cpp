@@ -675,7 +675,7 @@ void ThrowDummyResponseException(std::string s)
 	CognitiveLog::Error("CognitiveVRAnalytics::ResponseException! " + s);
 }
 
-FString FAnalyticsProviderCognitiveVR::GetSceneKey(FString sceneName)
+FString FAnalyticsProviderCognitiveVR::GetSceneId(FString sceneName)
 {
 
 	//GConfig->GetArray()
@@ -699,7 +699,7 @@ FString FAnalyticsProviderCognitiveVR::GetSceneKey(FString sceneName)
 	}
 
 	//no matches anywhere
-	CognitiveLog::Warning("UPlayerTracker::GetSceneKey no matches in ini");
+	CognitiveLog::Warning("UPlayerTracker::GetSceneId no matches in ini");
 	return "";
 }
 
@@ -737,29 +737,45 @@ bool FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
 	FString currentSceneName = myworld->GetMapName();
 	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
 
-	FString sceneKey = cog->GetSceneKey(currentSceneName);
+	FString sceneKey = cog->GetSceneId(currentSceneName);
 	if (sceneKey == "")
 	{
 		CognitiveLog::Warning("UPlayerTracker::SendJson does not have scenekey. fail!");
 		return false;
 	}
 
-	std::string stdjson(TCHAR_TO_UTF8(*endpoint));
+	std::string stdendpoint(TCHAR_TO_UTF8(*endpoint));
 	//CognitiveLog::Info(stdjson);
-	CognitiveLog::Info("send json to "+ stdjson);
-
-	FString url = "https://sceneexplorer.com/api/" + endpoint + "/" + sceneKey;
+	CognitiveLog::Info("send json to "+ stdendpoint);
 
 
 	//json to scene endpoint
 
 	TSharedRef<IHttpRequest> HttpRequest = Http->CreateRequest();
 	HttpRequest->SetContentAsString(json);
-	HttpRequest->SetURL(url);
+	HttpRequest->SetURL(endpoint);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->ProcessRequest();
 	return true;
+}
+
+FString FAnalyticsProviderCognitiveVR::GetCurrentSceneId()
+{
+	UWorld* myworld = currentWorld;
+	//UWorld* myworld = AActor::GetWorld();
+	if (myworld == NULL)
+	{
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson no world - use GWorld->GetWorld");
+		currentWorld = GWorld->GetWorld();
+		myworld = currentWorld;
+	}
+
+	FString currentSceneName = myworld->GetMapName();
+	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
+
+	FString sceneId = GetSceneId(currentSceneName);
+	return sceneId;
 }
 
 FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()

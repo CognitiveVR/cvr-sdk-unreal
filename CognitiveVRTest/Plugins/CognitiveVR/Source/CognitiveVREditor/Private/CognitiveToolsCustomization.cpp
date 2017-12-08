@@ -1,7 +1,6 @@
 
 #include "CognitiveVREditorPrivatePCH.h"
 #include "CognitiveToolsCustomization.h"
-#include "CognitiveVRSettings.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
@@ -75,6 +74,26 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 					.Text(this, &FCognitiveToolsCustomization::GetBlenderPath)
 				]
 		];
+
+	//FString editorSessionId = FAnalyticsCognitiveVR::Get().EditorSessionId;
+	//select export meshes
+	Category.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		.MinDesiredWidth(256)
+		[
+			SNew(SButton)
+			.Text(FText::FromString("Random Session Id"))
+			.OnClicked(this, &FCognitiveToolsCustomization::SetRandomSessionId)
+		];
+	Category.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		.MinDesiredWidth(256)
+		[
+			SNew(SButton)
+		.Text(FText::FromString("Print Session Id"))
+		.OnClicked(this, &FCognitiveToolsCustomization::PrintSessionId)
+		];
+
 
 	//select export meshes
 	Category.AddCustomRow(FText::FromString("Commands"))
@@ -266,6 +285,19 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			.Text(FText::FromString("Upload Dynamic Manifest"))
 			.OnClicked(this, &FCognitiveToolsCustomization::UploadDynamicsManifest)
 		];
+}
+
+FReply FCognitiveToolsCustomization::SetRandomSessionId()
+{
+	FAnalyticsCognitiveVR::Get().EditorSessionId = FString::FromInt(FMath::Rand());
+	return FReply::Handled();
+}
+
+FReply FCognitiveToolsCustomization::PrintSessionId()
+{
+	FString editorSessionId = FAnalyticsCognitiveVR::Get().EditorSessionId;
+	GLog->Log(editorSessionId);
+	return FReply::Handled();
 }
 
 float FCognitiveToolsCustomization::GetMinimumSize()
@@ -794,7 +826,7 @@ FReply FCognitiveToolsCustomization::UploadDynamics()
 		else if (FPaths::DirectoryExists(filePath))
 		{
 			GLog->Log("directory found " + filePath);
-			FString url = "https://sceneexplorer.com/api/objects/"+sceneID+"/"+fileName;
+			FString url = PostDynamicObjectMeshData(sceneID, fileName, 1);
 
 			UploadFromDirectory(url, filePath, "object");
 		}
@@ -1665,7 +1697,6 @@ void FCognitiveToolsCustomization::UploadFromDirectory(FString url, FString dire
 	auto enddata3 = (const uint8*)ConverterEnd3.Get();
 	AllBytes.Append(enddata3, ConverterEnd3.Length());
 
-	//HttpRequest->SetURL("http://192.168.1.145:3000/api/scenes");
 	HttpRequest->SetURL(url);
 	HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=\"cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i\"");
 	HttpRequest->SetHeader("Accept-Encoding", "identity");
@@ -1706,7 +1737,8 @@ void FCognitiveToolsCustomization::UploadFromDirectory(FString url, FString dire
 
 FReply FCognitiveToolsCustomization::UploadScene()
 {
-	FString url = "https://sceneexplorer.com/api/scenes";
+	FString url = PostNewScene();
+	//TODO add update scene versions
 
 	UploadFromDirectory(url, ExportDirectory,"scene");
 

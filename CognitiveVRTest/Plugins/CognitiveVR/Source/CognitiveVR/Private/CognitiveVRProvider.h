@@ -118,7 +118,8 @@ extern bool bHasSessionStarted;
 		//custom cognitive
 
 		bool SendJson(FString endpoint, FString Json);
-		FString GetSceneKey(FString sceneName);
+		FString GetCurrentSceneId();
+		FString GetSceneId(FString sceneName);
 
 		UPROPERTY(BlueprintAssignable)
 		FCognitiveSendData OnSendData;

@@ -20,7 +20,7 @@ void ExitPoll::MakeQuestionSetRequest(const FString Hook, const FCognitiveExitPo
 	}
 	FString ValueReceived = cogProvider->CustomerId;// = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
 
-	FString url = "https://api.cognitivevr.io/products/"+ ValueReceived +"/questionSetHooks/"+ Hook+"/questionSet";
+	FString url = Config::GetExitPollQuestionSet(ValueReceived, Hook);
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("GET");
 	r = response;
@@ -213,7 +213,7 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 
 	FString ValueReceived = cogProvider->CustomerId;// = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
-	FString url = "https://api.cognitivevr.io/products/" + ValueReceived + "/questionSets/" + currentSet.name + "/" + FString::FromInt(currentSet.version) + "/responses";
+	FString url = Config::PostExitPollResponses(ValueReceived, currentSet.name, currentSet.version);
 
 	HttpRequest->SetURL(url);
 	HttpRequest->SetHeader("Content-Type", "application/json");

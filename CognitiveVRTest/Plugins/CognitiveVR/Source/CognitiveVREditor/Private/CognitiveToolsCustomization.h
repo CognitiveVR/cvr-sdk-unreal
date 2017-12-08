@@ -43,6 +43,75 @@ public:
 	void SaveSceneData(FString sceneName, FString sceneKey);
 
 private:
+
+
+	//GET dynamic object manifest                           https ://api.sceneexplorer.com/versions/:versionId/objects
+	FORCEINLINE static FString GetDynamicObjectManifest(FString versionid)
+	{
+		return "https://api.sceneexplorer.com/versions/" + versionid + "/objects";
+	}
+
+	//POST dynamic object manifest                          https://data.sceneexplorer.com/objects/:sceneId?version=:versionNumber
+	FORCEINLINE static FString PostDynamicObjectManifest(FString sceneid, FString versionnumber)
+	{
+		return "https://data.sceneexplorer.com/objects/" + sceneid + "?version=" + versionnumber;
+	}
+
+	//POST dynamic object mesh data							https://data.sceneexplorer.com/objects/:sceneId/:exportDirectory?version=:versionNumber
+	FORCEINLINE static FString PostDynamicObjectMeshData(FString sceneid, FString exportdirectory, int32 versionnumber)
+	{
+		return "https://data.sceneexplorer.com/objects/" + sceneid + "/" + exportdirectory + "?version=" + FString::FromInt(versionnumber);
+	}
+
+	//GET scene settings and read scene version             https://api.sceneexplorer.com/scenes/:sceneId
+	FORCEINLINE static FString GetSceneVersion(FString sceneid)
+	{
+		return "https://api.sceneexplorer.com/scenes/" + sceneid;
+	}
+
+	//POST scene screenshot                                 https://data.sceneexplorer.com/scenes/:sceneId/screenshot?version=:versionNumber
+	FORCEINLINE static FString PostScreenshot(FString sceneid, FString versionnumber)
+	{
+		return "https://data.sceneexplorer.com/scenes/" + sceneid + "/screenshot?version=" + versionnumber;
+	}
+
+	//POST upload decimated scene                           https://data.sceneexplorer.com/scenes
+	FORCEINLINE static FString PostNewScene()
+	{
+		return "https://data.sceneexplorer.com/scenes";
+	}
+
+	//POST upload and replace existing scene                https://data.sceneexplorer.com/scenes/:sceneId
+	FORCEINLINE static FString PostUpdateScene(FString sceneid)
+	{
+		return "https://data.sceneexplorer.com/scenes/" + sceneid;
+	}
+
+	//POST auth token from dynamic object manifest response https://api.sceneexplorer.com/tokens/:sceneId
+	FORCEINLINE static FString PostAuthToken(FString sceneid)
+	{
+		return "http://api.sceneexplorer.com/tokens/" + sceneid;
+	}
+
+	//WEB used to open scenes on sceneexplorer              https://sceneexplorer.com/scene/ :sceneId
+	FORCEINLINE static FString SceneExplorerOpen(FString sceneid)
+	{
+		return "https://sceneexplorer.com/scene/" + sceneid;
+	}
+
+	//POST used to log into the editor						https://api.cognitivevr.io/sessions
+	FORCEINLINE static FString APISessions()
+	{
+		return "http://api.cognitivevr.io/sessions";
+	}
+
+	//WEB opens dashboard page to create a new product
+	FORCEINLINE static FString DashboardNewProduct()
+	{
+		return "https://dashboard.cognitivevr.io/admin/products/create";
+	}
+
+
 	bool HasSearchedForBlender = false; //to limit the searching directories. possibly not required
 
 	void SearchForBlender();
@@ -211,6 +280,9 @@ private:
 		}
 		return false;
 	}
+
+	FReply SetRandomSessionId();
+	FReply PrintSessionId();
 };
 
 class FContentContainer
