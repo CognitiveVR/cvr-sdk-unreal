@@ -40,6 +40,215 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 	SettingsCategory.AddProperty(MaxSizeProperty);
 	SettingsCategory.AddProperty(TextureResizeProperty);
 
+	//TSharedPtr<FString> LowerBoundTypeSelectedItem = MakeShareable(new FString("SOMETHING"));
+	//TArray<TSharedPtr<FString>> tempOrgs;
+
+	// Create a commands category
+	IDetailCategoryBuilder& LoginCategory = DetailBuilder.EditCategory(TEXT("Account"),FText::GetEmpty(),ECategoryPriority::Important);
+	/*LoginCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		.MinDesiredWidth(256)
+		[
+			SNew(SEditableTextBox)
+			.Text(FText::FromString(Email))
+			//.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
+			//.Text(FText::FromString("Export All"))
+			//.OnClicked(this, &FCognitiveToolsCustomization::Export_All)
+		];*/
+
+	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		.HAlign(HAlign_Fill)
+		[
+			SNew(SHorizontalBox)
+				//button
+			+ SHorizontalBox::Slot()
+			.MaxWidth(96)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Email"))
+			]
+
+			+ SHorizontalBox::Slot()
+			.MaxWidth(128)
+			//.Padding(4)
+			[
+				SNew(SEditableTextBox)
+				.MinDesiredWidth(128)
+				.OnTextChanged(this,&FCognitiveToolsCustomization::OnEmailChanged)
+			]
+		];
+
+	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		.HAlign(HAlign_Fill)
+		[
+			SNew(SHorizontalBox)
+			//button
+			+ SHorizontalBox::Slot()
+			.MaxWidth(96)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Password"))
+			]
+
+			+ SHorizontalBox::Slot()
+			.MaxWidth(128)
+			//.Padding(4)
+			[
+				SNew(SEditableTextBox)
+				.IsPassword(true)
+				.MinDesiredWidth(128)
+				.OnTextChanged(this,&FCognitiveToolsCustomization::OnPasswordChanged)
+			]
+
+			+ SHorizontalBox::Slot()
+			.MaxWidth(128)
+			[
+				SNew(SButton)
+				.IsEnabled(true)
+				.Text(FText::FromString("Log In"))
+				.OnClicked(this, &FCognitiveToolsCustomization::LogIn)
+			]
+		];
+
+	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		.MinDesiredWidth(256)
+		[
+			SNew(SButton)
+			.Text(FText::FromString("DEBUG Print Session Id"))
+			.OnClicked(this, &FCognitiveToolsCustomization::PrintSessionId)
+		];
+
+
+	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		.HAlign(HAlign_Fill)
+		[
+			SNew(SHorizontalBox)
+			//button
+			+ SHorizontalBox::Slot()
+			.MaxWidth(96)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Organization"))
+			]
+
+			+ SHorizontalBox::Slot()
+			.MaxWidth(128)
+			//.Padding(4)
+			[
+				SNew(STextComboBox)
+				.OptionsSource(&AllOrgNames)
+				.IsEnabled(this, &FCognitiveToolsCustomization::HasLoggedIn)
+				//.OptionsSource(&tempOrgs)
+				//.ToolTip(SNew(SToolTip).Text(LOCTEXT("BaseColorFBXImportToolTip", "When there is no diffuse texture in the imported material this color property will be used to fill a contant color value instead.")))
+				.OnSelectionChanged(this, &FCognitiveToolsCustomization::OnOrganizationChanged)
+				//.InitiallySelectedItem(LowerBoundTypeSelectedItem)
+			]
+		];
+
+	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		.HAlign(HAlign_Fill)
+		[
+			SNew(SHorizontalBox)
+			//button
+			+ SHorizontalBox::Slot()
+			.MaxWidth(96)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Product"))
+			]
+
+			+ SHorizontalBox::Slot()
+			.MaxWidth(128)
+			//.Padding(4)
+			[
+				SNew(STextComboBox)
+				.IsEnabled(this,&FCognitiveToolsCustomization::HasLoggedIn)
+				.OptionsSource(&AllProductNames)
+				//.OptionsSource(&tempOrgs)
+				//.ToolTip(SNew(SToolTip).Text(LOCTEXT("BaseColorFBXImportToolTip", "When there is no diffuse texture in the imported material this color property will be used to fill a contant color value instead.")))
+				.OnSelectionChanged(this, &FCognitiveToolsCustomization::OnProductChanged)
+				//.InitiallySelectedItem(LowerBoundTypeSelectedItem)
+			]
+		];
+	//TODO set initial selected item in list
+
+	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		.MinDesiredWidth(256)
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			.MaxWidth(128)
+			[
+				SNew(SCheckBox)
+				//.Style(FCoreStyle::Get(), "RadioButton")
+				.IsEnabled(this, &FCognitiveToolsCustomization::HasSelectedValidProduct)
+				.IsChecked(this, &FCognitiveToolsCustomization::HandleRadioButtonIsChecked, EReleaseType::Test)
+				.OnCheckStateChanged(this, &FCognitiveToolsCustomization::HandleRadioButtonCheckStateChanged, EReleaseType::Test)
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("Test"))
+				]
+			]
+	
+			+ SHorizontalBox::Slot()
+			.MaxWidth(128)
+			[
+				SNew(SCheckBox)
+				//.Style(FCoreStyle::Get(), "RadioButton")
+				.IsEnabled(this, &FCognitiveToolsCustomization::HasSelectedValidProduct)
+				.IsChecked(this, &FCognitiveToolsCustomization::HandleRadioButtonIsChecked, EReleaseType::Production)
+				.OnCheckStateChanged(this, &FCognitiveToolsCustomization::HandleRadioButtonCheckStateChanged, EReleaseType::Production)
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("Production"))
+				]
+			]
+		];
+
+	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		.MinDesiredWidth(256)
+		[
+			SNew(SButton)
+			.Text(FText::FromString("Save ID to file"))
+			.IsEnabled(this,&FCognitiveToolsCustomization::HasSelectedValidProduct)
+			.OnClicked(this, &FCognitiveToolsCustomization::SaveCustomerIdToFile)
+		];
+
+	//SaveCustomerIdToFile
+
+	//TODO some buttons for test/prod
+
+	/*LoginCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		.MinDesiredWidth(256)
+		[
+			SNew(STextComboBox)
+			.OptionsSource(&AllOrgNames)
+			//.OptionsSource(&tempOrgs)
+			//.ToolTip(SNew(SToolTip).Text(LOCTEXT("BaseColorFBXImportToolTip", "When there is no diffuse texture in the imported material this color property will be used to fill a contant color value instead.")))
+			.OnSelectionChanged(this, &FCognitiveToolsCustomization::OnOrganizationChanged)
+			//.InitiallySelectedItem(LowerBoundTypeSelectedItem)
+		];*/
+
+	/*LoginCategory.AddCustomRow(FText::FromString("Commands"))
+		.ValueContent()
+		.MinDesiredWidth(256)
+		[
+			SNew(STextComboBox)
+			.OptionsSource(&AllProductNames)
+			//.OptionsSource(&tempOrgs)
+			//.ToolTip(SNew(SToolTip).Text(LOCTEXT("BaseColorFBXImportToolTip", "When there is no diffuse texture in the imported material this color property will be used to fill a contant color value instead.")))
+			.OnSelectionChanged(this, &FCognitiveToolsCustomization::OnProductChanged)
+			//.InitiallySelectedItem(LowerBoundTypeSelectedItem)
+		];*/
+
 	// Create a commands category
 	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(TEXT("Scene Commands"));
 
@@ -77,22 +286,7 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 
 	//FString editorSessionId = FAnalyticsCognitiveVR::Get().EditorSessionId;
 	//select export meshes
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.Text(FText::FromString("Random Session Id"))
-			.OnClicked(this, &FCognitiveToolsCustomization::SetRandomSessionId)
-		];
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-		.Text(FText::FromString("Print Session Id"))
-		.OnClicked(this, &FCognitiveToolsCustomization::PrintSessionId)
-		];
+
 
 
 	//select export meshes
@@ -127,7 +321,6 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			.Text(FText::FromString("Export All"))
 			.OnClicked(this, &FCognitiveToolsCustomization::Export_All)
 		];
-
 
 	Category.AddCustomRow(FText::FromString("Select Export Directory"))
 		.ValueContent()
@@ -287,10 +480,121 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 		];
 }
 
+// Callback for checking a radio button.
+void FCognitiveToolsCustomization::HandleRadioButtonCheckStateChanged(ECheckBoxState NewRadioState, EReleaseType RadioThatChanged)
+{
+	if (NewRadioState == ECheckBoxState::Checked)
+	{
+		RadioChoice = RadioThatChanged;
+	}
+}
+
+// Callback for determining whether a radio button is checked.
+ECheckBoxState FCognitiveToolsCustomization::HandleRadioButtonIsChecked(EReleaseType ButtonId) const
+{
+	return (RadioChoice == ButtonId)
+		? ECheckBoxState::Checked
+		: ECheckBoxState::Unchecked;
+}
+
+bool FCognitiveToolsCustomization::HasLoggedIn() const
+{
+	return FAnalyticsCognitiveVR::Get().EditorSessionToken.Len() > 0;
+}
+
+bool FCognitiveToolsCustomization::HasSelectedValidProduct() const
+{
+	return SelectedProduct.customerId.Len() > 0;
+}
+
+FReply FCognitiveToolsCustomization::SaveCustomerIdToFile()
+{
+	//GConfig->Flush(true, GEngineIni);
+
+	GLog->Log("write customer id to ini: " + SelectedProduct.customerId);
+	GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), GEngineIni);
+	GConfig->SetString(TEXT("Analytics"), TEXT("CognitiveVRApiKey"), *SelectedProduct.customerId, GEngineIni);
+
+	GConfig->Flush(false, GEngineIni);
+
+	return FReply::Handled();
+}
+
+void FCognitiveToolsCustomization::OnEmailChanged(const FText& Text)
+{
+	Email = Text.ToString();
+}
+
+void FCognitiveToolsCustomization::OnPasswordChanged(const FText& Text)
+{
+	Password = Text.ToString();
+}
+
 FReply FCognitiveToolsCustomization::SetRandomSessionId()
 {
 	FAnalyticsCognitiveVR::Get().EditorSessionId = FString::FromInt(FMath::Rand());
 	return FReply::Handled();
+}
+
+void FCognitiveToolsCustomization::OnProductChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo)
+{
+	FString newProductName = *Selection;
+	for (int i = 0; i < ProductInfos.Num(); i++)
+	{
+		if (newProductName == ProductInfos[i].name)
+		{
+			SelectedProduct = ProductInfos[i];
+			return;
+		}
+	}
+}
+
+void FCognitiveToolsCustomization::OnOrganizationChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo)
+{
+	FString newOrgName = *Selection;
+
+	GLog->Log("organization selection changed " + newOrgName);
+
+	FOrganizationData selectedOrg;
+
+	for (int i = 0; i < OrganizationInfos.Num(); i++)
+	{
+		if (OrganizationInfos[i].name == newOrgName)
+		{
+			selectedOrg = OrganizationInfos[i];
+			break;
+		}
+	}
+
+	ProductInfos.Empty();
+
+	TArray<TSharedPtr<FJsonValue>> mainArray = JsonUserData->GetArrayField("products");
+	for (int RowNum = 0; RowNum != mainArray.Num(); RowNum++) {
+		TSharedPtr<FJsonObject> tempRow = mainArray[RowNum]->AsObject();
+		if (tempRow->GetStringField("orgId") != selectedOrg.id)
+		{
+			continue;
+		}
+		FProductData tempProduct;
+		tempProduct.id = tempRow->GetStringField("id");
+		tempProduct.name = tempRow->GetStringField("name");
+		tempProduct.orgId = tempRow->GetStringField("orgId");
+		tempProduct.customerId = tempRow->GetStringField("customerId");
+		ProductInfos.Add(tempProduct);
+
+		AllProductNames.Add(MakeShareable(new FString(tempProduct.name)));
+	}
+}
+
+TArray<TSharedPtr<FString>> FCognitiveToolsCustomization::GetOrganizationNames()
+{
+	//TArray<TSharedPtr<FString>> tempOrgs;
+	//tempOrgs.Add(MakeShareable(new FString("NO ORG1")));
+	//tempOrgs.Add(MakeShareable(new FString("NO ORG2")));
+	//tempOrgs.Add(MakeShareable(new FString("NO ORG3")));
+	//tempOrgs.Add(MakeShareable(new FString("NO ORG4")));
+	return AllOrgNames;
+	//return tempOrgs;
 }
 
 FReply FCognitiveToolsCustomization::PrintSessionId()
@@ -299,6 +603,106 @@ FReply FCognitiveToolsCustomization::PrintSessionId()
 	GLog->Log(editorSessionId);
 	return FReply::Handled();
 }
+
+FReply FCognitiveToolsCustomization::LogIn()
+{
+	//how to send request and listen for response?
+
+	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
+
+	HttpRequest->SetVerb("POST");
+	HttpRequest->SetURL("https://api.cognitivevr.io/sessions");
+
+	FString body = "{\"email\":\"" + Email + "\",\"password\":\"" + Password + "\"}";
+	
+	/*TArray<uint8> bodybytes;
+
+	FTCHARToUTF8 ConverterEnd1(*body);
+	auto enddata1 = (const uint8*)ConverterEnd1.Get();
+	bodybytes.Append(enddata1, ConverterEnd1.Length());*/
+
+	
+
+	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
+	//HttpRequest->SetHeader(TEXT("X-HTTP-Method-Override"), TEXT("POST"));
+
+	HttpRequest->SetContentAsString(body);
+
+	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveToolsCustomization::LogInResponse);
+
+	GLog->Log("send login request!");
+	GLog->Log(FString::FromInt(HttpRequest->GetContentLength()));
+
+	if (Email.Len() == 0)
+	{
+		GLog->Log("email length is 0");
+		return FReply::Handled();
+	}
+	if (Password.Len() == 0)
+	{
+		GLog->Log("password length is 0");
+		return FReply::Handled();
+	}
+
+	GLog->Log("email and password length > 0");
+
+	HttpRequest->ProcessRequest();
+	return FReply::Handled();
+}
+
+void FCognitiveToolsCustomization::LogInResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (Response.IsValid())
+	{
+		GLog->Log("Login Response "+Response->GetContentAsString());
+		GLog->Log("Login error code"+FString::FromInt(Response->GetResponseCode()));
+		if (Response->GetResponseCode() == 201)
+		{
+			FAnalyticsCognitiveVR::Get().EditorSessionToken = Response->GetHeader("Set-Cookie");
+
+			TArray<FString> Array;
+			FString MyString(Response->GetHeader("Set-Cookie"));
+			MyString.ParseIntoArray(Array, TEXT(";"), true);
+
+			FAnalyticsCognitiveVR::Get().EditorSessionId = Array[0].RightChop(18);
+			GLog->Log("token " + FAnalyticsCognitiveVR::Get().EditorSessionToken);
+			GLog->Log("id " + FAnalyticsCognitiveVR::Get().EditorSessionId);
+			
+			//parse login response to userdata
+			//read organization names from that
+			//OrganizationNames =
+			
+			TSharedRef<TJsonReader<>>Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
+			if (FJsonSerializer::Deserialize(Reader, JsonUserData))
+			{
+				TArray<TSharedPtr<FJsonValue>> mainArray = JsonUserData->GetArrayField("organizations");
+				for (int RowNum = 0; RowNum != mainArray.Num(); RowNum++) {
+					FOrganizationData tempOrg;
+					TSharedPtr<FJsonObject> tempRow = mainArray[RowNum]->AsObject();
+					tempOrg.id = tempRow->GetStringField("id");
+					tempOrg.name = tempRow->GetStringField("name");
+					tempOrg.prefix = tempRow->GetStringField("prefix");
+					OrganizationInfos.Add(tempOrg);
+
+					AllOrgNames.Add(MakeShareable(new FString(tempOrg.name)));
+				}
+
+				GLog->Log("found this many organizations: "+FString::FromInt(OrganizationInfos.Num()));
+			}
+		}
+	}
+	else
+	{
+		GLog->Log("Login Response is null");
+	}
+}
+
+/*TSharedPtr<FString> FCognitiveToolsCustomization::GetSelectedOrganizationName()
+{
+	TSharedPtr<FString> tempOrg = MakeShareable(new FString("NO ORGANIZATION"));
+
+	return SelectedOrgName;
+}*/
 
 float FCognitiveToolsCustomization::GetMinimumSize()
 {
@@ -1816,12 +2220,12 @@ void FCognitiveToolsCustomization::SaveSceneData(FString sceneName, FString scen
 
 
 	//TODO why can't i save to an ini file that automatically gets included in a build? why is that so hard?
-	return;
+	//return;
 
 	//FString keyValue = sceneName + "," + sceneKey;
 
 	GConfig->Flush(true, "DefaultEngineIni");
-	TArray<FString> scenePairs;
+	TArray<FString> scenePairs = TArray<FString>();
 
 	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, "DefaultEngineIni");
 

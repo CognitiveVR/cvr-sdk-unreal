@@ -7,6 +7,8 @@
 #include "PropertyEditing.h"
 //#include "DetailCustomizationsPrivatePCH.h"
 #include "PropertyCustomizationHelpers.h"
+#include "Json.h"
+#include "SCheckBox.h"
 
 #include "UnrealEd.h"
 #include "Engine.h"
@@ -26,13 +28,41 @@
 #include "MaterialUtilities.h"
 #include "DynamicObject.h"
 #include "GenericPlatformFile.h"
+#include "STextComboBox.h"
 //
 //#include "ExportSceneTool.generated.h"
 
 class UCognitiveVRSettings;
 
+class FOrganizationData
+{
+public:
+	FString id = "";
+	FString name = "";
+	FString prefix = "";
+};
+
+class FProductData
+{
+public:
+	FString id = "";
+	FString name = "";
+	FString orgId = "";
+	FString customerId = "";
+};
+
 class FCognitiveToolsCustomization : public IDetailCustomization
 {
+
+	// Enumerates radio button choices.
+	enum EReleaseType
+	{
+		Test,
+		Production
+	};
+
+	EReleaseType RadioChoice;
+
 public:
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
 
@@ -283,6 +313,42 @@ private:
 
 	FReply SetRandomSessionId();
 	FReply PrintSessionId();
+	FString Email;
+	void OnEmailChanged(const FText& Text);
+	FString Password;
+	void OnPasswordChanged(const FText& Text);
+
+	TSharedPtr<FJsonObject> JsonUserData;
+
+	//TArray<TSharedPtr<FString>> OrganizationNames;
+	TArray<FOrganizationData> OrganizationInfos;
+	void OnOrganizationChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo);
+
+	TArray<FProductData> ProductInfos;
+	void OnProductChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo);
+
+	//TSharedPtr<FString> SelectedOrgName;
+	//TSharedPtr<FString> GetSelectedOrganizationName();
+
+	//all products for the currently selected organization
+	TArray<TSharedPtr<FString>> AllProductNames;
+	TSharedPtr<FString> SelectedProductName;
+
+	FProductData SelectedProduct;
+
+	TArray<TSharedPtr<FString>> AllOrgNames;
+	TArray<TSharedPtr<FString>> GetOrganizationNames();
+
+	ECheckBoxState FCognitiveToolsCustomization::HandleRadioButtonIsChecked(EReleaseType ButtonId) const;
+	void FCognitiveToolsCustomization::HandleRadioButtonCheckStateChanged(ECheckBoxState NewRadioState, EReleaseType RadioThatChanged);
+
+
+	FReply SaveCustomerIdToFile();
+	bool HasSelectedValidProduct() const;
+	bool HasLoggedIn() const;
+
+	FReply LogIn();
+	void LogInResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 };
 
 class FContentContainer

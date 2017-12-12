@@ -59,6 +59,7 @@ public:
 	
 	//only used in the editor
 	FString EditorSessionId;
+	FString EditorSessionToken;
 	FString EditorAuthToken;
 		
 private:
