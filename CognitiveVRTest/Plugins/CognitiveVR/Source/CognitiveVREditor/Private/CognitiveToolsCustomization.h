@@ -9,6 +9,7 @@
 #include "PropertyCustomizationHelpers.h"
 #include "Json.h"
 #include "SCheckBox.h"
+#include "STableRow.h"
 
 #include "UnrealEd.h"
 #include "Engine.h"
@@ -51,6 +52,23 @@ public:
 	FString customerId = "";
 };
 
+class FSceneData
+{
+public:
+	FString Name = "";
+	FString Id = "";
+	int32 VersionNumber = 1;
+	int32 VersionId = 0;
+
+	FSceneData(FString name, FString id, int32 versionnumber, int32 versionid)
+	{
+		Name = name;
+		Id = id;
+		VersionNumber = versionnumber;
+		VersionId = versionid;
+	}
+};
+
 class FCognitiveToolsCustomization : public IDetailCustomization
 {
 
@@ -61,7 +79,7 @@ class FCognitiveToolsCustomization : public IDetailCustomization
 		Production
 	};
 
-	EReleaseType RadioChoice;
+	EReleaseType RadioChoice = EReleaseType::Test;
 
 public:
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
@@ -120,7 +138,7 @@ private:
 	//POST auth token from dynamic object manifest response https://api.sceneexplorer.com/tokens/:sceneId
 	FORCEINLINE static FString PostAuthToken(FString sceneid)
 	{
-		return "http://api.sceneexplorer.com/tokens/" + sceneid;
+		return "https://api.sceneexplorer.com/tokens/" + sceneid;
 	}
 
 	//WEB used to open scenes on sceneexplorer              https://sceneexplorer.com/scene/ :sceneId
@@ -320,6 +338,10 @@ private:
 
 	TSharedPtr<FJsonObject> JsonUserData;
 
+	FReply DEBUG_RequestAuthToken();
+	void AuthTokenRequest();
+	void AuthTokenResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
 	//TArray<TSharedPtr<FString>> OrganizationNames;
 	TArray<FOrganizationData> OrganizationInfos;
 	void OnOrganizationChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo);
@@ -342,10 +364,35 @@ private:
 	ECheckBoxState FCognitiveToolsCustomization::HandleRadioButtonIsChecked(EReleaseType ButtonId) const;
 	void FCognitiveToolsCustomization::HandleRadioButtonCheckStateChanged(ECheckBoxState NewRadioState, EReleaseType RadioThatChanged);
 
+	TArray<TSharedPtr<FSceneData>> SceneData;
+	TArray<TSharedPtr<FSceneData>> GetSceneData() const;
+
+	TSharedRef<ITableRow> OnGenerateWorkspaceRow(TSharedPtr<FSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
 
 	FReply SaveCustomerIdToFile();
+
+	FString GetCustomerIdFromFile() const;
+	EReleaseType GetReleaseTypeFromFile();
+	
+	void SaveOrganizationNameToFile(FString organization);
+	TSharedPtr<FString> GetOrganizationNameFromFile();
+	void SaveProductNameToFile(FString product);
+	TSharedPtr< FString > GetProductNameFromFile();
+
+	FReply OpenSceneInBrowser(FString sceneid);
+
 	bool HasSelectedValidProduct() const;
 	bool HasLoggedIn() const;
+
+	//reads scene data from ini
+	FReply RefreshSceneData();
+	FReply DebugRefreshCurrentScene();
+	
+	TSharedPtr<FSceneData> GetSceneData(FString scenename);
+	TSharedPtr<FSceneData> GetCurrentSceneData();
+
+	void SceneVersionRequest(FSceneData data);
+	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	FReply LogIn();
 	void LogInResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);

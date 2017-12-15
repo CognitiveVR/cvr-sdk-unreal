@@ -95,8 +95,8 @@ public:
 	UPROPERTY(EditAnywhere, Config, Category = "Export Settings")
 		int32 TextureResizeFactor = 4;
 
-	UPROPERTY(config, EditAnywhere, Category = "Scene Data")
-		TArray<FString> SceneData;
+	//UPROPERTY(config, EditAnywhere, Category = "Scene Data")
+		//TArray<FString> SceneData;
 
 	//UPROPERTY(config, EditAnywhere, Category = "Scene Keys")
 		//TArray<FSceneKeyPair> SceneKeyPair;

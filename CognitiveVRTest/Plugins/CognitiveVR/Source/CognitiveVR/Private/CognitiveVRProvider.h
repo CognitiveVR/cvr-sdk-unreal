@@ -152,6 +152,8 @@ extern bool bHasSessionStarted;
 
 		void OnLevelLoaded();
 		void SetWorld(UWorld* world);
+
+		TArray<FString> GetAllSceneIds();
 	};
 
 	void ThrowDummyResponseException(std::string s);

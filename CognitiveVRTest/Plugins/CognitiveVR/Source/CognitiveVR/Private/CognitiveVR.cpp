@@ -172,6 +172,19 @@ void InitCallback(CognitiveVRResponse resp)
 
 void FAnalyticsProviderCognitiveVR::SendDeviceInfo()
 {
+	//DEBUG
+	TArray<FString> scenePairs = GetAllSceneIds();
+	//GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, "DefaultEngineIni");
+
+	GLog->Log("FAnalyticsProviderCognitiveVR::SendDeviceInfo found this many scenes from ini " + FString::FromInt(scenePairs.Num()));
+	for (int32 i = 0; i < scenePairs.Num(); i++)
+	{
+		GLog->Log(scenePairs[i]);
+	}
+
+
+
+
 	//add a bunch of properties
 	if (GEngine->HMDDevice.IsValid())
 	{
@@ -701,6 +714,41 @@ FString FAnalyticsProviderCognitiveVR::GetSceneId(FString sceneName)
 	//no matches anywhere
 	CognitiveLog::Warning("UPlayerTracker::GetSceneId no matches in ini");
 	return "";
+}
+
+TArray<FString> FAnalyticsProviderCognitiveVR::GetAllSceneIds()
+{
+
+	TArray<FString> returnstrings;
+
+	//TODO load all this data once and store it for quick access
+
+	//GConfig->GetArray()
+	FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
+	if (Section == NULL)
+	{
+		return returnstrings;
+	}
+	for (FConfigSection::TIterator It(*Section); It; ++It)
+	{
+		if (It.Key() == TEXT("SceneData"))
+		{
+			returnstrings.Add(It.Value().GetValue());
+			/*
+			FString name;
+			FString key;
+			It.Value().GetValue().Split(TEXT(","), &name, &key);
+			if (*name == sceneName)
+			{
+				
+				//return key;
+			}*/
+		}
+	}
+
+	//no matches anywhere
+	GLog->Log("FAnalyticsProviderCognitiveVR::GetAllSceneIds found this many scenes " + FString::FromInt(returnstrings.Num()));
+	return returnstrings;
 }
 
 bool FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
