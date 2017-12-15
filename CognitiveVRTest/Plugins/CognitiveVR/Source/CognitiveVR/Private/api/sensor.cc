@@ -74,8 +74,14 @@ void Sensors::SendData()
 	{
 		//FAnalyticsProviderCognitiveVR::SendJson("sensors", out);
 		//s->SendJson("sensors", out);
-		FString sceneid = s->GetCurrentSceneId();
-		s->SendJson(Config::PostSensorData(sceneid, 1), out);
+		//FString sceneid = s->GetCurrentSceneId();
+		//s->SendJson(Config::PostSensorData(sceneid, 1), out);
+
+		auto scenedata = s->GetCurrentSceneData();
+		if (scenedata.IsValid())
+		{
+			s->SendJson(Config::PostSensorData(scenedata->Id, scenedata->VersionNumber), out);
+		}
 	}
 }
 

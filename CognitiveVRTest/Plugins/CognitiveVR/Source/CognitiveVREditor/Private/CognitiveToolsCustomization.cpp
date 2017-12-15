@@ -216,6 +216,7 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			.OnClicked(this, &FCognitiveToolsCustomization::SaveCustomerIdToFile)
 		];
 
+	//refresh doens't usually reload anything. unclear how unreal can reload ini files
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
 		[
 			SNew(SHorizontalBox)
@@ -242,7 +243,7 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
 			[
-				SNew(SListView<TSharedPtr<FSceneData>>)
+				SNew(SListView<TSharedPtr<FEditorSceneData>>)
 				.ItemHeight(24)
 				.ListItemsSource(&SceneData)
 				.OnGenerateRow(this, &FCognitiveToolsCustomization::OnGenerateWorkspaceRow)
@@ -546,10 +547,10 @@ void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
 	FCognitiveToolsCustomization::RefreshSceneData();
 }
 
-TSharedRef<ITableRow> FCognitiveToolsCustomization::OnGenerateWorkspaceRow(TSharedPtr<FSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
+TSharedRef<ITableRow> FCognitiveToolsCustomization::OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	return
-		SNew(SComboRow< TSharedPtr<FSceneData> >, OwnerTable)
+		SNew(SComboRow< TSharedPtr<FEditorSceneData> >, OwnerTable)
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
@@ -557,14 +558,14 @@ TSharedRef<ITableRow> FCognitiveToolsCustomization::OnGenerateWorkspaceRow(TShar
 			.Padding(2.0f)
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString(*InItem->Name))
+				.Text(FText::FromString(InItem->Name))
 			]
 			+ SHorizontalBox::Slot()
 			.FillWidth(1)
 			.Padding(2.0f)
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString(*InItem->Id))
+				.Text(FText::FromString(InItem->Id))
 			]
 			+ SHorizontalBox::Slot()
 			.FillWidth(1)
@@ -593,7 +594,12 @@ TSharedRef<ITableRow> FCognitiveToolsCustomization::OnGenerateWorkspaceRow(TShar
 
 FReply FCognitiveToolsCustomization::DebugRefreshCurrentScene()
 {
-	SceneVersionRequest(*GetCurrentSceneData());
+	TSharedPtr<FEditorSceneData> scenedata = GetCurrentSceneData();
+
+	if (scenedata.IsValid())
+	{
+		SceneVersionRequest(*scenedata);
+	}
 
 	return FReply::Handled();
 }
@@ -658,76 +664,32 @@ FReply FCognitiveToolsCustomization::RefreshSceneData()
 {
 	SceneData.Empty();
 
-	/*if (GConfig->DoesSectionExist(TEXT("/Script/CognitiveVR.CognitiveVRSettings"),GEngineIni))
-	{
-		GLog->Log("FCognitiveToolsCustomization::RefreshSceneData couldn't find any SECTION Script/CognitiveVR.CognitiveVRSettings: " + GEngineIni);
-		return FReply::Handled();
-	}*/
+	//GConfig->UnloadFile(GEngineIni);
+	//GConfig->LoadFile(GEngineIni);
 
-	//GConfig->GetArray
 	TArray<FString>scenstrings;
-
-
-	GConfig->GetSection(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), scenstrings, GEngineIni);
-	for (int i = 0; i<scenstrings.Num(); i++)
+	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SceneData"), scenstrings,GEngineIni);
+	
+	for (int i = 0; i < scenstrings.Num(); i++)
 	{
-		if (scenstrings[i].StartsWith("+SceneData="))
+		TArray<FString> Array;
+		scenstrings[i].ParseIntoArray(Array, TEXT(","), true);
+
+		if (Array.Num() == 2) //scenename,sceneid
 		{
-			FString data = scenstrings[i].RightChop(11);
-			//FString name;
-			//FString key;
-
-			TArray<FString> Array;
-			data.ParseIntoArray(Array, TEXT(","), true);
-
-			if (Array.Num() == 2)
-			{
-				//old scene data
-				Array.Add("1");
-				Array.Add("0");
-				//TODO write data back into the ini file
-			}
-
-			//data.Split(TEXT(","), &name, &key);
-				
-			if (Array.Num() != 4)
-			{
-				GLog->Log("failed to parse " + data);
-				continue;
-			}
-
-			FSceneData* tempscene = new FSceneData(Array[0], Array[1], FCString::Atoi(*Array[2]), FCString::Atoi(*Array[3]));
-
-			SceneData.Add(MakeShareable(tempscene));
-
-			//SceneVersionRequest(*tempscene);
+			//old scene data. append versionnumber and versionid
+			Array.Add("1");
+			Array.Add("0");
 		}
-		/*else if (scenstrings[i].StartsWith("SceneData="))
+
+		if (Array.Num() != 4)
 		{
-			FString data = scenstrings[i].RightChop(10);
-			TArray<FString> Array;
-			data.ParseIntoArray(Array, TEXT(","), true);
-
-			if (Array.Num() == 2)
-			{
-				//old scene data
-				Array.Add("1");
-				Array.Add("0");
-				//TODO write data back into the ini file
-			}
-
-			if (Array.Num() != 4)
-			{
-				GLog->Log("failed to parse " + data);
-				continue;
-			}
-
-			SceneData.Add(MakeShareable(new FSceneData(Array[0], Array[1], FCString::Atoi(*Array[2]), FCString::Atoi(*Array[3]))));
-		}*/
-		else
-		{
-			GLog->Log("FCognitiveToolsCustomization::RefreshSceneData foudn key " + scenstrings[i]);
+			GLog->Log("failed to parse " + scenstrings[i]);
+			continue;
 		}
+
+		FEditorSceneData* tempscene = new FEditorSceneData(Array[0], Array[1], FCString::Atoi(*Array[2]), FCString::Atoi(*Array[3]));
+		SceneData.Add(MakeShareable(tempscene));
 	}
 	
 	GLog->Log("FCognitiveToolsCustomization::RefreshSceneData found this many scenes: " + FString::FromInt(SceneData.Num()));
@@ -735,7 +697,7 @@ FReply FCognitiveToolsCustomization::RefreshSceneData()
 	return FReply::Handled();
 }
 
-void FCognitiveToolsCustomization::SceneVersionRequest(FSceneData data)
+void FCognitiveToolsCustomization::SceneVersionRequest(FEditorSceneData data)
 {
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 
@@ -801,9 +763,6 @@ void FCognitiveToolsCustomization::SceneVersionResponse(FHttpRequestPtr Request,
 	TSharedRef<TJsonReader<>>Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
 	if (FJsonSerializer::Deserialize(Reader, JsonSceneSettings))
 	{
-		//gets the collections of all versions
-		//JsonSceneSettings->GetArrayField("versions");
-
 		//get the latest version of the scene
 		int32 versionNumber = 0;
 		int32 versionId = 0;
@@ -822,11 +781,9 @@ void FCognitiveToolsCustomization::SceneVersionResponse(FHttpRequestPtr Request,
 			GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse couldn't find a latest version in SceneVersion data");
 			return;
 		}
-		//pull out scene id and version number
 
-		//get the scene data from ini
-
-		TSharedPtr<FSceneData> currentSceneData = GetCurrentSceneData();
+		//check that there is scene data in ini
+		TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
 		if (!currentSceneData.IsValid())
 		{
 			GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse can't find current scene data in ini files");
@@ -835,40 +792,72 @@ void FCognitiveToolsCustomization::SceneVersionResponse(FHttpRequestPtr Request,
 
 		//get array of scene data
 		TArray<FString> iniscenedata;
+
 		GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SceneData"), iniscenedata, GEngineIni);
+
+
+		/*FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
+		if (Section == NULL)
+		{
+			GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse can't find ini section header");
+			return;
+		}
+		for (FConfigSection::TIterator It(*Section); It; ++It)
+		{
+			if (It.Key() == TEXT("SceneData"))
+			{
+				GLog->Log("scene data");
+				FString name;
+				FString key;
+				It.Value().GetValue().Split(TEXT(","), &name, &key);
+				iniscenedata.Add(It.Value().GetValue());
+			}
+			else if (It.Key() == TEXT("+SceneData"))
+			{
+				GLog->Log("+scene data");
+				FString name;
+				FString key;
+				It.Value().GetValue().Split(TEXT(","), &name, &key);
+				iniscenedata.Add(It.Value().GetValue());
+			}
+			else
+			{
+				GLog->Log("found something that's not a scene key " + It.Key().ToString());
+			}
+		}*/
+
+		//TArray<FString> sceneidstuff;
+		//GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SceneData"), sceneidstuff, GEngineIni);
+		//GLog->Log("get array returned " + FString::FromInt(sceneidstuff.Num()));
+
 		
 		GLog->Log("found this many scene datas in ini " + FString::FromInt(iniscenedata.Num()));
+		GLog->Log("looking for scene " + currentSceneData->Name);
 
 		//update current scene
 		for (int i = 0; i < iniscenedata.Num(); i++)
 		{
-			if (iniscenedata[i].StartsWith("+SceneData="))
+			GLog->Log("looking at data " + iniscenedata[i]);
+
+			TArray<FString> entryarray;
+			iniscenedata[i].ParseIntoArray(entryarray, TEXT(","), true);
+
+			if (entryarray[0] == currentSceneData->Name)
 			{
-				FString data = iniscenedata[i].RightChop(11);
-
-				TArray<FString> entryarray;
-				data.ParseIntoArray(entryarray, TEXT(","), true);
-
-				GLog->Log("looking for scene " + currentSceneData->Name);
-
-				if (entryarray[0] == currentSceneData->Name)
-				{
-					iniscenedata[i] = "+SceneData=" + entryarray[0] + "," + entryarray[1] + "," + FString::FromInt(versionNumber) + "," + FString::FromInt(versionId);
-					GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse overwriting scene data to append versionnumber and versionid");
-					break;
-				}
-				else
-				{
-					GLog->Log("found scene " + entryarray[0]);
-				}
+				iniscenedata[i] = entryarray[0] + "," + entryarray[1] + "," + FString::FromInt(versionNumber) + "," + FString::FromInt(versionId);
+				GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse overwriting scene data to append versionnumber and versionid");
+				//GConfig->Remove(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SceneData"),)
+				//GConfig->Remove(TEXT("SceneData"));
+				break;
 			}
 			else
 			{
-				GLog->Log("array not starting correctly. line is: " + iniscenedata[i]);
+				GLog->Log("found scene " + entryarray[0]);
 			}
 		}
-		GLog->Log("maybe found the scene data?");
 		//set array to config
+		GConfig->RemoveKey(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SceneData"), GEngineIni);
+		//GConfig->Remove(
 		GConfig->SetArray(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SceneData"), iniscenedata, GEngineIni);
 		GConfig->Flush(false, GEngineIni);
 	}
@@ -878,7 +867,7 @@ void FCognitiveToolsCustomization::SceneVersionResponse(FHttpRequestPtr Request,
 	}
 }
 
-TArray<TSharedPtr<FSceneData>> FCognitiveToolsCustomization::GetSceneData() const
+TArray<TSharedPtr<FEditorSceneData>> FCognitiveToolsCustomization::GetSceneData() const
 {
 	return SceneData;
 }
@@ -1125,7 +1114,7 @@ void FCognitiveToolsCustomization::AuthTokenRequest()
 {
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 
-	TSharedPtr<FSceneData> currentscenedata = GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> currentscenedata = GetCurrentSceneData();
 	if (!currentscenedata.IsValid())
 	{
 		GLog->Log("FCogntiveToolsCustomization::AuthTokenRequest cannot find current scene data");
@@ -1572,6 +1561,20 @@ FReply FCognitiveToolsCustomization::UploadDynamicsManifest()
 	currentSceneName.RemoveFromStart(GWorld->StreamingLevelsPrefix);
 
 	//GConfig->GetArray()
+
+	TArray<FString> somearray;
+	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SceneData"), somearray, GEngineIni);
+	for (int i = 0; i < somearray.Num(); i++)
+	{
+		TArray<FString> split;
+		somearray[0].ParseIntoArray(split, TEXT(","));
+		if (split[0] == currentSceneName)
+		{
+			GLog->Log("-----> CognitiveToolsCustomization::UploadDynamicsManifest found key for scene " + split[0]);
+			sceneID = split[1];
+		}
+	}
+	/*
 	FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
 	if (Section == NULL)
 	{
@@ -1592,7 +1595,8 @@ FReply FCognitiveToolsCustomization::UploadDynamicsManifest()
 				break;
 			}
 		}
-	}
+	}*/
+
 	if (sceneID == "")
 	{
 		GLog->Log("CognitiveToolsCustomization::UploadDynamicsManifest couldn't find sceneid for " + currentSceneName);
@@ -1655,8 +1659,20 @@ FReply FCognitiveToolsCustomization::UploadDynamics()
 	FString currentSceneName = GWorld->GetMapName();
 	currentSceneName.RemoveFromStart(GWorld->StreamingLevelsPrefix);
 
+	TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(currentSceneName);
+
+	if (currentSceneData.IsValid())
+	{
+		sceneID = currentSceneData->Id;
+	}
+	else
+	{
+		GLog->Log("FCognitiveToolsCustomization::UploadDynamics can't find scene " + currentSceneName);
+		return FReply::Handled();
+	}
+
 	//GConfig->GetArray()
-	FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
+	/*FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
 	if (Section == NULL)
 	{
 		GLog->Log("can't upload dynamic objects. sceneid not set");
@@ -1680,7 +1696,7 @@ FReply FCognitiveToolsCustomization::UploadDynamics()
 				//GLog->Log("UPlayerTracker::GetSceneKey found key for scene " + name);
 			}
 		}
-	}
+	}*/
 
 
 
@@ -2408,35 +2424,6 @@ FReply FCognitiveToolsCustomization::Reduce_Textures()
 	return FReply::Handled();
 }
 
-FReply FCognitiveToolsCustomization::Http_Request()
-{
-	//TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
-
-	//JsonObject->SetStringField(TEXT("some_string_field"), *FString::Printf(TEXT("%s"), *SomeFStringVariable));
-
-	//FString OutputString;
-
-	//TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<>::Create(&OutputString);
-
-	//FJsonSerializer::Serialize(JsonObject.ToSharedRef(), JsonWriter);
-
-	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-
-	HttpRequest->SetVerb("GET");
-
-	//HttpRequest->SetHeader("Content-Type", "application/json");
-
-	HttpRequest->SetURL("https://s3.amazonaws.com/cvr-test/sdkversion.txt");
-
-	//HttpRequest->SetContentAsString(OutputString);
-
-	//HttpRequest->OnProcessRequestComplete().BindUObject(this, &FCognitiveToolsCustomization::OnYourFunctionCompleted);
-	//HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveToolsCustomization::OnYourFunctionCompleted);
-
-	HttpRequest->ProcessRequest();
-	return FReply::Handled();
-}
-
 void FCognitiveToolsCustomization::UploadFromDirectory(FString url, FString directory, FString expectedResponseType)
 {
 	FString filesStartingWith = TEXT("");
@@ -2614,7 +2601,7 @@ FReply FCognitiveToolsCustomization::UploadScene()
 
 	//get scene name
 	//look if scene name has an entry in the scene datas
-	TSharedPtr<FSceneData> sceneData = GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> sceneData = GetCurrentSceneData();
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
 	{
 		//existing uploaded scene
@@ -2632,7 +2619,7 @@ FReply FCognitiveToolsCustomization::UploadScene()
 	return FReply::Handled();
 }
 
-TSharedPtr<FSceneData> FCognitiveToolsCustomization::GetCurrentSceneData()
+TSharedPtr<FEditorSceneData> FCognitiveToolsCustomization::GetCurrentSceneData()
 {
 	UWorld* myworld = GWorld->GetWorld();
 
@@ -2641,7 +2628,7 @@ TSharedPtr<FSceneData> FCognitiveToolsCustomization::GetCurrentSceneData()
 	return GetSceneData(currentSceneName);
 }
 
-TSharedPtr<FSceneData> FCognitiveToolsCustomization::GetSceneData(FString scenename)
+TSharedPtr<FEditorSceneData> FCognitiveToolsCustomization::GetSceneData(FString scenename)
 {
 	for (int i = 0; i < SceneData.Num(); i++)
 	{
@@ -2728,26 +2715,6 @@ FReply FCognitiveToolsCustomization::DebugSendSceneData()
 
 void FCognitiveToolsCustomization::SaveSceneData(FString sceneName, FString sceneKey)
 {
-	/*FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
-	if (Section == NULL)
-	{
-		return FReply::Handled();
-	}
-	for (FConfigSection::TIterator It(*Section); It; ++It)
-	{
-		if (It.Key() == TEXT("SceneData"))
-		{
-			//returnstrings.Add(It.Value().GetValue());
-
-			FString name;
-			FString key;
-			It.Value().GetValue().Split(TEXT(","), &name, &key);
-			SceneData.Add(MakeShareable(new FSceneData(name, key)));
-		}
-	}*/
-
-
-
 	FString keyValue = sceneName + "," + sceneKey;
 	UE_LOG(LogTemp, Warning, TEXT("Upload complete! Add this into the SceneData array in Project Settings:      %s"),*keyValue);
 

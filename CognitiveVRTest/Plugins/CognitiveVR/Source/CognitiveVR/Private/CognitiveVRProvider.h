@@ -25,6 +25,23 @@ DECLARE_MULTICAST_DELEGATE(FCognitiveSendData);
 DECLARE_EVENT_OneParam(FAnalyticsProviderCognitiveVR, FCognitiveInitResponse, bool);
 //DECLARE_DELEGATE_OneParam(FCognitiveExitPollResponse, FExitPollQuestionSet);
 
+class FSceneData
+{
+public:
+	FString Name = "";
+	FString Id = "";
+	int32 VersionNumber = 1;
+	int32 VersionId = 0;
+
+	FSceneData(FString name, FString id, int32 versionnumber, int32 versionid)
+	{
+		Name = name;
+		Id = id;
+		VersionNumber = versionnumber;
+		VersionId = versionid;
+	}
+};
+
 extern bool bHasSessionStarted;
 
 	enum CognitiveVRError {
@@ -117,9 +134,9 @@ extern bool bHasSessionStarted;
 
 		//custom cognitive
 
-		bool SendJson(FString endpoint, FString Json);
-		FString GetCurrentSceneId();
-		FString GetSceneId(FString sceneName);
+		bool SendJson(FString url, FString Json);
+		//FString GetCurrentSceneId();
+		//FString GetSceneId(FString sceneName);
 
 		UPROPERTY(BlueprintAssignable)
 		FCognitiveSendData OnSendData;
@@ -153,7 +170,12 @@ extern bool bHasSessionStarted;
 		void OnLevelLoaded();
 		void SetWorld(UWorld* world);
 
-		TArray<FString> GetAllSceneIds();
+		//TArray<FString> GetAllSceneIds();
+		TArray<TSharedPtr<FSceneData>> SceneData;
+		//FSceneData SceneDataNotAPointer;
+		void CacheSceneData();
+		TSharedPtr<FSceneData> GetSceneData(FString scenename);
+		TSharedPtr<FSceneData> GetCurrentSceneData();
 	};
 
 	void ThrowDummyResponseException(std::string s);

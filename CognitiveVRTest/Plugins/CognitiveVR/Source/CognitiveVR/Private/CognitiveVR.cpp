@@ -168,23 +168,11 @@ void InitCallback(CognitiveVRResponse resp)
 	}
 
 	cog->SendDeviceInfo();
+	cog->CacheSceneData();
 }
 
 void FAnalyticsProviderCognitiveVR::SendDeviceInfo()
 {
-	//DEBUG
-	TArray<FString> scenePairs = GetAllSceneIds();
-	//GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, "DefaultEngineIni");
-
-	GLog->Log("FAnalyticsProviderCognitiveVR::SendDeviceInfo found this many scenes from ini " + FString::FromInt(scenePairs.Num()));
-	for (int32 i = 0; i < scenePairs.Num(); i++)
-	{
-		GLog->Log(scenePairs[i]);
-	}
-
-
-
-
 	//add a bunch of properties
 	if (GEngine->HMDDevice.IsValid())
 	{
@@ -688,8 +676,10 @@ void ThrowDummyResponseException(std::string s)
 	CognitiveLog::Error("CognitiveVRAnalytics::ResponseException! " + s);
 }
 
-FString FAnalyticsProviderCognitiveVR::GetSceneId(FString sceneName)
+/*FString FAnalyticsProviderCognitiveVR::GetSceneId(FString sceneName)
 {
+
+	
 
 	//GConfig->GetArray()
 	FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
@@ -714,10 +704,71 @@ FString FAnalyticsProviderCognitiveVR::GetSceneId(FString sceneName)
 	//no matches anywhere
 	CognitiveLog::Warning("UPlayerTracker::GetSceneId no matches in ini");
 	return "";
+}*/
+
+TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetCurrentSceneData()
+{
+	UWorld* myworld = currentWorld;
+	//UWorld* myworld = AActor::GetWorld();
+	if (myworld == NULL)
+	{
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson no world - use GWorld->GetWorld");
+		currentWorld = GWorld->GetWorld();
+		myworld = currentWorld;
+	}
+
+	FString currentSceneName = myworld->GetMapName();
+	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
+	return GetSceneData(currentSceneName);
 }
 
-TArray<FString> FAnalyticsProviderCognitiveVR::GetAllSceneIds()
+TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetSceneData(FString scenename)
 {
+	for (int i = 0; i < SceneData.Num(); i++)
+	{
+		if (!SceneData[i].IsValid()) { continue; }
+		if (SceneData[i]->Name == scenename)
+		{
+			return SceneData[i];
+		}
+	}
+	GLog->Log("FAnalyticsProviderCognitiveVR::GetSceneData couldn't find SceneData for scene " + scenename);
+	return NULL;
+}
+
+void FAnalyticsProviderCognitiveVR::CacheSceneData()
+{
+	TArray<FString>scenstrings;
+	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SceneData"), scenstrings, GEngineIni);
+
+	for (int i = 0; i < scenstrings.Num(); i++)
+	{
+		TArray<FString> Array;
+		scenstrings[i].ParseIntoArray(Array, TEXT(","), true);
+
+		if (Array.Num() == 2) //scenename,sceneid
+		{
+			//old scene data. append versionnumber and versionid
+			Array.Add("1");
+			Array.Add("0");
+		}
+
+		if (Array.Num() != 4)
+		{
+			GLog->Log("failed to parse " + scenstrings[i]);
+			continue;
+		}
+
+		FSceneData* tempscene = new FSceneData(Array[0], Array[1], FCString::Atoi(*Array[2]), FCString::Atoi(*Array[3]));
+		SceneData.Add(MakeShareable(tempscene));
+	}
+}
+
+/*TArray<FString> FAnalyticsProviderCognitiveVR::GetAllSceneIds()
+{
+
+
+
 
 	TArray<FString> returnstrings;
 
@@ -742,16 +793,16 @@ TArray<FString> FAnalyticsProviderCognitiveVR::GetAllSceneIds()
 			{
 				
 				//return key;
-			}*/
+			}*//*
 		}
 	}
 
 	//no matches anywhere
 	GLog->Log("FAnalyticsProviderCognitiveVR::GetAllSceneIds found this many scenes " + FString::FromInt(returnstrings.Num()));
 	return returnstrings;
-}
+}*/
 
-bool FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
+bool FAnalyticsProviderCognitiveVR::SendJson(FString url, FString json)
 {
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
 	if (cog == NULL)
@@ -773,7 +824,7 @@ bool FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
 
 	
 
-	UWorld* myworld = currentWorld;
+	/*UWorld* myworld = currentWorld;
 	//UWorld* myworld = AActor::GetWorld();
 	if (myworld == NULL)
 	{
@@ -785,30 +836,30 @@ bool FAnalyticsProviderCognitiveVR::SendJson(FString endpoint, FString json)
 	FString currentSceneName = myworld->GetMapName();
 	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
 
-	FString sceneKey = cog->GetSceneId(currentSceneName);
-	if (sceneKey == "")
+	auto scenedata = cog->GetSceneData(currentSceneName);
+	if (!scenedata.IsValid())
 	{
 		CognitiveLog::Warning("UPlayerTracker::SendJson does not have scenekey. fail!");
 		return false;
-	}
+	}*/
 
-	std::string stdendpoint(TCHAR_TO_UTF8(*endpoint));
+	//std::string stdendpoint(TCHAR_TO_UTF8(*url));
 	//CognitiveLog::Info(stdjson);
-	CognitiveLog::Info("send json to "+ stdendpoint);
+	//CognitiveLog::Info("send json to "+ stdendpoint);
 
 
 	//json to scene endpoint
 
 	TSharedRef<IHttpRequest> HttpRequest = Http->CreateRequest();
 	HttpRequest->SetContentAsString(json);
-	HttpRequest->SetURL(endpoint);
+	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->ProcessRequest();
 	return true;
 }
 
-FString FAnalyticsProviderCognitiveVR::GetCurrentSceneId()
+/*FString FAnalyticsProviderCognitiveVR::GetCurrentSceneId()
 {
 	UWorld* myworld = currentWorld;
 	//UWorld* myworld = AActor::GetWorld();
@@ -824,7 +875,7 @@ FString FAnalyticsProviderCognitiveVR::GetCurrentSceneId()
 
 	FString sceneId = GetSceneId(currentSceneName);
 	return sceneId;
-}
+}*/
 
 FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 {

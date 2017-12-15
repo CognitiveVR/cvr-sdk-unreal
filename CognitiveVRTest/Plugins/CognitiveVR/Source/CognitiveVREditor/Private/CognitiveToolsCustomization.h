@@ -52,7 +52,7 @@ public:
 	FString customerId = "";
 };
 
-class FSceneData
+class FEditorSceneData
 {
 public:
 	FString Name = "";
@@ -60,7 +60,7 @@ public:
 	int32 VersionNumber = 1;
 	int32 VersionId = 0;
 
-	FSceneData(FString name, FString id, int32 versionnumber, int32 versionid)
+	FEditorSceneData(FString name, FString id, int32 versionnumber, int32 versionid)
 	{
 		Name = name;
 		Id = id;
@@ -364,10 +364,10 @@ private:
 	ECheckBoxState FCognitiveToolsCustomization::HandleRadioButtonIsChecked(EReleaseType ButtonId) const;
 	void FCognitiveToolsCustomization::HandleRadioButtonCheckStateChanged(ECheckBoxState NewRadioState, EReleaseType RadioThatChanged);
 
-	TArray<TSharedPtr<FSceneData>> SceneData;
-	TArray<TSharedPtr<FSceneData>> GetSceneData() const;
+	TArray<TSharedPtr<FEditorSceneData>> SceneData;
+	TArray<TSharedPtr<FEditorSceneData>> GetSceneData() const;
 
-	TSharedRef<ITableRow> OnGenerateWorkspaceRow(TSharedPtr<FSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
+	TSharedRef<ITableRow> OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
 
 	FReply SaveCustomerIdToFile();
 
@@ -388,10 +388,10 @@ private:
 	FReply RefreshSceneData();
 	FReply DebugRefreshCurrentScene();
 	
-	TSharedPtr<FSceneData> GetSceneData(FString scenename);
-	TSharedPtr<FSceneData> GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> GetSceneData(FString scenename);
+	TSharedPtr<FEditorSceneData> GetCurrentSceneData();
 
-	void SceneVersionRequest(FSceneData data);
+	void SceneVersionRequest(FEditorSceneData data);
 	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	FReply LogIn();
