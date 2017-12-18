@@ -82,6 +82,14 @@ void InitCallback(CognitiveVRResponse resp)
 		ThrowDummyResponseException("Failed to initialize CognitiveVR " + resp.GetErrorMessage());
 
 		CognitiveLog::Info("Init callback not successful!");
+
+		FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+		if (cog == NULL)
+		{
+			CognitiveLog::Error("CognitiveVR InitCallback could not GetCognitiveVRProvider!");
+			return;
+		}
+		cog->bPendingInitRequest = false;
 		return;
 	}
 	bHasSessionStarted = true;
@@ -676,36 +684,6 @@ void ThrowDummyResponseException(std::string s)
 	CognitiveLog::Error("CognitiveVRAnalytics::ResponseException! " + s);
 }
 
-/*FString FAnalyticsProviderCognitiveVR::GetSceneId(FString sceneName)
-{
-
-	
-
-	//GConfig->GetArray()
-	FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
-	if (Section == NULL)
-	{
-		return "";
-	}
-	for (FConfigSection::TIterator It(*Section); It; ++It)
-	{
-		if (It.Key() == TEXT("SceneData"))
-		{
-			FString name;
-			FString key;
-			It.Value().GetValue().Split(TEXT(","), &name, &key);
-			if (*name == sceneName)
-			{
-				return key;
-			}
-		}
-	}
-
-	//no matches anywhere
-	CognitiveLog::Warning("UPlayerTracker::GetSceneId no matches in ini");
-	return "";
-}*/
-
 TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetCurrentSceneData()
 {
 	UWorld* myworld = currentWorld;
@@ -764,44 +742,6 @@ void FAnalyticsProviderCognitiveVR::CacheSceneData()
 	}
 }
 
-/*TArray<FString> FAnalyticsProviderCognitiveVR::GetAllSceneIds()
-{
-
-
-
-
-	TArray<FString> returnstrings;
-
-	//TODO load all this data once and store it for quick access
-
-	//GConfig->GetArray()
-	FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
-	if (Section == NULL)
-	{
-		return returnstrings;
-	}
-	for (FConfigSection::TIterator It(*Section); It; ++It)
-	{
-		if (It.Key() == TEXT("SceneData"))
-		{
-			returnstrings.Add(It.Value().GetValue());
-			/*
-			FString name;
-			FString key;
-			It.Value().GetValue().Split(TEXT(","), &name, &key);
-			if (*name == sceneName)
-			{
-				
-				//return key;
-			}*//*
-		}
-	}
-
-	//no matches anywhere
-	GLog->Log("FAnalyticsProviderCognitiveVR::GetAllSceneIds found this many scenes " + FString::FromInt(returnstrings.Num()));
-	return returnstrings;
-}*/
-
 bool FAnalyticsProviderCognitiveVR::SendJson(FString url, FString json)
 {
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
@@ -822,32 +762,6 @@ bool FAnalyticsProviderCognitiveVR::SendJson(FString url, FString json)
 		return false;
 	}
 
-	
-
-	/*UWorld* myworld = currentWorld;
-	//UWorld* myworld = AActor::GetWorld();
-	if (myworld == NULL)
-	{
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson no world - use GWorld->GetWorld");
-		currentWorld = GWorld->GetWorld();
-		myworld = currentWorld;
-	}
-
-	FString currentSceneName = myworld->GetMapName();
-	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
-
-	auto scenedata = cog->GetSceneData(currentSceneName);
-	if (!scenedata.IsValid())
-	{
-		CognitiveLog::Warning("UPlayerTracker::SendJson does not have scenekey. fail!");
-		return false;
-	}*/
-
-	//std::string stdendpoint(TCHAR_TO_UTF8(*url));
-	//CognitiveLog::Info(stdjson);
-	//CognitiveLog::Info("send json to "+ stdendpoint);
-
-
 	//json to scene endpoint
 
 	TSharedRef<IHttpRequest> HttpRequest = Http->CreateRequest();
@@ -859,27 +773,9 @@ bool FAnalyticsProviderCognitiveVR::SendJson(FString url, FString json)
 	return true;
 }
 
-/*FString FAnalyticsProviderCognitiveVR::GetCurrentSceneId()
-{
-	UWorld* myworld = currentWorld;
-	//UWorld* myworld = AActor::GetWorld();
-	if (myworld == NULL)
-	{
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson no world - use GWorld->GetWorld");
-		currentWorld = GWorld->GetWorld();
-		myworld = currentWorld;
-	}
-
-	FString currentSceneName = myworld->GetMapName();
-	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
-
-	FString sceneId = GetSceneId(currentSceneName);
-	return sceneId;
-}*/
-
 FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 {
-	//TODO cache this. are playercontrollers persisted across level changes?
+	//TODO cache this. playercontrollers DO NOT persist across level changes
 
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);

@@ -170,9 +170,7 @@ extern bool bHasSessionStarted;
 		void OnLevelLoaded();
 		void SetWorld(UWorld* world);
 
-		//TArray<FString> GetAllSceneIds();
 		TArray<TSharedPtr<FSceneData>> SceneData;
-		//FSceneData SceneDataNotAPointer;
 		void CacheSceneData();
 		TSharedPtr<FSceneData> GetSceneData(FString scenename);
 		TSharedPtr<FSceneData> GetCurrentSceneData();

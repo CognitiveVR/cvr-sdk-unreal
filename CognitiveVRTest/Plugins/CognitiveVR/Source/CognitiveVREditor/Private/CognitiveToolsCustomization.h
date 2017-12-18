@@ -398,6 +398,7 @@ private:
 	void LogInResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 };
 
+//used for uploading multiple dynamics at once
 class FContentContainer
 {
 public:
