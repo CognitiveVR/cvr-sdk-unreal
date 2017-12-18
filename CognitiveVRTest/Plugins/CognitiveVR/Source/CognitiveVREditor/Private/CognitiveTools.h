@@ -33,6 +33,8 @@
 //
 //#include "ExportSceneTool.generated.h"
 
+//https://forums.unrealengine.com/unreal-engine/marketplace/125106-configbp-ini-configuration-files-the-easy-way?p=1385756#post1385756
+
 class UCognitiveVRSettings;
 
 class FOrganizationData
@@ -69,7 +71,7 @@ public:
 	}
 };
 
-class FCognitiveToolsCustomization : public IDetailCustomization
+class FCognitiveTools : public IDetailCustomization
 {
 
 	// Enumerates radio button choices.
@@ -100,13 +102,13 @@ private:
 	}
 
 	//POST dynamic object manifest                          https://data.sceneexplorer.com/objects/:sceneId?version=:versionNumber
-	FORCEINLINE static FString PostDynamicObjectManifest(FString sceneid, FString versionnumber)
+	FORCEINLINE static FString PostDynamicObjectManifest(FString sceneid, int32 versionnumber)
 	{
-		return "https://data.sceneexplorer.com/objects/" + sceneid + "?version=" + versionnumber;
+		return "https://data.sceneexplorer.com/objects/" + sceneid + "?version=" + FString::FromInt(versionnumber);
 	}
 
 	//POST dynamic object mesh data							https://data.sceneexplorer.com/objects/:sceneId/:exportDirectory?version=:versionNumber
-	FORCEINLINE static FString PostDynamicObjectMeshData(FString sceneid, FString exportdirectory, int32 versionnumber)
+	FORCEINLINE static FString PostDynamicObjectMeshData(FString sceneid, int32 versionnumber, FString exportdirectory)
 	{
 		return "https://data.sceneexplorer.com/objects/" + sceneid + "/" + exportdirectory + "?version=" + FString::FromInt(versionnumber);
 	}
@@ -262,6 +264,9 @@ private:
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
 		FReply SetUniqueDynamicIds();
 
+	FReply GetDynamicsManifest();
+	void OnDynamicManifestResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
 	void OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
@@ -361,8 +366,8 @@ private:
 	TArray<TSharedPtr<FString>> AllOrgNames;
 	TArray<TSharedPtr<FString>> GetOrganizationNames();
 
-	ECheckBoxState FCognitiveToolsCustomization::HandleRadioButtonIsChecked(EReleaseType ButtonId) const;
-	void FCognitiveToolsCustomization::HandleRadioButtonCheckStateChanged(ECheckBoxState NewRadioState, EReleaseType RadioThatChanged);
+	ECheckBoxState FCognitiveTools::HandleRadioButtonIsChecked(EReleaseType ButtonId) const;
+	void FCognitiveTools::HandleRadioButtonCheckStateChanged(ECheckBoxState NewRadioState, EReleaseType RadioThatChanged);
 
 	TArray<TSharedPtr<FEditorSceneData>> SceneData;
 	TArray<TSharedPtr<FEditorSceneData>> GetSceneData() const;
