@@ -36,19 +36,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 	MinSizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MinimumSize));
 	MaxSizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MaximumSize));
 	TextureResizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, TextureResizeFactor));
-
-
-	/*IDetailCategoryBuilder& LightingCategory = DetailBuilder.EditCategory(TEXT("Debugging"));
-	LightingCategory.AddProperty(StaticOnlyProperty);
-	LightingCategory.AddProperty(StaticOnlyProperty);
-	LightingCategory.AddProperty(StaticOnlyProperty);*/
-
-	/*SettingsCategory.AddProperty(MinPolygonProperty);
-	SettingsCategory.AddProperty(MaxPolygonProperty);
-	SettingsCategory.AddProperty(StaticOnlyProperty);
-	SettingsCategory.AddProperty(MinSizeProperty);
-	SettingsCategory.AddProperty(MaxSizeProperty);
-	SettingsCategory.AddProperty(TextureResizeProperty);*/
+	ExcludeMeshProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, ExcludeMeshes));
 
 	// Create a commands category
 	IDetailCategoryBuilder& LoginCategory = DetailBuilder.EditCategory(TEXT("Account"),FText::GetEmpty(),ECategoryPriority::Important);
@@ -103,6 +91,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 
 			+ SHorizontalBox::Slot() //log in
 			.MaxWidth(128)
+				.Padding(4, 0, 0, 0)
 			[
 				SNew(SButton)
 				.Visibility(this, &FCognitiveTools::GetLoginButtonState)
@@ -113,6 +102,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			
 			+ SHorizontalBox::Slot() //log out
 			.MaxWidth(128)
+			.Padding(4,0,0,0)
 			[
 				SNew(SButton)
 				.Visibility(this, &FCognitiveTools::GetLogoutButtonState)
@@ -122,122 +112,127 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			]
 		];
 
+	//simple spacer
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.Text(FText::FromString("DEBUG Print Session Id"))
-			.OnClicked(this, &FCognitiveTools::PrintSessionId)
-		];
+	.ValueContent()
+	.HAlign(HAlign_Fill)
+	[
+		SNew(SHorizontalBox)
+		.Visibility(EVisibility::Hidden)
+	];
 
 	//ORGANIZATION DROPDOWN
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.HAlign(HAlign_Fill)
+	.ValueContent()
+	.HAlign(HAlign_Fill)
+	[
+		SNew(SHorizontalBox)
+		//button
+		+ SHorizontalBox::Slot()
+		.MaxWidth(96)
 		[
-			SNew(SHorizontalBox)
-			//button
-			+ SHorizontalBox::Slot()
-			.MaxWidth(96)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("Organization"))
-			]
+			SNew(STextBlock)
+			.Text(FText::FromString("Organization"))
+		]
 
-			+ SHorizontalBox::Slot()
-			.MaxWidth(128)
-			//.Padding(4)
-			[
-				SNew(STextComboBox)
-				.OptionsSource(&AllOrgNames)
-				.IsEnabled(this, &FCognitiveTools::HasLoggedIn)
-				//.OptionsSource(&tempOrgs)
-				
-				.OnSelectionChanged(this, &FCognitiveTools::OnOrganizationChanged)
-				//.InitiallySelectedItem(GetOrganizationNameFromFile())
-				//.InitiallySelectedItem(LowerBoundTypeSelectedItem)
-			]
-		];
+		+ SHorizontalBox::Slot()
+		.MaxWidth(128)
+		//.Padding(4)
+		[
+			SNew(STextComboBox)
+			.OptionsSource(&AllOrgNames)
+			.IsEnabled(this, &FCognitiveTools::HasLoggedIn)				
+			.OnSelectionChanged(this, &FCognitiveTools::OnOrganizationChanged)
+		]
+	];
 
 	//PRODUCT DROPDOWN
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.HAlign(HAlign_Fill)
-		[
-			SNew(SHorizontalBox)
-			//button
-			+ SHorizontalBox::Slot()
-			.MaxWidth(96)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("Product"))
-			]
-
-			+ SHorizontalBox::Slot()
-			.MaxWidth(128)
-			//.Padding(4)
-			[
-				SNew(STextComboBox)
-				.IsEnabled(this,&FCognitiveTools::HasLoggedIn)
-				.OptionsSource(&AllProductNames)
-				//.ToolTip(SNew(SToolTip).Text(LOCTEXT("BaseColorFBXImportToolTip", "this is a tooltip")))
-				.OnSelectionChanged(this, &FCognitiveTools::OnProductChanged)
-				//.InitiallySelectedItem(GetProductNameFromFile())
-			]
-		];
-
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
+	.ValueContent()
+	.HAlign(HAlign_Fill)
+	[
+		SNew(SHorizontalBox)
+		//button
+		+ SHorizontalBox::Slot()
+		.MaxWidth(96)
 		[
 			SNew(STextBlock)
-			.Text(FText::FromString(FCognitiveTools::GetCustomerIdFromFile()))
-		];
+			.Text(FText::FromString("Product"))
+		]
+
+		+ SHorizontalBox::Slot()
+		.MaxWidth(128)
+		//.Padding(4)
+		[
+			SNew(STextComboBox)
+			.IsEnabled(this,&FCognitiveTools::HasLoggedIn)
+			.OptionsSource(&AllProductNames)
+			//.ToolTip(SNew(SToolTip).Text(LOCTEXT("BaseColorFBXImportToolTip", "this is a tooltip")))
+			.OnSelectionChanged(this, &FCognitiveTools::OnProductChanged)
+			//.InitiallySelectedItem(GetProductNameFromFile())
+		]
+	];
 
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
+	.ValueContent()
+	.MinDesiredWidth(256)
+	[
+		SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot()
+		.MaxWidth(128)
 		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			.MaxWidth(128)
+			SNew(SCheckBox)
+			//.Style(FCoreStyle::Get(), "RadioButton")
+			.IsEnabled(this, &FCognitiveTools::HasSelectedValidProduct)
+			.IsChecked(this, &FCognitiveTools::HandleRadioButtonIsChecked, EReleaseType::Test)
+			.OnCheckStateChanged(this, &FCognitiveTools::HandleRadioButtonCheckStateChanged, EReleaseType::Test)
 			[
-				SNew(SCheckBox)
-				//.Style(FCoreStyle::Get(), "RadioButton")
-				.IsEnabled(this, &FCognitiveTools::HasSelectedValidProduct)
-				.IsChecked(this, &FCognitiveTools::HandleRadioButtonIsChecked, EReleaseType::Test)
-				.OnCheckStateChanged(this, &FCognitiveTools::HandleRadioButtonCheckStateChanged, EReleaseType::Test)
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("Test"))
-				]
+				SNew(STextBlock)
+				.Text(FText::FromString("Test"))
 			]
+		]
 	
-			+ SHorizontalBox::Slot()
-			.MaxWidth(128)
+		+ SHorizontalBox::Slot()
+		.MaxWidth(128)
+		[
+			SNew(SCheckBox)
+			//.Style(FCoreStyle::Get(), "RadioButton")
+			.IsEnabled(this, &FCognitiveTools::HasSelectedValidProduct)
+			.IsChecked(this, &FCognitiveTools::HandleRadioButtonIsChecked, EReleaseType::Production)
+			.OnCheckStateChanged(this, &FCognitiveTools::HandleRadioButtonCheckStateChanged, EReleaseType::Production)
 			[
-				SNew(SCheckBox)
-				//.Style(FCoreStyle::Get(), "RadioButton")
-				.IsEnabled(this, &FCognitiveTools::HasSelectedValidProduct)
-				.IsChecked(this, &FCognitiveTools::HandleRadioButtonIsChecked, EReleaseType::Production)
-				.OnCheckStateChanged(this, &FCognitiveTools::HandleRadioButtonCheckStateChanged, EReleaseType::Production)
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("Production"))
-				]
+				SNew(STextBlock)
+				.Text(FText::FromString("Production"))
 			]
-		];
+		]
+	];
+
+	//simple spacer
+	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+	.ValueContent()
+	.HAlign(HAlign_Fill)
+	[
+		SNew(SHorizontalBox)
+		.Visibility(EVisibility::Hidden)
+	];
 
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.Text(FText::FromString("Save ID to file"))
-			.IsEnabled(this,&FCognitiveTools::HasSelectedValidProduct)
-			.OnClicked(this, &FCognitiveTools::SaveCustomerIdToFile)
-		];
+	.ValueContent()
+	.MinDesiredWidth(256)
+	[
+		SNew(STextBlock)
+		.Text(FText::FromString(FCognitiveTools::GetCustomerIdFromFile()))
+	];
+
+	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+	.ValueContent()
+	.MinDesiredWidth(256)
+	[
+		SNew(SButton)
+		.Text(FText::FromString("Save"))
+		.IsEnabled(this,&FCognitiveTools::HasSelectedValidProduct)
+		.OnClicked(this, &FCognitiveTools::SaveCustomerIdToFile)
+	];
 
 	//refresh doens't usually reload anything. unclear how unreal can reload ini files
 
@@ -251,163 +246,283 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			]
 		];
 
-	/*LoginCategory.AddCustomRow(FText::FromString("Commands"))
+	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+	//.ValueContent()
+	//.MinDesiredWidth(896)
+	[
+		SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot()
 		[
-			SNew(SHorizontalBox)
-			+SHorizontalBox::Slot()
-			.HAlign(EHorizontalAlignment::HAlign_Right)
-			.MaxWidth(64)
-			[
-				SNew(SVerticalBox)
-				+ SVerticalBox::Slot()
-				.MaxHeight(24)
+			SNew(SListView<TSharedPtr<FEditorSceneData>>)
+			.ItemHeight(24)
+			.ListItemsSource(&SceneData)
+			.OnGenerateRow(this, &FCognitiveTools::OnGenerateWorkspaceRow)
+			.HeaderRow(
+				SNew(SHeaderRow)
+				+ SHeaderRow::Column("name")
+				.FillWidth(1)
 				[
-					SNew(SButton)
-					.IsEnabled(true)
-					.Text(FText::FromString("Refresh"))
-					.OnClicked(this, &FCognitiveTools::RefreshSceneData)
+					SNew(STextBlock)
+					//.MinDesiredWidth(256)
+					.Text(FText::FromString("Name"))
 				]
-			]
-		];*/
+
+				+ SHeaderRow::Column("id")
+				.FillWidth(1)
+				[
+					SNew(STextBlock)
+					//.MinDesiredWidth(512)
+					.Text(FText::FromString("Id"))
+				]
+
+				+ SHeaderRow::Column("version number")
+				.FillWidth(0.3)
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("Version Number"))
+				]
+
+				+ SHeaderRow::Column("version id")
+				.FillWidth(0.3)
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("Version Id"))
+				]
+
+				+ SHeaderRow::Column("open")
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("Scene Explorer"))
+				]
+			)
+		]
+	];
 
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-		//.ValueContent()
-		//.MinDesiredWidth(896)
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			[
-				SNew(SListView<TSharedPtr<FEditorSceneData>>)
-				.ItemHeight(24)
-				.ListItemsSource(&SceneData)
-				.OnGenerateRow(this, &FCognitiveTools::OnGenerateWorkspaceRow)
-				.HeaderRow(
-					SNew(SHeaderRow)
-					+ SHeaderRow::Column("name")
-					.FillWidth(1)
-					[
-						SNew(STextBlock)
-						//.MinDesiredWidth(256)
-						.Text(FText::FromString("Name"))
-					]
-
-					+ SHeaderRow::Column("id")
-					.FillWidth(1)
-					[
-						SNew(STextBlock)
-						//.MinDesiredWidth(512)
-						.Text(FText::FromString("Id"))
-					]
-
-					+ SHeaderRow::Column("version number")
-					.FillWidth(1)
-					[
-						SNew(STextBlock)
-						.Text(FText::FromString("Version Number"))
-					]
-
-					+ SHeaderRow::Column("version id")
-					.FillWidth(1)
-					[
-						SNew(STextBlock)
-						.Text(FText::FromString("Version Id"))
-					]
-
-					+ SHeaderRow::Column("Open in Browser")
-					.FillWidth(0.2)
-					[
-						SNew(STextBlock)
-						.Text(FText::FromString("Open"))
-					]
-				)
-			]
-		];
-
-	//getting auth token happens on login
-	/*LoginCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(true)
-			.Text(FText::FromString("DEBUG Get Auth Token"))
-			.OnClicked(this, &FCognitiveTools::DEBUG_RequestAuthToken)
-		];*/
-
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(true)
-			.Text(FText::FromString("Get Latest Scene Version Data"))
-			.OnClicked(this, &FCognitiveTools::DebugRefreshCurrentScene)
-		];
+	.ValueContent()
+	.MinDesiredWidth(256)
+	[
+		SNew(SButton)
+		.IsEnabled(true)
+		.Text(FText::FromString("Get Latest Scene Version Data"))
+		.OnClicked(this, &FCognitiveTools::DebugRefreshCurrentScene)
+	];
 
 
-	/*IDetailCategoryBuilder& Workflow = DetailBuilder.EditCategory(TEXT("Workflow"));
+	IDetailCategoryBuilder& Workflow = DetailBuilder.EditCategory(TEXT("Scene Upload Workflow"));
 
 	Workflow.AddCustomRow(FText::FromString("Commands"))
-		//.ValueContent()
-		//.MinDesiredWidth(896)
+	//.ValueContent()
+	//.MinDesiredWidth(896)
+	[
+		SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot()
+		.Padding(4.0f, 0.0f)
 		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
+			SNew(SVerticalBox)
+			+SVerticalBox::Slot()
+			.Padding(0,0,0,4)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
 			[
-				SNew(SVerticalBox)
-				+SVerticalBox::Slot()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("export settings"))
-				]
+				SNew(STextBlock)
+				.Text(FText::FromString("Export Settings"))
 			]
-			+ SHorizontalBox::Slot()
+			+SVerticalBox::Slot()
+			.AutoHeight()
 			[
-				SNew(SVerticalBox)
-				+ SVerticalBox::Slot()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("export all"))
-				]
-				+ SVerticalBox::Slot()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("export selected"))
-				]
+				SNew(SButton)
+				.IsEnabled(true)
+				.Text(FText::FromString("Select Blender.exe"))
+				.OnClicked(this, &FCognitiveTools::Select_Blender)
 			]
-			+ SHorizontalBox::Slot()
+			//TODO just a checkmark if blender path ends in blender.exe
+			/*+SVerticalBox::Slot()
 			[
-				SNew(SVerticalBox)
-				+SVerticalBox::Slot()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("do stuff to exported files"))
-				]
-				+ SVerticalBox::Slot()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("do other stuff to exported files"))
-				]
-			]
-			+ SHorizontalBox::Slot()
+				SNew(STextBlock)
+				.Text(this, &FCognitiveTools::GetBlenderPath)
+			]*/
+			+ SVerticalBox::Slot()
 			[
-				SNew(SVerticalBox)
-				+ SVerticalBox::Slot()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("upload"))
-				]
+				SNew(SProperty, ExcludeMeshProperty)
+				.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
+				.ShouldDisplayName(true)
 			]
-			+ SHorizontalBox::Slot()
+			+SVerticalBox::Slot()
 			[
-				SNew(SVerticalBox)
-				+ SVerticalBox::Slot()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("view on scene explorer"))
-				]
+				SNew(SProperty,StaticOnlyProperty)
+				.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
+				.ShouldDisplayName(true)
 			]
-		];*/
+			+ SVerticalBox::Slot()
+			[
+				SNew(SProperty, MinSizeProperty)
+				.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
+				.ShouldDisplayName(true)
+			]
+			+ SVerticalBox::Slot()
+			[
+				SNew(SProperty, MaxSizeProperty)
+				.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
+				.ShouldDisplayName(true)
+			]
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SButton)
+				.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
+				.Text(FText::FromString("Select Export Meshes"))
+				.OnClicked(this, &FCognitiveTools::Select_Export_Meshes)
+			]
+		]
+
+		+ SHorizontalBox::Slot()
+		.Padding(4.0f, 0.0f)
+		[
+			SNew(SVerticalBox)
+
+			+ SVerticalBox::Slot()
+
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Export"))
+			]
+
+			+ SVerticalBox::Slot()
+			.Padding(0, 0, 0, 4)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Important - select export as \"*.obj\"!"))
+			]
+
+			+ SVerticalBox::Slot()
+			.MaxHeight(32)
+			[
+				SNew(SButton)
+				.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndHasSelection)
+				.Text(FText::FromString("Export Selected Scene Actors"))
+				.OnClicked(this, &FCognitiveTools::Export_Selected)
+			]
+			+ SVerticalBox::Slot()
+			.MaxHeight(32)
+			[
+				SNew(SButton)
+				.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
+				.Text(FText::FromString("Export All Scene Actors"))
+				.OnClicked(this, &FCognitiveTools::Export_All)
+			]
+		]
+		+ SHorizontalBox::Slot()
+		.Padding(4.0f, 0.0f)
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.Padding(0, 0, 0, 4)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Optimize Files"))
+			]
+
+			+SVerticalBox::Slot()
+			[
+				SNew(SButton)
+				.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
+				.Text(FText::FromString("Select Export Directory"))
+				.OnClicked(this, &FCognitiveTools::Select_Export_Directory)
+			]
+			+ SVerticalBox::Slot()
+			[
+				SNew(STextBlock)
+				.Text(this, &FCognitiveTools::GetExportDirectory)
+			]
+
+			+ SVerticalBox::Slot()
+			[
+				SNew(SButton)
+				.IsEnabled(this, &FCognitiveTools::HasSetExportDirectory)
+				.Text(FText::FromString("Export Transparent Textures"))
+				.OnClicked(this, &FCognitiveTools::List_Materials)
+			]
+
+
+			+ SVerticalBox::Slot()
+			[
+				SNew(SProperty, MinPolygonProperty)
+				.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
+				.ShouldDisplayName(true)
+			]
+			+ SVerticalBox::Slot()
+			[
+				SNew(SProperty, MaxPolygonProperty)
+				.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
+				.ShouldDisplayName(true)
+			]
+			+ SVerticalBox::Slot()
+			[
+				SNew(SButton)
+				.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
+				.Text(FText::FromString("Reduce Mesh Topology"))
+				.OnClicked(this, &FCognitiveTools::Reduce_Meshes)
+			]
+
+			+ SVerticalBox::Slot()
+			[
+				SNew(SProperty, TextureResizeProperty)
+				.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
+				.ShouldDisplayName(true)
+			]
+			+ SVerticalBox::Slot()
+			[
+				SNew(SButton)
+				.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
+				.Text(FText::FromString("Convert Textures"))
+				.OnClicked(this, &FCognitiveTools::Reduce_Textures)
+			]
+		]
+		+ SHorizontalBox::Slot()
+		.Padding(4.0f, 0.0f)
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.Padding(0, 0, 0, 4)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Upload"))
+			]
+			+ SVerticalBox::Slot()
+			.MaxHeight(32)
+			[
+				SNew(SButton)
+				.IsEnabled(this, &FCognitiveTools::HasConvertedFilesInDirectory)
+				.Text(FText::FromString("Upload Scene"))
+				.OnClicked(this, &FCognitiveTools::UploadScene)
+			]
+		]
+		+ SHorizontalBox::Slot()
+		.Padding(4.0f, 0.0f)
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.Padding(0, 0, 0, 4)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Scene Explorer"))
+			]
+			+ SVerticalBox::Slot()
+			.MaxHeight(32)
+			[
+				SNew(SButton)
+				.IsEnabled(this, &FCognitiveTools::CurrentSceneHasSceneId)
+				.Text(FText::FromString("Open in Browser..."))
+				.OnClicked(this, &FCognitiveTools::OpenCurrentSceneInBrowser)
+			]
+		]
+	];
 
 	// Create a commands category
 	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(TEXT("Scene Commands"));
@@ -418,135 +533,6 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 		HasSearchedForBlender = true;
 		SearchForBlender();
 	}
-
-	Category.AddCustomRow(FText::FromString("Select Blender Horizontal"))
-		.ValueContent()
-		.HAlign(HAlign_Fill)
-		[
-			SNew(SHorizontalBox)
-				//button
-				+ SHorizontalBox::Slot()
-				.HAlign(HAlign_Left)
-				.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
-				[
-					SNew(SButton)
-					.IsEnabled(true)
-					.Text(FText::FromString("Select Blender"))
-					.OnClicked(this, &FCognitiveTools::Select_Blender)
-				]
-
-				+ SHorizontalBox::Slot()
-				.HAlign(HAlign_Right)
-				.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
-				[
-					SNew(STextBlock)
-					.Text(this, &FCognitiveTools::GetBlenderPath)
-				]
-		];
-
-	//select export meshes
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
-			.Text(FText::FromString("Select Export Meshes"))
-			.OnClicked(this, &FCognitiveTools::Select_Export_Meshes)
-		];
-
-	//export selected scene
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
-			.Text(FText::FromString("Export Selected"))
-			.OnClicked(this, &FCognitiveTools::Export_Selected)
-		];
-
-	//export whole scene
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
-			.Text(FText::FromString("Export All"))
-			.OnClicked(this, &FCognitiveTools::Export_All)
-		];
-
-	Category.AddCustomRow(FText::FromString("Select Export Directory"))
-		.ValueContent()
-		.HAlign(HAlign_Fill)
-		[
-			SNew(SHorizontalBox)
-			//button
-			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Left)
-			.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
-			[
-				SNew(SButton)
-				.IsEnabled(true)
-				.Text(FText::FromString("Select Export Directory"))
-				.OnClicked(this, &FCognitiveTools::Select_Export_Directory)
-			]
-
-			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Right)
-			.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
-			[
-				SNew(STextBlock)
-				.Text(this, &FCognitiveTools::GetExportDirectory)
-			]
-		];
-
-	//List Materials
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
-			.Text(FText::FromString("Export Transparent Textures"))
-			.OnClicked(this, &FCognitiveTools::List_Materials)
-		];
-
-	//Reduce Meshes
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
-			.Text(FText::FromString("Reduce Meshes"))
-			.OnClicked(this, &FCognitiveTools::Reduce_Meshes)
-		];
-
-	//Reduce Textures
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
-			.Text(FText::FromString("Reduce Textures"))
-			.OnClicked(this, &FCognitiveTools::Reduce_Textures)
-		];
-
-
-
-	//upload scene
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
-			.Text(FText::FromString("Upload Scene"))
-			.OnClicked(this, &FCognitiveTools::UploadScene)
-		];
 
 	// Create a commands category
 	IDetailCategoryBuilder& DynamicsCategory = DetailBuilder.EditCategory(TEXT("Dynamic Object Commands"));
@@ -679,25 +665,25 @@ TSharedRef<ITableRow> FCognitiveTools::OnGenerateWorkspaceRow(TSharedPtr<FEditor
 				.Text(FText::FromString(InItem->Id))
 			]
 			+ SHorizontalBox::Slot()
-			.FillWidth(1)
+			.FillWidth(0.3)
 			.Padding(2.0f)
 			[
 				SNew(STextBlock)
 				.Text(FText::FromString(FString::FromInt(InItem->VersionNumber)))
 			]
 			+ SHorizontalBox::Slot()
-			.FillWidth(1)
+			.FillWidth(0.3)
 			.Padding(2.0f)
 			[
 				SNew(STextBlock)
 				.Text(FText::FromString(FString::FromInt(InItem->VersionId)))
 			]
 			+ SHorizontalBox::Slot()
-			.FillWidth(0.2)
+			.FillWidth(1)
 			.Padding(2.0f)
 			[
 				SNew(SButton)
-				.Text(FText::FromString("Open"))
+				.Text(FText::FromString("Open in Browser..."))
 				.OnClicked(this,&FCognitiveTools::OpenSceneInBrowser,InItem->Id)
 			]
 		];
@@ -797,6 +783,20 @@ FReply FCognitiveTools::OpenSceneInBrowser(FString sceneid)
 	return FReply::Handled();
 }
 
+FReply FCognitiveTools::OpenCurrentSceneInBrowser()
+{
+	TSharedPtr<FEditorSceneData> scenedata = GetCurrentSceneData();
+
+	if (!scenedata.IsValid())
+	{
+		return FReply::Handled();
+	}
+
+	FString url = SceneExplorerOpen(scenedata->Id);
+
+	return FReply::Handled();
+}
+
 // Callback for checking a radio button.
 void FCognitiveTools::HandleRadioButtonCheckStateChanged(ECheckBoxState NewRadioState, EReleaseType RadioThatChanged)
 {
@@ -860,26 +860,13 @@ void FCognitiveTools::SceneVersionRequest(FEditorSceneData data)
 
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 
-	//HttpRequest->SetVerb("POST");
 	HttpRequest->SetURL(GetSceneVersion(data.Id));
-
-	//FString body = "{\"email\":\"" + Email + "\",\"password\":\"" + Password + "\"}";
-
-	/*TArray<uint8> bodybytes;
-
-	FTCHARToUTF8 ConverterEnd1(*body);
-	auto enddata1 = (const uint8*)ConverterEnd1.Get();
-	bodybytes.Append(enddata1, ConverterEnd1.Length());*/
 
 	GLog->Log("url "+GetSceneVersion(data.Id));
 	GLog->Log("auth token " + FAnalyticsCognitiveVR::Get().EditorAuthToken);
 
-	//HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
 	HttpRequest->SetHeader("Authorization", TEXT("Bearer " + FAnalyticsCognitiveVR::Get().EditorAuthToken));
-	//HttpRequest->SetHeader(TEXT("X-HTTP-Method-Override"), TEXT("POST"));
-
-	//HttpRequest->SetContentAsString(body);
 
 	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::SceneVersionResponse);
 	HttpRequest->ProcessRequest();
@@ -954,42 +941,6 @@ void FCognitiveTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpRespons
 
 		GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), iniscenedata, GEngineIni);
 
-
-		/*FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
-		if (Section == NULL)
-		{
-			GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse can't find ini section header");
-			return;
-		}
-		for (FConfigSection::TIterator It(*Section); It; ++It)
-		{
-			if (It.Key() == TEXT("SceneData"))
-			{
-				GLog->Log("scene data");
-				FString name;
-				FString key;
-				It.Value().GetValue().Split(TEXT(","), &name, &key);
-				iniscenedata.Add(It.Value().GetValue());
-			}
-			else if (It.Key() == TEXT("+SceneData"))
-			{
-				GLog->Log("+scene data");
-				FString name;
-				FString key;
-				It.Value().GetValue().Split(TEXT(","), &name, &key);
-				iniscenedata.Add(It.Value().GetValue());
-			}
-			else
-			{
-				GLog->Log("found something that's not a scene key " + It.Key().ToString());
-			}
-		}*/
-
-		//TArray<FString> sceneidstuff;
-		//GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SceneData"), sceneidstuff, GEngineIni);
-		//GLog->Log("get array returned " + FString::FromInt(sceneidstuff.Num()));
-
-		
 		GLog->Log("found this many scene datas in ini " + FString::FromInt(iniscenedata.Num()));
 		GLog->Log("looking for scene " + currentSceneData->Name);
 
@@ -1006,8 +957,6 @@ void FCognitiveTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpRespons
 				iniscenedata[i] = entryarray[0] + "," + entryarray[1] + "," + FString::FromInt(versionNumber) + "," + FString::FromInt(versionId);
 				GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse overwriting scene data to append versionnumber and versionid");
 				GLog->Log(iniscenedata[i]);
-				//GConfig->Remove(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SceneData"),)
-				//GConfig->Remove(TEXT("SceneData"));
 				break;
 			}
 			else
@@ -1178,17 +1127,8 @@ FReply FCognitiveTools::LogIn()
 	HttpRequest->SetURL("https://api.cognitivevr.io/sessions");
 
 	FString body = "{\"email\":\"" + Email + "\",\"password\":\"" + Password + "\"}";
-	
-	/*TArray<uint8> bodybytes;
-
-	FTCHARToUTF8 ConverterEnd1(*body);
-	auto enddata1 = (const uint8*)ConverterEnd1.Get();
-	bodybytes.Append(enddata1, ConverterEnd1.Length());*/
-
-	
 
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
-	//HttpRequest->SetHeader(TEXT("X-HTTP-Method-Override"), TEXT("POST"));
 
 	HttpRequest->SetContentAsString(body);
 
@@ -1335,7 +1275,7 @@ FReply FCognitiveTools::ExportDynamicTextures()
 }
 
 
-TSharedPtr<FEditorSceneData> FCognitiveTools::GetCurrentSceneData()
+TSharedPtr<FEditorSceneData> FCognitiveTools::GetCurrentSceneData() const
 {
 	UWorld* myworld = GWorld->GetWorld();
 
@@ -1344,7 +1284,7 @@ TSharedPtr<FEditorSceneData> FCognitiveTools::GetCurrentSceneData()
 	return GetSceneData(currentSceneName);
 }
 
-TSharedPtr<FEditorSceneData> FCognitiveTools::GetSceneData(FString scenename)
+TSharedPtr<FEditorSceneData> FCognitiveTools::GetSceneData(FString scenename) const
 {
 	for (int i = 0; i < SceneData.Num(); i++)
 	{

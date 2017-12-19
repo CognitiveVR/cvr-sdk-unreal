@@ -899,6 +899,11 @@ FReply FCognitiveTools::Select_Export_Directory()
 		UE_LOG(LogTemp, Warning, TEXT("FCognitiveToolsCustomization::Select_Export_Directory - picked a directory"));
 		ExportDirectory = outFilename;
 	}
+	else
+	{
+		GLog->Log("FCognitiveToolsCustomization::Select_Export_Directory cancelled?");
+		ExportDirectory = "";
+	}
 	return FReply::Handled();
 }
 
@@ -1595,7 +1600,7 @@ Gets all the files in a given directory.
 @param onlyFilesEndingWith Will only return filenames ending with this string (it looks at the extension as well!). Also applies onlyFilesStartingWith if specified.
 @return A list of files (including the extension).
 */
-TArray<FString> FCognitiveTools::GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension)
+TArray<FString> FCognitiveTools::GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension) const
 {
 	// Get all files in directory
 	TArray<FString> directoriesToSkip;
@@ -1648,6 +1653,28 @@ bool FCognitiveTools::HasFoundBlender() const
 	return FCognitiveTools::GetBlenderPath().ToString().Contains("blender.exe");
 }
 
+bool FCognitiveTools::HasFoundBlenderAndHasSelection() const
+{
+	return FCognitiveTools::GetBlenderPath().ToString().Contains("blender.exe") && GEditor->GetSelectedActorCount() > 0;
+}
+
+//checks for json and no bmps files in export directory
+bool FCognitiveTools::HasConvertedFilesInDirectory() const
+{
+	if (!HasSetExportDirectory()) { return false; }
+
+	FString filesStartingWith = TEXT("");
+	FString bmpextension = TEXT("bmp");
+	FString jsonextension = TEXT("json");
+
+	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(ExportDirectory, true, filesStartingWith, bmpextension, filesStartingWith);
+	TArray<FString> jsonInDirectory = GetAllFilesInDirectory(ExportDirectory, true, filesStartingWith, jsonextension, filesStartingWith);
+	if (imagesInDirectory.Num() > 0) { return false; }
+	if (jsonInDirectory.Num() == 0) { return false; }
+
+	return true;
+}
+
 bool FCognitiveTools::HasFoundBlenderAndExportDir() const
 {
 	return FCognitiveTools::GetBlenderPath().ToString().Contains("blender.exe") && !FCognitiveTools::GetExportDirectory().EqualTo(FText::FromString(""));
@@ -1656,6 +1683,20 @@ bool FCognitiveTools::HasFoundBlenderAndExportDir() const
 bool FCognitiveTools::HasFoundBlenderAndDynamicExportDir() const
 {
 	return FCognitiveTools::GetBlenderPath().ToString().Contains("blender.exe") && !FCognitiveTools::GetDynamicExportDirectory().EqualTo(FText::FromString(""));
+}
+
+bool FCognitiveTools::CurrentSceneHasSceneId() const
+{
+	TSharedPtr<FEditorSceneData> currentscene = GetCurrentSceneData();
+	if (!currentscene.IsValid())
+	{
+		return false;
+	}
+	if (currentscene->Id.Len() > 0)
+	{
+		return true;
+	}
+	return false;
 }
 
 bool FCognitiveTools::HasSetExportDirectory() const

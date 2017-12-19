@@ -166,6 +166,9 @@ private:
 
 	void SearchForBlender();
 	bool HasFoundBlender() const;
+	bool HasFoundBlenderAndHasSelection() const;
+	bool CurrentSceneHasSceneId() const;
+
 	bool HasFoundBlenderAndExportDir() const;
 	bool HasSetExportDirectory() const;
 	bool HasFoundBlenderAndDynamicExportDir() const;
@@ -190,7 +193,8 @@ private:
 	TSharedPtr<IPropertyHandle> MaxPolygonProperty;
 	TSharedPtr<IPropertyHandle> StaticOnlyProperty;
 	TSharedPtr<IPropertyHandle> TextureResizeProperty;
-	TSharedPtr<IPropertyHandle> SceneKeysProperty;
+	TSharedPtr<IPropertyHandle> ExcludeMeshProperty;
+	//TSharedPtr<IPropertyHandle> SceneKeysProperty;
 
 	//Select Blender.exe. Used to reduce polygon count of the exported scene
 	UFUNCTION(Exec, Category = "Export")
@@ -293,7 +297,7 @@ private:
 
 
 
-	TArray<FString> GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension,const FString ignoreExtension);
+	TArray<FString> GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension) const;
 
 	FString GetProductID();
 
@@ -387,11 +391,15 @@ private:
 	TSharedPtr< FString > GetProductNameFromFile();
 
 	FReply OpenSceneInBrowser(FString sceneid);
+	FReply OpenCurrentSceneInBrowser();
 
 	bool HasSelectedValidProduct() const;
 	bool HasLoggedIn() const;
 	EVisibility GetLoginButtonState() const;
 	EVisibility GetLogoutButtonState() const;
+
+	//EVisibility ExportSettingsVisibility() const;
+	//EVisibility OptimizeSettingsVisibility() const;
 	
 	//returns true if email + password fields lengths both greater than 0
 	bool HasValidLogInFields() const;
@@ -400,8 +408,10 @@ private:
 	FReply RefreshSceneData();
 	FReply DebugRefreshCurrentScene();
 	
-	TSharedPtr<FEditorSceneData> GetSceneData(FString scenename);
-	TSharedPtr<FEditorSceneData> GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> GetSceneData(FString scenename) const;
+	TSharedPtr<FEditorSceneData> GetCurrentSceneData() const;
+
+	bool HasConvertedFilesInDirectory() const;
 
 	void SceneVersionRequest(FEditorSceneData data);
 	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
