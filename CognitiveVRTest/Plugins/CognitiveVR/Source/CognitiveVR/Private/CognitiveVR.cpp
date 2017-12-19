@@ -176,7 +176,6 @@ void InitCallback(CognitiveVRResponse resp)
 	}
 
 	cog->SendDeviceInfo();
-	cog->CacheSceneData();
 }
 
 void FAnalyticsProviderCognitiveVR::SendDeviceInfo()
@@ -270,6 +269,8 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 			//TODO clear objectid list when persistent scene unloads
 		}
 	}*/
+
+	CacheSceneData();
 
 	return bHasSessionStarted;
 }
@@ -717,7 +718,7 @@ TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetSceneData(FString scene
 void FAnalyticsProviderCognitiveVR::CacheSceneData()
 {
 	TArray<FString>scenstrings;
-	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SceneData"), scenstrings, GEngineIni);
+	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenstrings, GEngineIni);
 
 	for (int i = 0; i < scenstrings.Num(); i++)
 	{

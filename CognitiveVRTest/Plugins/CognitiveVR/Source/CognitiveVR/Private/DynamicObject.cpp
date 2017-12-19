@@ -471,6 +471,11 @@ void UDynamicObject::SendData()
 {
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
 	TSharedPtr<FSceneData> currentscenedata = cog->GetCurrentSceneData();
+	if (!currentscenedata.IsValid())
+	{
+		GLog->Log("DynamicObject::SendData current scene data is invalid");
+		return;
+	}
 	SendData(currentscenedata->Name);
 }
 
