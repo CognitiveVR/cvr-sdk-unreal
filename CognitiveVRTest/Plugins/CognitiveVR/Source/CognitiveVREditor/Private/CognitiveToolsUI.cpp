@@ -38,10 +38,10 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 	TextureResizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, TextureResizeFactor));
 
 
-	IDetailCategoryBuilder& LightingCategory = DetailBuilder.EditCategory(TEXT("Debugging"));
+	/*IDetailCategoryBuilder& LightingCategory = DetailBuilder.EditCategory(TEXT("Debugging"));
 	LightingCategory.AddProperty(StaticOnlyProperty);
 	LightingCategory.AddProperty(StaticOnlyProperty);
-	LightingCategory.AddProperty(StaticOnlyProperty);
+	LightingCategory.AddProperty(StaticOnlyProperty);*/
 
 	/*SettingsCategory.AddProperty(MinPolygonProperty);
 	SettingsCategory.AddProperty(MaxPolygonProperty);
@@ -72,6 +72,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			[
 				SNew(SEditableTextBox)
 				.MinDesiredWidth(128)
+				.Visibility(this,&FCognitiveTools::LoginTextboxUsable)
 				.OnTextChanged(this,&FCognitiveTools::OnEmailChanged)
 			]
 		];
@@ -96,16 +97,28 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				SNew(SEditableTextBox)
 				.IsPassword(true)
 				.MinDesiredWidth(128)
+				.Visibility(this, &FCognitiveTools::LoginTextboxUsable)
 				.OnTextChanged(this,&FCognitiveTools::OnPasswordChanged)
 			]
 
-			+ SHorizontalBox::Slot()
+			+ SHorizontalBox::Slot() //log in
 			.MaxWidth(128)
 			[
 				SNew(SButton)
-				.IsEnabled(true)
+				.Visibility(this, &FCognitiveTools::GetLoginButtonState)
+				.IsEnabled(this, &FCognitiveTools::HasValidLogInFields)
 				.Text(FText::FromString("Log In"))
 				.OnClicked(this, &FCognitiveTools::LogIn)
+			]
+			
+			+ SHorizontalBox::Slot() //log out
+			.MaxWidth(128)
+			[
+				SNew(SButton)
+				.Visibility(this, &FCognitiveTools::GetLogoutButtonState)
+				.IsEnabled(true)
+				.Text(FText::FromString("Log Out"))
+				.OnClicked(this, &FCognitiveTools::LogOut)
 			]
 		];
 
@@ -227,7 +240,18 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 		];
 
 	//refresh doens't usually reload anything. unclear how unreal can reload ini files
+
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("must restart unreal to refresh ini files"))
+			]
+		];
+
+	/*LoginCategory.AddCustomRow(FText::FromString("Commands"))
 		[
 			SNew(SHorizontalBox)
 			+SHorizontalBox::Slot()
@@ -244,7 +268,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					.OnClicked(this, &FCognitiveTools::RefreshSceneData)
 				]
 			]
-		];
+		];*/
 
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
 		//.ValueContent()
@@ -299,7 +323,8 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			]
 		];
 
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+	//getting auth token happens on login
+	/*LoginCategory.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
 		.MinDesiredWidth(256)
 		[
@@ -307,7 +332,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			.IsEnabled(true)
 			.Text(FText::FromString("DEBUG Get Auth Token"))
 			.OnClicked(this, &FCognitiveTools::DEBUG_RequestAuthToken)
-		];
+		];*/
 
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
 		.ValueContent()
@@ -315,9 +340,74 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 		[
 			SNew(SButton)
 			.IsEnabled(true)
-		.Text(FText::FromString("DEBUG REFRESH CURRENT SCENE"))
-		.OnClicked(this, &FCognitiveTools::DebugRefreshCurrentScene)
+			.Text(FText::FromString("Get Latest Scene Version Data"))
+			.OnClicked(this, &FCognitiveTools::DebugRefreshCurrentScene)
 		];
+
+
+	/*IDetailCategoryBuilder& Workflow = DetailBuilder.EditCategory(TEXT("Workflow"));
+
+	Workflow.AddCustomRow(FText::FromString("Commands"))
+		//.ValueContent()
+		//.MinDesiredWidth(896)
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			[
+				SNew(SVerticalBox)
+				+SVerticalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("export settings"))
+				]
+			]
+			+ SHorizontalBox::Slot()
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("export all"))
+				]
+				+ SVerticalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("export selected"))
+				]
+			]
+			+ SHorizontalBox::Slot()
+			[
+				SNew(SVerticalBox)
+				+SVerticalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("do stuff to exported files"))
+				]
+				+ SVerticalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("do other stuff to exported files"))
+				]
+			]
+			+ SHorizontalBox::Slot()
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("upload"))
+				]
+			]
+			+ SHorizontalBox::Slot()
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("view on scene explorer"))
+				]
+			]
+		];*/
 
 	// Create a commands category
 	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(TEXT("Scene Commands"));
@@ -613,6 +703,32 @@ TSharedRef<ITableRow> FCognitiveTools::OnGenerateWorkspaceRow(TSharedPtr<FEditor
 		];
 }
 
+bool FCognitiveTools::HasValidLogInFields() const
+{
+	return Email.Len() > 0 && Password.Len() > 0;
+}
+
+EVisibility FCognitiveTools::LoginTextboxUsable() const
+{
+	if (HasLoggedIn())
+		return EVisibility::HitTestInvisible;
+	return EVisibility::Visible;
+}
+
+FReply FCognitiveTools::LogOut()
+{
+	Email = "";
+	//OnEmailChanged(TEXT(""));
+	Password = "";
+	//OnPasswordChanged(TEXT(""));
+
+	FAnalyticsCognitiveVR::Get().EditorAuthToken = "";
+	FAnalyticsCognitiveVR::Get().EditorSessionId = "";
+	FAnalyticsCognitiveVR::Get().EditorSessionToken = "";
+
+	return FReply::Handled();
+}
+
 FReply FCognitiveTools::DebugRefreshCurrentScene()
 {
 	TSharedPtr<FEditorSceneData> scenedata = GetCurrentSceneData();
@@ -623,6 +739,20 @@ FReply FCognitiveTools::DebugRefreshCurrentScene()
 	}
 
 	return FReply::Handled();
+}
+
+EVisibility FCognitiveTools::GetLogoutButtonState() const
+{
+	if (HasLoggedIn())
+		return EVisibility::Visible;
+	return EVisibility::Collapsed;
+}
+
+EVisibility FCognitiveTools::GetLoginButtonState() const
+{
+	if (HasLoggedIn())
+		return EVisibility::Collapsed;
+	return EVisibility::Visible;
 }
 
 FString FCognitiveTools::GetCustomerIdFromFile() const
@@ -1062,7 +1192,7 @@ FReply FCognitiveTools::LogIn()
 
 	HttpRequest->SetContentAsString(body);
 
-	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::LogInResponse);
+	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::OnLogInResponse);
 
 	GLog->Log("send login request!");
 	GLog->Log(FString::FromInt(HttpRequest->GetContentLength()));
@@ -1084,7 +1214,7 @@ FReply FCognitiveTools::LogIn()
 	return FReply::Handled();
 }
 
-void FCognitiveTools::LogInResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveTools::OnLogInResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (Response.IsValid())
 	{
@@ -1125,6 +1255,8 @@ void FCognitiveTools::LogInResponse(FHttpRequestPtr Request, FHttpResponsePtr Re
 				}
 
 				GLog->Log("found this many organizations: "+FString::FromInt(OrganizationInfos.Num()));
+
+				AuthTokenRequest();
 			}
 		}
 	}

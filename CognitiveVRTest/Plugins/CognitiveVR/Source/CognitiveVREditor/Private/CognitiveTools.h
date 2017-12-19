@@ -341,6 +341,8 @@ private:
 	FString Password;
 	void OnPasswordChanged(const FText& Text);
 
+	EVisibility LoginTextboxUsable() const;
+
 	TSharedPtr<FJsonObject> JsonUserData;
 
 	FReply DEBUG_RequestAuthToken();
@@ -388,6 +390,11 @@ private:
 
 	bool HasSelectedValidProduct() const;
 	bool HasLoggedIn() const;
+	EVisibility GetLoginButtonState() const;
+	EVisibility GetLogoutButtonState() const;
+	
+	//returns true if email + password fields lengths both greater than 0
+	bool HasValidLogInFields() const;
 
 	//reads scene data from ini
 	FReply RefreshSceneData();
@@ -400,7 +407,9 @@ private:
 	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	FReply LogIn();
-	void LogInResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnLogInResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
+	FReply LogOut();
 };
 
 //used for uploading multiple dynamics at once
