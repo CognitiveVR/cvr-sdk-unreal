@@ -56,6 +56,11 @@ public:
 		*/
 	virtual TSharedPtr<IAnalyticsProvider> CreateAnalyticsProvider(const FAnalyticsProviderConfigurationDelegate& GetConfigValue) const override;
 	virtual TSharedPtr<FAnalyticsProviderCognitiveVR> GetCognitiveVRProvider() const;
+	
+	//only used in the editor
+	FString EditorSessionId;
+	FString EditorSessionToken;
+	FString EditorAuthToken;
 		
 private:
 	//mutable TMap<FString, TSharedPtr<IAnalyticsProvider>> Analytics;

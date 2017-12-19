@@ -1,316 +1,61 @@
 
 #include "CognitiveVREditorPrivatePCH.h"
-#include "CognitiveToolsCustomization.h"
-#include "CognitiveVRSettings.h"
+#include "CognitiveTools.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
-void FCognitiveToolsCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
+//deals with all the exporting and non-display stuff in the editor preferences
+
+/*TSharedPtr<FString> FCognitiveToolsCustomization::GetSelectedOrganizationName()
 {
-	TSet<UClass*> Classes;
+	TSharedPtr<FString> tempOrg = MakeShareable(new FString("NO ORGANIZATION"));
 
-	TArray<TWeakObjectPtr<UObject>> ObjectsBeingCustomized;
-	DetailBuilder.GetObjectsBeingCustomized(ObjectsBeingCustomized);
+	return SelectedOrgName;
+}*/
 
-	DetailLayoutPtr = &DetailBuilder;
-
-	UClass* Class = NULL;
-
-	for (auto WeakObject : ObjectsBeingCustomized)
-	{
-		if (UObject* Instance = WeakObject.Get())
-		{
-			Class = Instance->GetClass();
-			break;
-		}
-	}
-
-	IDetailCategoryBuilder& SettingsCategory = DetailBuilder.EditCategory(TEXT("Export Settings"));
-
-	MinPolygonProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MinPolygons));
-	MaxPolygonProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MaxPolygons));
-	StaticOnlyProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, staticOnly));
-	MinSizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MinimumSize));
-	MaxSizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, MaximumSize));
-	TextureResizeProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UCognitiveVRSettings, TextureResizeFactor));
-
-	SettingsCategory.AddProperty(MinPolygonProperty);
-	SettingsCategory.AddProperty(MaxPolygonProperty);
-	SettingsCategory.AddProperty(StaticOnlyProperty);
-	SettingsCategory.AddProperty(MinSizeProperty);
-	SettingsCategory.AddProperty(MaxSizeProperty);
-	SettingsCategory.AddProperty(TextureResizeProperty);
-
-	// Create a commands category
-	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(TEXT("Scene Commands"));
-
-	FText p = GetBlenderPath();
-	if (p.EqualTo(FText::FromString("")) && !HasSearchedForBlender)
-	{
-		HasSearchedForBlender = true;
-		SearchForBlender();
-	}
-
-	Category.AddCustomRow(FText::FromString("Select Blender Horizontal"))
-		.ValueContent()
-		.HAlign(HAlign_Fill)
-		[
-			SNew(SHorizontalBox)
-				//button
-				+ SHorizontalBox::Slot()
-				.HAlign(HAlign_Left)
-				.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
-				[
-					SNew(SButton)
-					.IsEnabled(true)
-					.Text(FText::FromString("Select Blender"))
-					.OnClicked(this, &FCognitiveToolsCustomization::Select_Blender)
-				]
-
-				+ SHorizontalBox::Slot()
-				.HAlign(HAlign_Right)
-				.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
-				[
-					SNew(STextBlock)
-					.Text(this, &FCognitiveToolsCustomization::GetBlenderPath)
-				]
-		];
-
-	//select export meshes
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
-			.Text(FText::FromString("Select Export Meshes"))
-			.OnClicked(this, &FCognitiveToolsCustomization::Select_Export_Meshes)
-		];
-
-	//export selected scene
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
-			.Text(FText::FromString("Export Selected"))
-			.OnClicked(this, &FCognitiveToolsCustomization::Export_Selected)
-		];
-
-	//export whole scene
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
-			.Text(FText::FromString("Export All"))
-			.OnClicked(this, &FCognitiveToolsCustomization::Export_All)
-		];
-
-
-	Category.AddCustomRow(FText::FromString("Select Export Directory"))
-		.ValueContent()
-		.HAlign(HAlign_Fill)
-		[
-			SNew(SHorizontalBox)
-			//button
-			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Left)
-			.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
-			[
-				SNew(SButton)
-				.IsEnabled(true)
-				.Text(FText::FromString("Select Export Directory"))
-				.OnClicked(this, &FCognitiveToolsCustomization::Select_Export_Directory)
-			]
-
-			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Right)
-			.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
-			[
-				SNew(STextBlock)
-				.Text(this, &FCognitiveToolsCustomization::GetExportDirectory)
-			]
-		];
-
-	//List Materials
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndExportDir)
-			.Text(FText::FromString("Export Transparent Textures"))
-			.OnClicked(this, &FCognitiveToolsCustomization::List_Materials)
-		];
-
-	//Reduce Meshes
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndExportDir)
-			.Text(FText::FromString("Reduce Meshes"))
-			.OnClicked(this, &FCognitiveToolsCustomization::Reduce_Meshes)
-		];
-
-	//Reduce Textures
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndExportDir)
-			.Text(FText::FromString("Reduce Textures"))
-			.OnClicked(this, &FCognitiveToolsCustomization::Reduce_Textures)
-		];
-
-
-
-	//upload scene
-	Category.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlenderAndExportDir)
-			.Text(FText::FromString("Upload Scene"))
-			.OnClicked(this, &FCognitiveToolsCustomization::UploadScene)
-		];
-
-	// Create a commands category
-	IDetailCategoryBuilder& DynamicsCategory = DetailBuilder.EditCategory(TEXT("Dynamic Object Commands"));
-
-	//export all dynamics
-	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
-			.Text(FText::FromString("Export All Dynamic Objects"))
-			.OnClicked(this, &FCognitiveToolsCustomization::ExportDynamics)
-		];
-
-	//export selected dynamics
-	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveToolsCustomization::HasFoundBlender)
-			.Text(FText::FromString("Export Selected Dynamic Objects"))
-			.OnClicked(this, &FCognitiveToolsCustomization::ExportSelectedDynamics)
-		];
-
-	//select dynamic export directory
-	DynamicsCategory.AddCustomRow(FText::FromString("Select Dynamic Directory"))
-		.ValueContent()
-		.HAlign(HAlign_Fill)
-		[
-			SNew(SHorizontalBox)
-			//button
-			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Left)
-			.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
-			[
-				SNew(SButton)
-				.IsEnabled(true)
-				.Text(FText::FromString("Select Dynamic Directory"))
-				.OnClicked(this, &FCognitiveToolsCustomization::SelectDynamicsDirectory)
-			]
-
-			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Right)
-			.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
-			[
-				SNew(STextBlock)
-				.Text(this, &FCognitiveToolsCustomization::GetDynamicExportDirectory)
-			]
-		];
-
-	//upload dynamics
-	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveToolsCustomization::HasSetDynamicExportDirectory)
-			.Text(FText::FromString("Upload Dynamic Objects"))
-			.OnClicked(this, &FCognitiveToolsCustomization::UploadDynamics)
-		];
-
-	IDetailCategoryBuilder& DynamicsManifestCategory = DetailBuilder.EditCategory(TEXT("Dynamic Object Manifest"));
-
-	//upload dynamics
-	DynamicsManifestCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(true)
-			.Text(FText::FromString("Set Unique Dynamic Ids"))
-			.OnClicked(this, &FCognitiveToolsCustomization::SetUniqueDynamicIds)
-		];
-	
-	//upload dynamics manifest for aggregation
-	DynamicsManifestCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(true)
-			.Text(FText::FromString("Upload Dynamic Manifest"))
-			.OnClicked(this, &FCognitiveToolsCustomization::UploadDynamicsManifest)
-		];
-}
-
-float FCognitiveToolsCustomization::GetMinimumSize()
+float FCognitiveTools::GetMinimumSize()
 {
 	float MinSize = 0;
 	MinSizeProperty->GetValue(MinSize);
 	return MinSize;
 }
 
-float FCognitiveToolsCustomization::GetMaximumSize()
+float FCognitiveTools::GetMaximumSize()
 {
 	float MaxSize = 0;
 	MaxSizeProperty->GetValue(MaxSize);
 	return MaxSize;
 }
 
-bool FCognitiveToolsCustomization::GetStaticOnly()
+bool FCognitiveTools::GetStaticOnly()
 {
 	bool staticOnly = false;
 	StaticOnlyProperty->GetValue(staticOnly);
 	return staticOnly;
 }
 
-int32 FCognitiveToolsCustomization::GetMinPolygon()
+int32 FCognitiveTools::GetMinPolygon()
 {
 	int32 MinCount = 0;
 	MinPolygonProperty->GetValue(MinCount);
 	return MinCount;
 }
 
-int32 FCognitiveToolsCustomization::GetMaxPolygon()
+int32 FCognitiveTools::GetMaxPolygon()
 {
 	int32 MaxCount = 0;
 	MaxPolygonProperty->GetValue(MaxCount);
 	return MaxCount;
 }
 
-int32 FCognitiveToolsCustomization::GetTextureRefacor()
+int32 FCognitiveTools::GetTextureRefacor()
 {
 	int32 TextureRefactor = 0;
 	TextureResizeProperty->GetValue(TextureRefactor);
 	return TextureRefactor;
 }
 
-FReply FCognitiveToolsCustomization::ExportDynamics()
+FReply FCognitiveTools::ExportDynamics()
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
@@ -379,7 +124,7 @@ FReply FCognitiveToolsCustomization::ExportDynamics()
 	return FReply::Handled();
 }
 
-FReply FCognitiveToolsCustomization::ExportSelectedDynamics()
+FReply FCognitiveTools::ExportSelectedDynamics()
 {
 	UWorld* World = GWorld;
 	FString title = "Select Root Dynamic Directory";
@@ -427,7 +172,7 @@ FReply FCognitiveToolsCustomization::ExportSelectedDynamics()
 	return FReply::Handled();
 }
 
-void FCognitiveToolsCustomization::ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects)
+void FCognitiveTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects)
 {
 	FVector originalLocation;
 	FRotator originalRotation;
@@ -442,7 +187,10 @@ void FCognitiveToolsCustomization::ExportDynamicObjectArray(TArray<UDynamicObjec
 		{
 			continue;
 		}
-
+		if (exportObjects[i]->GetOwner() == NULL)
+		{
+			continue;
+		}
 		originalLocation = exportObjects[i]->GetOwner()->GetActorLocation();
 		originalRotation = exportObjects[i]->GetOwner()->GetActorRotation();
 		//originalScale = tempactor->GetActorScale();
@@ -497,19 +245,7 @@ void FCognitiveToolsCustomization::ExportDynamicObjectArray(TArray<UDynamicObjec
 	ConvertDynamicTextures();
 }
 
-FReply FCognitiveToolsCustomization::ReexportDynamicMeshesCmd()
-{
-	ReexportDynamicMeshes(ExportDynamicsDirectory);
-	return FReply::Handled();
-}
-
-FReply FCognitiveToolsCustomization::ExportDynamicTextures()
-{
-	ConvertDynamicTextures();
-	return FReply::Handled();
-}
-
-FReply FCognitiveToolsCustomization::SetUniqueDynamicIds()
+FReply FCognitiveTools::SetUniqueDynamicIds()
 {
 	//loop thorugh all dynamics in the scene
 	TArray<UDynamicObject*> dynamics;
@@ -609,7 +345,7 @@ FReply FCognitiveToolsCustomization::SetUniqueDynamicIds()
 	return FReply::Handled();
 }
 
-FReply FCognitiveToolsCustomization::UploadDynamicsManifest()
+FReply FCognitiveTools::UploadDynamicsManifest()
 {
 	TArray<UDynamicObject*> dynamics;
 
@@ -662,11 +398,29 @@ FReply FCognitiveToolsCustomization::UploadDynamicsManifest()
 
 
 	//get scene id
-	FString sceneID = "";
-	FString currentSceneName = GWorld->GetMapName();
-	currentSceneName.RemoveFromStart(GWorld->StreamingLevelsPrefix);
+	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
+	if (!currentSceneData.IsValid())
+	{
+		GLog->Log("FCognitiveTools::UploadDynamicObjectManifest could not find current scene id");
+		return FReply::Handled();
+	}
 
 	//GConfig->GetArray()
+	/*
+	TArray<FString> somearray;
+	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SceneData"), somearray, GEngineIni);
+	for (int i = 0; i < somearray.Num(); i++)
+	{
+		TArray<FString> split;
+		somearray[0].ParseIntoArray(split, TEXT(","));
+		if (split[0] == currentSceneData->Name)
+		{
+			GLog->Log("-----> CognitiveToolsCustomization::UploadDynamicsManifest found key for scene " + split[0]);
+			sceneID = split[1];
+		}
+	}*/
+
+	/*
 	FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
 	if (Section == NULL)
 	{
@@ -687,18 +441,24 @@ FReply FCognitiveToolsCustomization::UploadDynamicsManifest()
 				break;
 			}
 		}
-	}
-	if (sceneID == "")
+	}*/
+
+	if (currentSceneData->Id == "")
 	{
-		GLog->Log("CognitiveToolsCustomization::UploadDynamicsManifest couldn't find sceneid for " + currentSceneName);
+		GLog->Log("CognitiveToolsCustomization::UploadDynamicsManifest couldn't find sceneid for current scene");
+		return FReply::Handled();
+	}
+	if (currentSceneData->VersionNumber == 0)
+	{
+		GLog->Log("CognitiveTools::UploadDynamicsManifest current scene does not have valid version number. GetSceneVersions and try again");
 		return FReply::Handled();
 	}
 
-	FString url = "sceneexplorer.com/api/objects/" + sceneID;
+	FString url = PostDynamicObjectManifest(currentSceneData->Id, currentSceneData->VersionNumber);
 
 	//send manifest to api/objects/sceneid
 
-	GLog->Log("CognitiveVR Tools send dynamic object aggregation manifest");
+	GLog->Log("CognitiveTools::UploadDynamicsManifest send dynamic object aggregation manifest");
 	GLog->Log(url);
 	GLog->Log(objectManifest);
 
@@ -714,7 +474,7 @@ FReply FCognitiveToolsCustomization::UploadDynamicsManifest()
 	return FReply::Handled();
 }
 
-void FCognitiveToolsCustomization::OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveTools::OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	GLog->Log(Response->GetContentAsString());
 	GLog->Log(FString::FromInt(Response->GetResponseCode()));
@@ -725,8 +485,65 @@ void FCognitiveToolsCustomization::OnUploadManifestCompleted(FHttpRequestPtr Req
 	}
 }
 
+FReply FCognitiveTools::GetDynamicsManifest()
+{
+	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
+	if (!currentSceneData.IsValid())
+	{
+		GLog->Log("CognitiveTools::GetDyanmicManifest could not find current scene data");
+		return FReply::Handled();
+	}
+	if (currentSceneData->VersionId == 0)
+	{
+		GLog->Log("CognitiveTools::GetDyanmicManifest version id is not set! makes sure the scene has updated scene version");
+		return FReply::Handled();
+	}
+	if (FAnalyticsCognitiveVR::Get().EditorAuthToken.Len() == 0)
+	{
+		GLog->Log("CognitiveTools::GetDyanmicManifest auth token is empty. TODO get auth token and try again");
+		return FReply::Handled();
+	}
 
-FReply FCognitiveToolsCustomization::UploadDynamics()
+	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
+
+	//HttpRequest->SetVerb("POST");
+	HttpRequest->SetURL(GetDynamicObjectManifest(FString::FromInt(currentSceneData->VersionId)));
+	//HttpRequest->SetURL(GetSceneVersion(data.Id));
+
+	//FString body = "{\"email\":\"" + Email + "\",\"password\":\"" + Password + "\"}";
+
+	/*TArray<uint8> bodybytes;
+
+	FTCHARToUTF8 ConverterEnd1(*body);
+	auto enddata1 = (const uint8*)ConverterEnd1.Get();
+	bodybytes.Append(enddata1, ConverterEnd1.Length());*/
+
+	GLog->Log("url " + GetSceneVersion(FString::FromInt(currentSceneData->VersionId)));
+	GLog->Log("auth token " + FAnalyticsCognitiveVR::Get().EditorAuthToken);
+
+	//HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
+	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
+	HttpRequest->SetHeader("Authorization", TEXT("Bearer " + FAnalyticsCognitiveVR::Get().EditorAuthToken));
+	//HttpRequest->SetHeader(TEXT("X-HTTP-Method-Override"), TEXT("POST"));
+
+	//HttpRequest->SetContentAsString(body);
+
+	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::OnDynamicManifestResponse);
+	HttpRequest->ProcessRequest();
+	return FReply::Handled();
+}
+
+void FCognitiveTools::OnDynamicManifestResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (bWasSuccessful)
+	{
+		GLog->Log("CognitiveTools::OnDynamicManifestResponse content: " + Response->GetContentAsString());
+
+		//TODO save this in memory. display changes and objects known to SE in a panel
+	}
+}
+
+FReply FCognitiveTools::UploadDynamics()
 {	
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
@@ -745,13 +562,16 @@ FReply FCognitiveToolsCustomization::UploadDynamics()
 	Visitor.Visit(*ExportDynamicsDirectory, true);
 
 	GLog->Log("UploadDynamics found this many files " + Visitor.FileTimes.Num());
+	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
 
-	FString sceneID = "";
-	FString currentSceneName = GWorld->GetMapName();
-	currentSceneName.RemoveFromStart(GWorld->StreamingLevelsPrefix);
+	if (!currentSceneData.IsValid())
+	{
+		GLog->Log("FCognitiveToolsCustomization::UploadDynamics can't find current scene!");
+		return FReply::Handled();
+	}
 
 	//GConfig->GetArray()
-	FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
+	/*FConfigSection* Section = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
 	if (Section == NULL)
 	{
 		GLog->Log("can't upload dynamic objects. sceneid not set");
@@ -775,7 +595,7 @@ FReply FCognitiveToolsCustomization::UploadDynamics()
 				//GLog->Log("UPlayerTracker::GetSceneKey found key for scene " + name);
 			}
 		}
-	}
+	}*/
 
 
 
@@ -794,7 +614,7 @@ FReply FCognitiveToolsCustomization::UploadDynamics()
 		else if (FPaths::DirectoryExists(filePath))
 		{
 			GLog->Log("directory found " + filePath);
-			FString url = "https://sceneexplorer.com/api/objects/"+sceneID+"/"+fileName;
+			FString url = PostDynamicObjectMeshData(currentSceneData->Id, currentSceneData->VersionNumber, fileName);
 
 			UploadFromDirectory(url, filePath, "object");
 		}
@@ -807,7 +627,7 @@ FReply FCognitiveToolsCustomization::UploadDynamics()
 	return FReply::Handled();
 }
 
-void FCognitiveToolsCustomization::ReexportDynamicMeshes(FString directory)
+void FCognitiveTools::ReexportDynamicMeshes(FString directory)
 {
 	//open blender and run a script
 	//TODO make openblender and run a script into a function, because this is used in a bunch of places
@@ -881,7 +701,7 @@ void FCognitiveToolsCustomization::ReexportDynamicMeshes(FString directory)
 	//system("cmd.exe");
 }
 
-void FCognitiveToolsCustomization::ConvertDynamicTextures()
+void FCognitiveTools::ConvertDynamicTextures()
 {
 	//open blender and run a script
 	//TODO make openblender and run a script into a function, because this is used in a bunch of places
@@ -955,7 +775,7 @@ void FCognitiveToolsCustomization::ConvertDynamicTextures()
 	//system("cmd.exe");
 }
 
-FReply FCognitiveToolsCustomization::Export_Selected()
+FReply FCognitiveTools::Export_Selected()
 {
 	FEditorFileUtils::Export(true);
 
@@ -966,7 +786,7 @@ FReply FCognitiveToolsCustomization::Export_Selected()
 	return FReply::Handled();
 }
 
-FReply FCognitiveToolsCustomization::Export_All()
+FReply FCognitiveTools::Export_All()
 {
 	FEditorFileUtils::Export(false);
 
@@ -977,7 +797,7 @@ FReply FCognitiveToolsCustomization::Export_All()
 	return FReply::Handled();
 }
 
-FReply FCognitiveToolsCustomization::Select_Export_Meshes()
+FReply FCognitiveTools::Select_Export_Meshes()
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
@@ -1052,7 +872,7 @@ FReply FCognitiveToolsCustomization::Select_Export_Meshes()
 
 
 //open fiel type
-FReply FCognitiveToolsCustomization::Select_Blender()
+FReply FCognitiveTools::Select_Blender()
 {
 	FString title = "Select Blender.exe";
 	FString fileTypes = ".exe";
@@ -1067,7 +887,7 @@ FReply FCognitiveToolsCustomization::Select_Blender()
 }
 
 //open fiel type
-FReply FCognitiveToolsCustomization::Select_Export_Directory()
+FReply FCognitiveTools::Select_Export_Directory()
 {
 	FString title = "Select Export Directory";
 	FString fileTypes = ".exe";
@@ -1083,7 +903,7 @@ FReply FCognitiveToolsCustomization::Select_Export_Directory()
 }
 
 //open fiel type
-FReply FCognitiveToolsCustomization::SelectDynamicsDirectory()
+FReply FCognitiveTools::SelectDynamicsDirectory()
 {
 	FString title = "Select Dynamc Export Root Directory";
 	FString fileTypes = ".exe";
@@ -1098,7 +918,7 @@ FReply FCognitiveToolsCustomization::SelectDynamicsDirectory()
 	return FReply::Handled();
 }
 
-bool FCognitiveToolsCustomization::PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename)
+bool FCognitiveTools::PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename)
 {
 	OutFilename = FString();
 
@@ -1132,7 +952,7 @@ bool FCognitiveToolsCustomization::PickFile(const FString& Title, const FString&
 	return bFileChosen;
 }
 
-bool FCognitiveToolsCustomization::PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename)
+bool FCognitiveTools::PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename)
 {
 	OutFilename = FString();
 
@@ -1154,7 +974,7 @@ bool FCognitiveToolsCustomization::PickDirectory(const FString& Title, const FSt
 	return directoryChosen;
 }
 
-void* FCognitiveToolsCustomization::ChooseParentWindowHandle()
+void* FCognitiveTools::ChooseParentWindowHandle()
 {
 	void* ParentWindowWindowHandle = NULL;
 	IMainFrameModule& MainFrameModule = FModuleManager::LoadModuleChecked<IMainFrameModule>(TEXT("MainFrame"));
@@ -1167,13 +987,13 @@ void* FCognitiveToolsCustomization::ChooseParentWindowHandle()
 	return ParentWindowWindowHandle;
 }
 
-FReply FCognitiveToolsCustomization::List_Materials()
+FReply FCognitiveTools::List_Materials()
 {
 	List_MaterialArgs("",ExportDirectory);
 	return FReply::Handled();
 }
 
-void FCognitiveToolsCustomization::List_MaterialArgs(FString subdirectory, FString searchDirectory)
+void FCognitiveTools::List_MaterialArgs(FString subdirectory, FString searchDirectory)
 {
 	//look at export directory. find mtl file
 
@@ -1335,7 +1155,7 @@ void FCognitiveToolsCustomization::List_MaterialArgs(FString subdirectory, FStri
 }
 
 //run this as the next step after exporting the scene
-FReply FCognitiveToolsCustomization::Reduce_Meshes()
+FReply FCognitiveTools::Reduce_Meshes()
 {
 	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("DecimateExportedScene.py");
 	const TCHAR* charPath = *pythonscriptpath;
@@ -1416,7 +1236,7 @@ FReply FCognitiveToolsCustomization::Reduce_Meshes()
 	return FReply::Handled();
 }
 
-FString FCognitiveToolsCustomization::GetProductID()
+FString FCognitiveTools::GetProductID()
 {
 	FString ValueReceived;
 	GConfig->GetString(
@@ -1428,8 +1248,35 @@ FString FCognitiveToolsCustomization::GetProductID()
 	return ValueReceived;
 }
 
+FReply FCognitiveTools::UploadScene()
+{
+	FString url = "";
+
+	//get scene name
+	//look if scene name has an entry in the scene datas
+	TSharedPtr<FEditorSceneData> sceneData = GetCurrentSceneData();
+	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
+	{
+		GLog->Log("post update existing scene");
+		//existing uploaded scene
+		url = PostUpdateScene(sceneData->Id);
+	}
+	else
+	{
+		GLog->Log("post new scene");
+		//new scene
+		url = PostNewScene();
+	}
+
+	GLog->Log("upload scene to " + url);
+	//TODO listen for response. when the response returns, request the scene version with auth token
+	UploadFromDirectory(url, ExportDirectory, "scene");
+
+	return FReply::Handled();
+}
+
 //run this as the next step after exporting the scene
-FReply FCognitiveToolsCustomization::Reduce_Textures()
+FReply FCognitiveTools::Reduce_Textures()
 {
 	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("ConvertTextures.py");
 	const TCHAR* charPath = *pythonscriptpath;
@@ -1503,36 +1350,7 @@ FReply FCognitiveToolsCustomization::Reduce_Textures()
 	return FReply::Handled();
 }
 
-FReply FCognitiveToolsCustomization::Http_Request()
-{
-	//TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
-
-	//JsonObject->SetStringField(TEXT("some_string_field"), *FString::Printf(TEXT("%s"), *SomeFStringVariable));
-
-	//FString OutputString;
-
-	//TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<>::Create(&OutputString);
-
-	//FJsonSerializer::Serialize(JsonObject.ToSharedRef(), JsonWriter);
-
-	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-
-	HttpRequest->SetVerb("GET");
-
-	//HttpRequest->SetHeader("Content-Type", "application/json");
-
-	HttpRequest->SetURL("https://s3.amazonaws.com/cvr-test/sdkversion.txt");
-
-	//HttpRequest->SetContentAsString(OutputString);
-
-	//HttpRequest->OnProcessRequestComplete().BindUObject(this, &FCognitiveToolsCustomization::OnYourFunctionCompleted);
-	//HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveToolsCustomization::OnYourFunctionCompleted);
-
-	HttpRequest->ProcessRequest();
-	return FReply::Handled();
-}
-
-void FCognitiveToolsCustomization::UploadFromDirectory(FString url, FString directory, FString expectedResponseType)
+void FCognitiveTools::UploadFromDirectory(FString url, FString directory, FString expectedResponseType)
 {
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
@@ -1665,7 +1483,6 @@ void FCognitiveToolsCustomization::UploadFromDirectory(FString url, FString dire
 	auto enddata3 = (const uint8*)ConverterEnd3.Get();
 	AllBytes.Append(enddata3, ConverterEnd3.Length());
 
-	//HttpRequest->SetURL("http://192.168.1.145:3000/api/scenes");
 	HttpRequest->SetURL(url);
 	HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=\"cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i\"");
 	HttpRequest->SetHeader("Accept-Encoding", "identity");
@@ -1676,11 +1493,11 @@ void FCognitiveToolsCustomization::UploadFromDirectory(FString url, FString dire
 
 	if (expectedResponseType == "scene")
 	{
-		HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveToolsCustomization::OnUploadSceneCompleted);
+		HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::OnUploadSceneCompleted);
 	}
 	if (expectedResponseType == "object")
 	{
-		HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveToolsCustomization::OnUploadObjectCompleted);
+		HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::OnUploadObjectCompleted);
 	}
 
 	//DEBUGGING write http request contents to file
@@ -1704,16 +1521,7 @@ void FCognitiveToolsCustomization::UploadFromDirectory(FString url, FString dire
 	HttpRequest->ProcessRequest();
 }
 
-FReply FCognitiveToolsCustomization::UploadScene()
-{
-	FString url = "https://sceneexplorer.com/api/scenes";
-
-	UploadFromDirectory(url, ExportDirectory,"scene");
-
-	return FReply::Handled();
-}
-
-void FCognitiveToolsCustomization::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{
@@ -1737,11 +1545,19 @@ void FCognitiveToolsCustomization::OnUploadSceneCompleted(FHttpRequestPtr Reques
 
 		FString responseNoQuotes = *Response->GetContentAsString().Replace(TEXT("\""), TEXT(""));
 
-		SaveSceneData(currentSceneName, responseNoQuotes);
+		if (responseNoQuotes.Len() > 0)
+		{
+			SaveSceneData(currentSceneName, responseNoQuotes);
+		}
+		else
+		{
+			//successfully uploaded a scene but no response - updated an existing scene version
+			RefreshSceneData();
+		}
 	}
 }
 
-void FCognitiveToolsCustomization::OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{
@@ -1770,67 +1586,6 @@ void FCognitiveToolsCustomization::OnUploadObjectCompleted(FHttpRequestPtr Reque
 	}
 }
 
-FReply FCognitiveToolsCustomization::DebugSendSceneData()
-{
-	//+ FString::FromInt(FMath::Rand())
-	SaveSceneData("FirstPersonExampleMap", "1234-asdf-5678-hjkl");
-	return FReply::Handled();
-}
-
-void FCognitiveToolsCustomization::SaveSceneData(FString sceneName, FString sceneKey)
-{
-	FString keyValue = sceneName + "," + sceneKey;
-	UE_LOG(LogTemp, Warning, TEXT("Upload complete! Add this into the SceneData array in Project Settings:      %s"),*keyValue);
-
-
-	//TODO why can't i save to an ini file that automatically gets included in a build? why is that so hard?
-	return;
-
-	//FString keyValue = sceneName + "," + sceneKey;
-
-	GConfig->Flush(true, "DefaultEngineIni");
-	TArray<FString> scenePairs;
-
-	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, "DefaultEngineIni");
-
-	bool didSetKey = false;
-	for (int32 i = 0; i < scenePairs.Num(); i++)
-	{
-		FString name;
-		FString key;
-		scenePairs[i].Split(TEXT(","), &name, &key);
-		if (*name == sceneName)
-		{
-			scenePairs[i] = keyValue;
-			didSetKey = true;
-			GLog->Log("FCognitiveToolsCustomization::SaveSceneData - found and replace key for scene " + name + " new value " + keyValue);
-			break;
-		}
-	}
-	if (!didSetKey)
-	{
-		scenePairs.Add(keyValue);
-		GLog->Log("FCognitiveToolsCustomization::SaveSceneData - added new scene value and key for " + sceneName);
-	}
-
-	//remove scene names that don't have keys!
-	for (int32 i = scenePairs.Num()-1; i >= 0; i--)
-	{
-		FString name;
-		FString key;
-		if (!scenePairs[i].Split(TEXT(","), &name, &key))
-		{
-			scenePairs.RemoveAt(i);
-		}
-	}
-
-	GConfig->SetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, "DefaultEngineIni");
-
-	GConfig->Flush(false, "DefaultEngineIni");
-	//GConfig->UnloadFile(GEngineIni);
-	//GConfig->LoadFile(GEngineIni);
-}
-
 //https://answers.unrealengine.com/questions/212791/how-to-get-file-list-in-a-directory.html
 /**
 Gets all the files in a given directory.
@@ -1840,7 +1595,7 @@ Gets all the files in a given directory.
 @param onlyFilesEndingWith Will only return filenames ending with this string (it looks at the extension as well!). Also applies onlyFilesStartingWith if specified.
 @return A list of files (including the extension).
 */
-TArray<FString> FCognitiveToolsCustomization::GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension)
+TArray<FString> FCognitiveTools::GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension)
 {
 	// Get all files in directory
 	TArray<FString> directoriesToSkip;
@@ -1888,47 +1643,47 @@ TArray<FString> FCognitiveToolsCustomization::GetAllFilesInDirectory(const FStri
 	return files;
 }
 
-bool FCognitiveToolsCustomization::HasFoundBlender() const
+bool FCognitiveTools::HasFoundBlender() const
 {
-	return FCognitiveToolsCustomization::GetBlenderPath().ToString().Contains("blender.exe");
+	return FCognitiveTools::GetBlenderPath().ToString().Contains("blender.exe");
 }
 
-bool FCognitiveToolsCustomization::HasFoundBlenderAndExportDir() const
+bool FCognitiveTools::HasFoundBlenderAndExportDir() const
 {
-	return FCognitiveToolsCustomization::GetBlenderPath().ToString().Contains("blender.exe") && !FCognitiveToolsCustomization::GetExportDirectory().EqualTo(FText::FromString(""));
+	return FCognitiveTools::GetBlenderPath().ToString().Contains("blender.exe") && !FCognitiveTools::GetExportDirectory().EqualTo(FText::FromString(""));
 }
 
-bool FCognitiveToolsCustomization::HasFoundBlenderAndDynamicExportDir() const
+bool FCognitiveTools::HasFoundBlenderAndDynamicExportDir() const
 {
-	return FCognitiveToolsCustomization::GetBlenderPath().ToString().Contains("blender.exe") && !FCognitiveToolsCustomization::GetDynamicExportDirectory().EqualTo(FText::FromString(""));
+	return FCognitiveTools::GetBlenderPath().ToString().Contains("blender.exe") && !FCognitiveTools::GetDynamicExportDirectory().EqualTo(FText::FromString(""));
 }
 
-bool FCognitiveToolsCustomization::HasSetExportDirectory() const
+bool FCognitiveTools::HasSetExportDirectory() const
 {
-	return !FCognitiveToolsCustomization::GetExportDirectory().EqualTo(FText::FromString(""));
+	return !FCognitiveTools::GetExportDirectory().EqualTo(FText::FromString(""));
 }
 
-bool FCognitiveToolsCustomization::HasSetDynamicExportDirectory() const
+bool FCognitiveTools::HasSetDynamicExportDirectory() const
 {
-	return !FCognitiveToolsCustomization::GetDynamicExportDirectory().EqualTo(FText::FromString(""));
+	return !FCognitiveTools::GetDynamicExportDirectory().EqualTo(FText::FromString(""));
 }
 
-FText FCognitiveToolsCustomization::GetBlenderPath() const
+FText FCognitiveTools::GetBlenderPath() const
 {
 	return FText::FromString(BlenderPath);
 }
 
-FText FCognitiveToolsCustomization::GetExportDirectory() const
+FText FCognitiveTools::GetExportDirectory() const
 {
 	return FText::FromString(ExportDirectory);
 }
 
-FText FCognitiveToolsCustomization::GetDynamicExportDirectory() const
+FText FCognitiveTools::GetDynamicExportDirectory() const
 {
 	return FText::FromString(ExportDynamicsDirectory);
 }
 
-void FCognitiveToolsCustomization::SearchForBlender()
+void FCognitiveTools::SearchForBlender()
 {
 	//try to find blender in program files
 	FString testApp = "C:/Program Files/Blender Foundation/Blender/blender.exe";
@@ -1940,12 +1695,12 @@ void FCognitiveToolsCustomization::SearchForBlender()
 	}
 }
 
-TSharedRef<IDetailCustomization> FCognitiveToolsCustomization::MakeInstance()
+TSharedRef<IDetailCustomization> FCognitiveTools::MakeInstance()
 {
-	return MakeShareable(new FCognitiveToolsCustomization);
+	return MakeShareable(new FCognitiveTools);
 }
 
-FReply FCognitiveToolsCustomization::ExecuteToolCommand(IDetailLayoutBuilder* DetailBuilder, UFunction* MethodToExecute)
+FReply FCognitiveTools::ExecuteToolCommand(IDetailLayoutBuilder* DetailBuilder, UFunction* MethodToExecute)
 {
 	TArray<TWeakObjectPtr<UObject>> ObjectsBeingCustomized;
 	DetailBuilder->GetObjectsBeingCustomized(ObjectsBeingCustomized);

@@ -469,16 +469,9 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 
 void UDynamicObject::SendData()
 {
-	UWorld* myworld = GWorld;
-	if (myworld == NULL)
-	{
-		snapshots.Empty();
-		return;
-	}
-
-	FString currentSceneName = myworld->GetMapName();
-	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
-	UDynamicObject::SendData(currentSceneName);
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	TSharedPtr<FSceneData> currentscenedata = cog->GetCurrentSceneData();
+	SendData(currentscenedata->Name);
 }
 
 //TODO only combine 64 entries, prioritizing the manifest
@@ -522,7 +515,14 @@ void UDynamicObject::SendData(FString sceneName)
 	FString OutputString;
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-	cog->SendJson("dynamics", OutputString);
+	//cog->SendJson("dynamics", OutputString);
+	//FString sceneid = cog->GetCurrentSceneId();
+	
+	auto scenedata = cog->GetSceneData(sceneName);
+	if (scenedata.IsValid())
+	{
+		cog->SendJson(Config::PostDynamicData(scenedata->Id, scenedata->VersionNumber), OutputString);
+	}
 
 	snapshots.Empty();
 }
