@@ -183,7 +183,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 		[
 			SNew(SCheckBox)
 			//.Style(FCoreStyle::Get(), "RadioButton")
-			.IsEnabled(this, &FCognitiveTools::HasSelectedValidProduct)
+			.IsEnabled(this, &FCognitiveTools::HasLoadedOrSelectedValidProduct)
 			.IsChecked(this, &FCognitiveTools::HandleRadioButtonIsChecked, EReleaseType::Test)
 			.OnCheckStateChanged(this, &FCognitiveTools::HandleRadioButtonCheckStateChanged, EReleaseType::Test)
 			[
@@ -197,7 +197,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 		[
 			SNew(SCheckBox)
 			//.Style(FCoreStyle::Get(), "RadioButton")
-			.IsEnabled(this, &FCognitiveTools::HasSelectedValidProduct)
+			.IsEnabled(this, &FCognitiveTools::HasLoadedOrSelectedValidProduct)
 			.IsChecked(this, &FCognitiveTools::HandleRadioButtonIsChecked, EReleaseType::Production)
 			.OnCheckStateChanged(this, &FCognitiveTools::HandleRadioButtonCheckStateChanged, EReleaseType::Production)
 			[
@@ -242,7 +242,8 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			+ SHorizontalBox::Slot()
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString("must restart unreal to refresh ini files"))
+				.ColorAndOpacity(FLinearColor::Yellow)
+				.Text(FText::FromString("You must restart Unreal Editor to see changes in your config files here!"))
 			]
 		];
 
@@ -305,13 +306,14 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 		SNew(SButton)
 		.IsEnabled(true)
 		.Text(FText::FromString("Get Latest Scene Version Data"))
+		.ToolTip(SNew(SToolTip).Text(LOCTEXT("get scene data tip", "This will get the latest scene version data from Scene Explorer and saves it to your config files. Must restart Unreal Editor to see the changes in your config files here")))
 		.OnClicked(this, &FCognitiveTools::DebugRefreshCurrentScene)
 	];
 
 
-	IDetailCategoryBuilder& Workflow = DetailBuilder.EditCategory(TEXT("Scene Upload Workflow"));
+	IDetailCategoryBuilder& SceneWorkflow = DetailBuilder.EditCategory(TEXT("Scene Upload Workflow"));
 
-	Workflow.AddCustomRow(FText::FromString("Commands"))
+	SceneWorkflow.AddCustomRow(FText::FromString("Commands"))
 	//.ValueContent()
 	//.MinDesiredWidth(896)
 	[
@@ -499,6 +501,8 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				SNew(SButton)
 				.IsEnabled(this, &FCognitiveTools::HasConvertedFilesInDirectory)
 				.Text(FText::FromString("Upload Scene"))
+				//.ToolTip(TEXT("Make sure you have settings.json and no .bmp files in your export directory"))
+				.ToolTip(SNew(SToolTip).Text(LOCTEXT("export tip", "Make sure you have settings.json and no .bmp files in your export directory")))
 				.OnClicked(this, &FCognitiveTools::UploadScene)
 			]
 		]
@@ -518,127 +522,164 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			[
 				SNew(SButton)
 				.IsEnabled(this, &FCognitiveTools::CurrentSceneHasSceneId)
-				.Text(FText::FromString("Open in Browser..."))
+				.Text(FText::FromString("Open Current Scene in Browser..."))
 				.OnClicked(this, &FCognitiveTools::OpenCurrentSceneInBrowser)
 			]
 		]
 	];
 
-	// Create a commands category
-	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(TEXT("Scene Commands"));
 
-	FText p = GetBlenderPath();
-	if (p.EqualTo(FText::FromString("")) && !HasSearchedForBlender)
-	{
-		HasSearchedForBlender = true;
-		SearchForBlender();
-	}
+	IDetailCategoryBuilder& DynamicWorkflow = DetailBuilder.EditCategory(TEXT("Dynamic Upload Workflow"));
 
-	// Create a commands category
-	IDetailCategoryBuilder& DynamicsCategory = DetailBuilder.EditCategory(TEXT("Dynamic Object Commands"));
-
-	//export all dynamics
-	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
-			.Text(FText::FromString("Export All Dynamic Objects"))
-			.OnClicked(this, &FCognitiveTools::ExportDynamics)
-		];
-
-	//export selected dynamics
-	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
-			.Text(FText::FromString("Export Selected Dynamic Objects"))
-			.OnClicked(this, &FCognitiveTools::ExportSelectedDynamics)
-		];
-
-	//select dynamic export directory
-	DynamicsCategory.AddCustomRow(FText::FromString("Select Dynamic Directory"))
-		.ValueContent()
-		.HAlign(HAlign_Fill)
+	DynamicWorkflow.AddCustomRow(FText::FromString("Commands"))
+		//.ValueContent()
+		//.MinDesiredWidth(896)
 		[
 			SNew(SHorizontalBox)
-			//button
 			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Left)
-			.Padding(FMargin(0.0f, 0.0f, 30.0f, 0.0f))
+			.Padding(4.0f, 0.0f)
 			[
-				SNew(SButton)
-				.IsEnabled(true)
-				.Text(FText::FromString("Select Dynamic Directory"))
-				.OnClicked(this, &FCognitiveTools::SelectDynamicsDirectory)
-			]
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				.Padding(0, 0, 0, 4)
+				.HAlign(EHorizontalAlignment::HAlign_Center)
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("Scene Settings"))
+				]
+				+ SVerticalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("this many dynamics: 0"))
+				]
+				+ SVerticalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("warning some duplicate ids"))
+				]
 
+				+ SVerticalBox::Slot()
+				[
+					SNew(SButton)
+					.IsEnabled(true)
+					.Text(FText::FromString("Set Unique Dynamic Ids"))
+					.OnClicked(this, &FCognitiveTools::SetUniqueDynamicIds)
+				]
+			]
 			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Right)
-			.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+			.Padding(4.0f, 0.0f)
 			[
-				SNew(STextBlock)
-				.Text(this, &FCognitiveTools::GetDynamicExportDirectory)
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				.Padding(0, 0, 0, 4)
+				.HAlign(EHorizontalAlignment::HAlign_Center)
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("Export"))
+				]
+				+ SVerticalBox::Slot()
+				[
+					SNew(SButton)
+					.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
+					.Text(FText::FromString("Export Selected Dynamic Objects"))
+					.OnClicked(this, &FCognitiveTools::ExportSelectedDynamics)
+				]
+				+ SVerticalBox::Slot()
+				[
+					SNew(SButton)
+					.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
+					.Text(FText::FromString("Export All Dynamic Objects"))
+					.OnClicked(this, &FCognitiveTools::ExportDynamics)
+				]
 			]
-		];
-
-	//upload dynamics
-	DynamicsCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(this, &FCognitiveTools::HasSetDynamicExportDirectory)
-			.Text(FText::FromString("Upload Dynamic Objects"))
-			.OnClicked(this, &FCognitiveTools::UploadDynamics)
-		];
-
-	IDetailCategoryBuilder& DynamicsManifestCategory = DetailBuilder.EditCategory(TEXT("Dynamic Object Manifest"));
-
-	//upload dynamics
-	DynamicsManifestCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(true)
-			.Text(FText::FromString("Set Unique Dynamic Ids"))
-			.OnClicked(this, &FCognitiveTools::SetUniqueDynamicIds)
-		];
-	
-	//upload dynamics manifest for aggregation
-	DynamicsManifestCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(true)
-			.Text(FText::FromString("Upload Dynamic Manifest"))
-			.OnClicked(this, &FCognitiveTools::UploadDynamicsManifest)
-		];
-
-	//upload dynamics manifest for aggregation
-	DynamicsManifestCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(true)
-			.Text(FText::FromString("Get Dynamic Manifest"))
-			.OnClicked(this, &FCognitiveTools::GetDynamicsManifest)
-		];
-
-	DynamicsManifestCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.MinDesiredWidth(256)
-		[
-			SNew(SButton)
-			.IsEnabled(true)
-			.Text(FText::FromString("DEBUG SEND SCENE DATA"))
-			.OnClicked(this, &FCognitiveTools::DebugSendSceneData)
+			+ SHorizontalBox::Slot()
+			.Padding(4.0f, 0.0f)
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				.Padding(0, 0, 0, 4)
+				.HAlign(EHorizontalAlignment::HAlign_Center)
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("Organize Meshes"))
+				]
+				+ SVerticalBox::Slot()
+				[
+					SNew(SButton)
+					.IsEnabled(true)
+					.Text(FText::FromString("Select Dynamic Directory"))
+					.OnClicked(this, &FCognitiveTools::SelectDynamicsDirectory)
+				]
+				+ SVerticalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Text(this, &FCognitiveTools::GetDynamicExportDirectory)
+				]
+			]
+			+ SHorizontalBox::Slot()
+			.Padding(4.0f, 0.0f)
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				.Padding(0, 0, 0, 4)
+				.HAlign(EHorizontalAlignment::HAlign_Center)
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("Upload"))
+				]
+				+ SVerticalBox::Slot()
+				[
+					SNew(SButton)
+					.IsEnabled(this, &FCognitiveTools::HasSetDynamicExportDirectory)
+					.Text(FText::FromString("Upload Dynamic Objects"))
+					.OnClicked(this, &FCognitiveTools::UploadDynamics)
+				]
+			]
+			+ SHorizontalBox::Slot()
+			.Padding(4.0f, 0.0f)
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				.Padding(0, 0, 0, 4)
+				.HAlign(EHorizontalAlignment::HAlign_Center)
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("Scene Explorer"))
+				]
+				+ SVerticalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("list of dynamic objects on SE"))
+				]
+				+ SVerticalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("total number of objects on SE"))
+				]
+				+ SVerticalBox::Slot()
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					[
+						SNew(SButton)
+						.IsEnabled(true)
+						.Text(FText::FromString("Get Dynamics from SE"))
+						.OnClicked(this, &FCognitiveTools::GetDynamicsManifest)
+					]
+					+ SHorizontalBox::Slot()
+					[
+						SNew(SButton)
+						.IsEnabled(true)
+						.Text(FText::FromString("Post Dynamics to SE"))
+						.OnClicked(this, &FCognitiveTools::UploadDynamicsManifest)
+					]
+					/*+ SHorizontalBox::Slot()
+					[
+						SNew(SImage)
+						.Image(FCoreStyle::Get().GetBrush("Icons.Warning"))
+					]*/
+				]
+			]
 		];
 
 	FCognitiveTools::RefreshSceneData();
@@ -701,6 +742,11 @@ EVisibility FCognitiveTools::LoginTextboxUsable() const
 	return EVisibility::Visible;
 }
 
+FText FCognitiveTools::GetDynamicsFromManifest() const
+{
+	return FText::FromString("DYNAMICS");
+}
+
 FReply FCognitiveTools::LogOut()
 {
 	Email = "";
@@ -746,6 +792,15 @@ FString FCognitiveTools::GetCustomerIdFromFile() const
 	FString customerid;
 	GConfig->GetString(TEXT("Analytics"), TEXT("CognitiveVRApiKey"), customerid, GEngineIni);
 	return customerid;
+}
+
+bool FCognitiveTools::HasSavedCustomerId() const
+{
+	FString customerid = GetCustomerIdFromFile();
+	if (customerid.Len() == 0) { return false; }
+	if (customerid.EndsWith("-test")) { return true; }
+	if (customerid.EndsWith("-prod")) { return true; }
+	return false;
 }
 
 void FCognitiveTools::SaveOrganizationNameToFile(FString organization)
@@ -997,6 +1052,13 @@ bool FCognitiveTools::HasLoggedIn() const
 bool FCognitiveTools::HasSelectedValidProduct() const
 {
 	return SelectedProduct.customerId.Len() > 0;
+}
+
+bool FCognitiveTools::HasLoadedOrSelectedValidProduct() const
+{
+	if (SelectedProduct.customerId.Len() > 0) { return true; }
+	if (HasSavedCustomerId()) { return true; }
+	return false;
 }
 
 FCognitiveTools::EReleaseType FCognitiveTools::GetReleaseTypeFromFile()

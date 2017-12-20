@@ -174,6 +174,8 @@ private:
 	bool HasFoundBlenderAndDynamicExportDir() const;
 	bool HasSetDynamicExportDirectory() const;
 
+	int32 CountDynamicObjectsInScene() const;
+	bool DuplicateDynamicIdsInScene() const;
 
 	FText GetBlenderPath() const;
 
@@ -394,6 +396,7 @@ private:
 	FReply OpenCurrentSceneInBrowser();
 
 	bool HasSelectedValidProduct() const;
+	bool HasLoadedOrSelectedValidProduct() const;
 	bool HasLoggedIn() const;
 	EVisibility GetLoginButtonState() const;
 	EVisibility GetLogoutButtonState() const;
@@ -411,7 +414,10 @@ private:
 	TSharedPtr<FEditorSceneData> GetSceneData(FString scenename) const;
 	TSharedPtr<FEditorSceneData> GetCurrentSceneData() const;
 
+	//has json file and no bmp files in export directory
 	bool HasConvertedFilesInDirectory() const;
+	//returns true if customerid has been saved
+	bool HasSavedCustomerId() const;
 
 	void SceneVersionRequest(FEditorSceneData data);
 	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
@@ -420,6 +426,11 @@ private:
 	void OnLogInResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	FReply LogOut();
+
+
+
+	TSharedPtr<STextBlock> StatsTextBlock;
+	FText GetDynamicsFromManifest() const;
 };
 
 //used for uploading multiple dynamics at once

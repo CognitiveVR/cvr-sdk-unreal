@@ -1553,6 +1553,7 @@ void FCognitiveTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpRespo
 		if (responseNoQuotes.Len() > 0)
 		{
 			SaveSceneData(currentSceneName, responseNoQuotes);
+			RefreshSceneData();
 		}
 		else
 		{
@@ -1756,6 +1757,115 @@ FReply FCognitiveTools::ExecuteToolCommand(IDetailLayoutBuilder* DetailBuilder, 
 
 
 	return FReply::Handled();
+}
+
+int32 FCognitiveTools::CountDynamicObjectsInScene() const
+{
+	//loop thorugh all dynamics in the scene
+	TArray<UDynamicObject*> dynamics;
+
+	//make a list of all the used objectids
+
+	//TArray<FDynamicObjectId> usedIds;
+
+	//get all the dynamic objects in the scene
+	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AStaticMeshActor *Mesh = *ActorItr;
+
+		UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+		if (actorComponent == NULL)
+		{
+			continue;
+		}
+		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
+		if (dynamic == NULL)
+		{
+			continue;
+		}
+		dynamics.Add(dynamic);
+	}
+
+	return dynamics.Num();
+}
+
+bool FCognitiveTools::DuplicateDynamicIdsInScene() const
+{
+	//loop thorugh all dynamics in the scene
+	TArray<UDynamicObject*> dynamics;
+
+	//make a list of all the used objectids
+
+	TArray<FDynamicObjectId> usedIds;
+
+	//get all the dynamic objects in the scene
+	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AStaticMeshActor *Mesh = *ActorItr;
+
+		UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+		if (actorComponent == NULL)
+		{
+			continue;
+		}
+		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
+		if (dynamic == NULL)
+		{
+			continue;
+		}
+		dynamics.Add(dynamic);
+	}
+
+	//create objectids for each dynamic that's already set
+	/*for (auto& dynamic : dynamics)
+	{
+		FString finalMeshName = dynamic->MeshName;
+		if (!dynamic->UseCustomMeshName)
+		{
+			if (dynamic->CommonMeshName == ECommonMeshName::ViveController) { finalMeshName = "ViveController"; }
+			if (dynamic->CommonMeshName == ECommonMeshName::ViveTracker) { finalMeshName = "ViveTracker"; }
+			if (dynamic->CommonMeshName == ECommonMeshName::OculusTouchRight) { finalMeshName = "OculusTouchRight"; }
+			if (dynamic->CommonMeshName == ECommonMeshName::OculusTouchLeft) { finalMeshName = "OculusTouchLeft"; }
+		}
+	}*/
+
+	int32 currentUniqueId = 1;
+	int32 changedDynamics = 0;
+
+	//unassigned or invalid numbers
+	TArray<UDynamicObject*> UnassignedDynamics;
+
+	//try to put all ids back where they were
+	for (auto& dynamic : dynamics)
+	{
+		//id dynamic custom id is not in usedids - add it
+
+		int32 findId = dynamic->CustomId;
+
+		FDynamicObjectId* FoundId = usedIds.FindByPredicate([findId](const FDynamicObjectId& InItem)
+		{
+			return InItem.Id == findId;
+		});
+
+		if (FoundId == NULL)
+		{
+			usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
+		}
+		else
+		{
+			//assign a new and unused id
+			UnassignedDynamics.Add(dynamic);
+			break;
+		}
+	}
+
+	if (UnassignedDynamics.Num() > 0)
+	{
+		return true;
+	}
+	return false;
 }
 
 #undef LOCTEXT_NAMESPACE
