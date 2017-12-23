@@ -4,6 +4,10 @@
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
+static TArray<TSharedPtr<FDynamicData>> SceneDynamics;
+static TArray<TSharedPtr<FDynamicData>> SceneExplorerDynamics;
+static TArray<TSharedPtr<FString>> SubDirectoryNames;
+
 //deals with all the interface stuff in the editor preferences
 //includes any details needed to make the ui work
 
@@ -20,9 +24,9 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 
 	for (auto WeakObject : ObjectsBeingCustomized)
 	{
-		if (UObject* Instance = WeakObject.Get())
+		if (UObject* instance = WeakObject.Get())
 		{
-			Class = Instance->GetClass();
+			Class = instance->GetClass();
 			break;
 		}
 	}
@@ -254,6 +258,9 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 		SNew(SHorizontalBox)
 		+ SHorizontalBox::Slot()
 		[
+			SNew(SBox)
+			.MaxDesiredHeight(200)
+			[
 			SNew(SListView<TSharedPtr<FEditorSceneData>>)
 			.ItemHeight(24)
 			.ListItemsSource(&SceneData)
@@ -296,6 +303,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					.Text(FText::FromString("Scene Explorer"))
 				]
 			)
+			]
 		]
 	];
 
@@ -430,10 +438,14 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 
 			+SVerticalBox::Slot()
 			[
-				SNew(SButton)
-				.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
-				.Text(FText::FromString("Select Export Directory"))
-				.OnClicked(this, &FCognitiveTools::Select_Export_Directory)
+				SNew(SBox)
+				.HeightOverride(24)
+				[
+					SNew(SButton)
+					.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
+					.Text(FText::FromString("Select Export Directory"))
+					.OnClicked(this, &FCognitiveTools::Select_Export_Directory)
+				]
 			]
 			+ SVerticalBox::Slot()
 			[
@@ -443,10 +455,14 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 
 			+ SVerticalBox::Slot()
 			[
-				SNew(SButton)
-				.IsEnabled(this, &FCognitiveTools::HasSetExportDirectory)
-				.Text(FText::FromString("Export Transparent Textures"))
-				.OnClicked(this, &FCognitiveTools::List_Materials)
+				SNew(SBox)
+				.HeightOverride(24)
+				[
+					SNew(SButton)
+					.IsEnabled(this, &FCognitiveTools::HasSetExportDirectory)
+					.Text(FText::FromString("Export Transparent Textures"))
+					.OnClicked(this, &FCognitiveTools::List_Materials)
+				]
 			]
 
 
@@ -464,10 +480,14 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			]
 			+ SVerticalBox::Slot()
 			[
-				SNew(SButton)
-				.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
-				.Text(FText::FromString("Reduce Mesh Topology"))
-				.OnClicked(this, &FCognitiveTools::Reduce_Meshes)
+				SNew(SBox)
+				.HeightOverride(24)
+				[
+					SNew(SButton)
+					.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
+					.Text(FText::FromString("Reduce Mesh Topology"))
+					.OnClicked(this, &FCognitiveTools::Reduce_Meshes)
+				]
 			]
 
 			+ SVerticalBox::Slot()
@@ -478,10 +498,14 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			]
 			+ SVerticalBox::Slot()
 			[
-				SNew(SButton)
-				.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
-				.Text(FText::FromString("Convert Textures"))
-				.OnClicked(this, &FCognitiveTools::Reduce_Textures)
+				SNew(SBox)
+				.HeightOverride(24)
+				[
+					SNew(SButton)
+					.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
+					.Text(FText::FromString("Convert Textures"))
+					.OnClicked(this, &FCognitiveTools::Reduce_Textures)
+				]
 			]
 		]
 		+ SHorizontalBox::Slot()
@@ -531,6 +555,8 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 
 	IDetailCategoryBuilder& DynamicWorkflow = DetailBuilder.EditCategory(TEXT("Dynamic Upload Workflow"));
 
+	//TSharedPtr<SVerticalBox> DynamicsBox = SetDynamicBoxContent();
+
 	DynamicWorkflow.AddCustomRow(FText::FromString("Commands"))
 		//.ValueContent()
 		//.MinDesiredWidth(896)
@@ -541,55 +567,43 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			[
 				SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
-				.Padding(0, 0, 0, 4)
 				.HAlign(EHorizontalAlignment::HAlign_Center)
 				[
-					SNew(STextBlock)
-					.Text(FText::FromString("Scene Settings"))
+					SNew(SBox)
+					.HeightOverride(24)
+					[
+						SNew(STextBlock)
+						.Text(FText::FromString("Export"))
+					]
 				]
-				+ SVerticalBox::Slot()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("this many dynamics: 0"))
-				]
-				+ SVerticalBox::Slot()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("warning some duplicate ids"))
-				]
-
-				+ SVerticalBox::Slot()
-				[
-					SNew(SButton)
-					.IsEnabled(true)
-					.Text(FText::FromString("Set Unique Dynamic Ids"))
-					.OnClicked(this, &FCognitiveTools::SetUniqueDynamicIds)
-				]
-			]
-			+ SHorizontalBox::Slot()
-			.Padding(4.0f, 0.0f)
-			[
-				SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
 				.Padding(0, 0, 0, 4)
 				.HAlign(EHorizontalAlignment::HAlign_Center)
 				[
 					SNew(STextBlock)
-					.Text(FText::FromString("Export"))
+					.Text(FText::FromString("Important - select export as \"*.obj\"!"))
 				]
 				+ SVerticalBox::Slot()
 				[
-					SNew(SButton)
-					.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
-					.Text(FText::FromString("Export Selected Dynamic Objects"))
-					.OnClicked(this, &FCognitiveTools::ExportSelectedDynamics)
+					SNew(SBox)
+					.HeightOverride(24)
+					[
+						SNew(SButton)
+						.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
+						.Text(FText::FromString("Export Selected Dynamic Objects"))
+						.OnClicked(this, &FCognitiveTools::ExportSelectedDynamics)
+					]
 				]
 				+ SVerticalBox::Slot()
 				[
-					SNew(SButton)
-					.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
-					.Text(FText::FromString("Export All Dynamic Objects"))
-					.OnClicked(this, &FCognitiveTools::ExportDynamics)
+					SNew(SBox)
+					.HeightOverride(24)
+					[
+						SNew(SButton)
+						.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
+						.Text(FText::FromString("Export All Dynamic Object Meshes"))
+						.OnClicked(this, &FCognitiveTools::ExportDynamics)
+					]
 				]
 			]
 			+ SHorizontalBox::Slot()
@@ -607,13 +621,23 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				[
 					SNew(SButton)
 					.IsEnabled(true)
-					.Text(FText::FromString("Select Dynamic Directory"))
+					.Text(FText::FromString("Select Dynamic Mesh Directory"))
 					.OnClicked(this, &FCognitiveTools::SelectDynamicsDirectory)
 				]
 				+ SVerticalBox::Slot()
 				[
 					SNew(STextBlock)
 					.Text(this, &FCognitiveTools::GetDynamicExportDirectory)
+				]
+				+ SVerticalBox::Slot()
+				.FillHeight(2)
+				[
+					SNew(SBox)
+					.HeightOverride(200)
+					[
+						SAssignNew(SubDirectoryListWidget,SFStringListWidget)
+						.Items(GetSubDirectoryNames())
+					]
 				]
 			]
 			+ SHorizontalBox::Slot()
@@ -631,58 +655,135 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				[
 					SNew(SButton)
 					.IsEnabled(this, &FCognitiveTools::HasSetDynamicExportDirectory)
-					.Text(FText::FromString("Upload Dynamic Objects"))
+					.Text(this, &FCognitiveTools::GetDynamicObjectUploadText)
 					.OnClicked(this, &FCognitiveTools::UploadDynamics)
 				]
+			]
+		];
+
+
+	IDetailCategoryBuilder& DynamicManifestWorkflow = DetailBuilder.EditCategory(TEXT("Dynamic Objects"));
+
+	DynamicManifestWorkflow.AddCustomRow(FText::FromString("Commands"))
+		//.ValueContent()
+		//.MinDesiredWidth(896)
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				.MaxHeight(20)
+				.Padding(0, 0, 0, 4)
+				.HAlign(EHorizontalAlignment::HAlign_Center)
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("Dynamic Objects In Scene"))
+				]
+
+				/*+ SVerticalBox::Slot()
+				[
+					SAssignNew(SceneDynamicObjectList, SDynamicObjectListWidget).CognitiveTools(this)//.Items(SceneDynamics)
+				]*/
+				+ SVerticalBox::Slot()
+				.FillHeight(9)
+				[
+					SNew(SBox)
+					//.HeightOverride(900)
+					[
+						SNew(SDynamicObjectListWidget)
+						.CognitiveTools(this)
+						.Items(SceneDynamics)
+					]
+				]
+				+ SVerticalBox::Slot()
+				.MaxHeight(20)
+				[
+					SNew(STextBlock)
+					.Text(this,&FCognitiveTools::DisplayDynamicObjectsCountInScene)
+				]
+				+ SVerticalBox::Slot()
+				.MaxHeight(20)
+				[
+					SNew(STextBlock)
+					.ColorAndOpacity(FLinearColor::Yellow)
+					.Visibility(this,&FCognitiveTools::GetDuplicateDyanmicObjectVisibility)
+					.Text(FText::FromString("Scene contains some duplicate Dynamic Object Ids"))
+				]
+				+ SVerticalBox::Slot()
+				.MaxHeight(20)
+				[
+					SNew(SButton)
+					.IsEnabled(true)
+					.Text(FText::FromString("Set Unique Dynamic Ids"))
+					.OnClicked(this, &FCognitiveTools::SetUniqueDynamicIds)
+				]
+				/*+ SVerticalBox::Slot()
+				[
+					SNew(SButton)
+					.IsEnabled(true)
+					.Text(FText::FromString("Refresh"))
+					//.OnClicked(SceneDynamicObjectList->ButtonPressed)
+				]*/
 			]
 			+ SHorizontalBox::Slot()
 			.Padding(4.0f, 0.0f)
 			[
 				SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
+				.MaxHeight(20)
 				.Padding(0, 0, 0, 4)
 				.HAlign(EHorizontalAlignment::HAlign_Center)
 				[
 					SNew(STextBlock)
-					.Text(FText::FromString("Scene Explorer"))
+					.Text(FText::FromString("Dynamic Objects on SceneExplorer"))
+				]
+				/*+ SVerticalBox::Slot()
+				[
+					SNew(SDynamicObjectWebListWidget)
+					.CognitiveTools(this)
+					.Items(SceneExplorerDynamics)
+				]*/
+				+SVerticalBox::Slot()
+				.FillHeight(6)
+				[
+					SNew(SBox)
+					.HeightOverride(500)
+					[
+						SAssignNew(WebDynamicList,SDynamicObjectWebListWidget)
+					]
 				]
 				+ SVerticalBox::Slot()
+				.MaxHeight(20)
 				[
 					SNew(STextBlock)
-					.Text(FText::FromString("list of dynamic objects on SE"))
+					.Text(this, &FCognitiveTools::DisplayDynamicObjectsCountOnWeb)
 				]
 				+ SVerticalBox::Slot()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("total number of objects on SE"))
-				]
-				+ SVerticalBox::Slot()
+				.MaxHeight(20)
 				[
 					SNew(SHorizontalBox)
 					+ SHorizontalBox::Slot()
 					[
 						SNew(SButton)
 						.IsEnabled(true)
-						.Text(FText::FromString("Get Dynamics from SE"))
+						.Text(FText::FromString("Get Dynamics List from SceneExplorer"))
 						.OnClicked(this, &FCognitiveTools::GetDynamicsManifest)
 					]
 					+ SHorizontalBox::Slot()
 					[
 						SNew(SButton)
 						.IsEnabled(true)
-						.Text(FText::FromString("Post Dynamics to SE"))
+						.Text(FText::FromString("Send Dynamics List to SceneExplorer"))
 						.OnClicked(this, &FCognitiveTools::UploadDynamicsManifest)
 					]
-					/*+ SHorizontalBox::Slot()
-					[
-						SNew(SImage)
-						.Image(FCoreStyle::Get().GetBrush("Icons.Warning"))
-					]*/
 				]
 			]
 		];
 
+
 	FCognitiveTools::RefreshSceneData();
+	FCognitiveTools::RefreshDisplayDynamicObjectsCountInScene();
 }
 
 TSharedRef<ITableRow> FCognitiveTools::OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
@@ -730,6 +831,36 @@ TSharedRef<ITableRow> FCognitiveTools::OnGenerateWorkspaceRow(TSharedPtr<FEditor
 		];
 }
 
+TSharedRef<ITableRow> FCognitiveTools::OnGenerateDynamicRow(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
+{
+	return
+		SNew(SComboRow< TSharedPtr<FDynamicData> >, OwnerTable)
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			.FillWidth(1)
+			.Padding(2.0f)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(InItem->Name))
+			]
+			+ SHorizontalBox::Slot()
+			.FillWidth(1)
+			.Padding(2.0f)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(InItem->MeshName))
+			]
+			+ SHorizontalBox::Slot()
+			.FillWidth(0.3)
+			.Padding(2.0f)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(FString::FromInt(InItem->Id)))
+			]
+		];
+}
+
 bool FCognitiveTools::HasValidLogInFields() const
 {
 	return Email.Len() > 0 && Password.Len() > 0;
@@ -740,6 +871,17 @@ EVisibility FCognitiveTools::LoginTextboxUsable() const
 	if (HasLoggedIn())
 		return EVisibility::HitTestInvisible;
 	return EVisibility::Visible;
+}
+
+FText FCognitiveTools::GetDynamicObjectUploadText() const
+{
+	auto data = GetCurrentSceneData();
+	if (!data.IsValid())
+	{
+		return FText::FromString("scene data is invalid!");
+	}
+
+	return FText::FromString("Upload Dynamic Object Meshes to " + data->Name + " version " + FString::FromInt(data->VersionNumber));
 }
 
 FText FCognitiveTools::GetDynamicsFromManifest() const

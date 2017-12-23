@@ -2,7 +2,6 @@
 
 #include "CognitiveVREditorPrivatePCH.h"
 #include "CognitiveVRSettings.h"
-#include "SlateBasics.h"
 #include "IDetailCustomization.h"
 #include "PropertyEditing.h"
 //#include "DetailCustomizationsPrivatePCH.h"
@@ -10,6 +9,7 @@
 #include "Json.h"
 #include "SCheckBox.h"
 #include "STableRow.h"
+#include "SFStringListWidget.h"
 
 #include "UnrealEd.h"
 #include "Engine.h"
@@ -30,46 +30,14 @@
 #include "DynamicObject.h"
 #include "GenericPlatformFile.h"
 #include "STextComboBox.h"
+#include "SDynamicObjectListWidget.h"
+#include "SDynamicObjectWebListWidget.h"
 //
 //#include "ExportSceneTool.generated.h"
 
 //https://forums.unrealengine.com/unreal-engine/marketplace/125106-configbp-ini-configuration-files-the-easy-way?p=1385756#post1385756
 
 class UCognitiveVRSettings;
-
-class FOrganizationData
-{
-public:
-	FString id = "";
-	FString name = "";
-	FString prefix = "";
-};
-
-class FProductData
-{
-public:
-	FString id = "";
-	FString name = "";
-	FString orgId = "";
-	FString customerId = "";
-};
-
-class FEditorSceneData
-{
-public:
-	FString Name = "";
-	FString Id = "";
-	int32 VersionNumber = 1;
-	int32 VersionId = 0;
-
-	FEditorSceneData(FString name, FString id, int32 versionnumber, int32 versionid)
-	{
-		Name = name;
-		Id = id;
-		VersionNumber = versionnumber;
-		VersionId = versionid;
-	}
-};
 
 class FCognitiveTools : public IDetailCustomization
 {
@@ -87,6 +55,9 @@ public:
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
 
 	static TSharedRef<IDetailCustomization> MakeInstance();
+	//static TSharedRef<FCognitiveTools> Instance;
+	//static FCognitiveTools MyInstance;
+	//static TSharedRef<FCognitiveTools> MyInstanceRef;
 
 	static FReply ExecuteToolCommand(IDetailLayoutBuilder* DetailBuilder, UFunction* MethodToExecute);
 
@@ -176,6 +147,23 @@ private:
 
 	int32 CountDynamicObjectsInScene() const;
 	bool DuplicateDynamicIdsInScene() const;
+	FText DynamicCountInScene;
+	FText DisplayDynamicObjectsCountInScene() const;
+	FText DisplayDynamicObjectsCountOnWeb() const;
+	FText GetDynamicObjectUploadText() const;
+
+	FReply RefreshDisplayDynamicObjectsCountInScene();
+
+	EVisibility GetDuplicateDyanmicObjectVisibility() const;
+	EVisibility DuplicateDyanmicObjectVisibility = EVisibility::Hidden;
+
+	FText UploadDynamicsToSceneText;
+	FText GetUploadDynamicsToSceneText() const;
+	//FReply RefreshUploadDynamicsToSceneText();
+	void RefreshUploadDynamicsToSceneText();
+	TSharedPtr<SVerticalBox> SetDynamicBoxContent();
+
+	
 
 	FText GetBlenderPath() const;
 
@@ -378,7 +366,13 @@ private:
 	void FCognitiveTools::HandleRadioButtonCheckStateChanged(ECheckBoxState NewRadioState, EReleaseType RadioThatChanged);
 
 	TArray<TSharedPtr<FEditorSceneData>> SceneData;
+	//returns SceneData array
 	TArray<TSharedPtr<FEditorSceneData>> GetSceneData() const;
+
+public:
+	//gets all the dynamics in the scene and saves them to SceneDynamics
+	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
+private:
 
 	TSharedRef<ITableRow> OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
 
@@ -411,7 +405,9 @@ private:
 	FReply RefreshSceneData();
 	FReply DebugRefreshCurrentScene();
 	
+	//returns data about a scene by name
 	TSharedPtr<FEditorSceneData> GetSceneData(FString scenename) const;
+	//returns data about a scene by the currently open scene
 	TSharedPtr<FEditorSceneData> GetCurrentSceneData() const;
 
 	//has json file and no bmp files in export directory
@@ -428,9 +424,20 @@ private:
 	FReply LogOut();
 
 
+	TSharedRef<ITableRow> OnGenerateDynamicRow(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
+
 
 	TSharedPtr<STextBlock> StatsTextBlock;
 	FText GetDynamicsFromManifest() const;
+	//TArray<TSharedPtr<FDynamicData>> SceneExplorerDynamics;
+
+
+	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
+
+	TSharedPtr<SDynamicObjectWebListWidget> WebDynamicList;
+
+	TSharedPtr<SFStringListWidget> SubDirectoryListWidget;
+	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
 };
 
 //used for uploading multiple dynamics at once

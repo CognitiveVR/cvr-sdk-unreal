@@ -304,7 +304,7 @@ FReply FCognitiveTools::SetUniqueDynamicIds()
 			return InItem.Id == findId;
 		});
 
-		if (FoundId == NULL)
+		if (FoundId == NULL && dynamic->CustomId > 0)
 		{
 			usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
 		}
@@ -341,6 +341,8 @@ FReply FCognitiveTools::SetUniqueDynamicIds()
 
 	GWorld->MarkPackageDirty();
 	//save the scene? mark the scene as changed?
+
+	RefreshDisplayDynamicObjectsCountInScene();
 
 	return FReply::Handled();
 }
@@ -539,7 +541,34 @@ void FCognitiveTools::OnDynamicManifestResponse(FHttpRequestPtr Request, FHttpRe
 	{
 		GLog->Log("CognitiveTools::OnDynamicManifestResponse content: " + Response->GetContentAsString());
 
-		//TODO save this in memory. display changes and objects known to SE in a panel
+		SceneExplorerDynamics.Empty();
+
+		//do json stuff to this
+
+		TSharedPtr<FJsonValue> JsonDynamics;
+
+		TSharedRef<TJsonReader<>>Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
+		if (FJsonSerializer::Deserialize(Reader, JsonDynamics))
+		{
+			int32 count = JsonDynamics->AsArray().Num();
+			GLog->Log("found array with this many entries " + FString::FromInt(count));
+			for (int i = 0; i < count; i++)
+			{
+				TSharedPtr<FJsonObject> jsonobject = JsonDynamics->AsArray()[i]->AsObject();
+				FString name = jsonobject->GetStringField("name");
+				FString meshname = jsonobject->GetStringField("meshName");
+				int32 id = FCString::Atoi(*jsonobject->GetStringField("sdkId"));
+
+				GLog->Log("add dynamic with id " + jsonobject->GetStringField("sdkId"));
+
+				SceneExplorerDynamics.Add(MakeShareable(new FDynamicData(name, meshname, id)));
+			}
+		}
+		if (WebDynamicList.IsValid())
+		{
+			GLog->Log("Refresh web dynamic list");
+			WebDynamicList->ButtonPressed();
+		}
 	}
 }
 
@@ -625,6 +654,51 @@ FReply FCognitiveTools::UploadDynamics()
 	}
 
 	return FReply::Handled();
+}
+
+TArray<TSharedPtr<FString>> FCognitiveTools::GetSubDirectoryNames()
+{
+	TArray<TSharedPtr<FString>> subdirectoryNames;
+
+	// Get all files in directory
+	TArray<FString> directoriesToSkip;
+	IPlatformFile &PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+	TArray<FString> DirectoriesToSkip;
+	TArray<FString> DirectoriesToNotRecurse;
+
+	// use the timestamp grabbing visitor (include directories)
+	FLocalTimestampDirectoryVisitor Visitor(PlatformFile, DirectoriesToSkip, DirectoriesToNotRecurse, true);
+	Visitor.Visit(*ExportDynamicsDirectory, true);
+
+	//GLog->Log("FCognitiveTools::GetSubDirectoryNames found this many files " + Visitor.FileTimes.Num());
+	
+	//no matches anywhere
+	//CognitiveLog::Warning("UPlayerTracker::GetSceneKey ------- no matches in ini");
+
+	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
+	{
+		const FString filePath = TimestampIt.Key();
+		const FString fileName = FPaths::GetCleanFilename(filePath);
+
+		if (ExportDynamicsDirectory == filePath)
+		{
+			GLog->Log("root found " + filePath);
+		}
+		else if (FPaths::DirectoryExists(filePath))
+		{
+			GLog->Log("directory found " + filePath);
+			//FString url = PostDynamicObjectMeshData(currentSceneData->Id, currentSceneData->VersionNumber, fileName);
+			//UploadFromDirectory(url, filePath, "object");
+			subdirectoryNames.Add(MakeShareable(new FString(fileName)));
+		}
+		else
+		{
+			//GLog->Log("file found " + filePath);
+		}
+	}
+	SubDirectoryNames = subdirectoryNames;
+	return subdirectoryNames;
 }
 
 void FCognitiveTools::ReexportDynamicMeshes(FString directory)
@@ -920,6 +994,7 @@ FReply FCognitiveTools::SelectDynamicsDirectory()
 		UE_LOG(LogTemp, Warning, TEXT("FCognitiveToolsCustomization::SelectDynamicsDirectory - picked a directory"));
 		ExportDynamicsDirectory = outFilename;
 	}
+	//SubDirectoryListWidget->ButtonPressed();
 	return FReply::Handled();
 }
 
@@ -1749,9 +1824,9 @@ FReply FCognitiveTools::ExecuteToolCommand(IDetailLayoutBuilder* DetailBuilder, 
 
 	for (auto WeakObject : ObjectsBeingCustomized)
 	{
-		if (UObject* Instance = WeakObject.Get())
+		if (UObject* instance = WeakObject.Get())
 		{
-			Instance->CallFunctionByNameWithArguments(*MethodToExecute->GetName(), *GLog, nullptr, true);
+			instance->CallFunctionByNameWithArguments(*MethodToExecute->GetName(), *GLog, nullptr, true);
 		}
 	}
 
@@ -1788,6 +1863,75 @@ int32 FCognitiveTools::CountDynamicObjectsInScene() const
 	}
 
 	return dynamics.Num();
+}
+
+FText FCognitiveTools::DisplayDynamicObjectsCountInScene() const
+{
+	return DynamicCountInScene;
+}
+
+FText FCognitiveTools::DisplayDynamicObjectsCountOnWeb() const
+{
+	FString outstring = "Found " + FString::FromInt(SceneExplorerDynamics.Num()) + " Dynamic Objects on SceneExplorer";
+	return FText::FromString(outstring);
+}
+
+FReply FCognitiveTools::RefreshDisplayDynamicObjectsCountInScene()
+{
+	DynamicCountInScene = FText::FromString("Found "+ FString::FromInt(CountDynamicObjectsInScene()) + " Dynamic Objects in scene");
+	DuplicateDyanmicObjectVisibility = EVisibility::Hidden;
+
+
+	SceneDynamics.Empty();
+	//get all the dynamic objects in the scene
+	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		AStaticMeshActor *Mesh = *ActorItr;
+
+		UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+		if (actorComponent == NULL)
+		{
+			continue;
+		}
+		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
+		if (dynamic == NULL)
+		{
+			continue;
+		}
+		SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, dynamic->CustomId)));
+		//dynamics.Add(dynamic);
+	}
+
+	if (DuplicateDynamicIdsInScene())
+	{
+		DuplicateDyanmicObjectVisibility = EVisibility::Visible;
+	}
+
+	return FReply::Handled();
+}
+
+EVisibility FCognitiveTools::GetDuplicateDyanmicObjectVisibility() const
+{
+	return DuplicateDyanmicObjectVisibility;
+}
+
+FText FCognitiveTools::GetUploadDynamicsToSceneText() const
+{
+	return UploadDynamicsToSceneText;
+}
+
+void FCognitiveTools::RefreshUploadDynamicsToSceneText()
+{
+	TSharedPtr<FEditorSceneData> currentScene = GetCurrentSceneData();
+	if (!currentScene.IsValid())
+	{
+		UploadDynamicsToSceneText = FText::FromString("current scene is not valid!");
+		return;
+	}
+
+	//UploadDynamicsToSceneText = FText::FromString("Upload " + "numberofdirectoriesinexportdirectory" + " dynamic object meshes to " + currentScene->Name + " version " + currentScene->VersionNumber + " on Scene Explorer");
+	UploadDynamicsToSceneText = FText::FromString("upload x dynamic objects to current scene version y on scene explorer");
 }
 
 bool FCognitiveTools::DuplicateDynamicIdsInScene() const
@@ -1849,7 +1993,7 @@ bool FCognitiveTools::DuplicateDynamicIdsInScene() const
 			return InItem.Id == findId;
 		});
 
-		if (FoundId == NULL)
+		if (FoundId == NULL && dynamic->CustomId > 0)
 		{
 			usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
 		}
