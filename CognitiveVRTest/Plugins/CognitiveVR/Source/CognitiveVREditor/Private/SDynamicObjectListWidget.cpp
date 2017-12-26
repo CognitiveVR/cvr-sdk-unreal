@@ -10,19 +10,11 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 		[
 			SNew(SVerticalBox)
 			+SVerticalBox::Slot()
-			//.FillHeight(1)
-			.MaxHeight(24)
-			[
-				SNew(SButton)
-				.Text(FText::FromString("Refresh"))
-				.OnClicked(this, &SDynamicObjectListWidget::ButtonPressed)
-			]
-			+SVerticalBox::Slot()
-			.FillHeight(8)
+			.FillHeight(1)
 			[
 				SAssignNew(ListViewWidget, SListView<TSharedPtr<FDynamicData>>)
 				.ItemHeight(24)
-				.ListItemsSource(&Items) //The Items array is the source of this listview
+				.ListItemsSource(&SceneDynamics) //The Items array is the source of this listview
 				.OnGenerateRow(this, &SDynamicObjectListWidget::OnGenerateRowForList)
 				.HeaderRow(
 					SNew(SHeaderRow)
@@ -51,7 +43,21 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 					]
 				)
 			]
+			/*+SVerticalBox::Slot()
+			//.FillHeight(1)
+			//.MaxHeight(24)
+			.AutoHeight()
+			[
+				SNew(SButton)
+				.Text(FText::FromString("Refresh"))
+				.OnClicked(this, &SDynamicObjectListWidget::ButtonPressed)
+			]*/
 		];
+}
+
+void SDynamicObjectListWidget::RefreshList()
+{
+	ListViewWidget->RequestListRefresh();
 }
 
 FReply SDynamicObjectListWidget::ButtonPressed()
@@ -62,7 +68,7 @@ FReply SDynamicObjectListWidget::ButtonPressed()
 	
 	//Items = FCognitiveTools::GetSceneDynamics();
 	
-	Items = SceneDynamics;
+	//Items = SceneDynamics;
 	ListViewWidget->RequestListRefresh();
 
 	//Update the listview
@@ -83,6 +89,7 @@ TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
 			.MaxWidth(16)
+			.AutoWidth()
 		//.HAlign(EHorizontalAlignment::HAlign_Center)
 		//.VAlign(EVerticalAlignment::VAlign_Center)
 			.Padding(2.0f)

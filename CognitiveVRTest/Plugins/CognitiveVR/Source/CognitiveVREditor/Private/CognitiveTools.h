@@ -435,8 +435,12 @@ private:
 	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
 
 	TSharedPtr<SDynamicObjectWebListWidget> WebDynamicList;
+	//TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
 
+	FText UploadSceneNameFiles() const;
+	FText OpenSceneNameInBrowser() const;
 	TSharedPtr<SFStringListWidget> SubDirectoryListWidget;
+	void FindAllSubDirectoryNames();
 	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
 };
 

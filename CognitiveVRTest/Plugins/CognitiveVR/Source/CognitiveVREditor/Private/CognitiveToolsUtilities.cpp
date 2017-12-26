@@ -344,6 +344,8 @@ FReply FCognitiveTools::SetUniqueDynamicIds()
 
 	RefreshDisplayDynamicObjectsCountInScene();
 
+	SceneDynamicObjectList->RefreshList();
+
 	return FReply::Handled();
 }
 
@@ -658,8 +660,11 @@ FReply FCognitiveTools::UploadDynamics()
 
 TArray<TSharedPtr<FString>> FCognitiveTools::GetSubDirectoryNames()
 {
-	TArray<TSharedPtr<FString>> subdirectoryNames;
+	return SubDirectoryNames;
+}
 
+void FCognitiveTools::FindAllSubDirectoryNames()
+{
 	// Get all files in directory
 	TArray<FString> directoriesToSkip;
 	IPlatformFile &PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
@@ -675,7 +680,7 @@ TArray<TSharedPtr<FString>> FCognitiveTools::GetSubDirectoryNames()
 	
 	//no matches anywhere
 	//CognitiveLog::Warning("UPlayerTracker::GetSceneKey ------- no matches in ini");
-
+	SubDirectoryNames.Empty();
 	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
 	{
 		const FString filePath = TimestampIt.Key();
@@ -687,18 +692,15 @@ TArray<TSharedPtr<FString>> FCognitiveTools::GetSubDirectoryNames()
 		}
 		else if (FPaths::DirectoryExists(filePath))
 		{
-			GLog->Log("directory found " + filePath);
 			//FString url = PostDynamicObjectMeshData(currentSceneData->Id, currentSceneData->VersionNumber, fileName);
 			//UploadFromDirectory(url, filePath, "object");
-			subdirectoryNames.Add(MakeShareable(new FString(fileName)));
+			SubDirectoryNames.Add(MakeShareable(new FString(fileName)));
 		}
 		else
 		{
 			//GLog->Log("file found " + filePath);
 		}
 	}
-	SubDirectoryNames = subdirectoryNames;
-	return subdirectoryNames;
 }
 
 void FCognitiveTools::ReexportDynamicMeshes(FString directory)
@@ -993,6 +995,8 @@ FReply FCognitiveTools::SelectDynamicsDirectory()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FCognitiveToolsCustomization::SelectDynamicsDirectory - picked a directory"));
 		ExportDynamicsDirectory = outFilename;
+		FindAllSubDirectoryNames();
+		SubDirectoryListWidget->RefreshList();
 	}
 	//SubDirectoryListWidget->ButtonPressed();
 	return FReply::Handled();
@@ -1880,7 +1884,7 @@ FReply FCognitiveTools::RefreshDisplayDynamicObjectsCountInScene()
 {
 	DynamicCountInScene = FText::FromString("Found "+ FString::FromInt(CountDynamicObjectsInScene()) + " Dynamic Objects in scene");
 	DuplicateDyanmicObjectVisibility = EVisibility::Hidden;
-
+	SceneDynamicObjectList->RefreshList();
 
 	SceneDynamics.Empty();
 	//get all the dynamic objects in the scene

@@ -34,6 +34,7 @@ public:
 
 	/* The actual UI list */
 	TSharedPtr< SListView< TSharedPtr<FString> > > ListViewWidget;
+	void RefreshList();
 
 	//virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyClippingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 };

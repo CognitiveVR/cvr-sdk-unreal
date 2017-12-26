@@ -9,16 +9,8 @@ void SDynamicObjectWebListWidget::Construct(const FArguments& Args)
 	ChildSlot
 		[
 			SNew(SVerticalBox)
-			/*+SVerticalBox::Slot()
-			.FillHeight(1)
-			.MaxHeight(24)
-			[
-				SNew(SButton)
-				.Text(FText::FromString("Refresh"))
-				.OnClicked(this, &SDynamicObjectListWidget::ButtonPressed)
-			]*/
 			+SVerticalBox::Slot()
-			.FillHeight(3)
+			.FillHeight(1)
 			[
 				SAssignNew(ListViewWidget, SListView<TSharedPtr<FDynamicData>>)
 				.ItemHeight(24)

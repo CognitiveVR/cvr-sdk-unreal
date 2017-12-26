@@ -9,22 +9,28 @@ void SFStringListWidget::Construct(const FArguments& Args)
 	ChildSlot
 		[
 			SNew(SVerticalBox)
-			+SVerticalBox::Slot()
+			/*+SVerticalBox::Slot()
+			.AutoHeight()
 			[
 				SNew(SBox)
-				.HeightOverride(24)
 				[
 					SNew(SButton)
 					.Text(FText::FromString("Refresh"))
 					.OnClicked(this, &SFStringListWidget::ButtonPressed)
 				]
+			]*/
+			+SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Sub Directories"))
 			]
 			+SVerticalBox::Slot()
 			//.FillHeight(2)
 			[
 				SAssignNew(ListViewWidget, SListView<TSharedPtr<FString>>)
 				.ItemHeight(24)
-				.ListItemsSource(&Items) //The Items array is the source of this listview
+				.ListItemsSource(&SubDirectoryNames) //The Items array is the source of this listview
 				.OnGenerateRow(this, &SFStringListWidget::OnGenerateRowForList)
 				/*.HeaderRow(
 					SNew(SHeaderRow)
@@ -56,6 +62,11 @@ void SFStringListWidget::Construct(const FArguments& Args)
 		];
 }
 
+void SFStringListWidget::RefreshList()
+{
+	ListViewWidget->RequestListRefresh();
+}
+
 TSharedRef<ITableRow> SFStringListWidget::OnGenerateRowForList(TSharedPtr<FString> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	return
@@ -77,7 +88,6 @@ FReply SFStringListWidget::ButtonPressed()
 	//Adds a new item to the array (do whatever you want with this)
 
 	Items = SubDirectoryNames;
-	Items.Add(MakeShareable(new FString("Hello 1")));
 
 	//Update the listview
 	ListViewWidget->RequestListRefresh();

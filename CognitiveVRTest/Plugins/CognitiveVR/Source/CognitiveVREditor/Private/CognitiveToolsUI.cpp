@@ -429,6 +429,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 		[
 			SNew(SVerticalBox)
 			+ SVerticalBox::Slot()
+			.AutoHeight()
 			.Padding(0, 0, 0, 4)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			[
@@ -437,9 +438,10 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			]
 
 			+SVerticalBox::Slot()
+			.AutoHeight()
 			[
 				SNew(SBox)
-				.HeightOverride(24)
+				//.HeightOverride(24)
 				[
 					SNew(SButton)
 					.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
@@ -448,15 +450,17 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				]
 			]
 			+ SVerticalBox::Slot()
+			.AutoHeight()
 			[
 				SNew(STextBlock)
 				.Text(this, &FCognitiveTools::GetExportDirectory)
 			]
 
 			+ SVerticalBox::Slot()
+			.AutoHeight()
 			[
 				SNew(SBox)
-				.HeightOverride(24)
+				//.HeightOverride(24)
 				[
 					SNew(SButton)
 					.IsEnabled(this, &FCognitiveTools::HasSetExportDirectory)
@@ -467,21 +471,24 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 
 
 			+ SVerticalBox::Slot()
+			.AutoHeight()
 			[
 				SNew(SProperty, MinPolygonProperty)
 				.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
 				.ShouldDisplayName(true)
 			]
 			+ SVerticalBox::Slot()
+			.AutoHeight()
 			[
 				SNew(SProperty, MaxPolygonProperty)
 				.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
 				.ShouldDisplayName(true)
 			]
 			+ SVerticalBox::Slot()
+			.AutoHeight()
 			[
 				SNew(SBox)
-				.HeightOverride(24)
+				//.HeightOverride(24)
 				[
 					SNew(SButton)
 					.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
@@ -491,15 +498,17 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			]
 
 			+ SVerticalBox::Slot()
+			.AutoHeight()
 			[
 				SNew(SProperty, TextureResizeProperty)
 				.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
 				.ShouldDisplayName(true)
 			]
 			+ SVerticalBox::Slot()
+			.AutoHeight()
 			[
 				SNew(SBox)
-				.HeightOverride(24)
+				//.HeightOverride(24)
 				[
 					SNew(SButton)
 					.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
@@ -524,7 +533,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			[
 				SNew(SButton)
 				.IsEnabled(this, &FCognitiveTools::HasConvertedFilesInDirectory)
-				.Text(FText::FromString("Upload Scene"))
+				.Text(this, &FCognitiveTools::UploadSceneNameFiles)
 				//.ToolTip(TEXT("Make sure you have settings.json and no .bmp files in your export directory"))
 				.ToolTip(SNew(SToolTip).Text(LOCTEXT("export tip", "Make sure you have settings.json and no .bmp files in your export directory")))
 				.OnClicked(this, &FCognitiveTools::UploadScene)
@@ -546,7 +555,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			[
 				SNew(SButton)
 				.IsEnabled(this, &FCognitiveTools::CurrentSceneHasSceneId)
-				.Text(FText::FromString("Open Current Scene in Browser..."))
+				.Text(this, &FCognitiveTools::OpenSceneNameInBrowser)
 				.OnClicked(this, &FCognitiveTools::OpenCurrentSceneInBrowser)
 			]
 		]
@@ -567,43 +576,37 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			[
 				SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
+				//.AutoHeight()
 				.HAlign(EHorizontalAlignment::HAlign_Center)
 				[
-					SNew(SBox)
-					.HeightOverride(24)
-					[
-						SNew(STextBlock)
-						.Text(FText::FromString("Export"))
-					]
+					SNew(STextBlock)
+					.Text(FText::FromString("Export"))
 				]
 				+ SVerticalBox::Slot()
-				.Padding(0, 0, 0, 4)
+				//.Padding(0, 0, 0, 4)
 				.HAlign(EHorizontalAlignment::HAlign_Center)
+				//.AutoHeight()
 				[
 					SNew(STextBlock)
 					.Text(FText::FromString("Important - select export as \"*.obj\"!"))
 				]
 				+ SVerticalBox::Slot()
+				.MaxHeight(32)
+				//.AutoHeight()
 				[
-					SNew(SBox)
-					.HeightOverride(24)
-					[
-						SNew(SButton)
-						.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
-						.Text(FText::FromString("Export Selected Dynamic Objects"))
-						.OnClicked(this, &FCognitiveTools::ExportSelectedDynamics)
-					]
+					SNew(SButton)
+					.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
+					.Text(FText::FromString("Export Selected Dynamic Objects"))
+					.OnClicked(this, &FCognitiveTools::ExportSelectedDynamics)
 				]
 				+ SVerticalBox::Slot()
+				.MaxHeight(32)
+				//.AutoHeight()
 				[
-					SNew(SBox)
-					.HeightOverride(24)
-					[
-						SNew(SButton)
-						.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
-						.Text(FText::FromString("Export All Dynamic Object Meshes"))
-						.OnClicked(this, &FCognitiveTools::ExportDynamics)
-					]
+					SNew(SButton)
+					.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
+					.Text(FText::FromString("Export All Dynamic Object Meshes"))
+					.OnClicked(this, &FCognitiveTools::ExportDynamics)
 				]
 			]
 			+ SHorizontalBox::Slot()
@@ -611,6 +614,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			[
 				SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
+				.AutoHeight()
 				.Padding(0, 0, 0, 4)
 				.HAlign(EHorizontalAlignment::HAlign_Center)
 				[
@@ -618,6 +622,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					.Text(FText::FromString("Organize Meshes"))
 				]
 				+ SVerticalBox::Slot()
+				.AutoHeight()
 				[
 					SNew(SButton)
 					.IsEnabled(true)
@@ -625,12 +630,13 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					.OnClicked(this, &FCognitiveTools::SelectDynamicsDirectory)
 				]
 				+ SVerticalBox::Slot()
+				.AutoHeight()
 				[
 					SNew(STextBlock)
 					.Text(this, &FCognitiveTools::GetDynamicExportDirectory)
 				]
 				+ SVerticalBox::Slot()
-				.FillHeight(2)
+				//.FillHeight(2)
 				[
 					SNew(SBox)
 					.HeightOverride(200)
@@ -652,6 +658,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					.Text(FText::FromString("Upload"))
 				]
 				+ SVerticalBox::Slot()
+				.MaxHeight(32)
 				[
 					SNew(SButton)
 					.IsEnabled(this, &FCognitiveTools::HasSetDynamicExportDirectory)
@@ -673,7 +680,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			[
 				SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
-				.MaxHeight(20)
+				.AutoHeight()
 				.Padding(0, 0, 0, 4)
 				.HAlign(EHorizontalAlignment::HAlign_Center)
 				[
@@ -686,24 +693,32 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					SAssignNew(SceneDynamicObjectList, SDynamicObjectListWidget).CognitiveTools(this)//.Items(SceneDynamics)
 				]*/
 				+ SVerticalBox::Slot()
-				.FillHeight(9)
+				.FillHeight(1)
 				[
 					SNew(SBox)
-					//.HeightOverride(900)
+					.HeightOverride(300)
 					[
-						SNew(SDynamicObjectListWidget)
+						SAssignNew(SceneDynamicObjectList,SDynamicObjectListWidget)
 						.CognitiveTools(this)
 						.Items(SceneDynamics)
 					]
 				]
+				+SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SButton)
+					.Text(FText::FromString("Refresh"))
+					.OnClicked(this, &FCognitiveTools::RefreshDisplayDynamicObjectsCountInScene)
+				]
+
 				+ SVerticalBox::Slot()
-				.MaxHeight(20)
+				.AutoHeight()
 				[
 					SNew(STextBlock)
 					.Text(this,&FCognitiveTools::DisplayDynamicObjectsCountInScene)
 				]
 				+ SVerticalBox::Slot()
-				.MaxHeight(20)
+				.AutoHeight()
 				[
 					SNew(STextBlock)
 					.ColorAndOpacity(FLinearColor::Yellow)
@@ -711,7 +726,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					.Text(FText::FromString("Scene contains some duplicate Dynamic Object Ids"))
 				]
 				+ SVerticalBox::Slot()
-				.MaxHeight(20)
+				.AutoHeight()
 				[
 					SNew(SButton)
 					.IsEnabled(true)
@@ -731,7 +746,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			[
 				SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
-				.MaxHeight(20)
+				.AutoHeight()
 				.Padding(0, 0, 0, 4)
 				.HAlign(EHorizontalAlignment::HAlign_Center)
 				[
@@ -745,22 +760,22 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					.Items(SceneExplorerDynamics)
 				]*/
 				+SVerticalBox::Slot()
-				.FillHeight(6)
+				.FillHeight(1)
 				[
 					SNew(SBox)
-					.HeightOverride(500)
+					.HeightOverride(300)
 					[
 						SAssignNew(WebDynamicList,SDynamicObjectWebListWidget)
 					]
 				]
 				+ SVerticalBox::Slot()
-				.MaxHeight(20)
+				.AutoHeight()
 				[
 					SNew(STextBlock)
 					.Text(this, &FCognitiveTools::DisplayDynamicObjectsCountOnWeb)
 				]
 				+ SVerticalBox::Slot()
-				.MaxHeight(20)
+				.AutoHeight()
 				[
 					SNew(SHorizontalBox)
 					+ SHorizontalBox::Slot()
@@ -866,6 +881,22 @@ bool FCognitiveTools::HasValidLogInFields() const
 	return Email.Len() > 0 && Password.Len() > 0;
 }
 
+FText FCognitiveTools::UploadSceneNameFiles() const
+{
+	auto currentscenedata = GetCurrentSceneData();
+	FString outstring = "Upload Files for " + currentscenedata->Name;
+
+	return FText::FromString(outstring);
+}
+
+FText FCognitiveTools::OpenSceneNameInBrowser() const
+{
+	auto currentscenedata = GetCurrentSceneData();
+	FString outstring = "Open " + currentscenedata->Name + " in Browser...";
+
+	return FText::FromString(outstring);
+}
+
 EVisibility FCognitiveTools::LoginTextboxUsable() const
 {
 	if (HasLoggedIn())
@@ -881,7 +912,7 @@ FText FCognitiveTools::GetDynamicObjectUploadText() const
 		return FText::FromString("scene data is invalid!");
 	}
 
-	return FText::FromString("Upload Dynamic Object Meshes to " + data->Name + " version " + FString::FromInt(data->VersionNumber));
+	return FText::FromString("Upload "+FString::FromInt(SubDirectoryNames.Num())+" Dynamic Object Meshes to " + data->Name + " version " + FString::FromInt(data->VersionNumber));
 }
 
 FText FCognitiveTools::GetDynamicsFromManifest() const
