@@ -3,9 +3,6 @@
 
 void SDynamicObjectWebListWidget::Construct(const FArguments& Args)
 {
-	//DelimiterImage = InArgs._DelimiterImage;
-	//Items = Args._DynamicData;
-
 	ChildSlot
 		[
 			SNew(SVerticalBox)
@@ -22,7 +19,6 @@ void SDynamicObjectWebListWidget::Construct(const FArguments& Args)
 					.FillWidth(1)
 					[
 						SNew(STextBlock)
-						//.MinDesiredWidth(256)
 						.Text(FText::FromString("Name"))
 					]
 
@@ -30,7 +26,6 @@ void SDynamicObjectWebListWidget::Construct(const FArguments& Args)
 					.FillWidth(1)
 					[
 						SNew(STextBlock)
-						//.MinDesiredWidth(256)
 						.Text(FText::FromString("MeshName"))
 					]
 
@@ -38,7 +33,6 @@ void SDynamicObjectWebListWidget::Construct(const FArguments& Args)
 					.FillWidth(0.3)
 					[
 						SNew(STextBlock)
-						//.MinDesiredWidth(512)
 						.Text(FText::FromString("Id"))
 					]
 				)
@@ -46,22 +40,10 @@ void SDynamicObjectWebListWidget::Construct(const FArguments& Args)
 		];
 }
 
-FReply SDynamicObjectWebListWidget::ButtonPressed()
-{
-	//Adds a new item to the array (do whatever you want with this)
-	//Items.Add(MakeShareable(new FString("Hello 1")));
-	//Items = CognitiveTools->GetSceneDynamics();
-	
-	//Items = FCognitiveTools::GetSceneDynamics();
-	
+void SDynamicObjectWebListWidget::RefreshList()
+{	
 	Items = SceneExplorerDynamics;
 	ListViewWidget->RequestListRefresh();
-
-	//Update the listview
-	//if (ListViewWidget.IsValid())
-		//ListViewWidget->RequestListRefresh();
-
-	return FReply::Handled();
 }
 
 

@@ -50,7 +50,6 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 		.HAlign(HAlign_Fill)
 		[
 			SNew(SHorizontalBox)
-				//button
 			+ SHorizontalBox::Slot()
 			.MaxWidth(96)
 			[
@@ -60,7 +59,6 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 
 			+ SHorizontalBox::Slot()
 			.MaxWidth(128)
-			//.Padding(4)
 			[
 				SNew(SEditableTextBox)
 				.MinDesiredWidth(128)
@@ -74,7 +72,6 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 		.HAlign(HAlign_Fill)
 		[
 			SNew(SHorizontalBox)
-			//button
 			+ SHorizontalBox::Slot()
 			.MaxWidth(96)
 			[
@@ -84,7 +81,6 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 
 			+ SHorizontalBox::Slot()
 			.MaxWidth(128)
-			//.Padding(4)
 			[
 				SNew(SEditableTextBox)
 				.IsPassword(true)
@@ -141,7 +137,6 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 
 		+ SHorizontalBox::Slot()
 		.MaxWidth(128)
-		//.Padding(4)
 		[
 			SNew(STextComboBox)
 			.OptionsSource(&AllOrgNames)
@@ -166,14 +161,11 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 
 		+ SHorizontalBox::Slot()
 		.MaxWidth(128)
-		//.Padding(4)
 		[
 			SNew(STextComboBox)
 			.IsEnabled(this,&FCognitiveTools::HasLoggedIn)
 			.OptionsSource(&AllProductNames)
-			//.ToolTip(SNew(SToolTip).Text(LOCTEXT("BaseColorFBXImportToolTip", "this is a tooltip")))
 			.OnSelectionChanged(this, &FCognitiveTools::OnProductChanged)
-			//.InitiallySelectedItem(GetProductNameFromFile())
 		]
 	];
 
@@ -186,7 +178,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 		.MaxWidth(128)
 		[
 			SNew(SCheckBox)
-			//.Style(FCoreStyle::Get(), "RadioButton")
+			.Style(FCoreStyle::Get(), "RadioButton")
 			.IsEnabled(this, &FCognitiveTools::HasLoadedOrSelectedValidProduct)
 			.IsChecked(this, &FCognitiveTools::HandleRadioButtonIsChecked, EReleaseType::Test)
 			.OnCheckStateChanged(this, &FCognitiveTools::HandleRadioButtonCheckStateChanged, EReleaseType::Test)
@@ -200,7 +192,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 		.MaxWidth(128)
 		[
 			SNew(SCheckBox)
-			//.Style(FCoreStyle::Get(), "RadioButton")
+			.Style(FCoreStyle::Get(), "RadioButton")
 			.IsEnabled(this, &FCognitiveTools::HasLoadedOrSelectedValidProduct)
 			.IsChecked(this, &FCognitiveTools::HandleRadioButtonIsChecked, EReleaseType::Production)
 			.OnCheckStateChanged(this, &FCognitiveTools::HandleRadioButtonCheckStateChanged, EReleaseType::Production)
@@ -238,26 +230,38 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 		.OnClicked(this, &FCognitiveTools::SaveCustomerIdToFile)
 	];
 
-	//refresh doens't usually reload anything. unclear how unreal can reload ini files
-
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			[
-				SNew(STextBlock)
-				.ColorAndOpacity(FLinearColor::Yellow)
-				.Text(FText::FromString("You must restart Unreal Editor to see changes in your config files here!"))
-			]
-		];
-
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-	//.ValueContent()
-	//.MinDesiredWidth(896)
+	IDetailCategoryBuilder& ExportedSceneData = DetailBuilder.EditCategory(TEXT("Exported Scene Data"));
+	
+	ExportedSceneData.AddCustomRow(FText::FromString("Commands"))
 	[
 		SNew(SHorizontalBox)
 		+ SHorizontalBox::Slot()
+		.HAlign(EHorizontalAlignment::HAlign_Center)
 		[
+			SNew(STextBlock)
+			.ColorAndOpacity(FLinearColor::Yellow)
+			.Text(FText::FromString("You must restart Unreal Editor to see updated scene data below!"))
+		]
+	];
+
+	ExportedSceneData.AddCustomRow(FText::FromString("Commands"))
+	[
+		SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.HAlign(EHorizontalAlignment::HAlign_Center)
+		[
+			SNew(SButton)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			.IsEnabled(this, &FCognitiveTools::HasEditorAuthToken)
+			.Text(FText::FromString("Get Latest Scene Version Data"))
+			.ToolTip(SNew(SToolTip).Text(LOCTEXT("get scene data tip", "This will get the latest scene version data from Scene Explorer and saves it to your config files. Must restart Unreal Editor to see the changes in your config files here")))
+			.OnClicked(this, &FCognitiveTools::DebugRefreshCurrentScene)
+		]
+	];
+
+	ExportedSceneData.AddCustomRow(FText::FromString("Commands"))
+	[
 			SNew(SBox)
 			.MaxDesiredHeight(200)
 			[
@@ -303,27 +307,12 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					.Text(FText::FromString("Scene Explorer"))
 				]
 			)
-			]
 		]
 	];
-
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-	.ValueContent()
-	.MinDesiredWidth(256)
-	[
-		SNew(SButton)
-		.IsEnabled(true)
-		.Text(FText::FromString("Get Latest Scene Version Data"))
-		.ToolTip(SNew(SToolTip).Text(LOCTEXT("get scene data tip", "This will get the latest scene version data from Scene Explorer and saves it to your config files. Must restart Unreal Editor to see the changes in your config files here")))
-		.OnClicked(this, &FCognitiveTools::DebugRefreshCurrentScene)
-	];
-
 
 	IDetailCategoryBuilder& SceneWorkflow = DetailBuilder.EditCategory(TEXT("Scene Upload Workflow"));
 
 	SceneWorkflow.AddCustomRow(FText::FromString("Commands"))
-	//.ValueContent()
-	//.MinDesiredWidth(896)
 	[
 		SNew(SHorizontalBox)
 		+ SHorizontalBox::Slot()
@@ -335,22 +324,27 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString("Export Settings"))
+				.Text(FText::FromString("1. Export Settings"))
 			]
 			+SVerticalBox::Slot()
 			.AutoHeight()
 			[
-				SNew(SButton)
-				.IsEnabled(true)
-				.Text(FText::FromString("Select Blender.exe"))
-				.OnClicked(this, &FCognitiveTools::Select_Blender)
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SCheckBox)
+					.IsEnabled(false)
+					.IsChecked(this, &FCognitiveTools::HasFoundBlenderCheckbox)
+				]
+				+SHorizontalBox::Slot()
+				[
+					SNew(SButton)
+					.IsEnabled(true)
+					.Text(FText::FromString("Select Blender.exe"))
+					.OnClicked(this, &FCognitiveTools::Select_Blender)
+				]
 			]
-			//TODO just a checkmark if blender path ends in blender.exe
-			/*+SVerticalBox::Slot()
-			[
-				SNew(STextBlock)
-				.Text(this, &FCognitiveTools::GetBlenderPath)
-			]*/
 			+ SVerticalBox::Slot()
 			[
 				SNew(SProperty, ExcludeMeshProperty)
@@ -396,7 +390,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString("Export"))
+				.Text(FText::FromString("2. Export"))
 			]
 
 			+ SVerticalBox::Slot()
@@ -404,7 +398,8 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString("Important - select export as \"*.obj\"!"))
+				.ColorAndOpacity(FLinearColor::Yellow)
+				.Text(FText::FromString("Important - Export as \"*.obj\"!"))
 			]
 
 			+ SVerticalBox::Slot()
@@ -434,14 +429,13 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString("Optimize Files"))
+				.Text(FText::FromString("3. Optimize Files"))
 			]
 
 			+SVerticalBox::Slot()
 			.AutoHeight()
 			[
 				SNew(SBox)
-				//.HeightOverride(24)
 				[
 					SNew(SButton)
 					.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
@@ -460,7 +454,6 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			.AutoHeight()
 			[
 				SNew(SBox)
-				//.HeightOverride(24)
 				[
 					SNew(SButton)
 					.IsEnabled(this, &FCognitiveTools::HasSetExportDirectory)
@@ -488,7 +481,6 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			.AutoHeight()
 			[
 				SNew(SBox)
-				//.HeightOverride(24)
 				[
 					SNew(SButton)
 					.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
@@ -508,7 +500,6 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			.AutoHeight()
 			[
 				SNew(SBox)
-				//.HeightOverride(24)
 				[
 					SNew(SButton)
 					.IsEnabled(this, &FCognitiveTools::HasFoundBlenderAndExportDir)
@@ -526,7 +517,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString("Upload"))
+				.Text(FText::FromString("4. Upload"))
 			]
 			+ SVerticalBox::Slot()
 			.MaxHeight(32)
@@ -534,9 +525,24 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				SNew(SButton)
 				.IsEnabled(this, &FCognitiveTools::HasConvertedFilesInDirectory)
 				.Text(this, &FCognitiveTools::UploadSceneNameFiles)
-				//.ToolTip(TEXT("Make sure you have settings.json and no .bmp files in your export directory"))
 				.ToolTip(SNew(SToolTip).Text(LOCTEXT("export tip", "Make sure you have settings.json and no .bmp files in your export directory")))
 				.OnClicked(this, &FCognitiveTools::UploadScene)
+			]
+			+ SVerticalBox::Slot()
+			.MaxHeight(32)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			.VAlign(EVerticalAlignment::VAlign_Center)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Press F9 to take a screenshot"))
+			]
+			+ SVerticalBox::Slot()
+			.MaxHeight(32)
+			[
+				SNew(SButton)
+				.IsEnabled(this, &FCognitiveTools::CurrentSceneHasSceneId)
+				.Text(FText::FromString("Upload Screenshot"))
+				.OnClicked(this, &FCognitiveTools::SelectUploadScreenshot)
 			]
 		]
 		+ SHorizontalBox::Slot()
@@ -548,7 +554,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString("Scene Explorer"))
+				.Text(FText::FromString("5. Scene Explorer"))
 			]
 			+ SVerticalBox::Slot()
 			.MaxHeight(32)
@@ -559,16 +565,13 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				.OnClicked(this, &FCognitiveTools::OpenCurrentSceneInBrowser)
 			]
 		]
+		
 	];
 
 
 	IDetailCategoryBuilder& DynamicWorkflow = DetailBuilder.EditCategory(TEXT("Dynamic Upload Workflow"));
 
-	//TSharedPtr<SVerticalBox> DynamicsBox = SetDynamicBoxContent();
-
 	DynamicWorkflow.AddCustomRow(FText::FromString("Commands"))
-		//.ValueContent()
-		//.MinDesiredWidth(896)
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
@@ -576,23 +579,20 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			[
 				SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
-				//.AutoHeight()
 				.HAlign(EHorizontalAlignment::HAlign_Center)
 				[
 					SNew(STextBlock)
-					.Text(FText::FromString("Export"))
+					.Text(FText::FromString("1. Export"))
 				]
 				+ SVerticalBox::Slot()
-				//.Padding(0, 0, 0, 4)
 				.HAlign(EHorizontalAlignment::HAlign_Center)
-				//.AutoHeight()
 				[
 					SNew(STextBlock)
-					.Text(FText::FromString("Important - select export as \"*.obj\"!"))
+					.ColorAndOpacity(FLinearColor::Yellow)
+					.Text(FText::FromString("Important - Export as \"*.obj\"!"))
 				]
 				+ SVerticalBox::Slot()
 				.MaxHeight(32)
-				//.AutoHeight()
 				[
 					SNew(SButton)
 					.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
@@ -601,7 +601,6 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				]
 				+ SVerticalBox::Slot()
 				.MaxHeight(32)
-				//.AutoHeight()
 				[
 					SNew(SButton)
 					.IsEnabled(this, &FCognitiveTools::HasFoundBlender)
@@ -619,7 +618,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				.HAlign(EHorizontalAlignment::HAlign_Center)
 				[
 					SNew(STextBlock)
-					.Text(FText::FromString("Organize Meshes"))
+					.Text(FText::FromString("2. Organize Meshes"))
 				]
 				+ SVerticalBox::Slot()
 				.AutoHeight()
@@ -636,7 +635,6 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					.Text(this, &FCognitiveTools::GetDynamicExportDirectory)
 				]
 				+ SVerticalBox::Slot()
-				//.FillHeight(2)
 				[
 					SNew(SBox)
 					.HeightOverride(200)
@@ -655,7 +653,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				.HAlign(EHorizontalAlignment::HAlign_Center)
 				[
 					SNew(STextBlock)
-					.Text(FText::FromString("Upload"))
+					.Text(FText::FromString("3. Upload"))
 				]
 				+ SVerticalBox::Slot()
 				.MaxHeight(32)
@@ -672,8 +670,6 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 	IDetailCategoryBuilder& DynamicManifestWorkflow = DetailBuilder.EditCategory(TEXT("Dynamic Objects"));
 
 	DynamicManifestWorkflow.AddCustomRow(FText::FromString("Commands"))
-		//.ValueContent()
-		//.MinDesiredWidth(896)
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
@@ -687,11 +683,6 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					SNew(STextBlock)
 					.Text(FText::FromString("Dynamic Objects In Scene"))
 				]
-
-				/*+ SVerticalBox::Slot()
-				[
-					SAssignNew(SceneDynamicObjectList, SDynamicObjectListWidget).CognitiveTools(this)//.Items(SceneDynamics)
-				]*/
 				+ SVerticalBox::Slot()
 				.FillHeight(1)
 				[
@@ -733,13 +724,6 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					.Text(FText::FromString("Set Unique Dynamic Ids"))
 					.OnClicked(this, &FCognitiveTools::SetUniqueDynamicIds)
 				]
-				/*+ SVerticalBox::Slot()
-				[
-					SNew(SButton)
-					.IsEnabled(true)
-					.Text(FText::FromString("Refresh"))
-					//.OnClicked(SceneDynamicObjectList->ButtonPressed)
-				]*/
 			]
 			+ SHorizontalBox::Slot()
 			.Padding(4.0f, 0.0f)
@@ -753,12 +737,6 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					SNew(STextBlock)
 					.Text(FText::FromString("Dynamic Objects on SceneExplorer"))
 				]
-				/*+ SVerticalBox::Slot()
-				[
-					SNew(SDynamicObjectWebListWidget)
-					.CognitiveTools(this)
-					.Items(SceneExplorerDynamics)
-				]*/
 				+SVerticalBox::Slot()
 				.FillHeight(1)
 				[
@@ -781,14 +759,16 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					+ SHorizontalBox::Slot()
 					[
 						SNew(SButton)
-						.IsEnabled(true)
+						.IsEnabled(this,&FCognitiveTools::HasEditorAuthToken)
+						.ToolTip(SNew(SToolTip).Text(this,&FCognitiveTools::GetDynamicsOnSceneExplorerTooltip))
 						.Text(FText::FromString("Get Dynamics List from SceneExplorer"))
 						.OnClicked(this, &FCognitiveTools::GetDynamicsManifest)
 					]
 					+ SHorizontalBox::Slot()
 					[
 						SNew(SButton)
-						.IsEnabled(true)
+						.IsEnabled(this, &FCognitiveTools::HasEditorAuthToken)
+						.ToolTip(SNew(SToolTip).Text(this, &FCognitiveTools::SendDynamicsToSceneExplorerTooltip))
 						.Text(FText::FromString("Send Dynamics List to SceneExplorer"))
 						.OnClicked(this, &FCognitiveTools::UploadDynamicsManifest)
 					]
@@ -923,9 +903,7 @@ FText FCognitiveTools::GetDynamicsFromManifest() const
 FReply FCognitiveTools::LogOut()
 {
 	Email = "";
-	//OnEmailChanged(TEXT(""));
 	Password = "";
-	//OnPasswordChanged(TEXT(""));
 
 	FAnalyticsCognitiveVR::Get().EditorAuthToken = "";
 	FAnalyticsCognitiveVR::Get().EditorSessionId = "";
@@ -1043,13 +1021,8 @@ FReply FCognitiveTools::RefreshSceneData()
 {
 	SceneData.Empty();
 
-	//GConfig->UnloadFile(GEngineIni);
-	//GConfig->LoadFile(GEngineIni);
-
 	TArray<FString>scenstrings;
 	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenstrings,GEngineIni);
-	
-	GLog->Log("GEngineIni is " + GEngineIni);
 
 	for (int i = 0; i < scenstrings.Num(); i++)
 	{
@@ -1065,7 +1038,7 @@ FReply FCognitiveTools::RefreshSceneData()
 
 		if (Array.Num() != 4)
 		{
-			GLog->Log("failed to parse " + scenstrings[i]);
+			GLog->Log("FCognitiveTools::RefreshSceneData failed to parse " + scenstrings[i]);
 			continue;
 		}
 
@@ -1073,7 +1046,7 @@ FReply FCognitiveTools::RefreshSceneData()
 		SceneData.Add(MakeShareable(tempscene));
 	}
 	
-	GLog->Log("FCognitiveToolsCustomization::RefreshSceneData found this many scenes: " + FString::FromInt(SceneData.Num()));
+	GLog->Log("FCognitiveTools::RefreshSceneData found this many scenes: " + FString::FromInt(SceneData.Num()));
 
 	return FReply::Handled();
 }
@@ -1090,8 +1063,7 @@ void FCognitiveTools::SceneVersionRequest(FEditorSceneData data)
 
 	HttpRequest->SetURL(GetSceneVersion(data.Id));
 
-	GLog->Log("url "+GetSceneVersion(data.Id));
-	GLog->Log("auth token " + FAnalyticsCognitiveVR::Get().EditorAuthToken);
+	GLog->Log("FCognitiveTools::SceneVersionRequest send scene version request");
 
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
 	HttpRequest->SetHeader("Authorization", TEXT("Bearer " + FAnalyticsCognitiveVR::Get().EditorAuthToken));
@@ -1104,14 +1076,12 @@ void FCognitiveTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpRespons
 {
 	int32 responseCode = Response->GetResponseCode();
 
-	GLog->Log("FCognitiveToolsCustomization::GetSceneVersionResponse Code: " + FString::FromInt(responseCode));
-
-	GLog->Log(Response->GetContentAsString());
+	//GLog->Log("FCognitiveTools::SceneVersionResponse response: " + Response->GetContentAsString());
 
 	if (responseCode >= 500)
 	{
 		//internal server error
-		GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse 500-ish internal server error");
+		GLog->Log("FCognitiveTools::SceneVersionResponse 500-ish internal server error");
 		return;
 	}
 	if (responseCode >= 400)
@@ -1119,13 +1089,13 @@ void FCognitiveTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpRespons
 		if (responseCode == 401)
 		{
 			//not authorized
-			GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse not authorized!");
+			GLog->Log("FCognitiveTools::SceneVersionResponse not authorized! Log out and log in again");
 			return;
 		}
 		else
 		{
 			//maybe no scene?
-			GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse some error. maybe no scene?");
+			GLog->Log("FCognitiveTools::SceneVersionResponse some error. Maybe no scene?");
 			return;
 		}
 	}
@@ -1152,7 +1122,7 @@ void FCognitiveTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpRespons
 		}
 		if (versionNumber + versionId == 0)
 		{
-			GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse couldn't find a latest version in SceneVersion data");
+			GLog->Log("FCognitiveTools::SceneVersionResponse couldn't find a latest version in SceneVersion data");
 			return;
 		}
 
@@ -1160,7 +1130,7 @@ void FCognitiveTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpRespons
 		TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
 		if (!currentSceneData.IsValid())
 		{
-			GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse can't find current scene data in ini files");
+			GLog->Log("FCognitiveTools::SceneVersionResponse can't find current scene data in ini files");
 			return;
 		}
 
@@ -1169,13 +1139,13 @@ void FCognitiveTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpRespons
 
 		GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), iniscenedata, GEngineIni);
 
-		GLog->Log("found this many scene datas in ini " + FString::FromInt(iniscenedata.Num()));
-		GLog->Log("looking for scene " + currentSceneData->Name);
+		//GLog->Log("found this many scene datas in ini " + FString::FromInt(iniscenedata.Num()));
+		//GLog->Log("looking for scene " + currentSceneData->Name);
 
 		//update current scene
 		for (int i = 0; i < iniscenedata.Num(); i++)
 		{
-			GLog->Log("looking at data " + iniscenedata[i]);
+			//GLog->Log("looking at data " + iniscenedata[i]);
 
 			TArray<FString> entryarray;
 			iniscenedata[i].ParseIntoArray(entryarray, TEXT(","), true);
@@ -1183,8 +1153,8 @@ void FCognitiveTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpRespons
 			if (entryarray[0] == currentSceneData->Name)
 			{
 				iniscenedata[i] = entryarray[0] + "," + entryarray[1] + "," + FString::FromInt(versionNumber) + "," + FString::FromInt(versionId);
-				GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse overwriting scene data to append versionnumber and versionid");
-				GLog->Log(iniscenedata[i]);
+				//GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse overwriting scene data to append versionnumber and versionid");
+				//GLog->Log(iniscenedata[i]);
 				break;
 			}
 			else
@@ -1192,6 +1162,9 @@ void FCognitiveTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpRespons
 				//GLog->Log("found scene " + entryarray[0]);
 			}
 		}
+
+		GLog->Log("FCognitiveTools::SceneVersionResponse successful. Write scene data to config file");
+
 		//set array to config
 		GConfig->RemoveKey(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), GEngineIni);
 		//GConfig->Remove(
@@ -1217,6 +1190,13 @@ ECheckBoxState FCognitiveTools::HandleRadioButtonIsChecked(EReleaseType ButtonId
 		: ECheckBoxState::Unchecked;
 }
 
+ECheckBoxState FCognitiveTools::HasFoundBlenderCheckbox() const
+{
+	return (HasFoundBlender())
+		? ECheckBoxState::Checked
+		: ECheckBoxState::Unchecked;
+}
+
 bool FCognitiveTools::HasLoggedIn() const
 {
 	return FAnalyticsCognitiveVR::Get().EditorSessionToken.Len() > 0;
@@ -1234,6 +1214,16 @@ bool FCognitiveTools::HasLoadedOrSelectedValidProduct() const
 	return false;
 }
 
+bool FCognitiveTools::CustomerIdDoesntMatchFile() const
+{
+	FString customerid = GetCustomerIdFromFile();
+	if (customerid != SelectedProduct.customerId)
+	{
+		return true;
+	}
+	return false;
+}
+
 FCognitiveTools::EReleaseType FCognitiveTools::GetReleaseTypeFromFile()
 {
 	FString customerid = FCognitiveTools::GetCustomerIdFromFile();
@@ -1248,8 +1238,6 @@ FCognitiveTools::EReleaseType FCognitiveTools::GetReleaseTypeFromFile()
 	return EReleaseType::Test;
 }
 
-//TODO load releasetype and selected customer+product from ini file
-
 FReply FCognitiveTools::SaveCustomerIdToFile()
 {
 	FString CustomerId = SelectedProduct.customerId;
@@ -1263,7 +1251,7 @@ FReply FCognitiveTools::SaveCustomerIdToFile()
 		CustomerId.Append("-prod");
 	}
 	
-	GLog->Log("write customer id to ini: " + CustomerId);
+	GLog->Log("FCognitiveTools::SaveCustomerIdToFile save: " + CustomerId);
 	GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), GEngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("CognitiveVRApiKey"), *CustomerId, GEngineIni);
 
@@ -1305,7 +1293,7 @@ void FCognitiveTools::OnOrganizationChanged(TSharedPtr<FString> Selection, ESele
 
 	FString newOrgName = *Selection;
 
-	GLog->Log("organization selection changed " + newOrgName);
+	//GLog->Log("organization selection changed " + newOrgName);
 
 	FOrganizationData selectedOrg;
 
@@ -1345,10 +1333,10 @@ TArray<TSharedPtr<FString>> FCognitiveTools::GetOrganizationNames()
 	return AllOrgNames;
 }
 
-FReply FCognitiveTools::PrintSessionId()
+FReply FCognitiveTools::DEBUGPrintSessionId()
 {
 	FString editorSessionId = FAnalyticsCognitiveVR::Get().EditorSessionId;
-	GLog->Log(editorSessionId);
+	GLog->Log("FCognitiveTools::DEBUGPrintSessionId: " + editorSessionId);
 	return FReply::Handled();
 }
 
@@ -1369,21 +1357,18 @@ FReply FCognitiveTools::LogIn()
 
 	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::OnLogInResponse);
 
-	GLog->Log("send login request!");
-	GLog->Log(FString::FromInt(HttpRequest->GetContentLength()));
-
 	if (Email.Len() == 0)
 	{
-		GLog->Log("email length is 0");
+		GLog->Log("Email length is 0");
 		return FReply::Handled();
 	}
 	if (Password.Len() == 0)
 	{
-		GLog->Log("password length is 0");
+		GLog->Log("Password length is 0");
 		return FReply::Handled();
 	}
 
-	GLog->Log("email and password length > 0");
+	GLog->Log("FCognitiveTools::LogIn Send login request!");
 
 	HttpRequest->ProcessRequest();
 	return FReply::Handled();
@@ -1393,26 +1378,23 @@ void FCognitiveTools::OnLogInResponse(FHttpRequestPtr Request, FHttpResponsePtr 
 {
 	if (Response.IsValid())
 	{
-		GLog->Log("Login Response "+Response->GetContentAsString());
-		GLog->Log("Login error code"+FString::FromInt(Response->GetResponseCode()));
+		//GLog->Log("Login Response "+Response->GetContentAsString());
+		//GLog->Log("Login error code"+FString::FromInt(Response->GetResponseCode()));
 		if (Response->GetResponseCode() == 201)
 		{
 			FAnalyticsCognitiveVR::Get().EditorSessionToken = Response->GetHeader("Set-Cookie");
 			//request auth token
-			//AuthTokenRequest();
-
 
 			TArray<FString> Array;
 			FString MyString(Response->GetHeader("Set-Cookie"));
 			MyString.ParseIntoArray(Array, TEXT(";"), true);
 
 			FAnalyticsCognitiveVR::Get().EditorSessionId = Array[0].RightChop(18);
-			GLog->Log("token " + FAnalyticsCognitiveVR::Get().EditorSessionToken);
-			GLog->Log("id " + FAnalyticsCognitiveVR::Get().EditorSessionId);
+			//GLog->Log("token " + FAnalyticsCognitiveVR::Get().EditorSessionToken);
+			//GLog->Log("id " + FAnalyticsCognitiveVR::Get().EditorSessionId);
 			
 			//parse login response to userdata
 			//read organization names from that
-			//OrganizationNames =
 			
 			TSharedRef<TJsonReader<>>Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
 			if (FJsonSerializer::Deserialize(Reader, JsonUserData))
@@ -1429,10 +1411,11 @@ void FCognitiveTools::OnLogInResponse(FHttpRequestPtr Request, FHttpResponsePtr 
 					AllOrgNames.Add(MakeShareable(new FString(tempOrg.name)));
 				}
 
-				GLog->Log("found this many organizations: "+FString::FromInt(OrganizationInfos.Num()));
+				//GLog->Log("found this many organizations: "+FString::FromInt(OrganizationInfos.Num()));
 
 				AuthTokenRequest();
 			}
+			GLog->Log("FCognitiveTools::OnLogInResponse successful!");
 		}
 	}
 	else
@@ -1454,18 +1437,18 @@ void FCognitiveTools::AuthTokenRequest()
 	TSharedPtr<FEditorSceneData> currentscenedata = GetCurrentSceneData();
 	if (!currentscenedata.IsValid())
 	{
-		GLog->Log("FCogntiveToolsCustomization::AuthTokenRequest cannot find current scene data");
+		GLog->Log("FCogntiveTools::AuthTokenRequest cannot find current scene data");
 		return;
 	}
 	if (FAnalyticsCognitiveVR::Get().EditorSessionToken.Len() == 0)
 	{
-		GLog->Log("FCogntiveTools::AuthTokenRequest session token is invalid. log in");
+		GLog->Log("FCogntiveTools::AuthTokenRequest session token is invalid. Please Log in");
 		return;
 	}
 
-	GLog->Log("FCognitiveToolsCustomization::AuthTokenRequest send auth token request");
-	GLog->Log("url "+PostAuthToken(currentscenedata->Id));
-	GLog->Log("cookie " + FAnalyticsCognitiveVR::Get().EditorSessionToken);
+	//GLog->Log("FCognitiveTools::AuthTokenRequest send auth token request");
+	//GLog->Log("url "+PostAuthToken(currentscenedata->Id));
+	//GLog->Log("cookie " + FAnalyticsCognitiveVR::Get().EditorSessionToken);
 
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Cookie", FAnalyticsCognitiveVR::Get().EditorSessionToken);
@@ -1482,8 +1465,8 @@ void FCognitiveTools::AuthTokenResponse(FHttpRequestPtr Request, FHttpResponsePt
 		return;
 	}
 
-	GLog->Log("FCognitiveToolsCustomization::AuthTokenResponse response code " + FString::FromInt(Response->GetResponseCode()));
-	GLog->Log("FCognitiveToolsCustomization::AuthTokenResponse " + Response->GetContentAsString());
+	//GLog->Log("FCognitiveToolsCustomization::AuthTokenResponse response code " + FString::FromInt(Response->GetResponseCode()));
+	//GLog->Log("FCognitiveToolsCustomization::AuthTokenResponse " + Response->GetContentAsString());
 
 	if (bWasSuccessful)
 	{
@@ -1509,7 +1492,6 @@ FReply FCognitiveTools::ExportDynamicTextures()
 	return FReply::Handled();
 }
 
-
 TSharedPtr<FEditorSceneData> FCognitiveTools::GetCurrentSceneData() const
 {
 	UWorld* myworld = GWorld->GetWorld();
@@ -1533,7 +1515,7 @@ TSharedPtr<FEditorSceneData> FCognitiveTools::GetSceneData(FString scenename) co
 	return NULL;
 }
 
-FReply FCognitiveTools::DebugSendSceneData()
+FReply FCognitiveTools::DEBUGSendSceneData()
 {
 	SaveSceneData("FirstPersonExampleMap1234", "1234-asdf-5678-hjkl");
 	return FReply::Handled();
@@ -1542,8 +1524,6 @@ FReply FCognitiveTools::DebugSendSceneData()
 void FCognitiveTools::SaveSceneData(FString sceneName, FString sceneKey)
 {
 	FString keyValue = sceneName + "," + sceneKey;
-	UE_LOG(LogTemp, Warning, TEXT("Upload complete! Add this into the SceneData array in Project Settings:      %s"),*keyValue);
-
 
 	TArray<FString> scenePairs = TArray<FString>();
 
@@ -1583,8 +1563,6 @@ void FCognitiveTools::SaveSceneData(FString sceneName, FString sceneKey)
 	GConfig->SetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, GEngineIni);
 
 	GConfig->Flush(false, GEngineIni);
-	//GConfig->UnloadFile(GEngineIni);
-	//GConfig->LoadFile(GEngineIni);
 }
 
 #undef LOCTEXT_NAMESPACE

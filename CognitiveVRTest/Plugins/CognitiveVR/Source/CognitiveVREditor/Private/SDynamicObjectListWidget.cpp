@@ -3,9 +3,6 @@
 
 void SDynamicObjectListWidget::Construct(const FArguments& Args)
 {
-	//DelimiterImage = InArgs._DelimiterImage;
-	//Items = Args._DynamicData;
-
 	ChildSlot
 		[
 			SNew(SVerticalBox)
@@ -22,7 +19,6 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 					.FillWidth(1)
 					[
 						SNew(STextBlock)
-						//.MinDesiredWidth(256)
 						.Text(FText::FromString("Name"))
 					]
 
@@ -30,7 +26,6 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 					.FillWidth(1)
 					[
 						SNew(STextBlock)
-						//.MinDesiredWidth(256)
 						.Text(FText::FromString("MeshName"))
 					]
 
@@ -38,20 +33,10 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 					.FillWidth(0.3)
 					[
 						SNew(STextBlock)
-						//.MinDesiredWidth(512)
 						.Text(FText::FromString("Id"))
 					]
 				)
 			]
-			/*+SVerticalBox::Slot()
-			//.FillHeight(1)
-			//.MaxHeight(24)
-			.AutoHeight()
-			[
-				SNew(SButton)
-				.Text(FText::FromString("Refresh"))
-				.OnClicked(this, &SDynamicObjectListWidget::ButtonPressed)
-			]*/
 		];
 }
 
@@ -60,29 +45,8 @@ void SDynamicObjectListWidget::RefreshList()
 	ListViewWidget->RequestListRefresh();
 }
 
-FReply SDynamicObjectListWidget::ButtonPressed()
-{
-	//Adds a new item to the array (do whatever you want with this)
-	//Items.Add(MakeShareable(new FString("Hello 1")));
-	//Items = CognitiveTools->GetSceneDynamics();
-	
-	//Items = FCognitiveTools::GetSceneDynamics();
-	
-	//Items = SceneDynamics;
-	ListViewWidget->RequestListRefresh();
-
-	//Update the listview
-	//if (ListViewWidget.IsValid())
-		//ListViewWidget->RequestListRefresh();
-
-	return FReply::Handled();
-}
-
-
 TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
-	//FOnClicked::CreateSP(this, &SDynamicObjectListWidget::SelectDynamic, InItem);
-
 	return
 		SNew(SComboRow< TSharedPtr<FDynamicData> >, OwnerTable)
 		[
@@ -90,18 +54,13 @@ TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<
 			+ SHorizontalBox::Slot()
 			.MaxWidth(16)
 			.AutoWidth()
-		//.HAlign(EHorizontalAlignment::HAlign_Center)
-		//.VAlign(EVerticalAlignment::VAlign_Center)
 			.Padding(2.0f)
 			[
 				SNew(SBox)
 				.HeightOverride(16)
 				.HeightOverride(16)
 				[
-					//SNew(STextBlock)
-					//.Text(FText::FromString(InItem->Name))
 					SNew(SButton)
-					//.Text(FText::FromString(InItem->Name))
 					.OnClicked(FOnClicked::CreateSP(this, &SDynamicObjectListWidget::SelectDynamic, InItem))
 				]
 			]
@@ -111,9 +70,6 @@ TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<
 		[
 			SNew(STextBlock)
 			.Text(FText::FromString(InItem->Name))
-			//SNew(SButton)
-			//.Text(FText::FromString(InItem->Name))
-			//.OnClicked(FOnClicked::CreateSP(this, &SDynamicObjectListWidget::SelectDynamic, InItem))
 		]
 	+ SHorizontalBox::Slot()
 		.FillWidth(1)
@@ -134,8 +90,6 @@ TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<
 
 FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
 {
-	GLog->Log("select dynamic " + data->Name);
-
 	GEditor->SelectNone(false, true, false);
 
 	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)

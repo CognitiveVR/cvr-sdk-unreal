@@ -21,11 +21,10 @@ class SDynamicObjectListWidget : public SCompoundWidget
 public:
 	SLATE_BEGIN_ARGS(SDynamicObjectListWidget){}
 	SLATE_ARGUMENT(TArray<TSharedPtr<FDynamicData>>, Items)
-	SLATE_ARGUMENT(FCognitiveTools*,CognitiveTools)
+	SLATE_ARGUMENT(FCognitiveTools*, CognitiveTools)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& Args);
-	FReply ButtonPressed();
 
 	/* Adds a new textbox with the string to the list */
 	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FDynamicData> Item, const TSharedRef<STableViewBase>& OwnerTable);
@@ -40,6 +39,4 @@ public:
 	FReply SelectDynamic(TSharedPtr<FDynamicData> data);
 
 	void RefreshList();
-
-	//virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyClippingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 };

@@ -21,11 +21,11 @@ class SDynamicObjectWebListWidget : public SCompoundWidget
 public:
 	SLATE_BEGIN_ARGS(SDynamicObjectWebListWidget){}
 	SLATE_ARGUMENT(TArray<TSharedPtr<FDynamicData>>, Items)
-	SLATE_ARGUMENT(FCognitiveTools*,CognitiveTools)
+	SLATE_ARGUMENT(FCognitiveTools*, CognitiveTools)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& Args);
-	FReply ButtonPressed();
+	void RefreshList();
 
 	/* Adds a new textbox with the string to the list */
 	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FDynamicData> Item, const TSharedRef<STableViewBase>& OwnerTable);

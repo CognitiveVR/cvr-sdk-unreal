@@ -264,6 +264,7 @@ private:
 	void OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnUploadScreenshotCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	bool PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
 	bool PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
@@ -283,7 +284,7 @@ private:
 		FReply Select_Export_Directory();
 
 	UFUNCTION(Exec, Category = "Export")
-		FReply DebugSendSceneData();
+		FReply DEBUGSendSceneData();
 
 
 
@@ -329,7 +330,7 @@ private:
 	}
 
 	FReply SetRandomSessionId();
-	FReply PrintSessionId();
+	FReply DEBUGPrintSessionId();
 	FString Email;
 	void OnEmailChanged(const FText& Text);
 	FString Password;
@@ -414,6 +415,10 @@ private:
 	bool HasConvertedFilesInDirectory() const;
 	//returns true if customerid has been saved
 	bool HasSavedCustomerId() const;
+	bool CustomerIdDoesntMatchFile() const;
+	FText GetLikelyCustomerId() const;
+
+	ECheckBoxState HasFoundBlenderCheckbox() const;
 
 	void SceneVersionRequest(FEditorSceneData data);
 	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
@@ -442,6 +447,11 @@ private:
 	TSharedPtr<SFStringListWidget> SubDirectoryListWidget;
 	void FindAllSubDirectoryNames();
 	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
+	FReply SelectUploadScreenshot();
+	
+	bool HasEditorAuthToken() const;
+	FText GetDynamicsOnSceneExplorerTooltip() const;
+	FText SendDynamicsToSceneExplorerTooltip() const;
 };
 
 //used for uploading multiple dynamics at once
