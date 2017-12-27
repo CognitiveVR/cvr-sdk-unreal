@@ -36,10 +36,10 @@ class UCognitiveVRSettings
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 		int32 GazeBatchSize = 64;
 
-	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	//UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	bool GazeFromPhysicsRaycast = false;
 
-	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	//UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	bool GazeFromVisualRaycast = true;
 
 public:
