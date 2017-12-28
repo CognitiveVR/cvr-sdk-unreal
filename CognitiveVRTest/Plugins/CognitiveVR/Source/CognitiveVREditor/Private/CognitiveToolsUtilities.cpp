@@ -1655,6 +1655,16 @@ bool FCognitiveTools::HasConvertedFilesInDirectory() const
 	return true;
 }
 
+bool FCognitiveTools::CanUploadSceneFiles() const
+{
+	return HasConvertedFilesInDirectory() && HasLoggedIn();
+}
+
+bool FCognitiveTools::LoginAndCustonerIdAndBlenderExportDir() const
+{
+	return HasLoggedIn() && HasFoundBlenderAndExportDir() && HasSavedCustomerId();
+}
+
 bool FCognitiveTools::HasFoundBlenderAndExportDir() const
 {
 	return FCognitiveTools::GetBlenderPath().ToString().Contains("blender.exe") && !FCognitiveTools::GetExportDirectory().EqualTo(FText::FromString(""));
@@ -1707,14 +1717,14 @@ FText FCognitiveTools::SendDynamicsToSceneExplorerTooltip() const
 	return FText::FromString("Must log in to send Dynamic Objects List to SceneExplorer");
 }
 
-FText FCognitiveTools::GetLikelyCustomerId() const
+FText FCognitiveTools::GetCustomerId() const
 {
 	if (SelectedProduct.customerId.Len() > 0)
 	{
 		return FText::FromString(SelectedProduct.customerId);
 	}
-	FString customerid = GetCustomerIdFromFile();
-	return FText::FromString(customerid);
+	//FString customerid = GetCustomerIdFromFile();
+	return FText::FromString("");
 }
 
 bool FCognitiveTools::HasSetDynamicExportDirectory() const

@@ -380,7 +380,6 @@ private:
 	FReply SaveCustomerIdToFile();
 
 	FString GetCustomerIdFromFile() const;
-	FString GetCustomerIdFromFileWithoutRelease() const;
 	EReleaseType GetReleaseTypeFromFile();
 	
 	void SaveOrganizationNameToFile(FString organization);
@@ -414,12 +413,10 @@ private:
 
 	//has json file and no bmp files in export directory
 	bool HasConvertedFilesInDirectory() const;
-	bool CanUploadSceneFiles() const;
 	//returns true if customerid has been saved
 	bool HasSavedCustomerId() const;
 	bool CustomerIdDoesntMatchFile() const;
-	bool LoginAndCustonerIdAndBlenderExportDir() const;
-	FText GetCustomerId() const;
+	FText GetLikelyCustomerId() const;
 
 	ECheckBoxState HasFoundBlenderCheckbox() const;
 

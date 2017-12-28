@@ -48,11 +48,17 @@ void UPlayerTracker::BeginPlay()
 	FlushPersistentDebugLines(GetWorld());
 
 	s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (s.IsValid())
+	{
+		FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->SetWorld(GetWorld());
+		//s->SetWorld(GetWorld());
 
-	FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->SetWorld(GetWorld());
-	//s->SetWorld(GetWorld());
-
-	Super::BeginPlay();
+		Super::BeginPlay();
+	}
+	else
+	{
+		GLog->Log("UPlayerTracker::BeginPlay cannot find CognitiveVRProvider!");
+	}
 }
 
 void UPlayerTracker::AddJsonEvent(FJsonObject* newEvent)

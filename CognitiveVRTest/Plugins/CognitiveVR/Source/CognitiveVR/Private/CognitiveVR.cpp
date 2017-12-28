@@ -718,7 +718,8 @@ TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetSceneData(FString scene
 void FAnalyticsProviderCognitiveVR::CacheSceneData()
 {
 	TArray<FString>scenstrings;
-	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenstrings, GEngineIni);
+	FString TestSyncFile = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
+	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
 
 	for (int i = 0; i < scenstrings.Num(); i++)
 	{

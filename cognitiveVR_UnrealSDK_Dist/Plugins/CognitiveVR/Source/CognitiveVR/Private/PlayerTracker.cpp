@@ -185,6 +185,12 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 void UPlayerTracker::SendGazeEventDataToSceneExplorer()
 {
+	auto scenedata = s->GetCurrentSceneData();
+	if (scenedata.IsValid())
+	{
+		SendGazeEventDataToSceneExplorer(scenedata->Name);
+	}
+	/*
 	UWorld* myworld = GetWorld();
 	if (myworld == NULL)
 	{
@@ -194,7 +200,7 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer()
 
 	FString currentSceneName = myworld->GetMapName();
 	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
-	UPlayerTracker::SendGazeEventDataToSceneExplorer(currentSceneName);
+	UPlayerTracker::SendGazeEventDataToSceneExplorer(currentSceneName);*/
 }
 
 void UPlayerTracker::BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, int32 objectId)
@@ -314,8 +320,11 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer(FString sceneName)
 	FString GazeString = UPlayerTracker::GazeSnapshotsToString();
 	if (GazeString.Len() > 0)
 	{
-		//FAnalyticsProviderCognitiveVR::SendJson("gaze", GazeString);
-		s->SendJson("gaze", GazeString);
+		auto scenedata = s->GetSceneData(sceneName);
+		if (scenedata.IsValid())
+		{
+			s->SendJson(Config::PostGazeData(scenedata->Id, scenedata->VersionNumber), GazeString);
+		}
 	}
 
 	//EVENTS
@@ -323,8 +332,11 @@ void UPlayerTracker::SendGazeEventDataToSceneExplorer(FString sceneName)
 	FString EventString = UPlayerTracker::EventSnapshotsToString();
 	if (EventString.Len() > 0)
 	{
-		//FAnalyticsProviderCognitiveVR::SendJson("events", EventString);
-		s->SendJson("events", EventString);
+		auto scenedata = s->GetSceneData(sceneName);
+		if (scenedata.IsValid())
+		{
+			s->SendJson(Config::PostEventData(scenedata->Id, scenedata->VersionNumber), EventString);
+		}
 	}
 }
 

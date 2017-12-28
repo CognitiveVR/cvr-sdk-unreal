@@ -5,12 +5,6 @@
 
 using namespace cognitivevrapi;
 
-class UPlayerTracker
-{
-public:
-	static void SendJson(FString url, FString json);
-};
-
 Sensors::Sensors(FAnalyticsProviderCognitiveVR* sp)
 {
 	s = sp;
@@ -39,24 +33,6 @@ void Sensors::RecordSensor(FString Name, float value)
 	{
 		somedatapoints.Emplace(Name, "[" + FString::SanitizeFloat(Util::GetTimestamp()) + "," + FString::SanitizeFloat(value) + "]");
 	}
-	
-
-	/*TArray<FJsonValueNumber> sensorData;
-	sensorData.Init(0, 2);
-	sensorData[0] = Util::GetTimestamp();
-	sensorData[1] = value;
-
-	//[x.xxxx,y.yyyy]
-
-	if (sensorDataJson.Contains(Name))
-	{
-		TArray<TArray<FJsonValueNumber>>* index = sensorDataJson.Find(Name);
-		index->Add(sensorData);
-	}
-	else
-	{
-		sensorDataJson.Emplace(Name).Add(sensorData);
-	}*/
 
 	sensorDataCount ++;
 	if (sensorDataCount >= SensorThreshold)
@@ -72,8 +48,11 @@ void Sensors::SendData()
 	sensorDataCount = 0;
 	if (out != "")
 	{
-		//FAnalyticsProviderCognitiveVR::SendJson("sensors", out);
-		s->SendJson("sensors", out);
+		auto scenedata = s->GetCurrentSceneData();
+		if (scenedata.IsValid())
+		{
+			s->SendJson(Config::PostSensorData(scenedata->Id, scenedata->VersionNumber), out);
+		}
 	}
 }
 
