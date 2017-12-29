@@ -21,7 +21,7 @@ void CognitiveLog::Init()
 	else
 	{
 		Warning("==========================");
-		Warning("See 'Project Settings > cognitiveVR' for preferences and to toggle logging");
+		Warning("See 'Project Settings > Cognitive VR' for preferences and to toggle debug messages");
 		Warning("https://docs.cognitivevr.io/unreal/troubleshooting/ for help");
 		Warning("==========================");
 	}

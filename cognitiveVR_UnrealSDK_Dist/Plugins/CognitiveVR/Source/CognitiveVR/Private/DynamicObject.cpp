@@ -44,6 +44,11 @@ void UDynamicObject::BeginPlay()
 	Super::BeginPlay();
 
 	s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (!s.IsValid())
+	{
+		GLog->Log("UDynamicObject::BeginPlay cannot find CognitiveVRProvider!");
+		return;
+	}
 
 	if (MaxSnapshots < 0)
 	{

@@ -341,6 +341,9 @@ private:
 	TSharedPtr<FJsonObject> JsonUserData;
 
 	FReply DEBUG_RequestAuthToken();
+	//TSharedRef<IHttpRequest> RequestAuthTokenCallback();
+	//void OnSceneVersionGetAuthToken(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
 	void AuthTokenRequest();
 	void AuthTokenResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
@@ -455,6 +458,9 @@ private:
 	bool HasEditorAuthToken() const;
 	FText GetDynamicsOnSceneExplorerTooltip() const;
 	FText SendDynamicsToSceneExplorerTooltip() const;
+	FReply RefreshDynamicSubDirectory();
+	bool ConfigFileHasChanged = false;
+	EVisibility ConfigFileChangedVisibility() const;
 };
 
 //used for uploading multiple dynamics at once

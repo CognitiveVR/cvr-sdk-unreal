@@ -341,6 +341,9 @@ private:
 	TSharedPtr<FJsonObject> JsonUserData;
 
 	FReply DEBUG_RequestAuthToken();
+	//TSharedRef<IHttpRequest> RequestAuthTokenCallback();
+	//void OnSceneVersionGetAuthToken(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
 	void AuthTokenRequest();
 	void AuthTokenResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
@@ -380,6 +383,7 @@ private:
 	FReply SaveCustomerIdToFile();
 
 	FString GetCustomerIdFromFile() const;
+	FString GetCustomerIdFromFileWithoutRelease() const;
 	EReleaseType GetReleaseTypeFromFile();
 	
 	void SaveOrganizationNameToFile(FString organization);
@@ -413,10 +417,12 @@ private:
 
 	//has json file and no bmp files in export directory
 	bool HasConvertedFilesInDirectory() const;
+	bool CanUploadSceneFiles() const;
 	//returns true if customerid has been saved
 	bool HasSavedCustomerId() const;
 	bool CustomerIdDoesntMatchFile() const;
-	FText GetLikelyCustomerId() const;
+	bool LoginAndCustonerIdAndBlenderExportDir() const;
+	FText GetCustomerId() const;
 
 	ECheckBoxState HasFoundBlenderCheckbox() const;
 
@@ -452,6 +458,9 @@ private:
 	bool HasEditorAuthToken() const;
 	FText GetDynamicsOnSceneExplorerTooltip() const;
 	FText SendDynamicsToSceneExplorerTooltip() const;
+	FReply RefreshDynamicSubDirectory();
+	bool ConfigFileHasChanged = false;
+	EVisibility ConfigFileChangedVisibility() const;
 };
 
 //used for uploading multiple dynamics at once

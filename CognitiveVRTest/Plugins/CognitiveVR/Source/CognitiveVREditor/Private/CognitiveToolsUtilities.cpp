@@ -420,6 +420,7 @@ FReply FCognitiveTools::UploadDynamicsManifest()
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->SetContentAsString(objectManifest);
+	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::OnUploadManifestCompleted);
 
 	HttpRequest->ProcessRequest();
 
@@ -720,7 +721,7 @@ void FCognitiveTools::ConvertDynamicTextures()
 
 	const TCHAR* params = *stringParamSlashed;
 	int32 priorityMod = 0;
-	FProcHandle procHandle = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
+	FProcHandle process = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
 }
 
 FReply FCognitiveTools::Export_Selected()
@@ -1559,6 +1560,7 @@ void FCognitiveTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpRespo
 			//successfully uploaded a scene but no response - updated an existing scene version
 			RefreshSceneData();
 		}
+		ConfigFileHasChanged = true;
 	}
 }
 
@@ -1630,11 +1632,13 @@ TArray<FString> FCognitiveTools::GetAllFilesInDirectory(const FString directory,
 
 bool FCognitiveTools::HasFoundBlender() const
 {
+	if (!HasLoggedIn()) { return false; }
 	return FCognitiveTools::GetBlenderPath().ToString().Contains("blender.exe");
 }
 
 bool FCognitiveTools::HasFoundBlenderAndHasSelection() const
 {
+	if (!HasLoggedIn()) { return false; }
 	return FCognitiveTools::GetBlenderPath().ToString().Contains("blender.exe") && GEditor->GetSelectedActorCount() > 0;
 }
 
@@ -1677,6 +1681,7 @@ bool FCognitiveTools::HasFoundBlenderAndDynamicExportDir() const
 
 bool FCognitiveTools::CurrentSceneHasSceneId() const
 {
+	if (!HasLoggedIn()) { return false; }
 	TSharedPtr<FEditorSceneData> currentscene = GetCurrentSceneData();
 	if (!currentscene.IsValid())
 	{
@@ -1691,6 +1696,7 @@ bool FCognitiveTools::CurrentSceneHasSceneId() const
 
 bool FCognitiveTools::HasSetExportDirectory() const
 {
+	if (!HasLoggedIn()) { return false; }
 	return !FCognitiveTools::GetExportDirectory().EqualTo(FText::FromString(""));
 }
 
@@ -1701,11 +1707,29 @@ bool FCognitiveTools::HasEditorAuthToken() const
 
 FText FCognitiveTools::GetDynamicsOnSceneExplorerTooltip() const
 {
+	if (!HasLoggedIn())
+	{
+		return FText::FromString("Must log in to get Dynamic Objects List from SceneExplorer");
+	}
+	auto scene = GetCurrentSceneData();
+	if (!scene.IsValid())
+	{
+		return FText::FromString("Scene does not have valid data. Must export your scene before uploading dynamics!");
+	}
 	if (HasEditorAuthToken())
 	{
 		return FText::FromString("");
 	}
-	return FText::FromString("Must log in to get Dynamic Objects List from SceneExplorer");
+	return FText::FromString("Something went wrong!");
+}
+
+EVisibility FCognitiveTools::ConfigFileChangedVisibility() const
+{
+	if (ConfigFileHasChanged)
+	{
+		return EVisibility::Visible;
+	}
+	return EVisibility::Hidden;
 }
 
 FText FCognitiveTools::SendDynamicsToSceneExplorerTooltip() const
@@ -1729,6 +1753,7 @@ FText FCognitiveTools::GetCustomerId() const
 
 bool FCognitiveTools::HasSetDynamicExportDirectory() const
 {
+	if (!HasLoggedIn()) { return false; }
 	return !FCognitiveTools::GetDynamicExportDirectory().EqualTo(FText::FromString(""));
 }
 

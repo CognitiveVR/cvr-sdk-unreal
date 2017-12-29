@@ -172,7 +172,7 @@ void InitCallback(CognitiveVRResponse resp)
 	}
 	else
 	{
-		CognitiveLog::Error("InitCallback current world is null");
+		CognitiveLog::Error("InitCallback current world is null - SceneExplorer will not receive data. Have you added a PlayerTracker component to your character?");
 	}
 
 	cog->SendDeviceInfo();
