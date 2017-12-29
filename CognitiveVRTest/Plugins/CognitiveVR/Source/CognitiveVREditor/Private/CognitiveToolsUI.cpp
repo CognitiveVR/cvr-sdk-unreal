@@ -231,6 +231,16 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 	];
 
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+	.ValueContent()
+	.MinDesiredWidth(256)
+	[
+		SNew(SButton)
+		.Text(FText::FromString("Open on Dashboard..."))
+		.IsEnabled(this,&FCognitiveTools::EnableOpenProductOnDashboard)
+		.OnClicked(this, &FCognitiveTools::OpenProductOnDashboard)
+	];
+
+	LoginCategory.AddCustomRow(FText::FromString("Commands"))
 	[
 		SNew(SHorizontalBox)
 		+ SHorizontalBox::Slot()
@@ -1352,6 +1362,29 @@ void FCognitiveTools::OnEmailChanged(const FText& Text)
 void FCognitiveTools::OnPasswordChanged(const FText& Text)
 {
 	Password = Text.ToString();
+}
+
+FReply FCognitiveTools::OpenProductOnDashboard()
+{
+	FString url = DashboardNewProduct(GetCustomerId().ToString());
+
+	if (RadioChoice == EReleaseType::Test)
+	{
+		url.Append("-test");
+	}
+	else
+	{
+		url.Append("-prod");
+	}
+
+	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);
+
+	return FReply::Handled();
+}
+
+bool FCognitiveTools::EnableOpenProductOnDashboard() const
+{
+	return HasSelectedValidProduct();
 }
 
 void FCognitiveTools::OnProductChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo)
