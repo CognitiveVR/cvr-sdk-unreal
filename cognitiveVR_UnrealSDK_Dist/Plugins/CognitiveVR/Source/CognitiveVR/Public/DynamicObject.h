@@ -130,7 +130,7 @@ public:
 	bool SnapshotOnBeginPlay = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool UpdateOnTick = true;
+	bool SnapshotOnInterval = true;
 
 	UPROPERTY(EditAnywhere)
 	bool ReleaseIdOnDestroy = true;

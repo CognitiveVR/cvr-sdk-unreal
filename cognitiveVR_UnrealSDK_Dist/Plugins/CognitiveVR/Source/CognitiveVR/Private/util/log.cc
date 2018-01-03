@@ -6,22 +6,26 @@
 
 using namespace cognitivevrapi;
 
-bool MuteInfoMessages;
-bool MuteErrorMessages;
+bool MuteDebugMessages; //developer and debugging only
+bool MuteInfoMessages; //general responses and messaging
+bool MuteWarningMessages; //something going wrong with cognitive analytics
+bool MuteErrorMessages; //something going very wrong
 
 void CognitiveLog::Init()
 {
+	MuteDebugMessages = true;
 	MuteInfoMessages = false;
+	MuteWarningMessages = false;
 	MuteErrorMessages = false;
-	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteInfoMessages", false);
+	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteWarningMessages", false);
 	if (ValueReceived.Len()>0 && ValueReceived == "true")
 	{
-		MuteInfoMessages = true;
+		MuteWarningMessages = true;
 	}
 	else
 	{
 		Warning("==========================");
-		Warning("See 'Project Settings > cognitiveVR' for preferences and to toggle logging");
+		Warning("See 'Project Settings > Cognitive VR' for preferences and to toggle debug messages");
 		Warning("https://docs.cognitivevr.io/unreal/troubleshooting/ for help");
 		Warning("==========================");
 	}
@@ -31,6 +35,24 @@ void CognitiveLog::Init()
 	{
 		MuteErrorMessages = true;
 	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteDebugMessages", false);
+	if (ValueReceived.Len() == 0 || ValueReceived == "false")
+	{
+		MuteDebugMessages = false;
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteInfoMessages", false);
+	if (ValueReceived.Len()>0 && ValueReceived == "true")
+	{
+		MuteInfoMessages = true;
+	}
+}
+
+void CognitiveLog::DebugInfo(std::string s, bool newline)
+{
+	if (MuteDebugMessages) { return; }
+	UE_LOG(CognitiveVR_Log, Log, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
 }
 
 void CognitiveLog::Info(std::string s, bool newline)
@@ -41,7 +63,7 @@ void CognitiveLog::Info(std::string s, bool newline)
 
 void CognitiveLog::Warning(std::string s, bool newline)
 {
-	if (MuteInfoMessages) { return; }
+	if (MuteWarningMessages) { return; }
 	UE_LOG(CognitiveVR_Log, Warning, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
 }
 

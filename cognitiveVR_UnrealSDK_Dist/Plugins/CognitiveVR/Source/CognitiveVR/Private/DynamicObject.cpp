@@ -44,6 +44,11 @@ void UDynamicObject::BeginPlay()
 	Super::BeginPlay();
 
 	s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (!s.IsValid())
+	{
+		GLog->Log("UDynamicObject::BeginPlay cannot find CognitiveVRProvider!");
+		return;
+	}
 
 	if (MaxSnapshots < 0)
 	{
@@ -166,7 +171,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 
-	if (!UpdateOnTick) { return; }
+	if (!SnapshotOnInterval) { return; }
 
 	if (!s->HasStartedSession())
 	{
@@ -469,16 +474,14 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 
 void UDynamicObject::SendData()
 {
-	UWorld* myworld = GWorld;
-	if (myworld == NULL)
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	TSharedPtr<FSceneData> currentscenedata = cog->GetCurrentSceneData();
+	if (!currentscenedata.IsValid())
 	{
-		snapshots.Empty();
+		GLog->Log("DynamicObject::SendData current scene data is invalid");
 		return;
 	}
-
-	FString currentSceneName = myworld->GetMapName();
-	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
-	UDynamicObject::SendData(currentSceneName);
+	SendData(currentscenedata->Name);
 }
 
 //TODO only combine 64 entries, prioritizing the manifest
@@ -522,7 +525,14 @@ void UDynamicObject::SendData(FString sceneName)
 	FString OutputString;
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-	cog->SendJson("dynamics", OutputString);
+	//cog->SendJson("dynamics", OutputString);
+	//FString sceneid = cog->GetCurrentSceneId();
+	
+	auto scenedata = cog->GetSceneData(sceneName);
+	if (scenedata.IsValid())
+	{
+		cog->SendJson(Config::PostDynamicData(scenedata->Id, scenedata->VersionNumber), OutputString);
+	}
 
 	snapshots.Empty();
 }

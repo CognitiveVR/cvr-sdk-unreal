@@ -56,6 +56,9 @@ namespace cognitivevrapi
 			static void AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, bool &mybool);
 			static void AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, int32 &intValue);
 			static void AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, double &doubleValue);
+
+			
+
     };
 }
 #endif  // COGNITIVEVR_UTIL_H_

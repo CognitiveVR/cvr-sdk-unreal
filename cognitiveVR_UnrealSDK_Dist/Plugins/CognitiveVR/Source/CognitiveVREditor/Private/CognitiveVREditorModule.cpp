@@ -2,9 +2,9 @@
 #include "BaseEditorTool.h"
 #include "PropertyEditorModule.h"
 #include "LevelEditor.h"
-#include "CognitiveToolsCustomization.h"
+#include "CognitiveTools.h"
 
-#include "DemoStyle.h"
+//#include "DemoStyle.h"
 
 #define LOCTEXT_NAMESPACE "DemoTools"
 
@@ -31,10 +31,10 @@ void FCognitiveVREditorModule::StartupModule()
 {
 	// Register the details customizations
 	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
-	PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FCognitiveToolsCustomization::MakeInstance));
+	PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FCognitiveTools::MakeInstance));
 
 	// Register slate style ovverides
-	FDemoStyle::Initialize();
+	//FDemoStyle::Initialize();
 
 	// Register commands
 	//FDemoCommands::Register();
@@ -88,7 +88,7 @@ void FCognitiveVREditorModule::StartupModule()
 void FCognitiveVREditorModule::ShutdownModule()
 {
 	//FDemoCommands::Unregister();
-	FDemoStyle::Shutdown();
+	//FDemoStyle::Shutdown();
 }
 
 void FCognitiveVREditorModule::TriggerTool(UClass* ToolClass)
