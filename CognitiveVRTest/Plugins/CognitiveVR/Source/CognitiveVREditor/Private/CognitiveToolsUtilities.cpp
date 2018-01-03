@@ -1757,6 +1757,20 @@ bool FCognitiveTools::HasSetDynamicExportDirectory() const
 	return !FCognitiveTools::GetDynamicExportDirectory().EqualTo(FText::FromString(""));
 }
 
+bool FCognitiveTools::HasSetDynamicExportDirectoryHasSceneId() const
+{
+	if (!HasLoggedIn()) { return false; }
+	auto scenedata = GetCurrentSceneData();
+	if (!scenedata.IsValid()) { return false; }
+	return !FCognitiveTools::GetDynamicExportDirectory().EqualTo(FText::FromString(""));
+}
+
+bool FCognitiveTools::HasFoundBlenderHasSelection() const
+{
+	if (GEditor->GetSelectedActorCount() == 0) { return false; }
+	return HasFoundBlender();
+}
+
 FText FCognitiveTools::GetBlenderPath() const
 {
 	return FText::FromString(BlenderPath);

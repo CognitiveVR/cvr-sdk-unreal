@@ -19,7 +19,8 @@ namespace cognitivevrapi
     {
         public:
 			static void Init();
-            static void Info(std::string s, bool newline = true);
+			static void DebugInfo(std::string s, bool newline = true);
+			static void Info(std::string s, bool newline = true);
             static void Warning(std::string s, bool newline = true);
             static void Error(std::string s, bool newline = true);
     };

@@ -132,6 +132,12 @@ private:
 		return "https://dashboard.cognitivevr.io/admin/products/create";
 	}
 
+	//WEB open dashboard page to product
+	FORCEINLINE static FString DashboardNewProduct(FString customerid)
+	{
+		return "https://dashboard.cognitivevr.io/dashboard?pid=" + customerid;
+	}
+
 
 	bool HasSearchedForBlender = false; //to limit the searching directories. possibly not required
 
@@ -461,6 +467,12 @@ private:
 	FReply RefreshDynamicSubDirectory();
 	bool ConfigFileHasChanged = false;
 	EVisibility ConfigFileChangedVisibility() const;
+
+	FReply OpenProductOnDashboard();
+	bool EnableOpenProductOnDashboard() const;
+
+	bool HasFoundBlenderHasSelection() const;
+	bool HasSetDynamicExportDirectoryHasSceneId() const;
 };
 
 //used for uploading multiple dynamics at once

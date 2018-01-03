@@ -470,6 +470,9 @@ private:
 
 	FReply OpenProductOnDashboard();
 	bool EnableOpenProductOnDashboard() const;
+
+	bool HasFoundBlenderHasSelection() const;
+	bool HasSetDynamicExportDirectoryHasSceneId() const;
 };
 
 //used for uploading multiple dynamics at once

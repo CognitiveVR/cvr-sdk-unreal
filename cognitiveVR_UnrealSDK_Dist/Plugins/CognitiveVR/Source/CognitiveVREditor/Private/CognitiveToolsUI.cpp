@@ -231,6 +231,16 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 	];
 
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+	.ValueContent()
+	.MinDesiredWidth(256)
+	[
+		SNew(SButton)
+		.Text(FText::FromString("Open on Dashboard..."))
+		.IsEnabled(this,&FCognitiveTools::EnableOpenProductOnDashboard)
+		.OnClicked(this, &FCognitiveTools::OpenProductOnDashboard)
+	];
+
+	LoginCategory.AddCustomRow(FText::FromString("Commands"))
 	[
 		SNew(SHorizontalBox)
 		+ SHorizontalBox::Slot()
@@ -599,7 +609,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				.MaxHeight(32)
 				[
 					SNew(SButton)
-					.IsEnabled(this, &FCognitiveTools::HasFoundBlender) //TODO make this disabled if no selection
+					.IsEnabled(this, &FCognitiveTools::HasFoundBlenderHasSelection)
 					.Text(FText::FromString("Export Selected Dynamic Objects"))
 					.OnClicked(this, &FCognitiveTools::ExportSelectedDynamics)
 				]
@@ -632,24 +642,24 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					.Text(FText::FromString("Select Dynamic Mesh Directory"))
 					.OnClicked(this, &FCognitiveTools::SelectDynamicsDirectory)
 				]
-				+SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNew(SButton)
-					.IsEnabled(this,& FCognitiveTools::HasSetDynamicExportDirectory)
-					.Text(FText::FromString("Refresh"))
-					.OnClicked(this, &FCognitiveTools::RefreshDynamicSubDirectory)
-				]
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
 					SNew(STextBlock)
 					.Text(this, &FCognitiveTools::GetDynamicExportDirectory)
 				]
+				+SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SButton)
+					.IsEnabled(this,& FCognitiveTools::HasSetDynamicExportDirectory)
+					.Text(FText::FromString("Refresh Sub Directories"))
+					.OnClicked(this, &FCognitiveTools::RefreshDynamicSubDirectory)
+				]
 				+ SVerticalBox::Slot()
 				[
 					SNew(SBox)
-					.HeightOverride(200)
+					.HeightOverride(100)
 					[
 						SAssignNew(SubDirectoryListWidget,SFStringListWidget)
 						.Items(GetSubDirectoryNames())
@@ -671,7 +681,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				.MaxHeight(32)
 				[
 					SNew(SButton)
-					.IsEnabled(this, &FCognitiveTools::HasSetDynamicExportDirectory)
+					.IsEnabled(this, &FCognitiveTools::HasSetDynamicExportDirectoryHasSceneId)
 					.Text(this, &FCognitiveTools::GetDynamicObjectUploadText)
 					.OnClicked(this, &FCognitiveTools::UploadDynamics)
 				]
@@ -906,7 +916,7 @@ FText FCognitiveTools::OpenSceneNameInBrowser() const
 		FString currentSceneName = myworld->GetMapName();
 		currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
 
-		return FText::FromString("Upload Files for " + currentSceneName);
+		return FText::FromString("Open" + currentSceneName + " in Browser...");
 	}
 	FString outstring = "Open " + currentscenedata->Name + " in Browser...";
 
@@ -925,7 +935,7 @@ FText FCognitiveTools::GetDynamicObjectUploadText() const
 	auto data = GetCurrentSceneData();
 	if (!data.IsValid())
 	{
-		return FText::FromString("scene data is invalid!");
+		return FText::FromString("No Scene Data found");
 	}
 
 	return FText::FromString("Upload "+FString::FromInt(SubDirectoryNames.Num())+" Dynamic Object Meshes to " + data->Name + " version " + FString::FromInt(data->VersionNumber));
@@ -1352,6 +1362,29 @@ void FCognitiveTools::OnEmailChanged(const FText& Text)
 void FCognitiveTools::OnPasswordChanged(const FText& Text)
 {
 	Password = Text.ToString();
+}
+
+FReply FCognitiveTools::OpenProductOnDashboard()
+{
+	FString url = DashboardNewProduct(GetCustomerId().ToString());
+
+	if (RadioChoice == EReleaseType::Test)
+	{
+		url.Append("-test");
+	}
+	else
+	{
+		url.Append("-prod");
+	}
+
+	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);
+
+	return FReply::Handled();
+}
+
+bool FCognitiveTools::EnableOpenProductOnDashboard() const
+{
+	return HasSelectedValidProduct();
 }
 
 void FCognitiveTools::OnProductChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo)

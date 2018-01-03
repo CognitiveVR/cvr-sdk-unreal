@@ -171,7 +171,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 
-	if (!UpdateOnTick) { return; }
+	if (!SnapshotOnInterval) { return; }
 
 	if (!s->HasStartedSession())
 	{
