@@ -2,7 +2,7 @@ The Cognitive3D SDK for Unreal
 =========
 Welcome! This SDK for Unreal provides analytics and insights about your project. In addition, Cognitive3D empowers you to take actions that will improve users' engagement with your experience.
 
-See [docs.cognitive.io](http://docs.cognitivevr.io/unreal/get-started/) for details about gettings started.
+See [docs.cognitive3d.com](http://docs.cognitive3d.com/unreal/get-started/) for details about gettings started.
 
 This SDK supports both C++ and Blueprints.
 
