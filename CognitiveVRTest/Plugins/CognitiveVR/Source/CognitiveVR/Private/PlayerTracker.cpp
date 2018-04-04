@@ -61,12 +61,6 @@ void UPlayerTracker::BeginPlay()
 	}
 }
 
-void UPlayerTracker::AddJsonEvent(FJsonObject* newEvent)
-{
-	TSharedPtr<FJsonObject>snapObj = MakeShareable(newEvent);
-	events.Add(snapObj);
-}
-
 // Called every frame
 void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -89,7 +83,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	FVector gaze;
 	FRotator rot;
 	double time = Util::GetTimestamp();
-	int32 objectid = -1;
+	FString objectid = "";
 
 
 	TArray<APlayerController*, FDefaultAllocator> controllers;
@@ -189,27 +183,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	}
 }
 
-void UPlayerTracker::SendGazeEventDataToSceneExplorer()
-{
-	auto scenedata = s->GetCurrentSceneData();
-	if (scenedata.IsValid())
-	{
-		SendGazeEventDataToSceneExplorer(scenedata->Name);
-	}
-	/*
-	UWorld* myworld = GetWorld();
-	if (myworld == NULL)
-	{
-		CognitiveLog::Info("PlayerTracker::SendGazeEventDataToSceneExplorer WORLD DOESNT EXIST");
-		return;
-	}
-
-	FString currentSceneName = myworld->GetMapName();
-	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
-	UPlayerTracker::SendGazeEventDataToSceneExplorer(currentSceneName);*/
-}
-
-void UPlayerTracker::BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, int32 objectId)
+void UPlayerTracker::BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, FString objectId)
 {
 	TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
 
@@ -227,9 +201,9 @@ void UPlayerTracker::BuildSnapshot(FVector position, FVector gaze, FRotator rota
 
 	snapObj->SetArrayField("p", posArray);
 
-	if (objectId >= 0)
+	if (objectId != "")
 	{
-		snapObj->SetNumberField("o", objectId);
+		snapObj->SetStringField("o", objectId);
 	}
 
 	TArray<TSharedPtr<FJsonValue>> gazeArray;
@@ -264,10 +238,7 @@ void UPlayerTracker::BuildSnapshot(FVector position, FVector gaze, FRotator rota
 	snapshots.Add(snapObj);
 	if (snapshots.Num() > GazeBatchSize)
 	{
-		SendGazeEventDataToSceneExplorer();
-		//s->FlushEvents();
-		snapshots.Empty();
-		events.Empty();
+		SendData();
 	}
 }
 
@@ -311,71 +282,19 @@ void UPlayerTracker::BuildSnapshot(FVector position, FRotator rotation, double t
 	snapshots.Add(snapObj);
 	if (snapshots.Num() > GazeBatchSize)
 	{
-		SendGazeEventDataToSceneExplorer();
-		//s->FlushEvents();
-		snapshots.Empty();
-		events.Empty();
+		SendData();
 	}
 }
 
-void UPlayerTracker::SendGazeEventDataToSceneExplorer(FString sceneName)
+void UPlayerTracker::SendData()
 {
+	auto scenedata = s->GetCurrentSceneData();
+	if (s->GetCurrentSceneVersionNumber().Len() == 0) { return; }
+	if (!scenedata.IsValid()){return;}
+
 	//GAZE
 
-	//snapshots are cleared in TickComponent after snapshots are sent to SE
-	FString GazeString = UPlayerTracker::GazeSnapshotsToString();
-	if (GazeString.Len() > 0)
-	{
-		auto scenedata = s->GetSceneData(sceneName);
-		if (scenedata.IsValid())
-		{
-			s->SendJson(Config::PostGazeData(scenedata->Id, scenedata->VersionNumber), GazeString);
-		}
-	}
-
-	//EVENTS
-
-	FString EventString = UPlayerTracker::EventSnapshotsToString();
-	if (EventString.Len() > 0)
-	{
-		auto scenedata = s->GetSceneData(sceneName);
-		if (scenedata.IsValid())
-		{
-			s->SendJson(Config::PostEventData(scenedata->Id, scenedata->VersionNumber), EventString);
-		}
-	}
-}
-
-FString UPlayerTracker::EventSnapshotsToString()
-{
-	if (events.Num() == 0) { return ""; }
-
-	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
-	TArray<TSharedPtr<FJsonValue>> dataArray;
-	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
-
-	wholeObj->SetStringField("userid", cog->GetDeviceID());
-	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", cog->GetCognitiveSessionID());
-	wholeObj->SetNumberField("part", jsonEventPart);
-	jsonEventPart++;
-
-	for (int32 i = 0; i != events.Num(); ++i)
-	{
-		dataArray.Add(MakeShareable(new FJsonValueObject(events[i])));
-	}
-
-	wholeObj->SetArrayField("data", dataArray);
-
-	FString OutputString;
-	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
-	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-	return OutputString;
-}
-
-FString UPlayerTracker::GazeSnapshotsToString()
-{
-	if (snapshots.Num() == 0) { return ""; }
+	if (snapshots.Num() == 0) { return; }
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
@@ -412,7 +331,12 @@ FString UPlayerTracker::GazeSnapshotsToString()
 	FString OutputString;
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-	return OutputString;
+
+	if (OutputString.Len() > 0)
+	{
+		s->network->NetworkCall("gaze", OutputString);
+	}
+	snapshots.Empty();
 }
 
 
@@ -445,8 +369,9 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		if (shouldEndSession)
 		{
 			//this will send gaze and event data to scene explorer from THIS playertracker
-			SendGazeEventDataToSceneExplorer();
+			SendData();
 
+			//TODO this why is endplay on gaze recorder not on core?
 			//cognitivevr manager can't find playercontroller0, but will send events to dash and dynamics+sensors to SE
 			s->EndSession();
 		}

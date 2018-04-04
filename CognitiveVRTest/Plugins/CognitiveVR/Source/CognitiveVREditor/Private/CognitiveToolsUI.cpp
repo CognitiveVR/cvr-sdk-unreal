@@ -879,7 +879,7 @@ TSharedRef<ITableRow> FCognitiveTools::OnGenerateDynamicRow(TSharedPtr<FDynamicD
 			.Padding(2.0f)
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString(FString::FromInt(InItem->Id)))
+				.Text(FText::FromString(InItem->Id))
 			]
 		];
 }

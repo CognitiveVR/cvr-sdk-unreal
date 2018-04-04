@@ -20,7 +20,8 @@ void ExitPoll::MakeQuestionSetRequest(const FString Hook, const FCognitiveExitPo
 	}
 	FString ValueReceived = cogProvider->CustomerId;// = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
 
-	FString url = Config::GetExitPollQuestionSet(ValueReceived, Hook);
+	//FString url = Config::GetExitPollQuestionSet(ValueReceived, Hook);
+	FString url = "data.cognitive3d.com"; //TODO set correct exitpoll url
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("GET");
 	r = response;
@@ -33,7 +34,7 @@ void ExitPoll::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr
 {
 	if (!Response.IsValid())
 	{
-		CognitiveLog::Error("ExitPoll::OnResponseReceivedAsync - No valid Response. Check internet connection");
+		cognitivevrapi::CognitiveLog::Error("ExitPoll::OnResponseReceivedAsync - No valid Response. Check internet connection");
 
 		if (r.IsBound())
 		{
@@ -45,8 +46,7 @@ void ExitPoll::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr
 	currentSet = FExitPollQuestionSet();
 
 	FString UE4Str = Response->GetContentAsString();
-	std::string content(TCHAR_TO_UTF8(*UE4Str));
-	CognitiveLog::Info("ExitPoll::OnResponseReceivedAsync - Response: " + content);
+	cognitivevrapi::CognitiveLog::Info("ExitPoll::OnResponseReceivedAsync - Response: " + UE4Str);
 
 	//CognitiveVRResponse response = Network::ParseResponse(content);
 
@@ -57,7 +57,7 @@ void ExitPoll::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr
 	{
 		if (!jobject->HasField(TEXT("customerId")))
 		{
-			CognitiveLog::Info("ExitPoll::OnResponseReceivedAsync - no customerId in response - fail");
+			cognitivevrapi::CognitiveLog::Info("ExitPoll::OnResponseReceivedAsync - no customerId in response - fail");
 			if (r.IsBound())
 			{
 				r.Execute(FExitPollQuestionSet());
@@ -213,7 +213,8 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 
 	FString ValueReceived = cogProvider->CustomerId;// = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
-	FString url = Config::PostExitPollResponses(ValueReceived, currentSet.name, currentSet.version);
+	//FString url = Config::PostExitPollResponses(ValueReceived, currentSet.name, currentSet.version);
+	FString url = "data.cognitive3d.com"; //TODO add correct exitpoll url
 
 	HttpRequest->SetURL(url);
 	HttpRequest->SetHeader("Content-Type", "application/json");
@@ -264,11 +265,11 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 
 	if (!cogProvider.IsValid() || !bHasSessionStarted)
 	{
-		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		cognitivevrapi::CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	
-	cogProvider.Get()->transaction->BeginEnd("cvr.exitpoll", properties);
+	cogProvider.Get()->customevent->Send(FString("cvr.exitpoll"), FVector(0,0,0), properties); //TODO custom event position should be exitpoll panel position
 
 	//then flush transactions
 	cogProvider.Get()->FlushEvents();
@@ -279,12 +280,12 @@ void ExitPoll::OnQuestionResponse(FHttpRequestPtr Request, FHttpResponsePtr Resp
 {
 	if (!Response.IsValid())
 	{
-		CognitiveLog::Error("ExitPoll::OnQuestionResponse - No valid Response. Check internet connection");
+		cognitivevrapi::CognitiveLog::Error("ExitPoll::OnQuestionResponse - No valid Response. Check internet connection");
 		return;
 	}
 
 	FString UE4Str = "ExitPoll::OnQuestionResponse: " + Response->GetContentAsString();
-	CognitiveLog::Info(TCHAR_TO_UTF8(*UE4Str));
+	cognitivevrapi::CognitiveLog::Info(TCHAR_TO_UTF8(*UE4Str));
 }
 
 void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
@@ -298,13 +299,3 @@ void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 	responses.answers = answers;
 	SendQuestionResponse(responses);
 }
-
-/*FExitPollQuestionSet FExitPoll::GetExitPollQuestionSet(EResponseValueReturn& Out, FString Hook)
-{
-	return FExitPollQuestionSet();
-}
-
-void FExitPoll::SendExitPollResponse(FExitPollResponses FExitPoll)
-{
-
-}*/

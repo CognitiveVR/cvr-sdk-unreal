@@ -286,14 +286,14 @@ FReply FCognitiveTools::SetUniqueDynamicIds()
 	{
 		//id dynamic custom id is not in usedids - add it
 
-		int32 findId = dynamic->CustomId;
+		FString findId = dynamic->CustomId;
 
 		FDynamicObjectId* FoundId = usedIds.FindByPredicate([findId](const FDynamicObjectId& InItem)
 		{
 			return InItem.Id == findId;
 		});
 
-		if (FoundId == NULL && dynamic->CustomId > 0)
+		if (FoundId == NULL && dynamic->CustomId != "")
 		{
 			usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
 		}
@@ -311,12 +311,12 @@ FReply FCognitiveTools::SetUniqueDynamicIds()
 			//find some unused id number
 			FDynamicObjectId* FoundId = usedIds.FindByPredicate([currentUniqueId](const FDynamicObjectId& InItem)
 			{
-				return InItem.Id == currentUniqueId;
+				return InItem.Id == FString::FromInt(currentUniqueId);
 			});
 
 			if (FoundId == NULL)
 			{
-				dynamic->CustomId = currentUniqueId;
+				dynamic->CustomId = FString::FromInt(currentUniqueId);
 				dynamic->UseCustomId = true;
 				changedDynamics++;
 				currentUniqueId++;
@@ -369,11 +369,11 @@ FReply FCognitiveTools::UploadDynamicsManifest()
 	for (int32 i = 0; i < dynamics.Num(); i++)
 	{
 		//if they have a customid -> add them to the objectmanifest string
-		if (dynamics[i]->UseCustomId && dynamics[i]->CustomId != 0)
+		if (dynamics[i]->UseCustomId && dynamics[i]->CustomId != "")
 		{
 			wroteAnyObjects = true;
 			objectManifest += "{";
-			objectManifest += "\"id\":\"" + FString::FromInt(dynamics[i]->CustomId) + "\",";
+			objectManifest += "\"id\":\"" + dynamics[i]->CustomId + "\",";
 			objectManifest += "\"mesh\":\"" + dynamics[i]->MeshName + "\",";
 			objectManifest += "\"name\":\"" + dynamics[i]->GetOwner()->GetName() + "\"";
 			objectManifest += "},";
@@ -493,7 +493,7 @@ void FCognitiveTools::OnDynamicManifestResponse(FHttpRequestPtr Request, FHttpRe
 				TSharedPtr<FJsonObject> jsonobject = JsonDynamics->AsArray()[i]->AsObject();
 				FString name = jsonobject->GetStringField("name");
 				FString meshname = jsonobject->GetStringField("meshName");
-				int32 id = FCString::Atoi(*jsonobject->GetStringField("sdkId"));
+				FString id = jsonobject->GetStringField("sdkId");
 
 				SceneExplorerDynamics.Add(MakeShareable(new FDynamicData(name, meshname, id)));
 			}
@@ -1954,14 +1954,14 @@ bool FCognitiveTools::DuplicateDynamicIdsInScene() const
 	{
 		//id dynamic custom id is not in usedids - add it
 
-		int32 findId = dynamic->CustomId;
+		FString findId = dynamic->CustomId;
 
 		FDynamicObjectId* FoundId = usedIds.FindByPredicate([findId](const FDynamicObjectId& InItem)
 		{
 			return InItem.Id == findId;
 		});
 
-		if (FoundId == NULL && dynamic->CustomId > 0)
+		if (FoundId == NULL && dynamic->CustomId != "")
 		{
 			usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
 		}

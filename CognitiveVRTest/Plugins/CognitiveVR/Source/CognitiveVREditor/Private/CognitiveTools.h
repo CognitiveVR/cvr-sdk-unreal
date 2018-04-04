@@ -32,6 +32,7 @@
 #include "STextComboBox.h"
 #include "SDynamicObjectListWidget.h"
 #include "SDynamicObjectWebListWidget.h"
+#include "Http.h"
 //
 //#include "ExportSceneTool.generated.h"
 

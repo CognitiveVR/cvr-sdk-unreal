@@ -15,26 +15,27 @@ namespace cognitivevrapi
 			#pragma warning(disable:4251) //Disable DLL warning that does not apply in this context.
 
             //CognitiveVR API host. -- Only enterprise customers need this. Ex: https://data.cognitivevr.com
-            static std::string kNetworkHost;
+			static FString kNetworkHost;
+			static int32 kNetworkVersion;
 
             //SSF app. Ex: isos-personalization
-            static std::string kSsfApp;
+            //static std::string kSsfApp;
 
             //SSF Version. Ex: 4
-            static std::string kSsfVersion;
+            //static std::string kSsfVersion;
 
             //SSF Output. Ex: json
-            static std::string kSsfOutput;
+            //static std::string kSsfOutput;
 
             //Tuning variable cache time to live, measured in milliseconds. Ex. 900000 - 15 Minutes
-            static long kTuningCacheTtl;
+            //static long kTuningCacheTtl;
 
             //Network call timeout, measured in seconds. Ex. 5
-            static long kNetworkTimeout;
+            //static long kNetworkTimeout;
 			#pragma warning(pop)
 
 			
-
+			/*
 			//POST dynamics json data to scene explorer             https://data.sceneexplorer.com/dynamics/:sceneId?version=:versionNumber
 			FORCEINLINE static FString PostDynamicData(FString sceneid, int32 versionnumber)
 			{
@@ -75,7 +76,7 @@ namespace cognitivevrapi
 			FORCEINLINE static FString PostExitPollResponses(FString customerid, FString questionsetname, int32 questionsetversion)
 			{
 				return "https://api.cognitivevr.io/products/" + customerid + "/questionSets/" + questionsetname + "/" + FString::FromInt(questionsetversion) + "/responses";
-			}
+			}*/
     };
 }
 #endif  // COGNITIVEVR_CONFIG_H_

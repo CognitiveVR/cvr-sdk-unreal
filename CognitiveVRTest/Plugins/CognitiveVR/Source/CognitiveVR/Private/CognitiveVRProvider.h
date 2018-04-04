@@ -5,25 +5,20 @@
 #include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
 
-#include "Private/unreal/override_http_interface.h"
+//#include "Private/unreal/override_http_interface.h"
 #include "Private/util/util.h"
 #include "Private/util/config.h"
 #include "Private/util/cognitive_log.h"
-#include "Private/network/cognitivevr_response.h"
-#include "Private/util/cognitivevr_exception.h"
-#include "Private/network/http_interface.h"
-#include "Private/unreal/buffer_manager.h"
+//#include "Private/network/cognitivevr_response.h"
+//#include "Private/util/cognitivevr_exception.h"
+//#include "Private/network/http_interface.h"
+//#include "Private/unreal/buffer_manager.h"
 #include "Private/network/network.h"
-#include "Private/api/tuning.h"
-#include "Private/api/transaction.h"
+#include "Private/api/customevent.h"
 #include "Private/api/sensor.h"
 #include "Private/api/coreutilities.h"
 //#include "DynamicObject.h"
 #include "Engine.h"
-
-DECLARE_MULTICAST_DELEGATE(FCognitiveSendData);
-DECLARE_EVENT_OneParam(FAnalyticsProviderCognitiveVR, FCognitiveInitResponse, bool);
-//DECLARE_DELEGATE_OneParam(FCognitiveExitPollResponse, FExitPollQuestionSet);
 
 class FSceneData
 {
@@ -58,11 +53,8 @@ extern bool bHasSessionStarted;
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
 	class Network;
-	class Transaction;
-	class Tuning;
-	class BufferManager;
+	class CustomEvent;
 	class CoreUtilities;
-	class OverrideHttpInterface;
 	class CognitiveVRResponse;
 	class Sensors;
 	//class ExitPoll;
@@ -89,7 +81,7 @@ extern bool bHasSessionStarted;
 		/** The file archive used to write the data */
 		//FArchive* FileArchive;
 
-		FCognitiveInitResponse InitResponseEvent;
+		//FCognitiveInitResponse InitResponseEvent;
 
 	public:
 		/** Id representing the user the analytics are recording for */
@@ -133,21 +125,10 @@ extern bool bHasSessionStarted;
 
 
 		//custom cognitive
-
-		bool SendJson(FString url, FString Json);
-		//FString GetCurrentSceneId();
-		//FString GetSceneId(FString sceneName);
-
-		UPROPERTY(BlueprintAssignable)
-		FCognitiveSendData OnSendData;
-
-		FCognitiveInitResponse& OnInitResponse() { return InitResponseEvent; }
-
+		
 		FString DeviceId;
-		TSharedPtr<Transaction> transaction;
-		TSharedPtr<Tuning> tuning;
+		TSharedPtr<CustomEvent> customevent;
 		TSharedPtr<Network> network;
-		TSharedPtr<BufferManager> thread_manager;
 		TSharedPtr<CoreUtilities> core_utils;
 		TSharedPtr<Sensors> sensors;
 		TSharedPtr<FJsonObject> initProperties; //optional properties sent when initializing. platform, ram, etc
@@ -167,6 +148,9 @@ extern bool bHasSessionStarted;
 
 		FString CustomerId;
 
+		FString GetCurrentSceneId();
+		FString GetCurrentSceneVersionNumber();
+
 		void OnLevelLoaded();
 		void SetWorld(UWorld* world);
 
@@ -176,4 +160,4 @@ extern bool bHasSessionStarted;
 		TSharedPtr<FSceneData> GetCurrentSceneData();
 	};
 
-	void ThrowDummyResponseException(std::string s);
+	//void ThrowDummyResponseException(std::string s);

@@ -36,6 +36,7 @@ void UDynamicObject::OnComponentCreated()
 			return;
 		}
 		MeshName = staticmeshComponent->GetStaticMesh()->GetName();
+		CustomId = FGuid::NewGuid().ToString();
 	}
 }
 
@@ -67,30 +68,10 @@ void UDynamicObject::BeginPlay()
 		}
 	}
 
-	if (!s->HasStartedSession())
-	{
-		//TODO this should set a callback when session becomes started
+	//even if session has not started, still collect data
+	//session must be started to send
+	//scene id must be valid to send
 
-		//s->OnInitResponse.AddSP(this, &UDynamicObject::BeginPlayCallback); //multicast delegate style
-
-		//s->OnInitResponse().
-		s->OnInitResponse().AddUObject(this, &UDynamicObject::BeginPlayCallback);
-
-		FString UE4Str = GetOwner()->GetName();
-		std::string MyStdString(TCHAR_TO_UTF8(*UE4Str));
-
-		//s->OnInitResponse.Bind(this, BeginPlayCallback);
-
-		return;
-	}
-
-	BeginPlayCallback(true);
-	FString UE4Str2 = GetOwner()->GetName();
-	std::string MyStdString3(TCHAR_TO_UTF8(*UE4Str2));
-}
-
-void UDynamicObject::BeginPlayCallback(bool successful)
-{
 	LastPosition = GetOwner()->GetActorLocation();
 	LastForward = GetOwner()->GetActorForwardVector();
 
@@ -158,7 +139,7 @@ TSharedPtr<FDynamicObjectId> UDynamicObject::GetUniqueId(FString meshName)
 	static int32 originalId = 1000;
 	originalId++;
 
-	freeId = MakeShareable(new FDynamicObjectId(originalId, meshName));
+	freeId = MakeShareable(new FDynamicObjectId(FString::FromInt(originalId), meshName));
 	return freeId;
 }
 
@@ -240,11 +221,11 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 	if (!s.IsValid())
 	{
 		//can't stop snapshots here. at beginning of the game, the manager might not be finished setting up
-		CognitiveLog::Error("DynamicObject::MakeSnapshot provider is null. finding provider");
+		cognitivevrapi::CognitiveLog::Error("DynamicObject::MakeSnapshot provider is null. finding provider");
 		s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	}
 
-	if (Util::GetTimestamp() < s->LastSesisonTimestamp)
+	if (cognitivevrapi::Util::GetTimestamp() < s->LastSesisonTimestamp)
 	{
 		FDynamicObjectSnapshot snapshot = FDynamicObjectSnapshot();
 		return snapshot;
@@ -252,7 +233,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 
 	//decide if the object needs a new entry in the manifest
 	bool needObjectId = false;
-	if (!ObjectID.IsValid() || ObjectID->Id == -1)
+	if (!ObjectID.IsValid() || ObjectID->Id == "")
 	{
 		needObjectId = true;
 	}
@@ -294,13 +275,11 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 			{
 				ObjectID = recycledId;
 				ObjectID->Used = true;
-				std::string MyStdString(TCHAR_TO_UTF8(*MeshName));
-				CognitiveLog::Info("UDynamicObject::Recycle ObjectID! " + MyStdString);
+				cognitivevrapi::CognitiveLog::Info("UDynamicObject::Recycle ObjectID! " + MeshName);
 			}
 			else
 			{
-				std::string MyStdString(TCHAR_TO_UTF8(*MeshName));
-				CognitiveLog::Info("UDynamicObject::Get new ObjectID! " + MyStdString);
+				cognitivevrapi::CognitiveLog::Info("UDynamicObject::Get new ObjectID! " + MeshName);
 				ObjectID = GetUniqueId(MeshName);
 
 				allObjectIds.Add(ObjectID);
@@ -329,14 +308,15 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 
 		if (manifest.Num() == 1)
 		{
-			CognitiveLog::Info("DynamicObject::MakeSnapshot Register Provider->OnSendData for Dynamics");
-			s->OnSendData.AddStatic(SendData);
+			cognitivevrapi::CognitiveLog::Info("DynamicObject::MakeSnapshot Register Provider->OnSendData for Dynamics");
+			//s->OnSendData.AddStatic(SendData);
+			//TODO register dynamic object send data to some event, or just call manually from core
 		}
 	}
 
 	FDynamicObjectSnapshot snapshot = FDynamicObjectSnapshot();
 
-	double ts = Util::GetTimestamp();
+	double ts = cognitivevrapi::Util::GetTimestamp();
 
 	snapshot.time = ts;
 	snapshot.id = ObjectID->Id;
@@ -370,7 +350,7 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 	TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
 
 	//id
-	snapObj->SetNumberField("id", snapshot.id);
+	snapObj->SetStringField("id", snapshot.id);
 
 	//time
 	snapObj->SetNumberField("time", snapshot.time);
@@ -457,7 +437,7 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 		{
 			TSharedPtr<FJsonObject>engagement = MakeShareable(new FJsonObject);
 
-			engagement->SetNumberField("engagementparent", Elem.Parent);
+			engagement->SetStringField("engagementparent", Elem.Parent);
 			engagement->SetNumberField("engagement_time", Elem.EngagementTime);
 			engagement->SetNumberField("engagement_count", Elem.EngagementNumber);
 
@@ -481,23 +461,16 @@ void UDynamicObject::SendData()
 		GLog->Log("DynamicObject::SendData current scene data is invalid");
 		return;
 	}
-	SendData(currentscenedata->Name);
-}
 
-//TODO only combine 64 entries, prioritizing the manifest
-void UDynamicObject::SendData(FString sceneName)
-{
 	if (newManifest.Num() + snapshots.Num() == 0)
 	{
-		CognitiveLog::Info("UDynamicObject::SendData no objects or data to send!");
+		cognitivevrapi::CognitiveLog::Info("UDynamicObject::SendData no objects or data to send!");
 		return;
 	}	
 	
 	TArray<TSharedPtr<FJsonValueObject>> EventArray = UDynamicObject::DynamicSnapshotsToString();
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
-	
-	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
 
 	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
@@ -528,11 +501,7 @@ void UDynamicObject::SendData(FString sceneName)
 	//cog->SendJson("dynamics", OutputString);
 	//FString sceneid = cog->GetCurrentSceneId();
 	
-	auto scenedata = cog->GetSceneData(sceneName);
-	if (scenedata.IsValid())
-	{
-		cog->SendJson(Config::PostDynamicData(scenedata->Id, scenedata->VersionNumber), OutputString);
-	}
+	cog->network->NetworkCall("dynamic", OutputString);
 
 	snapshots.Empty();
 }
@@ -547,7 +516,7 @@ TSharedPtr<FJsonObject> UDynamicObject::DynamicObjectManifestToString()
 		entry->SetStringField("name", newManifest[i].Name);
 		entry->SetStringField("mesh", newManifest[i].MeshName);
 
-		manifestObject->SetObjectField(FString::FromInt(newManifest[i].Id), entry);
+		manifestObject->SetObjectField(newManifest[i].Id, entry);
 	}
 
 	return manifestObject;
@@ -615,7 +584,7 @@ void UDynamicObject::BeginEngagement(UDynamicObject* target, FString engagementT
 	}
 }
 
-void UDynamicObject::BeginEngagementId(FString engagementName, int32 parentObjectId)
+void UDynamicObject::BeginEngagementId(FString engagementName, FString parentObjectId)
 {
 	bool didFindEvent = false;
 	int32 previousEngagementCount = 0;
@@ -644,12 +613,12 @@ void UDynamicObject::EndEngagement(UDynamicObject* target, FString engagementTyp
 	}
 }
 
-void UDynamicObject::EndEngagementId(FString engagementName, int32 parentObjectId)
+void UDynamicObject::EndEngagementId(FString engagementName, FString parentObjectId)
 {
 	FEngagementEvent* foundEvent = NULL;
 	for (auto& e : DirtyEngagements)
 	{
-		if (e.EngagementType == engagementName && (e.Parent == parentObjectId || parentObjectId == -1))
+		if (e.EngagementType == engagementName && (e.Parent == parentObjectId || parentObjectId == ""))
 		{
 			foundEvent = &e;
 			break;

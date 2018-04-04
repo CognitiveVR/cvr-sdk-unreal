@@ -72,7 +72,7 @@ TSharedRef<ITableRow> SDynamicObjectWebListWidget::OnGenerateRowForList(TSharedP
 		.Padding(2.0f)
 		[
 			SNew(STextBlock)
-			.Text(FText::FromString(FString::FromInt(InItem->Id)))
+			.Text(FText::FromString(InItem->Id))
 		]
 		];
 }
