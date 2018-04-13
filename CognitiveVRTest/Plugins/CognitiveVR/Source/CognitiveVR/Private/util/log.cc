@@ -49,26 +49,26 @@ void CognitiveLog::Init()
 	}
 }
 
-void CognitiveLog::DebugInfo(std::string s, bool newline)
+void CognitiveLog::DebugInfo(FString s)
 {
 	if (MuteDebugMessages) { return; }
-	UE_LOG(CognitiveVR_Log, Log, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
+	UE_LOG(CognitiveVR_Log, Log, TEXT("%s"), *s);
 }
 
-void CognitiveLog::Info(std::string s, bool newline)
+void CognitiveLog::Info(FString s)
 {
 	if (MuteInfoMessages) { return; }
-	UE_LOG(CognitiveVR_Log, Log, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
+	UE_LOG(CognitiveVR_Log, Log, TEXT("%s"), *s);
 }
 
-void CognitiveLog::Warning(std::string s, bool newline)
+void CognitiveLog::Warning(FString s)
 {
 	if (MuteWarningMessages) { return; }
-	UE_LOG(CognitiveVR_Log, Warning, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
+	UE_LOG(CognitiveVR_Log, Warning, TEXT("%s"), *s);
 }
 
-void CognitiveLog::Error(std::string s, bool newline)
+void CognitiveLog::Error(FString s)
 {
 	if (MuteErrorMessages) { return; }
-	UE_LOG(CognitiveVR_Log, Error, TEXT("%s"), UTF8_TO_TCHAR(s.c_str()));
+	UE_LOG(CognitiveVR_Log, Error, TEXT("%s"), *s);
 }

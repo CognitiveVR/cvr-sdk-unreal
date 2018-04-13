@@ -45,179 +45,59 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 	// Create a commands category
 	IDetailCategoryBuilder& LoginCategory = DetailBuilder.EditCategory(TEXT("Account"),FText::GetEmpty(),ECategoryPriority::Important);
 
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.HAlign(HAlign_Fill)
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			.MaxWidth(96)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("Email"))
-			]
-
-			+ SHorizontalBox::Slot()
-			.MaxWidth(128)
-			[
-				SNew(SEditableTextBox)
-				.MinDesiredWidth(128)
-				.Visibility(this,&FCognitiveTools::LoginTextboxUsable)
-				.OnTextChanged(this,&FCognitiveTools::OnEmailChanged)
-			]
-		];
-
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-		.ValueContent()
-		.HAlign(HAlign_Fill)
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			.MaxWidth(96)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("Password"))
-			]
-
-			+ SHorizontalBox::Slot()
-			.MaxWidth(128)
-			[
-				SNew(SEditableTextBox)
-				.IsPassword(true)
-				.MinDesiredWidth(128)
-				.Visibility(this, &FCognitiveTools::LoginTextboxUsable)
-				.OnTextChanged(this,&FCognitiveTools::OnPasswordChanged)
-			]
-
-			+ SHorizontalBox::Slot() //log in
-			.MaxWidth(128)
-				.Padding(4, 0, 0, 0)
-			[
-				SNew(SButton)
-				.Visibility(this, &FCognitiveTools::GetLoginButtonState)
-				.IsEnabled(this, &FCognitiveTools::HasValidLogInFields)
-				.Text(FText::FromString("Log In"))
-				.OnClicked(this, &FCognitiveTools::LogIn)
-			]
-			
-			+ SHorizontalBox::Slot() //log out
-			.MaxWidth(128)
-			.Padding(4,0,0,0)
-			[
-				SNew(SButton)
-				.Visibility(this, &FCognitiveTools::GetLogoutButtonState)
-				.IsEnabled(true)
-				.Text(FText::FromString("Log Out"))
-				.OnClicked(this, &FCognitiveTools::LogOut)
-			]
-		];
-
 	//simple spacer
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+	/*LoginCategory.AddCustomRow(FText::FromString("Commands"))
 	.ValueContent()
 	.HAlign(HAlign_Fill)
 	[
 		SNew(SHorizontalBox)
 		.Visibility(EVisibility::Hidden)
-	];
-
-	//ORGANIZATION DROPDOWN
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-	.ValueContent()
-	.HAlign(HAlign_Fill)
-	[
-		SNew(SHorizontalBox)
-		//button
-		+ SHorizontalBox::Slot()
-		.MaxWidth(96)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString("Organization"))
-		]
-
-		+ SHorizontalBox::Slot()
-		.MaxWidth(128)
-		[
-			SNew(STextComboBox)
-			.OptionsSource(&AllOrgNames)
-			.IsEnabled(this, &FCognitiveTools::HasLoggedIn)				
-			.OnSelectionChanged(this, &FCognitiveTools::OnOrganizationChanged)
-		]
-	];
-
-	//PRODUCT DROPDOWN
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-	.ValueContent()
-	.HAlign(HAlign_Fill)
-	[
-		SNew(SHorizontalBox)
-		//button
-		+ SHorizontalBox::Slot()
-		.MaxWidth(96)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString("Product"))
-		]
-
-		+ SHorizontalBox::Slot()
-		.MaxWidth(128)
-		[
-			SNew(STextComboBox)
-			.IsEnabled(this,&FCognitiveTools::HasLoggedIn)
-			.OptionsSource(&AllProductNames)
-			.OnSelectionChanged(this, &FCognitiveTools::OnProductChanged)
-		]
-	];
-
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-	.ValueContent()
-	.MinDesiredWidth(256)
-	[
-		SNew(SHorizontalBox)
-		+ SHorizontalBox::Slot()
-		.MaxWidth(128)
-		[
-			SNew(SCheckBox)
-			.Style(FCoreStyle::Get(), "RadioButton")
-			.IsEnabled(this, &FCognitiveTools::HasLoadedOrSelectedValidProduct)
-			.IsChecked(this, &FCognitiveTools::HandleRadioButtonIsChecked, EReleaseType::Test)
-			.OnCheckStateChanged(this, &FCognitiveTools::HandleRadioButtonCheckStateChanged, EReleaseType::Test)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("Test"))
-			]
-		]
+	];*/
 	
-		+ SHorizontalBox::Slot()
-		.MaxWidth(128)
-		[
-			SNew(SCheckBox)
-			.Style(FCoreStyle::Get(), "RadioButton")
-			.IsEnabled(this, &FCognitiveTools::HasLoadedOrSelectedValidProduct)
-			.IsChecked(this, &FCognitiveTools::HandleRadioButtonIsChecked, EReleaseType::Production)
-			.OnCheckStateChanged(this, &FCognitiveTools::HandleRadioButtonCheckStateChanged, EReleaseType::Production)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("Production"))
-			]
-		]
-	];
 
-	//simple spacer
+	
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
 	.ValueContent()
 	.HAlign(HAlign_Fill)
 	[
 		SNew(SHorizontalBox)
-		.Visibility(EVisibility::Hidden)
+		+ SHorizontalBox::Slot()
+		.MaxWidth(96)
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString("Developer Key"))
+		]
+
+		+ SHorizontalBox::Slot()
+		.MaxWidth(128)
+		[
+			SNew(SEditableTextBox)
+			.MinDesiredWidth(128)
+			.Text(this, &FCognitiveTools::GetDeveloperKey)
+			.OnTextChanged(this,&FCognitiveTools::OnDeveloperKeyChanged)
+		]
 	];
 
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
 	.ValueContent()
-	.MinDesiredWidth(256)
+	.HAlign(HAlign_Fill)
 	[
-		SNew(STextBlock)
-		.Text(this,&FCognitiveTools::GetCustomerId)
+		SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot()
+		.MaxWidth(96)
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString("API Key"))
+		]
+
+		+ SHorizontalBox::Slot()
+		.MaxWidth(128)
+		[
+			SNew(SEditableTextBox)
+			.MinDesiredWidth(128)
+			.Text(this, &FCognitiveTools::GetAPIKey)
+			.OnTextChanged(this,&FCognitiveTools::OnAPIKeyChanged)
+		]
 	];
 
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
@@ -226,18 +106,8 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 	[
 		SNew(SButton)
 		.Text(FText::FromString("Save"))
-		.IsEnabled(this,&FCognitiveTools::HasSelectedValidProduct)
-		.OnClicked(this, &FCognitiveTools::SaveCustomerIdToFile)
-	];
-
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
-	.ValueContent()
-	.MinDesiredWidth(256)
-	[
-		SNew(SButton)
-		.Text(FText::FromString("Open on Dashboard..."))
-		.IsEnabled(this,&FCognitiveTools::EnableOpenProductOnDashboard)
-		.OnClicked(this, &FCognitiveTools::OpenProductOnDashboard)
+		//.IsEnabled(this,&FCognitiveTools::HasSelectedValidProduct)
+		.OnClicked(this, &FCognitiveTools::SaveAPIDeveloperKeysToFile)
 	];
 
 	LoginCategory.AddCustomRow(FText::FromString("Commands"))
@@ -264,7 +134,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 		[
 			SNew(SButton)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.IsEnabled(this, &FCognitiveTools::HasEditorAuthToken)
+			.IsEnabled(this, &FCognitiveTools::HasDeveloperKey)
 			.Text(FText::FromString("Get Latest Scene Version Data"))
 			.ToolTip(SNew(SToolTip).Text(LOCTEXT("get scene data tip", "This will get the latest scene version data from Scene Explorer and saves it to your config files. Must restart Unreal Editor to see the changes in your config files here")))
 			.OnClicked(this, &FCognitiveTools::DebugRefreshCurrentScene)
@@ -352,7 +222,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				+SHorizontalBox::Slot()
 				[
 					SNew(SButton)
-					.IsEnabled(this, &FCognitiveTools::HasLoggedIn)
+					.IsEnabled(this, &FCognitiveTools::HasDeveloperKey)
 					.Text(FText::FromString("Select Blender.exe"))
 					.OnClicked(this, &FCognitiveTools::Select_Blender)
 				]
@@ -638,7 +508,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				.AutoHeight()
 				[
 					SNew(SButton)
-					.IsEnabled(this,&FCognitiveTools::HasLoggedIn)
+					.IsEnabled(this,&FCognitiveTools::HasDeveloperKey)
 					.Text(FText::FromString("Select Dynamic Mesh Directory"))
 					.OnClicked(this, &FCognitiveTools::SelectDynamicsDirectory)
 				]
@@ -722,7 +592,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				.AutoHeight()
 				[
 					SNew(SButton)
-					.IsEnabled(this, &FCognitiveTools::HasLoggedIn)
+					.IsEnabled(this, &FCognitiveTools::HasDeveloperKey)
 					.Text(FText::FromString("Refresh"))
 					.OnClicked(this, &FCognitiveTools::RefreshDisplayDynamicObjectsCountInScene)
 				]
@@ -745,7 +615,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 				.AutoHeight()
 				[
 					SNew(SButton)
-					.IsEnabled(this, &FCognitiveTools::HasLoggedIn)
+					.IsEnabled(this, &FCognitiveTools::HasDeveloperKey)
 					.Text(FText::FromString("Set Unique Dynamic Ids"))
 					.OnClicked(this, &FCognitiveTools::SetUniqueDynamicIds)
 				]
@@ -784,7 +654,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					+ SHorizontalBox::Slot()
 					[
 						SNew(SButton)
-						.IsEnabled(this,&FCognitiveTools::HasEditorAuthToken)
+						.IsEnabled(this,&FCognitiveTools::HasDeveloperKey)
 						.ToolTip(SNew(SToolTip).Text(this,&FCognitiveTools::GetDynamicsOnSceneExplorerTooltip))
 						.Text(FText::FromString("Get Dynamics List from SceneExplorer"))
 						.OnClicked(this, &FCognitiveTools::GetDynamicsManifest)
@@ -792,7 +662,7 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 					+ SHorizontalBox::Slot()
 					[
 						SNew(SButton)
-						.IsEnabled(this, &FCognitiveTools::HasEditorAuthToken)
+						.IsEnabled(this, &FCognitiveTools::HasDeveloperKey)
 						.ToolTip(SNew(SToolTip).Text(this, &FCognitiveTools::SendDynamicsToSceneExplorerTooltip))
 						.Text(FText::FromString("Send Dynamics List to SceneExplorer"))
 						.OnClicked(this, &FCognitiveTools::UploadDynamicsManifest)
@@ -806,7 +676,11 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 	FCognitiveTools::RefreshDisplayDynamicObjectsCountInScene();
 	FCognitiveTools::SearchForBlender();
 
-	SelectedProduct.customerId = GetCustomerIdFromFileWithoutRelease();
+	FString EngineIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
+	FString EditorIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEditor.ini"));
+
+	GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), APIKey, EngineIni);
+	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
 }
 
 TSharedRef<ITableRow> FCognitiveTools::OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
@@ -879,14 +753,31 @@ TSharedRef<ITableRow> FCognitiveTools::OnGenerateDynamicRow(TSharedPtr<FDynamicD
 			.Padding(2.0f)
 			[
 				SNew(STextBlock)
-				.Text(FText::FromString(FString::FromInt(InItem->Id)))
+				.Text(FText::FromString(InItem->Id))
 			]
 		];
 }
 
-bool FCognitiveTools::HasValidLogInFields() const
+void FCognitiveTools::OnAPIKeyChanged(const FText& Text)
 {
-	return Email.Len() > 0 && Password.Len() > 0;
+	APIKey = Text.ToString();
+	//FAnalyticsCognitiveVR::GetCognitiveVRProvider()->APIKey = APIKey;
+	//FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
+}
+
+FText FCognitiveTools::GetAPIKey() const
+{
+	return FText::FromString(APIKey);
+}
+
+FText FCognitiveTools::GetDeveloperKey() const
+{
+	return FText::FromString(FAnalyticsCognitiveVR::Get().DeveloperKey);
+}
+
+void FCognitiveTools::OnDeveloperKeyChanged(const FText& Text)
+{
+	FAnalyticsCognitiveVR::Get().DeveloperKey = Text.ToString();
 }
 
 FText FCognitiveTools::UploadSceneNameFiles() const
@@ -923,13 +814,6 @@ FText FCognitiveTools::OpenSceneNameInBrowser() const
 	return FText::FromString(outstring);
 }
 
-EVisibility FCognitiveTools::LoginTextboxUsable() const
-{
-	if (HasLoggedIn())
-		return EVisibility::HitTestInvisible;
-	return EVisibility::Visible;
-}
-
 FText FCognitiveTools::GetDynamicObjectUploadText() const
 {
 	auto data = GetCurrentSceneData();
@@ -944,18 +828,6 @@ FText FCognitiveTools::GetDynamicObjectUploadText() const
 FText FCognitiveTools::GetDynamicsFromManifest() const
 {
 	return FText::FromString("DYNAMICS");
-}
-
-FReply FCognitiveTools::LogOut()
-{
-	Email = "";
-	Password = "";
-
-	FAnalyticsCognitiveVR::Get().EditorAuthToken = "";
-	FAnalyticsCognitiveVR::Get().EditorSessionId = "";
-	FAnalyticsCognitiveVR::Get().EditorSessionToken = "";
-
-	return FReply::Handled();
 }
 
 FReply FCognitiveTools::RefreshDynamicSubDirectory()
@@ -975,71 +847,6 @@ FReply FCognitiveTools::DebugRefreshCurrentScene()
 	}
 
 	return FReply::Handled();
-}
-
-EVisibility FCognitiveTools::GetLogoutButtonState() const
-{
-	if (HasLoggedIn())
-		return EVisibility::Visible;
-	return EVisibility::Collapsed;
-}
-
-EVisibility FCognitiveTools::GetLoginButtonState() const
-{
-	if (HasLoggedIn())
-		return EVisibility::Collapsed;
-	return EVisibility::Visible;
-}
-
-FString FCognitiveTools::GetCustomerIdFromFile() const
-{
-	FString customerid;
-	GConfig->GetString(TEXT("Analytics"), TEXT("CognitiveVRApiKey"), customerid, GEngineIni);
-	return customerid;
-}
-
-FString FCognitiveTools::GetCustomerIdFromFileWithoutRelease() const
-{
-	FString customerid;
-	GConfig->GetString(TEXT("Analytics"), TEXT("CognitiveVRApiKey"), customerid, GEngineIni);
-	customerid.RemoveFromEnd("-test");
-	customerid.RemoveFromEnd("-prod");
-	return customerid;
-}
-
-bool FCognitiveTools::HasSavedCustomerId() const
-{
-	FString customerid = GetCustomerIdFromFile();
-	if (customerid.Len() == 0) { return false; }
-	if (customerid.EndsWith("-test")) { return true; }
-	if (customerid.EndsWith("-prod")) { return true; }
-	return false;
-}
-
-void FCognitiveTools::SaveOrganizationNameToFile(FString organization)
-{
-	//GConfig->SetString(TEXT("Analytics"), TEXT("CognitiveOrganization"), *organization, GEngineIni);
-	//GConfig->Flush(false, GEngineIni);
-}
-
-TSharedPtr< FString > FCognitiveTools::GetOrganizationNameFromFile()
-{
-	FString organization;
-	GConfig->GetString(TEXT("Analytics"), TEXT("CognitiveOrganization"), organization, GEngineIni);
-	return MakeShareable(new FString(organization));
-}
-
-void FCognitiveTools::SaveProductNameToFile(FString product)
-{
-	//GConfig->SetString(TEXT("Analytics"), TEXT("CognitiveProduct"), *product, GEngineIni);
-	//GConfig->Flush(false, GEngineIni);
-}
-
-TSharedPtr< FString > FCognitiveTools::GetProductNameFromFile()
-{
-	FString product;
-	GConfig->GetString(TEXT("Analytics"), TEXT("CognitiveProduct"), product, GEngineIni);
-	return MakeShareable(new FString(product));
 }
 
 FReply FCognitiveTools::OpenSceneInBrowser(FString sceneid)
@@ -1063,20 +870,6 @@ FReply FCognitiveTools::OpenCurrentSceneInBrowser()
 	FString url = SceneExplorerOpen(scenedata->Id);
 
 	return FReply::Handled();
-}
-
-// Callback for checking a radio button.
-void FCognitiveTools::HandleRadioButtonCheckStateChanged(ECheckBoxState NewRadioState, EReleaseType RadioThatChanged)
-{
-	if (NewRadioState == ECheckBoxState::Checked)
-	{
-		RadioChoice = RadioThatChanged;
-	}
-
-	if (HasSelectedValidProduct())
-	{
-		SaveCustomerIdToFile();
-	}
 }
 
 FReply FCognitiveTools::RefreshSceneData()
@@ -1117,7 +910,7 @@ FReply FCognitiveTools::RefreshSceneData()
 
 void FCognitiveTools::SceneVersionRequest(FEditorSceneData data)
 {
-	if (FAnalyticsCognitiveVR::Get().EditorAuthToken.Len() == 0)
+	if (!HasDeveloperKey())
 	{
 		GLog->Log("FCognitiveTools::SceneVersionRequest no auth token. TODO get auth token and retry");
 		//auto httprequest = RequestAuthTokenCallback();
@@ -1132,7 +925,9 @@ void FCognitiveTools::SceneVersionRequest(FEditorSceneData data)
 	GLog->Log("FCognitiveTools::SceneVersionRequest send scene version request");
 
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
-	HttpRequest->SetHeader("Authorization", TEXT("Bearer " + FAnalyticsCognitiveVR::Get().EditorAuthToken));
+	//HttpRequest->SetHeader("Authorization", TEXT("Data " + FAnalyticsCognitiveVR::Get().EditorAuthToken));
+	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	HttpRequest->SetHeader("Authorization", AuthValue);
 
 	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::SceneVersionResponse);
 	HttpRequest->ProcessRequest();
@@ -1268,14 +1063,6 @@ TArray<TSharedPtr<FEditorSceneData>> FCognitiveTools::GetSceneData() const
 	return SceneData;
 }
 
-// Callback for determining whether a radio button is checked.
-ECheckBoxState FCognitiveTools::HandleRadioButtonIsChecked(EReleaseType ButtonId) const
-{
-	return (RadioChoice == ButtonId)
-		? ECheckBoxState::Checked
-		: ECheckBoxState::Unchecked;
-}
-
 ECheckBoxState FCognitiveTools::HasFoundBlenderCheckbox() const
 {
 	return (HasFoundBlender())
@@ -1283,352 +1070,22 @@ ECheckBoxState FCognitiveTools::HasFoundBlenderCheckbox() const
 		: ECheckBoxState::Unchecked;
 }
 
-bool FCognitiveTools::HasLoggedIn() const
+FReply FCognitiveTools::SaveAPIDeveloperKeysToFile()
 {
-	return FAnalyticsCognitiveVR::Get().EditorSessionToken.Len() > 0;
-}
+	FString EngineIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
+	FString EditorIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEditor.ini"));
+	//GLog->Log("FCognitiveTools::SaveAPIDeveloperKeysToFile save: " + CustomerId);
 
-bool FCognitiveTools::HasSelectedValidProduct() const
-{
-	if (!HasLoggedIn()) { return false; }
-	return SelectedProduct.customerId.Len() > 0;
-}
+	GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *APIKey, EngineIni);
 
-bool FCognitiveTools::HasLoadedOrSelectedValidProduct() const
-{
-	if (!HasLoggedIn()) { return false; }
-	if (SelectedProduct.customerId.Len() > 0) { return true; }
-	if (HasSavedCustomerId()) { return true; }
-	return false;
-}
-
-bool FCognitiveTools::CustomerIdDoesntMatchFile() const
-{
-	FString customerid = GetCustomerIdFromFile();
-	if (customerid != SelectedProduct.customerId)
-	{
-		return true;
-	}
-	return false;
-}
-
-FCognitiveTools::EReleaseType FCognitiveTools::GetReleaseTypeFromFile()
-{
-	FString customerid = FCognitiveTools::GetCustomerIdFromFile();
-
-	if (customerid.Len() > 0)
-	{
-		if (customerid.EndsWith("-prod"))
-		{
-			return EReleaseType::Production;
-		}
-	}
-	return EReleaseType::Test;
-}
-
-FReply FCognitiveTools::SaveCustomerIdToFile()
-{
-	FString CustomerId = SelectedProduct.customerId;
-
-	if (RadioChoice == EReleaseType::Test)
-	{
-		CustomerId.Append("-test");
-	}
-	else
-	{
-		CustomerId.Append("-prod");
-	}
-	
-	FString TestSyncFile = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
-	GLog->Log("FCognitiveTools::SaveCustomerIdToFile save: " + CustomerId);
-
-	GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), TestSyncFile);
-	GConfig->SetString(TEXT("Analytics"), TEXT("CognitiveVRApiKey"), *CustomerId, TestSyncFile);
-
-	SaveProductNameToFile(SelectedProduct.name);
+	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
 
 	GConfig->Flush(false, GEngineIni);
 
 	ConfigFileHasChanged = true;
 
 	return FReply::Handled();
-}
-
-void FCognitiveTools::OnEmailChanged(const FText& Text)
-{
-	Email = Text.ToString();
-}
-
-void FCognitiveTools::OnPasswordChanged(const FText& Text)
-{
-	Password = Text.ToString();
-}
-
-FReply FCognitiveTools::OpenProductOnDashboard()
-{
-	FString url = DashboardNewProduct(GetCustomerId().ToString());
-
-	if (RadioChoice == EReleaseType::Test)
-	{
-		url.Append("-test");
-	}
-	else
-	{
-		url.Append("-prod");
-	}
-
-	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);
-
-	return FReply::Handled();
-}
-
-bool FCognitiveTools::EnableOpenProductOnDashboard() const
-{
-	return HasSelectedValidProduct();
-}
-
-void FCognitiveTools::OnProductChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo)
-{
-	if (!Selection.IsValid()) { return; }
-
-	FString newProductName = *Selection;
-	for (int i = 0; i < ProductInfos.Num(); i++)
-	{
-		if (newProductName == ProductInfos[i].name)
-		{
-			SelectedProduct = ProductInfos[i];
-			return;
-		}
-	}
-}
-
-void FCognitiveTools::OnOrganizationChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo)
-{
-	if (!Selection.IsValid()) { return; }
-
-	FString newOrgName = *Selection;
-
-	//GLog->Log("organization selection changed " + newOrgName);
-
-	FOrganizationData selectedOrg;
-
-	for (int i = 0; i < OrganizationInfos.Num(); i++)
-	{
-		if (OrganizationInfos[i].name == newOrgName)
-		{
-			selectedOrg = OrganizationInfos[i];
-			break;
-		}
-	}
-
-	SaveOrganizationNameToFile(selectedOrg.name);
-
-	ProductInfos.Empty();
-
-	TArray<TSharedPtr<FJsonValue>> mainArray = JsonUserData->GetArrayField("products");
-	for (int RowNum = 0; RowNum != mainArray.Num(); RowNum++) {
-		TSharedPtr<FJsonObject> tempRow = mainArray[RowNum]->AsObject();
-		if (tempRow->GetStringField("orgId") != selectedOrg.id)
-		{
-			continue;
-		}
-		FProductData tempProduct;
-		tempProduct.id = tempRow->GetStringField("id");
-		tempProduct.name = tempRow->GetStringField("name");
-		tempProduct.orgId = tempRow->GetStringField("orgId");
-		tempProduct.customerId = tempRow->GetStringField("customerId");
-		ProductInfos.Add(tempProduct);
-
-		AllProductNames.Add(MakeShareable(new FString(tempProduct.name)));
-	}
-}
-
-TArray<TSharedPtr<FString>> FCognitiveTools::GetOrganizationNames()
-{
-	return AllOrgNames;
-}
-
-FReply FCognitiveTools::DEBUGPrintSessionId()
-{
-	FString editorSessionId = FAnalyticsCognitiveVR::Get().EditorSessionId;
-	GLog->Log("FCognitiveTools::DEBUGPrintSessionId: " + editorSessionId);
-	return FReply::Handled();
-}
-
-FReply FCognitiveTools::LogIn()
-{
-	//how to send request and listen for response?
-
-	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-
-	HttpRequest->SetVerb("POST");
-	HttpRequest->SetURL("https://api.cognitivevr.io/sessions");
-
-	FString body = "{\"email\":\"" + Email + "\",\"password\":\"" + Password + "\"}";
-
-	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
-
-	HttpRequest->SetContentAsString(body);
-
-	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::OnLogInResponse);
-
-	if (Email.Len() == 0)
-	{
-		GLog->Log("Email length is 0");
-		return FReply::Handled();
-	}
-	if (Password.Len() == 0)
-	{
-		GLog->Log("Password length is 0");
-		return FReply::Handled();
-	}
-
-	GLog->Log("FCognitiveTools::LogIn Send login request!");
-
-	HttpRequest->ProcessRequest();
-	return FReply::Handled();
-}
-
-void FCognitiveTools::OnLogInResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-{
-	if (Response.IsValid())
-	{
-		//GLog->Log("Login Response "+Response->GetContentAsString());
-		//GLog->Log("Login error code"+FString::FromInt(Response->GetResponseCode()));
-		if (Response->GetResponseCode() == 201)
-		{
-			FAnalyticsCognitiveVR::Get().EditorSessionToken = Response->GetHeader("Set-Cookie");
-			//request auth token
-
-			TArray<FString> Array;
-			FString MyString(Response->GetHeader("Set-Cookie"));
-			MyString.ParseIntoArray(Array, TEXT(";"), true);
-
-			FAnalyticsCognitiveVR::Get().EditorSessionId = Array[0].RightChop(18);
-			//GLog->Log("token " + FAnalyticsCognitiveVR::Get().EditorSessionToken);
-			//GLog->Log("id " + FAnalyticsCognitiveVR::Get().EditorSessionId);
-			
-			//parse login response to userdata
-			//read organization names from that
-			
-			TSharedRef<TJsonReader<>>Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
-			if (FJsonSerializer::Deserialize(Reader, JsonUserData))
-			{
-				TArray<TSharedPtr<FJsonValue>> mainArray = JsonUserData->GetArrayField("organizations");
-				for (int RowNum = 0; RowNum != mainArray.Num(); RowNum++) {
-					FOrganizationData tempOrg;
-					TSharedPtr<FJsonObject> tempRow = mainArray[RowNum]->AsObject();
-					tempOrg.id = tempRow->GetStringField("id");
-					tempOrg.name = tempRow->GetStringField("name");
-					tempOrg.prefix = tempRow->GetStringField("prefix");
-					OrganizationInfos.Add(tempOrg);
-
-					AllOrgNames.Add(MakeShareable(new FString(tempOrg.name)));
-				}
-
-				//GLog->Log("found this many organizations: "+FString::FromInt(OrganizationInfos.Num()));
-
-				AuthTokenRequest();
-			}
-			GLog->Log("Log In Successful");
-		}
-		else if (Response->GetResponseCode() >= 500)
-		{
-			GLog->Log("FCognitiveTools::OnLogInResponse internal server error");
-		}
-		else
-		{
-			GLog->Log("Email or Password is incorrect");
-		}
-	}
-	else
-	{
-		GLog->Log("Login Response is null");
-	}
-}
-
-FReply FCognitiveTools::DEBUG_RequestAuthToken()
-{
-	AuthTokenRequest();
-	return FReply::Handled();
-}
-
-/*TSharedRef<IHttpRequest> FCognitiveTools::RequestAuthTokenCallback()
-{
-	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-
-	TSharedPtr<FEditorSceneData> currentscenedata = GetCurrentSceneData();
-	if (!currentscenedata.IsValid())
-	{
-		GLog->Log("FCogntiveTools::AuthTokenRequest cannot find current scene data");
-		return HttpRequest;
-	}
-	if (FAnalyticsCognitiveVR::Get().EditorSessionToken.Len() == 0)
-	{
-		GLog->Log("FCogntiveTools::AuthTokenRequest session token is invalid. Please Log in");
-		return HttpRequest;
-	}
-
-	//GLog->Log("FCognitiveTools::AuthTokenRequest send auth token request");
-	//GLog->Log("url "+PostAuthToken(currentscenedata->Id));
-	//GLog->Log("cookie " + FAnalyticsCognitiveVR::Get().EditorSessionToken);
-
-	HttpRequest->SetVerb("POST");
-	HttpRequest->SetHeader("Cookie", FAnalyticsCognitiveVR::Get().EditorSessionToken);
-	HttpRequest->SetURL(PostAuthToken(currentscenedata->Id));
-	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::AuthTokenResponse);
-	HttpRequest->ProcessRequest();
-	return HttpRequest;
-}*/
-
-void FCognitiveTools::AuthTokenRequest()
-{
-	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-
-	TSharedPtr<FEditorSceneData> currentscenedata = GetCurrentSceneData();
-	if (!currentscenedata.IsValid())
-	{
-		GLog->Log("FCogntiveTools::AuthTokenRequest cannot find current scene data");
-		return;
-	}
-	if (FAnalyticsCognitiveVR::Get().EditorSessionToken.Len() == 0)
-	{
-		GLog->Log("FCogntiveTools::AuthTokenRequest session token is invalid. Please Log in");
-		return;
-	}
-
-	//GLog->Log("FCognitiveTools::AuthTokenRequest send auth token request");
-	//GLog->Log("url "+PostAuthToken(currentscenedata->Id));
-	//GLog->Log("cookie " + FAnalyticsCognitiveVR::Get().EditorSessionToken);
-
-	HttpRequest->SetVerb("POST");
-	HttpRequest->SetHeader("Cookie", FAnalyticsCognitiveVR::Get().EditorSessionToken);
-	HttpRequest->SetURL(PostAuthToken(currentscenedata->Id));
-	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::AuthTokenResponse);
-	HttpRequest->ProcessRequest();
-}
-
-void FCognitiveTools::AuthTokenResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-{
-	if (!Response.IsValid())
-	{
-		GLog->Log("FCognitiveToolsCustomization::AuthTokenResponse response isn't valid");
-		return;
-	}
-
-	//GLog->Log("FCognitiveToolsCustomization::AuthTokenResponse response code " + FString::FromInt(Response->GetResponseCode()));
-	//GLog->Log("FCognitiveToolsCustomization::AuthTokenResponse " + Response->GetContentAsString());
-
-	if (bWasSuccessful)
-	{
-		TSharedPtr<FJsonObject> JsonAuthToken;
-		TSharedRef<TJsonReader<>>Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
-		if (FJsonSerializer::Deserialize(Reader, JsonAuthToken))
-		{
-			FString token = JsonAuthToken->GetStringField("token");
-			FAnalyticsCognitiveVR::Get().EditorAuthToken = token;
-		}
-	}
 }
 
 FReply FCognitiveTools::ReexportDynamicMeshesCmd()
@@ -1669,12 +1126,6 @@ TSharedPtr<FEditorSceneData> FCognitiveTools::GetSceneData(FString scenename) co
 		lastSceneName = scenename;
 	}
 	return NULL;
-}
-
-FReply FCognitiveTools::DEBUGSendSceneData()
-{
-	SaveSceneData("FirstPersonExampleMap1234", "1234-asdf-5678-hjkl");
-	return FReply::Handled();
 }
 
 void FCognitiveTools::SaveSceneData(FString sceneName, FString sceneKey)
