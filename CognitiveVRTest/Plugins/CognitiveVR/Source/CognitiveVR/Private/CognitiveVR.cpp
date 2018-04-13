@@ -471,16 +471,19 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 
 void FAnalyticsProviderCognitiveVR::SetAge(const int32 InAge)
 {
+	SetUserProperty("Age", InAge);
 	Age = InAge;
 }
 
 void FAnalyticsProviderCognitiveVR::SetLocation(const FString& InLocation)
 {
+	SetUserProperty("Location", Location);
 	Location = InLocation;
 }
 
 void FAnalyticsProviderCognitiveVR::SetGender(const FString& InGender)
 {
+	SetUserProperty("Gender", InGender);
 	Gender = InGender;
 }
 
