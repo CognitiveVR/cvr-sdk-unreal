@@ -70,11 +70,25 @@ public:
 	//UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Player Tracker")
 	//static void SendPlayerData();
 
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Update")
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Device")
+	static void UpdateDeviceInt(const FString name, const int32 value);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Device")
+	static void UpdateDeviceFloat(const FString name, const float value);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Device")
+	static void UpdateDeviceString(const FString name, const FString value);
+
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|User")
+	static void UpdateUserInt(const FString name, const int32 value);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|User")
+	static void UpdateUserFloat(const FString name, const float value);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|User")
+	static void UpdateUserString(const FString name, const FString value);
+
+	/*UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Update")
 	static void UpdateDevice(const TArray<FAnalyticsEventAttr>& Attributes);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Update")
-	static void UpdateUser(const TArray<FAnalyticsEventAttr>& Attributes);
+	static void UpdateUser(const TArray<FAnalyticsEventAttr>& Attributes);*/
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
 	static void RecordSensor(const FString Name, const float Value);

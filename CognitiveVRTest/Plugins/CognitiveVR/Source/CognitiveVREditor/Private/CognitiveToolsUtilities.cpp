@@ -6,6 +6,11 @@
 
 //deals with all the exporting and non-display stuff in the editor preferences
 
+bool FCognitiveTools::HasDeveloperKey() const
+{
+	return FAnalyticsCognitiveVR::Get().DeveloperKey.Len() > 0;
+}
+
 float FCognitiveTools::GetMinimumSize()
 {
 	float MinSize = 0;
@@ -414,11 +419,12 @@ FReply FCognitiveTools::UploadDynamicsManifest()
 	//send manifest to api/objects/sceneid
 
 	GLog->Log("CognitiveTools::UploadDynamicsManifest send dynamic object aggregation manifest");
-
+	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
+	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetContentAsString(objectManifest);
 	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::OnUploadManifestCompleted);
 
@@ -453,7 +459,7 @@ FReply FCognitiveTools::GetDynamicsManifest()
 		GLog->Log("CognitiveTools::GetDyanmicManifest version id is not set! Makes sure the scene has updated scene version");
 		return FReply::Handled();
 	}
-	if (FAnalyticsCognitiveVR::Get().EditorAuthToken.Len() == 0)
+	if (!HasDeveloperKey())
 	{
 		GLog->Log("CognitiveTools::GetDyanmicManifest auth token is empty. Must log in!");
 		return FReply::Handled();
@@ -464,7 +470,8 @@ FReply FCognitiveTools::GetDynamicsManifest()
 	HttpRequest->SetURL(GetDynamicObjectManifest(FString::FromInt(currentSceneData->VersionId)));
 
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
-	HttpRequest->SetHeader("Authorization", TEXT("Bearer " + FAnalyticsCognitiveVR::Get().EditorAuthToken));
+	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	HttpRequest->SetHeader("Authorization", AuthValue);
 
 	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::OnDynamicManifestResponse);
 	HttpRequest->ProcessRequest();
@@ -963,6 +970,8 @@ FReply FCognitiveTools::SelectUploadScreenshot()
 		HttpRequest->SetURL(url);
 		HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=\"cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i\"");
 		HttpRequest->SetHeader("Accept-Encoding", "identity");
+		FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+		HttpRequest->SetHeader("Authorization", AuthValue);
 		HttpRequest->SetVerb("POST");
 		HttpRequest->SetContent(AllBytes);
 
@@ -1491,6 +1500,8 @@ void FCognitiveTools::UploadFromDirectory(FString url, FString directory, FStrin
 	HttpRequest->SetURL(url);
 	HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=\"cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i\"");
 	HttpRequest->SetHeader("Accept-Encoding", "identity");
+	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetContent(AllBytes);
 
@@ -1632,13 +1643,13 @@ TArray<FString> FCognitiveTools::GetAllFilesInDirectory(const FString directory,
 
 bool FCognitiveTools::HasFoundBlender() const
 {
-	if (!HasLoggedIn()) { return false; }
+	if (!HasDeveloperKey()) { return false; }
 	return FCognitiveTools::GetBlenderPath().ToString().Contains("blender.exe");
 }
 
 bool FCognitiveTools::HasFoundBlenderAndHasSelection() const
 {
-	if (!HasLoggedIn()) { return false; }
+	if (!HasDeveloperKey()) { return false; }
 	return FCognitiveTools::GetBlenderPath().ToString().Contains("blender.exe") && GEditor->GetSelectedActorCount() > 0;
 }
 
@@ -1661,12 +1672,12 @@ bool FCognitiveTools::HasConvertedFilesInDirectory() const
 
 bool FCognitiveTools::CanUploadSceneFiles() const
 {
-	return HasConvertedFilesInDirectory() && HasLoggedIn();
+	return HasConvertedFilesInDirectory() && HasDeveloperKey();
 }
 
 bool FCognitiveTools::LoginAndCustonerIdAndBlenderExportDir() const
 {
-	return HasLoggedIn() && HasFoundBlenderAndExportDir() && HasSavedCustomerId();
+	return HasDeveloperKey() && HasFoundBlenderAndExportDir();
 }
 
 bool FCognitiveTools::HasFoundBlenderAndExportDir() const
@@ -1681,7 +1692,7 @@ bool FCognitiveTools::HasFoundBlenderAndDynamicExportDir() const
 
 bool FCognitiveTools::CurrentSceneHasSceneId() const
 {
-	if (!HasLoggedIn()) { return false; }
+	if (!HasDeveloperKey()) { return false; }
 	TSharedPtr<FEditorSceneData> currentscene = GetCurrentSceneData();
 	if (!currentscene.IsValid())
 	{
@@ -1696,18 +1707,14 @@ bool FCognitiveTools::CurrentSceneHasSceneId() const
 
 bool FCognitiveTools::HasSetExportDirectory() const
 {
-	if (!HasLoggedIn()) { return false; }
+	if (!HasDeveloperKey()) { return false; }
 	return !FCognitiveTools::GetExportDirectory().EqualTo(FText::FromString(""));
 }
 
-bool FCognitiveTools::HasEditorAuthToken() const
-{
-	return FAnalyticsCognitiveVR::Get().EditorAuthToken.Len() > 0;
-}
 
 FText FCognitiveTools::GetDynamicsOnSceneExplorerTooltip() const
 {
-	if (!HasLoggedIn())
+	if (!HasDeveloperKey())
 	{
 		return FText::FromString("Must log in to get Dynamic Objects List from SceneExplorer");
 	}
@@ -1715,10 +1722,6 @@ FText FCognitiveTools::GetDynamicsOnSceneExplorerTooltip() const
 	if (!scene.IsValid())
 	{
 		return FText::FromString("Scene does not have valid data. Must export your scene before uploading dynamics!");
-	}
-	if (HasEditorAuthToken())
-	{
-		return FText::FromString("");
 	}
 	return FText::FromString("Something went wrong!");
 }
@@ -1734,32 +1737,22 @@ EVisibility FCognitiveTools::ConfigFileChangedVisibility() const
 
 FText FCognitiveTools::SendDynamicsToSceneExplorerTooltip() const
 {
-	if (HasEditorAuthToken())
+	if (HasDeveloperKey())
 	{
 		return FText::FromString("");
 	}
 	return FText::FromString("Must log in to send Dynamic Objects List to SceneExplorer");
 }
 
-FText FCognitiveTools::GetCustomerId() const
-{
-	if (SelectedProduct.customerId.Len() > 0)
-	{
-		return FText::FromString(SelectedProduct.customerId);
-	}
-	//FString customerid = GetCustomerIdFromFile();
-	return FText::FromString("");
-}
-
 bool FCognitiveTools::HasSetDynamicExportDirectory() const
 {
-	if (!HasLoggedIn()) { return false; }
+	if (!HasDeveloperKey()) { return false; }
 	return !FCognitiveTools::GetDynamicExportDirectory().EqualTo(FText::FromString(""));
 }
 
 bool FCognitiveTools::HasSetDynamicExportDirectoryHasSceneId() const
 {
-	if (!HasLoggedIn()) { return false; }
+	if (!HasDeveloperKey()) { return false; }
 	auto scenedata = GetCurrentSceneData();
 	if (!scenedata.IsValid()) { return false; }
 	return !FCognitiveTools::GetDynamicExportDirectory().EqualTo(FText::FromString(""));

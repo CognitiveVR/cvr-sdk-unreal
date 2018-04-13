@@ -6,16 +6,15 @@
 
 using namespace cognitivevrapi;
 
-CustomEvent::CustomEvent(FAnalyticsProviderCognitiveVR* sp)
+CustomEvent::CustomEvent(FAnalyticsProviderCognitiveVR* cvr)
 {
-	s = sp;
+	cog = cvr;
 	FString ValueReceived;
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventBatchSize", false);
 
 	if (ValueReceived.Len() > 0)
 	{
-
 		int32 customEventLimit = FCString::Atoi(*ValueReceived);
 		if (customEventLimit > 0)
 		{
@@ -26,42 +25,23 @@ CustomEvent::CustomEvent(FAnalyticsProviderCognitiveVR* sp)
 
 void CustomEvent::Send(FString category)
 {
-	if (!bHasSessionStarted || s == NULL)
-	{
-		CognitiveLog::Warning("CustomEvent::Send - FAnalyticsProviderCognitiveVR is null!");
-		return;
-	}
-	CustomEvent::Send(category, s->GetPlayerHMDPosition(), NULL);
+	CustomEvent::Send(category, cog->GetPlayerHMDPosition(), NULL);
 }
 
 void CustomEvent::Send(FString category, TSharedPtr<FJsonObject> properties)
 {
-	if (!bHasSessionStarted || s == NULL)
-	{
-		CognitiveLog::Warning("CustomEvent::Send - FAnalyticsProviderCognitiveVR is null!");
-		return;
-	}
-	CustomEvent::Send(category, s->GetPlayerHMDPosition(), properties);
+
+	CustomEvent::Send(category, cog->GetPlayerHMDPosition(), properties);
 }
 
 void CustomEvent::Send(FString category, FVector Position)
 {
-	if (!bHasSessionStarted || s == NULL)
-	{
-		CognitiveLog::Warning("CustomEvent::Send - FAnalyticsProviderCognitiveVR is null!");
-		return;
-	}
+
 	CustomEvent::Send(category, Position, NULL);
 }
 
 void CustomEvent::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties)
 {
-	if (!bHasSessionStarted || s == NULL)
-	{
-		CognitiveLog::Warning("CustomEvent::Send - FAnalyticsProviderCognitiveVR is null!");
-		return;
-	}
-
 	if (properties.Get() == NULL)
 	{
 		properties = MakeShareable(new FJsonObject);
@@ -75,7 +55,7 @@ void CustomEvent::Send(FString category, FVector Position, TSharedPtr<FJsonObjec
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
 
-	if (controllers[0]->GetPawn() == NULL)
+	if (controllers.Num() == 0 || controllers[0]->GetPawn() == NULL)
 	{
 		CognitiveLog::Warning("Transaction. local player controller does not have pawn. skip transaction on scene explorer");
 		return;
@@ -104,25 +84,24 @@ void CustomEvent::Send(FString category, FVector Position, TSharedPtr<FJsonObjec
 	{
 		SendData();
 	}
-
-
-
-	events.Empty();
 }
 
 void CustomEvent::SendData()
 {
-	//EVENTS
+	if (cog == NULL || !cog->HasStartedSession())
+	{
+		CognitiveLog::Warning("CustomEvent::Send - FAnalyticsProviderCognitiveVR is null!");
+		return;
+	}
 
 	if (events.Num() == 0) { return; }
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
-	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
 
-	wholeObj->SetStringField("userid", cog->GetDeviceID());
+	wholeObj->SetStringField("userid", cog->GetUserID());
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", cog->GetCognitiveSessionID());
+	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonEventPart);
 	jsonEventPart++;
 
@@ -137,5 +116,7 @@ void CustomEvent::SendData()
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 
-	s->network->NetworkCall("event", OutputString);
+	cog->network->NetworkCall("event", OutputString);
+
+	events.Empty();
 }

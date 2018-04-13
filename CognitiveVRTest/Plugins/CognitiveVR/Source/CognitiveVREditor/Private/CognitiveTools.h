@@ -44,13 +44,13 @@ class FCognitiveTools : public IDetailCustomization
 {
 
 	// Enumerates radio button choices.
-	enum EReleaseType
-	{
-		Test,
-		Production
-	};
+	//enum EReleaseType
+	//{
+	//	Test,
+	//	Production
+	//};
 
-	EReleaseType RadioChoice = EReleaseType::Test;
+	//EReleaseType RadioChoice = EReleaseType::Test;
 
 public:
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
@@ -65,54 +65,61 @@ public:
 	void SaveSceneData(FString sceneName, FString sceneKey);
 
 private:
+	void OnAPIKeyChanged(const FText& Text);
+	void OnDeveloperKeyChanged(const FText& Text);
 
+	FText GetAPIKey() const;
+	FText GetDeveloperKey() const;
+
+	FString APIKey;
+	//FString DeveloperKey;
 
 	//GET dynamic object manifest                           https ://api.sceneexplorer.com/versions/:versionId/objects
 	FORCEINLINE static FString GetDynamicObjectManifest(FString versionid)
 	{
-		return "https://api.sceneexplorer.com/versions/" + versionid + "/objects";
+		return "https://data.cognitive3d.com/v0/versions/" + versionid + "/objects";
 	}
 
 	//POST dynamic object manifest                          https://data.sceneexplorer.com/objects/:sceneId?version=:versionNumber
 	FORCEINLINE static FString PostDynamicObjectManifest(FString sceneid, int32 versionnumber)
 	{
-		return "https://data.sceneexplorer.com/objects/" + sceneid + "?version=" + FString::FromInt(versionnumber);
+		return "https://data.cognitive3d.com/v0/objects/" + sceneid + "?version=" + FString::FromInt(versionnumber);
 	}
 
 	//POST dynamic object mesh data							https://data.sceneexplorer.com/objects/:sceneId/:exportDirectory?version=:versionNumber
 	FORCEINLINE static FString PostDynamicObjectMeshData(FString sceneid, int32 versionnumber, FString exportdirectory)
 	{
-		return "https://data.sceneexplorer.com/objects/" + sceneid + "/" + exportdirectory + "?version=" + FString::FromInt(versionnumber);
+		return "https://data.cognitive3d.com/v0/objects/" + sceneid + "/" + exportdirectory + "?version=" + FString::FromInt(versionnumber);
 	}
 
 	//GET scene settings and read scene version             https://api.sceneexplorer.com/scenes/:sceneId
 	FORCEINLINE static FString GetSceneVersion(FString sceneid)
 	{
-		return "https://api.sceneexplorer.com/scenes/" + sceneid;
+		return "https://data.cognitive3d.com/v0/scenes/" + sceneid;
 	}
 
 	//POST scene screenshot                                 https://data.sceneexplorer.com/scenes/:sceneId/screenshot?version=:versionNumber
 	FORCEINLINE static FString PostScreenshot(FString sceneid, FString versionnumber)
 	{
-		return "https://data.sceneexplorer.com/scenes/" + sceneid + "/screenshot?version=" + versionnumber;
+		return "https://data.cognitive3d.com/v0/scenes/" + sceneid + "/screenshot?version=" + versionnumber;
 	}
 
 	//POST upload decimated scene                           https://data.sceneexplorer.com/scenes
 	FORCEINLINE static FString PostNewScene()
 	{
-		return "https://data.sceneexplorer.com/scenes";
+		return "https://data.cognitive3d.com/v0/scenes";
 	}
 
 	//POST upload and replace existing scene                https://data.sceneexplorer.com/scenes/:sceneId
 	FORCEINLINE static FString PostUpdateScene(FString sceneid)
 	{
-		return "https://data.sceneexplorer.com/scenes/" + sceneid;
+		return "https://data.cognitive3d.com/v0/scenes/" + sceneid;
 	}
 
 	//POST auth token from dynamic object manifest response https://api.sceneexplorer.com/tokens/:sceneId
 	FORCEINLINE static FString PostAuthToken(FString sceneid)
 	{
-		return "https://api.sceneexplorer.com/tokens/" + sceneid;
+		return "";
 	}
 
 	//WEB used to open scenes on sceneexplorer              https://sceneexplorer.com/scene/ :sceneId
@@ -124,7 +131,7 @@ private:
 	//POST used to log into the editor						https://api.cognitivevr.io/sessions
 	FORCEINLINE static FString APISessions()
 	{
-		return "http://api.cognitivevr.io/sessions";
+		return "";
 	}
 
 	//WEB opens dashboard page to create a new product
@@ -216,9 +223,6 @@ private:
 	//Runs a python script in blender to reduce the polygon count, clean up the mtl file and copy textures into a convient folder
 	UFUNCTION(Exec, Category = "Export")
 		FReply Reduce_Textures();
-
-	UFUNCTION(Exec, Category = "Export")
-		FReply Http_Request();
 
 	UFUNCTION(Exec, Category = "Export")
 		FReply UploadScene();
@@ -336,45 +340,45 @@ private:
 		return false;
 	}
 
-	FReply SetRandomSessionId();
-	FReply DEBUGPrintSessionId();
-	FString Email;
-	void OnEmailChanged(const FText& Text);
-	FString Password;
-	void OnPasswordChanged(const FText& Text);
+	//FReply SetRandomSessionId();
+	//FReply DEBUGPrintSessionId();
+	//FString Email;
+	//void OnEmailChanged(const FText& Text);
+	//FString Password;
+	//void OnPasswordChanged(const FText& Text);
 
-	EVisibility LoginTextboxUsable() const;
+	//EVisibility LoginTextboxUsable() const;
 
 	TSharedPtr<FJsonObject> JsonUserData;
 
-	FReply DEBUG_RequestAuthToken();
+	//FReply DEBUG_RequestAuthToken();
 	//TSharedRef<IHttpRequest> RequestAuthTokenCallback();
 	//void OnSceneVersionGetAuthToken(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	void AuthTokenRequest();
-	void AuthTokenResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	//void AuthTokenRequest();
+	//void AuthTokenResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	//TArray<TSharedPtr<FString>> OrganizationNames;
-	TArray<FOrganizationData> OrganizationInfos;
-	void OnOrganizationChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo);
+	//TArray<FOrganizationData> OrganizationInfos;
+	//void OnOrganizationChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo);
 
-	TArray<FProductData> ProductInfos;
-	void OnProductChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo);
+	//TArray<FProductData> ProductInfos;
+	//void OnProductChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo);
 
 	//TSharedPtr<FString> SelectedOrgName;
 	//TSharedPtr<FString> GetSelectedOrganizationName();
 
 	//all products for the currently selected organization
-	TArray<TSharedPtr<FString>> AllProductNames;
-	TSharedPtr<FString> SelectedProductName;
+	//TArray<TSharedPtr<FString>> AllProductNames;
+	//TSharedPtr<FString> SelectedProductName;
 
-	FProductData SelectedProduct;
+	//FProductData SelectedProduct;
 
-	TArray<TSharedPtr<FString>> AllOrgNames;
-	TArray<TSharedPtr<FString>> GetOrganizationNames();
+	//TArray<TSharedPtr<FString>> AllOrgNames;
+	//TArray<TSharedPtr<FString>> GetOrganizationNames();
 
-	ECheckBoxState FCognitiveTools::HandleRadioButtonIsChecked(EReleaseType ButtonId) const;
-	void FCognitiveTools::HandleRadioButtonCheckStateChanged(ECheckBoxState NewRadioState, EReleaseType RadioThatChanged);
+	//ECheckBoxState FCognitiveTools::HandleRadioButtonIsChecked(EReleaseType ButtonId) const;
+	//void FCognitiveTools::HandleRadioButtonCheckStateChanged(ECheckBoxState NewRadioState, EReleaseType RadioThatChanged);
 
 	TArray<TSharedPtr<FEditorSceneData>> SceneData;
 	//returns SceneData array
@@ -387,11 +391,11 @@ private:
 
 	TSharedRef<ITableRow> OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
 
-	FReply SaveCustomerIdToFile();
+	//FReply SaveCustomerIdToFile();
 
-	FString GetCustomerIdFromFile() const;
-	FString GetCustomerIdFromFileWithoutRelease() const;
-	EReleaseType GetReleaseTypeFromFile();
+	//FString GetCustomerIdFromFile() const;
+	//FString GetCustomerIdFromFileWithoutRelease() const;
+	//EReleaseType GetReleaseTypeFromFile();
 	
 	void SaveOrganizationNameToFile(FString organization);
 	TSharedPtr<FString> GetOrganizationNameFromFile();
@@ -403,7 +407,8 @@ private:
 
 	bool HasSelectedValidProduct() const;
 	bool HasLoadedOrSelectedValidProduct() const;
-	bool HasLoggedIn() const;
+	//bool HasLoggedIn() const;
+	bool HasDeveloperKey() const;
 	EVisibility GetLoginButtonState() const;
 	EVisibility GetLogoutButtonState() const;
 
@@ -411,7 +416,7 @@ private:
 	//EVisibility OptimizeSettingsVisibility() const;
 	
 	//returns true if email + password fields lengths both greater than 0
-	bool HasValidLogInFields() const;
+	//bool HasValidLogInFields() const;
 
 	//reads scene data from ini
 	FReply RefreshSceneData();
@@ -426,20 +431,20 @@ private:
 	bool HasConvertedFilesInDirectory() const;
 	bool CanUploadSceneFiles() const;
 	//returns true if customerid has been saved
-	bool HasSavedCustomerId() const;
+	//bool HasSavedCustomerId() const;
 	bool CustomerIdDoesntMatchFile() const;
 	bool LoginAndCustonerIdAndBlenderExportDir() const;
-	FText GetCustomerId() const;
+	//FText GetCustomerId() const;
 
 	ECheckBoxState HasFoundBlenderCheckbox() const;
 
 	void SceneVersionRequest(FEditorSceneData data);
 	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	FReply LogIn();
-	void OnLogInResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	//FReply LogIn();
+	//void OnLogInResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	FReply LogOut();
+	//FReply LogOut();
 
 
 	TSharedRef<ITableRow> OnGenerateDynamicRow(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
@@ -462,7 +467,7 @@ private:
 	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
 	FReply SelectUploadScreenshot();
 	
-	bool HasEditorAuthToken() const;
+	//bool HasEditorAuthToken() const;
 	FText GetDynamicsOnSceneExplorerTooltip() const;
 	FText SendDynamicsToSceneExplorerTooltip() const;
 	FReply RefreshDynamicSubDirectory();
@@ -474,6 +479,7 @@ private:
 
 	bool HasFoundBlenderHasSelection() const;
 	bool HasSetDynamicExportDirectoryHasSceneId() const;
+	FReply SaveAPIDeveloperKeysToFile();
 };
 
 //used for uploading multiple dynamics at once

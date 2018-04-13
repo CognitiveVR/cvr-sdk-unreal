@@ -5,7 +5,7 @@
 #include "Private/CognitiveVRPrivatePCH.h"
 #include "Runtime/Analytics/Analytics/Public/Interfaces/IAnalyticsProviderModule.h"
 #include "Private/api/customevent.h"
-#include "Private/api/coreutilities.h"
+
 //#include "IAnalyticsProviderModule.h"
 //#include "Core.h"
 //#include "ModuleManager.h"
@@ -55,12 +55,8 @@ public:
 		*/
 	virtual TSharedPtr<IAnalyticsProvider> CreateAnalyticsProvider(const FAnalyticsProviderConfigurationDelegate& GetConfigValue) const override;
 	virtual TSharedPtr<FAnalyticsProviderCognitiveVR> GetCognitiveVRProvider() const;
-	
-	//TODO replace with developer key
-	//only used in the editor
-	FString EditorSessionId;
-	FString EditorSessionToken;
-	FString EditorAuthToken;
+
+	FString DeveloperKey;
 		
 private:
 	//mutable TMap<FString, TSharedPtr<IAnalyticsProvider>> Analytics;

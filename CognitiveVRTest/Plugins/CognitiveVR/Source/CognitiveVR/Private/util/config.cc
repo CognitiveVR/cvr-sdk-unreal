@@ -6,7 +6,7 @@
 using namespace cognitivevrapi;
 
 //Configuration defaults.
-FString Config::kNetworkHost = "https://data.cognitivevr.io";
+FString Config::kNetworkHost = "data.cognitive3d.com";
 int32 Config::kNetworkVersion = 0;
 //std::string Config::kSsfApp = "isos-personalization";
 //std::string Config::kSsfVersion = "4";

@@ -8,7 +8,7 @@
 
 using namespace cognitivevrapi;
 
-extern bool bHasSessionStarted;
+//extern bool bHasSessionStarted;
 
 void UCognitiveVRBlueprints::SendCustomEvent(FString Category, const TArray<FAnalyticsEventAttr>& Attributes)
 {
@@ -22,11 +22,10 @@ void UCognitiveVRBlueprints::SendCustomEvent(FString Category, const TArray<FAna
 
 void UCognitiveVRBlueprints::SendCustomEventPosition(FString Category, const TArray<FAnalyticsEventAttr>& Attributes, FVector Position)
 {
-	TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
-	if (!Provider.IsValid() || !bHasSessionStarted || cog == NULL)
+	if (cog == NULL || !cog->HasStartedSession())
 	{
-		CognitiveLog::Error("UCognitiveVRBlueprints::EndTransaction could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SendCustomEventPosition could not get provider!");
 		return;
 	}
 
@@ -42,14 +41,12 @@ void UCognitiveVRBlueprints::SendCustomEventPosition(FString Category, const TAr
 	cog->customevent->Send(Category, Position, properties);
 }
 
-void UCognitiveVRBlueprints::UpdateDevice(const TArray<FAnalyticsEventAttr>& Attributes)
+/*void UCognitiveVRBlueprints::UpdateDevice(const TArray<FAnalyticsEventAttr>& Attributes)
 {
-	//SOME TRANSACTION OR SOMETHING
-	TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
-	if (!Provider.IsValid() || !bHasSessionStarted || cog == NULL)
+	if (cog == NULL || !cog->HasStartedSession())
 	{
-		CognitiveLog::Error("UCognitiveVRBlueprints::BeginEndTransaction could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
 		return;
 	}
 
@@ -67,15 +64,6 @@ void UCognitiveVRBlueprints::UpdateDevice(const TArray<FAnalyticsEventAttr>& Att
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	FString fs = FString::SanitizeFloat(Util::GetTimestamp());
-	FString empty;
-
-	//Util::AppendToJsonArray(jsonArray, fs);
-	//Util::AppendToJsonArray(jsonArray, fs);
-	//Util::AppendToJsonArray(jsonArray, empty); //user
-	//Util::AppendToJsonArray(jsonArray, cog->DeviceId); //device
-	//Util::AppendToJsonArray(jsonArray, properties);
-
 	//s->thread_manager->PushTask(NULL, "datacollector_updateDeviceState", jsonArray);
 	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
 	jsonObject.Get()->SetStringField("method", "datacollector_updateDeviceState");
@@ -86,16 +74,82 @@ void UCognitiveVRBlueprints::UpdateDevice(const TArray<FAnalyticsEventAttr>& Att
 
 
 	//cog->transaction->BeginEndPosition(TCHAR_TO_UTF8(*Category), Position, properties);
+}*/
+
+
+void UCognitiveVRBlueprints::UpdateDeviceInt(const FString name, const int32 value)
+{
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	if (cog == NULL || !cog->HasStartedSession())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
+		return;
+	}
+	cog->SetDeviceProperty(name, value);
+}
+	 
+void UCognitiveVRBlueprints::UpdateDeviceFloat(const FString name, const float value)
+{
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	if (cog == NULL || !cog->HasStartedSession())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
+		return;
+	}
+	cog->SetDeviceProperty(name, value);
+}
+	 
+void UCognitiveVRBlueprints::UpdateDeviceString(const FString name, const FString value)
+{
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	if (cog == NULL || !cog->HasStartedSession())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
+		return;
+	}
+	cog->SetDeviceProperty(name, value);
+}
+	 
+	 
+void UCognitiveVRBlueprints::UpdateUserInt(const FString name, const int32 value)
+{
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	if (cog == NULL || !cog->HasStartedSession())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
+		return;
+	}
+	cog->SetUserProperty(name, value);
+}
+	 
+void UCognitiveVRBlueprints::UpdateUserFloat(const FString name, const float value)
+{
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	if (cog == NULL || !cog->HasStartedSession())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
+		return;
+	}
+	cog->SetUserProperty(name, value);
+}
+	 
+void UCognitiveVRBlueprints::UpdateUserString(const FString name, const FString value)
+{
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	if (cog == NULL || !cog->HasStartedSession())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
+		return;
+	}
+	cog->SetUserProperty(name, value);
 }
 
-void UCognitiveVRBlueprints::UpdateUser(const TArray<FAnalyticsEventAttr>& Attributes)
+/*void UCognitiveVRBlueprints::UpdateUser(const TArray<FAnalyticsEventAttr>& Attributes)
 {
-	//SOME TRANSACTION OR SOMETHING
-	TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
-	if (!Provider.IsValid() || !bHasSessionStarted || cog == NULL)
+	if (cog == NULL || !cog->HasStartedSession())
 	{
-		CognitiveLog::Error("UCognitiveVRBlueprints::BeginEndTransaction could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateUser could not get provider!");
 		return;
 	}
 
@@ -128,16 +182,14 @@ void UCognitiveVRBlueprints::UpdateUser(const TArray<FAnalyticsEventAttr>& Attri
 
 	//cog->thread_manager->AddJsonToBatch(jsonObject);
 	//TODO blueprint update user data
-}
+}*/
 
 void UCognitiveVRBlueprints::RecordSensor(const FString Name, const float Value)
 {
-	//SOME TRANSACTION OR SOMETHING
-	TSharedPtr<IAnalyticsProvider> Provider = FAnalytics::Get().GetDefaultConfiguredProvider();
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
-	if (!Provider.IsValid() || !bHasSessionStarted || cog == NULL)
+	if (cog == NULL || !cog->HasStartedSession())
 	{
-		CognitiveLog::Error("UCognitiveVRBlueprints::BeginEndTransaction could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::RecordSensor could not get provider!");
 		return;
 	}
 
@@ -153,18 +205,6 @@ FExitPollQuestionSet UCognitiveVRBlueprints::GetCurrentExitPollQuestionSet()
 {
 	return ExitPoll::GetCurrentQuestionSet();
 }
-
-//void UCognitiveVRBlueprints::SendExitPollResponse(FExitPollResponses Responses)
-//{
-	/*TMap<FString, FString> answers;
-
-	for (int32 i = 0; i < Responses.answers.Num(); i++)
-	{
-		answers.Add(Responses.answers[i].type, Responses.answers[i].value);
-	}
-	ExitPoll::SendQuestionResponses(Responses.user,Responses.questionSetId,Responses.sessionId,Responses.hook,answers);*/
-//	ExitPoll::SendQuestionResponses(Responses);
-//}
 
 void UCognitiveVRBlueprints::SendExitPollAnswers(const TArray<FExitPollAnswer>& Answers)
 {

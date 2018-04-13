@@ -69,7 +69,7 @@ void FAnalyticsProviderCognitiveVR::SetWorld(UWorld* world)
 {
 	currentWorld = world;
 }
-void FAnalyticsProviderCognitiveVR::SendDeviceInfo()
+/*void FAnalyticsProviderCognitiveVR::SendDeviceInfo()
 {
 	//add a bunch of properties
 	if (GEngine->HMDDevice.IsValid())
@@ -90,25 +90,19 @@ void FAnalyticsProviderCognitiveVR::SendDeviceInfo()
 			hmd->RecordAnalytics();
 		}
 	}
-}
+}*/
 
 bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	CognitiveLog::Init();
 
-	if (bPendingInitRequest)
-	{
-		CognitiveLog::Warning("AnalyticsProviderCognitiveVR::StartSession already pending init!");
-		return false;
-	}
 	if (bHasSessionStarted)
 	{
+		return false;
 		//EndSession();
 		//return false;
 	}
 
-	GetSessionTimestamp();
-	GetSessionID();
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
 
@@ -135,14 +129,16 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		SetUserID("anonymous_"+DeviceId);
 	}
 
-	initProperties = properties;
+	SessionTimestamp = Util::GetTimestamp();
+	SessionId = FString::FromInt(GetSessionTimestamp()) + TEXT("_") + UserId;
 
-	CustomerId = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
+	//initProperties = properties;
+
+	APIKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
 
 	//OverrideHttpInterface* httpint = new OverrideHttpInterface();
 	network = MakeShareable(new Network(this));
 	//network->Init(httpint, &InitCallback);
-	bPendingInitRequest = true;
 
 	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::StartSession");
 	
@@ -174,17 +170,23 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		return false;
 	}
 
-	core_utils = MakeShareable(new CoreUtilities(this));
 	sensors = MakeShareable(new Sensors(this));
 
-	TSharedPtr<FJsonObject>deviceProperties = Util::DeviceScraper(initProperties);
-	if (deviceProperties.IsValid())
+	TSharedPtr<FJsonObject> defaultdeviceproperties = MakeShareable(new FJsonObject());
+	Util::DeviceScraper(defaultdeviceproperties);
+
+	for (auto currJsonValue = defaultdeviceproperties->Values.CreateConstIterator(); currJsonValue; ++currJsonValue)
 	{
-		core_utils->UpdateDeviceState(TCHAR_TO_UTF8(*GetDeviceID()), deviceProperties);
-	}
-	else
-	{
-		CognitiveLog::Error("Cognitive InitCallback could not find device properties!");
+		const FString Name = (*currJsonValue).Key;
+		TSharedPtr< FJsonValue > Value = (*currJsonValue).Value;
+		if (Value->Type == EJson::Number)
+		{
+			SetDeviceProperty(Name, (float)Value->AsNumber());
+		}
+		else if (Value->Type == EJson::String)
+		{
+			SetDeviceProperty(Name, Value->AsString());
+		}
 	}
 
 	//send new user / new device messages if necessary
@@ -202,13 +204,13 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	}*/
 
 	customevent->Send(FString("Session Begin"));
-	bPendingInitRequest = false;
+	//bPendingInitRequest = false;
 
 	//get all dynamic objects
 
 	//cog->OnInitResponse().Broadcast(resp.IsSuccessful());
 
-	if (currentWorld != NULL)
+	/*if (currentWorld != NULL)
 	{
 		for (TActorIterator<AStaticMeshActor> ActorItr(currentWorld); ActorItr; ++ActorItr)
 		{
@@ -237,9 +239,9 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	else
 	{
 		CognitiveLog::Error("InitCallback current world is null - SceneExplorer will not receive data. Have you added a PlayerTracker component to your character?");
-	}
+	}*/
 
-	SendDeviceInfo();
+	//SendDeviceInfo();
 
 	return bHasSessionStarted;
 }
@@ -258,7 +260,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::EndSession");
 
-	bPendingInitRequest = false;
+	//bPendingInitRequest = false;
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 	properties->SetNumberField("sessionlength", Util::GetTimestamp() - GetSessionTimestamp());
@@ -268,14 +270,13 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	FlushEvents();
 	CognitiveLog::Info("Freeing CognitiveVR memory.");
 
+	//TODO this IS called when stopped playing in editor! should clear dynamics session manifest too!
+
 	//delete network;
 	network = NULL;
 
 	//delete transaction;
 	customevent = NULL;
-
-	//delete core_utils;
-	core_utils = NULL;
 
 	//delete sensors;
 	sensors = NULL;
@@ -285,7 +286,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	SessionId = "";
 
 	bHasSessionStarted = false;
-	LastSesisonTimestamp = Util::GetTimestamp() + 1;
+	//LastSesisonTimestamp = Util::GetTimestamp() + 1;
 }
 
 void FAnalyticsProviderCognitiveVR::FlushEvents()
@@ -364,21 +365,17 @@ FString FAnalyticsProviderCognitiveVR::GetSessionID() const
 	return SessionId;
 }
 
-double FAnalyticsProviderCognitiveVR::GetSessionTimestamp()
+double FAnalyticsProviderCognitiveVR::GetSessionTimestamp() const
 {
-	if (SessionTimestamp < 0)
-	{
-		SessionTimestamp = Util::GetTimestamp();
-	}
 	return SessionTimestamp;
 }
 
-FString FAnalyticsProviderCognitiveVR::GetCognitiveSessionID()
+/*FString FAnalyticsProviderCognitiveVR::GetCognitiveSessionID()
 {
 	if (SessionId.IsEmpty())
 		SessionId = FString::FromInt(GetSessionTimestamp()) + TEXT("_") + DeviceId;
 	return SessionId;
-}
+}*/
 
 bool FAnalyticsProviderCognitiveVR::SetSessionID(const FString& InSessionID)
 {
@@ -399,6 +396,7 @@ bool FAnalyticsProviderCognitiveVR::SetSessionID(const FString& InSessionID)
 	return !bHasSessionStarted;
 }
 
+//built in analytics stuff
 void FAnalyticsProviderCognitiveVR::RecordEvent(const FString& EventName, const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	if (bHasSessionStarted)
@@ -597,43 +595,6 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 	}
 }
 
-void FAnalyticsProviderCognitiveVR::AppendUD(TSharedPtr<FJsonValueArray>& jsonArray)
-{
-	if (UserId.IsEmpty())
-	{
-		FString empty = FString("");
-		//Util::AppendToJsonArray(jsonArray, empty);
-	}
-	else
-	{
-		//Util::AppendToJsonArray(jsonArray, UserId);
-	}
-
-	if (DeviceId.IsEmpty())
-	{
-		FString empty = FString("");
-		//Util::AppendToJsonArray(jsonArray, empty);
-	}
-	else
-	{
-		//Util::AppendToJsonArray(jsonArray, DeviceId);
-	}
-}
-
-void FAnalyticsProviderCognitiveVR::SetDeviceID(const FString& InDeviceID)
-{
-	if (!bHasSessionStarted)
-	{
-		//DeviceId = InDeviceID;
-		//CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetDeviceID set device id");
-	}
-	else
-	{
-		// Log that we shouldn't switch users during a session
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SetDeviceID called while session is in progress. Ignoring");
-	}
-}
-
 TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetCurrentSceneData()
 {
 	UWorld* myworld = currentWorld;
@@ -722,4 +683,62 @@ FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 	}
 
 	return controllers[0]->PlayerCameraManager->GetCameraLocation();
+}
+
+void FAnalyticsProviderCognitiveVR::SetDeviceProperty(FString name, int32 value)
+{
+	if (DeviceProperties.HasField(name))
+		DeviceProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
+	else
+		DeviceProperties.SetNumberField(name, (int32)value);
+}
+void FAnalyticsProviderCognitiveVR::SetDeviceProperty(FString name, float value)
+{
+	if (DeviceProperties.HasField(name))
+		DeviceProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
+	else
+		DeviceProperties.SetNumberField(name, (float)value);
+}
+void FAnalyticsProviderCognitiveVR::SetDeviceProperty(FString name, FString value)
+{
+	if (DeviceProperties.HasField(name))
+		DeviceProperties.Values[name] = MakeShareable(new FJsonValueString(value));
+	else
+		DeviceProperties.SetStringField(name, value);
+}
+
+void FAnalyticsProviderCognitiveVR::SetUserProperty(FString name, int32 value)
+{
+	if (UserProperties.HasField(name))
+		UserProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
+	else
+		UserProperties.SetNumberField(name, (int32)value);
+}
+void FAnalyticsProviderCognitiveVR::SetUserProperty(FString name, float value)
+{
+	if (UserProperties.HasField(name))
+		UserProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
+	else
+		UserProperties.SetNumberField(name, (float)value);
+}
+void FAnalyticsProviderCognitiveVR::SetUserProperty(FString name, FString value)
+{
+	if (UserProperties.HasField(name))
+		UserProperties.Values[name] = MakeShareable(new FJsonValueString(value));
+	else
+		UserProperties.SetStringField(name, value);
+}
+
+FJsonObject FAnalyticsProviderCognitiveVR::GetDeviceProperties()
+{
+	FJsonObject returnobject = FJsonObject(DeviceProperties);
+	DeviceProperties = FJsonObject();
+	return returnobject;
+}
+
+FJsonObject FAnalyticsProviderCognitiveVR::GetUserProperties()
+{
+	FJsonObject returnobject = FJsonObject(UserProperties);
+	UserProperties = FJsonObject();
+	return returnobject;
 }

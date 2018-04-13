@@ -44,12 +44,14 @@ void Network::NetworkCall(FString suburl, FString contents)
 	//json to scene endpoint
 	FString url = "https://"+cognitivevrapi::Config::kNetworkHost+"/v"+FString::FromInt(cognitivevrapi::Config::kNetworkVersion)+"/"+suburl+"/"+s->GetCurrentSceneId() + "?version=" + s->GetCurrentSceneVersionNumber();
 
+	FString AuthValue = "APIKEY:DATA " + s->APIKey;
+
 	TSharedRef<IHttpRequest> HttpRequest = Http->CreateRequest();
 	HttpRequest->SetContentAsString(contents);
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
-	HttpRequest->SetHeader("Authorization", TEXT("abcde12345")); //TODO read authorization from somewhere
+	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->ProcessRequest();
 	return;
 }

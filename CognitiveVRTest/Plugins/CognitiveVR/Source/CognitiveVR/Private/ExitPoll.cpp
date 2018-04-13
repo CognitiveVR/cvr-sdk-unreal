@@ -18,12 +18,13 @@ void ExitPoll::MakeQuestionSetRequest(const FString Hook, const FCognitiveExitPo
 	{
 		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	}
-	FString ValueReceived = cogProvider->CustomerId;// = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
 
-	//FString url = Config::GetExitPollQuestionSet(ValueReceived, Hook);
-	FString url = "data.cognitive3d.com"; //TODO set correct exitpoll url
+	FString AuthValue = "APIKEY:DATA " + cogProvider->APIKey;
+	//TODO move exitpoll get request to network class. use config networkhost and config networkversion
+	FString url = "https://data.cognitive3d.com/v0/questionSetHooks/"+Hook+"/questionSet";
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("GET");
+	HttpRequest->SetHeader("Authorization", AuthValue);
 	r = response;
 	lastHook = Hook;
 	HttpRequest->OnProcessRequestComplete().BindStatic(ExitPoll::OnResponseReceivedAsync);
@@ -158,13 +159,13 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	}
 
+	if (!cogProvider.IsValid() || !cogProvider->HasStartedSession())
+	{
+		cognitivevrapi::CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		return;
+	}
+
 	TSharedPtr<FJsonObject> ResponseObject = MakeShareable(new FJsonObject);
-
-	//ResponseObject->SetStringField("user", s->GetUserID());
-	//ResponseObject->SetStringField("questionSetId", currentSet.id);
-	//ResponseObject->SetStringField("sessionId", s->GetSessionID());
-	//ResponseObject->SetStringField("hook", lastHook);
-
 	ResponseObject->SetStringField("userId", Responses.user);
 	ResponseObject->SetStringField("questionSetId", Responses.questionSetId);
 	ResponseObject->SetStringField("sessionId", Responses.sessionId);
@@ -212,24 +213,22 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 	
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 
-	FString ValueReceived = cogProvider->CustomerId;// = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "CognitiveVRApiKey", false);
-	//FString url = Config::PostExitPollResponses(ValueReceived, currentSet.name, currentSet.version);
-	FString url = "data.cognitive3d.com"; //TODO add correct exitpoll url
+	//TODO move exitpoll send request to network class. use config networkhost and config networkversion
+	FString url = "https://data.cognitive3d.com/v0/questionSets/"+currentSet.name+"/"+FString::FromInt(currentSet.version)+"/responses";
+	FString AuthValue = "APIKEY:DATA " + cogProvider->APIKey;
 
 	HttpRequest->SetURL(url);
 	HttpRequest->SetHeader("Content-Type", "application/json");
+	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetContentAsString(OutputString);
 	//HttpRequest->OnProcessRequestComplete().BindStatic(ExitPoll::OnQuestionResponse);
 	HttpRequest->ProcessRequest();
 
+
+
 	//send this as a transaction too
-
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	//properties->SetStringField("userId", s->GetUserID());
-	//properties->SetStringField("questionSetId", currentSet.id);
-	//properties->SetStringField("hook", lastHook);
-
 	properties->SetStringField("userId", Responses.user);
 	properties->SetStringField("questionSetId", Responses.questionSetId);
 	properties->SetStringField("hook", Responses.hook);
@@ -262,12 +261,6 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 			properties->SetNumberField("Answer" + FString::FromInt(i), 0);
 		}
 	}
-
-	if (!cogProvider.IsValid() || !bHasSessionStarted)
-	{
-		cognitivevrapi::CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
-		return;
-	}
 	
 	cogProvider.Get()->customevent->Send(FString("cvr.exitpoll"), FVector(0,0,0), properties); //TODO custom event position should be exitpoll panel position
 
@@ -295,7 +288,7 @@ void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 	responses.hook = lastHook;
 	responses.user = cogProvider->GetUserID();
 	responses.questionSetId = questionSet.id;
-	responses.sessionId = cogProvider->GetCognitiveSessionID();
+	responses.sessionId = cogProvider->GetSessionID();
 	responses.answers = answers;
 	SendQuestionResponse(responses);
 }

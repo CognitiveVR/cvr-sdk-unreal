@@ -12,7 +12,7 @@ class FAnalyticsProviderCognitiveVR;
 class COGNITIVEVR_API CustomEvent
 {
     private:
-		FAnalyticsProviderCognitiveVR* s;
+		FAnalyticsProviderCognitiveVR* cog;
 		TArray<TSharedPtr<FJsonObject>> batchedJson;
 		int32 jsonEventPart = 1;
 		int32 CustomEventBatchSize = 16;
@@ -20,7 +20,7 @@ class COGNITIVEVR_API CustomEvent
 		TArray<TSharedPtr<FJsonObject>> events;
 
     public:
-		CustomEvent(FAnalyticsProviderCognitiveVR* sp);
+		CustomEvent(FAnalyticsProviderCognitiveVR* cvr);
 
         /** Begin a new transaction.
 

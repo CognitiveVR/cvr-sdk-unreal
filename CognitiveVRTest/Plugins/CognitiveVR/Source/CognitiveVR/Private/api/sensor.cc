@@ -43,13 +43,18 @@ void Sensors::RecordSensor(FString Name, float value)
 
 void Sensors::SendData()
 {
+	if (s == NULL || !s->HasStartedSession())
+	{
+		return;
+	}
+
 	TSharedPtr<FJsonObject> wholeObj = MakeShareable(new FJsonObject);
 
 	TArray< TSharedPtr<FJsonValue> > DataArray;
 
-	wholeObj->SetStringField("name", s->GetDeviceID());
+	wholeObj->SetStringField("name", s->GetUserID());
 	wholeObj->SetNumberField("timestamp", (int32)s->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", s->GetCognitiveSessionID());
+	wholeObj->SetStringField("sessionid", s->GetSessionID());
 	wholeObj->SetNumberField("part", jsonPart);
 	jsonPart++;
 

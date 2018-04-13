@@ -154,11 +154,6 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 	if (!SnapshotOnInterval) { return; }
 
-	if (!s->HasStartedSession())
-	{
-		return;
-	}
-
 	currentTime += DeltaTime;
 	if (currentTime > SnapshotInterval)
 	{
@@ -204,10 +199,10 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		
 		FDynamicObjectSnapshot snapObj = MakeSnapshot();
 
-		if (snapObj.time > 1)
-		{
+		//if (snapObj.time > 1)
+		//{
 			snapshots.Add(snapObj);
-		}
+		//}
 
 		if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
 		{
@@ -218,18 +213,13 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 {
-	if (!s.IsValid())
-	{
-		//can't stop snapshots here. at beginning of the game, the manager might not be finished setting up
-		cognitivevrapi::CognitiveLog::Error("DynamicObject::MakeSnapshot provider is null. finding provider");
-		s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-	}
 
-	if (cognitivevrapi::Util::GetTimestamp() < s->LastSesisonTimestamp)
+	//TODO check that session ends correctly from editor
+	/*if (cognitivevrapi::Util::GetTimestamp() < s->LastSesisonTimestamp)
 	{
 		FDynamicObjectSnapshot snapshot = FDynamicObjectSnapshot();
 		return snapshot;
-	}
+	}*/
 
 	//decide if the object needs a new entry in the manifest
 	bool needObjectId = false;
@@ -452,9 +442,15 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 	return MakeShareable(new FJsonValueObject(snapObj));
 }
 
+//static
 void UDynamicObject::SendData()
 {
-	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (!cog.IsValid() || !cog->HasStartedSession())
+	{
+		return;
+	}
+
 	TSharedPtr<FSceneData> currentscenedata = cog->GetCurrentSceneData();
 	if (!currentscenedata.IsValid())
 	{
@@ -472,9 +468,9 @@ void UDynamicObject::SendData()
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 
-	wholeObj->SetStringField("userid", cog->GetDeviceID());
+	wholeObj->SetStringField("userid", cog->GetUserID());
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", cog->GetCognitiveSessionID());
+	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonPart);
 	jsonPart++;
 
@@ -500,8 +496,7 @@ void UDynamicObject::SendData()
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 	//cog->SendJson("dynamics", OutputString);
 	//FString sceneid = cog->GetCurrentSceneId();
-	
-	cog->network->NetworkCall("dynamic", OutputString);
+	cog->network->NetworkCall("dynamics", OutputString);
 
 	snapshots.Empty();
 }

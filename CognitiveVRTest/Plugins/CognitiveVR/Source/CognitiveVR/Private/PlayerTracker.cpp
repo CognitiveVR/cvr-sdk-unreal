@@ -45,14 +45,11 @@ UPlayerTracker::UPlayerTracker()
 
 void UPlayerTracker::BeginPlay()
 {
-	FlushPersistentDebugLines(GetWorld());
-
-	s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-	if (s.IsValid())
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (cog.IsValid())
 	{
-		FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->SetWorld(GetWorld());
-		//s->SetWorld(GetWorld());
 
+		cog->SetWorld(GetWorld());
 		Super::BeginPlay();
 	}
 	else
@@ -64,11 +61,6 @@ void UPlayerTracker::BeginPlay()
 // Called every frame
 void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	if (s.Get() == NULL)
-	{
-		return;
-	}
-
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	currentTime += DeltaTime;
@@ -288,27 +280,30 @@ void UPlayerTracker::BuildSnapshot(FVector position, FRotator rotation, double t
 
 void UPlayerTracker::SendData()
 {
-	auto scenedata = s->GetCurrentSceneData();
-	if (s->GetCurrentSceneVersionNumber().Len() == 0) { return; }
-	if (!scenedata.IsValid()){return;}
+	if (!cog.IsValid() || !cog->HasStartedSession()) { return; }
+	if (cog->GetCurrentSceneVersionNumber().Len() == 0) { return; }
+	if (!cog->GetCurrentSceneData().IsValid()){return;}
 
 	//GAZE
 
-	if (snapshots.Num() == 0) { return; }
+	FJsonObject userprops = cog->GetUserProperties();
+	FJsonObject deviceprops = cog->GetDeviceProperties();
+
+	if (snapshots.Num() == 0 && userprops.Values.Num() == 0 && deviceprops.Values.Num() == 0) { return; }
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
-	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
 
-	wholeObj->SetStringField("userid", cog->GetDeviceID());
+	wholeObj->SetStringField("userid", cog->GetUserID());
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", cog->GetCognitiveSessionID());
+	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonGazePart);
 	jsonGazePart++;
 
 	FName DeviceName(NAME_None);
 	FString DeviceNameString = "unknown";
 
+	//TODO get HMDdevice name on beginplay and cache
 	if (GEngine->HMDDevice.IsValid())
 	{
 		DeviceName = GEngine->HMDDevice->GetDeviceName();
@@ -328,13 +323,37 @@ void UPlayerTracker::SendData()
 
 	wholeObj->SetArrayField("data", dataArray);
 
+	if (deviceprops.Values.Num() > 0)
+	{
+		TArray<TSharedPtr<FJsonValue>> deviceproparray;
+		for (int32 i = 0; i != deviceprops.Values.Num(); ++i)
+		{
+			TSharedPtr<FJsonValueObject> deviceValue;
+			deviceValue = MakeShareable(new FJsonValueObject(snapshots[i]));
+			deviceproparray.Add(deviceValue);
+		}
+		wholeObj->SetArrayField("device", deviceproparray);
+	}
+
+	if (userprops.Values.Num() > 0)
+	{
+		TArray<TSharedPtr<FJsonValue>> userproparray;
+		for (int32 i = 0; i != userprops.Values.Num(); ++i)
+		{
+			TSharedPtr<FJsonValueObject> userValue;
+			userValue = MakeShareable(new FJsonValueObject(snapshots[i]));
+			userproparray.Add(userValue);
+		}
+		wholeObj->SetArrayField("user", userproparray);
+	}
+
 	FString OutputString;
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 
 	if (OutputString.Len() > 0)
 	{
-		s->network->NetworkCall("gaze", OutputString);
+		cog->network->NetworkCall("gaze", OutputString);
 	}
 	snapshots.Empty();
 }
@@ -364,7 +383,7 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		break;
 	}
 
-	if (s.Get() != NULL)
+	if (cog.IsValid())
 	{
 		if (shouldEndSession)
 		{
@@ -373,7 +392,7 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 			//TODO this why is endplay on gaze recorder not on core?
 			//cognitivevr manager can't find playercontroller0, but will send events to dash and dynamics+sensors to SE
-			s->EndSession();
+			cog->EndSession();
 		}
 	}
 	Super::EndPlay(EndPlayReason);
