@@ -911,6 +911,7 @@ bool FCognitiveTools::PickFile(const FString& Title, const FString& FileTypes, F
 	return bFileChosen;
 }
 
+//unused. previously used to upload a screenshot for an existing scene
 FReply FCognitiveTools::SelectUploadScreenshot()
 {
 	FString title = "Select Screenshot";
@@ -977,6 +978,17 @@ FReply FCognitiveTools::SelectUploadScreenshot()
 
 		HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::OnUploadScreenshotCompleted);
 		HttpRequest->ProcessRequest();
+	}
+	return FReply::Handled();
+}
+
+FReply FCognitiveTools::TakeScreenshot()
+{
+	FString dir = ExportDirectory;
+	FString targetDir = dir + "/screenshot/";
+	if (VerifyOrCreateDirectory(targetDir))
+	{
+		FScreenshotRequest::RequestScreenshot(targetDir + "screenshot", false, false);
 	}
 	return FReply::Handled();
 }
@@ -1382,11 +1394,14 @@ void FCognitiveTools::UploadFromDirectory(FString url, FString directory, FStrin
 
 	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(directory, true, filesStartingWith, pngextension, filesStartingWith);
 
+	imagesInDirectory.Remove(directory + "/screenshot/screenshot.png");
+	FString screenshotPath = directory + "/screenshot/screenshot.png";
+
 	TArray<FContentContainer> contentArray;
 
 	UE_LOG(LogTemp, Log, TEXT("UploadScene image count%d"), imagesInDirectory.Num());
 	UE_LOG(LogTemp, Log, TEXT("UploadScene file count%d"), filesInDirectory.Num());
-
+	
 	for (int32 i = 0; i < filesInDirectory.Num(); i++)
 	{
 		FString Content;
@@ -1446,6 +1461,34 @@ void FCognitiveTools::UploadFromDirectory(FString url, FString directory, FStrin
 			UE_LOG(LogTemp, Error, TEXT("failed to load image %s"), *imagesInDirectory[i]);
 		}
 	}
+
+	//append screenshot
+	FString Content;
+	TArray<uint8> byteResult;
+	if (FFileHelper::LoadFileToArray(byteResult, *screenshotPath))
+	{
+		FContentContainer container = FContentContainer();
+		//UE_LOG(LogTemp, Log, TEXT("Loaded image %s"), *imagesInDirectory[i]);
+		//loaded the file
+		Content = Content.Append(TEXT("\r\n"));
+		Content = Content.Append("--cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i");
+		Content = Content.Append(TEXT("\r\n"));
+		Content = Content.Append("Content-Type: image/png");
+		Content = Content.Append(TEXT("\r\n"));
+		Content = Content.Append("Content-disposition: form-data; name=\"screenshot\"; filename=\"screenshot.png\"");
+		Content = Content.Append(TEXT("\r\n"));
+		Content = Content.Append(TEXT("\r\n"));
+
+		container.Headers = Content;
+		container.BodyBinary = byteResult;
+
+		contentArray.Add(container);
+	}
+	else
+	{
+		GLog->Log("couldn't find screenshot to upload");
+	}
+
 	TArray<uint8> AllBytes;
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 

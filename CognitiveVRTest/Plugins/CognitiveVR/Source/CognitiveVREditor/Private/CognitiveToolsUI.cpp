@@ -405,27 +405,28 @@ void FCognitiveTools::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 			.MaxHeight(32)
 			[
 				SNew(SButton)
+				.IsEnabled(this,&FCognitiveTools::HasSetExportDirectory)
+				.Text(FText::FromString("Take Screenshot"))
+				.OnClicked(this, &FCognitiveTools::TakeScreenshot)
+			]
+
+			+ SVerticalBox::Slot()
+			.MaxHeight(32)
+			[
+				SNew(SButton)
 				.IsEnabled(this, &FCognitiveTools::CanUploadSceneFiles)
 				.Text(this, &FCognitiveTools::UploadSceneNameFiles)
 				.ToolTip(SNew(SToolTip).Text(LOCTEXT("export tip", "Make sure you have settings.json and no .bmp files in your export directory")))
 				.OnClicked(this, &FCognitiveTools::UploadScene)
 			]
-			+ SVerticalBox::Slot()
-			.MaxHeight(32)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.VAlign(EVerticalAlignment::VAlign_Center)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString("Press F9 to take a screenshot"))
-			]
-			+ SVerticalBox::Slot()
-			.MaxHeight(32)
-			[
-				SNew(SButton)
-				.IsEnabled(this, &FCognitiveTools::CurrentSceneHasSceneId)
-				.Text(FText::FromString("Upload Screenshot"))
-				.OnClicked(this, &FCognitiveTools::SelectUploadScreenshot)
-			]
+			//+ SVerticalBox::Slot()
+			//.MaxHeight(32)
+			//[
+			//	SNew(SButton)
+			//	.IsEnabled(this, &FCognitiveTools::CurrentSceneHasSceneId)
+			//	.Text(FText::FromString("Upload Screenshot"))
+			//	.OnClicked(this, &FCognitiveTools::SelectUploadScreenshot)
+			//]
 		]
 		+ SHorizontalBox::Slot()
 		.Padding(4.0f, 0.0f)

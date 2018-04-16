@@ -33,6 +33,7 @@
 #include "SDynamicObjectListWidget.h"
 #include "SDynamicObjectWebListWidget.h"
 #include "Http.h"
+#include "UnrealClient.h"
 //
 //#include "ExportSceneTool.generated.h"
 
@@ -466,6 +467,7 @@ private:
 	void FindAllSubDirectoryNames();
 	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
 	FReply SelectUploadScreenshot();
+	FReply TakeScreenshot();
 	
 	//bool HasEditorAuthToken() const;
 	FText GetDynamicsOnSceneExplorerTooltip() const;
