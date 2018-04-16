@@ -39,9 +39,9 @@ class FDynamicData
 public:
 	FString Name = "";
 	FString MeshName = "";
-	int32 Id = -1;
+	FString Id = "";
 
-	FDynamicData(FString name, FString meshname, int32 id)
+	FDynamicData(FString name, FString meshname, FString id)
 	{
 		Name = name;
 		MeshName = meshname;

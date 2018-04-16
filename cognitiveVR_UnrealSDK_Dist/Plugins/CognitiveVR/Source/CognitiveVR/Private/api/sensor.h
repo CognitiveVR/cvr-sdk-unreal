@@ -15,8 +15,7 @@ class COGNITIVEVR_API Sensors
 		FAnalyticsProviderCognitiveVR* s;
 
 		TMap<FString, FString> somedatapoints;
-		
-		FString SensorDataToString();
+
 		int32 jsonPart = 1;
 		int32 sensorDataCount = 0;
 		int32 SensorThreshold = 16;

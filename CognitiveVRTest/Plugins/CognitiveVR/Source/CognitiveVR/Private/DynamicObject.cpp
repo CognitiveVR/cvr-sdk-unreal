@@ -199,14 +199,14 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		
 		FDynamicObjectSnapshot snapObj = MakeSnapshot();
 
-		//if (snapObj.time > 1)
-		//{
-			snapshots.Add(snapObj);
-		//}
-
-		if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
+		//TODO allow recording of dynamics before session start, but don't 'leak' snapshots to a new session
+		if (snapObj.time > 1)
 		{
-			SendData();
+			snapshots.Add(snapObj);
+			if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
+			{
+				SendData();
+			}
 		}
 	}
 }

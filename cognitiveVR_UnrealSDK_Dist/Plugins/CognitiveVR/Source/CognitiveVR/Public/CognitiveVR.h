@@ -4,9 +4,8 @@
 
 #include "Private/CognitiveVRPrivatePCH.h"
 #include "Runtime/Analytics/Analytics/Public/Interfaces/IAnalyticsProviderModule.h"
-#include "Private/api/tuning.h"
-#include "Private/api/transaction.h"
-#include "Private/api/coreutilities.h"
+#include "Private/api/customevent.h"
+
 //#include "IAnalyticsProviderModule.h"
 //#include "Core.h"
 //#include "ModuleManager.h"
@@ -16,7 +15,7 @@
 DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);
 
 #define COGNITIVEVR_SDK_NAME "unreal"
-#define COGNITIVEVR_SDK_VERSION "0.4.4"
+#define COGNITIVEVR_SDK_VERSION "0.5.0"
 
 class IAnalyticsProvider;
 class FAnalyticsProviderCognitiveVR;
@@ -56,11 +55,8 @@ public:
 		*/
 	virtual TSharedPtr<IAnalyticsProvider> CreateAnalyticsProvider(const FAnalyticsProviderConfigurationDelegate& GetConfigValue) const override;
 	virtual TSharedPtr<FAnalyticsProviderCognitiveVR> GetCognitiveVRProvider() const;
-	
-	//only used in the editor
-	FString EditorSessionId;
-	FString EditorSessionToken;
-	FString EditorAuthToken;
+
+	FString DeveloperKey;
 		
 private:
 	//mutable TMap<FString, TSharedPtr<IAnalyticsProvider>> Analytics;

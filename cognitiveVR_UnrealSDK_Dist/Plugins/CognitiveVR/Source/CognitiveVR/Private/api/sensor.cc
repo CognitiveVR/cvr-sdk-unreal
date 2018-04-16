@@ -43,31 +43,21 @@ void Sensors::RecordSensor(FString Name, float value)
 
 void Sensors::SendData()
 {
-	FString out = SensorDataToString();
-	somedatapoints.Empty();
-	sensorDataCount = 0;
-	if (out != "")
+	if (s == NULL || !s->HasStartedSession())
 	{
-		auto scenedata = s->GetCurrentSceneData();
-		if (scenedata.IsValid())
-		{
-			s->SendJson(Config::PostSensorData(scenedata->Id, scenedata->VersionNumber), out);
-		}
+		return;
 	}
-}
 
-FString Sensors::SensorDataToString()
-{
 	TSharedPtr<FJsonObject> wholeObj = MakeShareable(new FJsonObject);
 
 	TArray< TSharedPtr<FJsonValue> > DataArray;
 
-	wholeObj->SetStringField("name", s->GetDeviceID());
+	wholeObj->SetStringField("name", s->GetUserID());
 	wholeObj->SetNumberField("timestamp", (int32)s->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", s->GetCognitiveSessionID());
+	wholeObj->SetStringField("sessionid", s->GetSessionID());
 	wholeObj->SetNumberField("part", jsonPart);
 	jsonPart++;
-	
+
 	wholeObj->SetStringField("data", "SENSORDATAHERE");
 
 	FString OutputString;
@@ -78,11 +68,11 @@ FString Sensors::SensorDataToString()
 	FString allData;
 	if (somedatapoints.Num() == 0)
 	{
-		return "";
+		return;
 	}
 	for (const auto& Entry : somedatapoints)
 	{
-		allData = allData.Append("{\"name\":\""+Entry.Key + "\",\"data\":[" + Entry.Value + "]},");
+		allData = allData.Append("{\"name\":\"" + Entry.Key + "\",\"data\":[" + Entry.Value + "]},");
 	}
 	allData.RemoveAt(allData.Len());
 
@@ -90,5 +80,8 @@ FString Sensors::SensorDataToString()
 	const TCHAR* charcomplete = *complete;
 	OutputString = OutputString.Replace(TEXT("\"SENSORDATAHERE\""), charcomplete);
 
-	return OutputString;
+	s->network->NetworkCall("sensor", OutputString);
+
+	somedatapoints.Empty();
+	sensorDataCount = 0;
 }

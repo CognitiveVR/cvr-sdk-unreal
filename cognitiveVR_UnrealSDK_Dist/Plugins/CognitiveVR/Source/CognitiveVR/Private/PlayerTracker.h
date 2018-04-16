@@ -140,6 +140,7 @@ public:
 
 //DECLARE_DYNAMIC_DELEGATE_OneParam(FOnlineUserImageRetrievedDelegate, UTexture2D*, Texture);
 
+//TODO why is the exitpoll response declared in the gaze tracking script? who knows
 DECLARE_DYNAMIC_DELEGATE_OneParam(FCognitiveExitPollResponse, FExitPollQuestionSet, QuestionSet);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -150,13 +151,11 @@ class COGNITIVEVR_API UPlayerTracker : public UActorComponent
 private:
 	float currentTime = 0;
 	TArray<TSharedPtr<FJsonObject>> snapshots;
-	TArray<TSharedPtr<FJsonObject>> events;
 
-	int32 jsonEventPart = 1;
 	int32 jsonGazePart = 1;
 
-	TSharedPtr<FAnalyticsProviderCognitiveVR> s;
-	void BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, int32 objectId = -1);
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
+	void BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, FString objectId = "");
 	void BuildSnapshot(FVector position, FRotator rotation, double time);
 
 public:
@@ -180,13 +179,7 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void SendGazeEventDataToSceneExplorer();
-	void SendGazeEventDataToSceneExplorer(FString sceneName);
-	
-	void AddJsonEvent(FJsonObject* newEvent);
-
-	FString GazeSnapshotsToString();
-	FString EventSnapshotsToString();
+	void SendData();
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 };
