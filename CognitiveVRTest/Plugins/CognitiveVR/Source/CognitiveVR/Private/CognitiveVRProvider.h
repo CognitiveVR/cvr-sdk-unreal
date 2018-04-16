@@ -5,25 +5,14 @@
 #include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
 
-#include "Private/unreal/override_http_interface.h"
 #include "Private/util/util.h"
 #include "Private/util/config.h"
 #include "Private/util/cognitive_log.h"
-#include "Private/network/cognitivevr_response.h"
-#include "Private/util/cognitivevr_exception.h"
-#include "Private/network/http_interface.h"
-#include "Private/unreal/buffer_manager.h"
 #include "Private/network/network.h"
-#include "Private/api/tuning.h"
-#include "Private/api/transaction.h"
+#include "Private/api/customevent.h"
 #include "Private/api/sensor.h"
-#include "Private/api/coreutilities.h"
 //#include "DynamicObject.h"
 #include "Engine.h"
-
-DECLARE_MULTICAST_DELEGATE(FCognitiveSendData);
-DECLARE_EVENT_OneParam(FAnalyticsProviderCognitiveVR, FCognitiveInitResponse, bool);
-//DECLARE_DELEGATE_OneParam(FCognitiveExitPollResponse, FExitPollQuestionSet);
 
 class FSceneData
 {
@@ -42,8 +31,6 @@ public:
 	}
 };
 
-extern bool bHasSessionStarted;
-
 	enum CognitiveVRError {
 		kErrorSuccess = 0,
 		kErrorGeneric = -1,
@@ -58,11 +45,7 @@ extern bool bHasSessionStarted;
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
 	class Network;
-	class Transaction;
-	class Tuning;
-	class BufferManager;
-	class CoreUtilities;
-	class OverrideHttpInterface;
+	class CustomEvent;
 	class CognitiveVRResponse;
 	class Sensors;
 	//class ExitPoll;
@@ -70,12 +53,6 @@ extern bool bHasSessionStarted;
 
 	class FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
 	{
-		/** Path where analytics files are saved out */
-		//FString AnalyticsFilePath;
-		/** Tracks whether we need to start the session or restart it */
-		//bool bHasSessionStarted;
-		/** Whether an event was written before or not */
-		//bool bHasWrittenFirstEvent;
 		/** Unique Id representing the session the analytics are recording for */
 		FString SessionId;
 		/** Holds the Age if set */
@@ -86,19 +63,13 @@ extern bool bHasSessionStarted;
 		FString Gender;
 		/** Holds the build info if set */
 		FString BuildInfo;
-		/** The file archive used to write the data */
-		//FArchive* FileArchive;
-
-		FCognitiveInitResponse InitResponseEvent;
-
-	public:
 		/** Id representing the user the analytics are recording for */
 		FString UserId;
-
-		/** True once server has responded. everything is initialized at this point */
-		//TODO time out should set bPendingInitRequest to false
-		bool bPendingInitRequest=false;
-
+		FString DeviceId;
+		double SessionTimestamp = -1;
+		FJsonObject DeviceProperties;
+		FJsonObject UserProperties;
+	public:
 		FAnalyticsProviderCognitiveVR();
 		virtual ~FAnalyticsProviderCognitiveVR();
 
@@ -133,39 +104,29 @@ extern bool bHasSessionStarted;
 
 
 		//custom cognitive
-
-		bool SendJson(FString url, FString Json);
-		//FString GetCurrentSceneId();
-		//FString GetSceneId(FString sceneName);
-
-		UPROPERTY(BlueprintAssignable)
-		FCognitiveSendData OnSendData;
-
-		FCognitiveInitResponse& OnInitResponse() { return InitResponseEvent; }
-
-		FString DeviceId;
-		TSharedPtr<Transaction> transaction;
-		TSharedPtr<Tuning> tuning;
+		
+		
+		TSharedPtr<CustomEvent> customevent;
 		TSharedPtr<Network> network;
-		TSharedPtr<BufferManager> thread_manager;
-		TSharedPtr<CoreUtilities> core_utils;
 		TSharedPtr<Sensors> sensors;
-		TSharedPtr<FJsonObject> initProperties; //optional properties sent when initializing. platform, ram, etc
+		//TSharedPtr<FJsonObject> initProperties; //optional properties sent when initializing. platform, ram, etc
 		FString GetDeviceID() const;
-		void SetDeviceID(const FString& InDeviceID);
-		double LastSesisonTimestamp = 1;
+		//void SetDeviceID(const FString& InDeviceID);
+		//double LastSesisonTimestamp = 1;
 
-		double SessionTimestamp = -1;
-		double GetSessionTimestamp();
-		FString GetCognitiveSessionID();
+		double GetSessionTimestamp() const;
 
-		void AppendUD(TSharedPtr<FJsonValueArray> &json);
+		//void AppendUD(TSharedPtr<FJsonValueArray> &json);
 		FVector GetPlayerHMDPosition();
-		void SendDeviceInfo();
+		//void SendDeviceInfo();
 
 		bool HasStartedSession();
 
-		FString CustomerId;
+		//FString CustomerId;
+		FString APIKey;
+
+		FString GetCurrentSceneId();
+		FString GetCurrentSceneVersionNumber();
 
 		void OnLevelLoaded();
 		void SetWorld(UWorld* world);
@@ -174,6 +135,14 @@ extern bool bHasSessionStarted;
 		void CacheSceneData();
 		TSharedPtr<FSceneData> GetSceneData(FString scenename);
 		TSharedPtr<FSceneData> GetCurrentSceneData();
-	};
 
-	void ThrowDummyResponseException(std::string s);
+		FJsonObject GetDeviceProperties();
+		FJsonObject GetUserProperties();
+
+		void SetDeviceProperty(FString name, int32 value);
+		void SetDeviceProperty(FString name, float value);
+		void SetDeviceProperty(FString name, FString value);
+		void SetUserProperty(FString name, int32 value);
+		void SetUserProperty(FString name, float value);
+		void SetUserProperty(FString name, FString value);
+	};

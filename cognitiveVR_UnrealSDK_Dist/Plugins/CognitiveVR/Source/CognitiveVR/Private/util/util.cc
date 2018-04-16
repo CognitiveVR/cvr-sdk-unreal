@@ -22,12 +22,12 @@ double Util::GetTimestamp()
 	#pragma warning(pop)
 }
 
-template < typename T > std::string Util::ToString( const T& n )
+/*template < typename T > std::string Util::ToString( const T& n )
 {
     std::ostringstream stm ;
     stm << n ;
     return stm.str() ;
-}
+}*/
 
 FString Util::GetDeviceName(FString DeviceName)
 {
@@ -93,105 +93,4 @@ TSharedPtr<FJsonObject> Util::DeviceScraper(TSharedPtr<FJsonObject> properties)
 	properties->SetStringField("cvr.device.os", osVersionOut+osSubVersionOut);
 
 	return properties;
-}
-
-
-void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, FString &fstring)
-{
-	TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
-	TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueString(fstring));
-	ValueArray.Emplace(tempVal);
-
-	json = MakeShareable(new FJsonValueArray(ValueArray));
-}
-
-void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, std::string &stdstring)
-{
-	FString fstring = stdstring.c_str();
-	TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
-	TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueString(fstring));
-	ValueArray.Emplace(tempVal);
-
-	json = MakeShareable(new FJsonValueArray(ValueArray));
-}
-
-void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, bool &mybool)
-{
-	TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
-	TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueNumber(mybool));
-	ValueArray.Emplace(tempVal);
-
-	json = MakeShareable(new FJsonValueArray(ValueArray));
-}
-
-void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, long &longValue)
-{
-	TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
-	TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueNumber(longValue));
-	ValueArray.Emplace(tempVal);
-
-	json = MakeShareable(new FJsonValueArray(ValueArray));
-}
-void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray> &json, int32 &intValue)
-{
-	TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
-	TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueNumber(intValue));
-	ValueArray.Emplace(tempVal);
-
-	json = MakeShareable(new FJsonValueArray(ValueArray));
-}
-void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray>& json, double &doubleValue)
-{
-	TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
-	TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueNumber(doubleValue));
-	ValueArray.Emplace(tempVal);
-
-	json = MakeShareable(new FJsonValueArray(ValueArray));
-}
-void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray>& json)
-{
-	TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
-	TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueNumber(NULL));
-	ValueArray.Emplace(tempVal);
-
-	json = MakeShareable(new FJsonValueArray(ValueArray));
-}
-void Util::AppendToJsonArray(TSharedPtr<FJsonValueArray>& json, TSharedPtr<FJsonObject> & object)
-{
-	TArray<TSharedPtr<FJsonValue>> ValueArray = json.Get()->AsArray();
-	TSharedPtr<FJsonValue> tempVal = MakeShareable(new FJsonValueObject(object));
-	ValueArray.Emplace(tempVal);
-
-	json = MakeShareable(new FJsonValueArray(ValueArray));
-}
-
-void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, std::string &stdstringValue)
-{
-	FString fstring = stdstringValue.c_str();
-	FString fkey = name.c_str();
-	json.Get()->SetStringField(fkey, fstring);
-}
-
-void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, FString &stringValue)
-{
-	FString fkey = name.c_str();
-	json.Get()->SetStringField(fkey, stringValue);
-}
-
-void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, bool &booleanValue)
-{
-	FString fkey = name.c_str();
-	json.Get()->SetBoolField(fkey, booleanValue);
-}
-
-void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, int32 &integerValue)
-{
-	FString fkey = name.c_str();
-	json.Get()->SetNumberField(fkey, integerValue);
-}
-
-void Util::AppendToJsonObject(TSharedPtr<FJsonObject> &json, std::string &name, double &doubleValue)
-{
-	FString fkey = name.c_str();
-	json.Get()->SetNumberField(fkey, doubleValue);
 }

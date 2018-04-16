@@ -30,7 +30,7 @@ class UCognitiveVRSettings
 
 	/** The number of transactions that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-	int32 TransactionBatchSize = 64;
+	int32 CustomEventBatchSize = 64;
 
 	/** The number of player snapshots that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)

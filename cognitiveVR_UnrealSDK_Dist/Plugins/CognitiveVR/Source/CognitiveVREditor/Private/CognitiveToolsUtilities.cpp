@@ -6,6 +6,11 @@
 
 //deals with all the exporting and non-display stuff in the editor preferences
 
+bool FCognitiveTools::HasDeveloperKey() const
+{
+	return FAnalyticsCognitiveVR::Get().DeveloperKey.Len() > 0;
+}
+
 float FCognitiveTools::GetMinimumSize()
 {
 	float MinSize = 0;
@@ -286,14 +291,14 @@ FReply FCognitiveTools::SetUniqueDynamicIds()
 	{
 		//id dynamic custom id is not in usedids - add it
 
-		int32 findId = dynamic->CustomId;
+		FString findId = dynamic->CustomId;
 
 		FDynamicObjectId* FoundId = usedIds.FindByPredicate([findId](const FDynamicObjectId& InItem)
 		{
 			return InItem.Id == findId;
 		});
 
-		if (FoundId == NULL && dynamic->CustomId > 0)
+		if (FoundId == NULL && dynamic->CustomId != "")
 		{
 			usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
 		}
@@ -311,12 +316,12 @@ FReply FCognitiveTools::SetUniqueDynamicIds()
 			//find some unused id number
 			FDynamicObjectId* FoundId = usedIds.FindByPredicate([currentUniqueId](const FDynamicObjectId& InItem)
 			{
-				return InItem.Id == currentUniqueId;
+				return InItem.Id == FString::FromInt(currentUniqueId);
 			});
 
 			if (FoundId == NULL)
 			{
-				dynamic->CustomId = currentUniqueId;
+				dynamic->CustomId = FString::FromInt(currentUniqueId);
 				dynamic->UseCustomId = true;
 				changedDynamics++;
 				currentUniqueId++;
@@ -369,11 +374,11 @@ FReply FCognitiveTools::UploadDynamicsManifest()
 	for (int32 i = 0; i < dynamics.Num(); i++)
 	{
 		//if they have a customid -> add them to the objectmanifest string
-		if (dynamics[i]->UseCustomId && dynamics[i]->CustomId != 0)
+		if (dynamics[i]->UseCustomId && dynamics[i]->CustomId != "")
 		{
 			wroteAnyObjects = true;
 			objectManifest += "{";
-			objectManifest += "\"id\":\"" + FString::FromInt(dynamics[i]->CustomId) + "\",";
+			objectManifest += "\"id\":\"" + dynamics[i]->CustomId + "\",";
 			objectManifest += "\"mesh\":\"" + dynamics[i]->MeshName + "\",";
 			objectManifest += "\"name\":\"" + dynamics[i]->GetOwner()->GetName() + "\"";
 			objectManifest += "},";
@@ -414,11 +419,12 @@ FReply FCognitiveTools::UploadDynamicsManifest()
 	//send manifest to api/objects/sceneid
 
 	GLog->Log("CognitiveTools::UploadDynamicsManifest send dynamic object aggregation manifest");
-
+	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
+	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetContentAsString(objectManifest);
 	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::OnUploadManifestCompleted);
 
@@ -453,7 +459,7 @@ FReply FCognitiveTools::GetDynamicsManifest()
 		GLog->Log("CognitiveTools::GetDyanmicManifest version id is not set! Makes sure the scene has updated scene version");
 		return FReply::Handled();
 	}
-	if (FAnalyticsCognitiveVR::Get().EditorAuthToken.Len() == 0)
+	if (!HasDeveloperKey())
 	{
 		GLog->Log("CognitiveTools::GetDyanmicManifest auth token is empty. Must log in!");
 		return FReply::Handled();
@@ -464,7 +470,8 @@ FReply FCognitiveTools::GetDynamicsManifest()
 	HttpRequest->SetURL(GetDynamicObjectManifest(FString::FromInt(currentSceneData->VersionId)));
 
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
-	HttpRequest->SetHeader("Authorization", TEXT("Bearer " + FAnalyticsCognitiveVR::Get().EditorAuthToken));
+	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	HttpRequest->SetHeader("Authorization", AuthValue);
 
 	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::OnDynamicManifestResponse);
 	HttpRequest->ProcessRequest();
@@ -493,7 +500,7 @@ void FCognitiveTools::OnDynamicManifestResponse(FHttpRequestPtr Request, FHttpRe
 				TSharedPtr<FJsonObject> jsonobject = JsonDynamics->AsArray()[i]->AsObject();
 				FString name = jsonobject->GetStringField("name");
 				FString meshname = jsonobject->GetStringField("meshName");
-				int32 id = FCString::Atoi(*jsonobject->GetStringField("sdkId"));
+				FString id = jsonobject->GetStringField("sdkId");
 
 				SceneExplorerDynamics.Add(MakeShareable(new FDynamicData(name, meshname, id)));
 			}
@@ -904,6 +911,7 @@ bool FCognitiveTools::PickFile(const FString& Title, const FString& FileTypes, F
 	return bFileChosen;
 }
 
+//unused. previously used to upload a screenshot for an existing scene
 FReply FCognitiveTools::SelectUploadScreenshot()
 {
 	FString title = "Select Screenshot";
@@ -963,11 +971,24 @@ FReply FCognitiveTools::SelectUploadScreenshot()
 		HttpRequest->SetURL(url);
 		HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=\"cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i\"");
 		HttpRequest->SetHeader("Accept-Encoding", "identity");
+		FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+		HttpRequest->SetHeader("Authorization", AuthValue);
 		HttpRequest->SetVerb("POST");
 		HttpRequest->SetContent(AllBytes);
 
 		HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::OnUploadScreenshotCompleted);
 		HttpRequest->ProcessRequest();
+	}
+	return FReply::Handled();
+}
+
+FReply FCognitiveTools::TakeScreenshot()
+{
+	FString dir = ExportDirectory;
+	FString targetDir = dir + "/screenshot/";
+	if (VerifyOrCreateDirectory(targetDir))
+	{
+		FScreenshotRequest::RequestScreenshot(targetDir + "screenshot", false, false);
 	}
 	return FReply::Handled();
 }
@@ -1373,11 +1394,14 @@ void FCognitiveTools::UploadFromDirectory(FString url, FString directory, FStrin
 
 	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(directory, true, filesStartingWith, pngextension, filesStartingWith);
 
+	imagesInDirectory.Remove(directory + "/screenshot/screenshot.png");
+	FString screenshotPath = directory + "/screenshot/screenshot.png";
+
 	TArray<FContentContainer> contentArray;
 
 	UE_LOG(LogTemp, Log, TEXT("UploadScene image count%d"), imagesInDirectory.Num());
 	UE_LOG(LogTemp, Log, TEXT("UploadScene file count%d"), filesInDirectory.Num());
-
+	
 	for (int32 i = 0; i < filesInDirectory.Num(); i++)
 	{
 		FString Content;
@@ -1437,6 +1461,34 @@ void FCognitiveTools::UploadFromDirectory(FString url, FString directory, FStrin
 			UE_LOG(LogTemp, Error, TEXT("failed to load image %s"), *imagesInDirectory[i]);
 		}
 	}
+
+	//append screenshot
+	FString Content;
+	TArray<uint8> byteResult;
+	if (FFileHelper::LoadFileToArray(byteResult, *screenshotPath))
+	{
+		FContentContainer container = FContentContainer();
+		//UE_LOG(LogTemp, Log, TEXT("Loaded image %s"), *imagesInDirectory[i]);
+		//loaded the file
+		Content = Content.Append(TEXT("\r\n"));
+		Content = Content.Append("--cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i");
+		Content = Content.Append(TEXT("\r\n"));
+		Content = Content.Append("Content-Type: image/png");
+		Content = Content.Append(TEXT("\r\n"));
+		Content = Content.Append("Content-disposition: form-data; name=\"screenshot\"; filename=\"screenshot.png\"");
+		Content = Content.Append(TEXT("\r\n"));
+		Content = Content.Append(TEXT("\r\n"));
+
+		container.Headers = Content;
+		container.BodyBinary = byteResult;
+
+		contentArray.Add(container);
+	}
+	else
+	{
+		GLog->Log("couldn't find screenshot to upload");
+	}
+
 	TArray<uint8> AllBytes;
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 
@@ -1491,6 +1543,8 @@ void FCognitiveTools::UploadFromDirectory(FString url, FString directory, FStrin
 	HttpRequest->SetURL(url);
 	HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=\"cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i\"");
 	HttpRequest->SetHeader("Accept-Encoding", "identity");
+	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetContent(AllBytes);
 
@@ -1632,13 +1686,13 @@ TArray<FString> FCognitiveTools::GetAllFilesInDirectory(const FString directory,
 
 bool FCognitiveTools::HasFoundBlender() const
 {
-	if (!HasLoggedIn()) { return false; }
+	if (!HasDeveloperKey()) { return false; }
 	return FCognitiveTools::GetBlenderPath().ToString().Contains("blender.exe");
 }
 
 bool FCognitiveTools::HasFoundBlenderAndHasSelection() const
 {
-	if (!HasLoggedIn()) { return false; }
+	if (!HasDeveloperKey()) { return false; }
 	return FCognitiveTools::GetBlenderPath().ToString().Contains("blender.exe") && GEditor->GetSelectedActorCount() > 0;
 }
 
@@ -1661,12 +1715,12 @@ bool FCognitiveTools::HasConvertedFilesInDirectory() const
 
 bool FCognitiveTools::CanUploadSceneFiles() const
 {
-	return HasConvertedFilesInDirectory() && HasLoggedIn();
+	return HasConvertedFilesInDirectory() && HasDeveloperKey();
 }
 
 bool FCognitiveTools::LoginAndCustonerIdAndBlenderExportDir() const
 {
-	return HasLoggedIn() && HasFoundBlenderAndExportDir() && HasSavedCustomerId();
+	return HasDeveloperKey() && HasFoundBlenderAndExportDir();
 }
 
 bool FCognitiveTools::HasFoundBlenderAndExportDir() const
@@ -1681,7 +1735,7 @@ bool FCognitiveTools::HasFoundBlenderAndDynamicExportDir() const
 
 bool FCognitiveTools::CurrentSceneHasSceneId() const
 {
-	if (!HasLoggedIn()) { return false; }
+	if (!HasDeveloperKey()) { return false; }
 	TSharedPtr<FEditorSceneData> currentscene = GetCurrentSceneData();
 	if (!currentscene.IsValid())
 	{
@@ -1696,18 +1750,14 @@ bool FCognitiveTools::CurrentSceneHasSceneId() const
 
 bool FCognitiveTools::HasSetExportDirectory() const
 {
-	if (!HasLoggedIn()) { return false; }
+	if (!HasDeveloperKey()) { return false; }
 	return !FCognitiveTools::GetExportDirectory().EqualTo(FText::FromString(""));
 }
 
-bool FCognitiveTools::HasEditorAuthToken() const
-{
-	return FAnalyticsCognitiveVR::Get().EditorAuthToken.Len() > 0;
-}
 
 FText FCognitiveTools::GetDynamicsOnSceneExplorerTooltip() const
 {
-	if (!HasLoggedIn())
+	if (!HasDeveloperKey())
 	{
 		return FText::FromString("Must log in to get Dynamic Objects List from SceneExplorer");
 	}
@@ -1715,10 +1765,6 @@ FText FCognitiveTools::GetDynamicsOnSceneExplorerTooltip() const
 	if (!scene.IsValid())
 	{
 		return FText::FromString("Scene does not have valid data. Must export your scene before uploading dynamics!");
-	}
-	if (HasEditorAuthToken())
-	{
-		return FText::FromString("");
 	}
 	return FText::FromString("Something went wrong!");
 }
@@ -1734,32 +1780,22 @@ EVisibility FCognitiveTools::ConfigFileChangedVisibility() const
 
 FText FCognitiveTools::SendDynamicsToSceneExplorerTooltip() const
 {
-	if (HasEditorAuthToken())
+	if (HasDeveloperKey())
 	{
 		return FText::FromString("");
 	}
 	return FText::FromString("Must log in to send Dynamic Objects List to SceneExplorer");
 }
 
-FText FCognitiveTools::GetCustomerId() const
-{
-	if (SelectedProduct.customerId.Len() > 0)
-	{
-		return FText::FromString(SelectedProduct.customerId);
-	}
-	//FString customerid = GetCustomerIdFromFile();
-	return FText::FromString("");
-}
-
 bool FCognitiveTools::HasSetDynamicExportDirectory() const
 {
-	if (!HasLoggedIn()) { return false; }
+	if (!HasDeveloperKey()) { return false; }
 	return !FCognitiveTools::GetDynamicExportDirectory().EqualTo(FText::FromString(""));
 }
 
 bool FCognitiveTools::HasSetDynamicExportDirectoryHasSceneId() const
 {
-	if (!HasLoggedIn()) { return false; }
+	if (!HasDeveloperKey()) { return false; }
 	auto scenedata = GetCurrentSceneData();
 	if (!scenedata.IsValid()) { return false; }
 	return !FCognitiveTools::GetDynamicExportDirectory().EqualTo(FText::FromString(""));
@@ -1954,14 +1990,14 @@ bool FCognitiveTools::DuplicateDynamicIdsInScene() const
 	{
 		//id dynamic custom id is not in usedids - add it
 
-		int32 findId = dynamic->CustomId;
+		FString findId = dynamic->CustomId;
 
 		FDynamicObjectId* FoundId = usedIds.FindByPredicate([findId](const FDynamicObjectId& InItem)
 		{
 			return InItem.Id == findId;
 		});
 
-		if (FoundId == NULL && dynamic->CustomId > 0)
+		if (FoundId == NULL && dynamic->CustomId != "")
 		{
 			usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
 		}

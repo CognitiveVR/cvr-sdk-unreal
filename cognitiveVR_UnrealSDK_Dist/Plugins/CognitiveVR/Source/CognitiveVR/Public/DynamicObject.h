@@ -26,11 +26,11 @@ class FEngagementEvent
 public:
 	bool Active = true;
 	FString EngagementType = "";
-	int32 Parent = -1;
+	FString Parent = "";
 	float EngagementTime = 0;
 	int32 EngagementNumber = 0;
 
-	FEngagementEvent(FString name, int32 parent, int engagementNumber)
+	FEngagementEvent(FString name, FString parent, int engagementNumber)
 	{
 		EngagementType = name;
 		Parent = parent;
@@ -41,12 +41,12 @@ public:
 class FDynamicObjectManifestEntry
 {
 public:
-	int32 Id = 0;
+	FString Id = "";
 	FString Name = "";
 	FString MeshName = "";
 	TMap<FString, FString> StringProperties;
 
-	FDynamicObjectManifestEntry(int32 id, FString name, FString mesh)
+	FDynamicObjectManifestEntry(FString id, FString name, FString mesh)
 	{
 		Id = id;
 		Name = name;
@@ -61,11 +61,11 @@ public:
 class FDynamicObjectId
 {
 public:
-	int32 Id = 0;
+	FString Id = "";
 	bool Used = true;
 	FString MeshName = "";
 
-	FDynamicObjectId(int32 id, FString meshName)
+	FDynamicObjectId(FString id, FString meshName)
 	{
 		Id = id;
 		MeshName = meshName;
@@ -83,7 +83,7 @@ public:
 	FVector position = FVector(0, 0, 0);
 	FQuat rotation = FQuat(0, 0, 0, 1);
 	double time = 0;
-	int32 id = 0;
+	FString id = "";
 	TMap<FString, FString> StringProperties;
 	TMap<FString, int32> IntegerProperties;
 	TMap<FString, float> FloatProperties;
@@ -141,7 +141,7 @@ public:
 	bool UseCustomId;
 
 	UPROPERTY(EditAnywhere)
-	int32 CustomId = -1;
+	FString CustomId = "";
 
 	UPROPERTY(EditAnywhere)
 	FString GroupName;
@@ -165,14 +165,12 @@ public:
 	//engagements
 	TArray<FEngagementEvent> DirtyEngagements;
 	TArray<FEngagementEvent> Engagements;
-	void BeginEngagementId(FString engagementName, int32 parentDynamicObjectId);
-	void EndEngagementId(FString engagementName, int32 parentDynamicObjectId);
+	void BeginEngagementId(FString engagementName, FString parentDynamicObjectId);
+	void EndEngagementId(FString engagementName, FString parentDynamicObjectId);
 
 
 	virtual void OnComponentCreated() override;
 	virtual void BeginPlay() override;
-
-	void BeginPlayCallback(bool successful);
 
 	TSharedPtr<FDynamicObjectId> GetUniqueId(FString meshName);
 	TSharedPtr<FDynamicObjectId> GetObjectId();
@@ -185,7 +183,6 @@ public:
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
 	static void SendData();
-	static void SendData(FString sceneName);
 	static TArray<TSharedPtr<FJsonValueObject>> DynamicSnapshotsToString();
 	static TSharedPtr<FJsonObject> DynamicObjectManifestToString();
 
