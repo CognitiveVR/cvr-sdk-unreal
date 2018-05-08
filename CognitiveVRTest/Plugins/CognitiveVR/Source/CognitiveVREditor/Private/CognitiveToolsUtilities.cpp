@@ -769,13 +769,13 @@ FReply FCognitiveTools::Select_Export_Meshes()
 
 	int32 ActorsExported = 0;
 
-	for (TActorIterator<AStaticMeshActor> ObstacleItr(tempworld); ObstacleItr; ++ObstacleItr)
+	for (TActorIterator<AActor> ObstacleItr(tempworld); ObstacleItr; ++ObstacleItr)
 	{
 		//get non-moveable static meshes only
 		if (GetStaticOnly())
 		{
 			EComponentMobility::Type mobility = EComponentMobility::Static;
-			const USceneComponent* sc = Cast<USceneComponent>(ObstacleItr->GetStaticMeshComponent());
+			const USceneComponent* sc = Cast<USceneComponent>(ObstacleItr->GetComponentByClass(UStaticMeshComponent::StaticClass())); //->GetStaticMeshComponent());
 			if (sc == NULL) { continue; }
 			if (sc->Mobility == EComponentMobility::Movable) { continue; }
 		}
@@ -798,16 +798,24 @@ FReply FCognitiveTools::Select_Export_Meshes()
 		}
 
 		//get the selectable bit
-		AStaticMeshActor *tempactor = *ObstacleItr;
+		/*AStaticMeshActor *tempactor = *ObstacleItr;
 		if (!tempactor)
 		{
-			continue;
-		}
-		UActorComponent* actorComponent = tempactor->GetComponentByClass(UStaticMeshComponent::StaticClass());
+			GLog->Log("temp actor skip - not of type static mesh actor");
+			//continue;
+		}*/
+		UActorComponent* actorComponent = (*ObstacleItr)->GetComponentByClass(UStaticMeshComponent::StaticClass());
 		if (actorComponent == NULL)
 		{
 			continue;
 		}
+		UActorComponent* dynamicComponent = (*ObstacleItr)->GetComponentByClass(UDynamicObject::StaticClass());
+		if (dynamicComponent != NULL)
+		{
+			//skip dynamic objects
+			continue;
+		}
+
 		USceneComponent* sceneComponent = Cast<USceneComponent>(actorComponent);
 		if (sceneComponent == NULL)
 		{
@@ -819,7 +827,7 @@ FReply FCognitiveTools::Select_Export_Meshes()
 		}
 		
 
-		GEditor->SelectActor(tempactor, true, false, true);
+		GEditor->SelectActor((*ObstacleItr), true, false, true);
 		ActorsExported++;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Found %d Static Meshes for Export"), ActorsExported);
@@ -1834,9 +1842,18 @@ void FCognitiveTools::SearchForBlender()
 	}
 }
 
+//TSharedRef<FCognitiveTools> ToolsInstance;
+FCognitiveTools* ToolsInstance;
+
 TSharedRef<IDetailCustomization> FCognitiveTools::MakeInstance()
 {
-	return MakeShareable(new FCognitiveTools);
+	ToolsInstance = new FCognitiveTools;
+	return MakeShareable(ToolsInstance);
+}
+
+FCognitiveTools* FCognitiveTools::GetInstance()
+{
+	return ToolsInstance;
 }
 
 FReply FCognitiveTools::ExecuteToolCommand(IDetailLayoutBuilder* DetailBuilder, UFunction* MethodToExecute)
@@ -2014,6 +2031,12 @@ bool FCognitiveTools::DuplicateDynamicIdsInScene() const
 		return true;
 	}
 	return false;
+}
+
+FReply FCognitiveTools::DebugButton()
+{
+	GLog->Log("BUTTON CLICKED");
+	return FReply::Handled();
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -3,6 +3,8 @@
 #include "PropertyEditorModule.h"
 #include "LevelEditor.h"
 #include "CognitiveTools.h"
+#include "SceneSetupWindow.h"
+#include "SetupCustomization.h"
 
 //#include "DemoStyle.h"
 
@@ -32,6 +34,7 @@ void FCognitiveVREditorModule::StartupModule()
 	// Register the details customizations
 	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
 	PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FCognitiveTools::MakeInstance));
+	PropertyModule.RegisterCustomClassLayout(TEXT("BaseEditorTool"), FOnGetDetailCustomizationInstance::CreateStatic(&FSetupCustomization::MakeInstance));
 
 	// Register slate style ovverides
 	//FDemoStyle::Initialize();
@@ -51,7 +54,7 @@ void FCognitiveVREditorModule::StartupModule()
 			FCanExecuteAction::CreateStatic(&FCognitiveVREditorModule::HandleTestCommandCanExcute)
 			);*/
 
-		/*struct Local
+		struct Local
 		{
 			//static void AddToolbarCommands(FToolBarBuilder& ToolbarBuilder)
 			//{
@@ -73,7 +76,7 @@ void FCognitiveVREditorModule::StartupModule()
 			EExtensionHook::After,
 			CommandList.ToSharedRef(),
 			FMenuExtensionDelegate::CreateStatic(&Local::AddMenuCommands));
-		LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);*/
+		LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
 
 		/*TSharedRef<FExtender> ToolbarExtender(new FExtender());
 		ToolbarExtender->AddToolBarExtension(
@@ -101,6 +104,10 @@ void FCognitiveVREditorModule::TriggerTool(UClass* ToolClass)
 	TArray<UObject*> ObjectsToView;
 	ObjectsToView.Add(ToolInstance);
 	TSharedRef<SWindow> Window = PropertyModule.CreateFloatingDetailsView(ObjectsToView, /*bIsLockeable=*/ false);
+	//PropertyModule.RegisterCustomClassLayout("USceneSetupWindow", FOnGetDetailCustomizationInstance::CreateStatic(&USceneSetupWindow::MakeInstance));
+	//PropertyModule.RegisterCustomClassLayout(TEXT("USceneSetupWindow"), FOnGetDetailCustomizationInstance::CreateStatic(&FSetupCustomization::MakeInstance));
+
+	GLog->Log("trigger tool");
 
 	Window->SetOnWindowClosed(FOnWindowClosed::CreateStatic(&FCognitiveVREditorModule::OnToolWindowClosed, ToolInstance));
 }
@@ -117,6 +124,8 @@ void FCognitiveVREditorModule::CreateToolListMenu(class FMenuBuilder& MenuBuilde
 				FString FriendlyName = Class->GetName();
 				FText MenuDescription = FText::Format(LOCTEXT("ToolMenuDescription", "{0}"), FText::FromString(FriendlyName));
 				FText MenuTooltip = FText::Format(LOCTEXT("ToolMenuTooltip", "Execute the {0} tool"), FText::FromString(FriendlyName));
+
+				GLog->Log("added cognitive tool to editor window");
 
 				FUIAction Action(FExecuteAction::CreateStatic(&FCognitiveVREditorModule::TriggerTool, Class));
 

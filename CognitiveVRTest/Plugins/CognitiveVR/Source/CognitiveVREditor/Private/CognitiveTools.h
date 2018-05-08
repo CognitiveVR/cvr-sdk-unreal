@@ -37,33 +37,28 @@
 //
 //#include "ExportSceneTool.generated.h"
 
-//https://forums.unrealengine.com/unreal-engine/marketplace/125106-configbp-ini-configuration-files-the-easy-way?p=1385756#post1385756
+//would this make more sense to not inherit from anything and have a separate idetailcustomization class?
+//this is customizing the settings class, but most of the functionality is in the customization, not the settings
 
 class UCognitiveVRSettings;
 
 class FCognitiveTools : public IDetailCustomization
 {
-
-	// Enumerates radio button choices.
-	//enum EReleaseType
-	//{
-	//	Test,
-	//	Production
-	//};
-
-	//EReleaseType RadioChoice = EReleaseType::Test;
-
 public:
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
 
 	static TSharedRef<IDetailCustomization> MakeInstance();
-	//static TSharedRef<FCognitiveTools> Instance;
-	//static FCognitiveTools MyInstance;
-	//static TSharedRef<FCognitiveTools> MyInstanceRef;
+
+	static FCognitiveTools* GetInstance();
 
 	static FReply ExecuteToolCommand(IDetailLayoutBuilder* DetailBuilder, UFunction* MethodToExecute);
 
 	void SaveSceneData(FString sceneName, FString sceneKey);
+
+	FReply DebugButton();
+
+	//gets all the dynamics in the scene and saves them to SceneDynamics
+	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 
 private:
 	void OnAPIKeyChanged(const FText& Text);
@@ -295,11 +290,6 @@ private:
 	UFUNCTION(Exec, Category = "Export")
 		FReply Select_Export_Directory();
 
-	UFUNCTION(Exec, Category = "Export")
-		FReply DEBUGSendSceneData();
-
-
-
 	TArray<FString> GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension) const;
 
 	FString GetProductID();
@@ -385,10 +375,6 @@ private:
 	//returns SceneData array
 	TArray<TSharedPtr<FEditorSceneData>> GetSceneData() const;
 
-public:
-	//gets all the dynamics in the scene and saves them to SceneDynamics
-	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
-private:
 
 	TSharedRef<ITableRow> OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
 

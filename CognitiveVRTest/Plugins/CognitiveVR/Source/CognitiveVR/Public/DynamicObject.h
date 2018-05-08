@@ -98,7 +98,7 @@ public:
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class COGNITIVEVR_API UDynamicObject : public UActorComponent
+class COGNITIVEVR_API UDynamicObject : public USceneComponent //UActorComponent
 {
 	GENERATED_BODY()
 
