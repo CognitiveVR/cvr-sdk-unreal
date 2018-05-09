@@ -41,7 +41,7 @@ void ACognitiveVRTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Oth
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 
-		OtherActor->GetComponentByClass(UDynamicObject::StaticClass());
+		//OtherActor->GetComponentByClass(UDynamicObject::StaticClass());
 
 		//if (true)
 			//auto actorcomponent = GetOwner()->GetComponentByClass(UDynamicObject::StaticClass());

@@ -94,7 +94,10 @@ void CustomEvent::SendData()
 		return;
 	}
 
-	if (events.Num() == 0) { return; }
+	if (events.Num() == 0)
+	{
+		return;
+	}
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
@@ -115,8 +118,7 @@ void CustomEvent::SendData()
 	FString OutputString;
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-
-	cog->network->NetworkCall("event", OutputString);
+	cog->network->NetworkCall("events", OutputString);
 
 	events.Empty();
 }

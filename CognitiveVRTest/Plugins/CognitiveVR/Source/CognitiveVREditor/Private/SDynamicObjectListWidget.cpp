@@ -92,12 +92,12 @@ FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
 {
 	GEditor->SelectNone(false, true, false);
 
-	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		AStaticMeshActor *Mesh = *ActorItr;
+		//AStaticMeshActor *Mesh = *ActorItr;
 
-		UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
 		if (actorComponent == NULL)
 		{
 			continue;
@@ -111,7 +111,7 @@ FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
 		if (dynamic->CustomId != data->Id) { continue; }
 		if (dynamic->MeshName != data->MeshName) { continue; }
 
-		GEditor->SelectActor(Mesh, true, true, true, true);
+		GEditor->SelectActor((*ActorItr), true, true, true, true);
 
 		break;
 	}

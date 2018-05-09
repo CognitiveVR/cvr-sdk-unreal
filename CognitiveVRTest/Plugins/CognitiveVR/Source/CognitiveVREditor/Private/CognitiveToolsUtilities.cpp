@@ -81,12 +81,12 @@ FReply FCognitiveTools::ExportDynamics()
 	TArray<FString> meshNames;
 	TArray<UDynamicObject*> exportObjects;
 
-	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		AStaticMeshActor *Mesh = *ActorItr;
+		//AStaticMeshActor *Mesh = *ActorItr;
 		
-		UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
 		if (actorComponent == NULL)
 		{
 			continue;
@@ -249,12 +249,12 @@ FReply FCognitiveTools::SetUniqueDynamicIds()
 	TArray<FDynamicObjectId> usedIds;
 
 	//get all the dynamic objects in the scene
-	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		AStaticMeshActor *Mesh = *ActorItr;
+		//AStaticMeshActor *Mesh = *ActorItr;
 
-		UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
 		if (actorComponent == NULL)
 		{
 			continue;
@@ -348,12 +348,12 @@ FReply FCognitiveTools::UploadDynamicsManifest()
 	TArray<UDynamicObject*> dynamics;
 
 	//get all the dynamic objects in the scene
-	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		AStaticMeshActor *Mesh = *ActorItr;
+		//AStaticMeshActor *Mesh = *ActorItr;
 
-		UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
 		if (actorComponent == NULL)
 		{
 			continue;
@@ -426,6 +426,7 @@ FReply FCognitiveTools::UploadDynamicsManifest()
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetContentAsString(objectManifest);
+
 	HttpRequest->OnProcessRequestComplete().BindSP(this, &FCognitiveTools::OnUploadManifestCompleted);
 
 	HttpRequest->ProcessRequest();
@@ -1879,12 +1880,12 @@ int32 FCognitiveTools::CountDynamicObjectsInScene() const
 	TArray<UDynamicObject*> dynamics;
 
 	//get all the dynamic objects in the scene
-	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		AStaticMeshActor *Mesh = *ActorItr;
+		//AStaticMeshActor *Mesh = *ActorItr;
 
-		UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
 		if (actorComponent == NULL)
 		{
 			continue;
@@ -1919,12 +1920,12 @@ FReply FCognitiveTools::RefreshDisplayDynamicObjectsCountInScene()
 
 	SceneDynamics.Empty();
 	//get all the dynamic objects in the scene
-	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		AStaticMeshActor *Mesh = *ActorItr;
+		//AStaticMeshActor *Mesh = *ActorItr;
 
-		UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
 		if (actorComponent == NULL)
 		{
 			continue;
@@ -1978,12 +1979,12 @@ bool FCognitiveTools::DuplicateDynamicIdsInScene() const
 	TArray<FDynamicObjectId> usedIds;
 
 	//get all the dynamic objects in the scene
-	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		AStaticMeshActor *Mesh = *ActorItr;
+		//AStaticMeshActor *Mesh = *ActorItr;
 
-		UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
 		if (actorComponent == NULL)
 		{
 			continue;
