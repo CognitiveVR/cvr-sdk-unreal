@@ -13,11 +13,4 @@ public:
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
 
 	static TSharedRef<IDetailCustomization> MakeInstance();
-	
-	static FReply ExecuteToolCommand(IDetailLayoutBuilder* DetailBuilder, UFunction* MethodToExecute);
-
-	int32 CurrentPage;
-	EVisibility ShouldDisplay(int32 page);
-
-	FReply ToolsDebugButton();
 };

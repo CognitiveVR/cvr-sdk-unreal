@@ -3,8 +3,12 @@
 #include "PropertyEditorModule.h"
 #include "LevelEditor.h"
 #include "CognitiveTools.h"
+#include "SDockTab.h"
 #include "SceneSetupWindow.h"
 #include "SetupCustomization.h"
+#include "Editor/WorkspaceMenuStructure/Public/WorkspaceMenuStructureModule.h"
+#include "Editor/EditorStyle/Public/EditorStyleSet.h"
+#include "SSceneSetupWidget.h"
 
 //#include "DemoStyle.h"
 
@@ -13,137 +17,117 @@
 class FCognitiveVREditorModule : public IModuleInterface
 {
 public:
-	// IMoudleInterface interface
-	virtual void StartupModule() override;
-	virtual void ShutdownModule() override;
-	// End of IModuleInterface interface
 
-	static void TriggerTool(UClass* ToolClass);
-	static void CreateToolListMenu(class FMenuBuilder& MenuBuilder);
-	static void OnToolWindowClosed(const TSharedRef<SWindow>& Window, UBaseEditorTool* Instance);
+	//	FName SequenceRecorderTabName = FName("SequenceRecorder");
+		// IMoudleInterface interface
+		//virtual void StartupModule() override;
+		//virtual void ShutdownModule() override;
+		// End of IModuleInterface interface
 
-	/*static void HandleTestCommandExcute();
+		//static void OnToolWindowClosed(const TSharedRef<SWindow>& Window, UBaseEditorTool* Instance);
 
-	static bool HandleTestCommandCanExcute();*/
+		//void AddMenuEntry(FMenuBuilder& MenuBuilder);
+		//void DisplayPopup();
+		//void SpawnSequenceRecorderTab(const FSpawnTabArgs& SpawnTabArgs);
 
-	TSharedPtr<FUICommandList> CommandList;
-};
+		/*static void HandleTestCommandExcute();
 
-void FCognitiveVREditorModule::StartupModule()
-{
-	// Register the details customizations
-	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
-	PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FCognitiveTools::MakeInstance));
-	PropertyModule.RegisterCustomClassLayout(TEXT("BaseEditorTool"), FOnGetDetailCustomizationInstance::CreateStatic(&FSetupCustomization::MakeInstance));
+		static bool HandleTestCommandCanExcute();*/
 
-	// Register slate style ovverides
-	//FDemoStyle::Initialize();
+	//TSharedPtr<FUICommandList> CommandList;
 
-	// Register commands
-	//FDemoCommands::Register();
-	CommandList = MakeShareable(new FUICommandList);
 
-	//{
-		FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-
-		CommandList->Append(LevelEditorModule.GetGlobalLevelEditorActions());
-
-		/*CommandList->MapAction(
-			FDemoCommands::Get().TestCommand,
-			FExecuteAction::CreateStatic(&FCognitiveVREditorModule::HandleTestCommandExcute),
-			FCanExecuteAction::CreateStatic(&FCognitiveVREditorModule::HandleTestCommandCanExcute)
-			);*/
-
-		struct Local
-		{
-			//static void AddToolbarCommands(FToolBarBuilder& ToolbarBuilder)
-			//{
-			//	ToolbarBuilder.AddToolBarButton(FDemoCommands::Get().TestCommand);
-			//}
-
-			static void AddMenuCommands(FMenuBuilder& MenuBuilder)
-			{
-				MenuBuilder.AddSubMenu(LOCTEXT("CognitiveVRTools", "CognitiveVR Tools"),
-					LOCTEXT("CognitiveVRTooltip", "CognitiveVR Tools"),
-					FNewMenuDelegate::CreateStatic(&FCognitiveVREditorModule::CreateToolListMenu)
-					);
-			}
-		};
-
-		TSharedRef<FExtender> MenuExtender(new FExtender());
-		MenuExtender->AddMenuExtension(
-			TEXT("EditMain"),
-			EExtensionHook::After,
-			CommandList.ToSharedRef(),
-			FMenuExtensionDelegate::CreateStatic(&Local::AddMenuCommands));
-		LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
-
-		/*TSharedRef<FExtender> ToolbarExtender(new FExtender());
-		ToolbarExtender->AddToolBarExtension(
-			TEXT("Game"),
-			EExtensionHook::After,
-			CommandList.ToSharedRef(),
-			FToolBarExtensionDelegate::CreateStatic(&Local::AddToolbarCommands));
-		LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);*/
-	//}
-}
-
-void FCognitiveVREditorModule::ShutdownModule()
-{
-	//FDemoCommands::Unregister();
-	//FDemoStyle::Shutdown();
-}
-
-void FCognitiveVREditorModule::TriggerTool(UClass* ToolClass)
-{
-	UBaseEditorTool* ToolInstance = NewObject<UBaseEditorTool>(GetTransientPackage(), ToolClass);
-	ToolInstance->AddToRoot();
-
-	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
-
-	TArray<UObject*> ObjectsToView;
-	ObjectsToView.Add(ToolInstance);
-	TSharedRef<SWindow> Window = PropertyModule.CreateFloatingDetailsView(ObjectsToView, /*bIsLockeable=*/ false);
-	//PropertyModule.RegisterCustomClassLayout("USceneSetupWindow", FOnGetDetailCustomizationInstance::CreateStatic(&USceneSetupWindow::MakeInstance));
-	//PropertyModule.RegisterCustomClassLayout(TEXT("USceneSetupWindow"), FOnGetDetailCustomizationInstance::CreateStatic(&FSetupCustomization::MakeInstance));
-
-	GLog->Log("trigger tool");
-
-	Window->SetOnWindowClosed(FOnWindowClosed::CreateStatic(&FCognitiveVREditorModule::OnToolWindowClosed, ToolInstance));
-}
-
-void FCognitiveVREditorModule::CreateToolListMenu(class FMenuBuilder& MenuBuilder)
-{
-	for (TObjectIterator<UClass> ClassIt; ClassIt; ++ClassIt)
+	virtual void StartupModule() override
 	{
-		UClass* Class = *ClassIt;
-		if (!Class->HasAnyClassFlags(CLASS_Deprecated | CLASS_NewerVersionExists | CLASS_Abstract))
+#if WITH_EDITOR
+		// Create the Extender that will add content to the menu
+		FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
+		/*
+		TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
+		MenuExtender->AddMenuExtension(
+			"EditMain",
+			EExtensionHook::After,
+			NULL,
+			FMenuExtensionDelegate::CreateRaw(this, &FCognitiveVREditorModule::AddMenuEntry)
+		);
+
+		LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);*/
+
+
+		// register 'keep simulation changes' recorder
+		//FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
+		//LevelEditorModule.OnCaptureSingleFrameAnimSequence().BindStatic(&FCognitiveVREditorModule::HandleCaptureSingleFrameAnimSequence);
+
+		GLog->Log("COGNITIVE MODULE BEGIN");
+
+		// register standalone UI
+		LevelEditorTabManagerChangedHandle = LevelEditorModule.OnTabManagerChanged().AddLambda([]()
 		{
-			if (Class->IsChildOf(UBaseEditorTool::StaticClass()))
+			TSharedPtr<FSlateStyleSet> StyleSet = MakeShareable(new FSlateStyleSet("CognitiveEditor"));
+			StyleSet->SetCoreContentRoot(FPaths::EngineContentDir() / TEXT("Slate"));
+			
+			FString iconpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("CognitiveSceneWizardTabIcon.png");
+			//FName BrushName = FName(*iconpath);
+
+			//const TCHAR* charPath = *iconpath;
+			StyleSet->Set(FName(*iconpath),new FSlateImageBrush(iconpath,FVector2D(128,128),FSlateColor()));
+
+			//FSlateStyleRegistry::RegisterSlateStyle(*StyleSet.Get());
+
+
+			GLog->Log("---------------......................ontabmanagerchagnd");
+			FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
+			LocalLevelEditorModule.GetLevelEditorTabManager()->RegisterTabSpawner(FName("CognitiveSceneSetup"), FOnSpawnTab::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab))
+				.SetGroup(WorkspaceMenu::GetMenuStructure().GetToolsCategory())
+				.SetDisplayName(LOCTEXT("SceneSetupTabTitle", "Cognitive Scene Setup"))
+				.SetTooltipText(LOCTEXT("SceneSetupTooltipText", "Open the Sequence Recorder tab."));
+				//.SetIcon(FSlateIcon(StyleSet, "CognitiveSceneWizardTabIcon"));
+		});
+
+		// Register the details customizations
+		FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
+		PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FCognitiveTools::MakeInstance));
+		PropertyModule.RegisterCustomClassLayout(TEXT("BaseEditorTool"), FOnGetDetailCustomizationInstance::CreateStatic(&FSetupCustomization::MakeInstance));
+#endif
+	}
+
+	virtual void ShutdownModule() override
+	{
+#if WITH_EDITOR
+		if (GEditor)
+		{
+			//FDemoCommands::Unregister();
+			//FDemoStyle::Shutdown();
+
+			if (FModuleManager::Get().IsModuleLoaded(TEXT("LevelEditor")))
 			{
-				FString FriendlyName = Class->GetName();
-				FText MenuDescription = FText::Format(LOCTEXT("ToolMenuDescription", "{0}"), FText::FromString(FriendlyName));
-				FText MenuTooltip = FText::Format(LOCTEXT("ToolMenuTooltip", "Execute the {0} tool"), FText::FromString(FriendlyName));
-
-				GLog->Log("added cognitive tool to editor window");
-
-				FUIAction Action(FExecuteAction::CreateStatic(&FCognitiveVREditorModule::TriggerTool, Class));
-
-				MenuBuilder.AddMenuEntry(
-					MenuDescription,
-					MenuTooltip,
-					FSlateIcon(),
-					Action);
+				FLevelEditorModule& LevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
+				//LevelEditorModule.OnCaptureSingleFrameAnimSequence().Unbind();
+				LevelEditorModule.OnTabManagerChanged().Remove(LevelEditorTabManagerChangedHandle);
 			}
 		}
+#endif
 	}
-}
 
-void FCognitiveVREditorModule::OnToolWindowClosed(const TSharedRef<SWindow>& Window, UBaseEditorTool* Instance)
-{
-	Instance->RemoveFromRoot();
-}
+	void OnToolWindowClosed(const TSharedRef<SWindow>& Window, UBaseEditorTool* Instance)
+	{
+		Instance->RemoveFromRoot();
+	}
 
+	static TSharedRef<SDockTab> SpawnCognitiveSceneSetupTab(const FSpawnTabArgs& SpawnTabArgs)
+	{
+		const TSharedRef<SDockTab> MajorTab =
+			SNew(SDockTab)
+			//.Icon(FEditorStyle::Get().GetBrush("SequenceRecorder.TabIcon"))
+			.TabRole(ETabRole::MajorTab);
+
+		MajorTab->SetContent(SNew(SSceneSetupWidget));
+
+		return MajorTab;
+	}
+
+	FDelegateHandle LevelEditorTabManagerChangedHandle;
+};
 IMPLEMENT_MODULE(FCognitiveVREditorModule, CognitiveVREditor);
 
 #undef LOCTEXT_NAMESPACE
