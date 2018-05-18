@@ -181,11 +181,11 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		TSharedPtr< FJsonValue > Value = (*currJsonValue).Value;
 		if (Value->Type == EJson::Number)
 		{
-			SetDeviceProperty(Name, (float)Value->AsNumber());
+			SetSessionProperty(Name, (float)Value->AsNumber());
 		}
 		else if (Value->Type == EJson::String)
 		{
-			SetDeviceProperty(Name, Value->AsString());
+			SetSessionProperty(Name, Value->AsString());
 		}
 	}
 
@@ -471,19 +471,19 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 
 void FAnalyticsProviderCognitiveVR::SetAge(const int32 InAge)
 {
-	SetUserProperty("Age", InAge);
+	SetSessionProperty("Age", InAge);
 	Age = InAge;
 }
 
 void FAnalyticsProviderCognitiveVR::SetLocation(const FString& InLocation)
 {
-	SetUserProperty("Location", Location);
+	SetSessionProperty("Location", Location);
 	Location = InLocation;
 }
 
 void FAnalyticsProviderCognitiveVR::SetGender(const FString& InGender)
 {
-	SetUserProperty("Gender", InGender);
+	SetSessionProperty("Gender", InGender);
 	Gender = InGender;
 }
 
@@ -688,51 +688,73 @@ FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 	return controllers[0]->PlayerCameraManager->GetCameraLocation();
 }
 
-void FAnalyticsProviderCognitiveVR::SetDeviceProperty(FString name, int32 value)
+//void FAnalyticsProviderCognitiveVR::SetDeviceProperty(FString name, int32 value)
+//{
+//	if (SessionProperties.HasField(name))
+//		SessionProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
+//	else
+//		SessionProperties.SetNumberField(name, (int32)value);
+//}
+//void FAnalyticsProviderCognitiveVR::SetDeviceProperty(FString name, float value)
+//{
+//	if (SessionProperties.HasField(name))
+//		SessionProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
+//	else
+//		SessionProperties.SetNumberField(name, (float)value);
+//}
+//void FAnalyticsProviderCognitiveVR::SetDeviceProperty(FString name, FString value)
+//{
+//	if (SessionProperties.HasField(name))
+//		SessionProperties.Values[name] = MakeShareable(new FJsonValueString(value));
+//	else
+//		SessionProperties.SetStringField(name, value);
+//}
+//
+//void FAnalyticsProviderCognitiveVR::SetUserProperty(FString name, int32 value)
+//{
+//	if (SessionProperties.HasField(name))
+//		SessionProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
+//	else
+//		SessionProperties.SetNumberField(name, (int32)value);
+//}
+//void FAnalyticsProviderCognitiveVR::SetUserProperty(FString name, float value)
+//{
+//	if (SessionProperties.HasField(name))
+//		SessionProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
+//	else
+//		SessionProperties.SetNumberField(name, (float)value);
+//}
+//void FAnalyticsProviderCognitiveVR::SetUserProperty(FString name, FString value)
+//{
+//	if (SessionProperties.HasField(name))
+//		SessionProperties.Values[name] = MakeShareable(new FJsonValueString(value));
+//	else
+//		SessionProperties.SetStringField(name, value);
+//}
+
+void FAnalyticsProviderCognitiveVR::SetSessionProperty(FString name, int32 value)
 {
-	if (DeviceProperties.HasField(name))
-		DeviceProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
+	if (SessionProperties.HasField(name))
+		SessionProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
 	else
-		DeviceProperties.SetNumberField(name, (int32)value);
+		SessionProperties.SetNumberField(name, (int32)value);
 }
-void FAnalyticsProviderCognitiveVR::SetDeviceProperty(FString name, float value)
+void FAnalyticsProviderCognitiveVR::SetSessionProperty(FString name, float value)
 {
-	if (DeviceProperties.HasField(name))
-		DeviceProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
+	if (SessionProperties.HasField(name))
+		SessionProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
 	else
-		DeviceProperties.SetNumberField(name, (float)value);
+		SessionProperties.SetNumberField(name, (float)value);
 }
-void FAnalyticsProviderCognitiveVR::SetDeviceProperty(FString name, FString value)
+void FAnalyticsProviderCognitiveVR::SetSessionProperty(FString name, FString value)
 {
-	if (DeviceProperties.HasField(name))
-		DeviceProperties.Values[name] = MakeShareable(new FJsonValueString(value));
+	if (SessionProperties.HasField(name))
+		SessionProperties.Values[name] = MakeShareable(new FJsonValueString(value));
 	else
-		DeviceProperties.SetStringField(name, value);
+		SessionProperties.SetStringField(name, value);
 }
 
-void FAnalyticsProviderCognitiveVR::SetUserProperty(FString name, int32 value)
-{
-	if (UserProperties.HasField(name))
-		UserProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
-	else
-		UserProperties.SetNumberField(name, (int32)value);
-}
-void FAnalyticsProviderCognitiveVR::SetUserProperty(FString name, float value)
-{
-	if (UserProperties.HasField(name))
-		UserProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
-	else
-		UserProperties.SetNumberField(name, (float)value);
-}
-void FAnalyticsProviderCognitiveVR::SetUserProperty(FString name, FString value)
-{
-	if (UserProperties.HasField(name))
-		UserProperties.Values[name] = MakeShareable(new FJsonValueString(value));
-	else
-		UserProperties.SetStringField(name, value);
-}
-
-FJsonObject FAnalyticsProviderCognitiveVR::GetDeviceProperties()
+/*FJsonObject FAnalyticsProviderCognitiveVR::GetDeviceProperties()
 {
 	FJsonObject returnobject = FJsonObject(DeviceProperties);
 	DeviceProperties = FJsonObject();
@@ -743,5 +765,12 @@ FJsonObject FAnalyticsProviderCognitiveVR::GetUserProperties()
 {
 	FJsonObject returnobject = FJsonObject(UserProperties);
 	UserProperties = FJsonObject();
+	return returnobject;
+}*/
+
+FJsonObject FAnalyticsProviderCognitiveVR::GetSessionProperties()
+{
+	FJsonObject returnobject = FJsonObject(SessionProperties);
+	SessionProperties = FJsonObject();
 	return returnobject;
 }

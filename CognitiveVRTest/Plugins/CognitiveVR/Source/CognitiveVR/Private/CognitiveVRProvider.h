@@ -67,8 +67,9 @@ public:
 		FString UserId;
 		FString DeviceId;
 		double SessionTimestamp = -1;
-		FJsonObject DeviceProperties;
-		FJsonObject UserProperties;
+		FJsonObject SessionProperties;
+		//FJsonObject DeviceProperties;
+		//FJsonObject UserProperties;
 	public:
 		FAnalyticsProviderCognitiveVR();
 		virtual ~FAnalyticsProviderCognitiveVR();
@@ -136,13 +137,18 @@ public:
 		TSharedPtr<FSceneData> GetSceneData(FString scenename);
 		TSharedPtr<FSceneData> GetCurrentSceneData();
 
-		FJsonObject GetDeviceProperties();
-		FJsonObject GetUserProperties();
+		//FJsonObject GetDeviceProperties();
+		//FJsonObject GetUserProperties();
+		FJsonObject GetSessionProperties();
 
-		void SetDeviceProperty(FString name, int32 value);
-		void SetDeviceProperty(FString name, float value);
-		void SetDeviceProperty(FString name, FString value);
-		void SetUserProperty(FString name, int32 value);
-		void SetUserProperty(FString name, float value);
-		void SetUserProperty(FString name, FString value);
+		void SetSessionProperty(FString name, int32 value);
+		void SetSessionProperty(FString name, float value);
+		void SetSessionProperty(FString name, FString value);
+
+		//void SetDeviceProperty(FString name, int32 value);
+		//void SetDeviceProperty(FString name, float value);
+		//void SetDeviceProperty(FString name, FString value);
+		//void SetUserProperty(FString name, int32 value);
+		//void SetUserProperty(FString name, float value);
+		//void SetUserProperty(FString name, FString value);
 	};
