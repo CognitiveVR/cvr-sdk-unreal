@@ -286,10 +286,11 @@ void UPlayerTracker::SendData()
 
 	//GAZE
 
-	FJsonObject userprops = cog->GetUserProperties();
-	FJsonObject deviceprops = cog->GetDeviceProperties();
+	//FJsonObject userprops = cog->GetUserProperties();
+	//FJsonObject deviceprops = cog->GetDeviceProperties();
+	FJsonObject props = cog->GetSessionProperties();
 
-	if (snapshots.Num() == 0 && userprops.Values.Num() == 0 && deviceprops.Values.Num() == 0) { return; }
+	if (snapshots.Num() == 0 && props.Values.Num() == 0) { return; }
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
@@ -310,6 +311,7 @@ void UPlayerTracker::SendData()
 		DeviceNameString = cognitivevrapi::Util::GetDeviceName(DeviceName.ToString());
 	}
 
+	wholeObj->SetStringField("formatversion", "1.0");
 	wholeObj->SetStringField("hmdtype", DeviceNameString);
 
 	for (int32 i = 0; i != snapshots.Num(); ++i)
@@ -323,20 +325,38 @@ void UPlayerTracker::SendData()
 
 	wholeObj->SetArrayField("data", dataArray);
 
-	if (deviceprops.Values.Num() > 0)
-	{
-		TArray<TSharedPtr<FJsonValue>> deviceproparray;
-		for (int32 i = 0; i != deviceprops.Values.Num(); ++i)
-		{
-			TSharedPtr<FJsonValueObject> deviceValue;
-			deviceValue = MakeShareable(new FJsonValueObject(snapshots[i]));
-			deviceproparray.Add(deviceValue);
-		}
-		wholeObj->SetArrayField("device", deviceproparray);
-	}
+//	if (deviceprops.Values.Num() > 0)
+//	{
+//		TSharedPtr<FJsonObject> deviceValue;
+//		deviceValue = MakeShareable(new FJsonObject(deviceprops));
+//
+//		wholeObj->SetObjectField("device", deviceValue);
+//		
+//		TArray<TSharedPtr<FJsonValue>> deviceproparray;
+//
+//		for (auto val : deviceprops.Values)
+//		{
+//			TSharedPtr<FJsonValueObject> deviceValue;
+//			deviceValue = MakeShareable(new FJsonValueObject(snapshots[i]));
+//			deviceproparray.Add(deviceValue);
+//		}
+//
+//		for (int32 i = 0; i != deviceprops.Values.Num(); ++i)
+//		{
+//			TSharedPtr<FJsonValueObject> deviceValue;
+//			deviceValue = MakeShareable(new FJsonValueObject(snapshots[i]));
+//			deviceproparray.Add(deviceValue);
+//		}
+//		wholeObj->SetArrayField("device", deviceproparray);
+//	}
 
-	if (userprops.Values.Num() > 0)
+	if (props.Values.Num() > 0)
 	{
+		TSharedPtr<FJsonObject> sessionValue;
+		sessionValue = MakeShareable(new FJsonObject(props));
+
+		wholeObj->SetObjectField("properties", sessionValue);
+		/*
 		TArray<TSharedPtr<FJsonValue>> userproparray;
 		for (int32 i = 0; i != userprops.Values.Num(); ++i)
 		{
@@ -345,11 +365,14 @@ void UPlayerTracker::SendData()
 			userproparray.Add(userValue);
 		}
 		wholeObj->SetArrayField("user", userproparray);
+		*/
 	}
 
 	FString OutputString;
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
+
+	GLog->Log(OutputString);
 
 	if (OutputString.Len() > 0)
 	{

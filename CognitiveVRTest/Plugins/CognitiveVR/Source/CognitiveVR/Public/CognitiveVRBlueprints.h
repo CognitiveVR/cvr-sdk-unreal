@@ -35,7 +35,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
 	static void SendCustomEventPosition(FString Name, const TArray<FAnalyticsEventAttr>& Attributes, FVector Position);
 
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Device")
+	/*UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Device")
 	static void UpdateDeviceInt(const FString name, const int32 value);
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Device")
 	static void UpdateDeviceFloat(const FString name, const float value);
@@ -47,7 +47,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|User")
 	static void UpdateUserFloat(const FString name, const float value);
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|User")
-	static void UpdateUserString(const FString name, const FString value);
+	static void UpdateUserString(const FString name, const FString value);*/
+
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Properties")
+		static void UpdateSessionInt(const FString name, const int32 value);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Properties")
+		static void UpdateSessionFloat(const FString name, const float value);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Properties")
+		static void UpdateSessionString(const FString name, const FString value);
+
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
+		static void SetSessionName(const FString name);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
 	static void RecordSensor(const FString Name, const float Value);
