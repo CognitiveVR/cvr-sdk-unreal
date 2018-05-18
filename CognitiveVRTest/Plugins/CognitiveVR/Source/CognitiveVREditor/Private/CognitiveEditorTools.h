@@ -2,14 +2,12 @@
 
 #include "CognitiveVREditorPrivatePCH.h"
 #include "CognitiveVRSettings.h"
+#include "CognitiveEditorData.h"
 #include "IDetailCustomization.h"
 #include "PropertyEditing.h"
 //#include "DetailCustomizationsPrivatePCH.h"
 #include "PropertyCustomizationHelpers.h"
 #include "Json.h"
-#include "SCheckBox.h"
-#include "STableRow.h"
-#include "SFStringListWidget.h"
 
 #include "UnrealEd.h"
 #include "Engine.h"
@@ -29,38 +27,26 @@
 #include "MaterialUtilities.h"
 #include "DynamicObject.h"
 #include "GenericPlatformFile.h"
-#include "STextComboBox.h"
-#include "SDynamicObjectListWidget.h"
-#include "SDynamicObjectWebListWidget.h"
 #include "Http.h"
 #include "UnrealClient.h"
-//
-//#include "ExportSceneTool.generated.h"
 
-//would this make more sense to not inherit from anything and have a separate idetailcustomization class?
-//this is customizing the settings class, but most of the functionality is in the customization, not the settings
+//all sorts of functionality for Cognitive SDK
 
-class UCognitiveVRSettings;
 
-class FCognitiveTools : public IDetailCustomization
+class FCognitiveEditorTools
 {
 public:
-	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
 
-	static TSharedRef<IDetailCustomization> MakeInstance();
+	static void Initialize();
 
-	static FCognitiveTools* GetInstance();
-
-	static FReply ExecuteToolCommand(IDetailLayoutBuilder* DetailBuilder, UFunction* MethodToExecute);
+	static FCognitiveEditorTools* GetInstance();
 
 	void SaveSceneData(FString sceneName, FString sceneKey);
 
-	FReply DebugButton();
-
 	//gets all the dynamics in the scene and saves them to SceneDynamics
+	TArray<TSharedPtr<FDynamicData>> SceneDynamics;
 	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 
-private:
 	void OnAPIKeyChanged(const FText& Text);
 	void OnDeveloperKeyChanged(const FText& Text);
 
@@ -171,85 +157,88 @@ private:
 	FText GetUploadDynamicsToSceneText() const;
 	//FReply RefreshUploadDynamicsToSceneText();
 	void RefreshUploadDynamicsToSceneText();
-	TSharedPtr<SVerticalBox> SetDynamicBoxContent();
+	//TSharedPtr<SVerticalBox> SetDynamicBoxContent();
 
-	
+	float MinimumSize = 1;
+	float MaximumSize = 10000;
+	bool StaticOnly = true;
+	int32 MinPolygon = 65536;
+	int32 MaxPolygon = 65536;
+	int32 TextureRefactor = 1;
+	FString ExcludeMeshes = "Camera,Player,SkySphereBlueprint";
+
+	float GetMinimumSize() const { return MinimumSize; }
+	float GetMaximumSize() const { return MaximumSize; }
+	bool GetStaticOnly() const { return StaticOnly; }
+	ECheckBoxState GetStaticOnlyCheckboxState() const
+	{
+		return (StaticOnly)
+			? ECheckBoxState::Checked
+			: ECheckBoxState::Unchecked;
+	}
+	void OnStaticOnlyCheckboxChanged(ECheckBoxState newstate)
+	{
+		if (newstate == ECheckBoxState::Checked)
+		{
+			StaticOnly = true;
+		}
+		else
+		{
+			StaticOnly = false;
+		}
+	}
+
+	int32 GetMinPolygon() const { return MinPolygon; }
+	int32 GetMaxPolygon() const { return MaxPolygon; }
+	int32 GetTextureRefactor() const { return TextureRefactor; }
+	FText GetExcludeMeshes() const { return FText::FromString(ExcludeMeshes); }
 
 	FText GetBlenderPath() const;
 
-	UCognitiveVRSettings *Settings;
-	IDetailLayoutBuilder *DetailLayoutPtr;
-
-	float GetMinimumSize();
-	float GetMaximumSize();
-	int32 GetMinPolygon();
-	int32 GetMaxPolygon();
-	int32 GetTextureRefacor();
-	bool GetStaticOnly();
-
-	TSharedPtr<IPropertyHandle> MinSizeProperty;
-	TSharedPtr<IPropertyHandle> MaxSizeProperty;
-	TSharedPtr<IPropertyHandle> MinPolygonProperty;
-	TSharedPtr<IPropertyHandle> MaxPolygonProperty;
-	TSharedPtr<IPropertyHandle> StaticOnlyProperty;
-	TSharedPtr<IPropertyHandle> TextureResizeProperty;
-	TSharedPtr<IPropertyHandle> ExcludeMeshProperty;
-	//TSharedPtr<IPropertyHandle> SceneKeysProperty;
-
 	//Select Blender.exe. Used to reduce polygon count of the exported scene
-	UFUNCTION(Exec, Category = "Export")
 		FReply Select_Blender();
 
 	//Select meshes that match settings - Above Minimum Size? Static?
-	UFUNCTION(Exec, Category = "Export")
 		FReply Select_Export_Meshes();
 
 	//Runs the built-in obj exporter with the selected meshses
-	UFUNCTION(Exec, Category = "Export")
 		FReply Export_Selected();
 
 	//Runs the built-in obj exporter with all meshses
-	UFUNCTION(Exec, Category = "Export")
 		FReply Export_All();
 
 	//Runs a python script in blender to reduce the polygon count, clean up the mtl file and copy textures into a convient folder
-	UFUNCTION(Exec, Category = "Export")
 		FReply Reduce_Meshes();
 
 	//Runs a python script in blender to reduce the polygon count, clean up the mtl file and copy textures into a convient folder
-	UFUNCTION(Exec, Category = "Export")
 		FReply Reduce_Textures();
 
-	UFUNCTION(Exec, Category = "Export")
 		FReply UploadScene();
 
-	void UploadMultipartData(FString url, TArray<FString> files, TArray<FString> images);
+	void WizardExport();
+	void Reduce_Meshes_And_Textures();
+
+	//void UploadMultipartData(FString url, TArray<FString> files, TArray<FString> images);
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
 
-	UFUNCTION(Exec, Category = "Export")
 		FReply List_Materials();
 	void List_MaterialArgs(FString subdirectory,FString searchDirectory);
 	void ReexportDynamicMeshes(FString directory);
 
-	UFUNCTION(Exec, Category = "Export")
 	FReply ReexportDynamicMeshesCmd();
 
 	//dynamic objects
 	//Runs the built-in obj exporter with all meshses
-	UFUNCTION(Exec, Category = "Dynamics")
 		FReply ExportDynamics();
 
-	UFUNCTION(Exec, Category = "Dynamics")
 		FReply ExportDynamicTextures();
 
 	//Runs the built-in obj exporter with selected meshes
-	UFUNCTION(Exec, Category = "Dynamics")
 		FReply ExportSelectedDynamics();
 	
 	void ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
 
 	//uploads each dynamic object using its directory to the current scene
-	UFUNCTION(Exec, Category = "Dynamics")
 		FReply SelectDynamicsDirectory();
 
 	void ConvertDynamicTextures();
@@ -292,8 +281,6 @@ private:
 
 	TArray<FString> GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension) const;
 
-	FString GetProductID();
-
 	//If this function cannot find or create the directory, returns false.
 	static FORCEINLINE bool VerifyOrCreateDirectory(FString& TestDir)
 	{
@@ -331,58 +318,11 @@ private:
 		return false;
 	}
 
-	//FReply SetRandomSessionId();
-	//FReply DEBUGPrintSessionId();
-	//FString Email;
-	//void OnEmailChanged(const FText& Text);
-	//FString Password;
-	//void OnPasswordChanged(const FText& Text);
-
-	//EVisibility LoginTextboxUsable() const;
-
-	TSharedPtr<FJsonObject> JsonUserData;
-
-	//FReply DEBUG_RequestAuthToken();
-	//TSharedRef<IHttpRequest> RequestAuthTokenCallback();
-	//void OnSceneVersionGetAuthToken(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
-	//void AuthTokenRequest();
-	//void AuthTokenResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
-	//TArray<TSharedPtr<FString>> OrganizationNames;
-	//TArray<FOrganizationData> OrganizationInfos;
-	//void OnOrganizationChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo);
-
-	//TArray<FProductData> ProductInfos;
-	//void OnProductChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo);
-
-	//TSharedPtr<FString> SelectedOrgName;
-	//TSharedPtr<FString> GetSelectedOrganizationName();
-
-	//all products for the currently selected organization
-	//TArray<TSharedPtr<FString>> AllProductNames;
-	//TSharedPtr<FString> SelectedProductName;
-
-	//FProductData SelectedProduct;
-
-	//TArray<TSharedPtr<FString>> AllOrgNames;
-	//TArray<TSharedPtr<FString>> GetOrganizationNames();
-
-	//ECheckBoxState FCognitiveTools::HandleRadioButtonIsChecked(EReleaseType ButtonId) const;
-	//void FCognitiveTools::HandleRadioButtonCheckStateChanged(ECheckBoxState NewRadioState, EReleaseType RadioThatChanged);
 
 	TArray<TSharedPtr<FEditorSceneData>> SceneData;
 	//returns SceneData array
 	TArray<TSharedPtr<FEditorSceneData>> GetSceneData() const;
 
-
-	TSharedRef<ITableRow> OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
-
-	//FReply SaveCustomerIdToFile();
-
-	//FString GetCustomerIdFromFile() const;
-	//FString GetCustomerIdFromFileWithoutRelease() const;
-	//EReleaseType GetReleaseTypeFromFile();
 	
 	void SaveOrganizationNameToFile(FString organization);
 	TSharedPtr<FString> GetOrganizationNameFromFile();
@@ -396,6 +336,7 @@ private:
 	bool HasLoadedOrSelectedValidProduct() const;
 	//bool HasLoggedIn() const;
 	bool HasDeveloperKey() const;
+	bool HasAPIKey() const;
 	EVisibility GetLoginButtonState() const;
 	EVisibility GetLogoutButtonState() const;
 
@@ -428,28 +369,17 @@ private:
 	void SceneVersionRequest(FEditorSceneData data);
 	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	//FReply LogIn();
-	//void OnLogInResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
-	//FReply LogOut();
-
-
-	TSharedRef<ITableRow> OnGenerateDynamicRow(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
-
-
-	TSharedPtr<STextBlock> StatsTextBlock;
 	FText GetDynamicsFromManifest() const;
-	//TArray<TSharedPtr<FDynamicData>> SceneExplorerDynamics;
+	TArray<TSharedPtr<FDynamicData>> SceneExplorerDynamics;
+	TArray<TSharedPtr<FString>> SubDirectoryNames;
 
+	FString GetProductID();
 
-	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
-
-	TSharedPtr<SDynamicObjectWebListWidget> WebDynamicList;
-	//TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
+	void RefreshAllUploadFiles();
+	TArray<TSharedPtr<FString>> AllUploadFiles;
 
 	FText UploadSceneNameFiles() const;
 	FText OpenSceneNameInBrowser() const;
-	TSharedPtr<SFStringListWidget> SubDirectoryListWidget;
 	void FindAllSubDirectoryNames();
 	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
 	FReply SelectUploadScreenshot();
@@ -462,12 +392,15 @@ private:
 	bool ConfigFileHasChanged = false;
 	EVisibility ConfigFileChangedVisibility() const;
 
-	FReply OpenProductOnDashboard();
-	bool EnableOpenProductOnDashboard() const;
+	//FReply OpenProductOnDashboard();
+	//bool EnableOpenProductOnDashboard() const;
 
 	bool HasFoundBlenderHasSelection() const;
 	bool HasSetDynamicExportDirectoryHasSceneId() const;
 	FReply SaveAPIDeveloperKeysToFile();
+
+	void SaveAPIKeyToFile(FString key);
+	void SaveDeveloperKeyToFile(FString key);
 };
 
 //used for uploading multiple dynamics at once

@@ -11,7 +11,7 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 			[
 				SAssignNew(ListViewWidget, SListView<TSharedPtr<FDynamicData>>)
 				.ItemHeight(24)
-				.ListItemsSource(&SceneDynamics) //The Items array is the source of this listview
+				.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneDynamics) //The Items array is the source of this listview
 				.OnGenerateRow(this, &SDynamicObjectListWidget::OnGenerateRowForList)
 				.HeaderRow(
 					SNew(SHeaderRow)
