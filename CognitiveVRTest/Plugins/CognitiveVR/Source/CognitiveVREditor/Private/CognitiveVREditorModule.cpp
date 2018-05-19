@@ -9,6 +9,9 @@
 #include "Editor/EditorStyle/Public/EditorStyleSet.h"
 #include "SSceneSetupWidget.h"
 #include "FCognitiveSettingsCustomization.h"
+#include "Containers/Ticker.h"
+#include "IImageWrapper.h"
+#include "IImageWrapperModule.h"
 
 //sets up customization for settings
 //adds scene setup window
@@ -40,6 +43,17 @@ public:
 
 	//FCognitiveTools* CognitiveEditorTools;
 
+	FTickerDelegate TickDelegate;
+	FDelegateHandle TickDelegateHandle;
+
+	TSharedPtr<IImageWrapper> ImageWrapper;
+
+	bool Tick(float deltatime)
+	{
+		FCognitiveEditorTools::GetInstance()->Tick(deltatime);
+		return true;
+	}
+
 	virtual void StartupModule() override
 	{
 #if WITH_EDITOR
@@ -59,7 +73,8 @@ public:
 
 		//ConfigFileHasChanged = true;
 
-
+		//TickDelegate = FTickerDelegate::CreateRaw(this, &FCognitiveVREditorModule::Tick);
+		//TickDelegateHandle = FTicker::GetCoreTicker().AddTicker(TickDelegate);
 
 		/*
 		TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
@@ -108,12 +123,18 @@ public:
 
 		PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FCognitiveSettingsCustomization::MakeInstance));
 		//PropertyModule.RegisterCustomClassLayout(TEXT("BaseEditorTool"), FOnGetDetailCustomizationInstance::CreateStatic(&FSetupCustomization::MakeInstance));
+
+		IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(TEXT("ImageWrapper"));
+		ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
 #endif
 	}
 
 	virtual void ShutdownModule() override
 	{
 #if WITH_EDITOR
+
+		//FTicker::GetCoreTicker().RemoveTicker(TickDelegateHandle);
+
 		if (GEditor)
 		{
 			//FDemoCommands::Unregister();

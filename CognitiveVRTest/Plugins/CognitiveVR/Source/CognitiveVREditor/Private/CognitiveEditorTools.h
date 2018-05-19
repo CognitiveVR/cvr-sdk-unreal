@@ -41,6 +41,8 @@ public:
 
 	static FCognitiveEditorTools* GetInstance();
 
+	void Tick(float deltatime);
+
 	void SaveSceneData(FString sceneName, FString sceneKey);
 
 	//gets all the dynamics in the scene and saves them to SceneDynamics
@@ -215,8 +217,8 @@ public:
 
 		FReply UploadScene();
 
-	void WizardExport();
-	void Reduce_Meshes_And_Textures();
+	void WizardExport(bool all);
+	FProcHandle Reduce_Meshes_And_Textures();
 
 	//void UploadMultipartData(FString url, TArray<FString> files, TArray<FString> images);
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
@@ -401,6 +403,9 @@ public:
 
 	void SaveAPIKeyToFile(FString key);
 	void SaveDeveloperKeyToFile(FString key);
+
+	void WizardUpload();
+	bool IsWizardUploading();
 };
 
 //used for uploading multiple dynamics at once

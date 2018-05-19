@@ -14,7 +14,10 @@
 #include "STableRow.h"
 #include "STextComboBox.h"
 #include "SListView.h"
+#include "SThrobber.h"
 #include "Runtime/SlateCore/Public/Layout/Visibility.h"
+#include "IImageWrapper.h"
+#include "IImageWrapperModule.h"
 
 class FCognitiveTools;
 
@@ -23,6 +26,7 @@ class SSceneSetupWidget : public SCompoundWidget
 public:
 	SLATE_BEGIN_ARGS(SSceneSetupWidget){}
 	SLATE_ARGUMENT(TArray<TSharedPtr<FDynamicData>>, Items)
+		SLATE_ARGUMENT(FSlateBrush*,ScreenshotTexture)
 	//SLATE_ARGUMENT(FCognitiveEditorTools*, CognitiveEditorTools)
 	SLATE_END_ARGS()
 
@@ -79,10 +83,16 @@ public:
 	FReply ARSkipExport();
 
 	TArray<TSharedPtr<FString>> NEWEXPORTFILES;
+	void GetScreenshotBrush();
+	FSlateBrush* ScreenshotTexture;
+	const FSlateBrush* GetScreenshotBrushTexture() const;
 
 	TSharedRef<ITableRow> OnGenerateSceneExportFileRow(TSharedPtr<FString> InItem, const TSharedRef<STableViewBase>& OwnerTable);
+	EVisibility DisplayWizardThrobber() const;
+	
 
 	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
+	TSharedPtr<SImage> ScreenshotImage;
 
 	FText DisplayDynamicObjectsCountInScene() const;
 	FReply RefreshDisplayDynamicObjectsCountInScene();
@@ -102,4 +112,12 @@ public:
 	FReply SelectDynamic(TSharedPtr<FDynamicData> data);
 
 	void RefreshList();
+
+	FReply TakeScreenshot();
+
+	int32 ScreenshotWidth = 256;
+	int32 ScreenshotHeight = 256;
+
+	FOptionalSize GetScreenshotWidth() const;
+	FOptionalSize GetScreenshotHeight() const;
 };

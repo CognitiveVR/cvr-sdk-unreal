@@ -5,6 +5,15 @@ TArray<TSharedPtr<FDynamicData>> SSceneSetupWidget::GetSceneDynamics()
 {
 	return FCognitiveEditorTools::GetInstance()->GetSceneDynamics();
 }
+FOptionalSize SSceneSetupWidget::GetScreenshotWidth() const
+{
+	return FOptionalSize(ScreenshotWidth);
+}
+
+FOptionalSize SSceneSetupWidget::GetScreenshotHeight() const
+{
+	return FOptionalSize(ScreenshotHeight);
+}
 
 void SSceneSetupWidget::Construct(const FArguments& Args)
 {
@@ -331,32 +340,49 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 #pragma endregion
 
 #pragma region "upload screen"
-			+ SVerticalBox::Slot()
-			.HAlign(HAlign_Center)
+			/*+ SVerticalBox::Slot()
+			.HAlign(HAlign_Fill)
 			.VAlign(VAlign_Top)
 			[
 				SNew(STextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
-				.Text(FText::FromString("upload everything?"))
+				.Text(FText::FromName(BrushName))
+			]*/
+
+			+SVerticalBox::Slot()
+				.HAlign(HAlign_Center)
+				.VAlign(VAlign_Center)
+				.AutoHeight()
+			[
+				SNew(SBox)
+				.WidthOverride(this,&SSceneSetupWidget::GetScreenshotWidth)
+				.HeightOverride(this, &SSceneSetupWidget::GetScreenshotHeight)
+				[
+					//SAssignNew(ScreenshotImage, SImage)
+					SNew(SImage)
+					.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
+					.Image(this,&SSceneSetupWidget::GetScreenshotBrushTexture)
+				]
+			]
+
+			+ SVerticalBox::Slot()
+				.AutoHeight()
+			[
+				SNew(SBox)
+				.HeightOverride(32)
+				.WidthOverride(64)
+				[
+					SNew(SButton)
+					.Text(FText::FromString("Take Screenshot"))
+					.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
+					.OnClicked(this, &SSceneSetupWidget::TakeScreenshot)
+				]
 			]
 
 			+ SVerticalBox::Slot()
 				.HAlign(HAlign_Center)
 				.VAlign(VAlign_Top)
 			[
-				/*SNew(SListView<TSharedPtr<FString>>)
-				.ItemHeight(24)
-				.ListItemsSource(&FCognitiveEditorTools::GetInstance->AllUploadFiles()) //BIND
-				.OnGenerateRow(this, &SSceneSetupWidget::OnGenerateSceneExportFileRow)
-				.HeaderRow(
-					SNew(SHeaderRow)
-					+ SHeaderRow::Column("name")
-					.FillWidth(1)
-					[
-						SNew(STextBlock)
-						.Text(FText::FromString("Name"))
-					]
-				)*/
 				SNew(SListView<TSharedPtr<FString>>)
 					.ItemHeight(16.0f)
 					.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
@@ -368,26 +394,27 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						.FillWidth(1)
 						[
 							SNew(STextBlock)
-							.Text(FText::FromString("Name"))
+							.Text(FText::FromString("Scene Files"))
 						]
 					)
 			]
 
-			//list of dynamic meshes
-			//list of files in scene export directory
-			//auto screenshot
-			//dynamic manifest (hidden)
-
 #pragma endregion
 
 #pragma region "done screen"
+			+ SVerticalBox::Slot()
+			[
+				SNew(SThrobber)
+				.Visibility(this,&SSceneSetupWidget::DisplayWizardThrobber)
+			]
+
 			+ SVerticalBox::Slot()
 			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Top)
 			[
 				SNew(STextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
-				.Text(FText::FromString("you're done!"))
+				.Text(FText::FromString("add a player tracker component to your player actor"))
 			]
 			]
 #pragma endregion
@@ -399,6 +426,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.HAlign(HAlign_Right)
 			[
 				SNew(SHorizontalBox)
+
 				+ SHorizontalBox::Slot()
 				[
 					SNew(SBox)
@@ -446,14 +474,61 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 		FCognitiveEditorTools::GetInstance()->SearchForBlender();
 }
 
+void SSceneSetupWidget::GetScreenshotBrush()
+{
+	FString ScreenshotPath = FPaths::Combine(*(FCognitiveEditorTools::GetInstance()->ExportDirectory), TEXT("screenshot"), TEXT("screenshot.png"));
+	FName BrushName = FName(*ScreenshotPath);
+
+	GLog->Log(ScreenshotPath);
+
+	FCognitiveVREditorModule& c3dmod = FModuleManager::GetModuleChecked< FCognitiveVREditorModule >("CognitiveVREditor");
+
+	TArray<uint8> RawFileData;
+	if (!FFileHelper::LoadFileToArray(RawFileData, *ScreenshotPath)) return;
+
+	if (ScreenshotTexture != nullptr)
+	{
+		delete ScreenshotTexture;
+	}
+
+	if (c3dmod.ImageWrapper.IsValid() && c3dmod.ImageWrapper->SetCompressed(RawFileData.GetData(), RawFileData.Num()))
+	{
+		ScreenshotWidth = c3dmod.ImageWrapper->GetWidth();
+		ScreenshotHeight = c3dmod.ImageWrapper->GetHeight();
+
+		if (ScreenshotHeight > ScreenshotWidth)
+		{
+			ScreenshotWidth = (int32)(((float)ScreenshotWidth / (float)ScreenshotHeight) * 256);
+			ScreenshotHeight = 256;
+		}
+		else if (ScreenshotHeight < ScreenshotWidth)
+		{
+			ScreenshotHeight = (int32)(((float)ScreenshotHeight / (float)ScreenshotWidth) * 256);
+			ScreenshotWidth = 256;
+		}
+		else
+		{
+			ScreenshotHeight = 256;
+			ScreenshotWidth = 256;
+		}
+		//ScreenshotImage->SetImage(new FSlateDynamicImageBrush(BrushName, FVector2D(ScreenshotWidth, ScreenshotHeight)));
+		ScreenshotTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(ScreenshotWidth, ScreenshotHeight));
+	}
+	else
+	{
+		GLog->Log("image wrap screenshot failed!");
+	}
+}
+
+const FSlateBrush* SSceneSetupWidget::GetScreenshotBrushTexture() const
+{
+	return ScreenshotTexture;
+}
+
 FReply SSceneSetupWidget::Export_Selected()
 {
-	FCognitiveEditorTools::GetInstance()->WizardExport();
-	//FCognitiveEditorTools::GetInstance()->Export_Selected();
+	FCognitiveEditorTools::GetInstance()->WizardExport(false);
 	SceneWasExported = true;
-
-	//FCognitiveEditorTools::GetInstance()->List_Materials();
-	//FCognitiveEditorTools::GetInstance()->Reduce_Meshes();
 
 	return FReply::Handled();
 }
@@ -470,14 +545,7 @@ FText SSceneSetupWidget::GetDisplayDeveloperKey() const
 
 FReply SSceneSetupWidget::Export_All()
 {
-	FCognitiveEditorTools::GetInstance()->WizardExport();
-
-	//FCognitiveEditorTools::GetInstance()->Export_All();
-	//FCognitiveEditorTools::GetInstance()->List_Materials();
-	//TODO copy and merge reduce meshes and reduce textures into one python script - issues when both are run at the same time
-	//FCognitiveEditorTools::GetInstance()->Reduce_Meshes();
-	//FCognitiveEditorTools::GetInstance()->Reduce_Textures();
-
+	FCognitiveEditorTools::GetInstance()->WizardExport(true);
 	SceneWasExported = true;
 
 	return FReply::Handled();
@@ -523,6 +591,13 @@ void SSceneSetupWidget::RefreshList()
 	ListViewWidget->RequestListRefresh();
 }
 
+FReply SSceneSetupWidget::TakeScreenshot()
+{
+	FCognitiveEditorTools::GetInstance()->TakeScreenshot();
+	GetScreenshotBrush();
+	return FReply::Handled();
+}
+
 FReply SSceneSetupWidget::NextPage()
 {
 	if (CurrentPage == 1)
@@ -543,10 +618,12 @@ FReply SSceneSetupWidget::NextPage()
 	else if (CurrentPage == 3)
 	{
 		FCognitiveEditorTools::GetInstance()->RefreshAllUploadFiles();
+		GetScreenshotBrush();
 	}
 	else if (CurrentPage == 4)
 	{
 		GLog->Log("upload scene, then dynamics, then manifest");
+		FCognitiveEditorTools::GetInstance()->WizardUpload();
 	}
 	else if (CurrentPage == 5)
 	{
@@ -566,6 +643,15 @@ FReply SSceneSetupWidget::LastPage()
 	if (CurrentPage == 0) { return FReply::Handled(); }
 	CurrentPage--;
 	return FReply::Handled();
+}
+
+EVisibility SSceneSetupWidget::DisplayWizardThrobber() const
+{
+	if (FCognitiveEditorTools::GetInstance()->IsWizardUploading() && 5 == CurrentPage)
+	{
+		return EVisibility::Visible;
+	}
+	return EVisibility::Hidden;
 }
 
 /*TArray<TSharedPtr<FString>> SSceneSetupWidget::GetAllUploadFiles() const
