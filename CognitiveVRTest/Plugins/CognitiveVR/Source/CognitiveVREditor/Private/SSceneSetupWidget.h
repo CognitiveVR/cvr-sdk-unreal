@@ -65,6 +65,8 @@ public:
 
 	EVisibility IsIntroVisible() const;
 	EVisibility IsKeysVisible() const;
+	EVisibility IsExplainDynamicsVisible() const;
+	EVisibility IsExplainSceneVisible() const;
 	EVisibility IsDynamicsVisible() const;
 	EVisibility IsExportVisible() const;
 	EVisibility IsUploadVisible() const;
@@ -77,6 +79,10 @@ public:
 	EVisibility BackButtonVisibility() const;
 	FReply LastPage();
 
+	EVisibility IsNewSceneUpload() const;
+	EVisibility IsSceneVersionUpload() const;
+	EVisibility IsIntroNewVersionVisible() const;
+
 	FReply Export_Selected();
 	FReply Export_All();
 
@@ -87,6 +93,15 @@ public:
 	void GetScreenshotBrush();
 	FSlateBrush* ScreenshotTexture;
 	const FSlateBrush* GetScreenshotBrushTexture() const;
+
+	const FSlateBrush* GetDynamicsGreyTexture() const;
+	FSlateBrush* DynamicsGreyTexture;
+	const FSlateBrush* GetDynamicsBlueTexture() const;
+	FSlateBrush* DynamicsBlueTexture;
+	const FSlateBrush* GetSceneGreyTexture() const;
+	FSlateBrush* SceneGreyTexture;
+	const FSlateBrush* GetSceneBlueTexture() const;
+	FSlateBrush* SceneBlueTexture;
 
 	TSharedRef<ITableRow> OnGenerateSceneExportFileRow(TSharedPtr<FString> InItem, const TSharedRef<STableViewBase>& OwnerTable);
 	EVisibility DisplayWizardThrobber() const;
