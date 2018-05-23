@@ -40,6 +40,11 @@ public:
 	TSharedPtr<SDynamicObjectWebListWidget> WebDynamicList;
 	TSharedPtr<SFStringListWidget> SubDirectoryListWidget;
 
+
+	FReply CopyDynamicSubDirectories();
+	//TArray<TSharedPtr<FString>>DynamicSubDirectories;
+
+
 	void OnChangedExcludeMesh(const FText& InNewValue);
 
 	void OnChangedExportMinimumSize(float InNewValue);

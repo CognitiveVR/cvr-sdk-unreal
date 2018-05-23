@@ -69,6 +69,7 @@ public:
 	EVisibility IsExportVisible() const;
 	EVisibility IsUploadVisible() const;
 	EVisibility IsCompleteVisible() const;
+	EVisibility IsUploadComplete() const;
 	FReply NextPage();
 	EVisibility NextButtonVisibility() const;
 	bool NextButtonEnabled() const;
@@ -97,10 +98,9 @@ public:
 	FText DisplayDynamicObjectsCountInScene() const;
 	FReply RefreshDisplayDynamicObjectsCountInScene();
 	EVisibility GetDuplicateDyanmicObjectVisibility() const;
-	EVisibility DuplicateDyanmicObjectVisibility;
 
 	FReply SetUniqueDynamicIds();
-	bool DuplicateDynamicIdsInScene() const;
+	//bool DuplicateDynamicIdsInScene() const;
 
 	int32 CountDynamicObjectsInScene() const;
 

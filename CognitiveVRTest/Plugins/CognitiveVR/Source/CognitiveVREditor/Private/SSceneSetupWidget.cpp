@@ -216,9 +216,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.AutoHeight()
 					[
 						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+						.Visibility(this, &SSceneSetupWidget::GetDuplicateDyanmicObjectVisibility)
 						.Text(FText::FromString("Set Unique Dynamic Ids"))
-						.OnClicked(this, &SSceneSetupWidget::SetUniqueDynamicIds)
+						.OnClicked(this,&SSceneSetupWidget::SetUniqueDynamicIds)
 					]
 				]
 
@@ -353,6 +353,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.HAlign(HAlign_Center)
 				.VAlign(VAlign_Center)
 				.AutoHeight()
+				.Padding(0, 0, 0, 4)
 			[
 				SNew(SBox)
 				.WidthOverride(this,&SSceneSetupWidget::GetScreenshotWidth)
@@ -367,6 +368,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 			+ SVerticalBox::Slot()
 				.AutoHeight()
+				.Padding(0, 0, 0, 4)
 			[
 				SNew(SBox)
 				.HeightOverride(32)
@@ -380,8 +382,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 
 			+ SVerticalBox::Slot()
-				.HAlign(HAlign_Center)
+				.HAlign(HAlign_Fill)
 				.VAlign(VAlign_Top)
+				.Padding(0, 0, 0, 4)
 			[
 				SNew(SListView<TSharedPtr<FString>>)
 					.ItemHeight(16.0f)
@@ -398,14 +401,44 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						]
 					)
 			]
+			+ SVerticalBox::Slot()
+			.HAlign(HAlign_Fill)
+			.VAlign(VAlign_Top)
+				.Padding(0, 0, 0, 4)
+			[
+				SNew(SListView<TSharedPtr<FString>>)
+					.ItemHeight(16.0f)
+					.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
+					.ListItemsSource(&FCognitiveEditorTools::GetInstance()->AllDynamicFiles)
+					.OnGenerateRow(this, &SSceneSetupWidget::OnGenerateSceneExportFileRow)
+					.HeaderRow(
+					SNew(SHeaderRow)
+					+ SHeaderRow::Column("name")
+						.FillWidth(1)
+						[
+							SNew(STextBlock)
+							.Text(FText::FromString("Dynamic Mesh Files"))
+						]
+					)
+			]
 
 #pragma endregion
 
 #pragma region "done screen"
 			+ SVerticalBox::Slot()
+			.HAlign(HAlign_Center)
+			.VAlign(VAlign_Top)
 			[
 				SNew(SThrobber)
 				.Visibility(this,&SSceneSetupWidget::DisplayWizardThrobber)
+			]
+			+ SVerticalBox::Slot()
+			.HAlign(HAlign_Center)
+			.VAlign(VAlign_Top)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::DisplayWizardThrobber)
+				.Text(FText::FromString("Uploading"))
 			]
 
 			+ SVerticalBox::Slot()
@@ -413,7 +446,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.VAlign(VAlign_Top)
 			[
 				SNew(STextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
+				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 				.Text(FText::FromString("add a player tracker component to your player actor"))
 			]
 			]
@@ -476,10 +509,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 void SSceneSetupWidget::GetScreenshotBrush()
 {
-	FString ScreenshotPath = FPaths::Combine(*(FCognitiveEditorTools::GetInstance()->ExportDirectory), TEXT("screenshot"), TEXT("screenshot.png"));
+	FString ScreenshotPath = FPaths::Combine(*(FCognitiveEditorTools::GetInstance()->BaseExportDirectory), TEXT("screenshot"), TEXT("screenshot.png"));
 	FName BrushName = FName(*ScreenshotPath);
-
-	GLog->Log(ScreenshotPath);
 
 	FCognitiveVREditorModule& c3dmod = FModuleManager::GetModuleChecked< FCognitiveVREditorModule >("CognitiveVREditor");
 
@@ -575,6 +606,14 @@ EVisibility SSceneSetupWidget::IsCompleteVisible() const
 {
 	return 5 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
 }
+EVisibility SSceneSetupWidget::IsUploadComplete() const
+{
+	if (FCognitiveEditorTools::GetInstance()->IsWizardUploading())
+	{
+		return EVisibility::Hidden;
+	}
+	return IsCompleteVisible();
+}
 
 void SSceneSetupWidget::OnAPIKeyChanged(const FText& Text)
 {
@@ -607,13 +646,7 @@ FReply SSceneSetupWidget::NextPage()
 	}
 	if (CurrentPage == 2)
 	{
-		//FCognitiveVREditorModule& tools = FModuleManager::GetModuleChecked< FCognitiveVREditorModule >("CognitiveVREditor");// ->CognitiveEditorTools->ExportDynamics();
-		//FCognitiveTools::GetInstance().ExportDynamics();
-		//FCognitiveTools::GetInstance().Get().ExportDynamics();
 		FCognitiveEditorTools::GetInstance()->ExportDynamics();
-		//tools.CognitiveEditorTools->ExportDynamics();
-		GLog->Log("export dynamic objects");
-		//CognitiveTools ExportDynamics
 	}
 	else if (CurrentPage == 3)
 	{
@@ -622,12 +655,11 @@ FReply SSceneSetupWidget::NextPage()
 	}
 	else if (CurrentPage == 4)
 	{
-		GLog->Log("upload scene, then dynamics, then manifest");
 		FCognitiveEditorTools::GetInstance()->WizardUpload();
 	}
 	else if (CurrentPage == 5)
 	{
-		GLog->Log("complete scene setup, close window");
+
 	}
 
 	if (CurrentPage != 5)
@@ -779,7 +811,7 @@ FText SSceneSetupWidget::NextButtonText() const
 }
 
 //at the moment, AR scene export is not supported in unreal
-//ar scene needs a settings.json file, but there isn't a clear place to write this without user input
+//TODO ar scene needs a settings.json file, but there isn't a clear place to write this without user input
 EVisibility SSceneSetupWidget::ARButtonVisibility() const
 {
 	return EVisibility::Collapsed;
@@ -864,105 +896,9 @@ FText SSceneSetupWidget::DisplayDynamicObjectsCountInScene() const
 //this should probably be in cognitiveeditortools
 FReply SSceneSetupWidget::SetUniqueDynamicIds()
 {
-	//loop thorugh all dynamics in the scene
-	TArray<UDynamicObject*> dynamics;
-
-	//make a list of all the used objectids
-
-	TArray<FDynamicObjectId> usedIds;
-
-	//get all the dynamic objects in the scene
-	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		//AStaticMeshActor *Mesh = *ActorItr;
-
-		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
-		if (actorComponent == NULL)
-		{
-			continue;
-		}
-		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
-		if (dynamic == NULL)
-		{
-			continue;
-		}
-		dynamics.Add(dynamic);
-	}
-
-	//create objectids for each dynamic that's already set
-	for (auto& dynamic : dynamics)
-	{
-		FString finalMeshName = dynamic->MeshName;
-		if (!dynamic->UseCustomMeshName)
-		{
-			if (dynamic->CommonMeshName == ECommonMeshName::ViveController) { finalMeshName = "ViveController"; }
-			if (dynamic->CommonMeshName == ECommonMeshName::ViveTracker) { finalMeshName = "ViveTracker"; }
-			if (dynamic->CommonMeshName == ECommonMeshName::OculusTouchRight) { finalMeshName = "OculusTouchRight"; }
-			if (dynamic->CommonMeshName == ECommonMeshName::OculusTouchLeft) { finalMeshName = "OculusTouchLeft"; }
-		}
-	}
-
-	int32 currentUniqueId = 1;
-	int32 changedDynamics = 0;
-
-	//unassigned or invalid numbers
-	TArray<UDynamicObject*> UnassignedDynamics;
-
-	//try to put all ids back where they were
-	for (auto& dynamic : dynamics)
-	{
-		//id dynamic custom id is not in usedids - add it
-
-		FString findId = dynamic->CustomId;
-
-		FDynamicObjectId* FoundId = usedIds.FindByPredicate([findId](const FDynamicObjectId& InItem)
-		{
-			return InItem.Id == findId;
-		});
-
-		if (FoundId == NULL && dynamic->CustomId != "")
-		{
-			usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
-		}
-		else
-		{
-			//assign a new and unused id
-			UnassignedDynamics.Add(dynamic);
-		}
-	}
-
-	for (auto& dynamic : UnassignedDynamics)
-	{
-		for (currentUniqueId; currentUniqueId < 1000; currentUniqueId++)
-		{
-			//find some unused id number
-			FDynamicObjectId* FoundId = usedIds.FindByPredicate([currentUniqueId](const FDynamicObjectId& InItem)
-			{
-				return InItem.Id == FString::FromInt(currentUniqueId);
-			});
-
-			if (FoundId == NULL)
-			{
-				dynamic->CustomId = FString::FromInt(currentUniqueId);
-				dynamic->UseCustomId = true;
-				changedDynamics++;
-				currentUniqueId++;
-				usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
-				break;
-			}
-		}
-	}
-
-	GLog->Log("CognitiveVR Tools set " + FString::FromInt(changedDynamics) + " dynamic ids");
-
-	GWorld->MarkPackageDirty();
-	//save the scene? mark the scene as changed?
-
+	FCognitiveEditorTools::GetInstance()->SetUniqueDynamicIds();
 	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
-
-	//SceneDynamicObjectList->RefreshList();
-
+	SceneDynamicObjectList->RefreshList();
 	return FReply::Handled();
 }
 
@@ -974,7 +910,7 @@ FReply SSceneSetupWidget::RefreshDisplayDynamicObjectsCountInScene()
 	return FReply::Handled();
 }
 
-bool SSceneSetupWidget::DuplicateDynamicIdsInScene() const
+/*bool SSceneSetupWidget::DuplicateDynamicIdsInScene() const
 {
 	//loop thorugh all dynamics in the scene
 	TArray<UDynamicObject*> dynamics;
@@ -1036,7 +972,7 @@ bool SSceneSetupWidget::DuplicateDynamicIdsInScene() const
 		return true;
 	}
 	return false;
-}
+}*/
 
 EVisibility SSceneSetupWidget::GetDuplicateDyanmicObjectVisibility() const
 {
@@ -1044,5 +980,5 @@ EVisibility SSceneSetupWidget::GetDuplicateDyanmicObjectVisibility() const
 	{
 		return EVisibility::Collapsed;
 	}
-	return DuplicateDyanmicObjectVisibility;
+	return FCognitiveEditorTools::GetInstance()->GetDuplicateDyanmicObjectVisibility();
 }

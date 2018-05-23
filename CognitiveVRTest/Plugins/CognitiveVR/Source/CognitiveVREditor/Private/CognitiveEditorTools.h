@@ -58,46 +58,48 @@ public:
 	FString APIKey;
 	//FString DeveloperKey;
 
+	static const FString Gateway;
+
 	//GET dynamic object manifest                           https ://api.sceneexplorer.com/versions/:versionId/objects
 	FORCEINLINE static FString GetDynamicObjectManifest(FString versionid)
 	{
-		return "https://data.cognitive3d.com/v0/versions/" + versionid + "/objects";
+		return "https://data." + Gateway + ".com/v0/versions/" + versionid + "/objects";
 	}
 
 	//POST dynamic object manifest                          https://data.sceneexplorer.com/objects/:sceneId?version=:versionNumber
 	FORCEINLINE static FString PostDynamicObjectManifest(FString sceneid, int32 versionnumber)
 	{
-		return "https://data.cognitive3d.com/v0/objects/" + sceneid + "?version=" + FString::FromInt(versionnumber);
+		return "https://data." + Gateway + ".com/v0/objects/" + sceneid + "?version=" + FString::FromInt(versionnumber);
 	}
 
 	//POST dynamic object mesh data							https://data.sceneexplorer.com/objects/:sceneId/:exportDirectory?version=:versionNumber
 	FORCEINLINE static FString PostDynamicObjectMeshData(FString sceneid, int32 versionnumber, FString exportdirectory)
 	{
-		return "https://data.cognitive3d.com/v0/objects/" + sceneid + "/" + exportdirectory + "?version=" + FString::FromInt(versionnumber);
+		return "https://data." + Gateway + ".com/v0/objects/" + sceneid + "/" + exportdirectory + "?version=" + FString::FromInt(versionnumber);
 	}
 
 	//GET scene settings and read scene version             https://api.sceneexplorer.com/scenes/:sceneId
 	FORCEINLINE static FString GetSceneVersion(FString sceneid)
 	{
-		return "https://data.cognitive3d.com/v0/scenes/" + sceneid;
+		return "https://data." + Gateway + ".com/v0/scenes/" + sceneid;
 	}
 
 	//POST scene screenshot                                 https://data.sceneexplorer.com/scenes/:sceneId/screenshot?version=:versionNumber
 	FORCEINLINE static FString PostScreenshot(FString sceneid, FString versionnumber)
 	{
-		return "https://data.cognitive3d.com/v0/scenes/" + sceneid + "/screenshot?version=" + versionnumber;
+		return "https://data." + Gateway + ".com/v0/scenes/" + sceneid + "/screenshot?version=" + versionnumber;
 	}
 
 	//POST upload decimated scene                           https://data.sceneexplorer.com/scenes
 	FORCEINLINE static FString PostNewScene()
 	{
-		return "https://data.cognitive3d.com/v0/scenes";
+		return "https://data." + Gateway + ".com/v0/scenes";
 	}
 
 	//POST upload and replace existing scene                https://data.sceneexplorer.com/scenes/:sceneId
 	FORCEINLINE static FString PostUpdateScene(FString sceneid)
 	{
-		return "https://data.cognitive3d.com/v0/scenes/" + sceneid;
+		return "https://data." + Gateway + ".com/v0/scenes/" + sceneid;
 	}
 
 	//POST auth token from dynamic object manifest response https://api.sceneexplorer.com/tokens/:sceneId
@@ -121,13 +123,13 @@ public:
 	//WEB opens dashboard page to create a new product
 	FORCEINLINE static FString DashboardNewProduct()
 	{
-		return "https://dashboard.cognitivevr.io/admin/products/create";
+		return "";
 	}
 
 	//WEB open dashboard page to product
 	FORCEINLINE static FString DashboardNewProduct(FString customerid)
 	{
-		return "https://dashboard.cognitivevr.io/dashboard?pid=" + customerid;
+		return "";
 	}
 
 
@@ -269,19 +271,25 @@ public:
 	void* ChooseParentWindowHandle();
 
 	//UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional, meta = (DisplayName = "BlenderPath", ShowForTools = "SceneExport"))
-	UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
-		FString BlenderPath;
-	UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
-		FString ExportDirectory;
-	UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
-		FString ExportDynamicsDirectory;
-	FText GetExportDirectory() const;
-	FText GetDynamicExportDirectory() const;
+	//UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
+	FString BlenderPath;
+	//UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
+		//FString ExportDirectory;
+	//UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
+		//FString ExportDynamicsDirectory;
+	//FText GetExportDirectory() const;
 
-	UFUNCTION(Exec, Category = "Export")
-		FReply Select_Export_Directory();
+	FString BaseExportDirectory;
+	FString DynamicsExportDirectory;
 
-	TArray<FString> GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension) const;
+	FText GetBaseExportDirectory() const; //c:/users/me/desktop/export/
+	//FText GetSceneExportDirectory() const; //c:/users/me/desktop/export/scenename/
+	FText GetDynamicsExportDirectory() const; //c:/users/me/desktop/export/dynamics/
+
+	//UFUNCTION(Exec, Category = "Export")
+	FReply Select_Export_Directory();
+
+	TArray<FString> GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension, bool skipsubdirectory) const;
 
 	//If this function cannot find or create the directory, returns false.
 	static FORCEINLINE bool VerifyOrCreateDirectory(FString& TestDir)
@@ -379,6 +387,7 @@ public:
 
 	void RefreshAllUploadFiles();
 	TArray<TSharedPtr<FString>> AllUploadFiles;
+	TArray<TSharedPtr<FString>> AllDynamicFiles;
 
 	FText UploadSceneNameFiles() const;
 	FText OpenSceneNameInBrowser() const;

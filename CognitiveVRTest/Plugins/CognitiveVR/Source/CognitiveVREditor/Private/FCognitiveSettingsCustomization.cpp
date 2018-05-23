@@ -27,10 +27,10 @@ TArray<TSharedPtr<FDynamicData>> FCognitiveSettingsCustomization::GetSceneDynami
 	return FCognitiveEditorTools::GetInstance()->GetSceneDynamics();
 }
 
-TArray<TSharedPtr<FString>> GetSubDirectoryNames()
+/*TArray<TSharedPtr<FString>> GetSubDirectoryNames()
 {
 	return FCognitiveEditorTools::GetInstance()->GetSubDirectoryNames();
-}
+}*/
 
 void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {
@@ -396,7 +396,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 			.AutoHeight()
 			[
 				SNew(STextBlock)
-				.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetExportDirectory)
+				.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBaseExportDirectory)
 			]
 
 			+ SVerticalBox::Slot()
@@ -626,7 +626,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 				.AutoHeight()
 				[
 					SNew(STextBlock)
-					.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDynamicExportDirectory)
+					.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDynamicsExportDirectory)
 				]
 				+SVerticalBox::Slot()
 				.AutoHeight()
@@ -634,7 +634,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 					SNew(SButton)
 					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::HasSetDynamicExportDirectory)
 					.Text(FText::FromString("Refresh Sub Directories"))
-					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::RefreshDynamicSubDirectory)
+					.OnClicked(this, &FCognitiveSettingsCustomization::CopyDynamicSubDirectories)
 				]
 				+ SVerticalBox::Slot()
 				[
@@ -642,7 +642,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 					.HeightOverride(100)
 					[
 						SAssignNew(SubDirectoryListWidget,SFStringListWidget)
-						.Items(GetSubDirectoryNames()) //BIND
+						//.Items(DynamicSubDirectories) //BIND
 					]
 				]
 			]
@@ -866,6 +866,19 @@ TSharedRef<ITableRow> FCognitiveSettingsCustomization::OnGenerateDynamicRow(TSha
 				.Text(FText::FromString(InItem->Id))
 			]
 		];
+}
+
+FReply FCognitiveSettingsCustomization::CopyDynamicSubDirectories()
+{
+	FCognitiveEditorTools::GetInstance()->RefreshDynamicSubDirectory();
+
+	SubDirectoryListWidget->Items = FCognitiveEditorTools::GetInstance()->GetSubDirectoryNames();
+
+	GLog->Log("this many dynamics " + FString::FromInt(FCognitiveEditorTools::GetInstance()->GetSubDirectoryNames().Num()));
+
+	SubDirectoryListWidget->RefreshList();
+
+	return FReply::Handled();
 }
 
 void FCognitiveSettingsCustomization::OnCommitedExportMinimumSize(float InNewValue, ETextCommit::Type CommitType)
