@@ -78,6 +78,8 @@ public:
 	FText NextButtonText() const;
 	EVisibility BackButtonVisibility() const;
 	FReply LastPage();
+	EVisibility UploadErrorVisibility() const;
+	FText UploadErrorText() const;
 
 	EVisibility IsNewSceneUpload() const;
 	EVisibility IsSceneVersionUpload() const;

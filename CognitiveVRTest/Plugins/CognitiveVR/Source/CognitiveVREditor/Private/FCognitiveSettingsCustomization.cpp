@@ -157,7 +157,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 			.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
 			.Text(FText::FromString("Get Latest Scene Version Data"))
 			.ToolTip(SNew(SToolTip).Text(LOCTEXT("get scene data tip", "This will get the latest scene version data from Scene Explorer and saves it to your config files. Must restart Unreal Editor to see the changes in your config files here")))
-			.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::DebugRefreshCurrentScene)
+			.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ButtonCurrentSceneVersionRequest)
 		]
 	];
 
@@ -782,7 +782,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 		];
 
 
-	FCognitiveEditorTools::GetInstance()->RefreshSceneData();
+	FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
 	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 	FCognitiveEditorTools::GetInstance()->SearchForBlender();
 

@@ -4,19 +4,80 @@
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
-const FString FCognitiveEditorTools::Gateway = "cognitive3d";
-
 //TSharedRef<FCognitiveEditorTools> ToolsInstance;
 FCognitiveEditorTools* CognitiveEditorToolsInstance;
+FString Gateway;
 
 FCognitiveEditorTools* FCognitiveEditorTools::GetInstance()
 {
 	return CognitiveEditorToolsInstance;
 }
 
+//GET dynamic object manifest                           https ://api.sceneexplorer.com/versions/:versionId/objects
+FString FCognitiveEditorTools::GetDynamicObjectManifest(FString versionid)
+{
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	return "https://" + Gateway + "/v0/versions/" + versionid + "/objects";
+}
+
+//POST dynamic object manifest                          https://data.sceneexplorer.com/objects/:sceneId?version=:versionNumber
+FString FCognitiveEditorTools::PostDynamicObjectManifest(FString sceneid, int32 versionnumber)
+{
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	return "https://" + Gateway + "/v0/objects/" + sceneid + "?version=" + FString::FromInt(versionnumber);
+}
+
+//POST dynamic object mesh data							https://data.sceneexplorer.com/objects/:sceneId/:exportDirectory?version=:versionNumber
+FString FCognitiveEditorTools::PostDynamicObjectMeshData(FString sceneid, int32 versionnumber, FString exportdirectory)
+{
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	return "https://" + Gateway + "/v0/objects/" + sceneid + "/" + exportdirectory + "?version=" + FString::FromInt(versionnumber);
+}
+
+//GET scene settings and read scene version             https://api.sceneexplorer.com/scenes/:sceneId
+FString FCognitiveEditorTools::GetSceneVersion(FString sceneid)
+{
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	return "https://" + Gateway + "/v0/scenes/" + sceneid;
+}
+
+//POST scene screenshot                                 https://data.sceneexplorer.com/scenes/:sceneId/screenshot?version=:versionNumber
+FString FCognitiveEditorTools::PostScreenshot(FString sceneid, FString versionnumber)
+{
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	return "https://" + Gateway + "/v0/scenes/" + sceneid + "/screenshot?version=" + versionnumber;
+}
+
+//POST upload decimated scene                           https://data.sceneexplorer.com/scenes
+FString FCognitiveEditorTools::PostNewScene()
+{
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	return "https://" + Gateway + "/v0/scenes";
+}
+
+//POST upload and replace existing scene                https://data.sceneexplorer.com/scenes/:sceneId
+FString FCognitiveEditorTools::PostUpdateScene(FString sceneid)
+{
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	return "https://" + Gateway + "/v0/scenes/" + sceneid;
+}
+
+//WEB used to open scenes on sceneexplorer              https://sceneexplorer.com/scene/ :sceneId
+FString FCognitiveEditorTools::SceneExplorerOpen(FString sceneid)
+{
+	auto sessionviewer = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SessionViewer", false);
+	return "https://"+sessionviewer + sceneid;
+}
+
+
 void FCognitiveEditorTools::Initialize()
 {
 	CognitiveEditorToolsInstance = new FCognitiveEditorTools;
+
+	//should be able to update gateway while unreal is running, but cache if not in editor since that's nuts
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+
+	//should update both editor urls and session data urls
 }
 
 //at any step in the uploading process
@@ -119,6 +180,7 @@ FReply FCognitiveEditorTools::ExportDynamics()
 				DynamicsExportDirectory = FPaths::Combine(*(BaseExportDirectory), TEXT("dynamics"));
 			}
 		}
+		GLog->Log("set DynamicsExportDirectory as " + DynamicsExportDirectory);
 	}
 	else
 	{
@@ -223,9 +285,9 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		GEditor->SelectActor(exportObjects[i]->GetOwner(), true, false, true);
 		//ActorsExported++;
 
-		DynamicsExportDirectory += "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
+		FString tempObject = DynamicsExportDirectory + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
 
-		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + DynamicsExportDirectory);
+		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray exporting DynamicObject " + ExportFilename);
 
 		// @todo: extend this to multiple levels.
@@ -236,14 +298,14 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 
 		//FString FilterString = TEXT("Object (*.obj)|*.obj|Unreal Text (*.t3d)|*.t3d|Stereo Litho (*.stl)|*.stl|LOD Export (*.lod.obj)|*.lod.obj");
 
-		GUnrealEd->ExportMap(GWorld, *DynamicsExportDirectory, true);
+		GUnrealEd->ExportMap(GWorld, *tempObject, true);
 
 		//exported
 		//move textures to root. want to do this in python, but whatever
 
 		//run python on them after everything is finished? need to convert texture anyway
 
-		DynamicsExportDirectory.RemoveFromEnd("/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj");
+		//DynamicsExportDirectory.RemoveFromEnd("/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj");
 
 		exportObjects[i]->GetOwner()->SetActorLocation(originalLocation);
 		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
@@ -447,6 +509,8 @@ void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, F
 	else
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadManifestCompleted failed to connect");
+		WizardUploading = false;
+		WizardUploadError = "FCognitiveEditorTools::OnUploadManifestCompleted failed to connect";
 		return;
 	}
 
@@ -456,13 +520,25 @@ void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, F
 	}
 	else
 	{
-
+		WizardUploading = false;
+		WizardUploadError = FString::FromInt(Response->GetResponseCode());
 	}
 
 	if (WizardUploading)
 	{
 		WizardUploading = false;
 	}
+
+	/*TSharedPtr<FEditorSceneData> scenedata = GetCurrentSceneData();
+
+	if (scenedata.IsValid())
+	{
+		SceneVersionRequest(*scenedata);
+	}
+	else
+	{
+		GLog->Log("FCognitiveEditorTools::OnUploadManifestCompleted failed to get current scene data and update the current version id");
+	}*/
 }
 
 FReply FCognitiveEditorTools::GetDynamicsManifest()
@@ -504,6 +580,8 @@ void FCognitiveEditorTools::OnDynamicManifestResponse(FHttpRequestPtr Request, F
 	else
 	{
 		GLog->Log("FCognitiveEditorTools::OnDynamicManifestResponse failed to connect");
+		WizardUploading = false;
+		WizardUploadError = "FCognitiveEditorTools::OnDynamicManifestResponse failed to connect";
 		return;
 	}
 
@@ -530,6 +608,14 @@ void FCognitiveEditorTools::OnDynamicManifestResponse(FHttpRequestPtr Request, F
 				SceneExplorerDynamics.Add(MakeShareable(new FDynamicData(name, meshname, id)));
 			}
 		}
+	}
+	else
+	{
+		WizardUploadError = "FCognitiveEditorTools::OnDynamicManifestResponse response code " + FString::FromInt(Response->GetResponseCode());
+	}
+	if (WizardUploading)
+	{
+		WizardUploading = false;
 	}
 }
 int32 OutstandingDynamicUploadRequests = 0;
@@ -792,6 +878,15 @@ FReply FCognitiveEditorTools::Export_Selected()
 
 	BaseExportDirectory = FPaths::ConvertRelativePathToFull(BaseExportDirectory);
 
+	if (DynamicsExportDirectory.Len() == 0)
+	{
+		FString targetDir = BaseExportDirectory + "/dynamics/";
+		if (VerifyOrCreateDirectory(targetDir))
+		{
+			DynamicsExportDirectory = targetDir;
+		}
+	}
+
 	return FReply::Handled();
 }
 
@@ -912,6 +1007,11 @@ FReply FCognitiveEditorTools::Select_Export_Directory()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Select_Export_Directory - picked a directory"));
 		BaseExportDirectory = outFilename;
+		FString targetDir = BaseExportDirectory + "/dynamics/";
+		if (VerifyOrCreateDirectory(targetDir))
+		{
+			DynamicsExportDirectory = targetDir;
+		}
 	}
 	else
 	{
@@ -932,6 +1032,7 @@ FReply FCognitiveEditorTools::SelectDynamicsDirectory()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::SelectDynamicsDirectory - picked a directory"));
 		DynamicsExportDirectory = outFilename;
+		GLog->Log("FCognitiveEditorTools::SelectDynamicsDirectory directory is " + DynamicsExportDirectory);
 		FindAllSubDirectoryNames();
 		//SubDirectoryListWidget->RefreshList();
 	}
@@ -1688,6 +1789,8 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 	else
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted failed to connect");
+		WizardUploadError = "FCognitiveEditorTools::OnUploadSceneCompleted failed to connect";
+		WizardUploading = false;
 		return;
 	}
 
@@ -1699,6 +1802,7 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 		if (myworld == NULL)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Upload Scene - No world!"));
+			WizardUploadError = "FCognitiveEditorTools::OnUploadSceneCompleted no world";
 			return;
 		}
 
@@ -1716,23 +1820,27 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 		if (responseNoQuotes.Len() > 0)
 		{
 			SaveSceneData(currentSceneName, responseNoQuotes);
-			RefreshSceneData();
+			ReadSceneDataFromFile();
 		}
 		else
 		{
 			//successfully uploaded a scene but no response - updated an existing scene version
-			RefreshSceneData();
+			ReadSceneDataFromFile();
 		}
 		ConfigFileHasChanged = true;
 
 		if (WizardUploading)
 		{
-			UploadDynamics();
+			CurrentSceneVersionRequest();
+			//ReadSceneDataFromFile();
+
+			//UploadDynamics();
 		}
 	}
 	else
 	{
 		WizardUploading = false;
+		WizardUploadError = "FCognitiveEditorTools::OnUploadSceneCompleted response code " + FString::FromInt(Response->GetResponseCode());
 	}
 }
 
@@ -1745,6 +1853,8 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 	else
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadObjectCompleted failed to connect");
+		WizardUploading = false;
+		WizardUploadError = "FCognitiveEditorTools::OnUploadObjectCompleted failed to connect";
 		return;
 	}
 
@@ -1756,6 +1866,7 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 	else
 	{
 		WizardUploading = false;
+		WizardUploadError = "FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode());
 	}
 
 	if (WizardUploading && OutstandingDynamicUploadRequests <= 0)
@@ -1969,7 +2080,7 @@ FText FCognitiveEditorTools::GetBaseExportDirectory() const
 
 FText FCognitiveEditorTools::GetDynamicsExportDirectory() const
 {
-	return FText::FromString(DynamicsExportDirectory);
+	return FText::FromString("-"+DynamicsExportDirectory+ "-");
 }
 
 void FCognitiveEditorTools::SearchForBlender()
@@ -2230,7 +2341,14 @@ FReply FCognitiveEditorTools::RefreshDynamicSubDirectory()
 	return FReply::Handled();
 }
 
-FReply FCognitiveEditorTools::DebugRefreshCurrentScene()
+FReply FCognitiveEditorTools::ButtonCurrentSceneVersionRequest()
+{
+	CurrentSceneVersionRequest();
+
+	return FReply::Handled();
+}
+
+void FCognitiveEditorTools::CurrentSceneVersionRequest()
 {
 	TSharedPtr<FEditorSceneData> scenedata = GetCurrentSceneData();
 
@@ -2238,8 +2356,6 @@ FReply FCognitiveEditorTools::DebugRefreshCurrentScene()
 	{
 		SceneVersionRequest(*scenedata);
 	}
-
-	return FReply::Handled();
 }
 
 FReply FCognitiveEditorTools::OpenSceneInBrowser(FString sceneid)
@@ -2265,7 +2381,7 @@ FReply FCognitiveEditorTools::OpenCurrentSceneInBrowser()
 	return FReply::Handled();
 }
 
-FReply FCognitiveEditorTools::RefreshSceneData()
+void FCognitiveEditorTools::ReadSceneDataFromFile()
 {
 	SceneData.Empty();
 
@@ -2298,14 +2414,14 @@ FReply FCognitiveEditorTools::RefreshSceneData()
 	GLog->Log("FCognitiveTools::RefreshSceneData found this many scenes: " + FString::FromInt(SceneData.Num()));
 	//ConfigFileHasChanged = true;
 
-	return FReply::Handled();
+	//return FReply::Handled();
 }
 
 void FCognitiveEditorTools::SceneVersionRequest(FEditorSceneData data)
 {
 	if (!HasDeveloperKey())
 	{
-		GLog->Log("FCognitiveTools::SceneVersionRequest no auth token. TODO get auth token and retry");
+		GLog->Log("FCognitiveTools::SceneVersionRequest no developer key set!");
 		//auto httprequest = RequestAuthTokenCallback();
 		
 		return;
@@ -2321,6 +2437,7 @@ void FCognitiveEditorTools::SceneVersionRequest(FEditorSceneData data)
 	//HttpRequest->SetHeader("Authorization", TEXT("Data " + FAnalyticsCognitiveVR::Get().EditorAuthToken));
 	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
 	HttpRequest->SetHeader("Authorization", AuthValue);
+	HttpRequest->SetHeader("Content-Type", "application/json");
 
 	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::SceneVersionResponse);
 	HttpRequest->ProcessRequest();
@@ -2333,25 +2450,28 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 	else
 	{
 		GLog->Log("FCognitiveEditorTools::SceneVersionResponse failed to connect");
+		WizardUploading = false;
+		WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse failed to connect";
 		return;
 	}
 
 	int32 responseCode = Response->GetResponseCode();
 
-	//GLog->Log("FCognitiveTools::SceneVersionResponse response: " + Response->GetContentAsString());
-
 	if (responseCode >= 500)
 	{
 		//internal server error
 		GLog->Log("FCognitiveTools::SceneVersionResponse 500-ish internal server error");
+		WizardUploadError = "FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode());
 		return;
 	}
 	if (responseCode >= 400)
 	{
+		WizardUploading = false;
 		if (responseCode == 401)
 		{
 			//not authorized
 			GLog->Log("FCognitiveTools::SceneVersionResponse not authorized!");
+			WizardUploadError = "FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode());
 			//DEBUG_RequestAuthToken();
 			//auto httprequest = RequestAuthTokenCallback();
 			//if (httprequest)
@@ -2364,6 +2484,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		{
 			//maybe no scene?
 			GLog->Log("FCognitiveTools::SceneVersionResponse some error. Maybe no scene?");
+			WizardUploadError = "FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode());
 			return;
 		}
 	}
@@ -2391,6 +2512,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		if (versionNumber + versionId == 0)
 		{
 			GLog->Log("FCognitiveTools::SceneVersionResponse couldn't find a latest version in SceneVersion data");
+			WizardUploadError = "FCognitiveTools::SceneVersionResponse couldn't find a latest version in SceneVersion data";
 			return;
 		}
 
@@ -2399,6 +2521,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		if (!currentSceneData.IsValid())
 		{
 			GLog->Log("FCognitiveTools::SceneVersionResponse can't find current scene data in ini files");
+			WizardUploadError = "FCognitiveTools::SceneVersionResponse can't find current scene data in ini files";
 			return;
 		}
 
@@ -2440,24 +2563,21 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		GConfig->SetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), iniscenedata, TestSyncFile);
 		GConfig->Flush(false, GEngineIni);
 		ConfigFileHasChanged = true;
+		if (WizardUploading)
+		{
+			UploadDynamics();
+		}
 	}
 	else
 	{
 		GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse failed to parse json response");
+		if (WizardUploading)
+		{
+			WizardUploadError = "FCognitiveToolsCustomization::SceneVersionResponse failed to parse json response";
+			WizardUploading = false;
+		}
 	}
 }
-
-/*void FCognitiveTools::OnSceneVersionGetAuthToken(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-{
-if (bWasSuccessful)
-{
-auto scene = GetCurrentSceneData();
-if (scene.IsValid())
-{
-SceneVersionRequest(*scene);
-}
-}
-}*/
 
 TArray<TSharedPtr<FEditorSceneData>> FCognitiveEditorTools::GetSceneData() const
 {
@@ -2622,20 +2742,13 @@ void FCognitiveEditorTools::WizardExport(bool all)
 void FCognitiveEditorTools::WizardUpload()
 {
 	WizardUploading = true;
+	WizardUploadError = "";
 	UploadScene();
-	//in response...
-	//if (WizardUploading)
-	//	UploadDynamics();
-	//upload dynamic meshes
 
-	//in response...
-	//upload dynamic manifest
-
-
-	//list of dynamic meshes
-	//list of files in scene export directory
-	//auto screenshot
-	//dynamic manifest (hidden)
+	//scene
+	//scene version
+	//dynamics meshes
+	//dynamic manifest
 }
 
 //run this as the next step after exporting the scene

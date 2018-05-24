@@ -641,6 +641,36 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this,&SSceneSetupWidget::DisplayWizardThrobber)
 			]
 			+ SVerticalBox::Slot()
+			.HAlign(HAlign_Center)
+			.VAlign(VAlign_Top)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::DisplayWizardThrobber)
+				.Text(FText::FromString("Uploading"))
+			]
+
+			+SVerticalBox::Slot()
+			.VAlign(VAlign_Center)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::UploadErrorVisibility)
+				.AutoWrapText(true)
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("There was an error while uploading. Check the Output Log for details"))
+			]
+
+			+SVerticalBox::Slot()
+			.VAlign(VAlign_Center)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::UploadErrorVisibility)
+				.AutoWrapText(true)
+				.ColorAndOpacity(FLinearColor::Red)
+				.Justification(ETextJustify::Center)
+				.Text(this,&SSceneSetupWidget::UploadErrorText)
+			]
+
+			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Center)
 			[
 				SNew(STextBlock)
@@ -667,7 +697,17 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.HAlign(HAlign_Right)
 			[
 				SNew(SHorizontalBox)
-
+				/*+ SHorizontalBox::Slot()
+				.HAlign(HAlign_Left)
+				[
+					SNew(SBox)
+					.WidthOverride(512)
+					.HeightOverride(32)
+					[
+						SNew(STextBlock)
+						.Text_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::GetDynamicsExportDirectory)
+					]
+				]*/
 				+ SHorizontalBox::Slot()
 				[
 					SNew(SBox)
@@ -710,7 +750,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 #pragma endregion
 		];
 
-		FCognitiveEditorTools::GetInstance()->RefreshSceneData();
+		FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
 		FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 		FCognitiveEditorTools::GetInstance()->SearchForBlender();
 
@@ -896,6 +936,10 @@ EVisibility SSceneSetupWidget::IsCompleteVisible() const
 EVisibility SSceneSetupWidget::IsUploadComplete() const
 {
 	if (FCognitiveEditorTools::GetInstance()->IsWizardUploading())
+	{
+		return EVisibility::Collapsed;
+	}
+	if (FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() > 0)
 	{
 		return EVisibility::Collapsed;
 	}
@@ -1204,4 +1248,14 @@ EVisibility SSceneSetupWidget::GetDuplicateDyanmicObjectVisibility() const
 		return EVisibility::Collapsed;
 	}
 	return FCognitiveEditorTools::GetInstance()->GetDuplicateDyanmicObjectVisibility();
+}
+
+EVisibility SSceneSetupWidget::UploadErrorVisibility() const
+{
+	return FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() == 0 ? EVisibility::Collapsed : EVisibility::Visible;
+}
+
+FText SSceneSetupWidget::UploadErrorText() const
+{
+	return FText::FromString(FCognitiveEditorTools::GetInstance()->WizardUploadError);
 }

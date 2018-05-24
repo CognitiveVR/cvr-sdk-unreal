@@ -36,6 +36,12 @@ class UCognitiveVRSettings
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 		int32 GazeBatchSize = 64;
 
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	FString Gateway = "cognitive3d";
+
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	FString SessionViewer = "sceneexplorer.com/scene/";
+
 	//UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	bool GazeFromPhysicsRaycast = false;
 

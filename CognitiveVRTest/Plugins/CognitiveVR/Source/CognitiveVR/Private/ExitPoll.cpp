@@ -171,6 +171,14 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 	ResponseObject->SetStringField("sessionId", Responses.sessionId);
 	ResponseObject->SetStringField("hook", Responses.hook);
 
+	auto scenedata = cogProvider->GetCurrentSceneData();
+	if (scenedata.IsValid())
+	{
+		ResponseObject->SetStringField("sceneId", scenedata->Id);
+		ResponseObject->SetNumberField("versionNumber", scenedata->VersionNumber);
+		ResponseObject->SetNumberField("versionId", scenedata->VersionId);
+	}
+
 	TArray<TSharedPtr<FJsonValue>> answerValues;
 
 	for (int32 i = 0; i < Responses.answers.Num(); i++)

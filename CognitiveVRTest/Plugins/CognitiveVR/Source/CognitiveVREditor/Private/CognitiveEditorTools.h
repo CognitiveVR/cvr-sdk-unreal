@@ -58,79 +58,28 @@ public:
 	FString APIKey;
 	//FString DeveloperKey;
 
-	static const FString Gateway;
-
-	//GET dynamic object manifest                           https ://api.sceneexplorer.com/versions/:versionId/objects
-	FORCEINLINE static FString GetDynamicObjectManifest(FString versionid)
-	{
-		return "https://data." + Gateway + ".com/v0/versions/" + versionid + "/objects";
-	}
+	FString GetDynamicObjectManifest(FString versionid);
 
 	//POST dynamic object manifest                          https://data.sceneexplorer.com/objects/:sceneId?version=:versionNumber
-	FORCEINLINE static FString PostDynamicObjectManifest(FString sceneid, int32 versionnumber)
-	{
-		return "https://data." + Gateway + ".com/v0/objects/" + sceneid + "?version=" + FString::FromInt(versionnumber);
-	}
+	FString PostDynamicObjectManifest(FString sceneid, int32 versionnumber);
 
 	//POST dynamic object mesh data							https://data.sceneexplorer.com/objects/:sceneId/:exportDirectory?version=:versionNumber
-	FORCEINLINE static FString PostDynamicObjectMeshData(FString sceneid, int32 versionnumber, FString exportdirectory)
-	{
-		return "https://data." + Gateway + ".com/v0/objects/" + sceneid + "/" + exportdirectory + "?version=" + FString::FromInt(versionnumber);
-	}
+	FString PostDynamicObjectMeshData(FString sceneid, int32 versionnumber, FString exportdirectory);
 
 	//GET scene settings and read scene version             https://api.sceneexplorer.com/scenes/:sceneId
-	FORCEINLINE static FString GetSceneVersion(FString sceneid)
-	{
-		return "https://data." + Gateway + ".com/v0/scenes/" + sceneid;
-	}
+	FString GetSceneVersion(FString sceneid);
 
 	//POST scene screenshot                                 https://data.sceneexplorer.com/scenes/:sceneId/screenshot?version=:versionNumber
-	FORCEINLINE static FString PostScreenshot(FString sceneid, FString versionnumber)
-	{
-		return "https://data." + Gateway + ".com/v0/scenes/" + sceneid + "/screenshot?version=" + versionnumber;
-	}
+	FString PostScreenshot(FString sceneid, FString versionnumber);
 
 	//POST upload decimated scene                           https://data.sceneexplorer.com/scenes
-	FORCEINLINE static FString PostNewScene()
-	{
-		return "https://data." + Gateway + ".com/v0/scenes";
-	}
+	FString PostNewScene();
 
 	//POST upload and replace existing scene                https://data.sceneexplorer.com/scenes/:sceneId
-	FORCEINLINE static FString PostUpdateScene(FString sceneid)
-	{
-		return "https://data." + Gateway + ".com/v0/scenes/" + sceneid;
-	}
-
-	//POST auth token from dynamic object manifest response https://api.sceneexplorer.com/tokens/:sceneId
-	FORCEINLINE static FString PostAuthToken(FString sceneid)
-	{
-		return "";
-	}
+	FString PostUpdateScene(FString sceneid);
 
 	//WEB used to open scenes on sceneexplorer              https://sceneexplorer.com/scene/ :sceneId
-	FORCEINLINE static FString SceneExplorerOpen(FString sceneid)
-	{
-		return "https://sceneexplorer.com/scene/" + sceneid;
-	}
-
-	//POST used to log into the editor						https://api.cognitivevr.io/sessions
-	FORCEINLINE static FString APISessions()
-	{
-		return "";
-	}
-
-	//WEB opens dashboard page to create a new product
-	FORCEINLINE static FString DashboardNewProduct()
-	{
-		return "";
-	}
-
-	//WEB open dashboard page to product
-	FORCEINLINE static FString DashboardNewProduct(FString customerid)
-	{
-		return "";
-	}
+	FString SceneExplorerOpen(FString sceneid);
 
 
 	bool HasSearchedForBlender = false; //to limit the searching directories. possibly not required
@@ -282,12 +231,15 @@ public:
 	FString BaseExportDirectory;
 	FString DynamicsExportDirectory;
 
-	FText GetBaseExportDirectory() const; //c:/users/me/desktop/export/
-	//FText GetSceneExportDirectory() const; //c:/users/me/desktop/export/scenename/
-	FText GetDynamicsExportDirectory() const; //c:/users/me/desktop/export/dynamics/
+	//c:/users/me/desktop/export/
+	FText GetBaseExportDirectory() const;
+	//c:/users/me/desktop/export/dynamics/
+	FText GetDynamicsExportDirectory() const;
 
 	//UFUNCTION(Exec, Category = "Export")
 	FReply Select_Export_Directory();
+
+	void CurrentSceneVersionRequest();
 
 	TArray<FString> GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension, bool skipsubdirectory) const;
 
@@ -334,21 +286,21 @@ public:
 	TArray<TSharedPtr<FEditorSceneData>> GetSceneData() const;
 
 	
-	void SaveOrganizationNameToFile(FString organization);
-	TSharedPtr<FString> GetOrganizationNameFromFile();
-	void SaveProductNameToFile(FString product);
-	TSharedPtr< FString > GetProductNameFromFile();
+	//void SaveOrganizationNameToFile(FString organization);
+	//TSharedPtr<FString> GetOrganizationNameFromFile();
+	//void SaveProductNameToFile(FString product);
+	//TSharedPtr< FString > GetProductNameFromFile();
 
 	FReply OpenSceneInBrowser(FString sceneid);
 	FReply OpenCurrentSceneInBrowser();
 
-	bool HasSelectedValidProduct() const;
-	bool HasLoadedOrSelectedValidProduct() const;
+	//bool HasSelectedValidProduct() const;
+	//bool HasLoadedOrSelectedValidProduct() const;
 	//bool HasLoggedIn() const;
 	bool HasDeveloperKey() const;
 	bool HasAPIKey() const;
-	EVisibility GetLoginButtonState() const;
-	EVisibility GetLogoutButtonState() const;
+	//EVisibility GetLoginButtonState() const;
+	//EVisibility GetLogoutButtonState() const;
 
 	//EVisibility ExportSettingsVisibility() const;
 	//EVisibility OptimizeSettingsVisibility() const;
@@ -357,8 +309,10 @@ public:
 	//bool HasValidLogInFields() const;
 
 	//reads scene data from ini
-	FReply RefreshSceneData();
-	FReply DebugRefreshCurrentScene();
+	void ReadSceneDataFromFile();
+
+	//send a http request to get the scene version data for current scene from sceneexplorer
+	FReply ButtonCurrentSceneVersionRequest();
 	
 	//returns data about a scene by name
 	TSharedPtr<FEditorSceneData> GetSceneData(FString scenename) const;
@@ -370,7 +324,7 @@ public:
 	bool CanUploadSceneFiles() const;
 	//returns true if customerid has been saved
 	//bool HasSavedCustomerId() const;
-	bool CustomerIdDoesntMatchFile() const;
+	//bool CustomerIdDoesntMatchFile() const;
 	bool LoginAndCustonerIdAndBlenderExportDir() const;
 	//FText GetCustomerId() const;
 
@@ -415,6 +369,9 @@ public:
 
 	void WizardUpload();
 	bool IsWizardUploading();
+
+	//set to 500, 404, 401 or some other junk if uploading from the wizard encountered and error
+	FString WizardUploadError;
 };
 
 //used for uploading multiple dynamics at once
