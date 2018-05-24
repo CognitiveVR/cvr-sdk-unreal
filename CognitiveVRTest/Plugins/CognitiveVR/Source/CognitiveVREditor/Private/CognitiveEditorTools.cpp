@@ -62,7 +62,7 @@ FString FCognitiveEditorTools::PostUpdateScene(FString sceneid)
 	return "https://" + Gateway + "/v0/scenes/" + sceneid;
 }
 
-//WEB used to open scenes on sceneexplorer              https://sceneexplorer.com/scene/ :sceneId
+//WEB used to open scenes on sceneexplorer or custom session viewer
 FString FCognitiveEditorTools::SceneExplorerOpen(FString sceneid)
 {
 	auto sessionviewer = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SessionViewer", false);
@@ -649,6 +649,8 @@ FReply FCognitiveEditorTools::UploadDynamics()
 		}
 	}
 
+	ReadSceneDataFromFile();
+
 	GLog->Log("FCognitiveEditorTools::UploadDynamics found " + FString::FromInt(dynamicNames.Num()) + " exported dynamic objects");
 	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
 
@@ -674,6 +676,7 @@ FReply FCognitiveEditorTools::UploadDynamics()
 		{
 			//GLog->Log("directory found " + filePath);
 			FString url = PostDynamicObjectMeshData(currentSceneData->Id, currentSceneData->VersionNumber, fileName);
+			GLog->Log("dynamic upload to url " + url);
 
 			UploadFromDirectory(url, filePath, "object");
 			OutstandingDynamicUploadRequests++;
@@ -2360,6 +2363,8 @@ void FCognitiveEditorTools::CurrentSceneVersionRequest()
 
 FReply FCognitiveEditorTools::OpenSceneInBrowser(FString sceneid)
 {
+
+
 	FString url = SceneExplorerOpen(sceneid);
 
 	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);
@@ -2493,6 +2498,8 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 
 	TSharedPtr<FJsonObject> JsonSceneSettings;
 
+	GLog->Log(Response->GetContentAsString());
+
 	TSharedRef<TJsonReader<>>Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
 	if (FJsonSerializer::Deserialize(Reader, JsonSceneSettings))
 	{
@@ -2534,6 +2541,8 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		//GLog->Log("found this many scene datas in ini " + FString::FromInt(iniscenedata.Num()));
 		//GLog->Log("looking for scene " + currentSceneData->Name);
 
+		int32 lastVersionNumber = 0;
+
 		//update current scene
 		for (int i = 0; i < iniscenedata.Num(); i++)
 		{
@@ -2542,12 +2551,12 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 			TArray<FString> entryarray;
 			iniscenedata[i].ParseIntoArray(entryarray, TEXT(","), true);
 
-			if (entryarray[0] == currentSceneData->Name)
+			if (entryarray[0] == currentSceneData->Name && versionNumber > lastVersionNumber)
 			{
+				lastVersionNumber = versionNumber;
 				iniscenedata[i] = entryarray[0] + "," + entryarray[1] + "," + FString::FromInt(versionNumber) + "," + FString::FromInt(versionId);
 				//GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse overwriting scene data to append versionnumber and versionid");
 				//GLog->Log(iniscenedata[i]);
-				break;
 			}
 			else
 			{
@@ -2559,10 +2568,19 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 
 		//set array to config
 		GConfig->RemoveKey(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), TestSyncFile);
-		//GConfig->Remove(
 		GConfig->SetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), iniscenedata, TestSyncFile);
-		GConfig->Flush(false, GEngineIni);
+
+		//FConfigCacheIni::LoadGlobalIniFile(GEngineIni, TEXT("Engine"));
+
+		//GConfig->RemoveKey(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), GEngineIni);
+		//GConfig->SetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), iniscenedata, GEngineIni);
+
+
+		GConfig->Flush(false, TestSyncFile);
+		//GConfig->LoadFile(TestSyncFile);
 		ConfigFileHasChanged = true;
+		ReadSceneDataFromFile();
+
 		if (WizardUploading)
 		{
 			UploadDynamics();

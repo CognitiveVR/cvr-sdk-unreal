@@ -753,6 +753,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 		FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
 		FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 		FCognitiveEditorTools::GetInstance()->SearchForBlender();
+		FCognitiveEditorTools::GetInstance()->WizardUploadError = "";
 
 		FString texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("objects_grey.png");
 		FName BrushName = FName(*texturepath);
