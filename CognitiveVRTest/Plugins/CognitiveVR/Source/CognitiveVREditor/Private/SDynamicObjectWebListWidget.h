@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CognitiveVREditorPrivatePCH.h"
-#include "CognitiveTools.h"
+#include "CognitiveEditorTools.h"
 #include "CognitiveEditorData.h"
 #include "CognitiveVRSettings.h"
 #include "IDetailCustomization.h"

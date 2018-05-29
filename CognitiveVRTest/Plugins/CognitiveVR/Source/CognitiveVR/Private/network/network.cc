@@ -7,10 +7,12 @@
 
 using namespace cognitivevrapi;
 FHttpModule* Http;
+FString Gateway;
 
 Network::Network(FAnalyticsProviderCognitiveVR* sp)
 {
 	CognitiveLog::Info("CognitiveVR::Network - Init");
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
     s = sp;
 	if (Http == NULL)
 		Http = &FHttpModule::Get();
@@ -42,7 +44,7 @@ void Network::NetworkCall(FString suburl, FString contents)
 	}
 
 	//json to scene endpoint
-	FString url = "https://"+cognitivevrapi::Config::kNetworkHost+"/v"+FString::FromInt(cognitivevrapi::Config::kNetworkVersion)+"/"+suburl+"/"+s->GetCurrentSceneId() + "?version=" + s->GetCurrentSceneVersionNumber();
+	FString url = "https://"+ Gateway +"/v"+FString::FromInt(0)+"/"+suburl+"/"+s->GetCurrentSceneId() + "?version=" + s->GetCurrentSceneVersionNumber();
 
 	FString AuthValue = "APIKEY:DATA " + s->APIKey;
 

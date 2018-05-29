@@ -80,7 +80,7 @@ void Sensors::SendData()
 	const TCHAR* charcomplete = *complete;
 	OutputString = OutputString.Replace(TEXT("\"SENSORDATAHERE\""), charcomplete);
 
-	s->network->NetworkCall("sensor", OutputString);
+	s->network->NetworkCall("sensors", OutputString);
 
 	somedatapoints.Empty();
 	sensorDataCount = 0;

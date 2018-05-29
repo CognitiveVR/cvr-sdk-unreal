@@ -76,7 +76,7 @@ void UCognitiveVRBlueprints::SendCustomEventPosition(FString Category, const TAr
 	//cog->transaction->BeginEndPosition(TCHAR_TO_UTF8(*Category), Position, properties);
 }*/
 
-
+/*
 void UCognitiveVRBlueprints::UpdateDeviceInt(const FString name, const int32 value)
 {
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
@@ -85,7 +85,7 @@ void UCognitiveVRBlueprints::UpdateDeviceInt(const FString name, const int32 val
 		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
 		return;
 	}
-	cog->SetDeviceProperty(name, value);
+	cog->SetSessionProperty(name, value);
 }
 	 
 void UCognitiveVRBlueprints::UpdateDeviceFloat(const FString name, const float value)
@@ -96,7 +96,7 @@ void UCognitiveVRBlueprints::UpdateDeviceFloat(const FString name, const float v
 		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
 		return;
 	}
-	cog->SetDeviceProperty(name, value);
+	cog->SetSessionProperty(name, value);
 }
 	 
 void UCognitiveVRBlueprints::UpdateDeviceString(const FString name, const FString value)
@@ -107,7 +107,7 @@ void UCognitiveVRBlueprints::UpdateDeviceString(const FString name, const FStrin
 		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
 		return;
 	}
-	cog->SetDeviceProperty(name, value);
+	cog->SetSessionProperty(name, value);
 }
 	 
 	 
@@ -119,7 +119,7 @@ void UCognitiveVRBlueprints::UpdateUserInt(const FString name, const int32 value
 		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
 		return;
 	}
-	cog->SetUserProperty(name, value);
+	cog->SetSessionProperty(name, value);
 }
 	 
 void UCognitiveVRBlueprints::UpdateUserFloat(const FString name, const float value)
@@ -130,7 +130,7 @@ void UCognitiveVRBlueprints::UpdateUserFloat(const FString name, const float val
 		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
 		return;
 	}
-	cog->SetUserProperty(name, value);
+	cog->SetSessionProperty(name, value);
 }
 	 
 void UCognitiveVRBlueprints::UpdateUserString(const FString name, const FString value)
@@ -141,7 +141,53 @@ void UCognitiveVRBlueprints::UpdateUserString(const FString name, const FString 
 		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
 		return;
 	}
-	cog->SetUserProperty(name, value);
+	cog->SetSessionProperty(name, value);
+}
+*/
+
+
+void UCognitiveVRBlueprints::UpdateSessionInt(const FString name, const int32 value)
+{
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	if (cog == NULL || !cog->HasStartedSession())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
+		return;
+	}
+	cog->SetSessionProperty(name, value);
+}
+
+void UCognitiveVRBlueprints::UpdateSessionFloat(const FString name, const float value)
+{
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	if (cog == NULL || !cog->HasStartedSession())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
+		return;
+	}
+	cog->SetSessionProperty(name, value);
+}
+
+void UCognitiveVRBlueprints::UpdateSessionString(const FString name, const FString value)
+{
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	if (cog == NULL || !cog->HasStartedSession())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
+		return;
+	}
+	cog->SetSessionProperty(name, value);
+}
+
+void UCognitiveVRBlueprints::SetSessionName(const FString name)
+{
+	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
+	if (cog == NULL || !cog->HasStartedSession())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateDevice could not get provider!");
+		return;
+	}
+	cog->SetSessionProperty("cvr.sessionname", name);
 }
 
 /*void UCognitiveVRBlueprints::UpdateUser(const TArray<FAnalyticsEventAttr>& Attributes)

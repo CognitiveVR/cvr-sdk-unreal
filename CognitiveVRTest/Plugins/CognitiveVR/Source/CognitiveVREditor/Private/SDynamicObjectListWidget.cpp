@@ -11,7 +11,7 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 			[
 				SAssignNew(ListViewWidget, SListView<TSharedPtr<FDynamicData>>)
 				.ItemHeight(24)
-				.ListItemsSource(&SceneDynamics) //The Items array is the source of this listview
+				.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneDynamics) //The Items array is the source of this listview
 				.OnGenerateRow(this, &SDynamicObjectListWidget::OnGenerateRowForList)
 				.HeaderRow(
 					SNew(SHeaderRow)
@@ -52,16 +52,17 @@ TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
-			.MaxWidth(16)
+			.MaxWidth(64)
 			.AutoWidth()
 			.Padding(2.0f)
 			[
 				SNew(SBox)
-				.HeightOverride(16)
-				.HeightOverride(16)
+				.WidthOverride(64)
+				.HeightOverride(20)
 				[
 					SNew(SButton)
 					.OnClicked(FOnClicked::CreateSP(this, &SDynamicObjectListWidget::SelectDynamic, InItem))
+					.Text(FText::FromString("Select"))
 				]
 			]
 			+ SHorizontalBox::Slot()
@@ -92,12 +93,12 @@ FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
 {
 	GEditor->SelectNone(false, true, false);
 
-	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		AStaticMeshActor *Mesh = *ActorItr;
+		//AStaticMeshActor *Mesh = *ActorItr;
 
-		UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
 		if (actorComponent == NULL)
 		{
 			continue;
@@ -111,7 +112,7 @@ FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
 		if (dynamic->CustomId != data->Id) { continue; }
 		if (dynamic->MeshName != data->MeshName) { continue; }
 
-		GEditor->SelectActor(Mesh, true, true, true, true);
+		GEditor->SelectActor((*ActorItr), true, true, true, true);
 
 		break;
 	}

@@ -98,7 +98,7 @@ public:
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class COGNITIVEVR_API UDynamicObject : public UActorComponent
+class COGNITIVEVR_API UDynamicObject : public USceneComponent //UActorComponent
 {
 	GENERATED_BODY()
 
@@ -117,33 +117,33 @@ private:
 public:	
 	// Sets default values for this component's properties
 
-	UPROPERTY(EditAnywhere)// , BlueprintReadWrite)
-	ECommonMeshName CommonMeshName;
-
 	UPROPERTY(EditAnywhere)
 	bool UseCustomMeshName = true;
 
 	UPROPERTY(EditAnywhere)
 	FString MeshName;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
+	ECommonMeshName CommonMeshName;
+
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	bool SnapshotOnBeginPlay = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
 	bool SnapshotOnInterval = true;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	bool ReleaseIdOnDestroy = true;
 
 	//group and id
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	bool UseCustomId;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	FString CustomId = "";
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	FString GroupName;
 
 	UPROPERTY(EditAnywhere)
@@ -151,13 +151,13 @@ public:
 
 	//snapshots
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	float SnapshotInterval = 0.1;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	float PositionThreshold = 2;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	float RotationThreshold = 10;
 
 	UDynamicObject();

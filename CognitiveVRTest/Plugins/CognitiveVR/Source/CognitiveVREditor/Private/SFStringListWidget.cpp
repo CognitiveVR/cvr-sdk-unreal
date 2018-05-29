@@ -17,7 +17,7 @@ void SFStringListWidget::Construct(const FArguments& Args)
 			[
 				SAssignNew(ListViewWidget, SListView<TSharedPtr<FString>>)
 				.ItemHeight(24)
-				.ListItemsSource(&SubDirectoryNames) //The Items array is the source of this listview
+				.ListItemsSource(&Items) //The Items array is the source of this listview
 				.OnGenerateRow(this, &SFStringListWidget::OnGenerateRowForList)
 			]
 		];
@@ -42,16 +42,4 @@ TSharedRef<ITableRow> SFStringListWidget::OnGenerateRowForList(TSharedPtr<FStrin
 				.Text(FText::FromString(*InItem))
 			]
 		];
-}
-
-FReply SFStringListWidget::ButtonPressed()
-{
-	//Adds a new item to the array (do whatever you want with this)
-
-	Items = SubDirectoryNames;
-
-	//Update the listview
-	ListViewWidget->RequestListRefresh();
-
-	return FReply::Handled();
 }

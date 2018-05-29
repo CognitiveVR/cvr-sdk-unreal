@@ -2,14 +2,12 @@
 
 #include "CognitiveVREditorPrivatePCH.h"
 #include "CognitiveVRSettings.h"
+#include "CognitiveEditorData.h"
 #include "IDetailCustomization.h"
 #include "PropertyEditing.h"
 //#include "DetailCustomizationsPrivatePCH.h"
 #include "PropertyCustomizationHelpers.h"
 #include "Json.h"
-#include "SCheckBox.h"
-#include "STableRow.h"
-#include "SFStringListWidget.h"
 
 #include "UnrealEd.h"
 #include "Engine.h"
@@ -29,43 +27,28 @@
 #include "MaterialUtilities.h"
 #include "DynamicObject.h"
 #include "GenericPlatformFile.h"
-#include "STextComboBox.h"
-#include "SDynamicObjectListWidget.h"
-#include "SDynamicObjectWebListWidget.h"
 #include "Http.h"
 #include "UnrealClient.h"
-//
-//#include "ExportSceneTool.generated.h"
 
-//https://forums.unrealengine.com/unreal-engine/marketplace/125106-configbp-ini-configuration-files-the-easy-way?p=1385756#post1385756
+//all sorts of functionality for Cognitive SDK
 
-class UCognitiveVRSettings;
 
-class FCognitiveTools : public IDetailCustomization
+class FCognitiveEditorTools
 {
-
-	// Enumerates radio button choices.
-	//enum EReleaseType
-	//{
-	//	Test,
-	//	Production
-	//};
-
-	//EReleaseType RadioChoice = EReleaseType::Test;
-
 public:
-	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
 
-	static TSharedRef<IDetailCustomization> MakeInstance();
-	//static TSharedRef<FCognitiveTools> Instance;
-	//static FCognitiveTools MyInstance;
-	//static TSharedRef<FCognitiveTools> MyInstanceRef;
+	static void Initialize();
 
-	static FReply ExecuteToolCommand(IDetailLayoutBuilder* DetailBuilder, UFunction* MethodToExecute);
+	static FCognitiveEditorTools* GetInstance();
+
+	void Tick(float deltatime);
 
 	void SaveSceneData(FString sceneName, FString sceneKey);
 
-private:
+	//gets all the dynamics in the scene and saves them to SceneDynamics
+	TArray<TSharedPtr<FDynamicData>> SceneDynamics;
+	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
+
 	void OnAPIKeyChanged(const FText& Text);
 	void OnDeveloperKeyChanged(const FText& Text);
 
@@ -75,77 +58,28 @@ private:
 	FString APIKey;
 	//FString DeveloperKey;
 
-	//GET dynamic object manifest                           https ://api.sceneexplorer.com/versions/:versionId/objects
-	FORCEINLINE static FString GetDynamicObjectManifest(FString versionid)
-	{
-		return "https://data.cognitive3d.com/v0/versions/" + versionid + "/objects";
-	}
+	FString GetDynamicObjectManifest(FString versionid);
 
 	//POST dynamic object manifest                          https://data.sceneexplorer.com/objects/:sceneId?version=:versionNumber
-	FORCEINLINE static FString PostDynamicObjectManifest(FString sceneid, int32 versionnumber)
-	{
-		return "https://data.cognitive3d.com/v0/objects/" + sceneid + "?version=" + FString::FromInt(versionnumber);
-	}
+	FString PostDynamicObjectManifest(FString sceneid, int32 versionnumber);
 
 	//POST dynamic object mesh data							https://data.sceneexplorer.com/objects/:sceneId/:exportDirectory?version=:versionNumber
-	FORCEINLINE static FString PostDynamicObjectMeshData(FString sceneid, int32 versionnumber, FString exportdirectory)
-	{
-		return "https://data.cognitive3d.com/v0/objects/" + sceneid + "/" + exportdirectory + "?version=" + FString::FromInt(versionnumber);
-	}
+	FString PostDynamicObjectMeshData(FString sceneid, int32 versionnumber, FString exportdirectory);
 
 	//GET scene settings and read scene version             https://api.sceneexplorer.com/scenes/:sceneId
-	FORCEINLINE static FString GetSceneVersion(FString sceneid)
-	{
-		return "https://data.cognitive3d.com/v0/scenes/" + sceneid;
-	}
+	FString GetSceneVersion(FString sceneid);
 
 	//POST scene screenshot                                 https://data.sceneexplorer.com/scenes/:sceneId/screenshot?version=:versionNumber
-	FORCEINLINE static FString PostScreenshot(FString sceneid, FString versionnumber)
-	{
-		return "https://data.cognitive3d.com/v0/scenes/" + sceneid + "/screenshot?version=" + versionnumber;
-	}
+	FString PostScreenshot(FString sceneid, FString versionnumber);
 
 	//POST upload decimated scene                           https://data.sceneexplorer.com/scenes
-	FORCEINLINE static FString PostNewScene()
-	{
-		return "https://data.cognitive3d.com/v0/scenes";
-	}
+	FString PostNewScene();
 
 	//POST upload and replace existing scene                https://data.sceneexplorer.com/scenes/:sceneId
-	FORCEINLINE static FString PostUpdateScene(FString sceneid)
-	{
-		return "https://data.cognitive3d.com/v0/scenes/" + sceneid;
-	}
-
-	//POST auth token from dynamic object manifest response https://api.sceneexplorer.com/tokens/:sceneId
-	FORCEINLINE static FString PostAuthToken(FString sceneid)
-	{
-		return "";
-	}
+	FString PostUpdateScene(FString sceneid);
 
 	//WEB used to open scenes on sceneexplorer              https://sceneexplorer.com/scene/ :sceneId
-	FORCEINLINE static FString SceneExplorerOpen(FString sceneid)
-	{
-		return "https://sceneexplorer.com/scene/" + sceneid;
-	}
-
-	//POST used to log into the editor						https://api.cognitivevr.io/sessions
-	FORCEINLINE static FString APISessions()
-	{
-		return "";
-	}
-
-	//WEB opens dashboard page to create a new product
-	FORCEINLINE static FString DashboardNewProduct()
-	{
-		return "https://dashboard.cognitivevr.io/admin/products/create";
-	}
-
-	//WEB open dashboard page to product
-	FORCEINLINE static FString DashboardNewProduct(FString customerid)
-	{
-		return "https://dashboard.cognitivevr.io/dashboard?pid=" + customerid;
-	}
+	FString SceneExplorerOpen(FString sceneid);
 
 
 	bool HasSearchedForBlender = false; //to limit the searching directories. possibly not required
@@ -176,86 +110,89 @@ private:
 	FText GetUploadDynamicsToSceneText() const;
 	//FReply RefreshUploadDynamicsToSceneText();
 	void RefreshUploadDynamicsToSceneText();
-	TSharedPtr<SVerticalBox> SetDynamicBoxContent();
+	//TSharedPtr<SVerticalBox> SetDynamicBoxContent();
 
-	
+	float MinimumSize = 1;
+	float MaximumSize = 10000;
+	bool StaticOnly = true;
+	int32 MinPolygon = 65536;
+	int32 MaxPolygon = 65536;
+	int32 TextureRefactor = 1;
+	FString ExcludeMeshes = "Camera,Player,SkySphereBlueprint";
+
+	float GetMinimumSize() const { return MinimumSize; }
+	float GetMaximumSize() const { return MaximumSize; }
+	bool GetStaticOnly() const { return StaticOnly; }
+	ECheckBoxState GetStaticOnlyCheckboxState() const
+	{
+		return (StaticOnly)
+			? ECheckBoxState::Checked
+			: ECheckBoxState::Unchecked;
+	}
+	void OnStaticOnlyCheckboxChanged(ECheckBoxState newstate)
+	{
+		if (newstate == ECheckBoxState::Checked)
+		{
+			StaticOnly = true;
+		}
+		else
+		{
+			StaticOnly = false;
+		}
+	}
+
+	int32 GetMinPolygon() const { return MinPolygon; }
+	int32 GetMaxPolygon() const { return MaxPolygon; }
+	int32 GetTextureRefactor() const { return TextureRefactor; }
+	FText GetExcludeMeshes() const { return FText::FromString(ExcludeMeshes); }
 
 	FText GetBlenderPath() const;
 
-	UCognitiveVRSettings *Settings;
-	IDetailLayoutBuilder *DetailLayoutPtr;
-
-	float GetMinimumSize();
-	float GetMaximumSize();
-	int32 GetMinPolygon();
-	int32 GetMaxPolygon();
-	int32 GetTextureRefacor();
-	bool GetStaticOnly();
-
-	TSharedPtr<IPropertyHandle> MinSizeProperty;
-	TSharedPtr<IPropertyHandle> MaxSizeProperty;
-	TSharedPtr<IPropertyHandle> MinPolygonProperty;
-	TSharedPtr<IPropertyHandle> MaxPolygonProperty;
-	TSharedPtr<IPropertyHandle> StaticOnlyProperty;
-	TSharedPtr<IPropertyHandle> TextureResizeProperty;
-	TSharedPtr<IPropertyHandle> ExcludeMeshProperty;
-	//TSharedPtr<IPropertyHandle> SceneKeysProperty;
-
 	//Select Blender.exe. Used to reduce polygon count of the exported scene
-	UFUNCTION(Exec, Category = "Export")
 		FReply Select_Blender();
 
 	//Select meshes that match settings - Above Minimum Size? Static?
-	UFUNCTION(Exec, Category = "Export")
 		FReply Select_Export_Meshes();
 
 	//Runs the built-in obj exporter with the selected meshses
-	UFUNCTION(Exec, Category = "Export")
 		FReply Export_Selected();
 
 	//Runs the built-in obj exporter with all meshses
-	UFUNCTION(Exec, Category = "Export")
 		FReply Export_All();
 
 	//Runs a python script in blender to reduce the polygon count, clean up the mtl file and copy textures into a convient folder
-	UFUNCTION(Exec, Category = "Export")
 		FReply Reduce_Meshes();
 
 	//Runs a python script in blender to reduce the polygon count, clean up the mtl file and copy textures into a convient folder
-	UFUNCTION(Exec, Category = "Export")
 		FReply Reduce_Textures();
 
-	UFUNCTION(Exec, Category = "Export")
 		FReply UploadScene();
 
-	void UploadMultipartData(FString url, TArray<FString> files, TArray<FString> images);
+	void WizardExport();
+	FProcHandle Reduce_Meshes_And_Textures();
+
+	//void UploadMultipartData(FString url, TArray<FString> files, TArray<FString> images);
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
 
-	UFUNCTION(Exec, Category = "Export")
 		FReply List_Materials();
 	void List_MaterialArgs(FString subdirectory,FString searchDirectory);
 	void ReexportDynamicMeshes(FString directory);
 
-	UFUNCTION(Exec, Category = "Export")
 	FReply ReexportDynamicMeshesCmd();
 
 	//dynamic objects
 	//Runs the built-in obj exporter with all meshses
-	UFUNCTION(Exec, Category = "Dynamics")
 		FReply ExportDynamics();
 
-	UFUNCTION(Exec, Category = "Dynamics")
 		FReply ExportDynamicTextures();
 
 	//Runs the built-in obj exporter with selected meshes
-	UFUNCTION(Exec, Category = "Dynamics")
 		FReply ExportSelectedDynamics();
 	
 	void ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
 
 	//uploads each dynamic object using its directory to the current scene
-	UFUNCTION(Exec, Category = "Dynamics")
-		FReply SelectDynamicsDirectory();
+		//FReply SelectDynamicsDirectory();
 
 	void ConvertDynamicTextures();
 
@@ -283,26 +220,59 @@ private:
 	void* ChooseParentWindowHandle();
 
 	//UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional, meta = (DisplayName = "BlenderPath", ShowForTools = "SceneExport"))
-	UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
-		FString BlenderPath;
-	UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
-		FString ExportDirectory;
-	UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
-		FString ExportDynamicsDirectory;
-	FText GetExportDirectory() const;
-	FText GetDynamicExportDirectory() const;
-
-	UFUNCTION(Exec, Category = "Export")
-		FReply Select_Export_Directory();
-
-	UFUNCTION(Exec, Category = "Export")
-		FReply DEBUGSendSceneData();
+	//UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
+	FString BlenderPath;
+	//UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
+		//FString ExportDirectory;
+	//UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
+		//FString ExportDynamicsDirectory;
+	//FText GetExportDirectory() const;
 
 
 
-	TArray<FString> GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension) const;
 
-	FString GetProductID();
+	FString BaseExportDirectory;
+
+	//c:/users/me/desktop/export/
+	FText GetBaseExportDirectoryDisplay() const;
+	FString GetBaseExportDirectory() const
+	{
+		return BaseExportDirectory;
+	}
+	//c:/users/me/desktop/export/scenename/
+	FText GetSceneExportDirectoryDisplay(FString scenename) const;
+	FString GetSceneExportDirectory(FString scenename)
+	{
+		return FPaths::Combine(BaseExportDirectory, scenename);
+	}
+	//c:/users/me/desktop/export/scenename/
+	FText GetCurrentSceneExportDirectoryDisplay() const;
+	FString GetCurrentSceneExportDirectory()
+	{
+		UWorld* myworld = GWorld->GetWorld();
+
+		FString currentSceneName = myworld->GetMapName();
+		return FPaths::Combine(BaseExportDirectory, currentSceneName);
+	}
+	//c:/users/me/desktop/export/dynamics/
+	FText GetDynamicsExportDirectoryDisplay() const;
+	FString GetDynamicsExportDirectory()
+	{
+		return FPaths::Combine(BaseExportDirectory, TEXT("dynamics"));
+	}
+	FReply SelectBaseExportDirectory();
+
+	FString GetCurrentSceneName()
+	{
+		UWorld* myworld = GWorld->GetWorld();
+
+		return myworld->GetMapName();
+	}
+
+
+	void CurrentSceneVersionRequest();
+
+	TArray<FString> GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension, bool skipsubdirectory) const;
 
 	//If this function cannot find or create the directory, returns false.
 	static FORCEINLINE bool VerifyOrCreateDirectory(FString& TestDir)
@@ -326,14 +296,13 @@ private:
 		return true;
 	}
 
-	//If this function cannot find or create the directory, returns false.
+	//If this function cannot find the file, returns false.
 	static FORCEINLINE bool VerifyFileExists(FString& TestPath)
 	{
 		// Every function call, unless the function is inline, adds a small
 		// overhead which we can avoid by creating a local variable like so.
 		// But beware of making every function inline!
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-
 		if (PlatformFile.FileExists(*TestPath))
 		{
 			return true;
@@ -341,77 +310,41 @@ private:
 		return false;
 	}
 
-	//FReply SetRandomSessionId();
-	//FReply DEBUGPrintSessionId();
-	//FString Email;
-	//void OnEmailChanged(const FText& Text);
-	//FString Password;
-	//void OnPasswordChanged(const FText& Text);
+	//If this function cannot find the file, returns false.
+	static FORCEINLINE bool VerifyDirectoryExists(FString& TestPath)
+	{
+		// Every function call, unless the function is inline, adds a small
+		// overhead which we can avoid by creating a local variable like so.
+		// But beware of making every function inline!
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		if (PlatformFile.DirectoryExists(*TestPath))
+		{
+			return true;
+		}
+		return false;
+	}
 
-	//EVisibility LoginTextboxUsable() const;
-
-	TSharedPtr<FJsonObject> JsonUserData;
-
-	//FReply DEBUG_RequestAuthToken();
-	//TSharedRef<IHttpRequest> RequestAuthTokenCallback();
-	//void OnSceneVersionGetAuthToken(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
-	//void AuthTokenRequest();
-	//void AuthTokenResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
-	//TArray<TSharedPtr<FString>> OrganizationNames;
-	//TArray<FOrganizationData> OrganizationInfos;
-	//void OnOrganizationChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo);
-
-	//TArray<FProductData> ProductInfos;
-	//void OnProductChanged(TSharedPtr<FString> Selection, ESelectInfo::Type SelectInfo);
-
-	//TSharedPtr<FString> SelectedOrgName;
-	//TSharedPtr<FString> GetSelectedOrganizationName();
-
-	//all products for the currently selected organization
-	//TArray<TSharedPtr<FString>> AllProductNames;
-	//TSharedPtr<FString> SelectedProductName;
-
-	//FProductData SelectedProduct;
-
-	//TArray<TSharedPtr<FString>> AllOrgNames;
-	//TArray<TSharedPtr<FString>> GetOrganizationNames();
-
-	//ECheckBoxState FCognitiveTools::HandleRadioButtonIsChecked(EReleaseType ButtonId) const;
-	//void FCognitiveTools::HandleRadioButtonCheckStateChanged(ECheckBoxState NewRadioState, EReleaseType RadioThatChanged);
 
 	TArray<TSharedPtr<FEditorSceneData>> SceneData;
 	//returns SceneData array
 	TArray<TSharedPtr<FEditorSceneData>> GetSceneData() const;
 
-public:
-	//gets all the dynamics in the scene and saves them to SceneDynamics
-	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
-private:
-
-	TSharedRef<ITableRow> OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
-
-	//FReply SaveCustomerIdToFile();
-
-	//FString GetCustomerIdFromFile() const;
-	//FString GetCustomerIdFromFileWithoutRelease() const;
-	//EReleaseType GetReleaseTypeFromFile();
 	
-	void SaveOrganizationNameToFile(FString organization);
-	TSharedPtr<FString> GetOrganizationNameFromFile();
-	void SaveProductNameToFile(FString product);
-	TSharedPtr< FString > GetProductNameFromFile();
+	//void SaveOrganizationNameToFile(FString organization);
+	//TSharedPtr<FString> GetOrganizationNameFromFile();
+	//void SaveProductNameToFile(FString product);
+	//TSharedPtr< FString > GetProductNameFromFile();
 
 	FReply OpenSceneInBrowser(FString sceneid);
 	FReply OpenCurrentSceneInBrowser();
 
-	bool HasSelectedValidProduct() const;
-	bool HasLoadedOrSelectedValidProduct() const;
+	//bool HasSelectedValidProduct() const;
+	//bool HasLoadedOrSelectedValidProduct() const;
 	//bool HasLoggedIn() const;
 	bool HasDeveloperKey() const;
-	EVisibility GetLoginButtonState() const;
-	EVisibility GetLogoutButtonState() const;
+	bool HasAPIKey() const;
+	//EVisibility GetLoginButtonState() const;
+	//EVisibility GetLogoutButtonState() const;
 
 	//EVisibility ExportSettingsVisibility() const;
 	//EVisibility OptimizeSettingsVisibility() const;
@@ -420,8 +353,10 @@ private:
 	//bool HasValidLogInFields() const;
 
 	//reads scene data from ini
-	FReply RefreshSceneData();
-	FReply DebugRefreshCurrentScene();
+	void ReadSceneDataFromFile();
+
+	//send a http request to get the scene version data for current scene from sceneexplorer
+	FReply ButtonCurrentSceneVersionRequest();
 	
 	//returns data about a scene by name
 	TSharedPtr<FEditorSceneData> GetSceneData(FString scenename) const;
@@ -433,8 +368,9 @@ private:
 	bool CanUploadSceneFiles() const;
 	//returns true if customerid has been saved
 	//bool HasSavedCustomerId() const;
-	bool CustomerIdDoesntMatchFile() const;
+	//bool CustomerIdDoesntMatchFile() const;
 	bool LoginAndCustonerIdAndBlenderExportDir() const;
+	bool HasFoundBlenderDynamicExportDirSelection() const;
 	//FText GetCustomerId() const;
 
 	ECheckBoxState HasFoundBlenderCheckbox() const;
@@ -442,28 +378,18 @@ private:
 	void SceneVersionRequest(FEditorSceneData data);
 	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	//FReply LogIn();
-	//void OnLogInResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
-	//FReply LogOut();
-
-
-	TSharedRef<ITableRow> OnGenerateDynamicRow(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
-
-
-	TSharedPtr<STextBlock> StatsTextBlock;
 	FText GetDynamicsFromManifest() const;
-	//TArray<TSharedPtr<FDynamicData>> SceneExplorerDynamics;
+	TArray<TSharedPtr<FDynamicData>> SceneExplorerDynamics;
+	TArray<TSharedPtr<FString>> SubDirectoryNames;
 
+	FString GetProductID();
 
-	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
-
-	TSharedPtr<SDynamicObjectWebListWidget> WebDynamicList;
-	//TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
+	void RefreshAllUploadFiles();
+	TArray<TSharedPtr<FString>> AllUploadFiles;
+	TArray<TSharedPtr<FString>> AllDynamicFiles;
 
 	FText UploadSceneNameFiles() const;
 	FText OpenSceneNameInBrowser() const;
-	TSharedPtr<SFStringListWidget> SubDirectoryListWidget;
 	void FindAllSubDirectoryNames();
 	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
 	FReply SelectUploadScreenshot();
@@ -476,12 +402,22 @@ private:
 	bool ConfigFileHasChanged = false;
 	EVisibility ConfigFileChangedVisibility() const;
 
-	FReply OpenProductOnDashboard();
-	bool EnableOpenProductOnDashboard() const;
+	//FReply OpenProductOnDashboard();
+	//bool EnableOpenProductOnDashboard() const;
 
 	bool HasFoundBlenderHasSelection() const;
 	bool HasSetDynamicExportDirectoryHasSceneId() const;
 	FReply SaveAPIDeveloperKeysToFile();
+
+	void SaveAPIKeyToFile(FString key);
+	void SaveDeveloperKeyToFile(FString key);
+
+	void WizardUpload();
+	bool IsWizardUploading();
+
+	//set to 500, 404, 401 or some other junk if uploading from the wizard encountered and error
+	FString WizardUploadError;
+	void CreateExportFolderStructure();
 };
 
 //used for uploading multiple dynamics at once

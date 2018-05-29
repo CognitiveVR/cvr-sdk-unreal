@@ -72,8 +72,13 @@ void UDynamicObject::BeginPlay()
 	//session must be started to send
 	//scene id must be valid to send
 
-	LastPosition = GetOwner()->GetActorLocation();
-	LastForward = GetOwner()->GetActorForwardVector();
+	//actor component
+	//LastPosition = GetOwner()->GetActorLocation();
+	//LastForward = GetOwner()->GetActorForwardVector();
+
+	//scene component
+	LastPosition = GetComponentLocation();
+	LastForward = GetComponentTransform().TransformVector(FVector::ForwardVector);
 
 	if (!UseCustomMeshName)
 	{
@@ -159,7 +164,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 	{
 		currentTime -= SnapshotInterval;
 
-		FVector currentForward = GetOwner()->GetActorForwardVector();
+		FVector currentForward = GetComponentTransform().TransformVector(FVector::ForwardVector);// GetOwner()->GetActorForwardVector();
 
 		currentForward.Normalize();
 		
@@ -167,7 +172,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 		float actualDegrees = FMath::Acos(FMath::Clamp<float>(dotRot, -1.0, 1.0)) * 57.29578;
 
-		if ((LastPosition - GetOwner()->GetActorLocation()).Size() > PositionThreshold)
+		if ((LastPosition - GetComponentLocation()).Size() > PositionThreshold)
 		{
 			//moved
 		}
@@ -194,8 +199,13 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 			}
 		}
 
-		LastPosition = GetOwner()->GetActorLocation();
-		LastForward = GetOwner()->GetActorForwardVector();
+		//actor component
+		//LastPosition = GetOwner()->GetActorLocation();
+		//LastForward = GetOwner()->GetActorForwardVector();
+
+		//scene component
+		LastPosition = GetComponentLocation();
+		LastForward = GetComponentTransform().TransformVector(FVector::ForwardVector);
 		
 		FDynamicObjectSnapshot snapObj = MakeSnapshot();
 
@@ -310,11 +320,13 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 
 	snapshot.time = ts;
 	snapshot.id = ObjectID->Id;
-	snapshot.position = FVector(-(int32)GetOwner()->GetActorLocation().X, (int32)GetOwner()->GetActorLocation().Z, (int32)GetOwner()->GetActorLocation().Y);
+	//snapshot.position = FVector(-(int32)GetOwner()->GetActorLocation().X, (int32)GetOwner()->GetActorLocation().Z, (int32)GetOwner()->GetActorLocation().Y);
+	snapshot.position = FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y);
 	
 
 	FQuat quat;
-	FRotator rot = GetOwner()->GetActorRotation();
+	//FRotator rot = GetOwner()->GetActorRotation();
+	FRotator rot = GetComponentRotation();
 	quat = rot.Quaternion();
 
 	snapshot.rotation = FQuat(quat.X, quat.Z, quat.Y, quat.W);
@@ -427,6 +439,7 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 		{
 			TSharedPtr<FJsonObject>engagement = MakeShareable(new FJsonObject);
 
+			engagement->SetStringField("engagementtype", Elem.EngagementType);
 			engagement->SetStringField("engagementparent", Elem.Parent);
 			engagement->SetNumberField("engagement_time", Elem.EngagementTime);
 			engagement->SetNumberField("engagement_count", Elem.EngagementNumber);
