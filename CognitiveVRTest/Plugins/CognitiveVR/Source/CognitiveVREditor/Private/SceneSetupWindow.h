@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CognitiveTools.h"
+#include "CognitiveEditorTools.h"
 #include "BaseEditorTool.h"
 #include "SceneSetupWindow.generated.h"
 

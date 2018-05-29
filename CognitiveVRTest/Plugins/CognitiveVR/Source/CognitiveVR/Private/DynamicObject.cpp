@@ -439,6 +439,7 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 		{
 			TSharedPtr<FJsonObject>engagement = MakeShareable(new FJsonObject);
 
+			engagement->SetStringField("engagementtype", Elem.EngagementType);
 			engagement->SetStringField("engagementparent", Elem.Parent);
 			engagement->SetNumberField("engagement_time", Elem.EngagementTime);
 			engagement->SetNumberField("engagement_count", Elem.EngagementNumber);

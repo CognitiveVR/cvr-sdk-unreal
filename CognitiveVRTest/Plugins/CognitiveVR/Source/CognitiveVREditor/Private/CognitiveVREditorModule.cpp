@@ -2,15 +2,20 @@
 #include "BaseEditorTool.h"
 #include "PropertyEditorModule.h"
 #include "LevelEditor.h"
-#include "CognitiveTools.h"
+#include "CognitiveEditorTools.h"
 #include "SDockTab.h"
 #include "SceneSetupWindow.h"
-#include "SetupCustomization.h"
 #include "Editor/WorkspaceMenuStructure/Public/WorkspaceMenuStructureModule.h"
 #include "Editor/EditorStyle/Public/EditorStyleSet.h"
 #include "SSceneSetupWidget.h"
+#include "FCognitiveSettingsCustomization.h"
+#include "Containers/Ticker.h"
+#include "IImageWrapper.h"
+#include "IImageWrapperModule.h"
 
-//#include "DemoStyle.h"
+//sets up customization for settings
+//adds scene setup window
+//creates editortools
 
 #define LOCTEXT_NAMESPACE "DemoTools"
 
@@ -36,12 +41,41 @@ public:
 
 	//TSharedPtr<FUICommandList> CommandList;
 
+	//FCognitiveTools* CognitiveEditorTools;
+
+	FTickerDelegate TickDelegate;
+	FDelegateHandle TickDelegateHandle;
+
+	TSharedPtr<IImageWrapper> ImageWrapper;
+
+	bool Tick(float deltatime)
+	{
+		FCognitiveEditorTools::GetInstance()->Tick(deltatime);
+		return true;
+	}
 
 	virtual void StartupModule() override
 	{
 #if WITH_EDITOR
 		// Create the Extender that will add content to the menu
 		FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
+		FCognitiveEditorTools::Initialize();
+
+
+		//FAnalyticsCognitiveVR::Get().DeveloperKey = "read from config";
+
+		FString EngineIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
+		FString EditorIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEditor.ini"));
+		//GLog->Log("FCognitiveTools::SaveAPIDeveloperKeysToFile save: " + CustomerId);
+
+		GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->APIKey, EngineIni);
+		GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
+
+		//ConfigFileHasChanged = true;
+
+		//TickDelegate = FTickerDelegate::CreateRaw(this, &FCognitiveVREditorModule::Tick);
+		//TickDelegateHandle = FTicker::GetCoreTicker().AddTicker(TickDelegate);
+
 		/*
 		TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
 		MenuExtender->AddMenuExtension(
@@ -58,8 +92,6 @@ public:
 		//FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
 		//LevelEditorModule.OnCaptureSingleFrameAnimSequence().BindStatic(&FCognitiveVREditorModule::HandleCaptureSingleFrameAnimSequence);
 
-		GLog->Log("COGNITIVE MODULE BEGIN");
-
 		// register standalone UI
 		LevelEditorTabManagerChangedHandle = LevelEditorModule.OnTabManagerChanged().AddLambda([]()
 		{
@@ -74,26 +106,31 @@ public:
 
 			//FSlateStyleRegistry::RegisterSlateStyle(*StyleSet.Get());
 
-
-			GLog->Log("---------------......................ontabmanagerchagnd");
 			FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
 			LocalLevelEditorModule.GetLevelEditorTabManager()->RegisterTabSpawner(FName("CognitiveSceneSetup"), FOnSpawnTab::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab))
 				.SetGroup(WorkspaceMenu::GetMenuStructure().GetToolsCategory())
 				.SetDisplayName(LOCTEXT("SceneSetupTabTitle", "Cognitive Scene Setup"))
-				.SetTooltipText(LOCTEXT("SceneSetupTooltipText", "Open the Sequence Recorder tab."));
+				.SetTooltipText(LOCTEXT("SceneSetupTooltipText", "Open the Cognitive Scene Setup Wizard"));
 				//.SetIcon(FSlateIcon(StyleSet, "CognitiveSceneWizardTabIcon"));
 		});
 
 		// Register the details customizations
 		FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
-		PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FCognitiveTools::MakeInstance));
-		PropertyModule.RegisterCustomClassLayout(TEXT("BaseEditorTool"), FOnGetDetailCustomizationInstance::CreateStatic(&FSetupCustomization::MakeInstance));
+
+		PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FCognitiveSettingsCustomization::MakeInstance));
+		//PropertyModule.RegisterCustomClassLayout(TEXT("BaseEditorTool"), FOnGetDetailCustomizationInstance::CreateStatic(&FSetupCustomization::MakeInstance));
+
+		IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(TEXT("ImageWrapper"));
+		ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
 #endif
 	}
 
 	virtual void ShutdownModule() override
 	{
 #if WITH_EDITOR
+
+		//FTicker::GetCoreTicker().RemoveTicker(TickDelegateHandle);
+
 		if (GEditor)
 		{
 			//FDemoCommands::Unregister();

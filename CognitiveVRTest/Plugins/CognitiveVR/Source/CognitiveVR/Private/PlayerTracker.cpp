@@ -372,8 +372,6 @@ void UPlayerTracker::SendData()
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 
-	GLog->Log(OutputString);
-
 	if (OutputString.Len() > 0)
 	{
 		cog->network->NetworkCall("gaze", OutputString);
