@@ -168,7 +168,7 @@ public:
 
 		FReply UploadScene();
 
-	void WizardExport(bool all);
+	void WizardExport();
 	FProcHandle Reduce_Meshes_And_Textures();
 
 	//void UploadMultipartData(FString url, TArray<FString> files, TArray<FString> images);
@@ -192,7 +192,7 @@ public:
 	void ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
 
 	//uploads each dynamic object using its directory to the current scene
-		FReply SelectDynamicsDirectory();
+		//FReply SelectDynamicsDirectory();
 
 	void ConvertDynamicTextures();
 
@@ -228,16 +228,39 @@ public:
 		//FString ExportDynamicsDirectory;
 	//FText GetExportDirectory() const;
 
+
+
+
 	FString BaseExportDirectory;
-	FString DynamicsExportDirectory;
 
 	//c:/users/me/desktop/export/
-	FText GetBaseExportDirectory() const;
+	FText GetBaseExportDirectoryDisplay() const;
+	FString GetBaseExportDirectory() const
+	{
+		return BaseExportDirectory;
+	}
+	//c:/users/me/desktop/export/scenename/
+	FText GetSceneExportDirectoryDisplay(FString scenename) const;
+	FString GetSceneExportDirectory(FString scenename)
+	{
+		return FPaths::Combine(BaseExportDirectory, scenename);
+	}
+	//c:/users/me/desktop/export/scenename/
+	FText GetCurrentSceneExportDirectoryDisplay() const;
+	FString GetCurrentSceneExportDirectory()
+	{
+		return FPaths::Combine(BaseExportDirectory, GetCurrentSceneData()->Name);
+	}
 	//c:/users/me/desktop/export/dynamics/
-	FText GetDynamicsExportDirectory() const;
+	FText GetDynamicsExportDirectoryDisplay() const;
+	FString GetDynamicsExportDirectory()
+	{
+		return FPaths::Combine(BaseExportDirectory, "dynamics");
+	}
+	FReply SelectBaseExportDirectory();
 
-	//UFUNCTION(Exec, Category = "Export")
-	FReply Select_Export_Directory();
+
+
 
 	void CurrentSceneVersionRequest();
 
@@ -372,6 +395,7 @@ public:
 
 	//set to 500, 404, 401 or some other junk if uploading from the wizard encountered and error
 	FString WizardUploadError;
+	void CreateExportFolderStructure();
 };
 
 //used for uploading multiple dynamics at once

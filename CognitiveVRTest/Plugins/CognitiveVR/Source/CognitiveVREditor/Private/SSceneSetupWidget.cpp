@@ -42,7 +42,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsIntroVisible)
 				.Justification(ETextJustify::Center)
 				.AutoWrapText(true)
-				.Text(FText::FromString("This will guide you through the initial setup of your scene and will have production ready analytics at the end of this setup."))
+				.Text(FText::FromString("This will guide you through the initial setup of your scene. At the end of this setup you will have production ready analytics."))
 			]
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Center)
@@ -270,33 +270,51 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 #pragma endregion
 
-#pragma region "dynamics screen"
+#pragma region "blender"
+			+ SVerticalBox::Slot()
+			.VAlign(VAlign_Top)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("Blender free and open source.\n\nYou can download it at blender.org"))
+			]
 
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Top)
 			[
 				SNew(STextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("Blender is used to convert exported images to .png"))
+				.Text(FText::FromString("We use Blender to automatically convert exported images to .pngs"))
+			]
+
+			+ SVerticalBox::Slot()
+			.VAlign(VAlign_Top)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("We also use Blender to automatically reduce the polygon count of large meshes"))
 			]
 
 			+SVerticalBox::Slot()
 			.AutoHeight()
 			[
 				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 				+SHorizontalBox::Slot()
 				.AutoWidth()
 				[
 					SNew(SCheckBox)
 					.IsEnabled(false)
-					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 					.IsChecked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasFoundBlenderCheckbox)
 				]
 				+SHorizontalBox::Slot()
 				[
 					SNew(SButton)
-					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 					.Text(FText::FromString("Select Blender.exe"))
 					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Blender)
 				]
@@ -305,7 +323,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			[
 				SNew(STextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 				.Text_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::GetBlenderPath)
 			]
 
@@ -314,8 +332,39 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.Padding(FMargin(0.0f, 24.0f, 0.0f, 24.0f))
 			[
 				SNew(SSeparator)
-				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 			]
+
+			+SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(FMargin(0,24,0,24))
+			[
+				SNew(SButton)
+				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
+				.Text(FText::FromString("Select Export Directory"))
+				.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectBaseExportDirectory)
+			]
+
+			+ SVerticalBox::Slot()
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
+				.Text_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::GetBaseExportDirectoryDisplay)
+			]
+#pragma endregion
+
+#pragma region "dynamics screen"
+
+			/*
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(FMargin(0.0f, 24.0f, 0.0f, 24.0f))
+			[
+				SNew(SSeparator)
+				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+			]*/
 
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Top)
@@ -363,13 +412,13 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						]
 					]
 
-					+ SVerticalBox::Slot()
+					/*+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
 						SNew(STextBlock)
 						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-						.Text(this,&SSceneSetupWidget::DisplayDynamicObjectsCountInScene)
-					]
+						.Text(FText::FromString(""))
+					]*/
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
@@ -414,6 +463,63 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 
 			+SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				+SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SCheckBox)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+					.IsChecked(this, &SSceneSetupWidget::GetNoExportGameplayMeshCheckbox)
+					.OnCheckStateChanged(this, &SSceneSetupWidget::OnChangeNoExportGameplayMesh)
+				]
+				+SHorizontalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+					.Text(FText::FromString("Do not export Skybox, Camera, Player or Dynamics"))
+				]
+			]
+			+SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				+SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SCheckBox)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+					.IsChecked(this,&SSceneSetupWidget::GetOnlyExportSelectedCheckbox)
+					.OnCheckStateChanged(this,&SSceneSetupWidget::OnChangeOnlyExportSelected)
+				]
+				+SHorizontalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+					.Text(FText::FromString("Only Export Selected"))
+				]
+			]
+
+			+ SVerticalBox::Slot()
+			.Padding(0, 0, 0, 4)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			.VAlign(VAlign_Center)
+			[
+				SNew(SBox)
+				.HeightOverride(64)
+				.WidthOverride(128)
+				[
+					SNew(SButton)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+					.Text(FText::FromString("Export Scene"))
+					.OnClicked(this,&SSceneSetupWidget::EvaluateExport)
+				]
+			]
+
+			/*+SVerticalBox::Slot()
 			.FillHeight(1)
 			[
 				SNew(SHorizontalBox)
@@ -508,7 +614,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						]
 					]
 				]
-			]
+			]*/
 
 
 #pragma endregion
@@ -565,7 +671,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
 				[
 					SNew(SButton)
-					.Text(FText::FromString("Take Screenshot"))
+					.Text(FText::FromString("Take Screenshot From Current View"))
 					.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
 					.OnClicked(this, &SSceneSetupWidget::TakeScreenshot)
 				]
@@ -677,7 +783,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("Just add a Player Tracker Component to your player character actor and that's it!\n\n\n\nYou will be recording user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard"))
+				.Text(FText::FromString("Just add a Player Tracker Component to your player character actor and call StartSession in blueprints!\n\n\n\nYou will be recording user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard"))
 			]
 
 			+ SVerticalBox::Slot()
@@ -750,6 +856,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 #pragma endregion
 		];
 
+		FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
 		FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
 		FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 		FCognitiveEditorTools::GetInstance()->SearchForBlender();
@@ -772,9 +879,130 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 		SceneGreyTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 180));
 }
 
+FReply SSceneSetupWidget::EvaluateExport()
+{
+	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
+
+	if (!tempworld)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorToolsCustomization::Select_Export_Meshes world is null"));
+		return FReply::Handled();
+	}
+
+	if (NoExportGameplayMeshes && OnlyExportSelected)
+	{
+		//go through current selection and remove dynamics/skybox/camera/player
+
+		TArray<AActor*> ToBeSelected;
+
+		for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
+		{
+			//iterate through selection, copy to another list, then set selection
+			if (AActor* Actor = Cast<AActor>(*It))
+			{
+				if (Actor->GetName().StartsWith("SkySphereBlueprint"))
+				{
+					continue;
+				}
+				UActorComponent* cameraComponent = Actor->GetComponentByClass(UCameraComponent::StaticClass());
+				if (cameraComponent != NULL)
+				{
+					continue;
+				}
+
+				UActorComponent* actorComponent = Actor->GetComponentByClass(UDynamicObject::StaticClass());
+				if (actorComponent != NULL)
+				{
+					continue;
+				}
+				UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+				if (dynamicComponent != NULL)
+				{
+					continue;
+				}
+				ToBeSelected.Add(Actor);
+			}
+		}
+
+		for (int32 i = 0; i < ToBeSelected.Num(); i++)
+		{
+			GEditor->SelectActor((ToBeSelected[i]), true, false, true);
+		}
+		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneData()->Name + ".obj";
+
+		GEditor->ExportMap(tempworld, *ExportedSceneFile, true);
+	}
+	else if (NoExportGameplayMeshes && !OnlyExportSelected)
+	{
+		//select everything, then remove dynamics/skybox/camera/player
+		GEditor->SelectNone(false, true, false);
+
+		for (TActorIterator<AActor> ObstacleItr(tempworld); ObstacleItr; ++ObstacleItr)
+		{
+			if (ObstacleItr->GetName().StartsWith("SkySphereBlueprint"))
+			{
+				continue;
+			}
+			UActorComponent* cameraComponent = ObstacleItr->GetComponentByClass(UCameraComponent::StaticClass());
+			if (cameraComponent != NULL)
+			{
+				continue;
+			}
+
+			UActorComponent* actorComponent = ObstacleItr->GetComponentByClass(UDynamicObject::StaticClass());
+			if (actorComponent != NULL)
+			{
+				continue;
+			}
+			UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+			if (dynamicComponent != NULL)
+			{
+				continue;
+			}
+
+			GEditor->SelectActor(*ObstacleItr, true, false, true);
+		}
+
+		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneData()->Name + ".obj";
+		GEditor->ExportMap(tempworld, *ExportedSceneFile, true);
+	}
+	else if (!NoExportGameplayMeshes && OnlyExportSelected)
+	{
+		//directly export everything currently selected
+		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneData()->Name + ".obj";
+		GEditor->ExportMap(tempworld, *ExportedSceneFile, true);
+	}
+	else if (!NoExportGameplayMeshes && !OnlyExportSelected)
+	{
+		//export everything, including bsp and dynamics
+		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneData()->Name + ".obj";
+		GEditor->ExportMap(tempworld, *ExportedSceneFile, false);
+	}
+
+
+	FCognitiveEditorTools::GetInstance()->WizardExport();
+	SceneWasExported = true;
+
+	return FReply::Handled();
+}
+
+ECheckBoxState SSceneSetupWidget::GetNoExportGameplayMeshCheckbox() const
+{
+	if (NoExportGameplayMeshes)return ECheckBoxState::Checked;
+	return ECheckBoxState::Unchecked;
+}
+
+ECheckBoxState SSceneSetupWidget::GetOnlyExportSelectedCheckbox() const
+{
+	if (OnlyExportSelected)return ECheckBoxState::Checked;
+	return ECheckBoxState::Unchecked;
+}
+
 void SSceneSetupWidget::GetScreenshotBrush()
 {
-	FString ScreenshotPath = FPaths::Combine(*(FCognitiveEditorTools::GetInstance()->BaseExportDirectory), TEXT("screenshot"), TEXT("screenshot.png"));
+	FString ScreenshotPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/screenshot/screenshot.png";
+
+	//FString ScreenshotPath = FPaths::Combine(FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory(), "screenshot", "screenshot.png");
 	FName BrushName = FName(*ScreenshotPath);
 
 	FCognitiveVREditorModule& c3dmod = FModuleManager::GetModuleChecked< FCognitiveVREditorModule >("CognitiveVREditor");
@@ -838,13 +1066,13 @@ const FSlateBrush* SSceneSetupWidget::GetScreenshotBrushTexture() const
 	return ScreenshotTexture;
 }
 
-FReply SSceneSetupWidget::Export_Selected()
+/*FReply SSceneSetupWidget::Export_Selected()
 {
-	FCognitiveEditorTools::GetInstance()->WizardExport(false);
+	FCognitiveEditorTools::GetInstance()->WizardExport();
 	SceneWasExported = true;
 
 	return FReply::Handled();
-}
+}*/
 
 FText SSceneSetupWidget::GetDisplayAPIKey() const
 {
@@ -856,17 +1084,17 @@ FText SSceneSetupWidget::GetDisplayDeveloperKey() const
 	return FText::FromString(DisplayDeveloperKey);
 }
 
-FReply SSceneSetupWidget::Export_All()
+/*FReply SSceneSetupWidget::Export_All()
 {
 	FCognitiveEditorTools::GetInstance()->WizardExport(true);
 	SceneWasExported = true;
 
 	return FReply::Handled();
-}
+}*/
 
 EVisibility SSceneSetupWidget::IsSceneVersionUpload() const
 {
-	if (CurrentPage != 6) { return EVisibility::Collapsed; }
+	if (CurrentPage != 7) { return EVisibility::Collapsed; }
 	
 
 	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
@@ -892,7 +1120,7 @@ EVisibility SSceneSetupWidget::IsIntroNewVersionVisible() const
 
 EVisibility SSceneSetupWidget::IsNewSceneUpload() const
 {
-	if (CurrentPage != 6) { return EVisibility::Collapsed; }
+	if (CurrentPage != 7) { return EVisibility::Collapsed; }
 	
 	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
@@ -910,29 +1138,33 @@ EVisibility SSceneSetupWidget::IsKeysVisible() const
 {
 	return 1 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
 }
-EVisibility SSceneSetupWidget::IsExplainDynamicsVisible() const
+EVisibility SSceneSetupWidget::IsBlenderVisible() const
 {
 	return 2 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
 }
-EVisibility SSceneSetupWidget::IsExplainSceneVisible() const
+EVisibility SSceneSetupWidget::IsExplainDynamicsVisible() const
 {
 	return 3 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
 }
-EVisibility SSceneSetupWidget::IsDynamicsVisible() const
+EVisibility SSceneSetupWidget::IsExplainSceneVisible() const
 {
 	return 4 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
 }
-EVisibility SSceneSetupWidget::IsExportVisible() const
+EVisibility SSceneSetupWidget::IsDynamicsVisible() const
 {
 	return 5 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
 }
-EVisibility SSceneSetupWidget::IsUploadVisible() const
+EVisibility SSceneSetupWidget::IsExportVisible() const
 {
 	return 6 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
 }
-EVisibility SSceneSetupWidget::IsCompleteVisible() const
+EVisibility SSceneSetupWidget::IsUploadVisible() const
 {
 	return 7 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
+}
+EVisibility SSceneSetupWidget::IsCompleteVisible() const
+{
+	return 8 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
 }
 EVisibility SSceneSetupWidget::IsUploadComplete() const
 {
@@ -976,25 +1208,30 @@ FReply SSceneSetupWidget::NextPage()
 		FCognitiveEditorTools::GetInstance()->SaveAPIKeyToFile(DisplayAPIKey);
 		FCognitiveEditorTools::GetInstance()->SaveDeveloperKeyToFile(DisplayDeveloperKey);
 	}
-	if (CurrentPage == 4)
+	if (CurrentPage == 2)
+	{
+		GLog->Log("set dynamic and scene export directories. create if needed");
+		FCognitiveEditorTools::GetInstance()->CreateExportFolderStructure();
+	}
+	if (CurrentPage == 5)
 	{
 		FCognitiveEditorTools::GetInstance()->ExportDynamics();
 	}
-	else if (CurrentPage == 5)
+	else if (CurrentPage == 6)
 	{
 		FCognitiveEditorTools::GetInstance()->RefreshAllUploadFiles();
 		GetScreenshotBrush();
 	}
-	else if (CurrentPage == 6)
+	else if (CurrentPage == 7)
 	{
 		FCognitiveEditorTools::GetInstance()->WizardUpload();
 	}
-	else if (CurrentPage == 7)
+	else if (CurrentPage == 8)
 	{
 
 	}
 
-	if (CurrentPage != 7)
+	if (CurrentPage != 8)
 	{
 		CurrentPage++;
 	}
@@ -1011,7 +1248,7 @@ FReply SSceneSetupWidget::LastPage()
 
 EVisibility SSceneSetupWidget::DisplayWizardThrobber() const
 {
-	if (FCognitiveEditorTools::GetInstance()->IsWizardUploading() && 7 == CurrentPage)
+	if (FCognitiveEditorTools::GetInstance()->IsWizardUploading() && 8 == CurrentPage)
 	{
 		return EVisibility::Visible;
 	}
@@ -1115,7 +1352,7 @@ FReply SSceneSetupWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
 
 EVisibility SSceneSetupWidget::NextButtonVisibility() const
 {
-	if (CurrentPage == 7)
+	if (CurrentPage == 8)
 	{
 		return EVisibility::Hidden;
 	}
@@ -1127,15 +1364,15 @@ FText SSceneSetupWidget::NextButtonText() const
 	{
 		return FText::FromString("Save");
 	}
-	else if (CurrentPage == 4)
+	else if (CurrentPage == 5)
 	{
 		return FText::FromString("Export Dynamics");
 	}
-	else if (CurrentPage == 5)
+	else if (CurrentPage == 6)
 	{
 		return FText::FromString("Next");
 	}
-	else if (CurrentPage == 6)
+	else if (CurrentPage == 7)
 	{
 		return FText::FromString("Upload");
 	}
@@ -1148,7 +1385,7 @@ EVisibility SSceneSetupWidget::ARButtonVisibility() const
 {
 	return EVisibility::Collapsed;
 
-	if (CurrentPage == 5)
+	if (CurrentPage == 6)
 	{
 		return EVisibility::Visible;
 	}
@@ -1172,7 +1409,17 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 			return true;
 		return false;
 	}
-	if (CurrentPage == 5)
+
+	if (CurrentPage == 2)
+	{
+		if (FCognitiveEditorTools::GetInstance()->HasFoundBlender())
+		{
+			return true;
+		}
+		return false;
+	}
+
+	if (CurrentPage == 6)
 	{
 		return SceneWasExported;
 	}
@@ -1186,7 +1433,7 @@ EVisibility SSceneSetupWidget::BackButtonVisibility() const
 	{
 		return EVisibility::Hidden;
 	}
-	if (CurrentPage == 7)
+	if (CurrentPage == 8)
 	{
 		return EVisibility::Hidden;
 	}

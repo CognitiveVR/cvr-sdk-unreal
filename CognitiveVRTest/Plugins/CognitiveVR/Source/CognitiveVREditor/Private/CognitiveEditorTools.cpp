@@ -77,6 +77,8 @@ void FCognitiveEditorTools::Initialize()
 	//should be able to update gateway while unreal is running, but cache if not in editor since that's nuts
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
 
+	CognitiveEditorToolsInstance->BaseExportDirectory = FPaths::GameDir();
+
 	//should update both editor urls and session data urls
 }
 
@@ -158,7 +160,13 @@ FReply FCognitiveEditorTools::ExportDynamics()
 		return FReply::Handled();
 	}
 
-	FString title = "Select Root Dynamic Directory";
+	if (BaseExportDirectory.Len() == 0)
+	{
+		GLog->Log("base directory not selected");
+		return FReply::Handled();
+	}
+
+	/*FString title = "Select Root Dynamic Directory";
 	FString fileTypes = "";
 	FString lastPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
 	FString defaultfile = FString();
@@ -185,7 +193,7 @@ FReply FCognitiveEditorTools::ExportDynamics()
 	else
 	{
 		return FReply::Handled();
-	}
+	}*/
 
 	for (TObjectIterator<UDynamicObject> It; It; ++It)
 	{
@@ -207,7 +215,7 @@ FReply FCognitiveEditorTools::ExportDynamics()
 
 FReply FCognitiveEditorTools::ExportSelectedDynamics()
 {
-	UWorld* World = GWorld;
+	/*UWorld* World = GWorld;
 	FString title = "Select Root Dynamic Directory";
 	FString fileTypes = "";
 	FString lastPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
@@ -221,7 +229,7 @@ FReply FCognitiveEditorTools::ExportSelectedDynamics()
 	else
 	{
 		return FReply::Handled();
-	}
+	}*/
 
 	TArray<FString> meshNames;
 	TArray<UDynamicObject*> SelectionSetCache;
@@ -285,7 +293,7 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		GEditor->SelectActor(exportObjects[i]->GetOwner(), true, false, true);
 		//ActorsExported++;
 
-		FString tempObject = DynamicsExportDirectory + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
+		FString tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
 
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray exporting DynamicObject " + ExportFilename);
@@ -311,7 +319,7 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
 		//tempactor->SetActorScale3D(originalScale);
 
-		List_MaterialArgs(exportObjects[i]->MeshName, DynamicsExportDirectory);
+		List_MaterialArgs(exportObjects[i]->MeshName, GetDynamicsExportDirectory());
 	}
 	GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
 
@@ -633,12 +641,12 @@ FReply FCognitiveEditorTools::UploadDynamics()
 
 	// use the timestamp grabbing visitor (include directories)
 	FLocalTimestampDirectoryVisitor Visitor(PlatformFile, DirectoriesToSkip, DirectoriesToNotRecurse, true);
-	Visitor.Visit(*DynamicsExportDirectory, true);
+	Visitor.Visit(*GetDynamicsExportDirectory(), true);
 
 	TArray<FString> dynamicNames;
 	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
 	{
-		if (TimestampIt.Key() != DynamicsExportDirectory && !TimestampIt.Key().EndsWith(".png") && !TimestampIt.Key().EndsWith(".obj") && !TimestampIt.Key().EndsWith(".mtl"))
+		if (TimestampIt.Key() != GetDynamicsExportDirectory() && !TimestampIt.Key().EndsWith(".png") && !TimestampIt.Key().EndsWith(".obj") && !TimestampIt.Key().EndsWith(".mtl"))
 		{
 			GLog->Log("upload dynamic " + FPaths::GetCleanFilename(TimestampIt.Key()));
 			dynamicNames.Add(FPaths::GetCleanFilename(TimestampIt.Key()));
@@ -668,7 +676,7 @@ FReply FCognitiveEditorTools::UploadDynamics()
 		const FString filePath = TimestampIt.Key();
 		const FString fileName = FPaths::GetCleanFilename(filePath);
 
-		if (DynamicsExportDirectory == filePath)
+		if (GetDynamicsExportDirectory() == filePath)
 		{
 			//GLog->Log("root found " + filePath);
 		}
@@ -685,6 +693,12 @@ FReply FCognitiveEditorTools::UploadDynamics()
 		{
 			//GLog->Log("file found " + filePath);
 		}
+	}
+
+	if (OutstandingDynamicUploadRequests == 0 && WizardUploading)
+	{
+		GLog->Log("FCognitiveEditorTools::UploadDynamics has no dynamics to upload!");
+		WizardUploading = false;
 	}
 
 	return FReply::Handled();
@@ -705,7 +719,7 @@ void FCognitiveEditorTools::FindAllSubDirectoryNames()
 
 	// use the timestamp grabbing visitor (include directories)
 	FLocalTimestampDirectoryVisitor Visitor(PlatformFile, DirectoriesToSkip, DirectoriesToNotRecurse, true);
-	Visitor.Visit(*DynamicsExportDirectory, true);
+	Visitor.Visit(*GetDynamicsExportDirectory(), true);
 	
 	//no matches anywhere
 	SubDirectoryNames.Empty();
@@ -713,7 +727,7 @@ void FCognitiveEditorTools::FindAllSubDirectoryNames()
 
 	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
 	{
-		if (TimestampIt.Key() != DynamicsExportDirectory && !TimestampIt.Key().EndsWith(".png") && !TimestampIt.Key().EndsWith(".obj") && !TimestampIt.Key().EndsWith(".mtl"))
+		if (TimestampIt.Key() != GetDynamicsExportDirectory() && !TimestampIt.Key().EndsWith(".png") && !TimestampIt.Key().EndsWith(".obj") && !TimestampIt.Key().EndsWith(".mtl"))
 		{
 			GLog->Log("display dynamic subdir " + FPaths::GetCleanFilename(TimestampIt.Key()));
 			SubDirectoryNames.Add(MakeShareable(new FString(FPaths::GetCleanFilename(TimestampIt.Key()))));
@@ -848,7 +862,7 @@ void FCognitiveEditorTools::ConvertDynamicTextures()
 		return;
 	}
 
-	FString ObjPath = DynamicsExportDirectory;
+	FString ObjPath = GetDynamicsExportDirectory();
 
 	if (ObjPath.Len() == 0)
 	{
@@ -873,33 +887,52 @@ void FCognitiveEditorTools::ConvertDynamicTextures()
 	FProcHandle process = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
 }
 
+void FCognitiveEditorTools::CreateExportFolderStructure()
+{
+
+	VerifyOrCreateDirectory(BaseExportDirectory);
+	FString temp = GetDynamicsExportDirectory();
+	VerifyOrCreateDirectory(temp);
+}
+
 FReply FCognitiveEditorTools::Export_Selected()
 {
-	FEditorFileUtils::Export(true);
+	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
-	BaseExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+	FString exportDir = FPaths::Combine(BaseExportDirectory, GetCurrentSceneData()->Name);
 
-	BaseExportDirectory = FPaths::ConvertRelativePathToFull(BaseExportDirectory);
+	GEditor->ExportMap(tempworld, *exportDir, true);
 
-	if (DynamicsExportDirectory.Len() == 0)
+	//FEditorFileUtils::Export(true);
+
+	//BaseExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+
+	//BaseExportDirectory = FPaths::ConvertRelativePathToFull(BaseExportDirectory);
+
+	/*if (DynamicsExportDirectory.Len() == 0)
 	{
 		FString targetDir = BaseExportDirectory + "/dynamics/";
 		if (VerifyOrCreateDirectory(targetDir))
 		{
 			DynamicsExportDirectory = targetDir;
 		}
-	}
+	}*/
 
 	return FReply::Handled();
 }
 
 FReply FCognitiveEditorTools::Export_All()
 {
-	FEditorFileUtils::Export(false);
+	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
-	BaseExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+	FString exportDir = FPaths::Combine(BaseExportDirectory, GetCurrentSceneData()->Name);
 
-	BaseExportDirectory = FPaths::ConvertRelativePathToFull(BaseExportDirectory);
+	GEditor->ExportMap(tempworld, *exportDir, false);
+	//FEditorFileUtils::Export(false);
+
+	//BaseExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+
+	//BaseExportDirectory = FPaths::ConvertRelativePathToFull(BaseExportDirectory);
 
 	return FReply::Handled();
 }
@@ -999,22 +1032,17 @@ FReply FCognitiveEditorTools::Select_Blender()
 	return FReply::Handled();
 }
 
-FReply FCognitiveEditorTools::Select_Export_Directory()
+FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 {
 	FString title = "Select Export Directory";
 	FString fileTypes = ".exe";
-	FString lastPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
+	FString lastPath = FPaths::GameDir();
 	FString defaultfile = FString();
 	FString outFilename = FString();
 	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Select_Export_Directory - picked a directory"));
 		BaseExportDirectory = outFilename;
-		FString targetDir = BaseExportDirectory + "/dynamics/";
-		if (VerifyOrCreateDirectory(targetDir))
-		{
-			DynamicsExportDirectory = targetDir;
-		}
 	}
 	else
 	{
@@ -1023,7 +1051,7 @@ FReply FCognitiveEditorTools::Select_Export_Directory()
 	}
 	return FReply::Handled();
 }
-
+/*
 FReply FCognitiveEditorTools::SelectDynamicsDirectory()
 {
 	FString title = "Select Dynamc Export Root Directory";
@@ -1040,8 +1068,10 @@ FReply FCognitiveEditorTools::SelectDynamicsDirectory()
 		//SubDirectoryListWidget->RefreshList();
 	}
 	return FReply::Handled();
-}
+}*/
 
+
+//used to select blender
 bool FCognitiveEditorTools::PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename)
 {
 	OutFilename = FString();
@@ -1077,7 +1107,7 @@ bool FCognitiveEditorTools::PickFile(const FString& Title, const FString& FileTy
 }
 
 //unused. previously used to upload a screenshot for an existing scene
-FReply FCognitiveEditorTools::SelectUploadScreenshot()
+/*FReply FCognitiveEditorTools::SelectUploadScreenshot()
 {
 	FString title = "Select Screenshot";
 	FString fileTypes = ".png";
@@ -1145,15 +1175,14 @@ FReply FCognitiveEditorTools::SelectUploadScreenshot()
 		HttpRequest->ProcessRequest();
 	}
 	return FReply::Handled();
-}
+}*/
 
 FReply FCognitiveEditorTools::TakeScreenshot()
 {
-	FString dir = BaseExportDirectory;
-	FString targetDir = dir + "/screenshot/";
-	if (VerifyOrCreateDirectory(targetDir))
+	FString dir = BaseExportDirectory+"/"+GetCurrentSceneData()->Name+"/screenshot/";
+	if (VerifyOrCreateDirectory(dir))
 	{
-		FScreenshotRequest::RequestScreenshot(targetDir + "screenshot", false, false);
+		FScreenshotRequest::RequestScreenshot(dir + "screenshot", false, false);
 	}
 	return FReply::Handled();
 }
@@ -1989,12 +2018,14 @@ bool FCognitiveEditorTools::LoginAndCustonerIdAndBlenderExportDir() const
 
 bool FCognitiveEditorTools::HasFoundBlenderAndExportDir() const
 {
-	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe") && !FCognitiveEditorTools::GetBaseExportDirectory().EqualTo(FText::FromString(""));
+	if (GetBaseExportDirectory().Len() == 0) { return false; }
+	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe");
 }
 
 bool FCognitiveEditorTools::HasFoundBlenderAndDynamicExportDir() const
 {
-	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe") && !FCognitiveEditorTools::GetDynamicsExportDirectory().EqualTo(FText::FromString(""));
+	if (GetBaseExportDirectory().Len() == 0) { return false; }
+	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe");
 }
 
 bool FCognitiveEditorTools::CurrentSceneHasSceneId() const
@@ -2015,7 +2046,7 @@ bool FCognitiveEditorTools::CurrentSceneHasSceneId() const
 bool FCognitiveEditorTools::HasSetExportDirectory() const
 {
 	if (!HasDeveloperKey()) { return false; }
-	return !FCognitiveEditorTools::GetBaseExportDirectory().EqualTo(FText::FromString(""));
+	return !FCognitiveEditorTools::GetBaseExportDirectory().Len() == 0;
 }
 
 
@@ -2054,7 +2085,8 @@ FText FCognitiveEditorTools::SendDynamicsToSceneExplorerTooltip() const
 bool FCognitiveEditorTools::HasSetDynamicExportDirectory() const
 {
 	if (!HasDeveloperKey()) { return false; }
-	return !FCognitiveEditorTools::GetDynamicsExportDirectory().EqualTo(FText::FromString(""));
+	if (GetBaseExportDirectory().Len() == 0) { return false; }
+	return true;
 }
 
 bool FCognitiveEditorTools::HasSetDynamicExportDirectoryHasSceneId() const
@@ -2062,7 +2094,8 @@ bool FCognitiveEditorTools::HasSetDynamicExportDirectoryHasSceneId() const
 	if (!HasDeveloperKey()) { return false; }
 	auto scenedata = GetCurrentSceneData();
 	if (!scenedata.IsValid()) { return false; }
-	return !FCognitiveEditorTools::GetDynamicsExportDirectory().EqualTo(FText::FromString(""));
+	if (GetBaseExportDirectory().Len() == 0) { return false; }
+	return true;
 }
 
 bool FCognitiveEditorTools::HasFoundBlenderHasSelection() const
@@ -2074,16 +2107,6 @@ bool FCognitiveEditorTools::HasFoundBlenderHasSelection() const
 FText FCognitiveEditorTools::GetBlenderPath() const
 {
 	return FText::FromString(BlenderPath);
-}
-
-FText FCognitiveEditorTools::GetBaseExportDirectory() const
-{
-	return FText::FromString(BaseExportDirectory);
-}
-
-FText FCognitiveEditorTools::GetDynamicsExportDirectory() const
-{
-	return FText::FromString("-"+DynamicsExportDirectory+ "-");
 }
 
 void FCognitiveEditorTools::SearchForBlender()
@@ -2651,7 +2674,7 @@ void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
 
 FReply FCognitiveEditorTools::ReexportDynamicMeshesCmd()
 {
-	ReexportDynamicMeshes(DynamicsExportDirectory);
+	ReexportDynamicMeshes(GetDynamicsExportDirectory());
 	return FReply::Handled();
 }
 
@@ -2734,12 +2757,8 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 	GConfig->Flush(false, GEngineIni);
 }
 
-void FCognitiveEditorTools::WizardExport(bool all)
+void FCognitiveEditorTools::WizardExport()
 {
-	if (all)
-		Export_All();
-	else
-		Export_Selected();
 	List_Materials();
 
 	FProcHandle fph = Reduce_Meshes_And_Textures();
@@ -2750,11 +2769,6 @@ void FCognitiveEditorTools::WizardExport(bool all)
 
 		TakeScreenshot();
 	}
-
-	//WaitingForBlender = true;
-
-	//create screenshot directory if not done already
-
 }
 
 void FCognitiveEditorTools::WizardUpload()
@@ -2803,7 +2817,7 @@ FProcHandle FCognitiveEditorTools::Reduce_Meshes_And_Textures()
 	}
 
 	FString SceneName = tempworld->GetMapName();
-	FString ObjPath = BaseExportDirectory;
+	FString ObjPath = FPaths::Combine(BaseExportDirectory,GetCurrentSceneData()->Name);
 
 	if (ObjPath.Len() == 0)
 	{
@@ -2850,6 +2864,30 @@ FProcHandle FCognitiveEditorTools::Reduce_Meshes_And_Textures()
 
 	//TODO when procHandle is complete, upload exported files to sceneexplorer.com
 	return BlenderReduceAllWizardProc;
+}
+
+
+FText FCognitiveEditorTools::GetBaseExportDirectoryDisplay() const
+{
+	return FText::FromString(BaseExportDirectory);
+}
+
+//c:/users/me/desktop/export/scenename/
+FText FCognitiveEditorTools::GetSceneExportDirectoryDisplay(FString scenename) const
+{
+	return FText::FromString(FPaths::Combine(BaseExportDirectory,scenename));
+}
+
+//c:/users/me/desktop/export/scenename/
+FText FCognitiveEditorTools::GetCurrentSceneExportDirectoryDisplay() const
+{
+	return FText::FromString(FPaths::Combine(BaseExportDirectory, GetCurrentSceneData()->Name));
+}
+
+//c:/users/me/desktop/export/dynamics/
+FText FCognitiveEditorTools::GetDynamicsExportDirectoryDisplay() const
+{
+	return FText::FromString(FPaths::Combine(BaseExportDirectory, "dynamics"));
 }
 
 #undef LOCTEXT_NAMESPACE

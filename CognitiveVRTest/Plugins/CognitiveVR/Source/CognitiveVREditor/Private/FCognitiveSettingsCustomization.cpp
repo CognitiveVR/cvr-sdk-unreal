@@ -389,14 +389,14 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 					SNew(SButton)
 					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasFoundBlender)
 					.Text(FText::FromString("Select Export Directory"))
-					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Export_Directory)
+					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectBaseExportDirectory)
 				]
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
 				SNew(STextBlock)
-				.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBaseExportDirectory)
+				.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBaseExportDirectoryDisplay)
 			]
 
 			+ SVerticalBox::Slot()
@@ -614,19 +614,19 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 					SNew(STextBlock)
 					.Text(FText::FromString("2. Organize Meshes"))
 				]
-				+ SVerticalBox::Slot()
+				/*+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
 					SNew(SButton)
 					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::HasDeveloperKey)
 					.Text(FText::FromString("Select Dynamic Mesh Directory"))
 					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectDynamicsDirectory)
-				]
+				]*/
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
 					SNew(STextBlock)
-					.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDynamicsExportDirectory)
+					.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDynamicsExportDirectoryDisplay)
 				]
 				+SVerticalBox::Slot()
 				.AutoHeight()

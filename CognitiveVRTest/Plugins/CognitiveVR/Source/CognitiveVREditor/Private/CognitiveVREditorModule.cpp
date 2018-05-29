@@ -92,8 +92,6 @@ public:
 		//FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
 		//LevelEditorModule.OnCaptureSingleFrameAnimSequence().BindStatic(&FCognitiveVREditorModule::HandleCaptureSingleFrameAnimSequence);
 
-		GLog->Log("COGNITIVE MODULE BEGIN");
-
 		// register standalone UI
 		LevelEditorTabManagerChangedHandle = LevelEditorModule.OnTabManagerChanged().AddLambda([]()
 		{
@@ -108,13 +106,11 @@ public:
 
 			//FSlateStyleRegistry::RegisterSlateStyle(*StyleSet.Get());
 
-
-			GLog->Log("---------------......................ontabmanagerchagnd");
 			FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
 			LocalLevelEditorModule.GetLevelEditorTabManager()->RegisterTabSpawner(FName("CognitiveSceneSetup"), FOnSpawnTab::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab))
 				.SetGroup(WorkspaceMenu::GetMenuStructure().GetToolsCategory())
 				.SetDisplayName(LOCTEXT("SceneSetupTabTitle", "Cognitive Scene Setup"))
-				.SetTooltipText(LOCTEXT("SceneSetupTooltipText", "Open the Sequence Recorder tab."));
+				.SetTooltipText(LOCTEXT("SceneSetupTooltipText", "Open the Cognitive Scene Setup Wizard"));
 				//.SetIcon(FSlateIcon(StyleSet, "CognitiveSceneWizardTabIcon"));
 		});
 

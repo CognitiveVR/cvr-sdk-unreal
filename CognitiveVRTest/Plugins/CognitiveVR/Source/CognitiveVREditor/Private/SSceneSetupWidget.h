@@ -65,6 +65,7 @@ public:
 
 	EVisibility IsIntroVisible() const;
 	EVisibility IsKeysVisible() const;
+	EVisibility IsBlenderVisible() const;
 	EVisibility IsExplainDynamicsVisible() const;
 	EVisibility IsExplainSceneVisible() const;
 	EVisibility IsDynamicsVisible() const;
@@ -85,8 +86,8 @@ public:
 	EVisibility IsSceneVersionUpload() const;
 	EVisibility IsIntroNewVersionVisible() const;
 
-	FReply Export_Selected();
-	FReply Export_All();
+	//FReply Export_Selected();
+	//FReply Export_All();
 
 	EVisibility ARButtonVisibility() const;
 	FReply ARSkipExport();
@@ -137,4 +138,34 @@ public:
 
 	FOptionalSize GetScreenshotWidth() const;
 	FOptionalSize GetScreenshotHeight() const;
+
+
+	FReply EvaluateExport();
+	bool NoExportGameplayMeshes;
+	ECheckBoxState GetNoExportGameplayMeshCheckbox() const;
+	void OnChangeNoExportGameplayMesh(ECheckBoxState newstate)
+	{
+		if (newstate == ECheckBoxState::Checked)
+		{
+			NoExportGameplayMeshes = true;
+		}
+		else
+		{
+			NoExportGameplayMeshes = false;
+		}
+	}
+	bool OnlyExportSelected;
+	ECheckBoxState GetOnlyExportSelectedCheckbox() const;
+	void OnChangeOnlyExportSelected(ECheckBoxState newstate)
+	{
+		if (newstate == ECheckBoxState::Checked)
+		{
+			OnlyExportSelected = true;
+		}
+		else
+		{
+			OnlyExportSelected = false;
+		}
+	}
+
 };
