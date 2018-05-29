@@ -13,52 +13,80 @@ FCognitiveEditorTools* FCognitiveEditorTools::GetInstance()
 	return CognitiveEditorToolsInstance;
 }
 
-//GET dynamic object manifest                           https ://api.sceneexplorer.com/versions/:versionId/objects
+//GET dynamic object manifest
 FString FCognitiveEditorTools::GetDynamicObjectManifest(FString versionid)
 {
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	if (Gateway.Len() == 0)
+	{
+		Gateway = "data.cognitive3d.com";
+	}
 	return "https://" + Gateway + "/v0/versions/" + versionid + "/objects";
 }
 
-//POST dynamic object manifest                          https://data.sceneexplorer.com/objects/:sceneId?version=:versionNumber
+//POST dynamic object manifest
 FString FCognitiveEditorTools::PostDynamicObjectManifest(FString sceneid, int32 versionnumber)
 {
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	if (Gateway.Len() == 0)
+	{
+		Gateway = "data.cognitive3d.com";
+	}
 	return "https://" + Gateway + "/v0/objects/" + sceneid + "?version=" + FString::FromInt(versionnumber);
 }
 
-//POST dynamic object mesh data							https://data.sceneexplorer.com/objects/:sceneId/:exportDirectory?version=:versionNumber
+//POST dynamic object mesh data
 FString FCognitiveEditorTools::PostDynamicObjectMeshData(FString sceneid, int32 versionnumber, FString exportdirectory)
 {
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	if (Gateway.Len() == 0)
+	{
+		Gateway = "data.cognitive3d.com";
+	}
 	return "https://" + Gateway + "/v0/objects/" + sceneid + "/" + exportdirectory + "?version=" + FString::FromInt(versionnumber);
 }
 
-//GET scene settings and read scene version             https://api.sceneexplorer.com/scenes/:sceneId
+//GET scene settings and read scene version
 FString FCognitiveEditorTools::GetSceneVersion(FString sceneid)
 {
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	if (Gateway.Len() == 0)
+	{
+		Gateway = "data.cognitive3d.com";
+	}
 	return "https://" + Gateway + "/v0/scenes/" + sceneid;
 }
 
-//POST scene screenshot                                 https://data.sceneexplorer.com/scenes/:sceneId/screenshot?version=:versionNumber
+//POST scene screenshot
 FString FCognitiveEditorTools::PostScreenshot(FString sceneid, FString versionnumber)
 {
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	if (Gateway.Len() == 0)
+	{
+		Gateway = "data.cognitive3d.com";
+	}
 	return "https://" + Gateway + "/v0/scenes/" + sceneid + "/screenshot?version=" + versionnumber;
 }
 
-//POST upload decimated scene                           https://data.sceneexplorer.com/scenes
+//POST upload decimated scene
 FString FCognitiveEditorTools::PostNewScene()
 {
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	if (Gateway.Len() == 0)
+	{
+		Gateway = "data.cognitive3d.com";
+	}
 	return "https://" + Gateway + "/v0/scenes";
 }
 
-//POST upload and replace existing scene                https://data.sceneexplorer.com/scenes/:sceneId
+//POST upload and replace existing scene
 FString FCognitiveEditorTools::PostUpdateScene(FString sceneid)
 {
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	if (Gateway.Len() == 0)
+	{
+		Gateway = "data.cognitive3d.com";
+	}
 	return "https://" + Gateway + "/v0/scenes/" + sceneid;
 }
 
@@ -77,7 +105,7 @@ void FCognitiveEditorTools::Initialize()
 	//should be able to update gateway while unreal is running, but cache if not in editor since that's nuts
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
 
-	CognitiveEditorToolsInstance->BaseExportDirectory = FPaths::GameDir();
+	//CognitiveEditorToolsInstance->BaseExportDirectory = FPaths::GameDir();
 
 	//should update both editor urls and session data urls
 }
@@ -899,7 +927,7 @@ FReply FCognitiveEditorTools::Export_Selected()
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
-	FString exportDir = FPaths::Combine(BaseExportDirectory, GetCurrentSceneData()->Name);
+	FString exportDir = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
 
 	GEditor->ExportMap(tempworld, *exportDir, true);
 
@@ -925,7 +953,7 @@ FReply FCognitiveEditorTools::Export_All()
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
-	FString exportDir = FPaths::Combine(BaseExportDirectory, GetCurrentSceneData()->Name);
+	FString exportDir = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
 
 	GEditor->ExportMap(tempworld, *exportDir, false);
 	//FEditorFileUtils::Export(false);
@@ -1179,7 +1207,7 @@ bool FCognitiveEditorTools::PickFile(const FString& Title, const FString& FileTy
 
 FReply FCognitiveEditorTools::TakeScreenshot()
 {
-	FString dir = BaseExportDirectory+"/"+GetCurrentSceneData()->Name+"/screenshot/";
+	FString dir = BaseExportDirectory+"/"+GetCurrentSceneName()+"/screenshot/";
 	if (VerifyOrCreateDirectory(dir))
 	{
 		FScreenshotRequest::RequestScreenshot(dir + "screenshot", false, false);
@@ -1507,7 +1535,7 @@ FReply FCognitiveEditorTools::UploadScene()
 
 	GLog->Log("FCognitiveEditorTools::UploadScene upload scene to " + url);
 	//TODO listen for response. when the response returns, request the scene version with auth token
-	UploadFromDirectory(url, BaseExportDirectory, "scene");
+	UploadFromDirectory(url, GetCurrentSceneExportDirectory(), "scene");
 
 	return FReply::Handled();
 }
@@ -1711,7 +1739,6 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 			container.BodyBinary = byteResult;
 
 			contentArray.Add(container);
-			GLog->Log("++++++++++++++++++++++++++++++++++++++upload screenshot");
 		}
 		else
 		{
@@ -1936,7 +1963,6 @@ TArray<FString> FCognitiveEditorTools::GetAllFilesInDirectory(const FString dire
 			basicPath.RemoveFromStart(directory + "/");
 			if (basicPath.Contains("\"") || basicPath.Contains("/"))
 			{
-				GLog->Log("skip subdirectory " + basicPath);
 				continue;
 			}
 		}
@@ -2025,6 +2051,13 @@ bool FCognitiveEditorTools::HasFoundBlenderAndExportDir() const
 bool FCognitiveEditorTools::HasFoundBlenderAndDynamicExportDir() const
 {
 	if (GetBaseExportDirectory().Len() == 0) { return false; }
+	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe");
+}
+
+bool FCognitiveEditorTools::HasFoundBlenderDynamicExportDirSelection() const
+{
+	if (GetBaseExportDirectory().Len() == 0) { return false; }
+	if (GEditor->GetSelectedActorCount() == 0) { return false; }
 	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe");
 }
 
@@ -2459,8 +2492,6 @@ void FCognitiveEditorTools::SceneVersionRequest(FEditorSceneData data)
 
 	HttpRequest->SetURL(GetSceneVersion(data.Id));
 
-	GLog->Log("FCognitiveTools::SceneVersionRequest send scene version request");
-
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
 	//HttpRequest->SetHeader("Authorization", TEXT("Data " + FAnalyticsCognitiveVR::Get().EditorAuthToken));
 	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
@@ -2489,7 +2520,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 	{
 		//internal server error
 		GLog->Log("FCognitiveTools::SceneVersionResponse 500-ish internal server error");
-		WizardUploadError = "FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode());
+		WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode());
 		return;
 	}
 	if (responseCode >= 400)
@@ -2499,7 +2530,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		{
 			//not authorized
 			GLog->Log("FCognitiveTools::SceneVersionResponse not authorized!");
-			WizardUploadError = "FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode());
+			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode());
 			//DEBUG_RequestAuthToken();
 			//auto httprequest = RequestAuthTokenCallback();
 			//if (httprequest)
@@ -2512,7 +2543,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		{
 			//maybe no scene?
 			GLog->Log("FCognitiveTools::SceneVersionResponse some error. Maybe no scene?");
-			WizardUploadError = "FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode());
+			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode());
 			return;
 		}
 	}
@@ -2520,8 +2551,6 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 	//parse response content to json
 
 	TSharedPtr<FJsonObject> JsonSceneSettings;
-
-	GLog->Log(Response->GetContentAsString());
 
 	TSharedRef<TJsonReader<>>Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
 	if (FJsonSerializer::Deserialize(Reader, JsonSceneSettings))
@@ -2817,7 +2846,7 @@ FProcHandle FCognitiveEditorTools::Reduce_Meshes_And_Textures()
 	}
 
 	FString SceneName = tempworld->GetMapName();
-	FString ObjPath = FPaths::Combine(BaseExportDirectory,GetCurrentSceneData()->Name);
+	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
 
 	if (ObjPath.Len() == 0)
 	{
@@ -2881,7 +2910,7 @@ FText FCognitiveEditorTools::GetSceneExportDirectoryDisplay(FString scenename) c
 //c:/users/me/desktop/export/scenename/
 FText FCognitiveEditorTools::GetCurrentSceneExportDirectoryDisplay() const
 {
-	return FText::FromString(FPaths::Combine(BaseExportDirectory, GetCurrentSceneData()->Name));
+	return FText::FromString(FPaths::Combine(BaseExportDirectory, FCognitiveEditorTools::GetInstance()->GetCurrentSceneName()));
 }
 
 //c:/users/me/desktop/export/dynamics/

@@ -106,6 +106,9 @@ public:
 	const FSlateBrush* GetSceneBlueTexture() const;
 	FSlateBrush* SceneBlueTexture;
 
+	const FSlateBrush* GetBlueprintStartTexture() const;
+	FSlateBrush* BlueprintStartTexture;
+
 	TSharedRef<ITableRow> OnGenerateSceneExportFileRow(TSharedPtr<FString> InItem, const TSharedRef<STableViewBase>& OwnerTable);
 	EVisibility DisplayWizardThrobber() const;
 	

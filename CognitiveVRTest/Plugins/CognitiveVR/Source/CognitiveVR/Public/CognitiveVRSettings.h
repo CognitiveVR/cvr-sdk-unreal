@@ -37,7 +37,7 @@ class UCognitiveVRSettings
 		int32 GazeBatchSize = 64;
 
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-	FString Gateway = "cognitive3d";
+	FString Gateway = "data.cognitive3d.com";
 
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	FString SessionViewer = "sceneexplorer.com/scene/";

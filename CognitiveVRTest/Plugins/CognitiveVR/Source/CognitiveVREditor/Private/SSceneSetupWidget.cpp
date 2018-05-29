@@ -335,13 +335,21 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 			]
 
+			+ SVerticalBox::Slot()
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
+				.Text(FText::FromString("Create a new temporary directory to hold all the exported files needed for scene uploading"))
+			]
+
 			+SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(FMargin(0,24,0,24))
 			[
 				SNew(SButton)
 				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-				.Text(FText::FromString("Select Export Directory"))
+				.Text(FText::FromString("Create Export Directory"))
 				.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectBaseExportDirectory)
 			]
 
@@ -451,18 +459,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Text(FText::FromString("All geometry without Dynamic Object Components will be uploaded to Scene Explorer. This will give you spatial context when you record player sessions"))
 			]
 
-			+ SVerticalBox::Slot()
-			.Padding(0, 0, 0, 4)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.VAlign(VAlign_Center)
-			[
-				SNew(STextBlock)
-				.ColorAndOpacity(FLinearColor::Yellow)
-				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-				.Text(FText::FromString("Important - Export as \"*.obj\"!"))
-			]
-
 			+SVerticalBox::Slot()
+			.HAlign(HAlign_Center)
 			.AutoHeight()
 			[
 				SNew(SHorizontalBox)
@@ -483,6 +481,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 			+SVerticalBox::Slot()
+			.HAlign(HAlign_Center)
 			.AutoHeight()
 			[
 				SNew(SHorizontalBox)
@@ -632,7 +631,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Top)
-				.AutoHeight()
+				
 				.Padding(0,0,0,10)
 			[
 				SNew(STextBlock)
@@ -783,7 +782,34 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("Just add a Player Tracker Component to your player character actor and call StartSession in blueprints!\n\n\n\nYou will be recording user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard"))
+				.Text(FText::FromString("Add a PlayerTracker Component to your Player Actor and add the following to your Level Blueprint:"))
+			]
+
+			+ SVerticalBox::Slot()
+			.HAlign(HAlign_Center)
+			.VAlign(VAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, 10)
+			[
+				SNew(SBox)
+				.WidthOverride(321)
+				.HeightOverride(128)
+				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+				[
+					SNew(SImage)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+					.Image(this, &SSceneSetupWidget::GetBlueprintStartTexture)
+				]
+			]
+
+			+ SVerticalBox::Slot()
+			.VAlign(VAlign_Center)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+				.AutoWrapText(true)
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("That's it!\n\nYou will be recording user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard"))
 			]
 
 			+ SVerticalBox::Slot()
@@ -857,7 +883,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 		];
 
 		FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
-		FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
 		FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 		FCognitiveEditorTools::GetInstance()->SearchForBlender();
 		FCognitiveEditorTools::GetInstance()->WizardUploadError = "";
@@ -877,6 +902,10 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 		texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("scene_grey.png");
 		BrushName = FName(*texturepath);
 		SceneGreyTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 180));
+
+		texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("bp_startsession.png");
+		BrushName = FName(*texturepath);
+		BlueprintStartTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 180));
 }
 
 FReply SSceneSetupWidget::EvaluateExport()
@@ -928,7 +957,7 @@ FReply SSceneSetupWidget::EvaluateExport()
 		{
 			GEditor->SelectActor((ToBeSelected[i]), true, false, true);
 		}
-		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneData()->Name + ".obj";
+		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
 
 		GEditor->ExportMap(tempworld, *ExportedSceneFile, true);
 	}
@@ -963,19 +992,19 @@ FReply SSceneSetupWidget::EvaluateExport()
 			GEditor->SelectActor(*ObstacleItr, true, false, true);
 		}
 
-		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneData()->Name + ".obj";
+		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
 		GEditor->ExportMap(tempworld, *ExportedSceneFile, true);
 	}
 	else if (!NoExportGameplayMeshes && OnlyExportSelected)
 	{
 		//directly export everything currently selected
-		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneData()->Name + ".obj";
+		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
 		GEditor->ExportMap(tempworld, *ExportedSceneFile, true);
 	}
 	else if (!NoExportGameplayMeshes && !OnlyExportSelected)
 	{
 		//export everything, including bsp and dynamics
-		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneData()->Name + ".obj";
+		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
 		GEditor->ExportMap(tempworld, *ExportedSceneFile, false);
 	}
 
@@ -1064,6 +1093,10 @@ const FSlateBrush* SSceneSetupWidget::GetSceneGreyTexture() const
 const FSlateBrush* SSceneSetupWidget::GetScreenshotBrushTexture() const
 {
 	return ScreenshotTexture;
+}
+const FSlateBrush* SSceneSetupWidget::GetBlueprintStartTexture() const
+{
+	return BlueprintStartTexture;
 }
 
 /*FReply SSceneSetupWidget::Export_Selected()
@@ -1207,6 +1240,7 @@ FReply SSceneSetupWidget::NextPage()
 	{
 		FCognitiveEditorTools::GetInstance()->SaveAPIKeyToFile(DisplayAPIKey);
 		FCognitiveEditorTools::GetInstance()->SaveDeveloperKeyToFile(DisplayDeveloperKey);
+		FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
 	}
 	if (CurrentPage == 2)
 	{
@@ -1412,7 +1446,7 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 
 	if (CurrentPage == 2)
 	{
-		if (FCognitiveEditorTools::GetInstance()->HasFoundBlender())
+		if (FCognitiveEditorTools::GetInstance()->HasFoundBlender() && FCognitiveEditorTools::GetInstance()->BaseExportDirectory.Len() > 0)
 		{
 			return true;
 		}
@@ -1421,7 +1455,9 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 
 	if (CurrentPage == 6)
 	{
-		return SceneWasExported;
+		FString sceneExportDir = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory();
+
+		return FCognitiveEditorTools::VerifyDirectoryExists(sceneExportDir);
 	}
 
 	return true;

@@ -249,17 +249,25 @@ public:
 	FText GetCurrentSceneExportDirectoryDisplay() const;
 	FString GetCurrentSceneExportDirectory()
 	{
-		return FPaths::Combine(BaseExportDirectory, GetCurrentSceneData()->Name);
+		UWorld* myworld = GWorld->GetWorld();
+
+		FString currentSceneName = myworld->GetMapName();
+		return FPaths::Combine(BaseExportDirectory, currentSceneName);
 	}
 	//c:/users/me/desktop/export/dynamics/
 	FText GetDynamicsExportDirectoryDisplay() const;
 	FString GetDynamicsExportDirectory()
 	{
-		return FPaths::Combine(BaseExportDirectory, "dynamics");
+		return FPaths::Combine(BaseExportDirectory, TEXT("dynamics"));
 	}
 	FReply SelectBaseExportDirectory();
 
+	FString GetCurrentSceneName()
+	{
+		UWorld* myworld = GWorld->GetWorld();
 
+		return myworld->GetMapName();
+	}
 
 
 	void CurrentSceneVersionRequest();
@@ -288,15 +296,28 @@ public:
 		return true;
 	}
 
-	//If this function cannot find or create the directory, returns false.
+	//If this function cannot find the file, returns false.
 	static FORCEINLINE bool VerifyFileExists(FString& TestPath)
 	{
 		// Every function call, unless the function is inline, adds a small
 		// overhead which we can avoid by creating a local variable like so.
 		// But beware of making every function inline!
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-
 		if (PlatformFile.FileExists(*TestPath))
+		{
+			return true;
+		}
+		return false;
+	}
+
+	//If this function cannot find the file, returns false.
+	static FORCEINLINE bool VerifyDirectoryExists(FString& TestPath)
+	{
+		// Every function call, unless the function is inline, adds a small
+		// overhead which we can avoid by creating a local variable like so.
+		// But beware of making every function inline!
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		if (PlatformFile.DirectoryExists(*TestPath))
 		{
 			return true;
 		}
@@ -349,6 +370,7 @@ public:
 	//bool HasSavedCustomerId() const;
 	//bool CustomerIdDoesntMatchFile() const;
 	bool LoginAndCustonerIdAndBlenderExportDir() const;
+	bool HasFoundBlenderDynamicExportDirSelection() const;
 	//FText GetCustomerId() const;
 
 	ECheckBoxState HasFoundBlenderCheckbox() const;
