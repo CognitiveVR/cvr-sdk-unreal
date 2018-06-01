@@ -103,9 +103,14 @@ void CustomEvent::SendData()
 	TArray<TSharedPtr<FJsonValue>> dataArray;
 
 	wholeObj->SetStringField("userid", cog->GetUserID());
+	if (!cog->LobbyId.IsEmpty())
+	{
+		wholeObj->SetStringField("lobbyId", cog->LobbyId);
+	}
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonEventPart);
+	wholeObj->SetStringField("formatversion", "1.0");
 	jsonEventPart++;
 
 	for (int32 i = 0; i != events.Num(); ++i)

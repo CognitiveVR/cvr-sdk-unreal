@@ -5,6 +5,7 @@
 #include "Private/CognitiveVRPrivatePCH.h"
 #include "Runtime/Analytics/Analytics/Public/Interfaces/IAnalyticsProviderModule.h"
 #include "Private/api/customevent.h"
+#include "Private/CognitiveVRProvider.h"
 
 //#include "IAnalyticsProviderModule.h"
 //#include "Core.h"

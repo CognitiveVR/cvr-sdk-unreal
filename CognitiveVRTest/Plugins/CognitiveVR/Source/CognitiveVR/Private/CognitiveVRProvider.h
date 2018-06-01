@@ -51,7 +51,7 @@ public:
 	//class ExitPoll;
 	//class UDynamicObject;
 
-	class FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
+	class COGNITIVEVR_API FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
 	{
 		/** Unique Id representing the session the analytics are recording for */
 		FString SessionId;
@@ -102,10 +102,6 @@ public:
 		virtual void RecordCurrencyGiven(const FString& GameCurrencyType, int32 GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		virtual void RecordError(const FString& Error, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		virtual void RecordProgress(const FString& ProgressType, const FString& ProgressHierarchy, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
-
-
-		//custom cognitive
-		
 		
 		TSharedPtr<CustomEvent> customevent;
 		TSharedPtr<Network> network;
@@ -114,6 +110,9 @@ public:
 		FString GetDeviceID() const;
 		//void SetDeviceID(const FString& InDeviceID);
 		//double LastSesisonTimestamp = 1;
+
+		void SetLobbyId(FString lobbyId);
+		FString LobbyId;
 
 		double GetSessionTimestamp() const;
 

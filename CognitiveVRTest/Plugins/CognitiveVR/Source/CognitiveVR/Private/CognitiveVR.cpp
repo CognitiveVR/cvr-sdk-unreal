@@ -251,6 +251,11 @@ void FAnalyticsProviderCognitiveVR::OnLevelLoaded()
 
 }
 
+void FAnalyticsProviderCognitiveVR::SetLobbyId(FString lobbyId)
+{
+	LobbyId = lobbyId;
+}
+
 void FAnalyticsProviderCognitiveVR::EndSession()
 {
 	if (!customevent.IsValid())

@@ -157,6 +157,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 
+	if (!s->HasStartedSession()) { return; }
 	if (!SnapshotOnInterval) { return; }
 
 	currentTime += DeltaTime;
@@ -482,8 +483,13 @@ void UDynamicObject::SendData()
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 
 	wholeObj->SetStringField("userid", cog->GetUserID());
+	if (!cog->LobbyId.IsEmpty())
+	{
+		wholeObj->SetStringField("lobbyId", cog->LobbyId);
+	}
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionid", cog->GetSessionID());
+	wholeObj->SetStringField("formatversion", "1.0");
 	wholeObj->SetNumberField("part", jsonPart);
 	jsonPart++;
 

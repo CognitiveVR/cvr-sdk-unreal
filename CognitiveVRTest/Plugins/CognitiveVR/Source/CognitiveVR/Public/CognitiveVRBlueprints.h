@@ -58,6 +58,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
 		static void SetSessionName(const FString name);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
+		static void SetLobbyId(const FString lobbyId);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
 	static void RecordSensor(const FString Name, const float Value);

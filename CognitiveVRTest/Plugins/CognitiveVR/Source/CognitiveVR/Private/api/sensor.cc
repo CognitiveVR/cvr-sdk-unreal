@@ -53,9 +53,14 @@ void Sensors::SendData()
 	TArray< TSharedPtr<FJsonValue> > DataArray;
 
 	wholeObj->SetStringField("name", s->GetUserID());
+	if (!s->LobbyId.IsEmpty())
+	{
+		wholeObj->SetStringField("lobbyId", s->LobbyId);
+	}
 	wholeObj->SetNumberField("timestamp", (int32)s->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionid", s->GetSessionID());
 	wholeObj->SetNumberField("part", jsonPart);
+	wholeObj->SetStringField("formatversion", "1.0");
 	jsonPart++;
 
 	wholeObj->SetStringField("data", "SENSORDATAHERE");
