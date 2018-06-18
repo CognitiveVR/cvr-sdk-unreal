@@ -71,6 +71,21 @@ public:
 		GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->APIKey, EngineIni);
 		GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
 
+		FString tempGateway;
+		GConfig->GetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), tempGateway, EngineIni);
+
+		if (tempGateway.IsEmpty())
+		{
+			GLog->Log("CognitiveVRModule::StartupModule set default gateway in ini");
+			FString defaultgateway = "data.cognitive3d.com";
+			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), *defaultgateway, EngineIni);
+			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("CustomEventBatchSize"), 64, EngineIni);
+			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SensorDataLimit"), 64, EngineIni);
+			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("GazeBatchSize"), 64, EngineIni);
+			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("DynamicDataLimit"), 64, EngineIni);
+		}
+		
+
 		//ConfigFileHasChanged = true;
 
 		//TickDelegate = FTickerDelegate::CreateRaw(this, &FCognitiveVREditorModule::Tick);
