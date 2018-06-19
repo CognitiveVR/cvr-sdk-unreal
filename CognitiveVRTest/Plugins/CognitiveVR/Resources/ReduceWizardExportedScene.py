@@ -127,10 +127,20 @@ print("=============================================deleted stuff")
 ops.import_scene.obj(filepath=exportPath+"/"+fileName+".obj", use_edges=True, use_smooth_groups=True, use_split_objects=True, use_split_groups=True, use_groups_as_vgroups=False, use_image_search=True, split_mode='ON', global_clamp_size=0, axis_forward='-Z', axis_up='Y')
 print("=============================================import complete")
 
+#import fbx geometry brushes
+if os.path.isfile(exportPath+"/"+fileName+".fbx"):
+	ops.import_scene.fbx(filepath=exportPath+"/"+fileName+".fbx")
+	print("==============imported fbx and it was great")
+else:
+	print("couldn't find "+exportPath+"/"+fileName+".fbx")
+
 #decimate. remesh bsp
 for obj in scene.objects:
 	if obj.type == 'MESH':
 		scene.objects.active = obj
+		
+		bpy.ops.object.scale_clear()
+		
 		mod = bpy.context.object.modifiers.new('Decimate','DECIMATE')
 
 		faceCount = len(bpy.context.object.data.polygons)
@@ -147,16 +157,17 @@ for obj in scene.objects:
 
 		mod.ratio = ratio
 		ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
-		if obj.name == 'BSP':
-			print("found bsp, recalc normals")			
-			ops.object.mode_set(mode='EDIT')
-			ops.mesh.remove_doubles(threshold=0.0001)
-			ops.mesh.normals_make_consistent(inside=False)
-			ops.object.mode_set(mode='OBJECT')
-			#TODO box uv unwrap and put some checker pattern on it
-			
-			mod = bpy.context.object.modifiers.new('Remesh','REMESH')
-			ops.object.modifier_apply(apply_as='DATA', modifier="Remesh")
+#		if obj.name == 'BSP':
+#			print("found bsp, recalc normals")			
+#			ops.object.mode_set(mode='EDIT')
+#			ops.mesh.remove_doubles(threshold=0.0001)
+#			ops.mesh.normals_make_consistent(inside=False)
+#			ops.object.mode_set(mode='OBJECT')
+#			#TODO box uv unwrap and put some checker pattern on it
+#			
+#			mod = bpy.context.object.modifiers.new('Remesh','REMESH')
+#			ops.object.modifier_apply(apply_as='DATA', modifier="Remesh")
+
 
 
 print("=============================================decimate complete")
@@ -310,6 +321,9 @@ for dir in onlydirectories:
 	print("==========remove directory "+exportPath+"/"+dir)
 	#shutil.rmtree(os.path.join(exportPath,dir))
 	shutil.rmtree(exportPath+'/'+dir)
+
+if os.path.isfile(exportPath+"/"+fileName+".fbx"):
+	os.remove(exportPath+"/"+fileName+".fbx")
 
 print("ALL DONE")
 exit()

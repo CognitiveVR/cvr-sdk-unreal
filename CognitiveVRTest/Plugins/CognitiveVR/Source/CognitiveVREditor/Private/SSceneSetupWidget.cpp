@@ -501,6 +501,27 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.Text(FText::FromString("Only Export Selected"))
 				]
 			]
+			+SVerticalBox::Slot()
+			.HAlign(HAlign_Center)
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				+SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SCheckBox)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+					.IsChecked(this,&SSceneSetupWidget::GetExportGeometryBrushesCheckbox)
+					.OnCheckStateChanged(this,&SSceneSetupWidget::OnChangeExportGeometryBrushes)
+				]
+				+SHorizontalBox::Slot()
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+					.Text(FText::FromString("Export Geometry Brushes"))
+				]
+			]
 
 			+ SVerticalBox::Slot()
 			.Padding(0, 0, 0, 4)
@@ -1008,6 +1029,29 @@ FReply SSceneSetupWidget::EvaluateExport()
 		GEditor->ExportMap(tempworld, *ExportedSceneFile, false);
 	}
 
+	if (ExportGeometryBrushes)
+	{
+		GEditor->SelectNone(false, true, false);
+
+		for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			//AStaticMeshActor *Mesh = *ActorItr;
+
+			ABrush* obj = Cast<ABrush>((*ActorItr));
+			AVolume* vol = Cast<AVolume>((*ActorItr));
+
+			if (obj == nullptr) { continue; } //skip non-brushes
+			if (vol != nullptr) { continue; } //skip volumes
+
+			GEditor->SelectActor((*ActorItr), true, true, true, true);
+		}
+
+		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".fbx";
+		GLog->Log("Export Geometry Brushes to " + ExportedSceneFile);
+
+		GEditor->ExportMap(tempworld, *ExportedSceneFile, true);
+	}
 
 	FCognitiveEditorTools::GetInstance()->WizardExport();
 	SceneWasExported = true;
@@ -1024,6 +1068,12 @@ ECheckBoxState SSceneSetupWidget::GetNoExportGameplayMeshCheckbox() const
 ECheckBoxState SSceneSetupWidget::GetOnlyExportSelectedCheckbox() const
 {
 	if (OnlyExportSelected)return ECheckBoxState::Checked;
+	return ECheckBoxState::Unchecked;
+}
+
+ECheckBoxState SSceneSetupWidget::GetExportGeometryBrushesCheckbox() const
+{
+	if (ExportGeometryBrushes)return ECheckBoxState::Checked;
 	return ECheckBoxState::Unchecked;
 }
 
