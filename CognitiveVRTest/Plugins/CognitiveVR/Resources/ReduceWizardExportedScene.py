@@ -22,245 +22,265 @@ productid = args[7]
 if (len(args))<9:
  args.append('')
 sdkVersion = args[8]
-if (len(args))<10:
- args.append('ABSOLUTELYNOTHING3475236148265')
-excludeMeshes = args[9]
-
-#copy textures
-#fix mtl
-#reimport
-#decimate
-#export
 
 #textures
-diffuse_ext='_D.bmp'
-other_img_ext='.bmp'
+#diffuse_ext='_D.bmp'
+#other_img_ext='.bmp'
 
 img_dirs=[]								# list of image directories in the root folder
 files=[]                                 # list for files 
 diffuse=[]                                 # list for imgage files 
 originalImagePathes=[]                           # where to find the original bmps
-mtl_ext='.mtl'
 mtlpath=''
 objPath=''
-obj_ext='.obj'
-excludeMeshArray = excludeMeshes.split(',')
 
-copymtlstring='\n'
 
-print("---------------exclude meshes " + excludeMeshes);
-
-for temp in os.listdir(exportPath):
-	tempdir = os.path.join(exportPath,temp)
-	print("============found file/dir: "+tempdir)
-	if os.path.isdir(tempdir):
-		if tempdir.endswith("dynamics"):
-			continue
-		img_dirs.append(tempdir)
-		print("============found dir: "+temp)
-
-#copy image files into root
+#find all file paths
 for tempPath, dirs, files in os.walk(exportPath):
 	for name in files:
 		print (tempPath + "  " + name)
 		if "dynamics" in tempPath:
 			print("------skip dynamic file------ " + name)
 			continue
-		if name.endswith(diffuse_ext):
+		if name.endswith('_D.bmp'):
 			diffuse.append(name)
 			newpath = os.path.join(tempPath, name)
 			originalImagePathes.append(newpath)
 			print ("======image src: " + newpath)
 			print ("======image dst: " + exportPath)
-			#check that this file exists
 			if os.path.isfile(newpath):
 				shutil.copy(newpath,exportPath)
-		if name.endswith(mtl_ext) and not name.endswith ("_unrealdec.mtl"):
+		if name.endswith('.mtl'):
 			mtlpath = os.path.join(tempPath, name)
-		if name.endswith(obj_ext) and not name.endswith ("_unrealdec.obj"):
+			print("found mtl path " + mtlpath)
+		if name.endswith('.obj'):
 			objPath = os.path.join(tempPath,name)
 
-for dir in img_dirs:
-	print ("---------- dirs: " + dir)
-	os.rename(dir,dir+"_old")
+#add empty line in beginning of mtlpath
+image_count=len(diffuse)
+if image_count > 0:
+	mo = open(mtlpath, encoding='utf-8-sig')
+	readString = mo.read()
+	outstrings=[]
+	outstrings.append('\n\n')
+	#==========================replace mtl with png references to textures
+	for line in readString.splitlines():
+		outstrings.append(line+'\n')
+	mo.close()
 
-image_count=len(diffuse)                        # count of diffuse 
-print("image_count " + str(image_count))       
+	#remove the mtl
+	os.remove(mtlpath)
 
-
-#==========================add a space at the beginning of the mtl
-mo = open(mtlpath, encoding='utf-8-sig')
-readString = mo.read()
-
-outstrings=[]
-outstrings.append('\n\n')
-
-#==========================replace mtl with png references to textures
-for line in readString.splitlines():
-
-	if line.endswith(diffuse_ext):
-		outstrings.append(line.replace(".bmp",".png")+'\n')
-	elif not line.endswith(other_img_ext):
-		outstrings.append(line.replace(".bmp",".png")+'\n'+'\n')		
-
-mo.close()
-
-#remove the mtl
-os.remove(mtlpath)
-
-#write to new file (BMP)
-nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
-nmo.writelines(outstrings)
-nmo.close()
-print("=============================================mtl fixed")
+	#write to new file (pngs)
+	nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
+	nmo.writelines(outstrings)
+	nmo.close()
 
 
+#import meshes
+#decimate
+#export meshes
 
-#select all
-for ob in scene.objects:
- ob.select = True
-ops.object.delete()
-print("=============================================deleted stuff")
+#copy textures to root
+#set mtl to root texture paths
 
+#convert bmp textures to pngs
 
-#import
-ops.import_scene.obj(filepath=exportPath+"/"+fileName+".obj", use_edges=True, use_smooth_groups=True, use_split_objects=True, use_split_groups=True, use_groups_as_vgroups=False, use_image_search=True, split_mode='ON', global_clamp_size=0, axis_forward='-Z', axis_up='Y')
-print("=============================================import complete")
-
-#import fbx geometry brushes
-if os.path.isfile(exportPath+"/"+fileName+".fbx"):
-	ops.import_scene.fbx(filepath=exportPath+"/"+fileName+".fbx")
-	print("==============imported fbx and it was great")
-else:
-	print("couldn't find "+exportPath+"/"+fileName+".fbx")
-
-#decimate. remesh bsp
-for obj in scene.objects:
-	if obj.type == 'MESH':
-		scene.objects.active = obj
-		
-		bpy.ops.object.scale_clear()
-		
-		mod = bpy.context.object.modifiers.new('Decimate','DECIMATE')
-
-		faceCount = len(bpy.context.object.data.polygons)
-		ratio = 1.0
-
-		ratio = (faceCount-minFaces)/maxFaces
-
-		ratio = 1-ratio
-
-		if ratio >= 1.0:
-			ratio = 1.0
-		if ratio <= 0.1:
-			ratio = 0.1
-
-		mod.ratio = ratio
-		ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
-#		if obj.name == 'BSP':
-#			print("found bsp, recalc normals")			
-#			ops.object.mode_set(mode='EDIT')
-#			ops.mesh.remove_doubles(threshold=0.0001)
-#			ops.mesh.normals_make_consistent(inside=False)
-#			ops.object.mode_set(mode='OBJECT')
-#			#TODO box uv unwrap and put some checker pattern on it
-#			
-#			mod = bpy.context.object.modifiers.new('Remesh','REMESH')
-#			ops.object.modifier_apply(apply_as='DATA', modifier="Remesh")
-
-
-
-print("=============================================decimate complete")
-
-bpy.ops.object.select_all(action='DESELECT')
-
-# select objects by type
-for o in scene.objects:
-	for excludeMesh in excludeMeshArray:
-		print("=============================================checking if " + o.name + " contained in " + excludeMesh)
+def DecimateMeshes():
+	print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+	print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++decimate")
+	print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 	
-		if excludeMesh in o.name:
-			print("=============================================delete " + o.name)
-			o.select = True
-		
-# call the operator once
-bpy.ops.object.delete()
-print("=============================================delete all exclude meshes")
-
-#move this obj into a new folder called 'raw_model_old' or something
-if not os.path.exists(os.path.join(exportPath,"raw_model_old/")):
-    os.makedirs(os.path.join(exportPath,"raw_model_old/"))
-
-shutil.move(objPath,os.path.join(exportPath,"raw_model_old/"))
-shutil.move(mtlpath,os.path.join(exportPath,"raw_model_old/"))
+	#select all
+	for ob in scene.objects:
+	 ob.select = True
+	ops.object.delete()
+	print("=============================================deleted stuff")
 
 
+	#import
+	ops.import_scene.obj(filepath=exportPath+"/"+fileName+".obj", use_edges=True, use_smooth_groups=True, use_split_objects=True, use_split_groups=True, use_groups_as_vgroups=False, use_image_search=True, split_mode='ON', global_clamp_size=0, axis_forward='-Z', axis_up='Y')
 
-
-#export
-bpy.ops.object.join()
-ops.export_scene.obj(filepath=exportPath+"/"+fileName+"_unrealdec.obj", use_edges=False, path_mode='RELATIVE')
-print("=============================================export complete")
-
-
-
-for tempPath, dirs, files in os.walk(exportPath):
-	for name in files:
-		if name.endswith("_unrealdec.mtl"):
-			mtlpath = os.path.join(tempPath, name)
-
-#does nothing
-for line in readString.splitlines():
-	if line.endswith(diffuse_ext):
-		outstrings.append(line.replace(".bmp",".png")+'\n')
-	elif not line.endswith(other_img_ext):
-		outstrings.append(line.replace(".bmp",".png")+'\n'+'\n')
-
-mo = open(mtlpath, encoding='utf-8-sig')
-readString = mo.read()
-
-
-
-
-
-finalmtlstrings=[]
-print("=============================================mtl start")
-#==========================replace mtl with png references to textures
-for line in readString.splitlines():
-	print("original line " + line)
-	if line.startswith("map_Kd"):
-		temppath = line.replace("map_Kd ","")
-		head, tail = os.path.split(temppath)
-		
-		#before actually appending this to the mtl, check if the .bmp image file exists
-		
-		print(">>>>>is this a file? "+exportPath+"/"+tail[:-4]+".bmp")
-		
-		if os.path.isfile(exportPath+"/"+tail[:-4]+".bmp"):
-			finalmtlstrings.append("map_Kd " + tail+"\n")
-			print(">>>>>append map_kd as " + tail)
-		else:
-			print("^^^^^^^^^^^ couldn't find file " + tail)
-	elif line.startswith("Ka"):
-		finalmtlstrings.append("Ka 0 0 0"+"\n")
-	elif line.startswith("Ks"):
-		finalmtlstrings.append("Ks 0 0 0"+"\n")
+	#import fbx geometry brushes
+	if os.path.isfile(exportPath+"/"+fileName+".fbx"):
+		ops.import_scene.fbx(filepath=exportPath+"/"+fileName+".fbx")
 	else:
-		finalmtlstrings.append(line+"\n")
-		#print("????????unknown line as " + line)
+		print("couldn't find "+exportPath+"/"+fileName+".fbx")
 		
+	print("=============================================import complete")
 
-mo.close()
+	#decimate. remesh bsp
+	for obj in scene.objects:
+		if obj.type == 'MESH':
+			scene.objects.active = obj
+			
+			bpy.ops.object.scale_clear()
+			
+			mod = bpy.context.object.modifiers.new('Decimate','DECIMATE')
 
-#remove the mtl
-os.remove(mtlpath)
+			faceCount = len(bpy.context.object.data.polygons)
+			ratio = 1.0
 
-#write to new file (BMP)
-nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
-nmo.writelines(finalmtlstrings)
-nmo.close()
-print("=============================================mtl fixed")
+			ratio = (faceCount-minFaces)/maxFaces
 
+			ratio = 1-ratio
+
+			if ratio >= 1.0:
+				ratio = 1.0
+			if ratio <= 0.1:
+				ratio = 0.1
+
+			mod.ratio = ratio
+			ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
+
+
+	print("=============================================decimate complete")
+
+	bpy.ops.object.select_all(action='DESELECT')
+	
+	os.makedirs(os.path.join(exportPath,"mesh_delete/"))
+	shutil.move(objPath,os.path.join(exportPath,"mesh_delete/"))
+
+	bpy.ops.object.select_all(action='SELECT')
+
+
+	#export
+	bpy.ops.object.join()
+	ops.export_scene.obj(filepath=exportPath+"/"+fileName+".obj", use_edges=False, path_mode='RELATIVE')
+	print("=============================================export complete")
+
+def FlattenTexturePaths(mtlpath):
+	print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+	print("++++++++++++++++++++++++++++++++++++++++++++flatten texture paths")
+	print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+	#get all subdirectories with images
+	for temp in os.listdir(exportPath):
+		tempdir = os.path.join(exportPath,temp)
+		print("============found file/dir: "+tempdir)
+		if os.path.isdir(tempdir):
+			if tempdir.endswith("dynamics"):
+				continue
+			img_dirs.append(tempdir)
+			print("============found dir: "+temp)
+
+	#mark directories for deletion
+	for dir in img_dirs:
+		print ("---------- dirs: " + dir)
+		os.rename(dir,dir+"_delete")
+
+	image_count=len(diffuse)                        # count of diffuse 
+	print("image_count " + str(image_count))       
+
+	#replace mtl bmps with pngs
+	readString = ''
+	#if image_count > 0:
+	#	print("============================ replace mtl bmps with pngs")
+	#	#==========================add a space at the beginning of the mtl
+	#	mo = open(mtlpath, encoding='utf-8-sig')
+	#	readString = mo.read()
+    #
+	#	outstrings=[]
+	#	outstrings.append('\n\n')
+    #
+	#	#==========================replace mtl with png references to textures
+	#	for line in readString.splitlines():
+	#		print("original line " + line)
+	#		if line.endswith('_D.bmp'):
+	#			outstrings.append(line.replace(".bmp",".png")+'\n')
+	#		elif not line.endswith('.bmp'):
+	#			outstrings.append(line.replace(".bmp",".png")+'\n')
+    #
+	#	mo.close()
+    #
+	#	#remove the mtl
+	#	os.remove(mtlpath)
+    #
+	#	#write to new file (pngs)
+	#	nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
+	#	nmo.writelines(outstrings)
+	#	nmo.close()
+	#	print("=============================================mtl fixed")
+	#else:
+	#	print("============================ no bmp images to fix!")
+	#	for tempPath, dirs, files in os.walk(exportPath):
+	#		for name in files:
+	#			if name.endswith(".mtl"):
+	#				mtlpath = os.path.join(tempPath, name)
+
+	if image_count > 0:
+		mo = open(mtlpath, encoding='utf-8-sig')
+		readString = mo.read()
+		finalmtlstrings=[]
+		print("=============================================mtl start")
+		#==========================replace mtl with png references to textures. remove path, since images will be copied to root in step 3
+		for line in readString.splitlines():
+			print("original line " + line)
+			if line.startswith("map_Kd"):
+				temppath = line.replace("map_Kd ","").replace(".bmp",".png")
+				head, tail = os.path.split(temppath)
+				tail = tail.replace(" ","")
+				finalmtlstrings.append("map_Kd " + tail+"\n")
+				
+				#if os.path.isfile(exportPath+"/"+tail[:-4]+".bmp"):
+				#	print(">>>>>append map_kd as " + tail)
+				#else:
+				#	print("^^^^^^^^^^^ couldn't find file " + tail)
+			elif line.startswith("Ka"):
+				finalmtlstrings.append("Ka 0 0 0"+"\n")
+			elif line.startswith("Ks"):
+				finalmtlstrings.append("Ks 0 0 0"+"\n")
+			elif line.endswith('.bmp'):
+				continue
+			else:
+				finalmtlstrings.append(line+"\n")
+				#print("????????unknown line as " + line)
+		mo.close()
+
+		#remove the mtl
+		os.remove(mtlpath)
+
+		#write to new file (BMP)
+		nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
+		nmo.writelines(finalmtlstrings)
+		nmo.close()
+		print("=============================================mtl fixed")
+	
+def ConvertTextures():
+	print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+	print("+++++++++++++++++++++++++++++++++++++++++++++++++convert textures")
+	print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+	#remove bmp files
+	#downsize pngs
+
+	onlyfiles = [f for f in os.listdir(exportPath) if os.path.isfile(os.path.join(exportPath, f))]
+
+	for file in onlyfiles:
+		print("open"+file)
+		if (file.endswith('.bmp')):
+			print("THIS IS AN IMAGE: "+file)
+			image = bpy.data.images.load(exportPath+"/"+file)
+			
+			pixels = list(image.pixels)
+			
+			image2 = bpy.data.images.new(image.name, width=image.size[0], height=image.size[1])
+			image2.filepath = exportPath+"/"+file.replace(".bmp",".png")
+			#num_pixels = len(image.pixels)
+			#dm = [(0.2) for cp in range(num_pixels)]
+			image2.pixels = pixels
+			image2.file_format = 'PNG'
+			#image2.depth = '8'
+			image2.scale(image.size[0]//1,image.size[1]//1)
+			image2.save()
+			os.remove(exportPath+"/"+file)
+			#i2 = bpy.data.images.new()
+	print("==================================all files done")
+
+
+DecimateMeshes()
+FlattenTexturePaths(mtlpath)
+ConvertTextures()
+
+#write json settings file
 f = open (os.path.join(exportPath,'settings.json'),'w')
 
 productid = productid[:-5]
@@ -270,60 +290,23 @@ f.close()
 
 print("=============================================json write complete")
 
-
-
-
-
-##============================CONVERT TEXTURE SECTION
-
-
-
-
-
-
-#remove bmp files
-#downsize pngs
-
-onlyfiles = [f for f in os.listdir(exportPath) if os.path.isfile(os.path.join(exportPath, f))]
 onlydirectories = [d for d in os.listdir(exportPath) if os.path.isdir(os.path.join(exportPath, d))]
 
-
-#bpy.context.window.screen = bpy.data.screens['UV Editing'] #uv window needs to be open?
-
-
-for file in onlyfiles:
-	print("open"+file)
-	if (file.endswith(other_img_ext)):
-		print("THIS IS AN IMAGE: "+file)
-		image = bpy.data.images.load(exportPath+"/"+file)
-		
-		pixels = list(image.pixels)
-		
-		image2 = bpy.data.images.new(image.name, width=image.size[0], height=image.size[1])
-		image2.filepath = exportPath+"/"+file.replace(".bmp",".png")
-		#num_pixels = len(image.pixels)
-		#dm = [(0.2) for cp in range(num_pixels)]
-		image2.pixels = pixels
-		image2.file_format = 'PNG'
-		#image2.depth = '8'
-		image2.scale(image.size[0]//1,image.size[1]//1)
-		image2.save()
-		os.remove(exportPath+"/"+file)
-		#i2 = bpy.data.images.new()
-print("==================================all files done")
-
+#remove unused directories
 for dir in onlydirectories:
 	print (dir)
 
 	if dir.endswith("dynamics"):
-		print("====leave dynamics directory")
+		print("====skip dynamics directory")
 		continue
-	print("==========remove directory "+exportPath+"/"+dir)
-	#shutil.rmtree(os.path.join(exportPath,dir))
-	shutil.rmtree(exportPath+'/'+dir)
+	if dir.endswith("_delete"):
+		print("==========remove directory "+exportPath+"/"+dir)
+		shutil.rmtree(exportPath+'/'+dir)
 
 if os.path.isfile(exportPath+"/"+fileName+".fbx"):
 	os.remove(exportPath+"/"+fileName+".fbx")
 
+	
+	
 print("ALL DONE")
 exit()
