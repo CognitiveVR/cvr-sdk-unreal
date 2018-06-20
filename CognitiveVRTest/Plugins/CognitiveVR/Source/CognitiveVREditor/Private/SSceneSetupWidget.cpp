@@ -523,7 +523,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 #pragma region "upload screen"
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Top)
-				.AutoHeight()
+				
+				.Padding(0, 0, 0, 10)
 			[
 				SNew(STextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsNewSceneUpload)
