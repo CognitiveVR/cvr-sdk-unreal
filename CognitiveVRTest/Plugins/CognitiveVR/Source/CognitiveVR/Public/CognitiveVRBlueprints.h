@@ -75,4 +75,16 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Exit Poll")
 	static void SendExitPollAnswers(const TArray<FExitPollAnswer>& Answers);
+
+
+
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
+	static void FlushEvents();
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
+	static bool StartSession();
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
+	static void EndSession();
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
+	static void SetUserId(const FString Name);
+
 };

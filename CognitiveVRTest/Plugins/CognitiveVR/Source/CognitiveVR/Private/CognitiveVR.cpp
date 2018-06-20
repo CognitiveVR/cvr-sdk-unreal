@@ -256,6 +256,11 @@ void FAnalyticsProviderCognitiveVR::SetLobbyId(FString lobbyId)
 	LobbyId = lobbyId;
 }
 
+void FAnalyticsProviderCognitiveVR::SetSessionName(FString sessionName)
+{
+	SetSessionProperty("cvr.sessionname", sessionName);
+}
+
 void FAnalyticsProviderCognitiveVR::EndSession()
 {
 	if (!customevent.IsValid())

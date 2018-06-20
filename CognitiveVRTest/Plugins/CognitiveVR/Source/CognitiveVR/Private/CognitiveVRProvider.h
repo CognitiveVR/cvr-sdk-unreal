@@ -127,6 +127,7 @@ public:
 
 		FString GetCurrentSceneId();
 		FString GetCurrentSceneVersionNumber();
+		void SetSessionName(FString sessionName);
 
 		void OnLevelLoaded();
 		void SetWorld(UWorld* world);
