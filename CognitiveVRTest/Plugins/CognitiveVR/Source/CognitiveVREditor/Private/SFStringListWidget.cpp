@@ -6,13 +6,13 @@ void SFStringListWidget::Construct(const FArguments& Args)
 	ChildSlot
 		[
 			SNew(SVerticalBox)
-			+SVerticalBox::Slot()
+			/*+SVerticalBox::Slot()
 			.AutoHeight()
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			[
 				SNew(STextBlock)
 				.Text(FText::FromString("Sub Directories"))
-			]
+			]*/
 			+SVerticalBox::Slot()
 			[
 				SAssignNew(ListViewWidget, SListView<TSharedPtr<FString>>)

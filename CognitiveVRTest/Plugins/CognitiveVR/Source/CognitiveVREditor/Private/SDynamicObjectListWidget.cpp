@@ -18,22 +18,25 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 					+ SHeaderRow::Column("name")
 					.FillWidth(1)
 					[
-						SNew(STextBlock)
-						.Text(FText::FromString("Name"))
+						SNew(SRichTextBlock)
+						.DecoratorStyleSet(&FEditorStyle::Get())
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Name</>"))
 					]
 
 					+ SHeaderRow::Column("mesh")
 					.FillWidth(1)
 					[
-						SNew(STextBlock)
-						.Text(FText::FromString("MeshName"))
+						SNew(SRichTextBlock)
+						.DecoratorStyleSet(&FEditorStyle::Get())
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Mesh Name</>"))
 					]
 
 					+ SHeaderRow::Column("id")
 					.FillWidth(0.3)
 					[
-						SNew(STextBlock)
-						.Text(FText::FromString("Id"))
+						SNew(SRichTextBlock)
+						.DecoratorStyleSet(&FEditorStyle::Get())
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Id</>"))
 					]
 				)
 			]

@@ -63,4 +63,6 @@ public:
 	void OnCommitedExportTextureRefactor(int32 InNewValue, ETextCommit::Type CommitType);
 
 	void OnCheckStateChangedStaticOnly(const bool& InNewValue);
+
+	FReply SelectAndRefreshExportDirectory();
 };

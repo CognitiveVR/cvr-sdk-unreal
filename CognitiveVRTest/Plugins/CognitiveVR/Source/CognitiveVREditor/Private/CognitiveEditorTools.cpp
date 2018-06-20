@@ -2227,7 +2227,7 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 	}
 	else
 	{
-		DuplicateDyanmicObjectVisibility = EVisibility::Hidden;
+		DuplicateDyanmicObjectVisibility = EVisibility::Collapsed;
 	}
 
 	return FReply::Handled();
