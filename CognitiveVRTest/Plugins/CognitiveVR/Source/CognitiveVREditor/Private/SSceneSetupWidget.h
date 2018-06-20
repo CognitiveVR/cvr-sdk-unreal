@@ -142,22 +142,6 @@ public:
 	FOptionalSize GetScreenshotWidth() const;
 	FOptionalSize GetScreenshotHeight() const;
 
-	bool ExportGeometryBrushes = true;
-	ECheckBoxState GetExportGeometryBrushesCheckbox() const;
-	void OnChangeExportGeometryBrushes(ECheckBoxState newstate)
-	{
-		if (newstate == ECheckBoxState::Checked)
-		{
-			ExportGeometryBrushes = true;
-		}
-		else
-		{
-			ExportGeometryBrushes = false;
-		}
-	}
-
-
-
 	FReply EvaluateExport();
 	bool NoExportGameplayMeshes = true;
 	ECheckBoxState GetNoExportGameplayMeshCheckbox() const;

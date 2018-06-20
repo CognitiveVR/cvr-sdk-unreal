@@ -477,7 +477,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				[
 					SNew(STextBlock)
 					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-					.Text(FText::FromString("Do not export Skybox, Camera, Player or Dynamics"))
+					.Text(FText::FromString("Do not export Skybox, Cameras or Dynamics"))
 				]
 			]
 			+SVerticalBox::Slot()
@@ -501,27 +501,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.Text(FText::FromString("Only Export Selected"))
 				]
 			]
-			+SVerticalBox::Slot()
-			.HAlign(HAlign_Center)
-			.AutoHeight()
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-				+SHorizontalBox::Slot()
-				.AutoWidth()
-				[
-					SNew(SCheckBox)
-					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-					.IsChecked(this,&SSceneSetupWidget::GetExportGeometryBrushesCheckbox)
-					.OnCheckStateChanged(this,&SSceneSetupWidget::OnChangeExportGeometryBrushes)
-				]
-				+SHorizontalBox::Slot()
-				[
-					SNew(STextBlock)
-					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-					.Text(FText::FromString("Export Geometry Brushes"))
-				]
-			]
 
 			+ SVerticalBox::Slot()
 			.Padding(0, 0, 0, 4)
@@ -538,104 +517,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.OnClicked(this,&SSceneSetupWidget::EvaluateExport)
 				]
 			]
-
-			/*+SVerticalBox::Slot()
-			.FillHeight(1)
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-				+SHorizontalBox::Slot() //select export meshes
-				.Padding(10, 0, 10, 0)
-				.FillWidth(0.5)
-				[
-					SNew(SVerticalBox)
-					+ SVerticalBox::Slot()
-					.Padding(0, 0, 0, 4)
-					[
-						SNew(SBox)
-						.HeightOverride(64)
-						[
-							SNew(STextBlock)
-							.AutoWrapText(true)
-							.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-							.Justification(ETextJustify::Center)
-							.Text(FText::FromString("Choose which meshes will be exported for your scene. This is the recommended option. This should skip any skyboxes, cameras and CSG"))
-						]
-					]
-					+ SVerticalBox::Slot()
-					.HAlign(HAlign_Center)
-					.VAlign(VAlign_Top)
-					[
-						SNew(SBox)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.HeightOverride(32)
-						[
-							SNew(SButton)
-							.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasFoundBlender)
-							.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-							.Text(FText::FromString("Select Export Meshes"))
-							.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Export_Meshes)
-						]
-					]
-
-					+ SVerticalBox::Slot()
-					[
-						SNew(SBox)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.HeightOverride(32)
-						[
-							SNew(SButton)
-							.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasFoundBlenderAndHasSelection)
-							.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-							.Text(FText::FromString("Export Selected Scene Actors"))
-							.OnClicked(this, &SSceneSetupWidget::Export_Selected)
-						]
-					]
-				]
-				+SHorizontalBox::Slot()
-				.AutoWidth()
-				.Padding(FMargin(24.0f, 0.0f, 24.0f, 0.0f))
-				[
-					SNew(SSeparator)
-					.Orientation(Orient_Vertical)
-					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-				]
-				+SHorizontalBox::Slot() //export all
-				.Padding(10,0,10,0)
-				.FillWidth(0.5)
-				[
-					SNew(SVerticalBox)
-					+ SVerticalBox::Slot()
-					.Padding(0, 0, 0, 4)
-					[
-						SNew(SBox)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.HeightOverride(64)
-						[
-							SNew(STextBlock)
-							.AutoWrapText(true)
-							.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-							.Justification(ETextJustify::Center)
-							.Text(FText::FromString("This will export every mesh from your scene, including Dynamic Objects, CSG and cameras"))
-						]
-					]
-					+ SVerticalBox::Slot()
-					[
-						SNew(SBox)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.HeightOverride(32)
-						[
-							SNew(SButton)
-							.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasFoundBlender)
-							.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-							.Text(FText::FromString("Export All Scene Actors"))
-							.OnClicked(this, &SSceneSetupWidget::Export_All)
-							//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Export_All)
-						]
-					]
-				]
-			]*/
-
 
 #pragma endregion
 
@@ -939,119 +820,93 @@ FReply SSceneSetupWidget::EvaluateExport()
 		return FReply::Handled();
 	}
 
-	if (NoExportGameplayMeshes && OnlyExportSelected)
+	TArray<AActor*> ToBeExported;
+	TArray<AActor*> ToBeExportedFinal;
+
+	if (OnlyExportSelected) //only export selected
 	{
-		//go through current selection and remove dynamics/skybox/camera/player
-
-		TArray<AActor*> ToBeSelected;
-
 		for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
 		{
-			//iterate through selection, copy to another list, then set selection
 			if (AActor* Actor = Cast<AActor>(*It))
 			{
-				if (Actor->GetName().StartsWith("SkySphereBlueprint"))
-				{
-					continue;
-				}
-				UActorComponent* cameraComponent = Actor->GetComponentByClass(UCameraComponent::StaticClass());
-				if (cameraComponent != NULL)
-				{
-					continue;
-				}
-
-				UActorComponent* actorComponent = Actor->GetComponentByClass(UDynamicObject::StaticClass());
-				if (actorComponent != NULL)
-				{
-					continue;
-				}
-				UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
-				if (dynamicComponent != NULL)
-				{
-					continue;
-				}
-				ToBeSelected.Add(Actor);
+				ToBeExported.Add(Actor);
 			}
 		}
-
-		for (int32 i = 0; i < ToBeSelected.Num(); i++)
-		{
-			GEditor->SelectActor((ToBeSelected[i]), true, false, true);
-		}
-		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
-
-		GEditor->ExportMap(tempworld, *ExportedSceneFile, true);
 	}
-	else if (NoExportGameplayMeshes && !OnlyExportSelected)
+	else //select all
 	{
-		//select everything, then remove dynamics/skybox/camera/player
-		GEditor->SelectNone(false, true, false);
-
-		for (TActorIterator<AActor> ObstacleItr(tempworld); ObstacleItr; ++ObstacleItr)
+		UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();
+		GEditor->Exec(World, TEXT("actor select all"));
+		for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
 		{
-			if (ObstacleItr->GetName().StartsWith("SkySphereBlueprint"))
+			if (AActor* Actor = Cast<AActor>(*It))
+			{
+				ToBeExported.Add(Actor);
+			}
+		}
+	}
+
+
+	if (NoExportGameplayMeshes)
+	{
+		for (int32 i = 0; i < ToBeExported.Num(); i++)
+		{
+			if (ToBeExported[i]->GetName().StartsWith("SkySphereBlueprint"))
 			{
 				continue;
 			}
-			UActorComponent* cameraComponent = ObstacleItr->GetComponentByClass(UCameraComponent::StaticClass());
+			UActorComponent* cameraComponent = ToBeExported[i]->GetComponentByClass(UCameraComponent::StaticClass());
 			if (cameraComponent != NULL)
 			{
 				continue;
 			}
 
-			UActorComponent* actorComponent = ObstacleItr->GetComponentByClass(UDynamicObject::StaticClass());
+			UActorComponent* actorComponent = ToBeExported[i]->GetComponentByClass(UDynamicObject::StaticClass());
 			if (actorComponent != NULL)
 			{
 				continue;
 			}
-			UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
-			if (dynamicComponent != NULL)
-			{
-				continue;
-			}
-
-			GEditor->SelectActor(*ObstacleItr, true, false, true);
+			ToBeExportedFinal.Add(ToBeExported[i]);
 		}
-
-		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
-		GEditor->ExportMap(tempworld, *ExportedSceneFile, true);
 	}
-	else if (!NoExportGameplayMeshes && OnlyExportSelected)
+	else
 	{
-		//directly export everything currently selected
-		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
-		GEditor->ExportMap(tempworld, *ExportedSceneFile, true);
-	}
-	else if (!NoExportGameplayMeshes && !OnlyExportSelected)
-	{
-		//export everything, including bsp and dynamics
-		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
-		GEditor->ExportMap(tempworld, *ExportedSceneFile, false);
-	}
-
-	if (ExportGeometryBrushes)
-	{
-		GEditor->SelectNone(false, true, false);
-
-		for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+		//export everything, it's fine
+		for (int32 i = 0; i < ToBeExported.Num(); i++)
 		{
-			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-			//AStaticMeshActor *Mesh = *ActorItr;
-
-			ABrush* obj = Cast<ABrush>((*ActorItr));
-			AVolume* vol = Cast<AVolume>((*ActorItr));
-
-			if (obj == nullptr) { continue; } //skip non-brushes
-			if (vol != nullptr) { continue; } //skip volumes
-
-			GEditor->SelectActor((*ActorItr), true, true, true, true);
+			ToBeExportedFinal.Add(ToBeExported[i]);
 		}
-
-		FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".fbx";
-		GLog->Log("Export Geometry Brushes to " + ExportedSceneFile);
-
-		GEditor->ExportMap(tempworld, *ExportedSceneFile, true);
 	}
+	
+	
+	GEditor->SelectNone(false, true, false);
+	for (int32 i = 0; i < ToBeExportedFinal.Num(); i++)
+	{
+		GEditor->SelectActor((ToBeExportedFinal[i]), true, false, true);
+	}
+	FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
+
+	GEditor->ExportMap(tempworld, *ExportedSceneFile, true);
+
+
+	//always export all bsp geometry brushes
+	//export geometry as fbx
+	GEditor->SelectNone(false, true, false);
+
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		ABrush* obj = Cast<ABrush>((*ActorItr));
+		AVolume* vol = Cast<AVolume>((*ActorItr));
+
+		if (obj == nullptr) { continue; } //skip non-brushes
+		if (vol != nullptr) { continue; } //skip volumes
+
+		GEditor->SelectActor((*ActorItr), true, true, true, true);
+	}
+
+	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".fbx";
+
+	GEditor->ExportMap(tempworld, *ExportedSceneFile2, true);
 
 	FCognitiveEditorTools::GetInstance()->WizardExport();
 	SceneWasExported = true;
@@ -1068,12 +923,6 @@ ECheckBoxState SSceneSetupWidget::GetNoExportGameplayMeshCheckbox() const
 ECheckBoxState SSceneSetupWidget::GetOnlyExportSelectedCheckbox() const
 {
 	if (OnlyExportSelected)return ECheckBoxState::Checked;
-	return ECheckBoxState::Unchecked;
-}
-
-ECheckBoxState SSceneSetupWidget::GetExportGeometryBrushesCheckbox() const
-{
-	if (ExportGeometryBrushes)return ECheckBoxState::Checked;
 	return ECheckBoxState::Unchecked;
 }
 
