@@ -1263,7 +1263,7 @@ void* FCognitiveEditorTools::ChooseParentWindowHandle()
 
 FReply FCognitiveEditorTools::List_Materials()
 {
-	List_MaterialArgs("", BaseExportDirectory);
+	List_MaterialArgs("", BaseExportDirectory + "/" + GetCurrentSceneName());
 	return FReply::Handled();
 }
 
