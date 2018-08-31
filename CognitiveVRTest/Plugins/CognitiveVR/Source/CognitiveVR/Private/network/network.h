@@ -11,19 +11,21 @@
 class FAnalyticsProviderCognitiveVR;
 class HttpInterface;
 
-class Network
+namespace cognitivevrapi
 {
-    private:
+	class Network
+	{
+	private:
 		FAnalyticsProviderCognitiveVR* s;
 
-    public:
-        Network(FAnalyticsProviderCognitiveVR* sp);
+	public:
+		Network(FAnalyticsProviderCognitiveVR* sp);
 
 		void NetworkCall(FString suburl, FString contents);
-		
+
 		//TODO exitpoll with callback should be here
 		void NetworkExitPollGet(FString hook);
 		void NetworkExitPollPost(FString questionsetname, FString questionsetversion, FString contents);
-};
-
+	};
+}
 #endif  // COGNITIVEVR_NETWORK_H_

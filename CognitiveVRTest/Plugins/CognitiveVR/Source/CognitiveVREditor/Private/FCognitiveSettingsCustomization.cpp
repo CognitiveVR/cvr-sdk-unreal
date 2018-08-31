@@ -17,12 +17,12 @@ TSharedRef<IDetailCustomization> FCognitiveSettingsCustomization::MakeInstance()
 	return MakeShareable(CognitiveSettingsCustomizationInstance);
 }
 
-TArray<TSharedPtr<FEditorSceneData>> GetSceneData()
+TArray<TSharedPtr<cognitivevrapi::FEditorSceneData>> GetSceneData()
 {
 	return FCognitiveEditorTools::GetInstance()->GetSceneData();
 }
 
-TArray<TSharedPtr<FDynamicData>> FCognitiveSettingsCustomization::GetSceneDynamics()
+TArray<TSharedPtr<cognitivevrapi::FDynamicData>> FCognitiveSettingsCustomization::GetSceneDynamics()
 {
 	return FCognitiveEditorTools::GetInstance()->GetSceneDynamics();
 }
@@ -166,7 +166,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 			SNew(SBox)
 			.MaxDesiredHeight(200)
 			[
-			SNew(SListView<TSharedPtr<FEditorSceneData>>)
+			SNew(SListView<TSharedPtr<cognitivevrapi::FEditorSceneData>>)
 			.ItemHeight(24)
 			.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneData) //BIND
 			.OnGenerateRow(this, &FCognitiveSettingsCustomization::OnGenerateWorkspaceRow)
@@ -581,10 +581,10 @@ FReply FCognitiveSettingsCustomization::SelectAndRefreshExportDirectory()
 	return FReply::Handled();
 }
 
-TSharedRef<ITableRow> FCognitiveSettingsCustomization::OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
+TSharedRef<ITableRow> FCognitiveSettingsCustomization::OnGenerateWorkspaceRow(TSharedPtr<cognitivevrapi::FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	return
-		SNew(SComboRow< TSharedPtr<FEditorSceneData> >, OwnerTable)
+		SNew(SComboRow< TSharedPtr<cognitivevrapi::FEditorSceneData> >, OwnerTable)
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
@@ -626,10 +626,10 @@ TSharedRef<ITableRow> FCognitiveSettingsCustomization::OnGenerateWorkspaceRow(TS
 		];
 }
 
-TSharedRef<ITableRow> FCognitiveSettingsCustomization::OnGenerateDynamicRow(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
+TSharedRef<ITableRow> FCognitiveSettingsCustomization::OnGenerateDynamicRow(TSharedPtr<cognitivevrapi::FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	return
-		SNew(SComboRow< TSharedPtr<FDynamicData> >, OwnerTable)
+		SNew(SComboRow< TSharedPtr<cognitivevrapi::FDynamicData> >, OwnerTable)
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()

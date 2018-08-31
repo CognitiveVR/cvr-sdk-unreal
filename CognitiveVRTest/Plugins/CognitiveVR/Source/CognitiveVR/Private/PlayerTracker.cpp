@@ -74,7 +74,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	FVector pos;
 	FVector gaze;
 	FRotator rot;
-	double time = Util::GetTimestamp();
+	double time = cognitivevrapi::Util::GetTimestamp();
 	FString objectid = "";
 
 
@@ -82,7 +82,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
 	{
-		CognitiveLog::Info("UPlayerTracker::TickComponent--------------------------no controllers. skip");
+		cognitivevrapi::CognitiveLog::Info("UPlayerTracker::TickComponent--------------------------no controllers. skip");
 		//return FVector();
 		return;
 	}

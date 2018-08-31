@@ -14,22 +14,33 @@
 //#include "DynamicObject.h"
 #include "Engine.h"
 
-class FSceneData
+namespace cognitivevrapi
 {
-public:
-	FString Name = "";
-	FString Id = "";
-	int32 VersionNumber = 1;
-	int32 VersionId = 0;
+	// Only declaring class here
+	class Sensors;
+	class CustomEvent;
+	class Network;
+	//class ExitPoll;
+}
 
-	FSceneData(FString name, FString id, int32 versionnumber, int32 versionid)
+namespace cognitivevrapi
+{
+	class FSceneData
 	{
-		Name = name;
-		Id = id;
-		VersionNumber = versionnumber;
-		VersionId = versionid;
-	}
-};
+	public:
+		FString Name = "";
+		FString Id = "";
+		int32 VersionNumber = 1;
+		int32 VersionId = 0;
+
+		FSceneData(FString name, FString id, int32 versionnumber, int32 versionid)
+		{
+			Name = name;
+			Id = id;
+			VersionNumber = versionnumber;
+			VersionId = versionid;
+		}
+	};
 
 	enum CognitiveVRError {
 		kErrorSuccess = 0,
@@ -41,13 +52,14 @@ public:
 		kErrorRequestTimedOut = -6,
 		kErrorUnknown = -7
 	};
+}
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
-	class Network;
-	class CustomEvent;
+	class cognitivevrapi::Network;
+	class cognitivevrapi::CustomEvent;
 	class CognitiveVRResponse;
-	class Sensors;
+	class cognitivevrapi::Sensors;
 	//class ExitPoll;
 	//class UDynamicObject;
 
@@ -103,9 +115,9 @@ public:
 		virtual void RecordError(const FString& Error, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		virtual void RecordProgress(const FString& ProgressType, const FString& ProgressHierarchy, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		
-		TSharedPtr<CustomEvent> customevent;
-		TSharedPtr<Network> network;
-		TSharedPtr<Sensors> sensors;
+		TSharedPtr<cognitivevrapi::CustomEvent> customevent;
+		TSharedPtr<cognitivevrapi::Network> network;
+		TSharedPtr<cognitivevrapi::Sensors> sensors;
 		//TSharedPtr<FJsonObject> initProperties; //optional properties sent when initializing. platform, ram, etc
 		FString GetDeviceID() const;
 		//void SetDeviceID(const FString& InDeviceID);
@@ -132,10 +144,10 @@ public:
 		void OnLevelLoaded();
 		void SetWorld(UWorld* world);
 
-		TArray<TSharedPtr<FSceneData>> SceneData;
+		TArray<TSharedPtr<cognitivevrapi::FSceneData>> SceneData;
 		void CacheSceneData();
-		TSharedPtr<FSceneData> GetSceneData(FString scenename);
-		TSharedPtr<FSceneData> GetCurrentSceneData();
+		TSharedPtr<cognitivevrapi::FSceneData> GetSceneData(FString scenename);
+		TSharedPtr<cognitivevrapi::FSceneData> GetCurrentSceneData();
 
 		//FJsonObject GetDeviceProperties();
 		//FJsonObject GetUserProperties();

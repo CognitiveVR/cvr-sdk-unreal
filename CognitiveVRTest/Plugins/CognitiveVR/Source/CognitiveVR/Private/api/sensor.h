@@ -9,9 +9,11 @@
 
 class FAnalyticsProviderCognitiveVR;
 
-class COGNITIVEVR_API Sensors
+namespace cognitivevrapi
 {
-    private:
+	class COGNITIVEVR_API Sensors
+	{
+	private:
 		FAnalyticsProviderCognitiveVR* s;
 
 		TMap<FString, FString> somedatapoints;
@@ -20,10 +22,12 @@ class COGNITIVEVR_API Sensors
 		int32 sensorDataCount = 0;
 		int32 SensorThreshold = 16;
 
-    public:
+	public:
 		Sensors(FAnalyticsProviderCognitiveVR* sp);
 		void RecordSensor(FString Name, float value);
 		void SendData();
-        
-};
+
+	};
+}
+
 #endif  // COGNITIVEVR_SENSORS_H_

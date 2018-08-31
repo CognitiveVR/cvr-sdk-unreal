@@ -3,9 +3,9 @@
 */
 #include "Private/api/sensor.h"
 
-using namespace cognitivevrapi;
+//using namespace cognitivevrapi;
 
-Sensors::Sensors(FAnalyticsProviderCognitiveVR* sp)
+cognitivevrapi::Sensors::Sensors(FAnalyticsProviderCognitiveVR* sp)
 {
 	s = sp;
 
@@ -23,7 +23,7 @@ Sensors::Sensors(FAnalyticsProviderCognitiveVR* sp)
 	}
 }
 
-void Sensors::RecordSensor(FString Name, float value)
+void cognitivevrapi::Sensors::RecordSensor(FString Name, float value)
 {
 	if (somedatapoints.Contains(Name))
 	{
@@ -41,7 +41,7 @@ void Sensors::RecordSensor(FString Name, float value)
 	}
 }
 
-void Sensors::SendData()
+void cognitivevrapi::Sensors::SendData()
 {
 	if (s == NULL || !s->HasStartedSession())
 	{

@@ -9,7 +9,7 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 			+SVerticalBox::Slot()
 			.FillHeight(1)
 			[
-				SAssignNew(ListViewWidget, SListView<TSharedPtr<FDynamicData>>)
+				SAssignNew(ListViewWidget, SListView<TSharedPtr<cognitivevrapi::FDynamicData>>)
 				.ItemHeight(24)
 				.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneDynamics) //The Items array is the source of this listview
 				.OnGenerateRow(this, &SDynamicObjectListWidget::OnGenerateRowForList)
@@ -48,10 +48,10 @@ void SDynamicObjectListWidget::RefreshList()
 	ListViewWidget->RequestListRefresh();
 }
 
-TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
+TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<cognitivevrapi::FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	return
-		SNew(SComboRow< TSharedPtr<FDynamicData> >, OwnerTable)
+		SNew(SComboRow< TSharedPtr<cognitivevrapi::FDynamicData> >, OwnerTable)
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
@@ -92,7 +92,7 @@ TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<
 		];
 }
 
-FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
+FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<cognitivevrapi::FDynamicData> data)
 {
 	GEditor->SelectNone(false, true, false);
 

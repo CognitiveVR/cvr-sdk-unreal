@@ -46,8 +46,8 @@ public:
 	void SaveSceneData(FString sceneName, FString sceneKey);
 
 	//gets all the dynamics in the scene and saves them to SceneDynamics
-	TArray<TSharedPtr<FDynamicData>> SceneDynamics;
-	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
+	TArray<TSharedPtr<cognitivevrapi::FDynamicData>> SceneDynamics;
+	TArray<TSharedPtr<cognitivevrapi::FDynamicData>> GetSceneDynamics();
 
 	void OnAPIKeyChanged(const FText& Text);
 	void OnDeveloperKeyChanged(const FText& Text);
@@ -325,9 +325,9 @@ public:
 	}
 
 
-	TArray<TSharedPtr<FEditorSceneData>> SceneData;
+	TArray<TSharedPtr<cognitivevrapi::FEditorSceneData>> SceneData;
 	//returns SceneData array
-	TArray<TSharedPtr<FEditorSceneData>> GetSceneData() const;
+	TArray<TSharedPtr<cognitivevrapi::FEditorSceneData>> GetSceneData() const;
 
 	
 	//void SaveOrganizationNameToFile(FString organization);
@@ -359,9 +359,9 @@ public:
 	FReply ButtonCurrentSceneVersionRequest();
 	
 	//returns data about a scene by name
-	TSharedPtr<FEditorSceneData> GetSceneData(FString scenename) const;
+	TSharedPtr<cognitivevrapi::FEditorSceneData> GetSceneData(FString scenename) const;
 	//returns data about a scene by the currently open scene
-	TSharedPtr<FEditorSceneData> GetCurrentSceneData() const;
+	TSharedPtr<cognitivevrapi::FEditorSceneData> GetCurrentSceneData() const;
 
 	//has json file and no bmp files in export directory
 	bool HasConvertedFilesInDirectory() const;
@@ -375,11 +375,11 @@ public:
 
 	ECheckBoxState HasFoundBlenderCheckbox() const;
 
-	void SceneVersionRequest(FEditorSceneData data);
+	void SceneVersionRequest(cognitivevrapi::FEditorSceneData data);
 	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	FText GetDynamicsFromManifest() const;
-	TArray<TSharedPtr<FDynamicData>> SceneExplorerDynamics;
+	TArray<TSharedPtr<cognitivevrapi::FDynamicData>> SceneExplorerDynamics;
 	TArray<TSharedPtr<FString>> SubDirectoryNames;
 
 	FString GetProductID();
@@ -420,11 +420,14 @@ public:
 	void CreateExportFolderStructure();
 };
 
-//used for uploading multiple dynamics at once
-class FContentContainer
+namespace cognitivevrapi
 {
-public:
-	FString Headers;
-	FString BodyText;
-	TArray<uint8> BodyBinary;
-};
+	//used for uploading multiple dynamics at once
+	class FContentContainer
+	{
+	public:
+		FString Headers;
+		FString BodyText;
+		TArray<uint8> BodyBinary;
+	};
+}

@@ -28,13 +28,13 @@ public:
 	UCognitiveVRSettings *Settings;
 	IDetailLayoutBuilder *DetailLayoutPtr;
 
-	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
+	TArray<TSharedPtr<cognitivevrapi::FDynamicData>> GetSceneDynamics();
 	FReply RefreshDisplayDynamicObjectsCountInScene();
 
 	//TSharedPtr<SVerticalBox> SetDynamicBoxContent();
 
-	TSharedRef<ITableRow> OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
-	TSharedRef<ITableRow> OnGenerateDynamicRow(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
+	TSharedRef<ITableRow> OnGenerateWorkspaceRow(TSharedPtr<cognitivevrapi::FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
+	TSharedRef<ITableRow> OnGenerateDynamicRow(TSharedPtr<cognitivevrapi::FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
 
 	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
 	TSharedPtr<SDynamicObjectWebListWidget> WebDynamicList;

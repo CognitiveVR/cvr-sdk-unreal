@@ -1,7 +1,7 @@
 #include "CognitiveVREditorPrivatePCH.h"
 #include "SSceneSetupWidget.h"
 
-TArray<TSharedPtr<FDynamicData>> SSceneSetupWidget::GetSceneDynamics()
+TArray<TSharedPtr<cognitivevrapi::FDynamicData>> SSceneSetupWidget::GetSceneDynamics()
 {
 	return FCognitiveEditorTools::GetInstance()->GetSceneDynamics();
 }
@@ -1084,7 +1084,7 @@ EVisibility SSceneSetupWidget::IsSceneVersionUpload() const
 	if (CurrentPage != 7) { return EVisibility::Collapsed; }
 	
 
-	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
+	TSharedPtr<cognitivevrapi::FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
 	{
 		return EVisibility::Visible;
@@ -1097,7 +1097,7 @@ EVisibility SSceneSetupWidget::IsIntroNewVersionVisible() const
 	if (CurrentPage != 0) { return EVisibility::Collapsed; }
 
 
-	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
+	TSharedPtr<cognitivevrapi::FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
 	{
 		return EVisibility::Visible;
@@ -1109,7 +1109,7 @@ EVisibility SSceneSetupWidget::IsNewSceneUpload() const
 {
 	if (CurrentPage != 7) { return EVisibility::Collapsed; }
 	
-	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
+	TSharedPtr<cognitivevrapi::FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
 	{
 		return EVisibility::Collapsed;
@@ -1264,10 +1264,10 @@ TSharedRef<ITableRow> SSceneSetupWidget::OnGenerateSceneExportFileRow(TSharedPtr
 		];
 }
 
-TSharedRef<ITableRow> SSceneSetupWidget::OnGenerateRowForList(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
+TSharedRef<ITableRow> SSceneSetupWidget::OnGenerateRowForList(TSharedPtr<cognitivevrapi::FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	return
-		SNew(SComboRow< TSharedPtr<FDynamicData> >, OwnerTable)
+		SNew(SComboRow< TSharedPtr<cognitivevrapi::FDynamicData> >, OwnerTable)
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
@@ -1307,7 +1307,7 @@ TSharedRef<ITableRow> SSceneSetupWidget::OnGenerateRowForList(TSharedPtr<FDynami
 		];
 }
 
-FReply SSceneSetupWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
+FReply SSceneSetupWidget::SelectDynamic(TSharedPtr<cognitivevrapi::FDynamicData> data)
 {
 	GEditor->SelectNone(false, true, false);
 

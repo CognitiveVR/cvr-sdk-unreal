@@ -20,23 +20,23 @@ class SDynamicObjectListWidget : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SDynamicObjectListWidget){}
-	SLATE_ARGUMENT(TArray<TSharedPtr<FDynamicData>>, Items)
+	SLATE_ARGUMENT(TArray<TSharedPtr<cognitivevrapi::FDynamicData>>, Items)
 	SLATE_ARGUMENT(FCognitiveTools*, CognitiveTools)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& Args);
 
 	/* Adds a new textbox with the string to the list */
-	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FDynamicData> Item, const TSharedRef<STableViewBase>& OwnerTable);
+	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<cognitivevrapi::FDynamicData> Item, const TSharedRef<STableViewBase>& OwnerTable);
 
 	/* The list of strings */
-	TArray<TSharedPtr<FDynamicData>> Items;
+	TArray<TSharedPtr<cognitivevrapi::FDynamicData>> Items;
 	FCognitiveTools* CognitiveTools;
 
 	/* The actual UI list */
-	TSharedPtr< SListView< TSharedPtr<FDynamicData> > > ListViewWidget;
+	TSharedPtr< SListView< TSharedPtr<cognitivevrapi::FDynamicData> > > ListViewWidget;
 
-	FReply SelectDynamic(TSharedPtr<FDynamicData> data);
+	FReply SelectDynamic(TSharedPtr<cognitivevrapi::FDynamicData> data);
 
 	void RefreshList();
 };
