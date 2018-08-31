@@ -155,8 +155,8 @@ private:
 	int32 jsonGazePart = 1;
 
 	TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
-	void BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, FString objectId = "");
-	void BuildSnapshot(FVector position, FRotator rotation, double time);
+	void BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos, FString objectId = "");
+	void BuildSnapshot(FVector position, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos);
 
 public:
 	FCognitiveExitPollResponse OnExitPollResponse;

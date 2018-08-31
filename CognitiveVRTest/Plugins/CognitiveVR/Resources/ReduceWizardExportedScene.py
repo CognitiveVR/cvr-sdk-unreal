@@ -132,6 +132,7 @@ def DecimateMeshes():
 
 			mod.ratio = ratio
 			ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
+			#ops.mesh.customdata_custom_splitnormals_clear() #TEST should fix custom normal issue on bsp
 
 
 	print("=============================================decimate complete")
