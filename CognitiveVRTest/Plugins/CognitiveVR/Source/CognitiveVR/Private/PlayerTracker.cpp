@@ -71,9 +71,8 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 	currentTime -= PlayerSnapshotInterval;
 
-	FVector pos;
 	FVector gaze;
-	FRotator rot;
+
 	double time = cognitivevrapi::Util::GetTimestamp();
 	FString objectid = "";
 
@@ -89,20 +88,30 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 	//FVector finalLoc;
 
-	controllers[0]->GetPlayerViewPoint(pos, rot);
+	//=========================PLAYER MANAGER WITHOUT CAMERA
+	//FVector pos;
+	//FRotator rot;
+	//controllers[0]->GetPlayerViewPoint(pos, rot);
+	//
+	//FTransform camManTransform = controllers[0]->PlayerCameraManager->GetActorTransform();
+	////FVector camManForward = controllers[0]->PlayerCameraManager->GetActorForwardVector();
+	//
+	//FRotator temphmdrot;
+	//FVector temphmdpos;
+	//UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition(temphmdrot, temphmdpos);
+	//
+	//FVector finalPos = camManTransform.TransformPosition(temphmdrot.UnrotateVector(temphmdpos));
+	//captureLocation = finalPos - temphmdpos;
+	//
+	//captureRotation = rot;
 
-	FTransform camManTransform = controllers[0]->PlayerCameraManager->GetActorTransform();
-	//FVector camManForward = controllers[0]->PlayerCameraManager->GetActorForwardVector();
+	//=========================PLAYER MANAGER WITH CAMERA 
 
-	FRotator temphmdrot;
-	FVector temphmdpos;
-	UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition(temphmdrot, temphmdpos);
+	captureLocation = controllers[0]->PlayerCameraManager->GetCameraLocation();
+	captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
 
-	FVector finalPos = camManTransform.TransformPosition(temphmdrot.UnrotateVector(temphmdpos));
-	captureLocation = finalPos - temphmdpos;
-	pos = finalPos - temphmdpos;
 
-	captureRotation = rot;
+	
 
 	//look at dynamic object
 

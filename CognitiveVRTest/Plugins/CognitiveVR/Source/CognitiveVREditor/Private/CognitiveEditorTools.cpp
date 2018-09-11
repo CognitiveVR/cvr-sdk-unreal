@@ -1503,14 +1503,15 @@ FReply FCognitiveEditorTools::Reduce_Meshes()
 
 FString FCognitiveEditorTools::GetProductID()
 {
-	FString ValueReceived;
+	return FString("UNUSED");
+	/*FString ValueReceived;
 	GConfig->GetString(
 		TEXT("Analytics"),
 		TEXT("CognitiveVRApiKey"),
 		ValueReceived,
 		GEngineIni
 	);
-	return ValueReceived;
+	return ValueReceived;*/
 }
 
 FReply FCognitiveEditorTools::UploadScene()
@@ -2878,7 +2879,7 @@ FProcHandle FCognitiveEditorTools::Reduce_Meshes_And_Textures()
 
 	escapedExcludeMeshes = escapedExcludeMeshes.Replace(TEXT(" "), TEXT("\" \""));
 
-	FString productID = GetProductID();
+	FString productID = "UNUSED";// GetProductID();
 
 	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " " + MinPolyCount + " " + MaxPolyCount + " " + SceneName + " " + productID + " " + COGNITIVEVR_SDK_VERSION + " " + escapedExcludeMeshes;
 

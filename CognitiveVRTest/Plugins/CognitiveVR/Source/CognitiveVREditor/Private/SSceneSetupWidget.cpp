@@ -284,7 +284,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				SNew(STextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("Blender free and open source.\n\nYou can download it at blender.org"))
+				.Text(FText::FromString("Blender is free and open source.\n\nYou can download it at blender.org"))
 			]
 
 			+ SVerticalBox::Slot()

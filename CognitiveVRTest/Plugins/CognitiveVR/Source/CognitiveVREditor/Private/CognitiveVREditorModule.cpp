@@ -59,7 +59,7 @@ public:
 #if WITH_EDITOR
 		// Create the Extender that will add content to the menu
 		FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-		FCognitiveEditorTools::Initialize();
+		
 
 
 		//FAnalyticsCognitiveVR::Get().DeveloperKey = "read from config";
@@ -68,15 +68,12 @@ public:
 		FString EditorIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEditor.ini"));
 		//GLog->Log("FCognitiveTools::SaveAPIDeveloperKeysToFile save: " + CustomerId);
 
-		GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->APIKey, EngineIni);
-		GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
-
 		FString tempGateway;
 		GConfig->GetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), tempGateway, EngineIni);
 
 		if (tempGateway.IsEmpty())
 		{
-			GLog->Log("CognitiveVRModule::StartupModule set default gateway in ini");
+			GLog->Log("CognitiveVRModule::StartupModule set default gateway in ini!!!!");
 			FString defaultgateway = "data.cognitive3d.com";
 			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), *defaultgateway, EngineIni);
 			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("CustomEventBatchSize"), 64, EngineIni);
@@ -85,7 +82,9 @@ public:
 			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("DynamicDataLimit"), 64, EngineIni);
 		}
 		
-
+		FCognitiveEditorTools::Initialize();
+		GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->APIKey, EngineIni);
+		GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
 		//ConfigFileHasChanged = true;
 
 		//TickDelegate = FTickerDelegate::CreateRaw(this, &FCognitiveVREditorModule::Tick);
