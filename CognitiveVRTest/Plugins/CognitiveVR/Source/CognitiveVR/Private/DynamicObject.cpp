@@ -12,6 +12,13 @@ TArray<TSharedPtr<cognitivevrapi::FDynamicObjectId>> allObjectIds;
 int32 jsonPart = 1;
 int32 MaxSnapshots = -1;
 
+int32 MinTimer = 5;
+int32 AutoTimer = 10;
+int32 ExtremeBatchSize = 128;
+float NextSendTime = 0;
+float LastSendTime = 0;
+FTimerHandle CognitiveDynamicAutoSendHandle;
+
 // Sets default values for this component's properties
 UDynamicObject::UDynamicObject()
 {
@@ -57,13 +64,43 @@ void UDynamicObject::BeginPlay()
 		FString ValueReceived;
 
 		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicDataLimit", false);
-
 		if (ValueReceived.Len() > 0)
 		{
 			int32 dynamicLimit = FCString::Atoi(*ValueReceived);
 			if (dynamicLimit > 0)
 			{
 				MaxSnapshots = dynamicLimit;
+			}
+		}
+
+		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicExtremeLimit", false);
+		if (ValueReceived.Len() > 0)
+		{
+			int32 parsedValue = FCString::Atoi(*ValueReceived);
+			if (parsedValue > 0)
+			{
+				ExtremeBatchSize = parsedValue;
+			}
+		}
+
+		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicMinTimer", false);
+		if (ValueReceived.Len() > 0)
+		{
+			int32 parsedValue = FCString::Atoi(*ValueReceived);
+			if (parsedValue > 0)
+			{
+				MinTimer = parsedValue;
+			}
+		}
+
+		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicAutoTimer", false);
+		if (ValueReceived.Len() > 0)
+		{
+			int32 parsedValue = FCString::Atoi(*ValueReceived);
+			if (parsedValue > 0)
+			{
+				AutoTimer = parsedValue;
+				s->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
 			}
 		}
 	}
@@ -487,6 +524,35 @@ void UDynamicObject::SendData()
 		return;
 	}	
 	
+	if (cog->GetWorld() != NULL)
+	{
+		bool withinMinTimer = LastSendTime + MinTimer > cog->GetWorld()->GetRealTimeSeconds();
+		bool withinExtremeBatchSize = newManifest.Num() + snapshots.Num() < ExtremeBatchSize;
+
+		if (withinMinTimer && withinExtremeBatchSize)
+		{
+			return;
+		}
+		if (!withinExtremeBatchSize)
+		{
+			GLog->Log("DynamicObject::SendData reached extreme batch size");
+		}
+		if (!withinMinTimer)
+		{
+			GLog->Log("DynamicObject::SendData minimum timer elapsed");
+		}
+
+		NextSendTime = cog->GetWorld()->GetRealTimeSeconds() + MinTimer;
+		LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
+	}
+
+	if (newManifest.Num() + snapshots.Num() < MaxSnapshots)
+	{
+		GLog->Log("DynamicObject::SendData less than normal batch size - likely autotimer");
+	}
+
+	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
+
 	TArray<TSharedPtr<FJsonValueObject>> EventArray = UDynamicObject::DynamicSnapshotsToString();
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);

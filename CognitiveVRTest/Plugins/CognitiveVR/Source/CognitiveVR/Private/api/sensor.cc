@@ -7,18 +7,48 @@
 
 cognitivevrapi::Sensors::Sensors(FAnalyticsProviderCognitiveVR* sp)
 {
-	s = sp;
+	cog = sp;
 
 	FString ValueReceived;
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorDataLimit", false);
-
 	if (ValueReceived.Len() > 0)
 	{
 		int32 sensorLimit = FCString::Atoi(*ValueReceived);
 		if (sensorLimit > 0)
 		{
 			SensorThreshold = sensorLimit;
+		}
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorExtremeLimit", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 parsedValue = FCString::Atoi(*ValueReceived);
+		if (parsedValue > 0)
+		{
+			ExtremeBatchSize = parsedValue;
+		}
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorMinTimer", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 parsedValue = FCString::Atoi(*ValueReceived);
+		if (parsedValue > 0)
+		{
+			MinTimer = parsedValue;
+		}
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorAutoTimer", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 parsedValue = FCString::Atoi(*ValueReceived);
+		if (parsedValue > 0)
+		{
+			AutoTimer = parsedValue;
+			cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, false);
 		}
 	}
 }
@@ -43,22 +73,42 @@ void cognitivevrapi::Sensors::RecordSensor(FString Name, float value)
 
 void cognitivevrapi::Sensors::SendData()
 {
-	if (s == NULL || !s->HasStartedSession())
+	if (cog == NULL || !cog->HasStartedSession())
 	{
 		return;
 	}
+
+	if (somedatapoints.Num() == 0)
+	{
+		return;
+	}
+
+	if (cog->GetWorld() != NULL)
+	{
+		bool withinMinTimer = LastSendTime + MinTimer > cog->GetWorld()->GetRealTimeSeconds();
+		bool withinExtremeBatchSize = somedatapoints.Num() < ExtremeBatchSize;
+
+		if (withinMinTimer && withinExtremeBatchSize)
+		{
+			return;
+		}
+
+		LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
+	}
+
+	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, false);
 
 	TSharedPtr<FJsonObject> wholeObj = MakeShareable(new FJsonObject);
 
 	TArray< TSharedPtr<FJsonValue> > DataArray;
 
-	wholeObj->SetStringField("name", s->GetUserID());
-	if (!s->LobbyId.IsEmpty())
+	wholeObj->SetStringField("name", cog->GetUserID());
+	if (!cog->LobbyId.IsEmpty())
 	{
-		wholeObj->SetStringField("lobbyId", s->LobbyId);
+		wholeObj->SetStringField("lobbyId", cog->LobbyId);
 	}
-	wholeObj->SetNumberField("timestamp", (int32)s->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", s->GetSessionID());
+	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
+	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonPart);
 	wholeObj->SetStringField("formatversion", "1.0");
 	jsonPart++;
@@ -71,10 +121,7 @@ void cognitivevrapi::Sensors::SendData()
 
 	//TODO use ustruct with array to format this to json instead of doing it manually
 	FString allData;
-	if (somedatapoints.Num() == 0)
-	{
-		return;
-	}
+
 	for (const auto& Entry : somedatapoints)
 	{
 		allData = allData.Append("{\"name\":\"" + Entry.Key + "\",\"data\":[" + Entry.Value + "]},");
@@ -85,7 +132,7 @@ void cognitivevrapi::Sensors::SendData()
 	const TCHAR* charcomplete = *complete;
 	OutputString = OutputString.Replace(TEXT("\"SENSORDATAHERE\""), charcomplete);
 
-	s->network->NetworkCall("sensors", OutputString);
+	cog->network->NetworkCall("sensors", OutputString);
 
 	somedatapoints.Empty();
 	sensorDataCount = 0;

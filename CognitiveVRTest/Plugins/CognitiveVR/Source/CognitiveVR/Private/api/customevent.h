@@ -6,6 +6,7 @@
 
 #include "Private/CognitiveVRPrivatePCH.h"
 #include "Private/util/util.h"
+#include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 
 class FAnalyticsProviderCognitiveVR;
 
@@ -18,6 +19,12 @@ namespace cognitivevrapi
 		TArray<TSharedPtr<FJsonObject>> batchedJson;
 		int32 jsonEventPart = 1;
 		int32 CustomEventBatchSize = 16;
+
+		int32 AutoTimer = 2;
+		int32 MinTimer = 2;
+		int32 ExtremeBatchSize = 64;
+		int32 LastSendTime = 0;
+		FTimerHandle AutoSendHandle;
 
 		TArray<TSharedPtr<FJsonObject>> events;
 

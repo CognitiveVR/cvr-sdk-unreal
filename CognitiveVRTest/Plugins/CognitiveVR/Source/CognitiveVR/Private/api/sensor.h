@@ -6,6 +6,7 @@
 
 #include "Private/CognitiveVRPrivatePCH.h"
 #include "Private/util/util.h"
+#include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 
 class FAnalyticsProviderCognitiveVR;
 
@@ -14,13 +15,19 @@ namespace cognitivevrapi
 	class COGNITIVEVR_API Sensors
 	{
 	private:
-		FAnalyticsProviderCognitiveVR* s;
+		FAnalyticsProviderCognitiveVR* cog;
 
 		TMap<FString, FString> somedatapoints;
 
 		int32 jsonPart = 1;
 		int32 sensorDataCount = 0;
 		int32 SensorThreshold = 16;
+
+		int32 AutoTimer = 2;
+		int32 MinTimer = 2;
+		int32 ExtremeBatchSize = 64;
+		int32 LastSendTime = 0;
+		FTimerHandle AutoSendHandle;
 
 	public:
 		Sensors(FAnalyticsProviderCognitiveVR* sp);
