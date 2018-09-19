@@ -418,8 +418,8 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 				.Padding(FMargin(64, 24, 64, 24))
 				[
 					SNew(SBorder)
-					.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
-					.BorderBackgroundColor(FLinearColor::Red)
+					//.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
+					//.BorderBackgroundColor(FLinearColor::Red)
 					.BorderImage(FEditorStyle::GetBrush("ToolPanel.LightGroupBorder"))
 					.Padding(8.0f)
 					[
@@ -441,13 +441,13 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 							.ColorAndOpacity(FLinearColor::White)
 							.ShadowColorAndOpacity(FLinearColor::Black)
 							.ShadowOffset(FVector2D::UnitVector)
-							.Text(FText::FromString("Scene contains duplicate Dynamic Object Ids"))
+							.Text(FText::FromString("Validate Dynamic Mesh Names and Ids"))
 						]
 						+SHorizontalBox::Slot()
 						[
 							SNew(SButton)
 							.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SetUniqueDynamicIds)
-							.Text(FText::FromString("Set Unique Dynamic Ids"))
+							.Text(FText::FromString("Validate"))
 						]
 					]
 				]

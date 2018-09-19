@@ -409,6 +409,10 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 	{
 		//id dynamic custom id is not in usedids - add it
 
+		if (dynamic->MeshName.IsEmpty())
+		{
+			dynamic->TryGenerateMeshName();
+		}						  
 		FString findId = dynamic->CustomId;
 
 		cognitivevrapi::FDynamicObjectId* FoundId = usedIds.FindByPredicate([findId](const cognitivevrapi::FDynamicObjectId& InItem)
@@ -429,11 +433,8 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 
 	for (auto& dynamic : UnassignedDynamics)
 	{
-		FString newCustomId = FGuid::NewGuid().ToString();
-
-		dynamic->CustomId = newCustomId;
-		dynamic->UseCustomId = true;
-		usedIds.Add(cognitivevrapi::FDynamicObjectId(newCustomId, dynamic->MeshName));
+		dynamic->GenerateCustomId();
+		usedIds.Add(cognitivevrapi::FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
 		changedDynamics++;
 	}
 
