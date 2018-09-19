@@ -2419,10 +2419,14 @@ void FCognitiveEditorTools::CurrentSceneVersionRequest()
 	}
 }
 
+FReply FCognitiveEditorTools::OpenURL(FString url)
+{
+	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);
+	return FReply::Handled();
+}
+
 FReply FCognitiveEditorTools::OpenSceneInBrowser(FString sceneid)
 {
-
-
 	FString url = SceneExplorerOpen(sceneid);
 
 	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);

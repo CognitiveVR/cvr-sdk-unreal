@@ -7,7 +7,7 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 		[
 			SNew(SVerticalBox)
 			+SVerticalBox::Slot()
-			.FillHeight(1)
+			//.FillHeight(1)
 			[
 				SAssignNew(ListViewWidget, SListView<TSharedPtr<cognitivevrapi::FDynamicData>>)
 				.ItemHeight(24)

@@ -390,6 +390,7 @@ public:
 
 	FText UploadSceneNameFiles() const;
 	FText OpenSceneNameInBrowser() const;
+	FReply OpenURL(FString url);
 	void FindAllSubDirectoryNames();
 	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
 	FReply SelectUploadScreenshot();
