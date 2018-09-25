@@ -214,7 +214,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 		]
 	];
 
-	IDetailCategoryBuilder& DynamicWorkflow = DetailBuilder.EditCategory(TEXT("Dynamic Upload Workflow"));
+	IDetailCategoryBuilder& DynamicWorkflow = DetailBuilder.EditCategory(TEXT("Dynamic Mesh Upload"));
 
 	DynamicWorkflow.InitiallyCollapsed(true);
 
@@ -232,12 +232,16 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 				.IsChecked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasFoundBlenderCheckbox)
 			]
 			+SHorizontalBox::Slot()
-			.MaxWidth(256)
+			.MaxWidth(238)
 			[
-				SNew(SButton)
-				.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-				.Text(FText::FromString("Select Blender.exe"))
-				.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Blender)
+				SNew(SBox)
+				.HeightOverride(32)
+				[
+					SNew(SButton)
+					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
+					.Text(FText::FromString("Select Blender.exe"))
+					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Blender)
+				]
 			]
 			+ SHorizontalBox::Slot()
 			[
@@ -252,10 +256,14 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 			+SHorizontalBox::Slot()
 			.MaxWidth(256)
 			[
-				SNew(SButton)
-				.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasFoundBlender)
-				.Text(FText::FromString("Select Export Directory"))
-				.OnClicked(this, &FCognitiveSettingsCustomization::SelectAndRefreshExportDirectory)
+				SNew(SBox)
+				.HeightOverride(32)
+				[
+					SNew(SButton)
+					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasFoundBlender)
+					.Text(FText::FromString("Select Export Directory"))
+					.OnClicked(this, &FCognitiveSettingsCustomization::SelectAndRefreshExportDirectory)
+				]
 			]
 			+ SHorizontalBox::Slot()
 			[
@@ -290,7 +298,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 				[
 					SNew(SButton)
 					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasFoundBlenderDynamicExportDirSelection)
-					.Text(FText::FromString("Export Selected Dynamic Objects"))
+					.Text(FText::FromString("Export Selected Dynamic Object Meshes"))
 					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportSelectedDynamics)
 				]
 				+ SVerticalBox::Slot()
@@ -302,7 +310,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportDynamics)
 				]
 			]
-	+SHorizontalBox::Slot()
+		+SHorizontalBox::Slot()
 		.Padding(FMargin(5.0f, 0.0f, 5.0f, 0.0f))
 		.AutoWidth()
 		.MaxWidth(2)
@@ -310,51 +318,37 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 			SNew(SSeparator)
 			.Orientation(EOrientation::Orient_Vertical)
 		]
-			+ SHorizontalBox::Slot()
-			.Padding(4.0f, 0.0f)
+		+ SHorizontalBox::Slot()
+		.Padding(4.0f, 0.0f)
+		[
+			SNew(SVerticalBox)
+			+SVerticalBox::Slot()
+			.AutoHeight()
 			[
-				SNew(SVerticalBox)
-				/*+ SVerticalBox::Slot()
-				.AutoHeight()
-				.Padding(0, 0, 0, 4)
-				.HAlign(EHorizontalAlignment::HAlign_Center)
+				SNew(SButton)
+				.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::HasSetDynamicExportDirectory)
+				.Text(FText::FromString("Refresh Dynamic Directories"))
+				.OnClicked(this, &FCognitiveSettingsCustomization::CopyDynamicSubDirectories)
+			]
+			+ SVerticalBox::Slot()
+			.Padding(4.0f, 2.0f)
+			.MaxHeight(2)
+			[
+				SNew(SSeparator)
+				.Orientation(EOrientation::Orient_Horizontal)
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SBox)
+				.HeightOverride(200)
 				[
-					SNew(STextBlock)
-					.Text(FText::FromString("Organize Meshes"))
-				]*/
-				/*+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNew(SButton)
-					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::HasDeveloperKey)
-					.Text(FText::FromString("Select Dynamic Mesh Directory"))
-					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectDynamicsDirectory)
-				]
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNew(STextBlock)
-					.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDynamicsExportDirectoryDisplay)
-				]*/
-				+SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNew(SButton)
-					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::HasSetDynamicExportDirectory)
-					.Text(FText::FromString("Refresh Dynamic Directories"))
-					.OnClicked(this, &FCognitiveSettingsCustomization::CopyDynamicSubDirectories)
-				]
-				+ SVerticalBox::Slot()
-				[
-					SNew(SBox)
-					.HeightOverride(100)
-					[
-						SAssignNew(SubDirectoryListWidget,SFStringListWidget)
-						//.Items(DynamicSubDirectories) //BIND
-					]
+					SAssignNew(SubDirectoryListWidget,SFStringListWidget)
+					//.Items(DynamicSubDirectories) //BIND
 				]
 			]
-	+ SHorizontalBox::Slot()
+		]
+		+ SHorizontalBox::Slot()
 		.AutoWidth()
 		.MaxWidth(2)
 		.Padding(FMargin(5.0f, 0.0f, 5.0f, 0.0f))
@@ -362,27 +356,24 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 			SNew(SSeparator)
 			.Orientation(EOrientation::Orient_Vertical)
 		]
-			+ SHorizontalBox::Slot()
-			.Padding(4.0f, 0.0f)
+		+ SHorizontalBox::Slot()
+		.Padding(4.0f, 0.0f)
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.MaxHeight(64)
 			[
-				SNew(SVerticalBox)
-				/*+ SVerticalBox::Slot()
-				.Padding(0, 0, 0, 4)
-				.HAlign(EHorizontalAlignment::HAlign_Center)
+				SNew(SButton)
+				.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasSetDynamicExportDirectoryHasSceneId)
+				.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::UploadDynamics)
 				[
 					SNew(STextBlock)
-					.Text(FText::FromString("Upload"))
-				]*/
-				+ SVerticalBox::Slot()
-				.MaxHeight(32)
-				[
-					SNew(SButton)
-					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasSetDynamicExportDirectoryHasSceneId)
+					.AutoWrapText(true)
 					.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDynamicObjectUploadText)
-					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::UploadDynamics)
 				]
 			]
-		];
+		]
+	];
 
 
 	IDetailCategoryBuilder& DynamicManifestWorkflow = DetailBuilder.EditCategory(TEXT("Dynamic Objects"));
@@ -395,24 +386,6 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 			+ SHorizontalBox::Slot()
 			[
 				SNew(SVerticalBox)
-				+SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNew(SHorizontalBox)
-					+SHorizontalBox::Slot()
-					[
-						SNew(SButton)
-						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-						.Text(FText::FromString("Refresh"))
-						.OnClicked(this, &FCognitiveSettingsCustomization::RefreshDisplayDynamicObjectsCountInScene)
-					]
-					+SHorizontalBox::Slot()
-					[
-						SNew(STextBlock)
-						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::DisplayDynamicObjectsCountInScene)
-					]
-				]
-
 				+SVerticalBox::Slot()
 				.AutoHeight()
 				.Padding(FMargin(64, 24, 64, 24))
@@ -433,7 +406,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 						]
 							// Notice
 						+SHorizontalBox::Slot()
-						.FillWidth(1.0f)
+						.FillWidth(1.5f)
 						.Padding(16.0f, 0.0f)
 						.VAlign(VAlign_Center)
 						[
@@ -441,63 +414,76 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 							.ColorAndOpacity(FLinearColor::White)
 							.ShadowColorAndOpacity(FLinearColor::Black)
 							.ShadowOffset(FVector2D::UnitVector)
-							.Text(FText::FromString("Validate Dynamic Mesh Names and Ids"))
+							.AutoWrapText(true)
+							.Text(FText::FromString("Dynamic Objects must have a valid Mesh Name\nTo have data aggregated, Dynamic Objects must have a Unique Id"))
 						]
 						+SHorizontalBox::Slot()
 						[
 							SNew(SButton)
 							.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SetUniqueDynamicIds)
-							.Text(FText::FromString("Validate"))
+							[
+								SNew(STextBlock)
+								.Justification(ETextJustify::Center)
+								.AutoWrapText(true)
+								.Text(FText::FromString("Validate Mesh Names and Unique Ids"))
+							]
+						]
+					]
+				]
+				+SVerticalBox::Slot()
+				.HAlign(HAlign_Center)
+				.VAlign(VAlign_Fill)
+				[
+					SNew(SBox)
+					.HeightOverride(64)
+					[
+						SNew(SButton)
+						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
+						//.ToolTip(SNew(SToolTip).Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SendDynamicsToSceneExplorerTooltip))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::UploadDynamicsManifest)
+						[
+							SNew(STextBlock)
+							.Justification(ETextJustify::Center)
+							.Text(FText::FromString("Upload Dynamic Objects Ids to SceneExplorer for Aggregation"))
 						]
 					]
 				]
 
-				/*+ SVerticalBox::Slot()
-				.AutoHeight()
-				.Padding(FMargin(24, 10, 24, 0))
-				[
-					SNew(STextBlock)
-					.ColorAndOpacity(FLinearColor::Yellow)
-					.Justification(ETextJustify::Center)
-					.Visibility_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
-					.Text(FText::FromString("Scene contains some duplicate Dynamic Object Ids"))
-				]
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				.Padding(FMargin(64,0,64,64))
+				+SVerticalBox::Slot()
 				[
 					SNew(SBox)
-					.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
-					.HeightOverride(32)
-					[
-						SNew(SButton)
-						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-						.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
-						.Text(FText::FromString("Set Unique Dynamic Ids"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SetUniqueDynamicIds)
-						//TODO replace with something really eye-catching, like SPlatformSetupMessage
-					]
-				]*/
+					.HeightOverride(16)
+				]
+
+				//+ SVerticalBox::Slot()
+				//.Padding(4.0f, 2.0f)
+				//.MaxHeight(2)
+				//[
+				//	SNew(SSeparator)
+				//	.Orientation(EOrientation::Orient_Horizontal)
+				//]
+
 				+SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNew(SButton)
-					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-					.ToolTip(SNew(SToolTip).Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SendDynamicsToSceneExplorerTooltip))
-					.Text(FText::FromString("Sync with Scene Explorer"))
-					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::UploadDynamicsManifest)
+					SNew(SHorizontalBox)
+					+SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SNew(SButton)
+						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
+						.Text(FText::FromString("Refresh"))
+						.OnClicked(this, &FCognitiveSettingsCustomization::RefreshDisplayDynamicObjectsCountInScene)
+					]
+					+SHorizontalBox::Slot()
+					[
+						SNew(STextBlock)
+						.Justification(ETextJustify::Center)
+						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::DisplayDynamicObjectsCountInScene)
+					]
 				]
-
 				+ SVerticalBox::Slot()
 				.AutoHeight()
-				.Padding(0, 0, 0, 4)
-				.HAlign(EHorizontalAlignment::HAlign_Center)
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("Dynamic Objects In Scene"))
-				]
-				+ SVerticalBox::Slot()
-				.FillHeight(1)
 				[
 					SNew(SBox)
 					.HeightOverride(300)
@@ -508,55 +494,6 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 					]
 				]
 			]
-			/*+ SHorizontalBox::Slot()
-			.Padding(4.0f, 0.0f)
-			[
-				SNew(SVerticalBox)
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				.Padding(0, 0, 0, 4)
-				.HAlign(EHorizontalAlignment::HAlign_Center)
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("Dynamic Objects on SceneExplorer"))
-				]
-				+SVerticalBox::Slot()
-				.FillHeight(1)
-				[
-					SNew(SBox)
-					.HeightOverride(300)
-					[
-						SAssignNew(WebDynamicList,SDynamicObjectWebListWidget)
-					]
-				]
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNew(STextBlock)
-					.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::DisplayDynamicObjectsCountOnWeb)
-				]
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot()
-					[
-						SNew(SButton)
-						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::HasDeveloperKey)
-						.ToolTip(SNew(SToolTip).Text_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::GetDynamicsOnSceneExplorerTooltip))
-						.Text(FText::FromString("Get Dynamics List from SceneExplorer"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDynamicsManifest)
-					]
-					+ SHorizontalBox::Slot()
-					[
-						SNew(SButton)
-						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-						.ToolTip(SNew(SToolTip).Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SendDynamicsToSceneExplorerTooltip))
-						.Text(FText::FromString("Send Dynamics List to SceneExplorer"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::UploadDynamicsManifest)
-					]
-				]
-			]*/
 		];
 
 

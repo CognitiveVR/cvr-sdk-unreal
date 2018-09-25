@@ -145,6 +145,8 @@ public:
 	FOptionalSize GetScreenshotWidth() const;
 	FOptionalSize GetScreenshotHeight() const;
 
+	FReply ValidateAndRefresh();
+
 	FReply EvaluateExport();
 	//sets export variables, then calls evaluateexport
 	FReply EvaluateExportLow();

@@ -5,7 +5,7 @@ import sys
 cwd = os.getcwd()
 targetdir = "cognitiveVR_UnrealSDK_temp"
 version = "0"
-enginesubversion = "19"
+enginesubversion = "20"
 
 def replaceline(file, linesrc, linedst):
 
@@ -120,6 +120,9 @@ insertline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Priv
 
 #11 replace editor selection code in dynamiccomponentdetails
 replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DynamicComponentDetails.cpp","	const TArray< TWeakObjectPtr<UObject> >& SelectedObjects = DetailLayout.GetDetailsView().GetSelectedObjects();","	const TArray< TWeakObjectPtr<UObject> >& SelectedObjects = DetailLayout.GetSelectedObjects();")
+
+#12 add audio define to microphone header
+insertline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Public\MicrophoneCaptureActor.h","#pragma once","#define NTDDI_THRESHOLD 0")
 
 print("made file changes")
 

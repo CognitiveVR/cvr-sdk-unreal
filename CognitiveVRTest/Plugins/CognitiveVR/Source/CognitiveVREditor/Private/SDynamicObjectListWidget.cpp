@@ -32,7 +32,7 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 					]
 
 					+ SHeaderRow::Column("id")
-					.FillWidth(0.3)
+					.FillWidth(1)
 					[
 						SNew(SRichTextBlock)
 						.DecoratorStyleSet(&FEditorStyle::Get())
@@ -83,7 +83,7 @@ TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<
 			.Text(FText::FromString(InItem->MeshName))
 		]
 	+ SHorizontalBox::Slot()
-		.FillWidth(0.3)
+		.FillWidth(1)
 		.Padding(2.0f)
 		[
 			SNew(STextBlock)

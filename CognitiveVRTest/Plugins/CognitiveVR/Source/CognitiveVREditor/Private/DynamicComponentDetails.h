@@ -16,8 +16,11 @@ private:
 	/** IDetailCustomization interface */
 	virtual void CustomizeDetails( IDetailLayoutBuilder& DetailLayout ) override;
 	FReply OnUpdateMeshAndId();
+	FReply TakeScreenshot();
+	FReply ExportAndUpload();
 	private:
 	TWeakObjectPtr<UDynamicObject> SelectedDynamicObject;
 
 	bool HasOwner() const;
+	bool HasOwnerAndExportDir() const;
 };

@@ -415,13 +415,13 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 #pragma region "dynamics screen"
 
 			+SVerticalBox::Slot()
+			.AutoHeight()
 			[
 				SNew(SBox)
 				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
 				[
 					SNew(SHorizontalBox)
 					+SHorizontalBox::Slot()
-					.HAlign(HAlign_Fill)
 					.AutoWidth()
 					[
 						SNew(SButton)
@@ -430,18 +430,17 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						.OnClicked(this, &SSceneSetupWidget::RefreshDisplayDynamicObjectsCountInScene)
 					]
 					+SHorizontalBox::Slot()
-					.HAlign(HAlign_Center)
 					[
 						SNew(STextBlock)
 						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
 						.AutoWrapText(true)
 						.Justification(ETextJustify::Center)
-						.Text(FText::FromString("These are the Dynamic Object Components currently found in your scene"))
+						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::DisplayDynamicObjectsCountInScene)
 					]
 				]
 			]
 
-			+ SVerticalBox::Slot()
+			/*+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0, 0, 0, 4)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
@@ -449,7 +448,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				SNew(STextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
 				.Text(FText::FromString("Dynamic Objects In Scene"))
-			]
+			]*/
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Fill)
 			.FillHeight(10)
@@ -482,7 +481,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					]
 						// Notice
 					+SHorizontalBox::Slot()
-					.FillWidth(1.0f)
+					.FillWidth(1.5f)
 					.Padding(16.0f, 0.0f)
 					.VAlign(VAlign_Center)
 					[
@@ -490,13 +489,20 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						.ColorAndOpacity(FLinearColor::White)
 						.ShadowColorAndOpacity(FLinearColor::Black)
 						.ShadowOffset(FVector2D::UnitVector)
-						.Text(FText::FromString("Validate Dynamic Mesh Names and Ids"))
+						.AutoWrapText(true)
+						.Text(FText::FromString("Dynamic Objects must have a valid Mesh Name\nTo have data aggregated, Dynamic Objects must have a Unique Id"))
 					]
 					+SHorizontalBox::Slot()
 					[
 						SNew(SButton)
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SetUniqueDynamicIds)
-						.Text(FText::FromString("Validate"))
+						.OnClicked_Raw(this, &SSceneSetupWidget::ValidateAndRefresh)
+						//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SetUniqueDynamicIds)
+						[
+							SNew(STextBlock)
+							.Justification(ETextJustify::Center)
+							.AutoWrapText(true)
+							.Text(FText::FromString("Validate Mesh Names and Unique Ids"))
+						]
 					]
 				]
 			]
@@ -702,7 +708,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				SNew(SListView<TSharedPtr<FString>>)
 					.ItemHeight(16.0f)
 					.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
-					.ListItemsSource(&FCognitiveEditorTools::GetInstance()->AllUploadFiles)
+					.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneUploadFiles)
 					.OnGenerateRow(this, &SSceneSetupWidget::OnGenerateSceneExportFileRow)
 					.HeaderRow(
 					SNew(SHeaderRow)
@@ -729,7 +735,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					SNew(SListView<TSharedPtr<FString>>)
 					.ItemHeight(16.0f)
 					.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
-					.ListItemsSource(&FCognitiveEditorTools::GetInstance()->AllDynamicFiles)
+					.ListItemsSource(&FCognitiveEditorTools::GetInstance()->DynamicUploadFiles)
 					.OnGenerateRow(this, &SSceneSetupWidget::OnGenerateSceneExportFileRow)
 					.HeaderRow(
 					SNew(SHeaderRow)
@@ -1348,7 +1354,9 @@ FReply SSceneSetupWidget::NextPage()
 	}
 	else if (CurrentPage == 6)
 	{
-		FCognitiveEditorTools::GetInstance()->RefreshAllUploadFiles();
+		//FCognitiveEditorTools::GetInstance()->RefreshAllUploadFiles();
+		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
+		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
 		GetScreenshotBrush();
 	}
 	else if (CurrentPage == 7)
@@ -1383,11 +1391,6 @@ EVisibility SSceneSetupWidget::DisplayWizardThrobber() const
 	}
 	return EVisibility::Collapsed;
 }
-
-/*TArray<TSharedPtr<FString>> SSceneSetupWidget::GetAllUploadFiles() const
-{
-	return FCognitiveEditorTools::GetInstance()->GetAllUploadFiles();
-}*/
 
 TSharedRef<ITableRow> SSceneSetupWidget::OnGenerateSceneExportFileRow(TSharedPtr<FString>InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
@@ -1637,4 +1640,12 @@ EVisibility SSceneSetupWidget::UploadErrorVisibility() const
 FText SSceneSetupWidget::UploadErrorText() const
 {
 	return FText::FromString(FCognitiveEditorTools::GetInstance()->WizardUploadError);
+}
+
+FReply SSceneSetupWidget::ValidateAndRefresh()
+{
+	FCognitiveEditorTools::GetInstance()->SetUniqueDynamicIds();
+	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
+	SceneDynamicObjectList->RefreshList();
+	return FReply::Handled();
 }
