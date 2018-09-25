@@ -8,7 +8,7 @@
 #include "PlayerTracker.h"
 #include "DynamicObject.h"
 
-using namespace cognitivevrapi;
+//using namespace cognitivevrapi;
 
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
@@ -94,7 +94,7 @@ void FAnalyticsProviderCognitiveVR::SetWorld(UWorld* world)
 
 bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAttribute>& Attributes)
 {
-	CognitiveLog::Init();
+	cognitivevrapi::CognitiveLog::Init();
 
 	if (bHasSessionStarted)
 	{
@@ -125,11 +125,11 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	if (GetUserID().IsEmpty())
 	{
-		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::StartSession user id is empty!");
+		cognitivevrapi::CognitiveLog::Info("FAnalyticsProviderCognitiveVR::StartSession user id is empty!");
 		SetUserID("anonymous_"+DeviceId);
 	}
 
-	SessionTimestamp = Util::GetTimestamp();
+	SessionTimestamp = cognitivevrapi::Util::GetTimestamp();
 	SessionId = FString::FromInt(GetSessionTimestamp()) + TEXT("_") + UserId;
 
 	//initProperties = properties;
@@ -137,10 +137,10 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	APIKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
 
 	//OverrideHttpInterface* httpint = new OverrideHttpInterface();
-	network = MakeShareable(new Network(this));
+	network = MakeShareable(new cognitivevrapi::Network(this));
 	//network->Init(httpint, &InitCallback);
 
-	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::StartSession");
+	cognitivevrapi::CognitiveLog::Info("FAnalyticsProviderCognitiveVR::StartSession");
 	
 
 	// Also include all the streaming levels in the results
@@ -156,24 +156,24 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	CacheSceneData();
 
-	CognitiveLog::Info("CognitiveVR InitCallback Response");
+	cognitivevrapi::CognitiveLog::Info("CognitiveVR InitCallback Response");
 
 	//-----------------------'response'
 
 	bHasSessionStarted = true;
 
-	customevent = MakeShareable(new CustomEvent(this));
+	customevent = MakeShareable(new cognitivevrapi::CustomEvent(this));
 
 	if (!network.IsValid())
 	{
-		CognitiveLog::Warning("CognitiveVRProvider InitCallback network is null");
+		cognitivevrapi::CognitiveLog::Warning("CognitiveVRProvider InitCallback network is null");
 		return false;
 	}
 
-	sensors = MakeShareable(new Sensors(this));
+	sensors = MakeShareable(new cognitivevrapi::Sensors(this));
 
 	TSharedPtr<FJsonObject> defaultdeviceproperties = MakeShareable(new FJsonObject());
-	Util::DeviceScraper(defaultdeviceproperties);
+	cognitivevrapi::Util::DeviceScraper(defaultdeviceproperties);
 
 	for (auto currJsonValue = defaultdeviceproperties->Values.CreateConstIterator(); currJsonValue; ++currJsonValue)
 	{
@@ -251,6 +251,16 @@ void FAnalyticsProviderCognitiveVR::OnLevelLoaded()
 
 }
 
+void FAnalyticsProviderCognitiveVR::SetLobbyId(FString lobbyId)
+{
+	LobbyId = lobbyId;
+}
+
+void FAnalyticsProviderCognitiveVR::SetSessionName(FString sessionName)
+{
+	SetSessionProperty("cvr.sessionname", sessionName);
+}
+
 void FAnalyticsProviderCognitiveVR::EndSession()
 {
 	if (!customevent.IsValid())
@@ -258,17 +268,17 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 		return;
 	}
 
-	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::EndSession");
+	cognitivevrapi::CognitiveLog::Info("FAnalyticsProviderCognitiveVR::EndSession");
 
 	//bPendingInitRequest = false;
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	properties->SetNumberField("sessionlength", Util::GetTimestamp() - GetSessionTimestamp());
+	properties->SetNumberField("sessionlength", cognitivevrapi::Util::GetTimestamp() - GetSessionTimestamp());
 
 	customevent->Send(FString("Session End"), properties);
 
 	FlushEvents();
-	CognitiveLog::Info("Freeing CognitiveVR memory.");
+	cognitivevrapi::CognitiveLog::Info("Freeing CognitiveVR memory.");
 
 	//TODO this IS called when stopped playing in editor! should clear dynamics session manifest too!
 
@@ -280,7 +290,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 	//delete sensors;
 	sensors = NULL;
-	CognitiveLog::Info("CognitiveVR memory freed.");
+	cognitivevrapi::CognitiveLog::Info("CognitiveVR memory freed.");
 
 	SessionTimestamp = -1;
 	SessionId = "";
@@ -294,13 +304,13 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 	FAnalyticsProviderCognitiveVR* cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Get();
 	if (cog == NULL)
 	{
-		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents could not GetCognitiveVRProvider!");
+		cognitivevrapi::CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents could not GetCognitiveVRProvider!");
 		return;
 	}
 
 	if (cog->HasStartedSession() == false)
 	{
-		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents CognitiveVRProvider has not started session!");
+		cognitivevrapi::CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents CognitiveVRProvider has not started session!");
 		return;
 	}
 
@@ -315,19 +325,19 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
 	{
-		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents cannot find controller. Skip upload to scene explorer");
+		cognitivevrapi::CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents cannot find controller. Skip upload to scene explorer");
 		return;
 	}
 	if (controllers[0]->GetPawn() == NULL)
 	{
-		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents controller0 has no pawn. Skip upload to scene explorer");
+		cognitivevrapi::CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents controller0 has no pawn. Skip upload to scene explorer");
 		return;
 	}
 
 	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 	if (up == NULL)
 	{
-		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents couldn't find player tracker. Skip upload to scene explorer");
+		cognitivevrapi::CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents couldn't find player tracker. Skip upload to scene explorer");
 		return;
 	}
 	else
@@ -341,12 +351,12 @@ void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
 	if (!bHasSessionStarted)
 	{
 		UserId = InUserID;
-		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetUserID set user id");
+		cognitivevrapi::CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetUserID set user id");
 	}
 	else
 	{
 		// Log that we shouldn't switch users during a session
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SetUserID called while session is in progress. Ignoring");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SetUserID called while session is in progress. Ignoring");
 	}
 }
 
@@ -381,7 +391,7 @@ bool FAnalyticsProviderCognitiveVR::SetSessionID(const FString& InSessionID)
 {
 	if (!bHasSessionStarted)
 	{
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SetSessionID automatically sets session id. Ignoring");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SetSessionID automatically sets session id. Ignoring");
 
 		/*if (SessionTimestamp < 0)
 		{
@@ -391,7 +401,7 @@ bool FAnalyticsProviderCognitiveVR::SetSessionID(const FString& InSessionID)
 	else
 	{
 		// Log that we shouldn't switch session ids during a session
-		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordEvent while a session is in progress. Ignoring");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordEvent while a session is in progress. Ignoring");
 	}
 	return !bHasSessionStarted;
 }
@@ -412,7 +422,7 @@ void FAnalyticsProviderCognitiveVR::RecordEvent(const FString& EventName, const 
 	}
 	else
 	{
-		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordEvent called before StartSession. Ignoring");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordEvent called before StartSession. Ignoring");
 	}
 }
 
@@ -430,7 +440,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, co
 	}
 	else
 	{
-		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordItemPurchase called before StartSession. Ignoring");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordItemPurchase called before StartSession. Ignoring");
 	}
 }
 
@@ -449,7 +459,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 	}
 	else
 	{
-		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyPurchase called before StartSession. Ignoring");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyPurchase called before StartSession. Ignoring");
 	}
 }
 
@@ -465,7 +475,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 	}
 	else
 	{
-		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyGiven called before StartSession. Ignoring");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyGiven called before StartSession. Ignoring");
 	}
 }
 
@@ -506,11 +516,11 @@ void FAnalyticsProviderCognitiveVR::RecordError(const FString& Error, const TArr
 
 		customevent->Send(FString("cvr.recorderror"), properties);
 
-		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordError");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordError");
 	}
 	else
 	{
-		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordError called before StartSession. Ignoring");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordError called before StartSession. Ignoring");
 	}
 }
 
@@ -531,7 +541,7 @@ void FAnalyticsProviderCognitiveVR::RecordProgress(const FString& ProgressType, 
 	}
 	else
 	{
-		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordError called before StartSession. Ignoring");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordError called before StartSession. Ignoring");
 	}
 }
 
@@ -552,7 +562,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, in
 	}
 	else
 	{
-		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordItemPurchase called before StartSession. Ignoring");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordItemPurchase called before StartSession. Ignoring");
 	}
 }
 
@@ -573,7 +583,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 	}
 	else
 	{
-		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyPurchase called before StartSession. Ignoring");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyPurchase called before StartSession. Ignoring");
 	}
 }
 
@@ -594,17 +604,17 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 	}
 	else
 	{
-		CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyGiven called before StartSession. Ignoring");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordCurrencyGiven called before StartSession. Ignoring");
 	}
 }
 
-TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetCurrentSceneData()
+TSharedPtr<cognitivevrapi::FSceneData> FAnalyticsProviderCognitiveVR::GetCurrentSceneData()
 {
 	UWorld* myworld = currentWorld;
 	//UWorld* myworld = AActor::GetWorld();
 	if (myworld == NULL)
 	{
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson no world - use GWorld->GetWorld");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson no world - use GWorld->GetWorld");
 		currentWorld = GWorld->GetWorld();
 		myworld = currentWorld;
 	}
@@ -614,7 +624,7 @@ TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetCurrentSceneData()
 	return GetSceneData(currentSceneName);
 }
 
-TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetSceneData(FString scenename)
+TSharedPtr<cognitivevrapi::FSceneData> FAnalyticsProviderCognitiveVR::GetSceneData(FString scenename)
 {
 	for (int i = 0; i < SceneData.Num(); i++)
 	{
@@ -668,7 +678,7 @@ void FAnalyticsProviderCognitiveVR::CacheSceneData()
 			continue;
 		}
 
-		FSceneData* tempscene = new FSceneData(Array[0], Array[1], FCString::Atoi(*Array[2]), FCString::Atoi(*Array[3]));
+		cognitivevrapi::FSceneData* tempscene = new cognitivevrapi::FSceneData(Array[0], Array[1], FCString::Atoi(*Array[2]), FCString::Atoi(*Array[3]));
 		SceneData.Add(MakeShareable(tempscene));
 	}
 }
@@ -681,7 +691,7 @@ FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
 	{
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition no controllers skip");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition no controllers skip");
 		return FVector();
 	}
 

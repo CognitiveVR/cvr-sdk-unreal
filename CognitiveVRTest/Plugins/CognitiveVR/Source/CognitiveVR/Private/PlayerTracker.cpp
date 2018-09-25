@@ -71,10 +71,9 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 	currentTime -= PlayerSnapshotInterval;
 
-	FVector pos;
 	FVector gaze;
-	FRotator rot;
-	double time = Util::GetTimestamp();
+
+	double time = cognitivevrapi::Util::GetTimestamp();
 	FString objectid = "";
 
 
@@ -82,27 +81,37 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
 	{
-		CognitiveLog::Info("UPlayerTracker::TickComponent--------------------------no controllers. skip");
+		cognitivevrapi::CognitiveLog::Info("UPlayerTracker::TickComponent--------------------------no controllers. skip");
 		//return FVector();
 		return;
 	}
 
 	//FVector finalLoc;
 
-	controllers[0]->GetPlayerViewPoint(pos, rot);
+	//=========================PLAYER MANAGER WITHOUT CAMERA
+	//FVector pos;
+	//FRotator rot;
+	//controllers[0]->GetPlayerViewPoint(pos, rot);
+	//
+	//FTransform camManTransform = controllers[0]->PlayerCameraManager->GetActorTransform();
+	////FVector camManForward = controllers[0]->PlayerCameraManager->GetActorForwardVector();
+	//
+	//FRotator temphmdrot;
+	//FVector temphmdpos;
+	//UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition(temphmdrot, temphmdpos);
+	//
+	//FVector finalPos = camManTransform.TransformPosition(temphmdrot.UnrotateVector(temphmdpos));
+	//captureLocation = finalPos - temphmdpos;
+	//
+	//captureRotation = rot;
 
-	FTransform camManTransform = controllers[0]->PlayerCameraManager->GetActorTransform();
-	//FVector camManForward = controllers[0]->PlayerCameraManager->GetActorForwardVector();
+	//=========================PLAYER MANAGER WITH CAMERA 
 
-	FRotator temphmdrot;
-	FVector temphmdpos;
-	UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition(temphmdrot, temphmdpos);
+	captureLocation = controllers[0]->PlayerCameraManager->GetCameraLocation();
+	captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
 
-	FVector finalPos = camManTransform.TransformPosition(temphmdrot.UnrotateVector(temphmdpos));
-	captureLocation = finalPos - temphmdpos;
-	pos = finalPos - temphmdpos;
 
-	captureRotation = rot;
+	
 
 	//look at dynamic object
 
@@ -111,25 +120,37 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 
 	FHitResult Hit; // The hit result gets populated by the line trace
+	FHitResult FloorHit; // The hit result gets populated by the line trace
 
 	FVector Start = captureLocation;
 	FVector End = captureLocation + captureRotation.Vector() * 10000.0f;
 	
+	FCollisionObjectQueryParams params = FCollisionObjectQueryParams();
+	params.AddObjectTypesToQuery(ECC_WorldStatic);
+	params.AddObjectTypesToQuery(ECC_WorldDynamic);
+
 	bool bHit = false;
 	if (GazeFromVisualRaycast)
 	{
-		FCollisionQueryParams params = FCollisionQueryParams(FName(), true);
-		bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, params);
+		FCollisionQueryParams gazeparams = FCollisionQueryParams(FName(), true);
+		bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, gazeparams);
 	}
 	else if (GazeFromPhysicsRaycast)
 	{
-		FCollisionObjectQueryParams params = FCollisionObjectQueryParams();
-		params.AddObjectTypesToQuery(ECC_WorldStatic);
-		params.AddObjectTypesToQuery(ECC_WorldDynamic);
 		//FCollisionResponseParams otherParams = FCollisionResponseParams();
 
 		bHit = GetWorld()->LineTraceSingleByObjectType(Hit, Start, End, params);
 		//bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Pawn,params,otherParams);
+	}
+
+	GetWorld()->LineTraceSingleByObjectType(FloorHit, captureLocation, FVector(0, 0, -1000), params);
+	
+	bool DidHitFloor = false;
+	FVector FloorHitPosition;
+	if (FloorHit.Actor.IsValid())
+	{
+		DidHitFloor = true;
+		FloorHitPosition = FloorHit.ImpactPoint;
 	}
 
 	bool hitDynamic = false;
@@ -166,16 +187,16 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		{
 			//hit some csg or something that is not an actor
 		}
-		BuildSnapshot(captureLocation, gaze, captureRotation, time, objectid);
+		BuildSnapshot(captureLocation, gaze, captureRotation, time, DidHitFloor, FloorHitPosition, objectid);
 	}
 	else
 	{
 		//hit nothing. use position and rotation only
-		BuildSnapshot(captureLocation, captureRotation, time);
+		BuildSnapshot(captureLocation, captureRotation, time, DidHitFloor, FloorHitPosition);
 	}
 }
 
-void UPlayerTracker::BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, FString objectId)
+void UPlayerTracker::BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos, FString objectId)
 {
 	TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
 
@@ -227,6 +248,20 @@ void UPlayerTracker::BuildSnapshot(FVector position, FVector gaze, FRotator rota
 
 	snapObj->SetArrayField("r", rotArray);
 
+	if (didHitFloor)
+	{
+		//floor position
+		TArray<TSharedPtr<FJsonValue>> floorArray;
+		JsonValue = MakeShareable(new FJsonValueNumber(-(int32)floorHitPos.X)); //right
+		floorArray.Add(JsonValue);
+		JsonValue = MakeShareable(new FJsonValueNumber((int32)floorHitPos.Z)); //up
+		floorArray.Add(JsonValue);
+		JsonValue = MakeShareable(new FJsonValueNumber((int32)floorHitPos.Y));  //forward
+		floorArray.Add(JsonValue);
+
+		snapObj->SetArrayField("f", floorArray);
+	}
+
 	snapshots.Add(snapObj);
 	if (snapshots.Num() > GazeBatchSize)
 	{
@@ -234,7 +269,7 @@ void UPlayerTracker::BuildSnapshot(FVector position, FVector gaze, FRotator rota
 	}
 }
 
-void UPlayerTracker::BuildSnapshot(FVector position, FRotator rotation, double time)
+void UPlayerTracker::BuildSnapshot(FVector position, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos)
 {
 	TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
 
@@ -271,6 +306,20 @@ void UPlayerTracker::BuildSnapshot(FVector position, FRotator rotation, double t
 
 	snapObj->SetArrayField("r", rotArray);
 
+	if (didHitFloor)
+	{
+		//floor position
+		TArray<TSharedPtr<FJsonValue>> floorArray;
+		JsonValue = MakeShareable(new FJsonValueNumber(-(int32)floorHitPos.X)); //right
+		floorArray.Add(JsonValue);
+		JsonValue = MakeShareable(new FJsonValueNumber((int32)floorHitPos.Z)); //up
+		floorArray.Add(JsonValue);
+		JsonValue = MakeShareable(new FJsonValueNumber((int32)floorHitPos.Y));  //forward
+		floorArray.Add(JsonValue);
+
+		snapObj->SetArrayField("f", floorArray);
+	}
+
 	snapshots.Add(snapObj);
 	if (snapshots.Num() > GazeBatchSize)
 	{
@@ -296,9 +345,14 @@ void UPlayerTracker::SendData()
 	TArray<TSharedPtr<FJsonValue>> dataArray;
 
 	wholeObj->SetStringField("userid", cog->GetUserID());
+	if (!cog->LobbyId.IsEmpty())
+	{
+		wholeObj->SetStringField("lobbyId", cog->LobbyId);
+	}
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonGazePart);
+	wholeObj->SetStringField("formatversion", "1.0");
 	jsonGazePart++;
 
 	FName DeviceName(NAME_None);

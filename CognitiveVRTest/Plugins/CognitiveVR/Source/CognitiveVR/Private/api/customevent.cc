@@ -4,9 +4,9 @@
 #include "Private/api/customevent.h"
 #include "PlayerTracker.h"
 
-using namespace cognitivevrapi;
+//using namespace cognitivevrapi;
 
-CustomEvent::CustomEvent(FAnalyticsProviderCognitiveVR* cvr)
+cognitivevrapi::CustomEvent::CustomEvent(FAnalyticsProviderCognitiveVR* cvr)
 {
 	cog = cvr;
 	FString ValueReceived;
@@ -23,24 +23,42 @@ CustomEvent::CustomEvent(FAnalyticsProviderCognitiveVR* cvr)
 	}
 }
 
-void CustomEvent::Send(FString category)
+void cognitivevrapi::CustomEvent::Send(FString category)
 {
-	CustomEvent::Send(category, cog->GetPlayerHMDPosition(), NULL);
+	CustomEvent::Send(category, cog->GetPlayerHMDPosition(), NULL, "");
 }
 
-void CustomEvent::Send(FString category, TSharedPtr<FJsonObject> properties)
+void cognitivevrapi::CustomEvent::Send(FString category, TSharedPtr<FJsonObject> properties)
 {
-
-	CustomEvent::Send(category, cog->GetPlayerHMDPosition(), properties);
+	CustomEvent::Send(category, cog->GetPlayerHMDPosition(), properties, "");
 }
 
-void CustomEvent::Send(FString category, FVector Position)
+void cognitivevrapi::CustomEvent::Send(FString category, FVector Position)
 {
-
-	CustomEvent::Send(category, Position, NULL);
+	CustomEvent::Send(category, Position, NULL, "");
 }
 
-void CustomEvent::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties)
+void cognitivevrapi::CustomEvent::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties)
+{
+	CustomEvent::Send(category, Position, properties, "");
+}
+
+void cognitivevrapi::CustomEvent::Send(FString category, FString dynamicObjectId)
+{
+	CustomEvent::Send(category, cog->GetPlayerHMDPosition(), NULL, dynamicObjectId);
+}
+
+void cognitivevrapi::CustomEvent::Send(FString category, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
+{
+	CustomEvent::Send(category, cog->GetPlayerHMDPosition(), properties, dynamicObjectId);
+}
+
+void cognitivevrapi::CustomEvent::Send(FString category, FVector Position, FString dynamicObjectId)
+{
+	CustomEvent::Send(category, Position, NULL, dynamicObjectId);
+}
+
+void cognitivevrapi::CustomEvent::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
 {
 	if (properties.Get() == NULL)
 	{
@@ -71,6 +89,8 @@ void CustomEvent::Send(FString category, FVector Position, TSharedPtr<FJsonObjec
 	FJsonObject* eventObject = new FJsonObject;
 	eventObject->SetStringField("name", category);
 	eventObject->SetNumberField("time", ts);
+	if (dynamicObjectId != "")
+		eventObject->SetStringField("dynamicId", dynamicObjectId);
 	eventObject->SetArrayField("point", pos);
 	if (properties.Get()->Values.Num() > 0)
 	{
@@ -86,7 +106,7 @@ void CustomEvent::Send(FString category, FVector Position, TSharedPtr<FJsonObjec
 	}
 }
 
-void CustomEvent::SendData()
+void cognitivevrapi::CustomEvent::SendData()
 {
 	if (cog == NULL || !cog->HasStartedSession())
 	{
@@ -103,9 +123,14 @@ void CustomEvent::SendData()
 	TArray<TSharedPtr<FJsonValue>> dataArray;
 
 	wholeObj->SetStringField("userid", cog->GetUserID());
+	if (!cog->LobbyId.IsEmpty())
+	{
+		wholeObj->SetStringField("lobbyId", cog->LobbyId);
+	}
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonEventPart);
+	wholeObj->SetStringField("formatversion", "1.0");
 	jsonEventPart++;
 
 	for (int32 i = 0; i != events.Num(); ++i)
@@ -119,6 +144,8 @@ void CustomEvent::SendData()
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 	cog->network->NetworkCall("events", OutputString);
+
+	GLog->Log(OutputString);
 
 	events.Empty();
 }

@@ -5,7 +5,7 @@
 #include "Private/CognitiveVRPrivatePCH.h"
 #include "MicrophoneCaptureActor.h"
 
-static int32 OnAudioCaptureCallback(void *OutBuffer, void* InBuffer, uint32 InBufferFrames, double StreamTime, RtAudioStreamStatus AudioStreamStatus, void* InUserData)
+static int32 OnAudioCaptureCallback(void *OutBuffer, void* InBuffer, uint32 InBufferFrames, double StreamTime, CRtAudioStreamStatus AudioStreamStatus, void* InUserData)
 {
 	// Cast the user data to the mic recorder
 	AMicrophoneCaptureActor* MicrophoneCaptureActor = (AMicrophoneCaptureActor*)InUserData;
@@ -45,17 +45,17 @@ bool AMicrophoneCaptureActor::BeginRecording(float RecordingDurationSec)
 
 	if (!ADC.getDeviceInfo((int32)ADC.getDefaultInputDevice()).isDefaultInput)
 	{
-		CognitiveLog::Warning("MicrophoneCaptureActor BeginRecording no default input source!");
+		cognitivevrapi::CognitiveLog::Warning("MicrophoneCaptureActor BeginRecording no default input source!");
 		return false;
 	}
 
 	if (RecordingDurationSec == 0)
 	{
-		CognitiveLog::Warning("MicrophoneCaptureActor BeginRecording duration is 0 seconds!");
+		cognitivevrapi::CognitiveLog::Warning("MicrophoneCaptureActor BeginRecording duration is 0 seconds!");
 		return false;
 	}
 
-	RtAudio::DeviceInfo Info = ADC.getDeviceInfo(StreamParams.deviceId);
+	CRtAudio::DeviceInfo Info = ADC.getDeviceInfo(StreamParams.deviceId);
 	RecordingSampleRate = 16000;// Info.preferredSampleRate;
 	NumInputChannels = 1;// Info.inputChannels;
 

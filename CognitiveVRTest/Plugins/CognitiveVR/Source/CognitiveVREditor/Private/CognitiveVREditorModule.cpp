@@ -12,6 +12,7 @@
 #include "Containers/Ticker.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
+#include "DynamicComponentDetails.h"
 
 //sets up customization for settings
 //adds scene setup window
@@ -59,7 +60,7 @@ public:
 #if WITH_EDITOR
 		// Create the Extender that will add content to the menu
 		FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-		FCognitiveEditorTools::Initialize();
+		
 
 
 		//FAnalyticsCognitiveVR::Get().DeveloperKey = "read from config";
@@ -68,9 +69,23 @@ public:
 		FString EditorIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEditor.ini"));
 		//GLog->Log("FCognitiveTools::SaveAPIDeveloperKeysToFile save: " + CustomerId);
 
+		FString tempGateway;
+		GConfig->GetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), tempGateway, EngineIni);
+
+		if (tempGateway.IsEmpty())
+		{
+			GLog->Log("CognitiveVRModule::StartupModule set default gateway in ini!!!!");
+			FString defaultgateway = "data.cognitive3d.com";
+			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), *defaultgateway, EngineIni);
+			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("CustomEventBatchSize"), 64, EngineIni);
+			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SensorDataLimit"), 64, EngineIni);
+			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("GazeBatchSize"), 64, EngineIni);
+			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("DynamicDataLimit"), 64, EngineIni);
+		}
+		
+		FCognitiveEditorTools::Initialize();
 		GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->APIKey, EngineIni);
 		GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
-
 		//ConfigFileHasChanged = true;
 
 		//TickDelegate = FTickerDelegate::CreateRaw(this, &FCognitiveVREditorModule::Tick);
@@ -119,7 +134,7 @@ public:
 
 		PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FCognitiveSettingsCustomization::MakeInstance));
 		//PropertyModule.RegisterCustomClassLayout(TEXT("BaseEditorTool"), FOnGetDetailCustomizationInstance::CreateStatic(&FSetupCustomization::MakeInstance));
-
+		PropertyModule.RegisterCustomClassLayout(TEXT("DynamicObject"), FOnGetDetailCustomizationInstance::CreateStatic(&UDynamicObjectComponentDetails::MakeInstance));
 		IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(TEXT("ImageWrapper"));
 		ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
 #endif

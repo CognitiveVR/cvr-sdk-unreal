@@ -5,6 +5,7 @@
 #include "Private/CognitiveVRPrivatePCH.h"
 #include "Runtime/Analytics/Analytics/Public/Interfaces/IAnalyticsProviderModule.h"
 #include "Private/api/customevent.h"
+#include "Private/CognitiveVRProvider.h"
 
 //#include "IAnalyticsProviderModule.h"
 //#include "Core.h"
@@ -15,7 +16,7 @@
 DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);
 
 #define COGNITIVEVR_SDK_NAME "unreal"
-#define COGNITIVEVR_SDK_VERSION "0.5.1"
+#define COGNITIVEVR_SDK_VERSION "0.5.4"
 
 class IAnalyticsProvider;
 class FAnalyticsProviderCognitiveVR;

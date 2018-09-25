@@ -7,9 +7,9 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 		[
 			SNew(SVerticalBox)
 			+SVerticalBox::Slot()
-			.FillHeight(1)
+			//.FillHeight(1)
 			[
-				SAssignNew(ListViewWidget, SListView<TSharedPtr<FDynamicData>>)
+				SAssignNew(ListViewWidget, SListView<TSharedPtr<cognitivevrapi::FDynamicData>>)
 				.ItemHeight(24)
 				.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneDynamics) //The Items array is the source of this listview
 				.OnGenerateRow(this, &SDynamicObjectListWidget::OnGenerateRowForList)
@@ -18,22 +18,25 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 					+ SHeaderRow::Column("name")
 					.FillWidth(1)
 					[
-						SNew(STextBlock)
-						.Text(FText::FromString("Name"))
+						SNew(SRichTextBlock)
+						.DecoratorStyleSet(&FEditorStyle::Get())
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Name</>"))
 					]
 
 					+ SHeaderRow::Column("mesh")
 					.FillWidth(1)
 					[
-						SNew(STextBlock)
-						.Text(FText::FromString("MeshName"))
+						SNew(SRichTextBlock)
+						.DecoratorStyleSet(&FEditorStyle::Get())
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Mesh Name</>"))
 					]
 
 					+ SHeaderRow::Column("id")
-					.FillWidth(0.3)
+					.FillWidth(1)
 					[
-						SNew(STextBlock)
-						.Text(FText::FromString("Id"))
+						SNew(SRichTextBlock)
+						.DecoratorStyleSet(&FEditorStyle::Get())
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Id</>"))
 					]
 				)
 			]
@@ -45,10 +48,10 @@ void SDynamicObjectListWidget::RefreshList()
 	ListViewWidget->RequestListRefresh();
 }
 
-TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
+TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<cognitivevrapi::FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	return
-		SNew(SComboRow< TSharedPtr<FDynamicData> >, OwnerTable)
+		SNew(SComboRow< TSharedPtr<cognitivevrapi::FDynamicData> >, OwnerTable)
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
@@ -80,7 +83,7 @@ TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<
 			.Text(FText::FromString(InItem->MeshName))
 		]
 	+ SHorizontalBox::Slot()
-		.FillWidth(0.3)
+		.FillWidth(1)
 		.Padding(2.0f)
 		[
 			SNew(STextBlock)
@@ -89,7 +92,7 @@ TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<
 		];
 }
 
-FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
+FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<cognitivevrapi::FDynamicData> data)
 {
 	GEditor->SelectNone(false, true, false);
 

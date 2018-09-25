@@ -17,7 +17,7 @@ void CognitiveLog::Init()
 	MuteInfoMessages = false;
 	MuteWarningMessages = false;
 	MuteErrorMessages = false;
-	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteWarningMessages", false);
+	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteInfoMessages", false);
 	if (ValueReceived.Len()>0 && ValueReceived == "true")
 	{
 		MuteWarningMessages = true;

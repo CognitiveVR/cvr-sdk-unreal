@@ -6,9 +6,9 @@
 #include "Util.h"
 
 TArray<FDynamicObjectSnapshot> snapshots;
-TArray<FDynamicObjectManifestEntry> manifest;
-TArray<FDynamicObjectManifestEntry> newManifest;
-TArray<TSharedPtr<FDynamicObjectId>> allObjectIds;
+TArray<cognitivevrapi::FDynamicObjectManifestEntry> manifest;
+TArray<cognitivevrapi::FDynamicObjectManifestEntry> newManifest;
+TArray<TSharedPtr<cognitivevrapi::FDynamicObjectId>> allObjectIds;
 int32 jsonPart = 1;
 int32 MaxSnapshots = -1;
 
@@ -21,7 +21,7 @@ UDynamicObject::UDynamicObject()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-void UDynamicObject::OnComponentCreated()
+void UDynamicObject::TryGenerateMeshName()
 {
 	if (MeshName.IsEmpty())
 	{
@@ -35,8 +35,43 @@ void UDynamicObject::OnComponentCreated()
 		{
 			return;
 		}
+		UseCustomMeshName = true;
+		MeshName = staticmeshComponent->GetStaticMesh()->GetName();
+	}
+}
+
+void UDynamicObject::GenerateCustomId()
+{
+	UseCustomId = true;
+	CustomId = FGuid::NewGuid().ToString();
+}
+
+void UDynamicObject::TryGenerateCustomIdAndMesh()
+{
+	if (MeshName.IsEmpty())
+	{
+		if (GetOwner() == NULL)
+		{
+			GLog->Log("owner is null, cannot generate custom id and mesh in this context");
+			return;
+		}
+
+		UActorComponent* actorComponent = GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
+		if (actorComponent == NULL)
+		{
+			return;
+		}
+		UStaticMeshComponent* staticmeshComponent = Cast<UStaticMeshComponent>(actorComponent);
+		if (staticmeshComponent == NULL || staticmeshComponent->GetStaticMesh() == NULL)
+		{
+			return;
+		}
+		GLog->Log("set meshname and customid");
+		UseCustomMeshName = true;
+		UseCustomId = true;
 		MeshName = staticmeshComponent->GetStaticMesh()->GetName();
 		CustomId = FGuid::NewGuid().ToString();
+		GWorld->MarkPackageDirty();
 	}
 }
 
@@ -138,25 +173,89 @@ FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, do
 	return this;
 }*/
 
-TSharedPtr<FDynamicObjectId> UDynamicObject::GetUniqueId(FString meshName)
+TSharedPtr<cognitivevrapi::FDynamicObjectId> UDynamicObject::GetUniqueId(FString meshName)
 {
-	TSharedPtr<FDynamicObjectId> freeId;
+	TSharedPtr<cognitivevrapi::FDynamicObjectId> freeId;
 	static int32 originalId = 1000;
 	originalId++;
 
-	freeId = MakeShareable(new FDynamicObjectId(FString::FromInt(originalId), meshName));
+	freeId = MakeShareable(new cognitivevrapi::FDynamicObjectId(FString::FromInt(originalId), meshName));
 	return freeId;
 }
 
-TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
+TSharedPtr<cognitivevrapi::FDynamicObjectId> UDynamicObject::GetObjectId()
 {
+	if (!ObjectID.IsValid() || ObjectID->Id == "")
+	{
+		GenerateObjectId();
+	}
 	return ObjectID;
+}
+
+void UDynamicObject::GenerateObjectId()
+{
+	if (!UseCustomId)
+	{
+		TSharedPtr<cognitivevrapi::FDynamicObjectId> recycledId;
+		bool foundRecycleId = false;
+
+		for (int32 i = 0; i < allObjectIds.Num(); i++)
+		{
+			if (!allObjectIds[i]->Used && allObjectIds[i]->MeshName == MeshName)
+			{
+				foundRecycleId = true;
+				recycledId = allObjectIds[i];
+				break;
+			}
+		}
+		if (foundRecycleId)
+		{
+			ObjectID = recycledId;
+			ObjectID->Used = true;
+			cognitivevrapi::CognitiveLog::Info("UDynamicObject::Recycle ObjectID! " + MeshName);
+		}
+		else
+		{
+			cognitivevrapi::CognitiveLog::Info("UDynamicObject::Get new ObjectID! " + MeshName);
+			ObjectID = GetUniqueId(MeshName);
+
+			allObjectIds.Add(ObjectID);
+		}
+
+		cognitivevrapi::FDynamicObjectManifestEntry entry = cognitivevrapi::FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
+		if (!GroupName.IsEmpty())
+		{
+			entry.SetProperty("groupname", GroupName);
+		}
+		manifest.Add(entry);
+		newManifest.Add(entry);
+	}
+	else
+	{
+		ObjectID = MakeShareable(new cognitivevrapi::FDynamicObjectId(CustomId, MeshName));
+		cognitivevrapi::FDynamicObjectManifestEntry entry = cognitivevrapi::FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
+		if (!GroupName.IsEmpty())
+		{
+			//entry.
+			entry.SetProperty("groupname", GroupName);
+		}
+		manifest.Add(entry);
+		newManifest.Add(entry);
+	}
+
+	//if (manifest.Num() == 1)
+	//{
+		//cognitivevrapi::CognitiveLog::Info("DynamicObject::MakeSnapshot Register Provider->OnSendData for Dynamics");
+		//s->OnSendData.AddStatic(SendData);
+		//TODO register dynamic object send data to some event, or just call manually from core
+	//}
 }
 
 void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction )
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 
+	if (!s->HasStartedSession()) { return; }
 	if (!SnapshotOnInterval) { return; }
 
 	currentTime += DeltaTime;
@@ -239,7 +338,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 	}
 	else
 	{
-		FDynamicObjectManifestEntry entry;
+		cognitivevrapi::FDynamicObjectManifestEntry entry;
 		bool foundEntry = false;
 		for (int32 i = 0; i < manifest.Num(); i++)
 		{
@@ -257,61 +356,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 
 	if (needObjectId)
 	{
-		if (!UseCustomId)
-		{
-			TSharedPtr<FDynamicObjectId> recycledId;
-			bool foundRecycleId = false;
-
-			for (int32 i = 0; i < allObjectIds.Num(); i++)
-			{
-				if (!allObjectIds[i]->Used && allObjectIds[i]->MeshName == MeshName)
-				{
-					foundRecycleId = true;
-					recycledId = allObjectIds[i];
-					break;
-				}
-			}
-			if (foundRecycleId)
-			{
-				ObjectID = recycledId;
-				ObjectID->Used = true;
-				cognitivevrapi::CognitiveLog::Info("UDynamicObject::Recycle ObjectID! " + MeshName);
-			}
-			else
-			{
-				cognitivevrapi::CognitiveLog::Info("UDynamicObject::Get new ObjectID! " + MeshName);
-				ObjectID = GetUniqueId(MeshName);
-
-				allObjectIds.Add(ObjectID);
-			}
-
-			FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
-			if (!GroupName.IsEmpty())
-			{
-				entry.SetProperty("groupname", GroupName);
-			}
-			manifest.Add(entry);
-			newManifest.Add(entry);
-		}
-		else
-		{
-			ObjectID = MakeShareable(new FDynamicObjectId(CustomId, MeshName));
-			FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
-			if (!GroupName.IsEmpty())
-			{
-				//entry.
-				entry.SetProperty("groupname", GroupName);
-			}
-			manifest.Add(entry);
-			newManifest.Add(entry);
-		}
-
-		if (manifest.Num() == 1)
-		{
-			cognitivevrapi::CognitiveLog::Info("DynamicObject::MakeSnapshot Register Provider->OnSendData for Dynamics");
-			//s->OnSendData.AddStatic(SendData);
-			//TODO register dynamic object send data to some event, or just call manually from core
-		}
+		GenerateObjectId();
 	}
 
 	FDynamicObjectSnapshot snapshot = FDynamicObjectSnapshot();
@@ -336,13 +381,13 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 	for (auto& element : DirtyEngagements)
 	{
 		//copying event because it could be removed below if inactive
-		auto engage = FEngagementEvent(element.EngagementType, element.Parent, element.EngagementNumber);
+		auto engage = cognitivevrapi::FEngagementEvent(element.EngagementType, element.Parent, element.EngagementNumber);
 		engage.EngagementTime = element.EngagementTime;
 
 		snapshot.Engagements.Add(engage);
 	}
 
-	DirtyEngagements.RemoveAll([=](const FEngagementEvent& engage) { return engage.Active == false; });
+	DirtyEngagements.RemoveAll([=](const cognitivevrapi::FEngagementEvent& engage) { return engage.Active == false; });
 
 	return snapshot;
 }
@@ -464,7 +509,7 @@ void UDynamicObject::SendData()
 		return;
 	}
 
-	TSharedPtr<FSceneData> currentscenedata = cog->GetCurrentSceneData();
+	TSharedPtr<cognitivevrapi::FSceneData> currentscenedata = cog->GetCurrentSceneData();
 	if (!currentscenedata.IsValid())
 	{
 		GLog->Log("DynamicObject::SendData current scene data is invalid");
@@ -482,8 +527,13 @@ void UDynamicObject::SendData()
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 
 	wholeObj->SetStringField("userid", cog->GetUserID());
+	if (!cog->LobbyId.IsEmpty())
+	{
+		wholeObj->SetStringField("lobbyId", cog->LobbyId);
+	}
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionid", cog->GetSessionID());
+	wholeObj->SetStringField("formatversion", "1.0");
 	wholeObj->SetNumberField("part", jsonPart);
 	jsonPart++;
 
@@ -605,7 +655,7 @@ void UDynamicObject::BeginEngagementId(FString engagementName, FString parentObj
 			//foundEvent = &e;
 		}
 	}
-	FEngagementEvent newEngagement = FEngagementEvent(engagementName, parentObjectId, previousEngagementCount + 1);
+	cognitivevrapi::FEngagementEvent newEngagement = cognitivevrapi::FEngagementEvent(engagementName, parentObjectId, previousEngagementCount + 1);
 	DirtyEngagements.Add(newEngagement);
 	Engagements.Add(newEngagement);
 }
@@ -623,7 +673,7 @@ void UDynamicObject::EndEngagement(UDynamicObject* target, FString engagementTyp
 
 void UDynamicObject::EndEngagementId(FString engagementName, FString parentObjectId)
 {
-	FEngagementEvent* foundEvent = NULL;
+	cognitivevrapi::FEngagementEvent* foundEvent = NULL;
 	for (auto& e : DirtyEngagements)
 	{
 		if (e.EngagementType == engagementName && (e.Parent == parentObjectId || parentObjectId == ""))
@@ -649,7 +699,7 @@ void UDynamicObject::EndEngagementId(FString engagementName, FString parentObjec
 			}
 		}
 
-		FEngagementEvent newEngagement = FEngagementEvent(engagementName, parentObjectId, previousEngagementCount + 1);
+		cognitivevrapi::FEngagementEvent newEngagement = cognitivevrapi::FEngagementEvent(engagementName, parentObjectId, previousEngagementCount + 1);
 		newEngagement.Active = false;
 		DirtyEngagements.Add(newEngagement);
 		Engagements.Add(newEngagement);
@@ -681,7 +731,7 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
-FDynamicObjectManifestEntry* FDynamicObjectManifestEntry::SetProperty(FString key, FString value)
+cognitivevrapi::FDynamicObjectManifestEntry* cognitivevrapi::FDynamicObjectManifestEntry::SetProperty(FString key, FString value)
 {
 	this->StringProperties.Add(key, value);
 	return this;
