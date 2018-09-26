@@ -12,6 +12,7 @@
 #include "Containers/Ticker.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
+#include "DynamicComponentDetails.h"
 
 //sets up customization for settings
 //adds scene setup window
@@ -133,7 +134,7 @@ public:
 
 		PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FCognitiveSettingsCustomization::MakeInstance));
 		//PropertyModule.RegisterCustomClassLayout(TEXT("BaseEditorTool"), FOnGetDetailCustomizationInstance::CreateStatic(&FSetupCustomization::MakeInstance));
-
+		PropertyModule.RegisterCustomClassLayout(TEXT("DynamicObject"), FOnGetDetailCustomizationInstance::CreateStatic(&UDynamicObjectComponentDetails::MakeInstance));
 		IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(TEXT("ImageWrapper"));
 		ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
 #endif

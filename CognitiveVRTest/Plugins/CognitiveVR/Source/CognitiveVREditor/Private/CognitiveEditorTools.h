@@ -199,6 +199,8 @@ public:
 	//uploads each dynamic object using its directory to the current scene
 	UFUNCTION(Exec, Category = "Dynamics")
 		FReply UploadDynamics();
+	UFUNCTION(Exec, Category = "Dynamics")
+		FReply UploadDynamic(FString directory);
 
 	//this is for aggregating dynamic objects
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
@@ -384,16 +386,20 @@ public:
 
 	FString GetProductID();
 
-	void RefreshAllUploadFiles();
-	TArray<TSharedPtr<FString>> AllUploadFiles;
-	TArray<TSharedPtr<FString>> AllDynamicFiles;
+	void RefreshSceneUploadFiles();
+	void RefreshDynamicUploadFiles();
+	//void RefreshAllUploadFiles();
+	TArray<TSharedPtr<FString>> SceneUploadFiles;
+	TArray<TSharedPtr<FString>> DynamicUploadFiles;
 
 	FText UploadSceneNameFiles() const;
 	FText OpenSceneNameInBrowser() const;
+	FReply OpenURL(FString url);
 	void FindAllSubDirectoryNames();
 	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
-	FReply SelectUploadScreenshot();
+	//FReply SelectUploadScreenshot();
 	FReply TakeScreenshot();
+	FReply TakeDynamicScreenshot(FString dynamicName);
 	
 	//bool HasEditorAuthToken() const;
 	FText GetDynamicsOnSceneExplorerTooltip() const;

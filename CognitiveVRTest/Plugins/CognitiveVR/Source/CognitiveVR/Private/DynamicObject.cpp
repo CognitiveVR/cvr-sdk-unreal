@@ -28,7 +28,7 @@ UDynamicObject::UDynamicObject()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-void UDynamicObject::OnComponentCreated()
+void UDynamicObject::TryGenerateMeshName()
 {
 	if (MeshName.IsEmpty())
 	{
@@ -42,8 +42,43 @@ void UDynamicObject::OnComponentCreated()
 		{
 			return;
 		}
+		UseCustomMeshName = true;
+		MeshName = staticmeshComponent->GetStaticMesh()->GetName();
+	}
+}
+
+void UDynamicObject::GenerateCustomId()
+{
+	UseCustomId = true;
+	CustomId = FGuid::NewGuid().ToString();
+}
+
+void UDynamicObject::TryGenerateCustomIdAndMesh()
+{
+	if (MeshName.IsEmpty())
+	{
+		if (GetOwner() == NULL)
+		{
+			GLog->Log("owner is null, cannot generate custom id and mesh in this context");
+			return;
+		}
+
+		UActorComponent* actorComponent = GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
+		if (actorComponent == NULL)
+		{
+			return;
+		}
+		UStaticMeshComponent* staticmeshComponent = Cast<UStaticMeshComponent>(actorComponent);
+		if (staticmeshComponent == NULL || staticmeshComponent->GetStaticMesh() == NULL)
+		{
+			return;
+		}
+		GLog->Log("set meshname and customid");
+		UseCustomMeshName = true;
+		UseCustomId = true;
 		MeshName = staticmeshComponent->GetStaticMesh()->GetName();
 		CustomId = FGuid::NewGuid().ToString();
+		GWorld->MarkPackageDirty();
 	}
 }
 

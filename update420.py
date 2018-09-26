@@ -5,7 +5,7 @@ import sys
 cwd = os.getcwd()
 targetdir = "cognitiveVR_UnrealSDK_temp"
 version = "0"
-enginesubversion = "18"
+enginesubversion = "20"
 
 def replaceline(file, linesrc, linedst):
 
@@ -113,13 +113,16 @@ insertline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVREditor\Cogn
 #9 readonlytargetinfo
 replaceline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVREditor\CognitiveVREditor.Build.cs","	public CognitiveVREditor(TargetInfo Target)","	public CognitiveVREditor(ReadOnlyTargetRules Target):base(Target)")
 replaceline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","		public CognitiveVR(TargetInfo Target)","		public CognitiveVR(ReadOnlyTargetRules Target): base(Target)")
-#replaceline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs",'		string DirectXSDKDir = UEBuildConfiguration.UEThirdPartySourceDirectory + "Windows/DirectX";','		string DirectXSDKDir = Target.UEThirdPartySourceDirectory + "Windows/DirectX";')
+replaceline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs",'		string DirectXSDKDir = UEBuildConfiguration.UEThirdPartySourceDirectory + "Windows/DirectX";','		string DirectXSDKDir = Target.UEThirdPartySourceDirectory + "Windows/DirectX";')
 
 #10 add core minimal to dynamiccomponentdetails
 insertline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DynamicComponentDetails.h",'#include "BaseEditorTool.h"','#include "coreminimal.h"')
 
 #11 replace editor selection code in dynamiccomponentdetails
 replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DynamicComponentDetails.cpp","	const TArray< TWeakObjectPtr<UObject> >& SelectedObjects = DetailLayout.GetDetailsView().GetSelectedObjects();","	const TArray< TWeakObjectPtr<UObject> >& SelectedObjects = DetailLayout.GetSelectedObjects();")
+
+#12 add audio define to microphone header
+insertline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Public\MicrophoneCaptureActor.h","#pragma once","#define NTDDI_THRESHOLD 0")
 
 print("made file changes")
 

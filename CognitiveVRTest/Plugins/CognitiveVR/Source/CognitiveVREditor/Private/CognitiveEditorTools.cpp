@@ -291,6 +291,12 @@ FReply FCognitiveEditorTools::ExportSelectedDynamics()
 
 void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects)
 {
+	if (!HasFoundBlender())
+	{
+		UE_LOG(CognitiveVR_Log, Error, TEXT("Could not complete Export - Must have Blender installed to convert images"));
+		return;
+	}
+
 	FVector originalLocation;
 	FRotator originalRotation;
 	FVector originalScale;
@@ -409,6 +415,10 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 	{
 		//id dynamic custom id is not in usedids - add it
 
+		if (dynamic->MeshName.IsEmpty())
+		{
+			dynamic->TryGenerateMeshName();
+		}						  
 		FString findId = dynamic->CustomId;
 
 		cognitivevrapi::FDynamicObjectId* FoundId = usedIds.FindByPredicate([findId](const cognitivevrapi::FDynamicObjectId& InItem)
@@ -429,11 +439,8 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 
 	for (auto& dynamic : UnassignedDynamics)
 	{
-		FString newCustomId = FGuid::NewGuid().ToString();
-
-		dynamic->CustomId = newCustomId;
-		dynamic->UseCustomId = true;
-		usedIds.Add(cognitivevrapi::FDynamicObjectId(newCustomId, dynamic->MeshName));
+		dynamic->GenerateCustomId();
+		usedIds.Add(cognitivevrapi::FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
 		changedDynamics++;
 	}
 
@@ -727,6 +734,87 @@ FReply FCognitiveEditorTools::UploadDynamics()
 	{
 		GLog->Log("FCognitiveEditorTools::UploadDynamics has no dynamics to upload!");
 		WizardUploading = false;
+	}
+
+	return FReply::Handled();
+}
+
+FReply FCognitiveEditorTools::UploadDynamic(FString directory)
+{
+	FString filesStartingWith = TEXT("");
+	FString pngextension = TEXT("png");
+
+	// Get all files in directory
+	IPlatformFile &PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+	TArray<FString> DirectoriesToSkip;
+	TArray<FString> DirectoriesToNotRecurse;
+
+	FString singleDir = GetDynamicsExportDirectory()+"/" + directory;
+
+	// use the timestamp grabbing visitor (include directories)
+	FLocalTimestampDirectoryVisitor Visitor(PlatformFile, DirectoriesToSkip, DirectoriesToNotRecurse, true);
+	Visitor.Visit(*singleDir, true);
+
+	TArray<FString> dynamicNames;
+	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
+	{
+		if (TimestampIt.Key() != GetDynamicsExportDirectory() && !TimestampIt.Key().EndsWith(".png") && !TimestampIt.Key().EndsWith(".obj") && !TimestampIt.Key().EndsWith(".mtl"))
+		{
+			GLog->Log("upload dynamic " + FPaths::GetCleanFilename(TimestampIt.Key()));
+			dynamicNames.Add(FPaths::GetCleanFilename(TimestampIt.Key()));
+		}
+		else
+		{
+			GLog->Log("skip file - not dynamic " + TimestampIt.Key());
+		}
+	}
+
+	ReadSceneDataFromFile();
+
+	GLog->Log("FCognitiveEditorTools::UploadDynamics found " + FString::FromInt(dynamicNames.Num()) + " exported dynamic objects");
+	TSharedPtr<cognitivevrapi::FEditorSceneData> currentSceneData = GetCurrentSceneData();
+
+	if (!currentSceneData.IsValid())
+	{
+		GLog->Log("FCognitiveEditorToolsCustomization::UploadDynamics can't find current scene!");
+		return FReply::Handled();
+	}
+
+	//no matches anywhere
+	//CognitiveLog::Warning("UPlayerTracker::GetSceneKey ------- no matches in ini");
+
+	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
+	{
+		const FString filePath = TimestampIt.Key();
+		const FString fileName = FPaths::GetCleanFilename(filePath);
+
+		if (GetDynamicsExportDirectory() == filePath)
+		{
+			GLog->Log("root found " + filePath);
+		}
+		else if (FPaths::DirectoryExists(filePath))
+		{
+			//GLog->Log("directory found " + filePath);
+			FString url = PostDynamicObjectMeshData(currentSceneData->Id, currentSceneData->VersionNumber, fileName);
+			GLog->Log("dynamic upload to url " + url);
+
+			UploadFromDirectory(url, filePath, "object");
+			OutstandingDynamicUploadRequests++;
+		}
+		else
+		{
+			//GLog->Log("file found " + filePath);
+		}
+	}
+
+	if (OutstandingDynamicUploadRequests == 0)
+	{
+		GLog->Log("FCognitiveEditorTools::UploadDynamics has no dynamics to upload!");
+	}
+	else
+	{
+		GLog->Log("FCognitiveEditorTools::UploadDynamics uploaded a thing");
 	}
 
 	return FReply::Handled();
@@ -1215,6 +1303,16 @@ FReply FCognitiveEditorTools::TakeScreenshot()
 	return FReply::Handled();
 }
 
+FReply FCognitiveEditorTools::TakeDynamicScreenshot(FString dynamicName)
+{
+	FString dir = BaseExportDirectory + "/dynamics/" + dynamicName + "/";
+	if (VerifyOrCreateDirectory(dir))
+	{
+		FScreenshotRequest::RequestScreenshot(dir + "cvr_object_thumbnail", false, false);
+	}
+	return FReply::Handled();
+}
+
 void FCognitiveEditorTools::OnUploadScreenshotCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful)
@@ -1613,14 +1711,14 @@ FReply FCognitiveEditorTools::Reduce_Textures()
 }
 
 //SCENE
-void FCognitiveEditorTools::RefreshAllUploadFiles()
+/*void FCognitiveEditorTools::RefreshAllUploadFiles()
 {
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
-	TArray<FString> filesInDirectory = GetAllFilesInDirectory(BaseExportDirectory, true, filesStartingWith, filesStartingWith, pngextension,false);
+	TArray<FString> filesInDirectory = GetAllFilesInDirectory(GetCurrentSceneExportDirectory(), true, filesStartingWith, filesStartingWith, pngextension,false);
 
-	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(BaseExportDirectory, true, filesStartingWith, pngextension, filesStartingWith,false);
-	imagesInDirectory.Remove(BaseExportDirectory + "/screenshot/screenshot.png");
+	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(GetCurrentSceneExportDirectory(), true, filesStartingWith, pngextension, filesStartingWith,false);
+	imagesInDirectory.Remove(GetCurrentSceneExportDirectory() + "/screenshot/screenshot.png");
 
 	//TArray<TSharedPtr<FString>> names;
 	AllUploadFiles.Empty();
@@ -1638,6 +1736,45 @@ void FCognitiveEditorTools::RefreshAllUploadFiles()
 			AllDynamicFiles.Add(MakeShareable(new FString(imagesInDirectory[i])));
 		else
 			AllUploadFiles.Add(MakeShareable(new FString(imagesInDirectory[i])));
+	}
+}*/
+
+void FCognitiveEditorTools::RefreshSceneUploadFiles()
+{
+	FString filesStartingWith = TEXT("");
+	FString pngextension = TEXT("png");
+	TArray<FString> filesInDirectory = GetAllFilesInDirectory(GetCurrentSceneExportDirectory(), true, filesStartingWith, filesStartingWith, pngextension, false);
+
+	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(GetCurrentSceneExportDirectory(), true, filesStartingWith, pngextension, filesStartingWith, false);
+	imagesInDirectory.Remove(GetCurrentSceneExportDirectory() + "/screenshot/screenshot.png");
+
+	SceneUploadFiles.Empty();
+	for (int32 i = 0; i < filesInDirectory.Num(); i++)
+	{
+		SceneUploadFiles.Add(MakeShareable(new FString(filesInDirectory[i])));
+	}
+	for (int32 i = 0; i < imagesInDirectory.Num(); i++)
+	{
+		SceneUploadFiles.Add(MakeShareable(new FString(imagesInDirectory[i])));
+	}
+}
+
+void FCognitiveEditorTools::RefreshDynamicUploadFiles()
+{
+	FString filesStartingWith = TEXT("");
+	FString pngextension = TEXT("png");
+	TArray<FString> filesInDirectory = GetAllFilesInDirectory(BaseExportDirectory+"/dynamics", true, filesStartingWith, filesStartingWith, pngextension, false);
+
+	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(BaseExportDirectory + "/dynamics", true, filesStartingWith, pngextension, filesStartingWith, false);
+
+	DynamicUploadFiles.Empty();
+	for (int32 i = 0; i < filesInDirectory.Num(); i++)
+	{
+		DynamicUploadFiles.Add(MakeShareable(new FString(filesInDirectory[i])));
+	}
+	for (int32 i = 0; i < imagesInDirectory.Num(); i++)
+	{
+		DynamicUploadFiles.Add(MakeShareable(new FString(imagesInDirectory[i])));
 	}
 }
 
@@ -2383,10 +2520,10 @@ FText FCognitiveEditorTools::GetDynamicObjectUploadText() const
 	auto data = GetCurrentSceneData();
 	if (!data.IsValid())
 	{
-		return FText::FromString("No Scene Data found");
+		return FText::FromString("No Scene Data found - Have you used Cognitive Scene Setup to export this scene?");
 	}
 
-	return FText::FromString("Upload " + FString::FromInt(SubDirectoryNames.Num()) + " Dynamic Object Meshes to " + data->Name + " version " + FString::FromInt(data->VersionNumber));
+	return FText::FromString("Upload " + FString::FromInt(SubDirectoryNames.Num()) + " Dynamic Object Meshes to " + data->Name + " Version " + FString::FromInt(data->VersionNumber));
 }
 
 FText FCognitiveEditorTools::GetDynamicsFromManifest() const
@@ -2418,10 +2555,14 @@ void FCognitiveEditorTools::CurrentSceneVersionRequest()
 	}
 }
 
+FReply FCognitiveEditorTools::OpenURL(FString url)
+{
+	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);
+	return FReply::Handled();
+}
+
 FReply FCognitiveEditorTools::OpenSceneInBrowser(FString sceneid)
 {
-
-
 	FString url = SceneExplorerOpen(sceneid);
 
 	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);

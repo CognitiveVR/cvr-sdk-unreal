@@ -115,6 +115,11 @@ replaceline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVREditor\Cog
 replaceline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","		public CognitiveVR(TargetInfo Target)","		public CognitiveVR(ReadOnlyTargetRules Target): base(Target)")
 replaceline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs",'		string DirectXSDKDir = UEBuildConfiguration.UEThirdPartySourceDirectory + "Windows/DirectX";','		string DirectXSDKDir = Target.UEThirdPartySourceDirectory + "Windows/DirectX";')
 
+#10 add core minimal to dynamiccomponentdetails
+insertline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DynamicComponentDetails.h",'#include "BaseEditorTool.h"','#include "coreminimal.h"')
+
+#11 replace editor selection code in dynamiccomponentdetails
+replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DynamicComponentDetails.cpp","	const TArray< TWeakObjectPtr<UObject> >& SelectedObjects = DetailLayout.GetDetailsView().GetSelectedObjects();","	const TArray< TWeakObjectPtr<UObject> >& SelectedObjects = DetailLayout.GetSelectedObjects();")
 
 print("made file changes")
 

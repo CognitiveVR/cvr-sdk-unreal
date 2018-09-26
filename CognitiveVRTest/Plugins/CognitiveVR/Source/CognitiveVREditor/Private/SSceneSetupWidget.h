@@ -52,7 +52,7 @@ public:
 	TArray<TSharedPtr<cognitivevrapi::FDynamicData>> Items;
 	//FCognitiveTools* CognitiveTools;
 
-	int32 CurrentPage;
+	int32 CurrentPage = 0;
 	bool SceneWasExported = false;
 
 	
@@ -132,6 +132,9 @@ public:
 
 	FReply SelectDynamic(TSharedPtr<cognitivevrapi::FDynamicData> data);
 
+	FReply SelectAll();
+	FReply DeselectTransparentMaterials();
+
 	void RefreshList();
 
 	FReply TakeScreenshot();
@@ -142,7 +145,15 @@ public:
 	FOptionalSize GetScreenshotWidth() const;
 	FOptionalSize GetScreenshotHeight() const;
 
+	FReply ValidateAndRefresh();
+
 	FReply EvaluateExport();
+	//sets export variables, then calls evaluateexport
+	FReply EvaluateExportLow();
+	//sets export variables, then calls evaluateexport
+	FReply EvaluateExportMed();
+	//sets export variables, then calls evaluateexport
+	FReply EvaluateExportHigh();
 	bool NoExportGameplayMeshes = true;
 	ECheckBoxState GetNoExportGameplayMeshCheckbox() const;
 	void OnChangeNoExportGameplayMesh(ECheckBoxState newstate)

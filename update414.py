@@ -5,7 +5,7 @@ import sys
 cwd = os.getcwd()
 targetdir = "cognitiveVR_UnrealSDK_temp"
 version = "0"
-enginesubversion = "18"
+enginesubversion = "14"
 
 def replaceline(file, linesrc, linedst):
 
@@ -91,35 +91,30 @@ version = getpluginversion()
 print (version)
 
 #3 add blueprinttype to dynamic data
-replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Public\DynamicObject.h","USTRUCT()","USTRUCT(BlueprintType)")
+#replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Public\DynamicObject.h","USTRUCT()","USTRUCT(BlueprintType)")
 
 #4 replace json attrvalue with json attrvaluestring
-replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVR.cpp","			properties->SetStringField(Attr.AttrName, Attr.AttrValue);","			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);")
+#replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVR.cpp","			properties->SetStringField(Attr.AttrName, Attr.AttrValue);","			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);")
 
 #5 insert xr and hmd function headers
-insertline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\playertracker.h",'#include "DynamicObject.h"','#include "Runtime/HeadMountedDisplay/Public/IXRTrackingSystem.h"')
-insertline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\playertracker.h",'#include "DynamicObject.h"','#include "HeadMountedDisplayFunctionLibrary.h"')
+#insertline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\playertracker.h",'#include "DynamicObject.h"','#include "Runtime/HeadMountedDisplay/Public/IXRTrackingSystem.h"')
+#insertline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\playertracker.h",'#include "DynamicObject.h"','#include "HeadMountedDisplayFunctionLibrary.h"')
 
 #6 replace hmddevice with xrsystem
-replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\playertracker.cpp","	if (GEngine->HMDDevice.IsValid())","	if (GEngine->XRSystem.IsValid())")
-replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\playertracker.cpp","		DeviceName = GEngine->HMDDevice->GetDeviceName();","		DeviceName = GEngine->XRSystem->GetSystemName();")
+#replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\playertracker.cpp","	if (GEngine->HMDDevice.IsValid())","	if (GEngine->XRSystem.IsValid())")
+#replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\playertracker.cpp","		DeviceName = GEngine->HMDDevice->GetDeviceName();","		DeviceName = GEngine->XRSystem->GetSystemName();")
 
 #7 add workspacemenustructre to editor module
-insertline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.cpp",'#include "SSceneSetupWidget.h"','#include "WorkspaceMenuStructure.h"')
+#insertline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.cpp",'#include "SSceneSetupWidget.h"','#include "WorkspaceMenuStructure.h"')
 
 #8 add WorkspaceMenuStructure to module dependencies
-insertline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVREditor\CognitiveVREditor.Build.cs",'				"LevelEditor",','				"WorkspaceMenuStructure",')
+#insertline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVREditor\CognitiveVREditor.Build.cs",'				"LevelEditor",','				"WorkspaceMenuStructure",')
 
 #9 readonlytargetinfo
-replaceline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVREditor\CognitiveVREditor.Build.cs","	public CognitiveVREditor(TargetInfo Target)","	public CognitiveVREditor(ReadOnlyTargetRules Target):base(Target)")
-replaceline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","		public CognitiveVR(TargetInfo Target)","		public CognitiveVR(ReadOnlyTargetRules Target): base(Target)")
+#replaceline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVREditor\CognitiveVREditor.Build.cs","	public CognitiveVREditor(TargetInfo Target)","	public CognitiveVREditor(ReadOnlyTargetRules Target):base(Target)")
+#replaceline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","		public CognitiveVR(TargetInfo Target)","		public CognitiveVR(ReadOnlyTargetRules Target): base(Target)")
 #replaceline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs",'		string DirectXSDKDir = UEBuildConfiguration.UEThirdPartySourceDirectory + "Windows/DirectX";','		string DirectXSDKDir = Target.UEThirdPartySourceDirectory + "Windows/DirectX";')
 
-#10 add core minimal to dynamiccomponentdetails
-insertline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DynamicComponentDetails.h",'#include "BaseEditorTool.h"','#include "coreminimal.h"')
-
-#11 replace editor selection code in dynamiccomponentdetails
-replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DynamicComponentDetails.cpp","	const TArray< TWeakObjectPtr<UObject> >& SelectedObjects = DetailLayout.GetDetailsView().GetSelectedObjects();","	const TArray< TWeakObjectPtr<UObject> >& SelectedObjects = DetailLayout.GetSelectedObjects();")
 
 print("made file changes")
 

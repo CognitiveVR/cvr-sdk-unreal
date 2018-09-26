@@ -177,6 +177,9 @@ public:
 	float RotationThreshold = 10;
 
 	UDynamicObject();
+	void TryGenerateMeshName();
+	void GenerateCustomId();
+	void TryGenerateCustomIdAndMesh();
 	
 	//engagements
 	TArray<cognitivevrapi::FEngagementEvent> DirtyEngagements;
@@ -185,7 +188,7 @@ public:
 	void EndEngagementId(FString engagementName, FString parentDynamicObjectId);
 
 
-	virtual void OnComponentCreated() override;
+	//virtual void OnComponentCreated() override;
 	virtual void BeginPlay() override;
 
 	TSharedPtr<cognitivevrapi::FDynamicObjectId> GetUniqueId(FString meshName);
