@@ -132,7 +132,21 @@ void cognitivevrapi::CustomEvent::Send(FString category, FVector Position, TShar
 
 	if (events.Num() > CustomEventBatchSize)
 	{
-		SendData();
+		TrySendData();
+	}
+}
+
+void cognitivevrapi::CustomEvent::TrySendData()
+{
+	if (cog->GetWorld() != NULL)
+	{
+		bool withinMinTimer = LastSendTime + MinTimer > cog->GetWorld()->GetRealTimeSeconds();
+		bool withinExtremeBatchSize = events.Num() < ExtremeBatchSize;
+
+		if (withinMinTimer && withinExtremeBatchSize)
+		{
+			return;
+		}
 	}
 }
 
@@ -146,19 +160,12 @@ void cognitivevrapi::CustomEvent::SendData()
 
 	if (events.Num() == 0)
 	{
+		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEvent::SendData), AutoTimer, false);
 		return;
 	}
 
 	if (cog->GetWorld() != NULL)
 	{
-		bool withinMinTimer = LastSendTime + MinTimer > cog->GetWorld()->GetRealTimeSeconds();
-		bool withinExtremeBatchSize = events.Num() < ExtremeBatchSize;
-
-		if (withinMinTimer && withinExtremeBatchSize)
-		{
-			return;
-		}
-
 		LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
 	}
 

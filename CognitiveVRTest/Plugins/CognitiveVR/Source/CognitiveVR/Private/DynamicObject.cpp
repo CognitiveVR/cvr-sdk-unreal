@@ -16,7 +16,7 @@ int32 MinTimer = 5;
 int32 AutoTimer = 10;
 int32 ExtremeBatchSize = 128;
 float NextSendTime = 0;
-float LastSendTime = 0;
+float LastSendTime = -60;
 FTimerHandle CognitiveDynamicAutoSendHandle;
 
 // Sets default values for this component's properties
@@ -59,7 +59,6 @@ void UDynamicObject::TryGenerateCustomIdAndMesh()
 	{
 		if (GetOwner() == NULL)
 		{
-			GLog->Log("owner is null, cannot generate custom id and mesh in this context");
 			return;
 		}
 
@@ -73,7 +72,6 @@ void UDynamicObject::TryGenerateCustomIdAndMesh()
 		{
 			return;
 		}
-		GLog->Log("set meshname and customid");
 		UseCustomMeshName = true;
 		UseCustomId = true;
 		MeshName = staticmeshComponent->GetStaticMesh()->GetName();
@@ -184,7 +182,7 @@ void UDynamicObject::BeginPlay()
 
 		if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
 		{
-			SendData();
+			TrySendData();
 		}
 	}
 }
@@ -351,7 +349,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 			snapshots.Add(snapObj);
 			if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
 			{
-				SendData();
+				TrySendData();
 			}
 		}
 	}
@@ -537,6 +535,22 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 	return MakeShareable(new FJsonValueObject(snapObj));
 }
 
+void UDynamicObject::TrySendData()
+{
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (cog->GetWorld() != NULL)
+	{
+		bool withinMinTimer = LastSendTime + MinTimer > cog->GetWorld()->GetRealTimeSeconds();
+		bool withinExtremeBatchSize = newManifest.Num() + snapshots.Num() < ExtremeBatchSize;
+
+		if (withinMinTimer && withinExtremeBatchSize)
+		{
+			return;
+		}
+		SendData();
+	}
+}
+
 //static
 void UDynamicObject::SendData()
 {
@@ -556,34 +570,13 @@ void UDynamicObject::SendData()
 	if (newManifest.Num() + snapshots.Num() == 0)
 	{
 		cognitivevrapi::CognitiveLog::Info("UDynamicObject::SendData no objects or data to send!");
+		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
 		return;
 	}	
 	
 	if (cog->GetWorld() != NULL)
 	{
-		bool withinMinTimer = LastSendTime + MinTimer > cog->GetWorld()->GetRealTimeSeconds();
-		bool withinExtremeBatchSize = newManifest.Num() + snapshots.Num() < ExtremeBatchSize;
-
-		if (withinMinTimer && withinExtremeBatchSize)
-		{
-			return;
-		}
-		if (!withinExtremeBatchSize)
-		{
-			GLog->Log("DynamicObject::SendData reached extreme batch size");
-		}
-		if (!withinMinTimer)
-		{
-			GLog->Log("DynamicObject::SendData minimum timer elapsed");
-		}
-
-		NextSendTime = cog->GetWorld()->GetRealTimeSeconds() + MinTimer;
 		LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
-	}
-
-	if (newManifest.Num() + snapshots.Num() < MaxSnapshots)
-	{
-		GLog->Log("DynamicObject::SendData less than normal batch size - likely autotimer");
 	}
 
 	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
@@ -693,7 +686,7 @@ void UDynamicObject::SendDynamicObjectSnapshot(UPARAM(ref)FDynamicObjectSnapshot
 	snapshots.Add(snapshot);
 	if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
 	{
-		SendData();
+		TrySendData();
 	}
 }
 

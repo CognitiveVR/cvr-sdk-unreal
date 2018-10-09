@@ -26,8 +26,11 @@ namespace cognitivevrapi
 		int32 AutoTimer = 2;
 		int32 MinTimer = 2;
 		int32 ExtremeBatchSize = 64;
-		int32 LastSendTime = 0;
+		int32 LastSendTime = -60;
 		FTimerHandle AutoSendHandle;
+
+		//checks minimum send timer before sending recorded data to dashboard
+		void TrySendData();
 
 	public:
 		Sensors(FAnalyticsProviderCognitiveVR* sp);

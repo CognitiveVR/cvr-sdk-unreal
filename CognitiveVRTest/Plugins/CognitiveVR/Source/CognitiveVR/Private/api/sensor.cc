@@ -67,8 +67,23 @@ void cognitivevrapi::Sensors::RecordSensor(FString Name, float value)
 	sensorDataCount ++;
 	if (sensorDataCount >= SensorThreshold)
 	{
-		Sensors::SendData();
+		Sensors::TrySendData();
 	}
+}
+
+void cognitivevrapi::Sensors::TrySendData()
+{
+	if (cog->GetWorld() != NULL)
+	{
+		bool withinMinTimer = LastSendTime + MinTimer > cog->GetWorld()->GetRealTimeSeconds();
+		bool withinExtremeBatchSize = sensorDataCount < ExtremeBatchSize;
+		
+		if (withinMinTimer && withinExtremeBatchSize)
+		{
+			return;
+		}
+	}
+	SendData();
 }
 
 void cognitivevrapi::Sensors::SendData()
@@ -80,19 +95,12 @@ void cognitivevrapi::Sensors::SendData()
 
 	if (somedatapoints.Num() == 0)
 	{
+		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, false);
 		return;
 	}
 
 	if (cog->GetWorld() != NULL)
 	{
-		bool withinMinTimer = LastSendTime + MinTimer > cog->GetWorld()->GetRealTimeSeconds();
-		bool withinExtremeBatchSize = somedatapoints.Num() < ExtremeBatchSize;
-
-		if (withinMinTimer && withinExtremeBatchSize)
-		{
-			return;
-		}
-
 		LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
 	}
 
