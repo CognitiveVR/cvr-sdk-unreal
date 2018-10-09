@@ -12,13 +12,43 @@ cognitivevrapi::CustomEvent::CustomEvent(FAnalyticsProviderCognitiveVR* cvr)
 	FString ValueReceived;
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventBatchSize", false);
-
 	if (ValueReceived.Len() > 0)
 	{
 		int32 customEventLimit = FCString::Atoi(*ValueReceived);
 		if (customEventLimit > 0)
 		{
 			CustomEventBatchSize = customEventLimit;
+		}
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventExtremeLimit", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 parsedValue = FCString::Atoi(*ValueReceived);
+		if (parsedValue > 0)
+		{
+			ExtremeBatchSize = parsedValue;
+		}
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventMinTimer", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 parsedValue = FCString::Atoi(*ValueReceived);
+		if (parsedValue > 0)
+		{
+			MinTimer = parsedValue;
+		}
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventAutoTimer", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 parsedValue = FCString::Atoi(*ValueReceived);
+		if (parsedValue > 0)
+		{
+			AutoTimer = parsedValue;
+			cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEvent::SendData), AutoTimer, false);
 		}
 	}
 }
@@ -102,7 +132,21 @@ void cognitivevrapi::CustomEvent::Send(FString category, FVector Position, TShar
 
 	if (events.Num() > CustomEventBatchSize)
 	{
-		SendData();
+		TrySendData();
+	}
+}
+
+void cognitivevrapi::CustomEvent::TrySendData()
+{
+	if (cog->GetWorld() != NULL)
+	{
+		bool withinMinTimer = LastSendTime + MinTimer > cog->GetWorld()->GetRealTimeSeconds();
+		bool withinExtremeBatchSize = events.Num() < ExtremeBatchSize;
+
+		if (withinMinTimer && withinExtremeBatchSize)
+		{
+			return;
+		}
 	}
 }
 
@@ -116,8 +160,16 @@ void cognitivevrapi::CustomEvent::SendData()
 
 	if (events.Num() == 0)
 	{
+		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEvent::SendData), AutoTimer, false);
 		return;
 	}
+
+	if (cog->GetWorld() != NULL)
+	{
+		LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
+	}
+
+	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEvent::SendData), AutoTimer, false);
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
@@ -144,8 +196,6 @@ void cognitivevrapi::CustomEvent::SendData()
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 	cog->network->NetworkCall("events", OutputString);
-
-	GLog->Log(OutputString);
 
 	events.Empty();
 }

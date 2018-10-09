@@ -143,6 +143,7 @@ namespace cognitivevrapi
 
 		void OnLevelLoaded();
 		void SetWorld(UWorld* world);
+		UWorld* GetWorld();
 
 		TArray<TSharedPtr<cognitivevrapi::FSceneData>> SceneData;
 		void CacheSceneData();

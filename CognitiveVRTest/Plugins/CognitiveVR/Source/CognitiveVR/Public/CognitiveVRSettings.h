@@ -23,14 +23,32 @@ class UCognitiveVRSettings
 	/** The number of sensor data points that will be collected together before being sent to scene explorer */
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	int32 SensorDataLimit = 64;
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	int32 SensorExtremeLimit = 128;
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	int32 SensorMinTimer = 2;
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	int32 SensorAutoTimer = 30;
 
 	/** The number of dynamic object snapshots that will be collected together before being sent to scene explorer */
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-		int32 DynamicDataLimit = 64;
+	int32 DynamicDataLimit = 64;
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	int32 DynamicExtremeLimit = 128;
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	int32 DynamicMinTimer = 2;
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	int32 DynamicAutoTimer = 30;
 
 	/** The number of transactions that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	int32 CustomEventBatchSize = 64;
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	int32 CustomEventExtremeLimit = 128;
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	int32 CustomEventMinTimer = 2;
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+	int32 CustomEventAutoTimer = 30;
 
 	/** The number of player snapshots that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)

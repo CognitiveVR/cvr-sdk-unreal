@@ -69,6 +69,11 @@ void FAnalyticsProviderCognitiveVR::SetWorld(UWorld* world)
 {
 	currentWorld = world;
 }
+
+UWorld* FAnalyticsProviderCognitiveVR::GetWorld()
+{
+	return currentWorld;
+}
 /*void FAnalyticsProviderCognitiveVR::SendDeviceInfo()
 {
 	//add a bunch of properties
