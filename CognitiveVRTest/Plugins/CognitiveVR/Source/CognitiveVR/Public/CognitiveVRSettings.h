@@ -20,64 +20,55 @@ class UCognitiveVRSettings
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	bool MuteErrorMessages = false;
 
-	/** The number of sensor data points that will be collected together before being sent to scene explorer */
-	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-	int32 SensorDataLimit = 64;
-
-	/** The number of dynamic object snapshots that will be collected together before being sent to scene explorer */
-	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-		int32 DynamicDataLimit = 64;
-
-	/** The number of transactions that will be collected together before being sent to analytics server and scene explorer*/
-	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-	int32 CustomEventBatchSize = 64;
-
-	/** The number of player snapshots that will be collected together before being sent to analytics server and scene explorer*/
-	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-		int32 GazeBatchSize = 64;
-
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	FString Gateway = "data.cognitive3d.com";
 
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 	FString SessionViewer = "sceneexplorer.com/scene/";
 
-	//UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-	bool GazeFromPhysicsRaycast = false;
+	/** The number of player snapshots that will be collected together before being sent to analytics server and scene explorer*/
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+	int32 GazeBatchSize = 64;
 
-	//UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-	bool GazeFromVisualRaycast = true;
+	/** The number of transactions that will be collected together before being sent to analytics server and scene explorer*/
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+	int32 CustomEventBatchSize = 64;
+	//Threshold for ignoring the Event Minimum Timer. If this many Events have been recorded, immediately send
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+	int32 CustomEventExtremeLimit = 128;
+	//Time (in seconds) that must be elapsed before sending a new batch of Event data. Ignored if the batch size reaches Event Extreme Limit
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+	int32 CustomEventMinTimer = 2;
+	//The time (in seconds) to automatically send any outstanding Event data
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+	int32 CustomEventAutoTimer = 30;
 
-//public:
-	//Mesh names separated by ','. These will be removed in the Reduce Meshes step
-	//UPROPERTY(config, EditAnywhere, Category = "Export Settings")
-		//FString ExcludeMeshes = "VRPawn,SkySphere,Camera";
+	/** The number of dynamic object snapshots that will be collected together before being sent to scene explorer */
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+	int32 DynamicDataLimit = 64;
+	//Threshold for ignoring the Dynamic Minimum Timer. If this many Dynamic snapshots have been recorded, immediately send
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+	int32 DynamicExtremeLimit = 128;
+	//Time (in seconds) that must be elapsed before sending a new batch of Dynamic data. Ignored if the batch size reaches Dynamic Extreme Limit
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+	int32 DynamicMinTimer = 2;
+	//The time (in seconds) to automatically send any outstanding Dynamic snapshots or Manifest entries
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+	int32 DynamicAutoTimer = 30;
 
-	//The threshold Blender will reduce. Anything with a polygon count below this number will not be reduced
-	//UPROPERTY(EditAnywhere, Config, Category = "Export Settings")
-		//int32 MinPolygons = 500;
+	/** The number of sensor data points that will be collected together before being sent to scene explorer */
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+	int32 SensorDataLimit = 64;
+	//Threshold for ignoring the Sensor Minimum Timer. If this many Sensor data points have been recorded, immediately send
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+	int32 SensorExtremeLimit = 128;
+	//Time (in seconds) that must be elapsed before sending a new batch of Sensor data. Ignored if the batch size reaches Sensor Extreme Limit
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+	int32 SensorMinTimer = 2;
+	//The time (in seconds) to automatically send any outstanding Sensor data
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+	int32 SensorAutoTimer = 30;
 
-	//The upper threshold Blender will reduce. Any mesh with a polygon count more than this number will be reduced to 10%
-	//UPROPERTY(EditAnywhere, Config, Category = "Export Settings")
-		//int32 MaxPolygons = 20000;
-
-	//Only export StaticMeshComponents with set to be non-movable
-	//UPROPERTY(EditAnywhere, Category = "Export Settings")
-		//bool staticOnly = true;
-
-	//Ignore meshes with bounding size less than this value
-	//UPROPERTY(EditAnywhere, Category = "Export Settings")
-		//float MinimumSize = 100;
-
-	//Ignore meshes with bounding size larger than this value
-	//UPROPERTY(EditAnywhere, Category = "Export Settings")
-		//float MaximumSize = 10000;
-
-	//Textures size is divided by this amount. MUST be a power of two greater than 0!
-	//UPROPERTY(EditAnywhere, Config, Category = "Export Settings")
-		//int32 TextureResizeFactor = 4;
-
-	// UAnalyticsSettingsBase interface
 protected:
 	/**
 	* Provides a mechanism to read the section based information into this UObject's properties

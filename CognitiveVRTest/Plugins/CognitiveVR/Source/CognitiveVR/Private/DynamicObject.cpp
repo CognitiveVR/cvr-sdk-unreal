@@ -12,6 +12,13 @@ TArray<TSharedPtr<cognitivevrapi::FDynamicObjectId>> allObjectIds;
 int32 jsonPart = 1;
 int32 MaxSnapshots = -1;
 
+int32 MinTimer = 5;
+int32 AutoTimer = 10;
+int32 ExtremeBatchSize = 128;
+float NextSendTime = 0;
+float LastSendTime = -60;
+FTimerHandle CognitiveDynamicAutoSendHandle;
+
 // Sets default values for this component's properties
 UDynamicObject::UDynamicObject()
 {
@@ -52,7 +59,6 @@ void UDynamicObject::TryGenerateCustomIdAndMesh()
 	{
 		if (GetOwner() == NULL)
 		{
-			GLog->Log("owner is null, cannot generate custom id and mesh in this context");
 			return;
 		}
 
@@ -66,7 +72,6 @@ void UDynamicObject::TryGenerateCustomIdAndMesh()
 		{
 			return;
 		}
-		GLog->Log("set meshname and customid");
 		UseCustomMeshName = true;
 		UseCustomId = true;
 		MeshName = staticmeshComponent->GetStaticMesh()->GetName();
@@ -88,19 +93,11 @@ void UDynamicObject::BeginPlay()
 
 	if (MaxSnapshots < 0)
 	{
-		MaxSnapshots = 16;
-		FString ValueReceived;
-
-		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicDataLimit", false);
-
-		if (ValueReceived.Len() > 0)
-		{
-			int32 dynamicLimit = FCString::Atoi(*ValueReceived);
-			if (dynamicLimit > 0)
-			{
-				MaxSnapshots = dynamicLimit;
-			}
-		}
+		MaxSnapshots = s->GetCognitiveSettings()->DynamicDataLimit;
+		ExtremeBatchSize = s->GetCognitiveSettings()->DynamicExtremeLimit;
+		MinTimer = s->GetCognitiveSettings()->DynamicMinTimer;
+		AutoTimer = s->GetCognitiveSettings()->DynamicAutoTimer;
+		GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
 	}
 
 	//even if session has not started, still collect data
@@ -147,31 +144,10 @@ void UDynamicObject::BeginPlay()
 
 		if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
 		{
-			SendData();
+			TrySendData();
 		}
 	}
 }
-
-/*FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, FString value)
-{
-	this->StringProperties.Add(key, value);	
-	return this;
-}
-FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, bool value)
-{
-	this->BoolProperties.Add(key, value);
-	return this;
-}
-FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, int32 value)
-{
-	this->IntegerProperties.Add(key, value);
-	return this;
-}
-FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, double value)
-{
-	this->DoubleProperties.Add(key, value);
-	return this;
-}*/
 
 TSharedPtr<cognitivevrapi::FDynamicObjectId> UDynamicObject::GetUniqueId(FString meshName)
 {
@@ -255,6 +231,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 
+	if (!s.IsValid()) { return; }
 	if (!s->HasStartedSession()) { return; }
 	if (!SnapshotOnInterval) { return; }
 
@@ -314,7 +291,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 			snapshots.Add(snapObj);
 			if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
 			{
-				SendData();
+				TrySendData();
 			}
 		}
 	}
@@ -500,6 +477,22 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 	return MakeShareable(new FJsonValueObject(snapObj));
 }
 
+void UDynamicObject::TrySendData()
+{
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (cog->GetWorld() != NULL)
+	{
+		bool withinMinTimer = LastSendTime + MinTimer > cog->GetWorld()->GetRealTimeSeconds();
+		bool withinExtremeBatchSize = newManifest.Num() + snapshots.Num() < ExtremeBatchSize;
+
+		if (withinMinTimer && withinExtremeBatchSize)
+		{
+			return;
+		}
+		SendData();
+	}
+}
+
 //static
 void UDynamicObject::SendData()
 {
@@ -519,9 +512,17 @@ void UDynamicObject::SendData()
 	if (newManifest.Num() + snapshots.Num() == 0)
 	{
 		cognitivevrapi::CognitiveLog::Info("UDynamicObject::SendData no objects or data to send!");
+		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
 		return;
 	}	
 	
+	if (cog->GetWorld() != NULL)
+	{
+		LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
+	}
+
+	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
+
 	TArray<TSharedPtr<FJsonValueObject>> EventArray = UDynamicObject::DynamicSnapshotsToString();
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
@@ -627,7 +628,7 @@ void UDynamicObject::SendDynamicObjectSnapshot(UPARAM(ref)FDynamicObjectSnapshot
 	snapshots.Add(snapshot);
 	if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
 	{
-		SendData();
+		TrySendData();
 	}
 }
 

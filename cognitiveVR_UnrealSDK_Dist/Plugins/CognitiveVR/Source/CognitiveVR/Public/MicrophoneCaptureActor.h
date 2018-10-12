@@ -6,7 +6,7 @@
 #include "CognitiveVRProvider.h"
 #include "Private/CognitiveVRPrivatePCH.h"
 #include "GameFramework/Actor.h"
-#include "rtaudio/RtAudio.h"
+#include "rtaudio/CRtAudio.h"
 #include "Base64.h"
 #include "MicrophoneCaptureActor.generated.h"
 
@@ -25,7 +25,7 @@ private:
 	void EncodeToWav(TArray<uint8>& OutWaveFileData, const uint8* InPCMData, const int32 NumBytes);
 	
 	// RtAudio ADC object -- used to interact with low-level audio device.
-	RtAudio ADC;
+	CRtAudio ADC;
 
 	// Saves raw PCM data recorded to a wave file format
 	void SerializeWaveFile(TArray<uint8>& OutWaveFileData, const uint8* InPCMData, const int32 NumBytes);
@@ -67,7 +67,7 @@ private:
 	int32 NumRecordedSamples;
 
 	// Stream parameters to initialize the ADC
-	RtAudio::StreamParameters StreamParams;
+	CRtAudio::StreamParameters StreamParams;
 
 	// The sample rate used in the recording
 	float RecordingSampleRate = 16000;

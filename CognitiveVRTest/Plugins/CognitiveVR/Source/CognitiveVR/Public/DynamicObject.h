@@ -120,6 +120,8 @@ private:
 	//used to set unique object id from snapshot or when accessed from elsewhere
 	void GenerateObjectId();
 
+	static void TrySendData();
+
 public:	
 	// Sets default values for this component's properties
 

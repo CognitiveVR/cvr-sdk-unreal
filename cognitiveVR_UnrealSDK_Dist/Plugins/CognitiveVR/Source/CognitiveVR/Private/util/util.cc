@@ -22,13 +22,6 @@ double Util::GetTimestamp()
 	#pragma warning(pop)
 }
 
-/*template < typename T > std::string Util::ToString( const T& n )
-{
-    std::ostringstream stm ;
-    stm << n ;
-    return stm.str() ;
-}*/
-
 FString Util::GetDeviceName(FString DeviceName)
 {
 	if (DeviceName == "OculusRift")
@@ -59,16 +52,6 @@ TSharedPtr<FJsonObject> Util::DeviceScraper(TSharedPtr<FJsonObject> properties)
 	FString appVersion = "1.0";
 	GConfig->GetString(TEXT("/Script/EngineSettings.GeneralProjectSettings"), TEXT("ProjectVersion"), appVersion, GGameIni);
 	properties->SetStringField("cvr.app.version", appVersion);
-
-
-	/*IHeadMountedDisplay* HMD = GEngine->HMDDevice.Get();
-	if (HMD && HMD->GetHMDDeviceType() == EHMDDeviceType::DT_GearVR)
-	{
-	FGearVR* OculusHMD = static_cast<FGearVR*>(HMD);
-
-	OculusHMD->StartOVRQuitMenu();
-	}*/
-
 
 	FString engineVersion = FEngineVersion::Current().ToString().Replace(TEXT("+"), TEXT(" "));;
 	properties->SetStringField("cvr.engine.version", engineVersion);

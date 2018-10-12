@@ -5,8 +5,9 @@
 #include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
 
+#include "Public/CognitiveVRSettings.h"
 #include "Private/util/util.h"
-#include "Private/util/config.h"
+//#include "Private/util/config.h"
 #include "Private/util/cognitive_log.h"
 #include "Private/network/network.h"
 #include "Private/api/customevent.h"
@@ -14,22 +15,36 @@
 //#include "DynamicObject.h"
 #include "Engine.h"
 
-class FSceneData
+namespace cognitivevrapi
 {
-public:
-	FString Name = "";
-	FString Id = "";
-	int32 VersionNumber = 1;
-	int32 VersionId = 0;
+	// Only declaring class here
+	class Sensors;
+	class CustomEvent;
+	class Network;
+	//class UCognitiveVRSettings;
+	//class ExitPoll;
+}
 
-	FSceneData(FString name, FString id, int32 versionnumber, int32 versionid)
+class UCognitiveVRSettings;
+
+namespace cognitivevrapi
+{
+	class FSceneData
 	{
-		Name = name;
-		Id = id;
-		VersionNumber = versionnumber;
-		VersionId = versionid;
-	}
-};
+	public:
+		FString Name = "";
+		FString Id = "";
+		int32 VersionNumber = 1;
+		int32 VersionId = 0;
+
+		FSceneData(FString name, FString id, int32 versionnumber, int32 versionid)
+		{
+			Name = name;
+			Id = id;
+			VersionNumber = versionnumber;
+			VersionId = versionid;
+		}
+	};
 
 	enum CognitiveVRError {
 		kErrorSuccess = 0,
@@ -41,17 +56,19 @@ public:
 		kErrorRequestTimedOut = -6,
 		kErrorUnknown = -7
 	};
+}
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
-	class Network;
-	class CustomEvent;
+	class cognitivevrapi::Network;
+	class cognitivevrapi::CustomEvent;
 	class CognitiveVRResponse;
-	class Sensors;
+	class cognitivevrapi::Sensors;
+	
 	//class ExitPoll;
 	//class UDynamicObject;
 
-	class FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
+	class COGNITIVEVR_API FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
 	{
 		/** Unique Id representing the session the analytics are recording for */
 		FString SessionId;
@@ -67,8 +84,11 @@ public:
 		FString UserId;
 		FString DeviceId;
 		double SessionTimestamp = -1;
-		FJsonObject DeviceProperties;
-		FJsonObject UserProperties;
+		FJsonObject SessionProperties;
+		//FJsonObject DeviceProperties;
+		//FJsonObject UserProperties;
+		UCognitiveVRSettings* cognitiveSettings;
+
 	public:
 		FAnalyticsProviderCognitiveVR();
 		virtual ~FAnalyticsProviderCognitiveVR();
@@ -101,18 +121,18 @@ public:
 		virtual void RecordCurrencyGiven(const FString& GameCurrencyType, int32 GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		virtual void RecordError(const FString& Error, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		virtual void RecordProgress(const FString& ProgressType, const FString& ProgressHierarchy, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
-
-
-		//custom cognitive
 		
-		
-		TSharedPtr<CustomEvent> customevent;
-		TSharedPtr<Network> network;
-		TSharedPtr<Sensors> sensors;
+		TSharedPtr<cognitivevrapi::CustomEvent> customevent;
+		TSharedPtr<cognitivevrapi::Network> network;
+		TSharedPtr<cognitivevrapi::Sensors> sensors;
+		//UCognitiveVRSettings* CognitiveSettings;
 		//TSharedPtr<FJsonObject> initProperties; //optional properties sent when initializing. platform, ram, etc
 		FString GetDeviceID() const;
 		//void SetDeviceID(const FString& InDeviceID);
 		//double LastSesisonTimestamp = 1;
+
+		void SetLobbyId(FString lobbyId);
+		FString LobbyId;
 
 		double GetSessionTimestamp() const;
 
@@ -127,22 +147,31 @@ public:
 
 		FString GetCurrentSceneId();
 		FString GetCurrentSceneVersionNumber();
+		void SetSessionName(FString sessionName);
 
 		void OnLevelLoaded();
 		void SetWorld(UWorld* world);
+		UWorld* GetWorld();
 
-		TArray<TSharedPtr<FSceneData>> SceneData;
+		TArray<TSharedPtr<cognitivevrapi::FSceneData>> SceneData;
 		void CacheSceneData();
-		TSharedPtr<FSceneData> GetSceneData(FString scenename);
-		TSharedPtr<FSceneData> GetCurrentSceneData();
+		TSharedPtr<cognitivevrapi::FSceneData> GetSceneData(FString scenename);
+		TSharedPtr<cognitivevrapi::FSceneData> GetCurrentSceneData();
 
-		FJsonObject GetDeviceProperties();
-		FJsonObject GetUserProperties();
+		UCognitiveVRSettings* GetCognitiveSettings();
 
-		void SetDeviceProperty(FString name, int32 value);
-		void SetDeviceProperty(FString name, float value);
-		void SetDeviceProperty(FString name, FString value);
-		void SetUserProperty(FString name, int32 value);
-		void SetUserProperty(FString name, float value);
-		void SetUserProperty(FString name, FString value);
+		//FJsonObject GetDeviceProperties();
+		//FJsonObject GetUserProperties();
+		FJsonObject GetSessionProperties();
+
+		void SetSessionProperty(FString name, int32 value);
+		void SetSessionProperty(FString name, float value);
+		void SetSessionProperty(FString name, FString value);
+
+		//void SetDeviceProperty(FString name, int32 value);
+		//void SetDeviceProperty(FString name, float value);
+		//void SetDeviceProperty(FString name, FString value);
+		//void SetUserProperty(FString name, int32 value);
+		//void SetUserProperty(FString name, float value);
+		//void SetUserProperty(FString name, FString value);
 	};

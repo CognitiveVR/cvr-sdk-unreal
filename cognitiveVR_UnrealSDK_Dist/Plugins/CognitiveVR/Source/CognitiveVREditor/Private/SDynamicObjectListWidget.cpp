@@ -7,33 +7,36 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 		[
 			SNew(SVerticalBox)
 			+SVerticalBox::Slot()
-			.FillHeight(1)
+			//.FillHeight(1)
 			[
-				SAssignNew(ListViewWidget, SListView<TSharedPtr<FDynamicData>>)
+				SAssignNew(ListViewWidget, SListView<TSharedPtr<cognitivevrapi::FDynamicData>>)
 				.ItemHeight(24)
-				.ListItemsSource(&SceneDynamics) //The Items array is the source of this listview
+				.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneDynamics) //The Items array is the source of this listview
 				.OnGenerateRow(this, &SDynamicObjectListWidget::OnGenerateRowForList)
 				.HeaderRow(
 					SNew(SHeaderRow)
 					+ SHeaderRow::Column("name")
 					.FillWidth(1)
 					[
-						SNew(STextBlock)
-						.Text(FText::FromString("Name"))
+						SNew(SRichTextBlock)
+						.DecoratorStyleSet(&FEditorStyle::Get())
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Name</>"))
 					]
 
 					+ SHeaderRow::Column("mesh")
 					.FillWidth(1)
 					[
-						SNew(STextBlock)
-						.Text(FText::FromString("MeshName"))
+						SNew(SRichTextBlock)
+						.DecoratorStyleSet(&FEditorStyle::Get())
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Mesh Name</>"))
 					]
 
 					+ SHeaderRow::Column("id")
-					.FillWidth(0.3)
+					.FillWidth(1)
 					[
-						SNew(STextBlock)
-						.Text(FText::FromString("Id"))
+						SNew(SRichTextBlock)
+						.DecoratorStyleSet(&FEditorStyle::Get())
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Id</>"))
 					]
 				)
 			]
@@ -45,23 +48,24 @@ void SDynamicObjectListWidget::RefreshList()
 	ListViewWidget->RequestListRefresh();
 }
 
-TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
+TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<cognitivevrapi::FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	return
-		SNew(SComboRow< TSharedPtr<FDynamicData> >, OwnerTable)
+		SNew(SComboRow< TSharedPtr<cognitivevrapi::FDynamicData> >, OwnerTable)
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
-			.MaxWidth(16)
+			.MaxWidth(64)
 			.AutoWidth()
 			.Padding(2.0f)
 			[
 				SNew(SBox)
-				.HeightOverride(16)
-				.HeightOverride(16)
+				.WidthOverride(64)
+				.HeightOverride(20)
 				[
 					SNew(SButton)
 					.OnClicked(FOnClicked::CreateSP(this, &SDynamicObjectListWidget::SelectDynamic, InItem))
+					.Text(FText::FromString("Select"))
 				]
 			]
 			+ SHorizontalBox::Slot()
@@ -79,7 +83,7 @@ TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<
 			.Text(FText::FromString(InItem->MeshName))
 		]
 	+ SHorizontalBox::Slot()
-		.FillWidth(0.3)
+		.FillWidth(1)
 		.Padding(2.0f)
 		[
 			SNew(STextBlock)
@@ -88,16 +92,16 @@ TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<
 		];
 }
 
-FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
+FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<cognitivevrapi::FDynamicData> data)
 {
 	GEditor->SelectNone(false, true, false);
 
-	for (TActorIterator<AStaticMeshActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		AStaticMeshActor *Mesh = *ActorItr;
+		//AStaticMeshActor *Mesh = *ActorItr;
 
-		UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
+		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
 		if (actorComponent == NULL)
 		{
 			continue;
@@ -111,7 +115,7 @@ FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
 		if (dynamic->CustomId != data->Id) { continue; }
 		if (dynamic->MeshName != data->MeshName) { continue; }
 
-		GEditor->SelectActor(Mesh, true, true, true, true);
+		GEditor->SelectActor((*ActorItr), true, true, true, true);
 
 		break;
 	}

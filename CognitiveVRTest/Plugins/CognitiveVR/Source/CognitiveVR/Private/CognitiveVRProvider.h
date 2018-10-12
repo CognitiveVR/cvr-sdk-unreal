@@ -5,6 +5,7 @@
 #include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
 
+#include "Public/CognitiveVRSettings.h"
 #include "Private/util/util.h"
 //#include "Private/util/config.h"
 #include "Private/util/cognitive_log.h"
@@ -20,8 +21,11 @@ namespace cognitivevrapi
 	class Sensors;
 	class CustomEvent;
 	class Network;
+	//class UCognitiveVRSettings;
 	//class ExitPoll;
 }
+
+class UCognitiveVRSettings;
 
 namespace cognitivevrapi
 {
@@ -60,6 +64,7 @@ namespace cognitivevrapi
 	class cognitivevrapi::CustomEvent;
 	class CognitiveVRResponse;
 	class cognitivevrapi::Sensors;
+	
 	//class ExitPoll;
 	//class UDynamicObject;
 
@@ -82,6 +87,8 @@ namespace cognitivevrapi
 		FJsonObject SessionProperties;
 		//FJsonObject DeviceProperties;
 		//FJsonObject UserProperties;
+		UCognitiveVRSettings* cognitiveSettings;
+
 	public:
 		FAnalyticsProviderCognitiveVR();
 		virtual ~FAnalyticsProviderCognitiveVR();
@@ -118,6 +125,7 @@ namespace cognitivevrapi
 		TSharedPtr<cognitivevrapi::CustomEvent> customevent;
 		TSharedPtr<cognitivevrapi::Network> network;
 		TSharedPtr<cognitivevrapi::Sensors> sensors;
+		//UCognitiveVRSettings* CognitiveSettings;
 		//TSharedPtr<FJsonObject> initProperties; //optional properties sent when initializing. platform, ram, etc
 		FString GetDeviceID() const;
 		//void SetDeviceID(const FString& InDeviceID);
@@ -143,11 +151,14 @@ namespace cognitivevrapi
 
 		void OnLevelLoaded();
 		void SetWorld(UWorld* world);
+		UWorld* GetWorld();
 
 		TArray<TSharedPtr<cognitivevrapi::FSceneData>> SceneData;
 		void CacheSceneData();
 		TSharedPtr<cognitivevrapi::FSceneData> GetSceneData(FString scenename);
 		TSharedPtr<cognitivevrapi::FSceneData> GetCurrentSceneData();
+
+		UCognitiveVRSettings* GetCognitiveSettings();
 
 		//FJsonObject GetDeviceProperties();
 		//FJsonObject GetUserProperties();
