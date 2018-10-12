@@ -10,37 +10,6 @@
 UPlayerTracker::UPlayerTracker()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-
-	FString ValueReceived;
-
-	//gaze batch size
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "GazeBatchSize", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 sensorLimit = FCString::Atoi(*ValueReceived);
-		if (sensorLimit > 0)
-		{
-			GazeBatchSize = sensorLimit;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "GazeFromVisualRaycast", false);
-	if (ValueReceived.Len() > 0)
-	{
-		if (ValueReceived == "false")
-			GazeFromVisualRaycast = false;
-		else
-			GazeFromVisualRaycast = true;
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "GazeFromPhysicsRaycast", false);
-	if (ValueReceived.Len() > 0)
-	{
-		if (ValueReceived == "false")
-			GazeFromPhysicsRaycast = false;
-		else
-			GazeFromPhysicsRaycast = true;
-	}
 }
 
 void UPlayerTracker::BeginPlay()
@@ -48,9 +17,9 @@ void UPlayerTracker::BeginPlay()
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	if (cog.IsValid())
 	{
-
 		cog->SetWorld(GetWorld());
 		Super::BeginPlay();
+		GazeBatchSize = cog->GetCognitiveSettings()->GazeBatchSize;
 	}
 	else
 	{
@@ -130,18 +99,8 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	params.AddObjectTypesToQuery(ECC_WorldDynamic);
 
 	bool bHit = false;
-	if (GazeFromVisualRaycast)
-	{
-		FCollisionQueryParams gazeparams = FCollisionQueryParams(FName(), true);
-		bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, gazeparams);
-	}
-	else if (GazeFromPhysicsRaycast)
-	{
-		//FCollisionResponseParams otherParams = FCollisionResponseParams();
-
-		bHit = GetWorld()->LineTraceSingleByObjectType(Hit, Start, End, params);
-		//bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Pawn,params,otherParams);
-	}
+	FCollisionQueryParams gazeparams = FCollisionQueryParams(FName(), true);
+	bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, gazeparams);
 
 	GetWorld()->LineTraceSingleByObjectType(FloorHit, captureLocation, FVector(0, 0, -1000), params);
 	
