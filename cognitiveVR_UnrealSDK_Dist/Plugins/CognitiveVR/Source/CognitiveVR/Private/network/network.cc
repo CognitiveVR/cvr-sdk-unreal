@@ -5,44 +5,46 @@
 #include "AnalyticsSettings.h"
 #include "Http.h"
 
-using namespace cognitivevrapi;
+//using namespace cognitivevrapi;
 FHttpModule* Http;
+FString Gateway;
 
-Network::Network(FAnalyticsProviderCognitiveVR* sp)
+cognitivevrapi::Network::Network(FAnalyticsProviderCognitiveVR* sp)
 {
-	CognitiveLog::Info("CognitiveVR::Network - Init");
+	cognitivevrapi::CognitiveLog::Info("CognitiveVR::Network - Init");
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
     s = sp;
 	if (Http == NULL)
 		Http = &FHttpModule::Get();
 }
 
-void Network::NetworkCall(FString suburl, FString contents)
+void cognitivevrapi::Network::NetworkCall(FString suburl, FString contents)
 {	
 	if (s == NULL)
 	{
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
 		return;
 	}
 
 	if (s->GetCurrentSceneId().Len() == 0)
 	{
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
 		return;
 	}
 	if (s->GetCurrentSceneVersionNumber().Len() == 0)
 	{
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
+		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
 		return;
 	}
 
 	if (Http == NULL)
 	{
-		CognitiveLog::Warning("Cognitive Provider::SendJson Http module not initialized! likely hasn't started session");
+		cognitivevrapi::CognitiveLog::Warning("Cognitive Provider::SendJson Http module not initialized! likely hasn't started session");
 		return;
 	}
 
 	//json to scene endpoint
-	FString url = "https://"+cognitivevrapi::Config::kNetworkHost+"/v"+FString::FromInt(cognitivevrapi::Config::kNetworkVersion)+"/"+suburl+"/"+s->GetCurrentSceneId() + "?version=" + s->GetCurrentSceneVersionNumber();
+	FString url = "https://"+ Gateway +"/v"+FString::FromInt(0)+"/"+suburl+"/"+s->GetCurrentSceneId() + "?version=" + s->GetCurrentSceneVersionNumber();
 
 	FString AuthValue = "APIKEY:DATA " + s->APIKey;
 
@@ -56,11 +58,11 @@ void Network::NetworkCall(FString suburl, FString contents)
 	return;
 }
 
-void Network::NetworkExitPollGet(FString hook)
+void cognitivevrapi::Network::NetworkExitPollGet(FString hook)
 {
 
 }
-void Network::NetworkExitPollPost(FString questionsetname, FString questionsetversion, FString contents)
+void cognitivevrapi::Network::NetworkExitPollPost(FString questionsetname, FString questionsetversion, FString contents)
 {
 
 }

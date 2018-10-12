@@ -21,6 +21,8 @@ enum class ECommonMeshName : uint8
 	ViveTracker
 };
 
+namespace cognitivevrapi
+{
 class FEngagementEvent
 {
 public:
@@ -73,6 +75,7 @@ public:
 
 	FDynamicObjectId() {}
 };
+}
 
 USTRUCT()
 struct FDynamicObjectSnapshot
@@ -89,7 +92,7 @@ public:
 	TMap<FString, float> FloatProperties;
 	TMap<FString, bool> BoolProperties;
 
-	TArray<FEngagementEvent> Engagements;
+	TArray<cognitivevrapi::FEngagementEvent> Engagements;
 
 	/*FDynamicObjectSnapshot* SnapshotProperty(FString key, FString value);
 	FDynamicObjectSnapshot* SnapshotProperty(FString key, bool value);
@@ -98,7 +101,7 @@ public:
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class COGNITIVEVR_API UDynamicObject : public UActorComponent
+class COGNITIVEVR_API UDynamicObject : public USceneComponent //UActorComponent
 {
 	GENERATED_BODY()
 
@@ -110,70 +113,88 @@ private:
 
 	float currentTime = 0;
 	TSharedPtr<FAnalyticsProviderCognitiveVR> s;
-	TSharedPtr<FDynamicObjectId> ObjectID;
+	TSharedPtr<cognitivevrapi::FDynamicObjectId> ObjectID;
 	FVector LastPosition;
 	FVector LastForward;
+
+	//used to set unique object id from snapshot or when accessed from elsewhere
+	void GenerateObjectId();
+
+	static void TrySendData();
 
 public:	
 	// Sets default values for this component's properties
 
-	UPROPERTY(EditAnywhere)// , BlueprintReadWrite)
-	ECommonMeshName CommonMeshName;
-
+	//should this object be represented by a custom mesh. requires uploading this mesh to the dashboard
 	UPROPERTY(EditAnywhere)
 	bool UseCustomMeshName = true;
 
+	//the name of the mesh to render on the dashboard
 	UPROPERTY(EditAnywhere)
 	FString MeshName;
 
-	UPROPERTY(EditAnywhere)
+	//if not using a custom mesh, which common mesh to render on the dashboard to represent this object
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
+	ECommonMeshName CommonMeshName;
+
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	bool SnapshotOnBeginPlay = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
 	bool SnapshotOnInterval = true;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	bool ReleaseIdOnDestroy = true;
 
 	//group and id
 
-	UPROPERTY(EditAnywhere)
+	//set a custom id for this dynamic object. recommended for non-spawned actors
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	bool UseCustomId;
 
-	UPROPERTY(EditAnywhere)
+	//the custom id for registering this dynamic object. recommended for non-spawned actors
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	FString CustomId = "";
 
-	UPROPERTY(EditAnywhere)
+	//organizes similar dynamic objects together for display on dashboard
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	FString GroupName;
 
+	//should this object record how the player is gazing?
 	UPROPERTY(EditAnywhere)
 	bool TrackGaze = false;
 
 	//snapshots
 
-	UPROPERTY(EditAnywhere)
+	//time in seconds between checking if position and rotation updates need to be recorded
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	float SnapshotInterval = 0.1;
 
-	UPROPERTY(EditAnywhere)
+	//distance in cm the object needs to move before sending an update
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	float PositionThreshold = 2;
 
-	UPROPERTY(EditAnywhere)
+	//rotation in degrees the object needs to rotate before sending an update
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	float RotationThreshold = 10;
 
 	UDynamicObject();
+	void TryGenerateMeshName();
+	void GenerateCustomId();
+	void TryGenerateCustomIdAndMesh();
 	
 	//engagements
-	TArray<FEngagementEvent> DirtyEngagements;
-	TArray<FEngagementEvent> Engagements;
+	TArray<cognitivevrapi::FEngagementEvent> DirtyEngagements;
+	TArray<cognitivevrapi::FEngagementEvent> Engagements;
 	void BeginEngagementId(FString engagementName, FString parentDynamicObjectId);
 	void EndEngagementId(FString engagementName, FString parentDynamicObjectId);
 
 
-	virtual void OnComponentCreated() override;
+	//virtual void OnComponentCreated() override;
 	virtual void BeginPlay() override;
 
-	TSharedPtr<FDynamicObjectId> GetUniqueId(FString meshName);
-	TSharedPtr<FDynamicObjectId> GetObjectId();
+	TSharedPtr<cognitivevrapi::FDynamicObjectId> GetUniqueId(FString meshName);
+	TSharedPtr<cognitivevrapi::FDynamicObjectId> GetObjectId();
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 	FDynamicObjectSnapshot MakeSnapshot();
@@ -186,8 +207,6 @@ public:
 	static TArray<TSharedPtr<FJsonValueObject>> DynamicSnapshotsToString();
 	static TSharedPtr<FJsonObject> DynamicObjectManifestToString();
 
-	
-	//FDynamicObjectSnapshot NewSnapshot();
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		FDynamicObjectSnapshot SnapshotStringProperty(UPARAM(ref) FDynamicObjectSnapshot& target, FString key, FString stringValue);

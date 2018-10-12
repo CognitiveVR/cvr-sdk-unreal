@@ -9,7 +9,7 @@
 
 #include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
-#include "Private/util/config.h"
+//#include "Private/util/config.h"
 
 #include "CognitiveVR.h"
 

@@ -2,28 +2,22 @@
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #include "Private/api/sensor.h"
+#include "CognitiveVRSettings.h"
 
-using namespace cognitivevrapi;
+//using namespace cognitivevrapi;
 
-Sensors::Sensors(FAnalyticsProviderCognitiveVR* sp)
+cognitivevrapi::Sensors::Sensors(FAnalyticsProviderCognitiveVR* sp)
 {
-	s = sp;
+	cog = sp;
 
-	FString ValueReceived;
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorDataLimit", false);
-
-	if (ValueReceived.Len() > 0)
-	{
-		int32 sensorLimit = FCString::Atoi(*ValueReceived);
-		if (sensorLimit > 0)
-		{
-			SensorThreshold = sensorLimit;
-		}
-	}
+	SensorThreshold = cog->GetCognitiveSettings()->SensorDataLimit;
+	ExtremeBatchSize = cog->GetCognitiveSettings()->SensorExtremeLimit;
+	MinTimer = cog->GetCognitiveSettings()->SensorMinTimer;
+	AutoTimer = cog->GetCognitiveSettings()->SensorAutoTimer;
+	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, false);
 }
 
-void Sensors::RecordSensor(FString Name, float value)
+void cognitivevrapi::Sensors::RecordSensor(FString Name, float value)
 {
 	if (somedatapoints.Contains(Name))
 	{
@@ -37,25 +31,58 @@ void Sensors::RecordSensor(FString Name, float value)
 	sensorDataCount ++;
 	if (sensorDataCount >= SensorThreshold)
 	{
-		Sensors::SendData();
+		Sensors::TrySendData();
 	}
 }
 
-void Sensors::SendData()
+void cognitivevrapi::Sensors::TrySendData()
 {
-	if (s == NULL || !s->HasStartedSession())
+	if (cog->GetWorld() != NULL)
+	{
+		bool withinMinTimer = LastSendTime + MinTimer > cog->GetWorld()->GetRealTimeSeconds();
+		bool withinExtremeBatchSize = sensorDataCount < ExtremeBatchSize;
+		
+		if (withinMinTimer && withinExtremeBatchSize)
+		{
+			return;
+		}
+	}
+	SendData();
+}
+
+void cognitivevrapi::Sensors::SendData()
+{
+	if (cog == NULL || !cog->HasStartedSession())
 	{
 		return;
 	}
+
+	if (somedatapoints.Num() == 0)
+	{
+		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, false);
+		return;
+	}
+
+	if (cog->GetWorld() != NULL)
+	{
+		LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
+	}
+
+	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, false);
 
 	TSharedPtr<FJsonObject> wholeObj = MakeShareable(new FJsonObject);
 
 	TArray< TSharedPtr<FJsonValue> > DataArray;
 
-	wholeObj->SetStringField("name", s->GetUserID());
-	wholeObj->SetNumberField("timestamp", (int32)s->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", s->GetSessionID());
+	wholeObj->SetStringField("name", cog->GetUserID());
+	if (!cog->LobbyId.IsEmpty())
+	{
+		wholeObj->SetStringField("lobbyId", cog->LobbyId);
+	}
+	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
+	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonPart);
+	wholeObj->SetStringField("formatversion", "1.0");
 	jsonPart++;
 
 	wholeObj->SetStringField("data", "SENSORDATAHERE");
@@ -66,10 +93,7 @@ void Sensors::SendData()
 
 	//TODO use ustruct with array to format this to json instead of doing it manually
 	FString allData;
-	if (somedatapoints.Num() == 0)
-	{
-		return;
-	}
+
 	for (const auto& Entry : somedatapoints)
 	{
 		allData = allData.Append("{\"name\":\"" + Entry.Key + "\",\"data\":[" + Entry.Value + "]},");
@@ -80,7 +104,7 @@ void Sensors::SendData()
 	const TCHAR* charcomplete = *complete;
 	OutputString = OutputString.Replace(TEXT("\"SENSORDATAHERE\""), charcomplete);
 
-	s->network->NetworkCall("sensor", OutputString);
+	cog->network->NetworkCall("sensors", OutputString);
 
 	somedatapoints.Empty();
 	sensorDataCount = 0;

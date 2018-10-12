@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CognitiveVREditorPrivatePCH.h"
-#include "CognitiveTools.h"
+#include "CognitiveEditorTools.h"
 #include "CognitiveEditorData.h"
 #include "CognitiveVRSettings.h"
 #include "IDetailCustomization.h"
@@ -24,7 +24,7 @@ public:
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& Args);
-	FReply ButtonPressed();
+	//FReply ButtonPressed();
 
 	/* Adds a new textbox with the string to the list */
 	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FString> Item, const TSharedRef<STableViewBase>& OwnerTable);

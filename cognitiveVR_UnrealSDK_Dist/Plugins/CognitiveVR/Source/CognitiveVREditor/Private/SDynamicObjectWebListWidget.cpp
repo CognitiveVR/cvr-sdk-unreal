@@ -9,7 +9,7 @@ void SDynamicObjectWebListWidget::Construct(const FArguments& Args)
 			+SVerticalBox::Slot()
 			.FillHeight(1)
 			[
-				SAssignNew(ListViewWidget, SListView<TSharedPtr<FDynamicData>>)
+				SAssignNew(ListViewWidget, SListView<TSharedPtr<cognitivevrapi::FDynamicData>>)
 				.ItemHeight(24)
 				.ListItemsSource(&Items) //The Items array is the source of this listview
 				.OnGenerateRow(this, &SDynamicObjectWebListWidget::OnGenerateRowForList)
@@ -47,10 +47,10 @@ void SDynamicObjectWebListWidget::RefreshList()
 }
 
 
-TSharedRef<ITableRow> SDynamicObjectWebListWidget::OnGenerateRowForList(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
+TSharedRef<ITableRow> SDynamicObjectWebListWidget::OnGenerateRowForList(TSharedPtr<cognitivevrapi::FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	return
-		SNew(SComboRow< TSharedPtr<FDynamicData> >, OwnerTable)
+		SNew(SComboRow< TSharedPtr<cognitivevrapi::FDynamicData> >, OwnerTable)
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
