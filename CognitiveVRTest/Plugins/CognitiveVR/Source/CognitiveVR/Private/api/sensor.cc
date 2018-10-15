@@ -2,7 +2,6 @@
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #include "Private/api/sensor.h"
-#include "CognitiveVRSettings.h"
 
 //using namespace cognitivevrapi;
 
@@ -10,11 +9,48 @@ cognitivevrapi::Sensors::Sensors(FAnalyticsProviderCognitiveVR* sp)
 {
 	cog = sp;
 
-	SensorThreshold = cog->GetCognitiveSettings()->SensorDataLimit;
-	ExtremeBatchSize = cog->GetCognitiveSettings()->SensorExtremeLimit;
-	MinTimer = cog->GetCognitiveSettings()->SensorMinTimer;
-	AutoTimer = cog->GetCognitiveSettings()->SensorAutoTimer;
-	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, false);
+	FString ValueReceived;
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorDataLimit", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 sensorLimit = FCString::Atoi(*ValueReceived);
+		if (sensorLimit > 0)
+		{
+			SensorThreshold = sensorLimit;
+		}
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorExtremeLimit", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 parsedValue = FCString::Atoi(*ValueReceived);
+		if (parsedValue > 0)
+		{
+			ExtremeBatchSize = parsedValue;
+		}
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorMinTimer", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 parsedValue = FCString::Atoi(*ValueReceived);
+		if (parsedValue > 0)
+		{
+			MinTimer = parsedValue;
+		}
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorAutoTimer", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 parsedValue = FCString::Atoi(*ValueReceived);
+		if (parsedValue > 0)
+		{
+			AutoTimer = parsedValue;
+			cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, false);
+		}
+	}
 }
 
 void cognitivevrapi::Sensors::RecordSensor(FString Name, float value)

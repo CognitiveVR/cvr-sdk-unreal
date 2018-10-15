@@ -3,7 +3,6 @@
 */
 #include "Private/api/customevent.h"
 #include "PlayerTracker.h"
-#include "CognitiveVRSettings.h"
 
 //using namespace cognitivevrapi;
 
@@ -12,11 +11,46 @@ cognitivevrapi::CustomEvent::CustomEvent(FAnalyticsProviderCognitiveVR* cvr)
 	cog = cvr;
 	FString ValueReceived;
 
-	CustomEventBatchSize = cog->GetCognitiveSettings()->CustomEventBatchSize;
-	ExtremeBatchSize = cog->GetCognitiveSettings()->CustomEventExtremeLimit;
-	MinTimer = cog->GetCognitiveSettings()->CustomEventMinTimer;
-	AutoTimer = cog->GetCognitiveSettings()->CustomEventAutoTimer;
-	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEvent::SendData), AutoTimer, false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventBatchSize", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 customEventLimit = FCString::Atoi(*ValueReceived);
+		if (customEventLimit > 0)
+		{
+			CustomEventBatchSize = customEventLimit;
+		}
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventExtremeLimit", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 parsedValue = FCString::Atoi(*ValueReceived);
+		if (parsedValue > 0)
+		{
+			ExtremeBatchSize = parsedValue;
+		}
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventMinTimer", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 parsedValue = FCString::Atoi(*ValueReceived);
+		if (parsedValue > 0)
+		{
+			MinTimer = parsedValue;
+		}
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventAutoTimer", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 parsedValue = FCString::Atoi(*ValueReceived);
+		if (parsedValue > 0)
+		{
+			AutoTimer = parsedValue;
+			cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEvent::SendData), AutoTimer, false);
+		}
+	}
 }
 
 void cognitivevrapi::CustomEvent::Send(FString category)
@@ -74,6 +108,8 @@ void cognitivevrapi::CustomEvent::Send(FString category, FVector Position, TShar
 		CognitiveLog::Warning("Transaction. local player controller does not have pawn. skip transaction on scene explorer");
 		return;
 	}
+
+	//UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
 
 	TArray< TSharedPtr<FJsonValue> > pos;
 	pos.Add(MakeShareable(new FJsonValueNumber((int32)-Position.X)));
