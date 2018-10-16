@@ -2,8 +2,7 @@
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #include "util/cognitive_log.h"
-#include "AnalyticsSettings.h"
-#include "Public/CognitiveVRSettings.h"
+//#include "AnalyticsSettings.h"
 
 using namespace cognitivevrapi;
 
@@ -18,20 +17,35 @@ void CognitiveLog::Init()
 	MuteInfoMessages = false;
 	MuteWarningMessages = false;
 	MuteErrorMessages = false;
-
-	UCognitiveVRSettings* settings = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->GetCognitiveSettings();
-	
-	MuteWarningMessages = settings->MuteInfoMessages;
-	MuteInfoMessages = settings->MuteInfoMessages;
-	//MuteDebugMessages = settings->MuteInfoMessages;
-	MuteErrorMessages = settings->MuteErrorMessages;
-
-	if (!settings->MuteInfoMessages)
+	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteInfoMessages", false);
+	if (ValueReceived.Len()>0 && ValueReceived == "true")
+	{
+		MuteWarningMessages = true;
+	}
+	else
 	{
 		Warning("==========================");
 		Warning("See 'Project Settings > Cognitive VR' for preferences and to toggle debug messages");
 		Warning("https://docs.cognitivevr.io/unreal/troubleshooting/ for help");
 		Warning("==========================");
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteErrorMessages", false);
+	if (ValueReceived.Len()>0 && ValueReceived == "true")
+	{
+		MuteErrorMessages = true;
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteDebugMessages", false);
+	if (ValueReceived.Len() == 0 || ValueReceived == "false")
+	{
+		MuteDebugMessages = false;
+	}
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteInfoMessages", false);
+	if (ValueReceived.Len()>0 && ValueReceived == "true")
+	{
+		MuteInfoMessages = true;
 	}
 }
 

@@ -2,7 +2,7 @@
 
 #include "CognitiveVR.h"
 #include "DynamicObject.h"
-#include "CognitiveVRSettings.h"
+//#include "CognitiveVRSettings.h"
 #include "Util.h"
 
 TArray<FDynamicObjectSnapshot> snapshots;
@@ -93,11 +93,49 @@ void UDynamicObject::BeginPlay()
 
 	if (MaxSnapshots < 0)
 	{
-		MaxSnapshots = s->GetCognitiveSettings()->DynamicDataLimit;
-		ExtremeBatchSize = s->GetCognitiveSettings()->DynamicExtremeLimit;
-		MinTimer = s->GetCognitiveSettings()->DynamicMinTimer;
-		AutoTimer = s->GetCognitiveSettings()->DynamicAutoTimer;
-		GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
+		MaxSnapshots = 16;
+		FString ValueReceived;
+
+		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicDataLimit", false);
+		if (ValueReceived.Len() > 0)
+		{
+			int32 dynamicLimit = FCString::Atoi(*ValueReceived);
+			if (dynamicLimit > 0)
+			{
+				MaxSnapshots = dynamicLimit;
+			}
+		}
+
+		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicExtremeLimit", false);
+		if (ValueReceived.Len() > 0)
+		{
+			int32 parsedValue = FCString::Atoi(*ValueReceived);
+			if (parsedValue > 0)
+			{
+				ExtremeBatchSize = parsedValue;
+			}
+		}
+
+		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicMinTimer", false);
+		if (ValueReceived.Len() > 0)
+		{
+			int32 parsedValue = FCString::Atoi(*ValueReceived);
+			if (parsedValue > 0)
+			{
+				MinTimer = parsedValue;
+			}
+		}
+
+		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicAutoTimer", false);
+		if (ValueReceived.Len() > 0)
+		{
+			int32 parsedValue = FCString::Atoi(*ValueReceived);
+			if (parsedValue > 0)
+			{
+				AutoTimer = parsedValue;
+				GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
+			}
+		}
 	}
 
 	//even if session has not started, still collect data
@@ -148,6 +186,27 @@ void UDynamicObject::BeginPlay()
 		}
 	}
 }
+
+/*FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, FString value)
+{
+	this->StringProperties.Add(key, value);	
+	return this;
+}
+FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, bool value)
+{
+	this->BoolProperties.Add(key, value);
+	return this;
+}
+FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, int32 value)
+{
+	this->IntegerProperties.Add(key, value);
+	return this;
+}
+FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, double value)
+{
+	this->DoubleProperties.Add(key, value);
+	return this;
+}*/
 
 TSharedPtr<cognitivevrapi::FDynamicObjectId> UDynamicObject::GetUniqueId(FString meshName)
 {

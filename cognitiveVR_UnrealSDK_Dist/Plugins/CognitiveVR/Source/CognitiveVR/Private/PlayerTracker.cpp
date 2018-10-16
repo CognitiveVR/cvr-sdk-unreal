@@ -2,7 +2,7 @@
 
 #include "CognitiveVR.h"
 #include "PlayerTracker.h"
-#include "CognitiveVRSettings.h"
+//#include "CognitiveVRSettings.h"
 #include "Util.h"
 
 
@@ -10,6 +10,19 @@
 UPlayerTracker::UPlayerTracker()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+
+	FString ValueReceived;
+
+	//gaze batch size
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "GazeBatchSize", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 sensorLimit = FCString::Atoi(*ValueReceived);
+		if (sensorLimit > 0)
+		{
+			GazeBatchSize = sensorLimit;
+		}
+	}
 }
 
 void UPlayerTracker::BeginPlay()
@@ -17,9 +30,9 @@ void UPlayerTracker::BeginPlay()
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	if (cog.IsValid())
 	{
+
 		cog->SetWorld(GetWorld());
 		Super::BeginPlay();
-		GazeBatchSize = cog->GetCognitiveSettings()->GazeBatchSize;
 	}
 	else
 	{
