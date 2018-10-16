@@ -2,7 +2,7 @@
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #include "network.h"
-#include "AnalyticsSettings.h"
+//#include "AnalyticsSettings.h"
 #include "Http.h"
 
 //using namespace cognitivevrapi;

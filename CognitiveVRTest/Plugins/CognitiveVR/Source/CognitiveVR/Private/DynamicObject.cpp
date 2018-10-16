@@ -2,7 +2,7 @@
 
 #include "CognitiveVR.h"
 #include "DynamicObject.h"
-#include "CognitiveVRSettings.h"
+//#include "CognitiveVRSettings.h"
 #include "Util.h"
 
 TArray<FDynamicObjectSnapshot> snapshots;
@@ -133,7 +133,7 @@ void UDynamicObject::BeginPlay()
 			if (parsedValue > 0)
 			{
 				AutoTimer = parsedValue;
-				s->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
+				GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
 			}
 		}
 	}
@@ -290,6 +290,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 
+	if (!s.IsValid()) { return; }
 	if (!s->HasStartedSession()) { return; }
 	if (!SnapshotOnInterval) { return; }
 

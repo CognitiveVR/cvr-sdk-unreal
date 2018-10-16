@@ -2,7 +2,7 @@
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #include "util/cognitive_log.h"
-#include "AnalyticsSettings.h"
+//#include "AnalyticsSettings.h"
 
 using namespace cognitivevrapi;
 

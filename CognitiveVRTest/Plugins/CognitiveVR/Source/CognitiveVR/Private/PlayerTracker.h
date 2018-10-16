@@ -170,8 +170,6 @@ public:
 		float PlayerSnapshotInterval = 0.1;
 
 	int32 GazeBatchSize = 100;
-	bool GazeFromVisualRaycast = true;
-	bool GazeFromPhysicsRaycast = false;
 
 	UPlayerTracker();
 
