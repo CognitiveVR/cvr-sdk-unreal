@@ -229,7 +229,7 @@ TSharedPtr<cognitivevrapi::FDynamicObjectId> UDynamicObject::GetObjectId()
 
 void UDynamicObject::GenerateObjectId()
 {
-	if (!UseCustomId)
+	if (!UseCustomId || CustomId.IsEmpty())
 	{
 		TSharedPtr<cognitivevrapi::FDynamicObjectId> recycledId;
 		bool foundRecycleId = false;
@@ -612,7 +612,11 @@ void UDynamicObject::SendData()
 		ObjArray.Add(EventArray[i]);
 	}
 
-	wholeObj->SetArrayField("data", ObjArray);
+	if (ObjArray.Num() > 0)
+	{
+		wholeObj->SetArrayField("data", ObjArray);
+	}
+
 
 	FString OutputString;
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
