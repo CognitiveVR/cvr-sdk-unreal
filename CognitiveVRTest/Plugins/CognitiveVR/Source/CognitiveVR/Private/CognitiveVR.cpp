@@ -137,28 +137,14 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	SessionTimestamp = cognitivevrapi::Util::GetTimestamp();
 	SessionId = FString::FromInt(GetSessionTimestamp()) + TEXT("_") + UserId;
 
-	//initProperties = properties;
-
 	APIKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
 
-	//OverrideHttpInterface* httpint = new OverrideHttpInterface();
 	network = MakeShareable(new cognitivevrapi::Network(this));
-	//network->Init(httpint, &InitCallback);
+	customevent = MakeShareable(new cognitivevrapi::CustomEvent(this));
+	sensors = MakeShareable(new cognitivevrapi::Sensors(this));
 
 	cognitivevrapi::CognitiveLog::Info("FAnalyticsProviderCognitiveVR::StartSession");
 	
-
-	// Also include all the streaming levels in the results
-	/*for (int32 LevelIndex = 0; LevelIndex < GWorld->StreamingLevels.Num(); ++LevelIndex)
-	{
-		ULevelStreaming* StreamingLevel = GWorld->StreamingLevels[LevelIndex];
-		if (StreamingLevel != NULL)
-		{
-			//StreamingLevel->OnLevelLoaded.Add(this,&FAnalyticsProviderCognitiveVR::OnLevelLoaded);
-			//TODO clear objectid list when persistent scene unloads
-		}
-	}*/
-
 	CacheSceneData();
 
 	cognitivevrapi::CognitiveLog::Info("CognitiveVR InitCallback Response");
@@ -167,86 +153,59 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	bHasSessionStarted = true;
 
-	customevent = MakeShareable(new cognitivevrapi::CustomEvent(this));
-
 	if (!network.IsValid())
 	{
 		cognitivevrapi::CognitiveLog::Warning("CognitiveVRProvider InitCallback network is null");
 		return false;
 	}
 
-	sensors = MakeShareable(new cognitivevrapi::Sensors(this));
+	cognitivevrapi::Util::SetHardwareSessionProperties();
 
-	TSharedPtr<FJsonObject> defaultdeviceproperties = MakeShareable(new FJsonObject());
-	cognitivevrapi::Util::DeviceScraper(defaultdeviceproperties);
+	FString HMDDeviceName = UHeadMountedDisplayFunctionLibrary::GetHMDDeviceName().ToString();
+	SetSessionProperty("c3d.device.hmd.type", HMDDeviceName);
 
-	for (auto currJsonValue = defaultdeviceproperties->Values.CreateConstIterator(); currJsonValue; ++currJsonValue)
+	if (HMDDeviceName.Contains("vive"))
 	{
-		const FString Name = (*currJsonValue).Key;
-		TSharedPtr< FJsonValue > Value = (*currJsonValue).Value;
-		if (Value->Type == EJson::Number)
-		{
-			SetSessionProperty(Name, (float)Value->AsNumber());
-		}
-		else if (Value->Type == EJson::String)
-		{
-			SetSessionProperty(Name, Value->AsString());
-		}
+		SetSessionProperty("c3d.device.manufacturer", "HTC");
 	}
-
-	//send new user / new device messages if necessary
-
-	/*auto dataObject = resp.GetContent();
-	if (dataObject.GetBoolField("usernew"))
+	else if (HMDDeviceName.Contains("oculus"))
 	{
-		core_utils->NewUser(TCHAR_TO_UTF8(*cog->GetUserID()));
-		//new device
+		SetSessionProperty("c3d.device.manufacturer", "Oculus");
 	}
-	if (dataObject.GetBoolField("devicenew"))
+	else if (HMDDeviceName.Contains("microsoft"))
 	{
-		core_utils->NewDevice(TCHAR_TO_UTF8(*cog->GetDeviceID()));
-	//new device
-	}*/
-
-	customevent->Send(FString("Session Begin"));
-	//bPendingInitRequest = false;
-
-	//get all dynamic objects
-
-	//cog->OnInitResponse().Broadcast(resp.IsSuccessful());
-
-	/*if (currentWorld != NULL)
-	{
-		for (TActorIterator<AStaticMeshActor> ActorItr(currentWorld); ActorItr; ++ActorItr)
-		{
-			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-			AStaticMeshActor *Mesh = *ActorItr;
-
-			UActorComponent* actorComponent = Mesh->GetComponentByClass(UDynamicObject::StaticClass());
-			if (actorComponent == NULL)
-			{
-				continue;
-			}
-			UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
-			if (dynamic == NULL)
-			{
-				continue;
-			}
-			if (dynamic->GetObjectId().IsValid())
-			{
-				continue;
-			}
-			CognitiveLog::Warning("InitCallback Dynamic Special startup!");
-			//TODO network test to actually reach cognitive3d server
-			//dynamic->BeginPlayCallback(true); 
-		}
+		SetSessionProperty("c3d.device.manufacturer", "Microsoft");
 	}
 	else
 	{
-		CognitiveLog::Error("InitCallback current world is null - SceneExplorer will not receive data. Have you added a PlayerTracker component to your character?");
-	}*/
+		SetSessionProperty("c3d.device.manufacturer", "Unknown");
+	}
 
-	//SendDeviceInfo();
+	SetSessionProperty("c3d.device.eyetracing.enabled", false);
+	SetSessionProperty("c3d.device.eyetracing.type", "None");
+
+
+	if (currentWorld != NULL)
+	{
+		if (currentWorld->WorldType == EWorldType::Game)
+		{
+			SetSessionProperty("c3d.app.inEditor", "false");
+		}
+		else
+		{
+			SetSessionProperty("c3d.app.inEditor", "true");
+		}
+	}
+
+	SetSessionProperty("c3d.app.sdktype", "Default");
+
+	SetSessionProperty("c3d.app.engine", "Unreal");
+
+	SetSessionProperty("c3d.username", GetUserID());
+	SetSessionProperty("c3d.deviceid", GetDeviceID());
+	SetSessionProperty("c3d.sessionname", SessionId);
+
+	customevent->Send(FString("Session Begin"));
 
 	return bHasSessionStarted;
 }
@@ -263,7 +222,7 @@ void FAnalyticsProviderCognitiveVR::SetLobbyId(FString lobbyId)
 
 void FAnalyticsProviderCognitiveVR::SetSessionName(FString sessionName)
 {
-	SetSessionProperty("cvr.sessionname", sessionName);
+	SetSessionProperty("c3d.sessionname", sessionName);
 }
 
 void FAnalyticsProviderCognitiveVR::EndSession()

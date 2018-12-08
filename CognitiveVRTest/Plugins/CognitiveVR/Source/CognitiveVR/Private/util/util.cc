@@ -43,37 +43,35 @@ FString Util::GetDeviceName(FString DeviceName)
 	return FString("unknown");
 }
 
-TSharedPtr<FJsonObject> Util::DeviceScraper(TSharedPtr<FJsonObject> properties)
+void Util::SetHardwareSessionProperties()
 {
+	auto cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+
 	FString appName;
 	GConfig->GetString(TEXT("/Script/EngineSettings.GeneralProjectSettings"), TEXT("ProjectName"), appName, GGameIni);
-	properties->SetStringField("cvr.app.name", appName);
+
+	cog->SetSessionProperty("c3d.app.name", appName);
 
 	FString appVersion = "1.0";
 	GConfig->GetString(TEXT("/Script/EngineSettings.GeneralProjectSettings"), TEXT("ProjectVersion"), appVersion, GGameIni);
-	properties->SetStringField("cvr.app.version", appVersion);
+	cog->SetSessionProperty("c3d.app.version", appVersion);
 
 	FString engineVersion = FEngineVersion::Current().ToString().Replace(TEXT("+"), TEXT(" "));;
-	properties->SetStringField("cvr.engine.version", engineVersion);
+	cog->SetSessionProperty("c3d.app.engine.version", engineVersion);
 
-	properties->SetStringField("cvr.device.cpu.brand", FWindowsPlatformMisc::GetCPUBrand());
-	properties->SetStringField("cvr.device.cpu.vendor", FWindowsPlatformMisc::GetCPUVendor());
-	properties->SetNumberField("cvr.device.cores", FWindowsPlatformMisc::NumberOfCores());
-	
-	const FPlatformMemoryConstants& MemoryConstants = FPlatformMemory::GetConstants();
-	properties->SetNumberField("cvr.device.memory (GB)", MemoryConstants.TotalPhysicalGB);
+	cog->SetSessionProperty("c3d.device.type", "Desktop"); //TODO handheld/desktop/console
 
-	FGPUDriverInfo info = FWindowsPlatformMisc::GetGPUDriverInfo(FWindowsPlatformMisc::GetPrimaryGPUBrand());
-	properties->SetStringField("cvr.device.gpu.provider", info.ProviderName);
-	properties->SetStringField("cvr.device.gpu", FWindowsPlatformMisc::GetPrimaryGPUBrand());
-	properties->SetStringField("cvr.device.gpu.driver.version", info.UserDriverVersion);
-	properties->SetStringField("cvr.device.gpu.driver.date", info.DriverDate);
+	cog->SetSessionProperty("c3d.device.cpu", FWindowsPlatformMisc::GetCPUBrand());
+
+	//TODO device model
+
+	cog->SetSessionProperty("c3d.device.gpu", FWindowsPlatformMisc::GetPrimaryGPUBrand());
 
 	FString osVersionOut;
 	FString osSubVersionOut;
 	FWindowsPlatformMisc::GetOSVersions(osVersionOut, osSubVersionOut);
+	cog->SetSessionProperty("c3d.device.os", osVersionOut + " " + osSubVersionOut);
 
-	properties->SetStringField("cvr.device.os", osVersionOut+osSubVersionOut);
-
-	return properties;
+	const FPlatformMemoryConstants& MemoryConstants = FPlatformMemory::GetConstants();
+	cog->SetSessionProperty("c3d.device.memory", (int)MemoryConstants.TotalPhysicalGB);
 }
