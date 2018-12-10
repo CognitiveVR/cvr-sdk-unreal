@@ -270,7 +270,7 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 		}
 	}
 	
-	cogProvider.Get()->customevent->Send(FString("cvr.exitpoll"), FVector(0,0,0), properties); //TODO custom event position should be exitpoll panel position
+	cogProvider.Get()->customevent->Send(FString("c3d.exitpoll"), FVector(0,0,0), properties); //TODO custom event position should be exitpoll panel position
 
 	//then flush transactions
 	cogProvider.Get()->FlushEvents();

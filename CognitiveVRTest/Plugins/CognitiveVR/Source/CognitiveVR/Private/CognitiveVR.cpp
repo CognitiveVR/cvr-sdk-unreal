@@ -400,7 +400,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, co
 		properties->SetNumberField("PerItemCost", PerItemCost);
 		properties->SetNumberField("ItemQuantity", ItemQuantity);
 
-		customevent->Send("cvr.recorditempurchase", properties);
+		customevent->Send("c3d.recorditempurchase", properties);
 	}
 	else
 	{
@@ -419,7 +419,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 		properties->SetNumberField("RealMoneyCost", RealMoneyCost);
 		properties->SetStringField("PaymentProvider", PaymentProvider);
 
-		customevent->Send("cvr.recordcurrencypurchase", properties);
+		customevent->Send("c3d.recordcurrencypurchase", properties);
 	}
 	else
 	{
@@ -435,7 +435,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 		properties->SetStringField("GameCurrencyType", GameCurrencyType);
 		properties->SetNumberField("GameCurrencyAmount", GameCurrencyAmount);
 
-		customevent->Send(FString("cvr.recordcurrencygiven"), properties);
+		customevent->Send(FString("c3d.recordcurrencygiven"), properties);
 	}
 	else
 	{
@@ -478,7 +478,7 @@ void FAnalyticsProviderCognitiveVR::RecordError(const FString& Error, const TArr
 			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
 		}
 
-		customevent->Send(FString("cvr.recorderror"), properties);
+		customevent->Send(FString("c3d.recorderror"), properties);
 
 		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordError");
 	}
@@ -501,7 +501,7 @@ void FAnalyticsProviderCognitiveVR::RecordProgress(const FString& ProgressType, 
 			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
 		}
 
-		customevent->Send(FString("cvr.recordprogress"), properties);
+		customevent->Send(FString("c3d.recordprogress"), properties);
 	}
 	else
 	{
@@ -522,7 +522,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, in
 			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
 		}
 
-		customevent->Send(FString("cvr.recorditempurchase"), properties);
+		customevent->Send(FString("c3d.recorditempurchase"), properties);
 	}
 	else
 	{
@@ -564,7 +564,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
 		}
 
-		customevent->Send(FString("cvr.recordcurrencygiven"), properties);
+		customevent->Send(FString("c3d.recordcurrencygiven"), properties);
 	}
 	else
 	{

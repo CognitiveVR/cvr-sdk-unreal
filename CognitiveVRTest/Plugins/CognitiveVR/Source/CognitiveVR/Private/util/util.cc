@@ -59,11 +59,28 @@ void Util::SetHardwareSessionProperties()
 	FString engineVersion = FEngineVersion::Current().ToString().Replace(TEXT("+"), TEXT(" "));;
 	cog->SetSessionProperty("c3d.app.engine.version", engineVersion);
 
-	cog->SetSessionProperty("c3d.device.type", "Desktop"); //TODO handheld/desktop/console
+	auto platformName = UGameplayStatics::GetPlatformName();
+	if (platformName.Compare("Windows", ESearchCase::IgnoreCase) == 0 || platformName.Compare("Mac", ESearchCase::IgnoreCase) == 0 || platformName.Compare("Linux", ESearchCase::IgnoreCase) == 0)
+	{
+		cog->SetSessionProperty("c3d.device.type", "Desktop");
+	}
+	else if (platformName.Compare("IOS", ESearchCase::IgnoreCase) == 0 || platformName.Compare("Android", ESearchCase::IgnoreCase) == 0)
+	{
+		cog->SetSessionProperty("c3d.device.type", "Handheld");
+	}
+	else if (platformName.Compare("PS4", ESearchCase::IgnoreCase) == 0 || platformName.Contains("xbox", ESearchCase::IgnoreCase) || platformName.Contains("Switch", ESearchCase::IgnoreCase))
+	{
+		cog->SetSessionProperty("c3d.device.type", "Console");
+	}
+	else
+	{
+		cog->SetSessionProperty("c3d.device.type", "Unknown");
+	}
+
 
 	cog->SetSessionProperty("c3d.device.cpu", FWindowsPlatformMisc::GetCPUBrand());
 
-	//TODO device model
+	//TODO device model, especially for phones
 
 	cog->SetSessionProperty("c3d.device.gpu", FWindowsPlatformMisc::GetPrimaryGPUBrand());
 
