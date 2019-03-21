@@ -90,6 +90,12 @@ void cognitivevrapi::CustomEvent::Send(FString category, FVector Position, FStri
 
 void cognitivevrapi::CustomEvent::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
 {
+	if (cog == NULL || !cog->HasStartedSession())
+	{
+		CognitiveLog::Warning("CustomEvent::Send - FAnalyticsProviderCognitiveVR is null!");
+		return;
+	}
+
 	if (properties.Get() == NULL)
 	{
 		properties = MakeShareable(new FJsonObject);
@@ -154,7 +160,7 @@ void cognitivevrapi::CustomEvent::SendData()
 {
 	if (cog == NULL || !cog->HasStartedSession())
 	{
-		CognitiveLog::Warning("CustomEvent::Send - FAnalyticsProviderCognitiveVR is null!");
+		CognitiveLog::Warning("CustomEvent::SendData - FAnalyticsProviderCognitiveVR is null!");
 		return;
 	}
 

@@ -205,7 +205,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	SetSessionProperty("c3d.deviceid", GetDeviceID());
 	SetSessionProperty("c3d.sessionname", SessionId);
 
-	customevent->Send(FString("Session Begin"));
+	customevent->Send(FString("c3d.sessionStart"));
 
 	return bHasSessionStarted;
 }
@@ -239,7 +239,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 	properties->SetNumberField("sessionlength", cognitivevrapi::Util::GetTimestamp() - GetSessionTimestamp());
 
-	customevent->Send(FString("Session End"), properties);
+	customevent->Send(FString("c3d.sessionEnd"), properties);
 
 	FlushEvents();
 	cognitivevrapi::CognitiveLog::Info("Freeing CognitiveVR memory.");

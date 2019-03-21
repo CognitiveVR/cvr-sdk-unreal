@@ -18,6 +18,7 @@ int32 ExtremeBatchSize = 128;
 float NextSendTime = 0;
 float LastSendTime = -60;
 FTimerHandle CognitiveDynamicAutoSendHandle;
+static const FString DynamicObjectFileType = "obj";
 
 // Sets default values for this component's properties
 UDynamicObject::UDynamicObject()
@@ -637,6 +638,7 @@ TSharedPtr<FJsonObject> UDynamicObject::DynamicObjectManifestToString()
 		TSharedPtr<FJsonObject>entry = MakeShareable(new FJsonObject);
 		entry->SetStringField("name", newManifest[i].Name);
 		entry->SetStringField("mesh", newManifest[i].MeshName);
+		entry->SetStringField("fileType", DynamicObjectFileType);
 
 		manifestObject->SetObjectField(newManifest[i].Id, entry);
 	}
