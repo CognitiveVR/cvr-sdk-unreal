@@ -16,7 +16,6 @@ namespace cognitivevrapi
 	{
 	private:
 		FAnalyticsProviderCognitiveVR* cog;
-		TArray<TSharedPtr<FJsonObject>> batchedJson;
 		int32 jsonEventPart = 1;
 		int32 CustomEventBatchSize = 16;
 
