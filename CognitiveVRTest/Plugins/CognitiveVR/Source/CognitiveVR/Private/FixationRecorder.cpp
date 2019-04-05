@@ -62,15 +62,15 @@ int32 UFixationRecorder::GetIndex(int32 offset)
 
 void UFixationRecorder::BeginPlay()
 {
-	world = GetWorld();
-	//create a bunch of eye capture data and put into array
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	world = GetWorld();
 	if (cog.IsValid())
 	{
 		for (int32 i = 0; i < CachedEyeCaptureCount; i++)
 		{
 			EyeCaptures.Add(FEyeCapture());
 		}
+		Super::BeginPlay();
 	}
 	else
 	{
@@ -84,6 +84,7 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 
 	if (ActiveFixation.IsLocal)
 	{
+		if (ActiveFixation.LocalTransform == NULL) { return true; }
 		if (eyeCapture.SkipPositionForFixationAverage || eyeCapture.OffTransform)
 		{
 			FVector fixationWorldPosition = ActiveFixation.LocalTransform->GetComponentTransform().TransformPosition(ActiveFixation.LocalPosition);
@@ -207,6 +208,7 @@ bool UFixationRecorder::IsGazeOffTransform(FEyeCapture eyeCapture)
 
 	return false;
 }
+
 bool UFixationRecorder::CheckEndFixation(FFixation testFixation)
 {
 	if (EyeCaptures[index].Time > testFixation.LastInRange + FixationEndSaccadeConfirmMS)
@@ -227,6 +229,9 @@ bool UFixationRecorder::CheckEndFixation(FFixation testFixation)
 		{
 			return true;
 		}
+		if (testFixation.LocalTransform == NULL) { return true; }
+		if (!testFixation.LocalTransform->IsValidLowLevel()) { return true; }
+		if (testFixation.LocalTransform->IsPendingKill()) { return true; }
 	}
 	return false;
 }
@@ -234,11 +239,11 @@ bool UFixationRecorder::CheckEndFixation(FFixation testFixation)
 #if defined TOBII_EYETRACKING_ACTIVE
 int64 UFixationRecorder::GetEyeCaptureTimestamp(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker)
 {
-	long ts = eyetracker->GetCombinedGazeData().TimeStamp.ToUnixTimestamp();
-	double miliseconds = eyetracker->GetCombinedGazeData().TimeStamp.GetMillisecond();
-	int64 finalTime = ts * 1000 + miliseconds;
-
-	return finalTime;
+	int32 t = eyetracker->GetCombinedGazeData().TimeStamp.ToUnixTimestamp();
+	int64 ts = t;
+	ts *= 1000;
+	ts += eyetracker->GetCombinedGazeData().TimeStamp.GetMillisecond();
+	return ts;
 }
 
 bool UFixationRecorder::AreEyesClosed(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker)
@@ -592,8 +597,11 @@ void UFixationRecorder::RecordFixationEnd(FFixation fixation)
 {
 	//write fixation to json
 	TSharedPtr<FJsonObject>fixObj = MakeShareable(new FJsonObject);
-	fixObj->SetNumberField("starttime", fixation.StartMs * 1000);
-	fixObj->SetNumberField("duration", fixation.DurationMs * 1000);
+
+	double d = (double)fixation.StartMs / 1000.0;
+
+	fixObj->SetNumberField("time", d);
+	fixObj->SetNumberField("duration", fixation.DurationMs);
 	fixObj->SetNumberField("maxradius", fixation.MaxRadius);
 
 	if (fixation.IsLocal)
@@ -638,7 +646,7 @@ void UFixationRecorder::SendData()
 {
 	if (!cog.IsValid() || !cog->HasStartedSession()) { return; }
 	if (cog->GetCurrentSceneVersionNumber().Len() == 0) { return; }
-	if (!cog->GetCurrentSceneData().IsValid()) { return; }
+	if (!cog->GetCurrentSceneData().IsValid()){return;}
 
 	if (Fixations.Num() == 0) { return; }
 
