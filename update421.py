@@ -130,12 +130,11 @@ replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Pri
 insertline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Public\MicrophoneCaptureActor.h","#pragma once","#define NTDDI_THRESHOLD 0")
 
 #13 rename cc extensions to cpp extensions
-renamefile(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\api\customevent.cc",cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\api\customevent.cpp")
-renamefile(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\api\sensor.cc",cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\api\sensor.cpp")
-renamefile(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\network\network.cc",cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\network\network.cpp")
-renamefile(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\util\log.cc",cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\util\log.cpp")
-renamefile(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\util\util.cc",cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\util\util.cpp")
-print("made file changes")
+renamefile(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\\api\customevent.cc",cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\\api\customevent.cpp")
+renamefile(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\\api\sensor.cc",cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\\api\sensor.cpp")
+renamefile(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\\network\\network.cc",cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\\network\\network.cpp")
+renamefile(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\\util\log.cc",cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\\util\log.cpp")
+renamefile(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\\util\util.cc",cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\\util\util.cpp")
 
 #finally rename the folder to the correct sdk version
 
