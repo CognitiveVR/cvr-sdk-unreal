@@ -130,7 +130,7 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 				return true;
 			}
 
-			float distance = FVector::Distance(ActiveFixation.WorldPosition, eyeCapture.HMDPosition);
+			float distance = FVector::Dist(ActiveFixation.WorldPosition, eyeCapture.HMDPosition);
 			float currentRadius = FMath::Atan(FMath::DegreesToRadians(MaxFixationAngle))*distance;
 			ActiveFixation.MaxRadius = FMath::Max(ActiveFixation.MaxRadius, currentRadius);
 
@@ -191,7 +191,7 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 				return true;
 			}
 
-			float distance = FVector::Distance(ActiveFixation.WorldPosition, eyeCapture.HMDPosition);
+			float distance = FVector::Dist(ActiveFixation.WorldPosition, eyeCapture.HMDPosition);
 			float currentRadius = FMath::Atan(FMath::DegreesToRadians(MaxFixationAngle))*distance;
 			ActiveFixation.MaxRadius = FMath::Max(ActiveFixation.MaxRadius, currentRadius);
 
@@ -211,7 +211,7 @@ bool UFixationRecorder::IsGazeOffTransform(FEyeCapture eyeCapture)
 
 bool UFixationRecorder::CheckEndFixation(FFixation testFixation)
 {
-	if (EyeCaptures[index].Time > testFixation.LastInRange + FixationEndSaccadeConfirmMS)
+	if (EyeCaptures[index].Time > testFixation.LastInRange + SaccadeFixationEndMs)
 	{
 		return true;
 	}
@@ -219,13 +219,13 @@ bool UFixationRecorder::CheckEndFixation(FFixation testFixation)
 	{
 		return true;
 	}
-	if (EyeCaptures[index].Time > testFixation.LastNonDiscardedTime + MaxFixationConsecutiveNoiseMs)
+	if (EyeCaptures[index].Time > testFixation.LastNonDiscardedTime + MaxConsecutiveDiscardMs)
 	{
 		return true;
 	}
 	if (testFixation.IsLocal)
 	{
-		if (EyeCaptures[index].Time > testFixation.LastOnTransform + MaxFixationConsecutiveNoiseDynamicMs)
+		if (EyeCaptures[index].Time > testFixation.LastOnTransform + MaxConsecutiveOffDynamicMs)
 		{
 			return true;
 		}
@@ -508,7 +508,7 @@ bool UFixationRecorder::TryBeginLocalFixation()
 		FixationTransform = mostUsed;
 		ActiveFixation.LocalTransform = mostUsed;
 		ActiveFixation.DynamicObjectId = mostUsed->GetObjectId()->Id;
-		float distance = FVector::Distance(ActiveFixation.WorldPosition, EyeCaptures[index].HMDPosition);
+		float distance = FVector::Dist(ActiveFixation.WorldPosition, EyeCaptures[index].HMDPosition);
 		float opposite = FMath::Atan(FMath::DegreesToRadians(MaxFixationAngle)) * distance;
 		ActiveFixation.StartMs = EyeCaptures[index].Time;
 		ActiveFixation.LastInRange = ActiveFixation.StartMs;
@@ -576,7 +576,7 @@ bool UFixationRecorder::TryBeginFixation()
 	if (withinRadius)
 	{
 		ActiveFixation.WorldPosition = averageWorldPos;
-		float distance = FVector::Distance(ActiveFixation.WorldPosition, EyeCaptures[index].HMDPosition);
+		float distance = FVector::Dist(ActiveFixation.WorldPosition, EyeCaptures[index].HMDPosition);
 		float opposite = FMath::Atan(FMath::DegreesToRadians(MaxFixationAngle)) * distance;
 		ActiveFixation.StartMs = EyeCaptures[index].Time;
 		ActiveFixation.LastInRange = ActiveFixation.StartMs;

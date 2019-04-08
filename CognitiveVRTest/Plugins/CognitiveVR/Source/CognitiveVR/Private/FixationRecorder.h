@@ -92,13 +92,13 @@ public:
 
 	/* amount of saccades that must be consecutive before a fixation ends */
 	UPROPERTY(EditAnywhere)
-		int32 FixationEndSaccadeConfirmMS = 10;
+		int32 SaccadeFixationEndMs = 10;
 	/* the amount of time gaze can be discarded before a fixation is ended. gaze can be discarded if eye tracking values are outside of expected ranges */
 	UPROPERTY(EditAnywhere)
-		int32 MaxFixationConsecutiveNoiseMs = 10;
+		int32 MaxConsecutiveDiscardMs = 10;
 	/* amount of time gaze can be off the transform before fixation ends. mostly useful when fixation is right on the edge of a dynamic object */
 	UPROPERTY(EditAnywhere)
-		int32 MaxFixationConsecutiveNoiseDynamicMs = 500;
+		int32 MaxConsecutiveOffDynamicMs = 500;
 
 	//UPROPERTY(EditAnywhere)
 	//int32 DynamicRollingAverageMs = 100;
