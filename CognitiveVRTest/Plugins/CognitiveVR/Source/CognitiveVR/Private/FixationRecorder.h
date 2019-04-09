@@ -100,8 +100,9 @@ public:
 	UPROPERTY(EditAnywhere)
 		int32 MaxConsecutiveOffDynamicMs = 500;
 
-	//UPROPERTY(EditAnywhere)
-	//int32 DynamicRollingAverageMs = 100;
+	/*increases the size of the fixation angle as gaze gets toward the edge of the viewport. this is used to reduce the number of incorrectly ended fixations because of hardware limits at the edge of the eye tracking field of view*/
+	UPROPERTY(EditAnywhere)
+		UCurveFloat* FocusSizeFromCenter;
 
 	virtual void BeginPlay() override;
 

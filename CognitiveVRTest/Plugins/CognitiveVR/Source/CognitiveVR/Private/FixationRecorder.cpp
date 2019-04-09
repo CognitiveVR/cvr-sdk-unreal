@@ -95,7 +95,25 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 			FVector eyeCaptureDirection = eyeCaptureWorldPosition - eyeCapture.HMDPosition;
 			eyeCaptureDirection.Normalize();
 
-			float angle = FMath::Cos(FMath::DegreesToRadians(MaxFixationAngle));
+			FSceneViewProjectionData ProjectionData;
+			FViewport* viewport = NULL;
+			EStereoscopicPass pass = EStereoscopicPass::eSSP_FULL;
+
+			UGameplayStatics::GetGameInstance(this)->GetFirstGamePlayer()->GetProjectionData(viewport, pass, ProjectionData);
+			FMatrix const ViewProjectionMatrix = ProjectionData.ComputeViewProjectionMatrix();
+			FIntRect const ViewRect = ProjectionData.GetViewRect();
+			FVector2D screenPos;
+			const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+
+			float rescale = 1;
+			if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(fixationWorldPosition, screenPos))
+			{
+				FVector2D viewport = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
+				float screenDist = FVector2D::Distance(viewport, FVector2D(0.5f, 0.5f));
+				rescale = FocusSizeFromCenter->GetFloatValue(screenDist);
+			}
+
+			float angle = FMath::Cos(FMath::DegreesToRadians(MaxFixationAngle * rescale));
 
 			if (FVector::DotProduct(eyeCaptureDirection, fixationDirection) < angle)
 			{
@@ -124,7 +142,26 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 			FVector eyeCaptureDirection = eyeCaptureWorldPosition - eyeCapture.HMDPosition;
 			eyeCaptureDirection.Normalize();
 
-			float angle = FMath::Cos(FMath::DegreesToRadians(MaxFixationAngle));
+			FSceneViewProjectionData ProjectionData;
+			FViewport* viewport = NULL;
+			EStereoscopicPass pass = EStereoscopicPass::eSSP_FULL;
+
+			UGameplayStatics::GetGameInstance(this)->GetFirstGamePlayer()->GetProjectionData(viewport, pass, ProjectionData);
+			FMatrix const ViewProjectionMatrix = ProjectionData.ComputeViewProjectionMatrix();
+			FIntRect const ViewRect = ProjectionData.GetViewRect();
+			FVector2D screenPos;
+			const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+
+			float rescale = 1;
+			if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(fixationWorldPosition, screenPos))
+			{
+				FVector2D viewport = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
+				float screenDist = FVector2D::Distance(viewport, FVector2D(0.5f, 0.5f));
+				rescale = FocusSizeFromCenter->GetFloatValue(screenDist);
+			}
+
+			float angle = FMath::Cos(FMath::DegreesToRadians(MaxFixationAngle * rescale));
+
 			if (FVector::DotProduct(eyeCaptureDirection, fixationDirection) < angle)
 			{
 				return true;
@@ -145,18 +182,34 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 		if (eyeCapture.SkipPositionForFixationAverage) //probably looking at skybox
 		{
 			FVector WorldPosition = eyeCapture.WorldPosition;
-			FSceneViewProjectionData ProjectionData;
-			FMatrix const ViewProjectionMatrix = ProjectionData.ComputeViewProjectionMatrix();
-			FIntRect const ViewRect = ProjectionData.GetConstrainedViewRect();
-			FVector2D screenPos;
-
-			FSceneView::ProjectWorldToScreen(WorldPosition, ViewRect, ViewProjectionMatrix, screenPos);
 			FVector lookDir = eyeCapture.WorldPosition - eyeCapture.HMDPosition;
 			lookDir.Normalize();
 			FVector fixationDir = ActiveFixation.WorldPosition - eyeCapture.HMDPosition;
 			fixationDir.Normalize();
 
-			float angle = FMath::Cos(FMath::DegreesToRadians(MaxFixationAngle));
+
+
+			FSceneViewProjectionData ProjectionData;
+			FViewport* viewport = NULL;
+			EStereoscopicPass pass = EStereoscopicPass::eSSP_FULL;
+
+			UGameplayStatics::GetGameInstance(this)->GetFirstGamePlayer()->GetProjectionData(viewport, pass, ProjectionData);
+			FMatrix const ViewProjectionMatrix = ProjectionData.ComputeViewProjectionMatrix();
+			FIntRect const ViewRect = ProjectionData.GetViewRect();
+			FVector2D screenPos;
+			const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+
+			float rescale = 1;
+			if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(WorldPosition, screenPos))
+			{
+				FVector2D viewport = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
+				float screenDist = FVector2D::Distance(viewport, FVector2D(0.5f, 0.5f));
+				rescale = FocusSizeFromCenter->GetFloatValue(screenDist);
+			}
+
+			float angle = FMath::Cos(FMath::DegreesToRadians(MaxFixationAngle * rescale));
+
+
 
 			if (FVector::DotProduct(lookDir, fixationDir) < angle)
 			{
@@ -166,10 +219,6 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 		else
 		{
 			FVector WorldPosition = eyeCapture.WorldPosition;
-			FSceneViewProjectionData ProjectionData;
-			FMatrix const ViewProjectionMatrix = ProjectionData.ComputeViewProjectionMatrix();
-			FIntRect const ViewRect = ProjectionData.GetConstrainedViewRect();
-			FVector2D screenPos;
 
 			FVector averageWorldPos = FVector::ZeroVector;
 			for (int32 i = 0; i < CachedEyeCapturePositions.Num(); i++)
@@ -184,7 +233,25 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 			FVector fixationDir = ActiveFixation.WorldPosition - eyeCapture.HMDPosition;
 			fixationDir.Normalize();
 
-			float angle = FMath::Cos(FMath::DegreesToRadians(MaxFixationAngle));
+			FSceneViewProjectionData ProjectionData;
+			FViewport* viewport = NULL;
+			EStereoscopicPass pass = EStereoscopicPass::eSSP_FULL;
+
+			UGameplayStatics::GetGameInstance(this)->GetFirstGamePlayer()->GetProjectionData(viewport, pass, ProjectionData);
+			FMatrix const ViewProjectionMatrix = ProjectionData.ComputeViewProjectionMatrix();
+			FIntRect const ViewRect = ProjectionData.GetViewRect();
+			FVector2D screenPos;
+			const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+
+			float rescale = 1;
+			if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(WorldPosition, screenPos))
+			{
+				FVector2D viewport = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
+				float screenDist = FVector2D::Distance(viewport, FVector2D(0.5f, 0.5f));
+				rescale = FocusSizeFromCenter->GetFloatValue(screenDist);
+			}
+
+			float angle = FMath::Cos(FMath::DegreesToRadians(MaxFixationAngle * rescale));
 
 			if (FVector::DotProduct(lookDir, fixationDir) < angle)
 			{
@@ -478,13 +545,24 @@ bool UFixationRecorder::TryBeginLocalFixation()
 
 	FVector WorldPosition = EyeCaptures[index].WorldPosition;
 	FSceneViewProjectionData ProjectionData;
+	FViewport* viewport = NULL;
+	EStereoscopicPass pass = EStereoscopicPass::eSSP_FULL;
+
+	UGameplayStatics::GetGameInstance(this)->GetFirstGamePlayer()->GetProjectionData(viewport, pass, ProjectionData);
 	FMatrix const ViewProjectionMatrix = ProjectionData.ComputeViewProjectionMatrix();
-	FIntRect const ViewRect = ProjectionData.GetConstrainedViewRect();
+	FIntRect const ViewRect = ProjectionData.GetViewRect();
 	FVector2D screenPos;
+	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
 
-	FSceneView::ProjectWorldToScreen(WorldPosition, ViewRect, ViewProjectionMatrix, screenPos);
+	float rescale = 1;
+	if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(WorldPosition, screenPos))
+	{
+		FVector2D viewport = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
+		float screenDist = FVector2D::Distance(viewport, FVector2D(0.5f, 0.5f));
+		rescale = FocusSizeFromCenter->GetFloatValue(screenDist);
+	}
 
-	float angle = FMath::Cos(FMath::DegreesToRadians(MaxFixationAngle));
+	float angle = FMath::Cos(FMath::DegreesToRadians(MaxFixationAngle * rescale));
 
 	for (int32 i = 0; i < sampleCount; i++)
 	{
@@ -551,13 +629,24 @@ bool UFixationRecorder::TryBeginFixation()
 
 	FVector WorldPosition = EyeCaptures[index].WorldPosition;
 	FSceneViewProjectionData ProjectionData;
+	FViewport* viewport = NULL;
+	EStereoscopicPass pass = EStereoscopicPass::eSSP_FULL;
+
+	UGameplayStatics::GetGameInstance(this)->GetFirstGamePlayer()->GetProjectionData(viewport, pass, ProjectionData);
 	FMatrix const ViewProjectionMatrix = ProjectionData.ComputeViewProjectionMatrix();
-	FIntRect const ViewRect = ProjectionData.GetConstrainedViewRect();
+	FIntRect const ViewRect = ProjectionData.GetViewRect();
 	FVector2D screenPos;
+	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
 
-	FSceneView::ProjectWorldToScreen(WorldPosition, ViewRect, ViewProjectionMatrix, screenPos);
+	float rescale = 1;
+	if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(WorldPosition, screenPos))
+	{
+		FVector2D viewport = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
+		float screenDist = FVector2D::Distance(viewport, FVector2D(0.5f, 0.5f));
+		rescale = FocusSizeFromCenter->GetFloatValue(screenDist);
+	}
 
-	float angle = FMath::Cos(FMath::DegreesToRadians(MaxFixationAngle));
+	float angle = FMath::Cos(FMath::DegreesToRadians(MaxFixationAngle * rescale));
 
 	for (int32 i = 0; i < sampleCount; i++)
 	{
@@ -578,6 +667,7 @@ bool UFixationRecorder::TryBeginFixation()
 		ActiveFixation.WorldPosition = averageWorldPos;
 		float distance = FVector::Dist(ActiveFixation.WorldPosition, EyeCaptures[index].HMDPosition);
 		float opposite = FMath::Atan(FMath::DegreesToRadians(MaxFixationAngle)) * distance;
+
 		ActiveFixation.StartMs = EyeCaptures[index].Time;
 		ActiveFixation.LastInRange = ActiveFixation.StartMs;
 		ActiveFixation.StartDistance = distance;
@@ -646,7 +736,7 @@ void UFixationRecorder::SendData()
 {
 	if (!cog.IsValid() || !cog->HasStartedSession()) { return; }
 	if (cog->GetCurrentSceneVersionNumber().Len() == 0) { return; }
-	if (!cog->GetCurrentSceneData().IsValid()){return;}
+	if (!cog->GetCurrentSceneData().IsValid()) { return; }
 
 	if (Fixations.Num() == 0) { return; }
 
