@@ -707,7 +707,7 @@ void UFixationRecorder::RecordFixationEnd(FFixation fixation)
 
 		fixObj->SetArrayField("p", posArray);
 
-		fixObj->SetStringField("dynamicid", fixation.DynamicObjectId);
+		fixObj->SetStringField("objectid", fixation.DynamicObjectId);
 	}
 	else
 	{
