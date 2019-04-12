@@ -48,9 +48,13 @@ cognitivevrapi::CustomEvent::CustomEvent(FAnalyticsProviderCognitiveVR* cvr)
 		if (parsedValue > 0)
 		{
 			AutoTimer = parsedValue;
-			cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEvent::SendData), AutoTimer, false);
 		}
 	}
+}
+
+void cognitivevrapi::CustomEvent::StartSession()
+{
+	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEvent::SendData), AutoTimer, false);
 }
 
 void cognitivevrapi::CustomEvent::Send(FString category)

@@ -34,6 +34,7 @@ namespace cognitivevrapi
 
 	public:
 		Sensors(FAnalyticsProviderCognitiveVR* sp);
+		void StartSession();
 		void RecordSensor(FString Name, float value);
 		void SendData();
 

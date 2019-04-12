@@ -33,6 +33,8 @@ namespace cognitivevrapi
 	public:
 		CustomEvent(FAnalyticsProviderCognitiveVR* cvr);
 
+		void StartSession();
+
 		//record event with name linked to a dynamic object
 		void Send(FString category, FString dynamicObjectId);
 		//record event with name and properties linked to a dynamic object

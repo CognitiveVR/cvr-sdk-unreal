@@ -143,6 +143,9 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	customevent = MakeShareable(new cognitivevrapi::CustomEvent(this));
 	sensors = MakeShareable(new cognitivevrapi::Sensors(this));
 
+	customevent->StartSession();
+	sensors->StartSession();
+
 	cognitivevrapi::CognitiveLog::Info("FAnalyticsProviderCognitiveVR::StartSession");
 	
 	CacheSceneData();
