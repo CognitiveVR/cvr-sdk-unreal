@@ -24,7 +24,8 @@ namespace cognitivevrapi
 
 			static FString GetDeviceName(FString DeviceName);
 
-			static TSharedPtr<FJsonObject> DeviceScraper(TSharedPtr<FJsonObject> properties);
+			//record several default hardware values to session properties
+			static void SetHardwareSessionProperties();
     };
 }
 #endif  // COGNITIVEVR_UTIL_H_

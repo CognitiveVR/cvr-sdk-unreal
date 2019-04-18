@@ -18,6 +18,7 @@ int32 ExtremeBatchSize = 128;
 float NextSendTime = 0;
 float LastSendTime = -60;
 FTimerHandle CognitiveDynamicAutoSendHandle;
+static const FString DynamicObjectFileType = "obj";
 
 // Sets default values for this component's properties
 UDynamicObject::UDynamicObject()
@@ -229,7 +230,7 @@ TSharedPtr<cognitivevrapi::FDynamicObjectId> UDynamicObject::GetObjectId()
 
 void UDynamicObject::GenerateObjectId()
 {
-	if (!UseCustomId)
+	if (!UseCustomId || CustomId.IsEmpty())
 	{
 		TSharedPtr<cognitivevrapi::FDynamicObjectId> recycledId;
 		bool foundRecycleId = false;
@@ -612,7 +613,11 @@ void UDynamicObject::SendData()
 		ObjArray.Add(EventArray[i]);
 	}
 
-	wholeObj->SetArrayField("data", ObjArray);
+	if (ObjArray.Num() > 0)
+	{
+		wholeObj->SetArrayField("data", ObjArray);
+	}
+
 
 	FString OutputString;
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
@@ -633,6 +638,7 @@ TSharedPtr<FJsonObject> UDynamicObject::DynamicObjectManifestToString()
 		TSharedPtr<FJsonObject>entry = MakeShareable(new FJsonObject);
 		entry->SetStringField("name", newManifest[i].Name);
 		entry->SetStringField("mesh", newManifest[i].MeshName);
+		entry->SetStringField("fileType", DynamicObjectFileType);
 
 		manifestObject->SetObjectField(newManifest[i].Id, entry);
 	}

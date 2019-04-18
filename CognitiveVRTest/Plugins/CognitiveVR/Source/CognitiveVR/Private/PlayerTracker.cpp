@@ -40,7 +40,6 @@ void UPlayerTracker::BeginPlay()
 	}
 }
 
-// Called every frame
 void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -64,39 +63,13 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	if (controllers.Num() == 0)
 	{
 		cognitivevrapi::CognitiveLog::Info("UPlayerTracker::TickComponent--------------------------no controllers. skip");
-		//return FVector();
 		return;
 	}
-
-	//FVector finalLoc;
-
-	//=========================PLAYER MANAGER WITHOUT CAMERA
-	//FVector pos;
-	//FRotator rot;
-	//controllers[0]->GetPlayerViewPoint(pos, rot);
-	//
-	//FTransform camManTransform = controllers[0]->PlayerCameraManager->GetActorTransform();
-	////FVector camManForward = controllers[0]->PlayerCameraManager->GetActorForwardVector();
-	//
-	//FRotator temphmdrot;
-	//FVector temphmdpos;
-	//UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition(temphmdrot, temphmdpos);
-	//
-	//FVector finalPos = camManTransform.TransformPosition(temphmdrot.UnrotateVector(temphmdpos));
-	//captureLocation = finalPos - temphmdpos;
-	//
-	//captureRotation = rot;
-
-	//=========================PLAYER MANAGER WITH CAMERA 
 
 	captureLocation = controllers[0]->PlayerCameraManager->GetCameraLocation();
 	captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
 
-
-	
-
 	//look at dynamic object
-
 	FCollisionQueryParams Params; // You can use this to customize various properties about the trace
 	Params.AddIgnoredActor(GetOwner()); // Ignore the player's pawn
 
@@ -306,9 +279,6 @@ void UPlayerTracker::SendData()
 	if (!cog->GetCurrentSceneData().IsValid()){return;}
 
 	//GAZE
-
-	//FJsonObject userprops = cog->GetUserProperties();
-	//FJsonObject deviceprops = cog->GetDeviceProperties();
 	FJsonObject props = cog->GetSessionProperties();
 
 	if (snapshots.Num() == 0 && props.Values.Num() == 0) { return; }
@@ -351,47 +321,12 @@ void UPlayerTracker::SendData()
 
 	wholeObj->SetArrayField("data", dataArray);
 
-//	if (deviceprops.Values.Num() > 0)
-//	{
-//		TSharedPtr<FJsonObject> deviceValue;
-//		deviceValue = MakeShareable(new FJsonObject(deviceprops));
-//
-//		wholeObj->SetObjectField("device", deviceValue);
-//		
-//		TArray<TSharedPtr<FJsonValue>> deviceproparray;
-//
-//		for (auto val : deviceprops.Values)
-//		{
-//			TSharedPtr<FJsonValueObject> deviceValue;
-//			deviceValue = MakeShareable(new FJsonValueObject(snapshots[i]));
-//			deviceproparray.Add(deviceValue);
-//		}
-//
-//		for (int32 i = 0; i != deviceprops.Values.Num(); ++i)
-//		{
-//			TSharedPtr<FJsonValueObject> deviceValue;
-//			deviceValue = MakeShareable(new FJsonValueObject(snapshots[i]));
-//			deviceproparray.Add(deviceValue);
-//		}
-//		wholeObj->SetArrayField("device", deviceproparray);
-//	}
-
 	if (props.Values.Num() > 0)
 	{
 		TSharedPtr<FJsonObject> sessionValue;
 		sessionValue = MakeShareable(new FJsonObject(props));
 
 		wholeObj->SetObjectField("properties", sessionValue);
-		/*
-		TArray<TSharedPtr<FJsonValue>> userproparray;
-		for (int32 i = 0; i != userprops.Values.Num(); ++i)
-		{
-			TSharedPtr<FJsonValueObject> userValue;
-			userValue = MakeShareable(new FJsonValueObject(snapshots[i]));
-			userproparray.Add(userValue);
-		}
-		wholeObj->SetArrayField("user", userproparray);
-		*/
 	}
 
 	FString OutputString;

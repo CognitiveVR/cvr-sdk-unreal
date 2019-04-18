@@ -48,9 +48,13 @@ cognitivevrapi::Sensors::Sensors(FAnalyticsProviderCognitiveVR* sp)
 		if (parsedValue > 0)
 		{
 			AutoTimer = parsedValue;
-			cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, false);
 		}
 	}
+}
+
+void cognitivevrapi::Sensors::StartSession()
+{
+	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, false);
 }
 
 void cognitivevrapi::Sensors::RecordSensor(FString Name, float value)

@@ -16,7 +16,6 @@ namespace cognitivevrapi
 	{
 	private:
 		FAnalyticsProviderCognitiveVR* cog;
-		TArray<TSharedPtr<FJsonObject>> batchedJson;
 		int32 jsonEventPart = 1;
 		int32 CustomEventBatchSize = 16;
 
@@ -33,6 +32,8 @@ namespace cognitivevrapi
 
 	public:
 		CustomEvent(FAnalyticsProviderCognitiveVR* cvr);
+
+		void StartSession();
 
 		//record event with name linked to a dynamic object
 		void Send(FString category, FString dynamicObjectId);

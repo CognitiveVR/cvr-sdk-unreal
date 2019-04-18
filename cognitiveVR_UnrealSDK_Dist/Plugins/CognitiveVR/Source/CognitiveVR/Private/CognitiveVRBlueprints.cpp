@@ -106,7 +106,7 @@ void UCognitiveVRBlueprints::SetSessionName(const FString name)
 		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SetSessionName could not get provider!");
 		return;
 	}
-	cog->SetSessionProperty("cvr.sessionname", name);
+	cog->SetSessionName(name);
 }
 
 void UCognitiveVRBlueprints::SetLobbyId(const FString lobbyId)

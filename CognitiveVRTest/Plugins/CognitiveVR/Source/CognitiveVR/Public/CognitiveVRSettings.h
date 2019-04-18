@@ -31,7 +31,7 @@ class UCognitiveVRSettings
 	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
 		int32 GazeBatchSize = 64;
 
-	/** The number of transactions that will be collected together before being sent to analytics server and scene explorer*/
+	/** The number of Custom Events that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
 		int32 CustomEventBatchSize = 64;
 	//Threshold for ignoring the Event Minimum Timer. If this many Events have been recorded, immediately send
@@ -69,6 +69,19 @@ class UCognitiveVRSettings
 	//The time (in seconds) to automatically send any outstanding Sensor data
 	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
 		int32 SensorAutoTimer = 30;
+
+	/** The number of fixations that will be collected together before being sent to analytics server and scene explorer*/
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+		int32 FixationBatchSize = 64;
+	//Threshold for ignoring the Event Minimum Timer. If this many Fixations have been recorded, immediately send
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+		int32 FixationExtremeLimit = 128;
+	//Time (in seconds) that must be elapsed before sending a new batch of Fixation data. Ignored if the batch size reaches Event Extreme Limit
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+		int32 FixationMinTimer = 2;
+	//The time (in seconds) to automatically send any outstanding Fixations
+	UPROPERTY(config, EditAnywhere, Category = Cognitive_VR_Data)
+		int32 FixationAutoTimer = 30;
 
 protected:
 	/**
