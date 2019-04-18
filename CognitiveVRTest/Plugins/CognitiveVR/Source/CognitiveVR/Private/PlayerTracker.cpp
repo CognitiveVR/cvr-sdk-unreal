@@ -4,8 +4,6 @@
 #include "PlayerTracker.h"
 //#include "CognitiveVRSettings.h"
 #include "Util.h"
-#include "Fixations.h"
-#include "EyeCapture.h"
 
 
 // Sets default values for this component's properties

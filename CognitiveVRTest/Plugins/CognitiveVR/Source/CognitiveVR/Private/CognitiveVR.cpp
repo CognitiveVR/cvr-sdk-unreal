@@ -184,8 +184,14 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		SetSessionProperty("c3d.device.manufacturer", "Unknown");
 	}
 
-	SetSessionProperty("c3d.device.eyetracing.enabled", false);
-	SetSessionProperty("c3d.device.eyetracing.type", "None");
+#if defined TOBII_EYETRACKING_ACTIVE
+	SetSessionProperty("c3d.device.eyetracking.enabled", true);
+	SetSessionProperty("c3d.device.eyetracking.type", "Tobii");
+#else
+	SetSessionProperty("c3d.device.eyetracking.enabled", false);
+	SetSessionProperty("c3d.device.eyetracking.type", "None");
+#endif
+
 
 
 	if (currentWorld != NULL)
