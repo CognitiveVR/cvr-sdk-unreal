@@ -108,8 +108,8 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 			float rescale = 1;
 			if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(fixationWorldPosition, screenPos))
 			{
-				FVector2D viewport = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
-				float screenDist = FVector2D::Distance(viewport, FVector2D(0.5f, 0.5f));
+				FVector2D viewport2d = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
+				float screenDist = FVector2D::Distance(viewport2d, FVector2D(0.5f, 0.5f));
 				rescale = FocusSizeFromCenter->GetFloatValue(screenDist);
 			}
 
@@ -155,8 +155,8 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 			float rescale = 1;
 			if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(fixationWorldPosition, screenPos))
 			{
-				FVector2D viewport = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
-				float screenDist = FVector2D::Distance(viewport, FVector2D(0.5f, 0.5f));
+				FVector2D viewport2d = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
+				float screenDist = FVector2D::Distance(viewport2d, FVector2D(0.5f, 0.5f));
 				rescale = FocusSizeFromCenter->GetFloatValue(screenDist);
 			}
 
@@ -202,8 +202,8 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 			float rescale = 1;
 			if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(WorldPosition, screenPos))
 			{
-				FVector2D viewport = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
-				float screenDist = FVector2D::Distance(viewport, FVector2D(0.5f, 0.5f));
+				FVector2D viewport2d = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
+				float screenDist = FVector2D::Distance(viewport2d, FVector2D(0.5f, 0.5f));
 				rescale = FocusSizeFromCenter->GetFloatValue(screenDist);
 			}
 
@@ -246,8 +246,8 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 			float rescale = 1;
 			if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(WorldPosition, screenPos))
 			{
-				FVector2D viewport = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
-				float screenDist = FVector2D::Distance(viewport, FVector2D(0.5f, 0.5f));
+				FVector2D viewport2d = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
+				float screenDist = FVector2D::Distance(viewport2d, FVector2D(0.5f, 0.5f));
 				rescale = FocusSizeFromCenter->GetFloatValue(screenDist);
 			}
 
@@ -556,8 +556,8 @@ bool UFixationRecorder::TryBeginLocalFixation()
 	float rescale = 1;
 	if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(WorldPosition, screenPos))
 	{
-		FVector2D viewport = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
-		float screenDist = FVector2D::Distance(viewport, FVector2D(0.5f, 0.5f));
+		FVector2D viewport2d = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
+		float screenDist = FVector2D::Distance(viewport2d, FVector2D(0.5f, 0.5f));
 		rescale = FocusSizeFromCenter->GetFloatValue(screenDist);
 	}
 
@@ -640,8 +640,8 @@ bool UFixationRecorder::TryBeginFixation()
 	float rescale = 1;
 	if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(WorldPosition, screenPos))
 	{
-		FVector2D viewport = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
-		float screenDist = FVector2D::Distance(viewport, FVector2D(0.5f, 0.5f));
+		FVector2D viewport2d = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
+		float screenDist = FVector2D::Distance(viewport2d, FVector2D(0.5f, 0.5f));
 		rescale = FocusSizeFromCenter->GetFloatValue(screenDist);
 	}
 
