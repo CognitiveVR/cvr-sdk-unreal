@@ -6,21 +6,22 @@
 
 using namespace cognitivevrapi;
 
-bool MuteDebugMessages; //developer and debugging only
-bool MuteInfoMessages; //general responses and messaging
-bool MuteWarningMessages; //something going wrong with cognitive analytics
-bool MuteErrorMessages; //something going very wrong
+bool ShowDebugLogs; //basic info/warning/errors
+bool ShowDevLogs; //development specific logs
+
+//bool MuteDebugMessages; //developer and debugging only
+//bool MuteInfoMessages; //general responses and messaging
+//bool MuteWarningMessages; //something going wrong with cognitive analytics
+//bool MuteErrorMessages; //something going very wrong
 
 void CognitiveLog::Init()
 {
-	MuteDebugMessages = true;
-	MuteInfoMessages = false;
-	MuteWarningMessages = false;
-	MuteErrorMessages = false;
-	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteInfoMessages", false);
-	if (ValueReceived.Len()>0 && ValueReceived == "true")
+	ShowDebugLogs = true;
+	ShowDevLogs = false;
+	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "EnableLogging", false);
+	if (ValueReceived.Len()>0 && ValueReceived == "false")
 	{
-		MuteWarningMessages = true;
+		ShowDebugLogs = false;
 	}
 	else
 	{
@@ -30,45 +31,33 @@ void CognitiveLog::Init()
 		Warning("==========================");
 	}
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteErrorMessages", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "EnableDevLogging", false);
 	if (ValueReceived.Len()>0 && ValueReceived == "true")
 	{
-		MuteErrorMessages = true;
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteDebugMessages", false);
-	if (ValueReceived.Len() == 0 || ValueReceived == "false")
-	{
-		MuteDebugMessages = false;
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "MuteInfoMessages", false);
-	if (ValueReceived.Len()>0 && ValueReceived == "true")
-	{
-		MuteInfoMessages = true;
+		ShowDevLogs = true;
 	}
 }
 
-void CognitiveLog::DebugInfo(FString s)
+void CognitiveLog::DevLog(FString s)
 {
-	if (MuteDebugMessages) { return; }
+	if (!ShowDevLogs) { return; }
 	UE_LOG(CognitiveVR_Log, Log, TEXT("%s"), *s);
 }
 
 void CognitiveLog::Info(FString s)
 {
-	if (MuteInfoMessages) { return; }
+	if (!ShowDebugLogs) { return; }
 	UE_LOG(CognitiveVR_Log, Log, TEXT("%s"), *s);
 }
 
 void CognitiveLog::Warning(FString s)
 {
-	if (MuteWarningMessages) { return; }
+	if (!ShowDebugLogs) { return; }
 	UE_LOG(CognitiveVR_Log, Warning, TEXT("%s"), *s);
 }
 
 void CognitiveLog::Error(FString s)
 {
-	if (MuteErrorMessages) { return; }
+	if (!ShowDebugLogs) { return; }
 	UE_LOG(CognitiveVR_Log, Error, TEXT("%s"), *s);
 }

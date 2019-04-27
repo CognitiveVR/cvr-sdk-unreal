@@ -222,53 +222,137 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 	[
 		SNew(SVerticalBox)
 		+SVerticalBox::Slot()
+		.MaxHeight(17)
 		[
 			SNew(SHorizontalBox)
 			+SHorizontalBox::Slot()
-			.AutoWidth()
-			[
-				SNew(SCheckBox)
-				.IsEnabled(false)
-				.IsChecked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasFoundBlenderCheckbox)
-			]
-			+SHorizontalBox::Slot()
-			.MaxWidth(238)
+			.MaxWidth(200)
 			[
 				SNew(SBox)
-				.HeightOverride(32)
+				.HeightOverride(17)
 				[
-					SNew(SButton)
+					SNew(STextBlock)
 					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-					.Text(FText::FromString("Select Blender.exe"))
-					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Blender)
+					.Text(FText::FromString("Path to Blender.exe"))
+					//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Blender)
 				]
 			]
 			+ SHorizontalBox::Slot()
+				//.MaxWidth(400)
+				.Padding(1)
 			[
-				SNew(STextBlock)
-				.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBlenderPath)
+				SNew(SBox)
+				.HeightOverride(17)
+				[
+					SNew(SEditableTextBox)
+					.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBlenderPath)
+					.OnTextChanged(this, &FCognitiveSettingsCustomization::OnBlenderPathChanged)
+					//SNew(STextBlock)
+					//
+				]
 			]
+			+SHorizontalBox::Slot()
+			.MaxWidth(17)
+			[
+				SNew(SBox)
+				.HeightOverride(17)
+				.WidthOverride(17)
+				[
+					SNew(SButton)
+					//PickerWidget = SAssignNew(BrowseButton, SButton)
+					.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
+					.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
+					//.OnClicked(FOnClicked::CreateSP(this, &FDirectoryPathStructCustomization::OnPickDirectory, PathProperty.ToSharedRef(), bRelativeToGameContentDir, bUseRelativePath, bLongPackageName))
+					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Blender)
+					.ContentPadding(2.0f)
+					.ForegroundColor(FSlateColor::UseForeground())
+					.IsFocusable(false)
+					[
+						SNew(SImage)
+						.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
+						.ColorAndOpacity(FSlateColor::UseForeground())
+					]
+				]
+			]
+			//+SHorizontalBox::Slot()
+			//.MaxWidth(17)
+			//[
+			//	SNew(SBox)
+			//	.HeightOverride(17)
+			//	.WidthOverride(17)
+			//	.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::BlenderValidVisibility)
+			//	[
+			//		SNew(SImage)
+			//		.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
+			//	]
+			//]
+			//+SHorizontalBox::Slot()
+			//.MaxWidth(17)
+			//[
+			//	SNew(SBox)
+			//	.HeightOverride(17)
+			//	.WidthOverride(17)
+			//	.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::BlenderInvalidVisibility)
+			//	[
+			//		SNew(SImage)
+			//		.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
+			//		.ColorAndOpacity(FLinearColor::Black)
+			//	]
+			//]
 		]
 
 		+SVerticalBox::Slot()
+		.MaxHeight(17)
 		[
 			SNew(SHorizontalBox)
 			+SHorizontalBox::Slot()
-			.MaxWidth(256)
+			.MaxWidth(200)
 			[
 				SNew(SBox)
-				.HeightOverride(32)
+				.HeightOverride(17)
 				[
-					SNew(SButton)
-					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasFoundBlender)
-					.Text(FText::FromString("Select Export Directory"))
-					.OnClicked(this, &FCognitiveSettingsCustomization::SelectAndRefreshExportDirectory)
+					SNew(STextBlock)
+					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
+					.Text(FText::FromString("Path to Export Directory"))
+					//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Blender)
 				]
 			]
 			+ SHorizontalBox::Slot()
+				//.MaxWidth(400)
+				.Padding(1)
 			[
-				SNew(STextBlock)
-				.Text_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::GetBaseExportDirectoryDisplay)
+				SNew(SBox)
+				.HeightOverride(17)
+				[
+					SNew(SEditableTextBox)
+					.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBaseExportDirectoryDisplay)
+					.OnTextChanged(this, &FCognitiveSettingsCustomization::OnExportPathChanged)
+					//SNew(STextBlock)
+					//
+				]
+			]
+			+SHorizontalBox::Slot()
+			.MaxWidth(17)
+			[
+				SNew(SBox)
+				.HeightOverride(17)
+				.WidthOverride(17)
+				[
+					SNew(SButton)
+					//PickerWidget = SAssignNew(BrowseButton, SButton)
+					.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
+					.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
+					//.OnClicked(FOnClicked::CreateSP(this, &FDirectoryPathStructCustomization::OnPickDirectory, PathProperty.ToSharedRef(), bRelativeToGameContentDir, bUseRelativePath, bLongPackageName))
+					.OnClicked(this, &FCognitiveSettingsCustomization::SelectAndRefreshExportDirectory)
+					.ContentPadding(2.0f)
+					.ForegroundColor(FSlateColor::UseForeground())
+					.IsFocusable(false)
+					[
+						SNew(SImage)
+						.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
+						.ColorAndOpacity(FSlateColor::UseForeground())
+					]
+				]
 			]
 		]
 
@@ -329,6 +413,13 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 				.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::HasSetDynamicExportDirectory)
 				.Text(FText::FromString("Refresh Dynamic Directories"))
 				.OnClicked(this, &FCognitiveSettingsCustomization::CopyDynamicSubDirectories)
+			]
+			+SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::HasSetDynamicExportDirectory)
+				.Text(FText::FromString("Meshes Exported:"))
 			]
 			+ SVerticalBox::Slot()
 			.Padding(4.0f, 2.0f)
@@ -402,6 +493,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 						.VAlign(VAlign_Center)
 						[
 							SNew(SImage)
+							.Visibility_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
 							.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
 						]
 							// Notice
@@ -411,16 +503,17 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 						.VAlign(VAlign_Center)
 						[
 							SNew(STextBlock)
-							.ColorAndOpacity(FLinearColor::White)
-							.ShadowColorAndOpacity(FLinearColor::Black)
-							.ShadowOffset(FVector2D::UnitVector)
+							.ColorAndOpacity(FLinearColor::Black)
+							//.ShadowColorAndOpacity(FLinearColor::Black)
+							//.ShadowOffset(FVector2D::UnitVector)
 							.AutoWrapText(true)
 							.Text(FText::FromString("Dynamic Objects must have a valid Mesh Name\nTo have data aggregated, Dynamic Objects must have a Unique Id"))
 						]
 						+SHorizontalBox::Slot()
 						[
 							SNew(SButton)
-							.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SetUniqueDynamicIds)
+							.OnClicked(this,&FCognitiveSettingsCustomization::ValidateAndRefresh)
+							//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SetUniqueDynamicIds) // TODO should refresh list
 							[
 								SNew(STextBlock)
 								.Justification(ETextJustify::Center)
@@ -670,6 +763,24 @@ void FCognitiveSettingsCustomization::OnCommitedExportTextureRefactor(int32 InNe
 
 FReply FCognitiveSettingsCustomization::RefreshDisplayDynamicObjectsCountInScene()
 {
+	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
+	SceneDynamicObjectList->RefreshList();
+	return FReply::Handled();
+}
+
+void FCognitiveSettingsCustomization::OnBlenderPathChanged(const FText& Text)
+{
+	FCognitiveEditorTools::GetInstance()->BlenderPath = Text.ToString();
+}
+
+void FCognitiveSettingsCustomization::OnExportPathChanged(const FText& Text)
+{
+	FCognitiveEditorTools::GetInstance()->BaseExportDirectory = Text.ToString();
+}
+
+FReply FCognitiveSettingsCustomization::ValidateAndRefresh()
+{
+	FCognitiveEditorTools::GetInstance()->SetUniqueDynamicIds();
 	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 	SceneDynamicObjectList->RefreshList();
 	return FReply::Handled();
