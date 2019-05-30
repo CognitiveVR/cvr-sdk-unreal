@@ -19,10 +19,12 @@ namespace cognitivevrapi
     {
         public:
 			static void Init();
-			static void DebugInfo(FString s);
+			static void DevLog(FString s);
 			static void Info(FString s);
             static void Warning(FString s);
             static void Error(FString s);
+
+			static bool DevLogEnabled();
     };
 }
 #endif  // COGNITIVEVR_LOG_H_

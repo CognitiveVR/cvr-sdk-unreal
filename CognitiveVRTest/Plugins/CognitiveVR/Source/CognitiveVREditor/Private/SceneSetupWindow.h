@@ -5,6 +5,7 @@
 #include "SceneSetupWindow.generated.h"
 
 //this is a container class to be customized. all functionality will stay in cognitivetools
+//this window just holds a scene setup slate widget
 
 UCLASS(Blueprintable)
 class USceneSetupWindow : public UBaseEditorTool

@@ -15,7 +15,7 @@
 #include "SDynamicObjectListWidget.h"
 #include "SDynamicObjectWebListWidget.h"
 
-//customization ui for cognitive settings. most of the functionality calls FCognitiveEditorTools
+//customization ui for cognitive settings/preferences. most of this is interface code that calls FCognitiveEditorTools logic
 
 class UCognitiveVRSettings;
 
@@ -64,5 +64,13 @@ public:
 
 	void OnCheckStateChangedStaticOnly(const bool& InNewValue);
 
+	void OnBlenderPathChanged(const FText& Text);
+	void OnExportPathChanged(const FText& Text);
+
 	FReply SelectAndRefreshExportDirectory();
+
+	FReply ValidateAndRefresh();
+
+	TSharedPtr<SWidget> PickerWidget;
+	TSharedPtr<SButton> BrowseButton;
 };

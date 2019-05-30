@@ -8,6 +8,8 @@
 
 class UDynamicObject;
 
+//custom details inspector for dynamic object component
+
 class UDynamicObjectComponentDetails : public IDetailCustomization
 {
 public:

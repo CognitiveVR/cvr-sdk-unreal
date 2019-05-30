@@ -853,28 +853,6 @@ void FCognitiveEditorTools::FindAllSubDirectoryNames()
 			GLog->Log("skip file - not dynamic subdir " + TimestampIt.Key());
 		}
 	}
-
-
-	/*
-
-	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
-	{
-		const FString filePath = TimestampIt.Key();
-		const FString fileName = FPaths::GetCleanFilename(filePath);
-
-		if (DynamicsExportDirectory == filePath)
-		{
-			//GLog->Log("root found " + filePath);
-		}
-		else if (FPaths::DirectoryExists(filePath))
-		{
-			SubDirectoryNames.Add(MakeShareable(new FString(fileName)));
-		}
-		else
-		{
-			//GLog->Log("file found " + filePath);
-		}
-	}*/
 }
 
 void FCognitiveEditorTools::ReexportDynamicMeshes(FString directory)
@@ -1167,24 +1145,6 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 	}
 	return FReply::Handled();
 }
-/*
-FReply FCognitiveEditorTools::SelectDynamicsDirectory()
-{
-	FString title = "Select Dynamc Export Root Directory";
-	FString fileTypes = ".exe";
-	FString lastPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
-	FString defaultfile = FString();
-	FString outFilename = FString();
-	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::SelectDynamicsDirectory - picked a directory"));
-		DynamicsExportDirectory = outFilename;
-		GLog->Log("FCognitiveEditorTools::SelectDynamicsDirectory directory is " + DynamicsExportDirectory);
-		FindAllSubDirectoryNames();
-		//SubDirectoryListWidget->RefreshList();
-	}
-	return FReply::Handled();
-}*/
 
 
 //used to select blender
@@ -1709,35 +1669,6 @@ FReply FCognitiveEditorTools::Reduce_Textures()
 	//TODO when procHandle is complete, upload exported files to sceneexplorer.com
 	return FReply::Handled();
 }
-
-//SCENE
-/*void FCognitiveEditorTools::RefreshAllUploadFiles()
-{
-	FString filesStartingWith = TEXT("");
-	FString pngextension = TEXT("png");
-	TArray<FString> filesInDirectory = GetAllFilesInDirectory(GetCurrentSceneExportDirectory(), true, filesStartingWith, filesStartingWith, pngextension,false);
-
-	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(GetCurrentSceneExportDirectory(), true, filesStartingWith, pngextension, filesStartingWith,false);
-	imagesInDirectory.Remove(GetCurrentSceneExportDirectory() + "/screenshot/screenshot.png");
-
-	//TArray<TSharedPtr<FString>> names;
-	AllUploadFiles.Empty();
-	AllDynamicFiles.Empty();
-	for (int32 i = 0; i < filesInDirectory.Num(); i++)
-	{
-		if (filesInDirectory[i].Contains("/dynamics/"))
-			AllDynamicFiles.Add(MakeShareable(new FString(filesInDirectory[i])));
-		else
-			AllUploadFiles.Add(MakeShareable(new FString(filesInDirectory[i])));
-	}
-	for (int32 i = 0; i < imagesInDirectory.Num(); i++)
-	{
-		if (imagesInDirectory[i].Contains("/dynamics/"))
-			AllDynamicFiles.Add(MakeShareable(new FString(imagesInDirectory[i])));
-		else
-			AllUploadFiles.Add(MakeShareable(new FString(imagesInDirectory[i])));
-	}
-}*/
 
 void FCognitiveEditorTools::RefreshSceneUploadFiles()
 {
@@ -3059,6 +2990,20 @@ FText FCognitiveEditorTools::GetCurrentSceneExportDirectoryDisplay() const
 FText FCognitiveEditorTools::GetDynamicsExportDirectoryDisplay() const
 {
 	return FText::FromString(FPaths::Combine(BaseExportDirectory, "dynamics"));
+}
+
+EVisibility FCognitiveEditorTools::BlenderValidVisibility() const
+{
+	if (HasFoundBlender())
+		return EVisibility::Visible;
+	return EVisibility::Collapsed;
+}
+
+EVisibility FCognitiveEditorTools::BlenderInvalidVisibility() const
+{
+	if (HasFoundBlender())
+		return EVisibility::Collapsed;
+	return EVisibility::Visible;
 }
 
 #undef LOCTEXT_NAMESPACE

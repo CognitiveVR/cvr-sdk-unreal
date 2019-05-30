@@ -11,7 +11,6 @@ FString Gateway;
 
 cognitivevrapi::Network::Network(FAnalyticsProviderCognitiveVR* sp)
 {
-	cognitivevrapi::CognitiveLog::Info("CognitiveVR::Network - Init");
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
     s = sp;
 	if (Http == NULL)
@@ -55,6 +54,10 @@ void cognitivevrapi::Network::NetworkCall(FString suburl, FString contents)
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->ProcessRequest();
+
+	if (cognitivevrapi::CognitiveLog::DevLogEnabled())
+		cognitivevrapi::CognitiveLog::DevLog(url + "\n" + contents);
+
 	return;
 }
 

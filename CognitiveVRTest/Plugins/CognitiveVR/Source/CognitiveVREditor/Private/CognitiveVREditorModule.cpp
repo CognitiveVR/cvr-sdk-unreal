@@ -135,23 +135,25 @@ public:
 		// register standalone UI
 		LevelEditorTabManagerChangedHandle = LevelEditorModule.OnTabManagerChanged().AddLambda([]()
 		{
-			TSharedPtr<FSlateStyleSet> StyleSet = MakeShareable(new FSlateStyleSet("CognitiveEditor"));
-			StyleSet->SetCoreContentRoot(FPaths::EngineContentDir() / TEXT("Slate"));
+			//TSharedPtr<FSlateStyleSet> StyleSet = MakeShareable(new FSlateStyleSet("CognitiveEditor"));
+			//StyleSet->SetCoreContentRoot(FPaths::EngineContentDir() / TEXT("Slate"));
 			
-			FString iconpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("CognitiveSceneWizardTabIcon.png");
+			//FString iconpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("CognitiveSceneWizardTabIcon.png");
 			//FName BrushName = FName(*iconpath);
 
 			//const TCHAR* charPath = *iconpath;
-			StyleSet->Set(FName(*iconpath),new FSlateImageBrush(iconpath,FVector2D(128,128),FSlateColor()));
+			//StyleSet->Set(FName(*iconpath),new FSlateImageBrush(iconpath,FVector2D(128,128),FSlateColor()));
 
-			//FSlateStyleRegistry::RegisterSlateStyle(*StyleSet.Get());
+			//FSlateStyleRegistry::RegisterSlateStyle(*StyleSet.Get()); //need to make a new class for this style? silently crashes unreal if this is called here
+
+			//FSlateIcon& iconRef = FSlateIcon(StyleSet, "CognitiveSceneWizardTabIcon");
 
 			FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
 			LocalLevelEditorModule.GetLevelEditorTabManager()->RegisterTabSpawner(FName("CognitiveSceneSetup"), FOnSpawnTab::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab))
 				.SetGroup(WorkspaceMenu::GetMenuStructure().GetToolsCategory())
 				.SetDisplayName(LOCTEXT("SceneSetupTabTitle", "Cognitive Scene Setup"))
 				.SetTooltipText(LOCTEXT("SceneSetupTooltipText", "Open the Cognitive Scene Setup Wizard"));
-				//.SetIcon(FSlateIcon(StyleSet, "CognitiveSceneWizardTabIcon"));
+				//.SetIcon(FSlateIcon(StyleSet.Get()->GetStyleSetName(), "CognitiveSceneWizardTabIcon"));
 		});
 
 		// Register the details customizations

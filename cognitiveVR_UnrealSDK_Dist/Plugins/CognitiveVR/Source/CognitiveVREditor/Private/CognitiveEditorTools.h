@@ -408,6 +408,10 @@ public:
 	bool ConfigFileHasChanged = false;
 	EVisibility ConfigFileChangedVisibility() const;
 
+	//returns visible if blender path found and valid
+	EVisibility BlenderValidVisibility() const;
+	EVisibility BlenderInvalidVisibility() const;
+
 	//FReply OpenProductOnDashboard();
 	//bool EnableOpenProductOnDashboard() const;
 

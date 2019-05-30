@@ -55,6 +55,8 @@ public:
 	int32 CurrentPage = 0;
 	bool SceneWasExported = false;
 
+	FReply DebugNextPage();
+	FReply DebugPreviousPage();
 	
 	//FString APIKey;
 	//FText GetAPIKey() const;
@@ -62,7 +64,7 @@ public:
 	//FText GetDeveloperKey() const;
 
 	
-
+	FText GetHeaderTitle() const;
 	EVisibility IsIntroVisible() const;
 	EVisibility IsKeysVisible() const;
 	EVisibility IsBlenderVisible() const;
@@ -106,6 +108,9 @@ public:
 	const FSlateBrush* GetSceneBlueTexture() const;
 	FSlateBrush* SceneBlueTexture;
 
+	const FSlateBrush* GetBlenderLogo() const;
+	FSlateBrush* BlenderLogoTexture;
+
 	const FSlateBrush* GetBlueprintStartTexture() const;
 	FSlateBrush* BlueprintStartTexture;
 
@@ -120,7 +125,7 @@ public:
 	FReply RefreshDisplayDynamicObjectsCountInScene();
 	EVisibility GetDuplicateDyanmicObjectVisibility() const;
 
-	FReply SetUniqueDynamicIds();
+	//FReply SetUniqueDynamicIds();
 	//bool DuplicateDynamicIdsInScene() const;
 
 	int32 CountDynamicObjectsInScene() const;
@@ -181,4 +186,6 @@ public:
 		}
 	}
 
+	void OnExportPathChanged(const FText& Text);
+	void OnBlenderPathChanged(const FText& Text);
 };
