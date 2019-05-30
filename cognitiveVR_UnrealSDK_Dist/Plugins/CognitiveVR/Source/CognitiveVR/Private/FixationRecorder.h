@@ -13,6 +13,12 @@
 #include "ITobiiCore.h"
 #include "ITobiiEyetracker.h"
 #endif
+#if defined SRANIPAL_API
+#include "SRanipal_Eye.h"
+#include "ViveSR_Enums.h"
+#include "SRanipal_Eyes_Enums.h"
+#include "SRanipal_FunctionLibrary_Eye.h"
+#endif
 #include "FixationRecorder.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -45,6 +51,10 @@ private:
 #if defined TOBII_EYETRACKING_ACTIVE
 	bool AreEyesClosed(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker);
 	int64 GetEyeCaptureTimestamp(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker);
+#elif defined SRANIPAL_API
+	bool AreEyesClosed();
+	int64 GetEyeCaptureTimestamp();
+	ViveSR::anipal::Eye::EyeData* data;
 #else
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();

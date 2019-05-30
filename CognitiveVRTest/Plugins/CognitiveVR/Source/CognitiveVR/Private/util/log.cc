@@ -2,19 +2,11 @@
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 #include "util/cognitive_log.h"
-//#include "AnalyticsSettings.h"
-
-using namespace cognitivevrapi;
 
 bool ShowDebugLogs; //basic info/warning/errors
 bool ShowDevLogs; //development specific logs
 
-//bool MuteDebugMessages; //developer and debugging only
-//bool MuteInfoMessages; //general responses and messaging
-//bool MuteWarningMessages; //something going wrong with cognitive analytics
-//bool MuteErrorMessages; //something going very wrong
-
-void CognitiveLog::Init()
+void cognitivevrapi::CognitiveLog::Init()
 {
 	ShowDebugLogs = true;
 	ShowDevLogs = false;
@@ -38,25 +30,30 @@ void CognitiveLog::Init()
 	}
 }
 
-void CognitiveLog::DevLog(FString s)
+bool cognitivevrapi::CognitiveLog::DevLogEnabled()
+{
+	return ShowDevLogs;
+}
+
+void cognitivevrapi::CognitiveLog::DevLog(FString s)
 {
 	if (!ShowDevLogs) { return; }
 	UE_LOG(CognitiveVR_Log, Log, TEXT("%s"), *s);
 }
 
-void CognitiveLog::Info(FString s)
+void cognitivevrapi::CognitiveLog::Info(FString s)
 {
 	if (!ShowDebugLogs) { return; }
 	UE_LOG(CognitiveVR_Log, Log, TEXT("%s"), *s);
 }
 
-void CognitiveLog::Warning(FString s)
+void cognitivevrapi::CognitiveLog::Warning(FString s)
 {
 	if (!ShowDebugLogs) { return; }
 	UE_LOG(CognitiveVR_Log, Warning, TEXT("%s"), *s);
 }
 
-void CognitiveLog::Error(FString s)
+void cognitivevrapi::CognitiveLog::Error(FString s)
 {
 	if (!ShowDebugLogs) { return; }
 	UE_LOG(CognitiveVR_Log, Error, TEXT("%s"), *s);

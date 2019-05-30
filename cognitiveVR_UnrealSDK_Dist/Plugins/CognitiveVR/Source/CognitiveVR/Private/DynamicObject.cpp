@@ -259,10 +259,6 @@ void UDynamicObject::GenerateObjectId()
 		}
 
 		cognitivevrapi::FDynamicObjectManifestEntry entry = cognitivevrapi::FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
-		if (!GroupName.IsEmpty())
-		{
-			entry.SetProperty("groupname", GroupName);
-		}
 		manifest.Add(entry);
 		newManifest.Add(entry);
 	}
@@ -270,11 +266,6 @@ void UDynamicObject::GenerateObjectId()
 	{
 		ObjectID = MakeShareable(new cognitivevrapi::FDynamicObjectId(CustomId, MeshName));
 		cognitivevrapi::FDynamicObjectManifestEntry entry = cognitivevrapi::FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
-		if (!GroupName.IsEmpty())
-		{
-			//entry.
-			entry.SetProperty("groupname", GroupName);
-		}
 		manifest.Add(entry);
 		newManifest.Add(entry);
 	}

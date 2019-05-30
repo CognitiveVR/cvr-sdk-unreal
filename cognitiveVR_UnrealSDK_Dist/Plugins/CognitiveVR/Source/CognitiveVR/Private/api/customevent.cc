@@ -6,6 +6,9 @@
 
 //using namespace cognitivevrapi;
 
+uint64 lastFrameCount = 0;
+int32 consecutiveFrame = 0;
+
 cognitivevrapi::CustomEvent::CustomEvent(FAnalyticsProviderCognitiveVR* cvr)
 {
 	cog = cvr;
@@ -94,6 +97,24 @@ void cognitivevrapi::CustomEvent::Send(FString category, FVector Position, FStri
 
 void cognitivevrapi::CustomEvent::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
 {
+	if (lastFrameCount >= GFrameCounter - 1)
+	{
+		if (lastFrameCount != GFrameCounter)
+		{
+			lastFrameCount = GFrameCounter;
+			consecutiveFrame++;
+			if (consecutiveFrame > 200)
+			{
+				CognitiveLog::Warning("Cognitive3D receiving Custom Events every frame. This is not a recommended method for implementation!\nPlease see docs.cognitive3d.com/unreal/customevents");
+			}
+		}
+	}
+	else
+	{
+		lastFrameCount = GFrameCounter;
+		consecutiveFrame = 0;
+	}
+
 	if (cog == NULL || !cog->HasStartedSession())
 	{
 		CognitiveLog::Warning("CustomEvent::Send - FAnalyticsProviderCognitiveVR is null!");

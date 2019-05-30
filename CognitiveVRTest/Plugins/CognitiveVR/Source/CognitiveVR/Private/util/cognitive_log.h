@@ -23,6 +23,8 @@ namespace cognitivevrapi
 			static void Info(FString s);
             static void Warning(FString s);
             static void Error(FString s);
+
+			static bool DevLogEnabled();
     };
 }
 #endif  // COGNITIVEVR_LOG_H_

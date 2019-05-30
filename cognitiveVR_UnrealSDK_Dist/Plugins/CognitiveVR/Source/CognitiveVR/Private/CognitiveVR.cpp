@@ -7,6 +7,7 @@
 #include "CognitiveVRSettings.h"
 #include "PlayerTracker.h"
 #include "DynamicObject.h"
+#include "FixationRecorder.h"
 
 //using namespace cognitivevrapi;
 
@@ -307,15 +308,16 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 		return;
 	}
 
-	UPlayerTracker* up = controllers[0]->GetPawn()->FindComponentByClass<UPlayerTracker>();
-	if (up == NULL)
+	for (TObjectIterator<UPlayerTracker> Itr; Itr; ++Itr)
 	{
-		cognitivevrapi::CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents couldn't find player tracker. Skip upload to scene explorer");
-		return;
+		Itr->SendData();
+		cognitivevrapi::CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents SEND FIXATION DATA");
 	}
-	else
+
+	for (TObjectIterator<UFixationRecorder> Itr; Itr; ++Itr)
 	{
-		up->SendData();
+		Itr->SendData();
+		cognitivevrapi::CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents SEND FIXATION DATA");
 	}
 }
 

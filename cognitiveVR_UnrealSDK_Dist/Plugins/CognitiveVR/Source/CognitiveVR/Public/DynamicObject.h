@@ -156,10 +156,6 @@ public:
 	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	FString CustomId = "";
 
-	//organizes similar dynamic objects together for display on dashboard
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	FString GroupName;
-
 	//should this object record how the player is gazing?
 	UPROPERTY(EditAnywhere)
 	bool TrackGaze = false;

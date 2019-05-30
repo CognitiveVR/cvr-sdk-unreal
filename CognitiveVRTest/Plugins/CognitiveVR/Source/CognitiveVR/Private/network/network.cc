@@ -55,7 +55,8 @@ void cognitivevrapi::Network::NetworkCall(FString suburl, FString contents)
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->ProcessRequest();
 
-	cognitivevrapi::CognitiveLog::DevLog(url + "\n" + contents);
+	if (cognitivevrapi::CognitiveLog::DevLogEnabled())
+		cognitivevrapi::CognitiveLog::DevLog(url + "\n" + contents);
 
 	return;
 }

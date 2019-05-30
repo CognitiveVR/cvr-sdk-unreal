@@ -350,7 +350,30 @@ bool UFixationRecorder::AreEyesClosed(TSharedPtr<ITobiiEyeTracker, ESPMode::Thre
 	}
 	return false;
 }
+
+#elif defined SRANIPAL_API
+bool UFixationRecorder::AreEyesClosed()
+{
+	float leftOpenness = 0;
+	bool leftValid = USRanipal_FunctionLibrary_Eye::GetEyeOpenness(EyeIndex::LEFT, leftOpenness);
+	
+	float rightOpenness;
+	bool rightValid = USRanipal_FunctionLibrary_Eye::GetEyeOpenness(EyeIndex::RIGHT, rightOpenness);
+
+	if (leftValid && leftOpenness < 0.5f) { return true; }
+	if (rightValid && rightOpenness < 0.5f) { return true; }
+
+	return false;
+}
+
+int64 UFixationRecorder::GetEyeCaptureTimestamp()
+{
+	int64 ts = (int64)(cognitivevrapi::Util::GetTimestamp() * 1000);
+	return ts;
+}
+
 #else
+
 bool UFixationRecorder::AreEyesClosed()
 {
 	return false;
@@ -421,6 +444,23 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp(eyetracker);
 	FVector Start = eyetracker->GetCombinedGazeData().WorldGazeOrigin;
 	FVector End = eyetracker->GetCombinedGazeData().WorldGazeOrigin + eyetracker->GetCombinedGazeData().WorldGazeDirection * 100000.0f;
+#elif defined SRANIPAL_API
+	EyeCaptures[index].EyesClosed = AreEyesClosed();
+	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
+
+	FVector Start = FVector::ZeroVector;
+	FVector Direction = FVector::ZeroVector;
+	FVector End = FVector::ZeroVector;
+
+	if (USRanipal_FunctionLibrary_Eye::GetGazeRay(GazeIndex::COMBINE, Start, Direction))
+	{
+		End = Start + Direction * 100000.0f;
+	}
+	else
+	{
+		//EyeCaptures[index].Discard = true;
+	}
+
 #else
 	EyeCaptures[index].EyesClosed = AreEyesClosed();
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
