@@ -70,6 +70,7 @@ void UFixationRecorder::BeginPlay()
 		{
 			EyeCaptures.Add(FEyeCapture());
 		}
+		GEngine->GetAllLocalPlayerControllers(controllers);
 		Super::BeginPlay();
 	}
 	else
@@ -449,21 +450,34 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
 
 	FVector Start = FVector::ZeroVector;
-	FVector Direction = FVector::ZeroVector;
+	FVector LocalDirection = FVector::ZeroVector;
 	FVector End = FVector::ZeroVector;
 
-	if (USRanipal_FunctionLibrary_Eye::GetGazeRay(GazeIndex::COMBINE, Start, Direction))
+	if (USRanipal_FunctionLibrary_Eye::GetGazeRay(GazeIndex::COMBINE, Start, LocalDirection))
 	{
-		End = Start + Direction * 100000.0f;
+		if (controllers.Num() == 0)
+		{
+			cognitivevrapi::CognitiveLog::Info("FixationRecorder::TickComponent - no controllers");
+			return;
+		}
+
+		FVector captureLocation = controllers[0]->PlayerCameraManager->GetCameraLocation();
+		Start = captureLocation;
+
+		FVector WorldDir = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(LocalDirection);
+		End = captureLocation + WorldDir * 100000.0f;
 	}
 	else
 	{
-		//EyeCaptures[index].Discard = true;
+		EyeCaptures[index].Discard = true;
 	}
 
 #else
 	EyeCaptures[index].EyesClosed = AreEyesClosed();
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
+
+	EyeCaptures[index].Discard = true;
+	cognitivevrapi::CognitiveLog::Error("FixationRecorder::TickComponent - no eye tracking SDKs found!");
 
 	FVector Start = FVector::ZeroVector;
 	FVector End = FVector::ZeroVector;
@@ -717,6 +731,7 @@ bool UFixationRecorder::TryBeginFixation()
 			if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage) { continue; }
 			CachedEyeCapturePositions.Add(EyeCaptures[GetIndex(i)].WorldPosition);
 		}
+		//DrawDebugSphere(world, averageWorldPos, 10, 3, FColor::Red, false, 10);
 		return true;
 	}
 	return false;
