@@ -171,6 +171,7 @@ private:
 
 	FVector GetWorldGazeEnd(FVector start);
 	FVector LastDirection;
+	TArray<APlayerController*, FDefaultAllocator> controllers;
 
 public:
 	FCognitiveExitPollResponse OnExitPollResponse;

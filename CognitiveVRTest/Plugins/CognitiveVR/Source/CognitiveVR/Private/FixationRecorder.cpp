@@ -70,9 +70,7 @@ void UFixationRecorder::BeginPlay()
 		{
 			EyeCaptures.Add(FEyeCapture());
 		}
-#if defined SRANIPAL_API
 		GEngine->GetAllLocalPlayerControllers(controllers);
-#endif
 		Super::BeginPlay();
 	}
 	else
@@ -733,7 +731,7 @@ bool UFixationRecorder::TryBeginFixation()
 			if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage) { continue; }
 			CachedEyeCapturePositions.Add(EyeCaptures[GetIndex(i)].WorldPosition);
 		}
-		DrawDebugSphere(world, averageWorldPos, 10, 3, FColor::Red, false, 10);
+		//DrawDebugSphere(world, averageWorldPos, 10, 3, FColor::Red, false, 10);
 		return true;
 	}
 	return false;

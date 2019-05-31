@@ -33,6 +33,7 @@ void UPlayerTracker::BeginPlay()
 
 		cog->SetWorld(GetWorld());
 		Super::BeginPlay();
+		GEngine->GetAllLocalPlayerControllers(controllers);
 	}
 	else
 	{
@@ -53,8 +54,6 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 
 	if (USRanipal_FunctionLibrary_Eye::GetGazeRay(GazeIndex::COMBINE, TempStart, LocalDirection))
 	{
-		TArray<APlayerController*, FDefaultAllocator> controllers;
-		GEngine->GetAllLocalPlayerControllers(controllers);
 		FVector WorldDir = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(LocalDirection);
 		End = start + WorldDir * 100000.0f;
 		LastDirection = WorldDir;
@@ -63,8 +62,6 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	End = start + LastDirection * 100000.0f;
 	return End;
 #else
-	TArray<APlayerController*, FDefaultAllocator> controllers;
-	GEngine->GetAllLocalPlayerControllers(controllers);
 	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
 	FVector End = start + captureRotation.Vector() * 10000.0f;
 	return End;
@@ -87,9 +84,6 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	double time = cognitivevrapi::Util::GetTimestamp();
 	FString objectid = "";
 
-
-	TArray<APlayerController*, FDefaultAllocator> controllers;
-	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
 	{
 		cognitivevrapi::CognitiveLog::Info("UPlayerTracker::TickComponent--------------------------no controllers. skip");
@@ -162,7 +156,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		{
 			//hit some csg or something that is not an actor
 		}
-		DrawDebugSphere(GetWorld(), gaze, 3, 3, FColor::Cyan, false, 0.2);
+		//DrawDebugSphere(GetWorld(), gaze, 3, 3, FColor::Cyan, false, 0.2);
 		BuildSnapshot(captureLocation, gaze, captureRotation, time, DidHitFloor, FloorHitPosition, objectid);
 	}
 	else
