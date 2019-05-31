@@ -55,6 +55,7 @@ private:
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
 	ViveSR::anipal::Eye::EyeData* data;
+	TArray<APlayerController*, FDefaultAllocator> controllers;
 #else
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();

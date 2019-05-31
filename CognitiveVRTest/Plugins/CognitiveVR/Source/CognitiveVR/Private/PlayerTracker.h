@@ -10,6 +10,17 @@
 #include "SceneView.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "DynamicObject.h"
+#if defined TOBII_EYETRACKING_ACTIVE
+#include "TobiiTypes.h"
+#include "ITobiiCore.h"
+#include "ITobiiEyetracker.h"
+#endif
+#if defined SRANIPAL_API
+#include "SRanipal_Eye.h"
+#include "ViveSR_Enums.h"
+#include "SRanipal_Eyes_Enums.h"
+#include "SRanipal_FunctionLibrary_Eye.h"
+#endif
 #include "PlayerTracker.generated.h"
 
 USTRUCT(BlueprintType)
@@ -158,13 +169,11 @@ private:
 	void BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos, FString objectId = "");
 	void BuildSnapshot(FVector position, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos);
 
+	FVector GetWorldGazeEnd(FVector start);
+	FVector LastDirection;
+
 public:
 	FCognitiveExitPollResponse OnExitPollResponse;
-
-	FVector captureLocation;
-	FRotator captureRotation;
-
-	USceneComponent* transformComponent;
 
 	UPROPERTY(EditAnywhere)
 		float PlayerSnapshotInterval = 0.1;

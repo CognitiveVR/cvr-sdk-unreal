@@ -40,6 +40,37 @@ void UPlayerTracker::BeginPlay()
 	}
 }
 
+FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
+{
+#if defined TOBII_EYETRACKING_ACTIVE
+	auto eyetracker = ITobiiCore::GetEyeTracker();
+	FVector End = start + eyetracker->GetCombinedGazeData().WorldGazeDirection * 100000.0f;
+	return End;
+#elif defined SRANIPAL_API
+	FVector End = FVector::ZeroVector;
+	FVector TempStart = FVector::ZeroVector;
+	FVector LocalDirection = FVector::ZeroVector;
+
+	if (USRanipal_FunctionLibrary_Eye::GetGazeRay(GazeIndex::COMBINE, TempStart, LocalDirection))
+	{
+		TArray<APlayerController*, FDefaultAllocator> controllers;
+		GEngine->GetAllLocalPlayerControllers(controllers);
+		FVector WorldDir = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(LocalDirection);
+		End = start + WorldDir * 100000.0f;
+		LastDirection = WorldDir;
+		return End;
+	}
+	End = start + LastDirection * 100000.0f;
+	return End;
+#else
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
+	FVector End = start + captureRotation.Vector() * 10000.0f;
+	return End;
+#endif
+}
+
 void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -52,8 +83,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 	currentTime -= PlayerSnapshotInterval;
 
-	FVector gaze;
-
+	
 	double time = cognitivevrapi::Util::GetTimestamp();
 	FString objectid = "";
 
@@ -66,8 +96,8 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		return;
 	}
 
-	captureLocation = controllers[0]->PlayerCameraManager->GetCameraLocation();
-	captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
+	FVector captureLocation = controllers[0]->PlayerCameraManager->GetCameraLocation();
+	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
 
 	//look at dynamic object
 	FCollisionQueryParams Params; // You can use this to customize various properties about the trace
@@ -78,7 +108,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	FHitResult FloorHit; // The hit result gets populated by the line trace
 
 	FVector Start = captureLocation;
-	FVector End = captureLocation + captureRotation.Vector() * 10000.0f;
+	FVector End = GetWorldGazeEnd(Start);
 	
 	FCollisionObjectQueryParams params = FCollisionObjectQueryParams();
 	params.AddObjectTypesToQuery(ECC_WorldStatic);
@@ -101,7 +131,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	bool hitDynamic = false;
 	if (bHit)
 	{
-		gaze = Hit.ImpactPoint;
+		FVector gaze = Hit.ImpactPoint;
 
 		if (Hit.Actor.IsValid())
 		{
@@ -132,6 +162,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		{
 			//hit some csg or something that is not an actor
 		}
+		DrawDebugSphere(GetWorld(), gaze, 3, 3, FColor::Cyan, false, 0.2);
 		BuildSnapshot(captureLocation, gaze, captureRotation, time, DidHitFloor, FloorHitPosition, objectid);
 	}
 	else
