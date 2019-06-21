@@ -54,6 +54,12 @@ cognitivevrapi::Sensors::Sensors(FAnalyticsProviderCognitiveVR* sp)
 
 void cognitivevrapi::Sensors::StartSession()
 {
+	if (cog->GetWorld() == NULL)
+	{
+		CognitiveLog::Warning("Sensors::StartSession - GetWorld is Null! Likely missing PlayerTrackerComponent on Player actor");
+		return;
+	}
+
 	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, false);
 }
 
