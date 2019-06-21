@@ -57,6 +57,17 @@ cognitivevrapi::CustomEvent::CustomEvent(FAnalyticsProviderCognitiveVR* cvr)
 
 void cognitivevrapi::CustomEvent::StartSession()
 {
+	if (cog == NULL) {
+		return;
+	}
+	if (cog->GetWorld() == NULL)
+	{
+		CognitiveLog::Warning("CustomEvent::StartSession - GetWorld is Null! Likely missing PlayerTrackerComponent on Player actor");
+		return;
+	}
+	if (cog->GetWorld()->GetGameInstance() == NULL) {
+		return;
+	}
 	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEvent::SendData), AutoTimer, false);
 }
 

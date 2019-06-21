@@ -70,7 +70,9 @@ void UFixationRecorder::BeginPlay()
 		{
 			EyeCaptures.Add(FEyeCapture());
 		}
+#if defined SRANIPAL_API
 		GEngine->GetAllLocalPlayerControllers(controllers);
+#endif
 		Super::BeginPlay();
 	}
 	else
@@ -372,7 +374,27 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 	int64 ts = (int64)(cognitivevrapi::Util::GetTimestamp() * 1000);
 	return ts;
 }
+#elif defined VARJOEYETRACKER_API
+bool UFixationRecorder::AreEyesClosed()
+{
+	FVarjoEyeTrackingData data;
+	UVarjoEyeTrackerFunctionLibrary::GetEyeTrackerGazeData(data);
+	if (data.leftStatus == 0)
+	{
+		return true;
+	}
+	if (data.rightStatus == 0)
+	{
+		return true;
+	}
+	return false;
+}
 
+int64 UFixationRecorder::GetEyeCaptureTimestamp()
+{
+	int64 ts = (int64)(cognitivevrapi::Util::GetTimestamp() * 1000);
+	return ts;
+}
 #else
 
 bool UFixationRecorder::AreEyesClosed()
@@ -466,6 +488,30 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 		FVector WorldDir = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(LocalDirection);
 		End = captureLocation + WorldDir * 100000.0f;
+	}
+	else
+	{
+		EyeCaptures[index].Discard = true;
+	}
+
+#elif defined VARJOEYETRACKER_API
+	EyeCaptures[index].EyesClosed = AreEyesClosed();
+	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
+
+	FVector LocalStart = FVector::ZeroVector;
+	FVector Start = FVector::ZeroVector;
+	FVector LocalDirection = FVector::ZeroVector;
+	FVector End = FVector::ZeroVector;
+	float ignored = 0;
+
+	FVarjoEyeTrackingData data;
+
+	if (UVarjoEyeTrackerFunctionLibrary::GetEyeTrackerGazeData(data)) //if the data is valid
+	{
+		//the gaze transformed into world space
+		UVarjoEyeTrackerFunctionLibrary::GetGazeRay(Start, LocalDirection, ignored);
+
+		End = Start + LocalDirection * 10000.0f;
 	}
 	else
 	{
