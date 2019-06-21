@@ -19,6 +19,9 @@
 #include "SRanipal_Eyes_Enums.h"
 #include "SRanipal_FunctionLibrary_Eye.h"
 #endif
+#if defined VARJOEYETRACKER_API
+#include "VarjoEyeTrackerFunctionLibrary.h"
+#endif
 #include "FixationRecorder.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -56,6 +59,10 @@ private:
 	int64 GetEyeCaptureTimestamp();
 	ViveSR::anipal::Eye::EyeData* data;
 	TArray<APlayerController*, FDefaultAllocator> controllers;
+#elif defined VARJOEYETRACKER_API
+	bool AreEyesClosed();
+	int64 GetEyeCaptureTimestamp();
+	FVarjoEyeTrackingData* data;
 #else
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
