@@ -846,6 +846,7 @@ void UFixationRecorder::SendData()
 	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
 	wholeObj->SetNumberField("part", jsonFixationPart);
+	jsonFixationPart++;
 	wholeObj->SetStringField("formatversion", "1.0");
 
 	TArray<TSharedPtr<FJsonValue>> dataArray;
@@ -865,7 +866,7 @@ void UFixationRecorder::SendData()
 
 	if (OutputString.Len() > 0)
 	{
-		//cog->network->NetworkCall("fixation", OutputString);
+		cog->network->NetworkCall("fixations", OutputString);
 	}
 	Fixations.Empty();
 }
