@@ -500,7 +500,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 	FVector LocalStart = FVector::ZeroVector;
 	FVector Start = FVector::ZeroVector;
-	FVector LocalDirection = FVector::ZeroVector;
+	FVector WorldDirection = FVector::ZeroVector;
 	FVector End = FVector::ZeroVector;
 	float ignored = 0;
 
@@ -509,9 +509,9 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	if (UVarjoEyeTrackerFunctionLibrary::GetEyeTrackerGazeData(data)) //if the data is valid
 	{
 		//the gaze transformed into world space
-		UVarjoEyeTrackerFunctionLibrary::GetGazeRay(Start, LocalDirection, ignored);
+		UVarjoEyeTrackerFunctionLibrary::GetGazeRay(Start, WorldDirection, ignored);
 
-		End = Start + LocalDirection * 10000.0f;
+		End = Start + WorldDirection * 10000.0f;
 	}
 	else
 	{
