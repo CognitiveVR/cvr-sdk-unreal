@@ -295,29 +295,14 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 	sensors->SendData();
 	UDynamicObject::SendData();
 
-	TArray<APlayerController*, FDefaultAllocator> controllers;
-	GEngine->GetAllLocalPlayerControllers(controllers);
-	if (controllers.Num() == 0)
-	{
-		cognitivevrapi::CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents cannot find controller. Skip upload to scene explorer");
-		return;
-	}
-	if (controllers[0]->GetPawn() == NULL)
-	{
-		cognitivevrapi::CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents controller0 has no pawn. Skip upload to scene explorer");
-		return;
-	}
-
 	for (TObjectIterator<UPlayerTracker> Itr; Itr; ++Itr)
 	{
 		Itr->SendData();
-		cognitivevrapi::CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents SEND FIXATION DATA");
 	}
 
 	for (TObjectIterator<UFixationRecorder> Itr; Itr; ++Itr)
 	{
 		Itr->SendData();
-		cognitivevrapi::CognitiveLog::Error("FAnalyticsProviderCognitiveVR::FlushEvents SEND FIXATION DATA");
 	}
 }
 

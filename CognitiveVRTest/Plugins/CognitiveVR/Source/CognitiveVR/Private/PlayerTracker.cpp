@@ -61,6 +61,25 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	}
 	End = start + LastDirection * 100000.0f;
 	return End;
+#elif defined VARJOEYETRACKER_API
+	FVector Start = start;
+	FVector WorldDirection = FVector::ZeroVector;
+	FVector End = FVector::ZeroVector;
+	float ignored = 0;
+
+	FVarjoEyeTrackingData data;
+
+	if (UVarjoEyeTrackerFunctionLibrary::GetEyeTrackerGazeData(data)) //if the data is valid
+	{
+		//the gaze transformed into world space
+		UVarjoEyeTrackerFunctionLibrary::GetGazeRay(Start, WorldDirection, ignored);
+
+		End = start + WorldDirection * 10000.0f;
+		LastDirection = WorldDirection;
+		return End;
+	}
+	End = start + LastDirection * 100000.0f;
+	return End;
 #else
 	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
 	FVector End = start + captureRotation.Vector() * 10000.0f;

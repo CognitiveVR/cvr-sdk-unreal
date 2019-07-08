@@ -21,6 +21,9 @@
 #include "SRanipal_Eyes_Enums.h"
 #include "SRanipal_FunctionLibrary_Eye.h"
 #endif
+#if defined VARJOEYETRACKER_API
+#include "VarjoEyeTrackerFunctionLibrary.h"
+#endif
 #include "PlayerTracker.generated.h"
 
 USTRUCT(BlueprintType)
