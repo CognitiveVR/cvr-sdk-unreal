@@ -158,7 +158,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 					FVector localHitPosition = hitDynamicObject->GetOwner()->GetActorTransform().InverseTransformPosition(Hit.ImpactPoint);
 
-					localHitPosition *= hitDynamicObject->GetOwner()->GetActorTransform().GetScale3D();
+					//localHitPosition *= hitDynamicObject->GetOwner()->GetActorTransform().GetScale3D();
 
 					objectid = hitDynamicObject->GetObjectId()->Id;
 					gaze.X = localHitPosition.X;

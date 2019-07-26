@@ -150,6 +150,7 @@ void UDynamicObject::BeginPlay()
 	//scene component
 	LastPosition = GetComponentLocation();
 	LastForward = GetComponentTransform().TransformVector(FVector::ForwardVector);
+	LastScale = FVector(1, 1, 1);
 
 	if (!UseCustomMeshName)
 	{
@@ -174,7 +175,13 @@ void UDynamicObject::BeginPlay()
 
 	if (SnapshotOnBeginPlay)
 	{
-		FDynamicObjectSnapshot initSnapshot = MakeSnapshot();
+		bool hasScaleChanged = true;
+		if ( FMath::Abs( LastScale.Size() - GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+		{
+			hasScaleChanged = true;
+		}
+
+		FDynamicObjectSnapshot initSnapshot = MakeSnapshot(hasScaleChanged);
 		SnapshotBoolProperty(initSnapshot, "enable", true);
 		if (initSnapshot.time > 1)
 		{
@@ -299,22 +306,32 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 		float actualDegrees = FMath::Acos(FMath::Clamp<float>(dotRot, -1.0, 1.0)) * 57.29578;
 
-		if ((LastPosition - GetComponentLocation()).Size() > PositionThreshold)
+		bool hasScaleChanged = false;
+
+		if (FMath::Abs(LastScale.Size() - GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
 		{
-			//moved
+			hasScaleChanged = true;
 		}
-		else if (actualDegrees > RotationThreshold) //rotator stuff
+
+		if (!hasScaleChanged)
 		{
-			//rotated
-		}
-		else if (DirtyEngagements.Num() > 0)
-		{
-			//dirty engagements are written an inactive ones are removed in MakeSnapshot()
-		}
-		else
-		{
-			//hasn't moved enough
-			return;
+			if ((LastPosition - GetComponentLocation()).Size() > PositionThreshold)
+			{
+				//moved
+			}
+			else if (actualDegrees > RotationThreshold) //rotator stuff
+			{
+				//rotated
+			}
+			else if (DirtyEngagements.Num() > 0)
+			{
+				//dirty engagements are written an inactive ones are removed in MakeSnapshot()
+			}
+			else
+			{
+				//hasn't moved enough
+				return;
+			}
 		}
 
 		if (DirtyEngagements.Num() > 0)
@@ -333,8 +350,12 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		//scene component
 		LastPosition = GetComponentLocation();
 		LastForward = GetComponentTransform().TransformVector(FVector::ForwardVector);
+		if (hasScaleChanged)
+		{
+			LastScale = GetComponentTransform().GetScale3D();
+		}
 		
-		FDynamicObjectSnapshot snapObj = MakeSnapshot();
+		FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
 
 		//TODO allow recording of dynamics before session start, but don't 'leak' snapshots to a new session
 		if (snapObj.time > 1)
@@ -348,7 +369,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 	}
 }
 
-FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
+FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 {
 
 	//TODO check that session ends correctly from editor
@@ -395,7 +416,12 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot()
 	snapshot.id = ObjectID->Id;
 	//snapshot.position = FVector(-(int32)GetOwner()->GetActorLocation().X, (int32)GetOwner()->GetActorLocation().Z, (int32)GetOwner()->GetActorLocation().Y);
 	snapshot.position = FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y);
-	
+
+	if (hasChangedScale)
+	{
+		snapshot.hasScaleChanged = true;
+		snapshot.scale = GetComponentTransform().GetScale3D();
+	}
 
 	FQuat quat;
 	//FRotator rot = GetOwner()->GetActorRotation();
@@ -434,6 +460,7 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 
 	//positions
 	TArray<TSharedPtr<FJsonValue>> posArray;
+	TArray<TSharedPtr<FJsonValue>> scaleArray;
 	TSharedPtr<FJsonValueNumber> JsonValue;
 
 	JsonValue = MakeShareable(new FJsonValueNumber(snapshot.position.X)); //right
@@ -459,7 +486,18 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 
 	snapObj->SetArrayField("r", rotArray);
 
+	if (snapshot.hasScaleChanged)
+	{
+		//scale
+		JsonValue = MakeShareable(new FJsonValueNumber(snapshot.scale.X));
+		scaleArray.Add(JsonValue);
+		JsonValue = MakeShareable(new FJsonValueNumber(snapshot.scale.Z));
+		scaleArray.Add(JsonValue);
+		JsonValue = MakeShareable(new FJsonValueNumber(snapshot.scale.Y));
+		scaleArray.Add(JsonValue);
 
+		snapObj->SetArrayField("s", scaleArray);
+	}
 
 	TArray<TSharedPtr<FJsonValueObject>> properties;
 
@@ -767,7 +805,7 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (ReleaseIdOnDestroy && !TrackGaze)
 	{
-		FDynamicObjectSnapshot initSnapshot = MakeSnapshot();
+		FDynamicObjectSnapshot initSnapshot = MakeSnapshot(false);
 		SnapshotBoolProperty(initSnapshot, "enable", false);
 		
 		if (initSnapshot.time > 1)

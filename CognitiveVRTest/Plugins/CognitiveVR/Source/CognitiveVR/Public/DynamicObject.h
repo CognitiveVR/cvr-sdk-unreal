@@ -84,6 +84,8 @@ struct FDynamicObjectSnapshot
 
 public:
 	FVector position = FVector(0, 0, 0);
+	FVector scale = FVector(1, 1, 1);
+	bool hasScaleChanged = false;
 	FQuat rotation = FQuat(0, 0, 0, 1);
 	double time = 0;
 	FString id = "";
@@ -116,6 +118,7 @@ private:
 	TSharedPtr<cognitivevrapi::FDynamicObjectId> ObjectID;
 	FVector LastPosition;
 	FVector LastForward;
+	FVector LastScale;
 
 	//used to set unique object id from snapshot or when accessed from elsewhere
 	void GenerateObjectId();
@@ -174,6 +177,9 @@ public:
 	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	float RotationThreshold = 10;
 
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
+	float ScaleThreshold = 0.1;
+
 	UDynamicObject();
 	void TryGenerateMeshName();
 	void GenerateCustomId();
@@ -193,7 +199,7 @@ public:
 	TSharedPtr<cognitivevrapi::FDynamicObjectId> GetObjectId();
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
-	FDynamicObjectSnapshot MakeSnapshot();
+	FDynamicObjectSnapshot MakeSnapshot(bool hasChangedScale);
 
 	static TSharedPtr<FJsonValueObject> WriteSnapshotToJson(FDynamicObjectSnapshot snapshot);
 

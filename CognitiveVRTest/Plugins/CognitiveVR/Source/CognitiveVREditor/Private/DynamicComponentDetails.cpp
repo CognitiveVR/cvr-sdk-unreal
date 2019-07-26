@@ -71,12 +71,12 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasOwnerAndExportDir)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
-		.ToolTipText(FText::FromString("Take Screenshot from current viewport. Export Directory must be set. See CognitiveVR Settings"))
-		.OnClicked(this, &UDynamicObjectComponentDetails::TakeScreenshot)
+		.ToolTipText(FText::FromString("Export Directory must be set. See CognitiveVR Settings"))
+		.OnClicked(this, &UDynamicObjectComponentDetails::Export)
 		[
 			SNew( STextBlock )
 			.Font( IDetailLayoutBuilder::GetDetailFont() )
-			.Text(FText::FromString("Take Screenshot") )
+			.Text(FText::FromString("Export Mesh") )
 		]
 	];
 	DetailLayout.EditCategory( "DynamicObject" )
@@ -91,11 +91,11 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
 		.ToolTipText(FText::FromString("Export Directory must be set. See CognitiveVR Settings"))
-		.OnClicked(this, &UDynamicObjectComponentDetails::ExportAndUpload)
+		.OnClicked(this, &UDynamicObjectComponentDetails::Upload)
 		[
 			SNew( STextBlock )
 			.Font( IDetailLayoutBuilder::GetDetailFont() )
-			.Text(FText::FromString("Export Mesh and Upload") )
+			.Text(FText::FromString("Upload Mesh") )
 		]
 	];
 }
@@ -127,7 +127,7 @@ FReply UDynamicObjectComponentDetails::TakeScreenshot()
 	return FReply::Handled();
 }
 
-FReply UDynamicObjectComponentDetails::ExportAndUpload()
+FReply UDynamicObjectComponentDetails::Export()
 {
 	GEditor->SelectNone(false, true, false);
 
@@ -141,6 +141,11 @@ FReply UDynamicObjectComponentDetails::ExportAndUpload()
 
 	FCognitiveEditorTools::GetInstance()->ExportSelectedDynamics();
 
+	return FReply::Handled();
+}
+
+FReply UDynamicObjectComponentDetails::Upload()
+{
 	FCognitiveEditorTools::GetInstance()->UploadDynamic(SelectedDynamicObject->MeshName);
 
 	return FReply::Handled();
