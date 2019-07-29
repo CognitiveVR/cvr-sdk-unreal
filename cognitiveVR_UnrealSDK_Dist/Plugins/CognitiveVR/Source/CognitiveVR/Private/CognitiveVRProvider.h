@@ -144,6 +144,8 @@ namespace cognitivevrapi
 		void OnLevelLoaded();
 		void SetWorld(UWorld* world);
 		UWorld* GetWorld();
+		//calls player tracker session begin (which sets the world). if not found, will return null
+		UWorld* EnsureGetWorld();
 
 		TArray<TSharedPtr<cognitivevrapi::FSceneData>> SceneData;
 		void CacheSceneData();
