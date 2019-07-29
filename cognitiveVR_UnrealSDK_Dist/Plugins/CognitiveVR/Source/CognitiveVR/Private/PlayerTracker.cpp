@@ -5,7 +5,6 @@
 //#include "CognitiveVRSettings.h"
 #include "Util.h"
 
-
 // Sets default values for this component's properties
 UPlayerTracker::UPlayerTracker()
 {
@@ -27,11 +26,16 @@ UPlayerTracker::UPlayerTracker()
 
 void UPlayerTracker::BeginPlay()
 {
+	if (HasBegunPlay()) { return; }
+	UWorld* world = GetWorld();
+	if (GetWorld() == NULL) { GLog->Log("get world from player tracker is null!"); return; } //somehow world is null from playertracker
+
+	if (world->WorldType != EWorldType::PIE && world->WorldType != EWorldType::Game) { return; } //editor world. skip
+
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	if (cog.IsValid())
 	{
-
-		cog->SetWorld(GetWorld());
+		cog->SetWorld(world);
 		Super::BeginPlay();
 		GEngine->GetAllLocalPlayerControllers(controllers);
 	}
@@ -61,6 +65,25 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	}
 	End = start + LastDirection * 100000.0f;
 	return End;
+#elif defined VARJOEYETRACKER_API
+	FVector Start = start;
+	FVector WorldDirection = FVector::ZeroVector;
+	FVector End = FVector::ZeroVector;
+	float ignored = 0;
+
+	FVarjoEyeTrackingData data;
+
+	if (UVarjoEyeTrackerFunctionLibrary::GetEyeTrackerGazeData(data)) //if the data is valid
+	{
+		//the gaze transformed into world space
+		UVarjoEyeTrackerFunctionLibrary::GetGazeRay(Start, WorldDirection, ignored);
+
+		End = start + WorldDirection * 10000.0f;
+		LastDirection = WorldDirection;
+		return End;
+	}
+	End = start + LastDirection * 100000.0f;
+	return End;
 #else
 	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
 	FVector End = start + captureRotation.Vector() * 10000.0f;
@@ -70,6 +93,12 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 
 void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+	if (!cog->HasStartedSession())
+	{
+		//don't record player position data before a session has begun
+		return;
+	}
+
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	currentTime += DeltaTime;
@@ -139,7 +168,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 					FVector localHitPosition = hitDynamicObject->GetOwner()->GetActorTransform().InverseTransformPosition(Hit.ImpactPoint);
 
-					localHitPosition *= hitDynamicObject->GetOwner()->GetActorTransform().GetScale3D();
+					//localHitPosition *= hitDynamicObject->GetOwner()->GetActorTransform().GetScale3D();
 
 					objectid = hitDynamicObject->GetObjectId()->Id;
 					gaze.X = localHitPosition.X;

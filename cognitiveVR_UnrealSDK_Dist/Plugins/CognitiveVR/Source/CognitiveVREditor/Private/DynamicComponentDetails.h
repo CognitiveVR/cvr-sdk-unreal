@@ -19,7 +19,8 @@ private:
 	virtual void CustomizeDetails( IDetailLayoutBuilder& DetailLayout ) override;
 	FReply OnUpdateMeshAndId();
 	FReply TakeScreenshot();
-	FReply ExportAndUpload();
+	FReply Export();
+	FReply Upload();
 	private:
 	TWeakObjectPtr<UDynamicObject> SelectedDynamicObject;
 

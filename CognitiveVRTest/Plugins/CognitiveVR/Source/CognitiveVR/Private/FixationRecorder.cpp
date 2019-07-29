@@ -411,6 +411,12 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 
 void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+	//don't record player position data before a session has begun
+	if (!cog->HasStartedSession())
+	{
+		return;
+	}
+
 	if (!IsFixating)
 	{
 		if (TryBeginLocalFixation())

@@ -681,14 +681,14 @@ FReply FCognitiveEditorTools::UploadDynamics()
 	TArray<FString> dynamicNames;
 	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
 	{
-		if (TimestampIt.Key() != GetDynamicsExportDirectory() && !TimestampIt.Key().EndsWith(".png") && !TimestampIt.Key().EndsWith(".obj") && !TimestampIt.Key().EndsWith(".mtl"))
+		if (TimestampIt.Key() == GetDynamicsExportDirectory() || (!TimestampIt.Key().EndsWith(".png") && !TimestampIt.Key().EndsWith(".obj") && !TimestampIt.Key().EndsWith(".mtl")))
 		{
-			GLog->Log("upload dynamic " + FPaths::GetCleanFilename(TimestampIt.Key()));
-			dynamicNames.Add(FPaths::GetCleanFilename(TimestampIt.Key()));
+			GLog->Log("skip file - not dynamic " + TimestampIt.Key());
 		}
 		else
 		{
-			GLog->Log("skip file - not dynamic " + TimestampIt.Key());
+			GLog->Log("upload dynamic " + FPaths::GetCleanFilename(TimestampIt.Key()));
+			dynamicNames.Add(FPaths::GetCleanFilename(TimestampIt.Key()));
 		}
 	}
 
@@ -759,7 +759,7 @@ FReply FCognitiveEditorTools::UploadDynamic(FString directory)
 	TArray<FString> dynamicNames;
 	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
 	{
-		if (TimestampIt.Key() != GetDynamicsExportDirectory() && !TimestampIt.Key().EndsWith(".png") && !TimestampIt.Key().EndsWith(".obj") && !TimestampIt.Key().EndsWith(".mtl"))
+		if (TimestampIt.Key().EndsWith(".png") || TimestampIt.Key().EndsWith(".obj") || TimestampIt.Key().EndsWith(".mtl"))
 		{
 			GLog->Log("upload dynamic " + FPaths::GetCleanFilename(TimestampIt.Key()));
 			dynamicNames.Add(FPaths::GetCleanFilename(TimestampIt.Key()));
@@ -840,17 +840,11 @@ void FCognitiveEditorTools::FindAllSubDirectoryNames()
 	//no matches anywhere
 	SubDirectoryNames.Empty();
 
-
 	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
 	{
-		if (TimestampIt.Key() != GetDynamicsExportDirectory() && !TimestampIt.Key().EndsWith(".png") && !TimestampIt.Key().EndsWith(".obj") && !TimestampIt.Key().EndsWith(".mtl"))
+		if (PlatformFile.DirectoryExists(*TimestampIt.Key()) && TimestampIt.Key().Contains("dynamics") && !TimestampIt.Key().EndsWith("dynamics"))
 		{
-			GLog->Log("display dynamic subdir " + FPaths::GetCleanFilename(TimestampIt.Key()));
 			SubDirectoryNames.Add(MakeShareable(new FString(FPaths::GetCleanFilename(TimestampIt.Key()))));
-		}
-		else
-		{
-			GLog->Log("skip file - not dynamic subdir " + TimestampIt.Key());
 		}
 	}
 }
