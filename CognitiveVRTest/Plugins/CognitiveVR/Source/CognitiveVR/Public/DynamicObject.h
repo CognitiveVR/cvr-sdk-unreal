@@ -119,14 +119,20 @@ private:
 	FVector LastPosition;
 	FVector LastForward;
 	FVector LastScale;
+	bool HasInitialized = false;
 
 	//used to set unique object id from snapshot or when accessed from elsewhere
 	void GenerateObjectId();
 
+	void Initialize();
 	static void TrySendData();
+	static void ClearSnapshots();
 
 public:	
 	// Sets default values for this component's properties
+
+	static void OnSessionBegin();
+	static void OnSessionEnd();
 
 	//should this object be represented by a custom mesh. requires uploading this mesh to the dashboard
 	UPROPERTY(EditAnywhere)

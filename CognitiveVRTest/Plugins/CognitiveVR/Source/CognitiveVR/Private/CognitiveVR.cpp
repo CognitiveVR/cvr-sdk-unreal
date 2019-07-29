@@ -75,28 +75,19 @@ UWorld* FAnalyticsProviderCognitiveVR::GetWorld()
 {
 	return currentWorld;
 }
-/*void FAnalyticsProviderCognitiveVR::SendDeviceInfo()
+
+UWorld* FAnalyticsProviderCognitiveVR::EnsureGetWorld()
 {
-	//add a bunch of properties
-	if (GEngine->HMDDevice.IsValid())
+	if (currentWorld == NULL)
 	{
-		auto hmd = GEngine->HMDDevice.Get();
-
-		EHMDDeviceType::Type devicetype = hmd->GetHMDDeviceType();
-
-		if (devicetype == EHMDDeviceType::DT_SteamVR)
+		for (TObjectIterator<UPlayerTracker> Itr; Itr; ++Itr)
 		{
-			TArray<FAnalyticsEventAttribute> EventAttributes;
-			FName deviceName = hmd->GetDeviceName();
-			EventAttributes.Add(FAnalyticsEventAttribute(TEXT("DeviceName"), deviceName.ToString()));
-			FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider()->RecordEvent("HMDDevice", EventAttributes);
-		}
-		else
-		{
-			hmd->RecordAnalytics();
+			Itr->BeginPlay();
 		}
 	}
-}*/
+
+	return currentWorld;
+}
 
 bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAttribute>& Attributes)
 {
@@ -217,6 +208,13 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	customevent->Send(FString("c3d.sessionStart"));
 
+	if (currentWorld->WorldType != EWorldType::Game)
+	{
+		UDynamicObject::ClearSnapshots();
+	}
+
+	UDynamicObject::OnSessionBegin();
+
 	return bHasSessionStarted;
 }
 
@@ -270,6 +268,9 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	SessionId = "";
 
 	bHasSessionStarted = false;
+
+	UDynamicObject::OnSessionEnd();
+
 	//LastSesisonTimestamp = Util::GetTimestamp() + 1;
 }
 

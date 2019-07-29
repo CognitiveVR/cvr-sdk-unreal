@@ -5,7 +5,7 @@
 //#include "CognitiveVRSettings.h"
 #include "Util.h"
 
-TArray<FDynamicObjectSnapshot> snapshots;
+TArray<FDynamicObjectSnapshot> snapshots; //this should be cleared when session starts in PIE
 TArray<cognitivevrapi::FDynamicObjectManifestEntry> manifest;
 TArray<cognitivevrapi::FDynamicObjectManifestEntry> newManifest;
 TArray<TSharedPtr<cognitivevrapi::FDynamicObjectId>> allObjectIds;
@@ -81,9 +81,63 @@ void UDynamicObject::TryGenerateCustomIdAndMesh()
 	}
 }
 
+//static
+void UDynamicObject::ClearSnapshots()
+{
+	//when playing in editor, sometimes snapshots will persist in this list
+	snapshots.Empty();
+}
+
+//static
+void UDynamicObject::OnSessionBegin()
+{
+	auto cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	UWorld* sessionWorld = cog->EnsureGetWorld();
+
+	if (sessionWorld == NULL)
+	{
+		GLog->Log("sessionWorld is null! need to make playertracker initialize first");
+		return;
+	}
+
+	for (TObjectIterator<UDynamicObject> Itr; Itr; ++Itr)
+	{
+		//itr will also return editor world objects
+		//sessionWorld is either game or PIE type
+		if (Itr->GetWorld() != sessionWorld) { continue; }
+
+		if (Itr->SnapshotOnBeginPlay)
+		{
+			Itr->Initialize();
+		}
+	}
+}
+
+//static
+void UDynamicObject::OnSessionEnd()
+{
+	for (TObjectIterator<UDynamicObject> Itr; Itr; ++Itr)
+	{
+		if (Itr->SnapshotOnBeginPlay)
+		{
+			Itr->HasInitialized = false;
+		}
+	}
+	snapshots.Empty();
+}
+
 void UDynamicObject::BeginPlay()
 {
 	Super::BeginPlay();
+	Initialize();
+}
+
+void UDynamicObject::Initialize()
+{
+	if (HasInitialized)
+	{
+		return;
+	}
 
 	s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	if (!s.IsValid())
@@ -175,8 +229,14 @@ void UDynamicObject::BeginPlay()
 
 	if (SnapshotOnBeginPlay)
 	{
+		if (!s->HasStartedSession())
+		{
+			return;
+		}
+		HasInitialized = true;
+
 		bool hasScaleChanged = true;
-		if ( FMath::Abs( LastScale.Size() - GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+		if (FMath::Abs(LastScale.Size() - GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
 		{
 			hasScaleChanged = true;
 		}
@@ -354,7 +414,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		{
 			LastScale = GetComponentTransform().GetScale3D();
 		}
-		
+
 		FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
 
 		//TODO allow recording of dynamics before session start, but don't 'leak' snapshots to a new session
@@ -371,14 +431,6 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 {
-
-	//TODO check that session ends correctly from editor
-	/*if (cognitivevrapi::Util::GetTimestamp() < s->LastSesisonTimestamp)
-	{
-		FDynamicObjectSnapshot snapshot = FDynamicObjectSnapshot();
-		return snapshot;
-	}*/
-
 	//decide if the object needs a new entry in the manifest
 	bool needObjectId = false;
 	if (!ObjectID.IsValid() || ObjectID->Id == "")
@@ -603,8 +655,8 @@ void UDynamicObject::SendData()
 		cognitivevrapi::CognitiveLog::Info("UDynamicObject::SendData no objects or data to send!");
 		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
 		return;
-	}	
-	
+	}
+
 	if (cog->GetWorld() != NULL)
 	{
 		LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
@@ -803,7 +855,7 @@ void UDynamicObject::EndEngagementId(FString engagementName, FString parentObjec
 
 void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (ReleaseIdOnDestroy && !TrackGaze)
+	if (ReleaseIdOnDestroy && !TrackGaze && s->HasStartedSession())
 	{
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot(false);
 		SnapshotBoolProperty(initSnapshot, "enable", false);
@@ -815,6 +867,7 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 		ObjectID->Used = false;
 	}
+	HasInitialized = false;
 
 	if (EndPlayReason == EEndPlayReason::EndPlayInEditor)
 	{
