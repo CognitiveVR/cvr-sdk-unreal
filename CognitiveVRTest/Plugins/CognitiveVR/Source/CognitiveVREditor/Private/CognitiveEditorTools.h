@@ -151,24 +151,10 @@ public:
 	//Select Blender.exe. Used to reduce polygon count of the exported scene
 		FReply Select_Blender();
 
-	//Select meshes that match settings - Above Minimum Size? Static?
-		FReply Select_Export_Meshes();
-
-	//Runs the built-in obj exporter with the selected meshses
-		FReply Export_Selected();
-
-	//Runs the built-in obj exporter with all meshses
-		FReply Export_All();
-
-	//Runs a python script in blender to reduce the polygon count, clean up the mtl file and copy textures into a convient folder
-		//FReply Reduce_Textures();
-
 		FReply UploadScene();
 
 	void WizardExport();
 	FProcHandle Reduce_Meshes_And_Textures();
-
-	//void UploadMultipartData(FString url, TArray<FString> files, TArray<FString> images);
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
 
 		FReply List_Materials();
@@ -178,18 +164,12 @@ public:
 	//Runs the built-in obj exporter with all meshses
 		FReply ExportDynamics();
 
-		//FReply ExportDynamicTextures();
-
 	//Runs the built-in obj exporter with selected meshes
 		FReply ExportSelectedDynamics();
 	
 	void ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
 
-	//uploads each dynamic object using its directory to the current scene
-		//FReply SelectDynamicsDirectory();
-
-	//uses blender to convert bmps to pngs
-	void ConvertDynamicTextures();
+	//used after dynamic object exporting
 	void ConvertToGLTF(TArray<FString> meshNames);
 
 	//uploads each dynamic object using its directory to the current scene
@@ -327,25 +307,10 @@ public:
 	//returns SceneData array
 	TArray<TSharedPtr<cognitivevrapi::FEditorSceneData>> GetSceneData() const;
 
-	
-	//void SaveOrganizationNameToFile(FString organization);
-	//TSharedPtr<FString> GetOrganizationNameFromFile();
-	//void SaveProductNameToFile(FString product);
-	//TSharedPtr< FString > GetProductNameFromFile();
-
 	FReply OpenSceneInBrowser(FString sceneid);
 	FReply OpenCurrentSceneInBrowser();
-
-	//bool HasSelectedValidProduct() const;
-	//bool HasLoadedOrSelectedValidProduct() const;
-	//bool HasLoggedIn() const;
 	bool HasDeveloperKey() const;
 	bool HasAPIKey() const;
-	//EVisibility GetLoginButtonState() const;
-	//EVisibility GetLogoutButtonState() const;
-
-	//EVisibility ExportSettingsVisibility() const;
-	//EVisibility OptimizeSettingsVisibility() const;
 	
 	//returns true if email + password fields lengths both greater than 0
 	//bool HasValidLogInFields() const;
@@ -364,12 +329,8 @@ public:
 	//has json file and no bmp files in export directory
 	bool HasConvertedFilesInDirectory() const;
 	bool CanUploadSceneFiles() const;
-	//returns true if customerid has been saved
-	//bool HasSavedCustomerId() const;
-	//bool CustomerIdDoesntMatchFile() const;
 	bool LoginAndCustonerIdAndBlenderExportDir() const;
 	bool HasFoundBlenderDynamicExportDirSelection() const;
-	//FText GetCustomerId() const;
 
 	ECheckBoxState HasFoundBlenderCheckbox() const;
 
@@ -380,11 +341,8 @@ public:
 	TArray<TSharedPtr<cognitivevrapi::FDynamicData>> SceneExplorerDynamics;
 	TArray<TSharedPtr<FString>> SubDirectoryNames;
 
-	FString GetProductID();
-
 	void RefreshSceneUploadFiles();
 	void RefreshDynamicUploadFiles();
-	//void RefreshAllUploadFiles();
 	TArray<TSharedPtr<FString>> SceneUploadFiles;
 	TArray<TSharedPtr<FString>> DynamicUploadFiles;
 
@@ -393,11 +351,9 @@ public:
 	FReply OpenURL(FString url);
 	void FindAllSubDirectoryNames();
 	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
-	//FReply SelectUploadScreenshot();
 	FReply TakeScreenshot();
 	FReply TakeDynamicScreenshot(FString dynamicName);
 	
-	//bool HasEditorAuthToken() const;
 	FText GetDynamicsOnSceneExplorerTooltip() const;
 	FText SendDynamicsToSceneExplorerTooltip() const;
 	FReply RefreshDynamicSubDirectory();

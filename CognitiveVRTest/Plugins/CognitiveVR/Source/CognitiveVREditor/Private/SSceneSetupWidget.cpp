@@ -695,32 +695,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					[
 						SNew(SButton)
 						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.Text(FText::FromString("Low Quality"))
-						.OnClicked(this,&SSceneSetupWidget::EvaluateExportLow)
-					]
-				]
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.Text(FText::FromString("Medium Quality"))
-						.OnClicked(this,&SSceneSetupWidget::EvaluateExportMed)
-					]
-				]
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.Text(FText::FromString("Maximum Quality"))
-						.OnClicked(this,&SSceneSetupWidget::EvaluateExportHigh)
+						.Text(FText::FromString("Export"))
+						.OnClicked(this,&SSceneSetupWidget::EvaluateExport)
 					]
 				]
 			]
@@ -1074,36 +1050,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 		BlenderLogoTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 78));
 }
 
-FReply SSceneSetupWidget::EvaluateExportLow()
-{
-	//cognitive editor tools maxpolygons, texturesize, etc
-	FCognitiveEditorTools::GetInstance()->MaxPolygon = 16384;
-	FCognitiveEditorTools::GetInstance()->MinPolygon = 8192;
-	FCognitiveEditorTools::GetInstance()->TextureRefactor = 8;
-
-	return EvaluateExport();
-}
-
-FReply SSceneSetupWidget::EvaluateExportMed()
-{
-	//cognitive editor tools maxpolygons, texturesize, etc
-	FCognitiveEditorTools::GetInstance()->MaxPolygon = 65536;
-	FCognitiveEditorTools::GetInstance()->MinPolygon = 16384;
-	FCognitiveEditorTools::GetInstance()->TextureRefactor = 2;
-
-	return EvaluateExport();
-}
-
-FReply SSceneSetupWidget::EvaluateExportHigh()
-{
-	//cognitive editor tools maxpolygons, texturesize, etc
-	FCognitiveEditorTools::GetInstance()->MaxPolygon = 262144;
-	FCognitiveEditorTools::GetInstance()->MinPolygon = 65536;
-	FCognitiveEditorTools::GetInstance()->TextureRefactor = 1;
-
-	return EvaluateExport();
-}
-
 FReply SSceneSetupWidget::EvaluateExport()
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
@@ -1328,14 +1274,6 @@ const FSlateBrush* SSceneSetupWidget::GetBlueprintStartTexture() const
 	return BlueprintStartTexture;
 }
 
-/*FReply SSceneSetupWidget::Export_Selected()
-{
-	FCognitiveEditorTools::GetInstance()->WizardExport();
-	SceneWasExported = true;
-
-	return FReply::Handled();
-}*/
-
 FText SSceneSetupWidget::GetDisplayAPIKey() const
 {
 	return FText::FromString(DisplayAPIKey);
@@ -1345,14 +1283,6 @@ FText SSceneSetupWidget::GetDisplayDeveloperKey() const
 {
 	return FText::FromString(DisplayDeveloperKey);
 }
-
-/*FReply SSceneSetupWidget::Export_All()
-{
-	FCognitiveEditorTools::GetInstance()->WizardExport(true);
-	SceneWasExported = true;
-
-	return FReply::Handled();
-}*/
 
 EVisibility SSceneSetupWidget::IsSceneVersionUpload() const
 {
