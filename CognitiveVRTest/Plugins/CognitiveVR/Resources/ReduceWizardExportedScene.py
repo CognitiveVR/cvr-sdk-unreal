@@ -10,6 +10,7 @@ import shutil
 scene = bpy.context.scene
 ops = bpy.ops
 args = sys.argv
+
 exportPath = args[3]
 minFaces = int(args[4])
 maxFaces = int(args[5])
@@ -93,13 +94,16 @@ def DecimateMeshes():
 	
 	#select all
 	for ob in scene.objects:
-	 ob.select = True
+	 #ob.select = True
+	 #2.7 -> 2.8 change
+	 ob.select_set(True)
 	ops.object.delete()
 	print("=============================================deleted stuff")
 
 
 	#import
-	ops.import_scene.obj(filepath=exportPath+"/"+fileName+".obj", use_edges=True, use_smooth_groups=True, use_split_objects=True, use_split_groups=True, use_groups_as_vgroups=False, use_image_search=True, split_mode='ON', global_clamp_size=0, axis_forward='-Z', axis_up='Y')
+	#ops.import_scene.obj(filepath=exportPath+"/"+fileName+".obj", use_edges=True, use_smooth_groups=True, use_split_objects=True, use_split_groups=True, use_groups_as_vgroups=False, use_image_search=True, split_mode='ON', global_clamp_size=0, axis_forward='-Z', axis_up='Y')
+	ops.import_scene.obj(filepath=exportPath+"/"+fileName+".obj", use_edges=True, use_smooth_groups=True, use_split_objects=True, use_split_groups=True, use_groups_as_vgroups=False, use_image_search=True, split_mode='ON', axis_forward='-Z', axis_up='Y')
 
 	#import fbx geometry brushes
 	if os.path.isfile(exportPath+"/"+fileName+".fbx"):
@@ -110,44 +114,51 @@ def DecimateMeshes():
 	print("=============================================import complete")
 
 	#decimate. remesh bsp
-	for obj in scene.objects:
-		if obj.type == 'MESH':
-			scene.objects.active = obj
-			
-			bpy.ops.object.scale_clear()
-			
-			mod = bpy.context.object.modifiers.new('Decimate','DECIMATE')
-
-			faceCount = len(bpy.context.object.data.polygons)
-			ratio = 1.0
-
-			ratio = (faceCount-minFaces)/maxFaces
-
-			ratio = 1-ratio
-
-			if ratio >= 1.0:
-				ratio = 1.0
-			if ratio <= 0.1:
-				ratio = 0.1
-
-			mod.ratio = ratio
-			ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
-			#ops.mesh.customdata_custom_splitnormals_clear() #TEST should fix custom normal issue on bsp
+	#for obj in scene.objects:
+	#	if obj.type == 'MESH':
+	#		scene.objects.active = obj #HERE
+	#		
+	#		bpy.ops.object.scale_clear()
+	#		
+	#		mod = bpy.context.object.modifiers.new('Decimate','DECIMATE')
+    #
+	#		faceCount = len(bpy.context.object.data.polygons)
+	#		ratio = 1.0
+    #
+	#		ratio = (faceCount-minFaces)/maxFaces
+    #
+	#		ratio = 1-ratio
+    #
+	#		if ratio >= 1.0:
+	#			ratio = 1.0
+	#		if ratio <= 0.1:
+	#			ratio = 0.1
+    #
+	#		mod.ratio = ratio
+	#		ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
+	#		#ops.mesh.customdata_custom_splitnormals_clear() #TEST should fix custom normal issue on bsp
 
 
 	print("=============================================decimate complete")
+
+	print(bpy.context.area)
 
 	bpy.ops.object.select_all(action='DESELECT')
 	
 	os.makedirs(os.path.join(exportPath,"mesh_delete/"))
 	shutil.move(objPath,os.path.join(exportPath,"mesh_delete/"))
 
+	#bpy.context.active_object = bpy.ops.objects[0]
 	bpy.ops.object.select_all(action='SELECT')
 
+	#what is the context currently? can this be printed to the screen?
+
+	print(bpy.context.area)
 
 	#export
-	bpy.ops.object.join()
-	ops.export_scene.obj(filepath=exportPath+"/"+fileName+".obj", use_edges=False, path_mode='RELATIVE')
+	#bpy.ops.object.join()
+	#ops.export_scene.obj(filepath=exportPath+"/"+fileName+".obj", use_edges=False, path_mode='RELATIVE')
+	ops.export_scene.gltf(export_format='GLTF_SEPARATE',export_animations=False,filepath=exportPath+"/"+"scene.gltf")
 	print("=============================================export complete")
 
 def FlattenTexturePaths(mtlpath):
@@ -241,9 +252,9 @@ def FlattenTexturePaths(mtlpath):
 		os.remove(mtlpath)
 
 		#write to new file (BMP)
-		nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
-		nmo.writelines(finalmtlstrings)
-		nmo.close()
+		#nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
+		#nmo.writelines(finalmtlstrings)
+		#nmo.close()
 		print("=============================================mtl fixed")
 	
 def ConvertTextures():
@@ -307,7 +318,5 @@ for dir in onlydirectories:
 if os.path.isfile(exportPath+"/"+fileName+".fbx"):
 	os.remove(exportPath+"/"+fileName+".fbx")
 
-	
-	
 print("ALL DONE")
-exit()
+#exit()

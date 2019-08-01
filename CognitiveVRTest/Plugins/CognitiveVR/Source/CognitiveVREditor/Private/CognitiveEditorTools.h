@@ -161,10 +161,7 @@ public:
 		FReply Export_All();
 
 	//Runs a python script in blender to reduce the polygon count, clean up the mtl file and copy textures into a convient folder
-		FReply Reduce_Meshes();
-
-	//Runs a python script in blender to reduce the polygon count, clean up the mtl file and copy textures into a convient folder
-		FReply Reduce_Textures();
+		//FReply Reduce_Textures();
 
 		FReply UploadScene();
 
@@ -176,15 +173,12 @@ public:
 
 		FReply List_Materials();
 	void List_MaterialArgs(FString subdirectory,FString searchDirectory);
-	void ReexportDynamicMeshes(FString directory);
-
-	FReply ReexportDynamicMeshesCmd();
 
 	//dynamic objects
 	//Runs the built-in obj exporter with all meshses
 		FReply ExportDynamics();
 
-		FReply ExportDynamicTextures();
+		//FReply ExportDynamicTextures();
 
 	//Runs the built-in obj exporter with selected meshes
 		FReply ExportSelectedDynamics();
@@ -194,7 +188,9 @@ public:
 	//uploads each dynamic object using its directory to the current scene
 		//FReply SelectDynamicsDirectory();
 
+	//uses blender to convert bmps to pngs
 	void ConvertDynamicTextures();
+	void ConvertToGLTF(TArray<FString> meshNames);
 
 	//uploads each dynamic object using its directory to the current scene
 	UFUNCTION(Exec, Category = "Dynamics")
