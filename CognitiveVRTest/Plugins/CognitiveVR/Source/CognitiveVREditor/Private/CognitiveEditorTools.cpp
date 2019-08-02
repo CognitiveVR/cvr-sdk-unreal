@@ -209,6 +209,8 @@ FReply FCognitiveEditorTools::ExportDynamics()
 
 	ExportDynamicObjectArray(exportObjects);
 
+	FindAllSubDirectoryNames();
+
 	return FReply::Handled();
 }
 
@@ -1778,19 +1780,6 @@ EVisibility FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility() const
 FText FCognitiveEditorTools::GetUploadDynamicsToSceneText() const
 {
 	return UploadDynamicsToSceneText;
-}
-
-void FCognitiveEditorTools::RefreshUploadDynamicsToSceneText()
-{
-	TSharedPtr<cognitivevrapi::FEditorSceneData> currentScene = GetCurrentSceneData();
-	if (!currentScene.IsValid())
-	{
-		UploadDynamicsToSceneText = FText::FromString("current scene is not valid!");
-		return;
-	}
-
-	//UploadDynamicsToSceneText = FText::FromString("Upload " + "numberofdirectoriesinexportdirectory" + " dynamic object meshes to " + currentScene->Name + " version " + currentScene->VersionNumber + " on Scene Explorer");
-	UploadDynamicsToSceneText = FText::FromString("upload x dynamic objects to current scene version y on scene explorer");
 }
 
 bool FCognitiveEditorTools::DuplicateDynamicIdsInScene() const

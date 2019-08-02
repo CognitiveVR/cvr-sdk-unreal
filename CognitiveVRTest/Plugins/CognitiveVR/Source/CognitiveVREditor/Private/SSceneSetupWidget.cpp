@@ -585,6 +585,26 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
+			+ SVerticalBox::Slot()
+			.Padding(0, 0, 0, 4)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			.VAlign(VAlign_Center)
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.HeightOverride(64)
+					.WidthOverride(128)
+					[
+						SNew(SButton)
+						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+						.Text(FText::FromString("Export Meshes"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportDynamics)
+					]
+				]
+			]
+
 
 #pragma endregion
 
@@ -668,17 +688,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			[
 				SNew(SSeparator)
 				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-			]
-
-			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
-			.MaxHeight(40)
-			[
-				SNew(STextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-				.AutoWrapText(true)
-				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("Export Quality - Lower quality can help reduce load times on the Dashboard."))
 			]
 
 			+ SVerticalBox::Slot()
@@ -1417,13 +1426,8 @@ FReply SSceneSetupWidget::NextPage()
 		GLog->Log("set dynamic and scene export directories. create if needed");
 		FCognitiveEditorTools::GetInstance()->CreateExportFolderStructure();
 	}
-	if (CurrentPage == 5)
-	{
-		FCognitiveEditorTools::GetInstance()->ExportDynamics();
-	}
 	else if (CurrentPage == 6)
 	{
-		//FCognitiveEditorTools::GetInstance()->RefreshAllUploadFiles();
 		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
 		GetScreenshotBrush();
@@ -1567,7 +1571,14 @@ FText SSceneSetupWidget::NextButtonText() const
 	}
 	else if (CurrentPage == 5)
 	{
-		return FText::FromString("Export Dynamics");
+		if (FCognitiveEditorTools::GetInstance()->SubDirectoryNames.Num() > 0)
+		{
+			return FText::FromString("Next");
+		}
+		else
+		{
+			return FText::FromString("Skip");
+		}		
 	}
 	else if (CurrentPage == 6)
 	{
@@ -1620,11 +1631,23 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 		return false;
 	}
 
+	if (CurrentPage == 5)
+	{
+		FCognitiveEditorTools::GetInstance()->FindAllSubDirectoryNames();
+	}
+
 	if (CurrentPage == 6)
 	{
 		FString sceneExportDir = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory();
 
 		return FCognitiveEditorTools::VerifyDirectoryExists(sceneExportDir);
+	}
+
+	if (CurrentPage == 7)
+	{
+		//refresh the upload filename lists
+		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
+		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 	}
 
 	return true;

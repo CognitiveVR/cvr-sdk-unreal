@@ -108,8 +108,6 @@ public:
 
 	FText UploadDynamicsToSceneText;
 	FText GetUploadDynamicsToSceneText() const;
-	//FReply RefreshUploadDynamicsToSceneText();
-	void RefreshUploadDynamicsToSceneText();
 	//TSharedPtr<SVerticalBox> SetDynamicBoxContent();
 
 	float MinimumSize = 1;

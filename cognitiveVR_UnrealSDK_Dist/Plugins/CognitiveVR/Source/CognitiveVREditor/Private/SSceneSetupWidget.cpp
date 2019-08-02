@@ -585,6 +585,26 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
+			+ SVerticalBox::Slot()
+			.Padding(0, 0, 0, 4)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			.VAlign(VAlign_Center)
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.HeightOverride(64)
+					.WidthOverride(128)
+					[
+						SNew(SButton)
+						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+						.Text(FText::FromString("Export Meshes"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportDynamics)
+					]
+				]
+			]
+
 
 #pragma endregion
 
@@ -671,17 +691,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
-			.MaxHeight(40)
-			[
-				SNew(STextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-				.AutoWrapText(true)
-				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("Export Quality - Lower quality can help reduce load times on the Dashboard."))
-			]
-
-			+ SVerticalBox::Slot()
 			.Padding(0, 0, 0, 4)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			.VAlign(VAlign_Center)
@@ -695,32 +704,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					[
 						SNew(SButton)
 						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.Text(FText::FromString("Low Quality"))
-						.OnClicked(this,&SSceneSetupWidget::EvaluateExportLow)
-					]
-				]
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.Text(FText::FromString("Medium Quality"))
-						.OnClicked(this,&SSceneSetupWidget::EvaluateExportMed)
-					]
-				]
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.Text(FText::FromString("Maximum Quality"))
-						.OnClicked(this,&SSceneSetupWidget::EvaluateExportHigh)
+						.Text(FText::FromString("Export"))
+						.OnClicked(this,&SSceneSetupWidget::EvaluateExport)
 					]
 				]
 			]
@@ -1074,36 +1059,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 		BlenderLogoTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 78));
 }
 
-FReply SSceneSetupWidget::EvaluateExportLow()
-{
-	//cognitive editor tools maxpolygons, texturesize, etc
-	FCognitiveEditorTools::GetInstance()->MaxPolygon = 16384;
-	FCognitiveEditorTools::GetInstance()->MinPolygon = 8192;
-	FCognitiveEditorTools::GetInstance()->TextureRefactor = 8;
-
-	return EvaluateExport();
-}
-
-FReply SSceneSetupWidget::EvaluateExportMed()
-{
-	//cognitive editor tools maxpolygons, texturesize, etc
-	FCognitiveEditorTools::GetInstance()->MaxPolygon = 65536;
-	FCognitiveEditorTools::GetInstance()->MinPolygon = 16384;
-	FCognitiveEditorTools::GetInstance()->TextureRefactor = 2;
-
-	return EvaluateExport();
-}
-
-FReply SSceneSetupWidget::EvaluateExportHigh()
-{
-	//cognitive editor tools maxpolygons, texturesize, etc
-	FCognitiveEditorTools::GetInstance()->MaxPolygon = 262144;
-	FCognitiveEditorTools::GetInstance()->MinPolygon = 65536;
-	FCognitiveEditorTools::GetInstance()->TextureRefactor = 1;
-
-	return EvaluateExport();
-}
-
 FReply SSceneSetupWidget::EvaluateExport()
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
@@ -1328,14 +1283,6 @@ const FSlateBrush* SSceneSetupWidget::GetBlueprintStartTexture() const
 	return BlueprintStartTexture;
 }
 
-/*FReply SSceneSetupWidget::Export_Selected()
-{
-	FCognitiveEditorTools::GetInstance()->WizardExport();
-	SceneWasExported = true;
-
-	return FReply::Handled();
-}*/
-
 FText SSceneSetupWidget::GetDisplayAPIKey() const
 {
 	return FText::FromString(DisplayAPIKey);
@@ -1345,14 +1292,6 @@ FText SSceneSetupWidget::GetDisplayDeveloperKey() const
 {
 	return FText::FromString(DisplayDeveloperKey);
 }
-
-/*FReply SSceneSetupWidget::Export_All()
-{
-	FCognitiveEditorTools::GetInstance()->WizardExport(true);
-	SceneWasExported = true;
-
-	return FReply::Handled();
-}*/
 
 EVisibility SSceneSetupWidget::IsSceneVersionUpload() const
 {
@@ -1487,13 +1426,8 @@ FReply SSceneSetupWidget::NextPage()
 		GLog->Log("set dynamic and scene export directories. create if needed");
 		FCognitiveEditorTools::GetInstance()->CreateExportFolderStructure();
 	}
-	if (CurrentPage == 5)
-	{
-		FCognitiveEditorTools::GetInstance()->ExportDynamics();
-	}
 	else if (CurrentPage == 6)
 	{
-		//FCognitiveEditorTools::GetInstance()->RefreshAllUploadFiles();
 		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
 		GetScreenshotBrush();
@@ -1637,7 +1571,14 @@ FText SSceneSetupWidget::NextButtonText() const
 	}
 	else if (CurrentPage == 5)
 	{
-		return FText::FromString("Export Dynamics");
+		if (FCognitiveEditorTools::GetInstance()->SubDirectoryNames.Num() > 0)
+		{
+			return FText::FromString("Next");
+		}
+		else
+		{
+			return FText::FromString("Skip");
+		}		
 	}
 	else if (CurrentPage == 6)
 	{
@@ -1690,11 +1631,23 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 		return false;
 	}
 
+	if (CurrentPage == 5)
+	{
+		FCognitiveEditorTools::GetInstance()->FindAllSubDirectoryNames();
+	}
+
 	if (CurrentPage == 6)
 	{
 		FString sceneExportDir = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory();
 
 		return FCognitiveEditorTools::VerifyDirectoryExists(sceneExportDir);
+	}
+
+	if (CurrentPage == 7)
+	{
+		//refresh the upload filename lists
+		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
+		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 	}
 
 	return true;

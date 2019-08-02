@@ -105,6 +105,8 @@ public:
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class COGNITIVEVR_API UDynamicObject : public USceneComponent //UActorComponent
 {
+	friend class FAnalyticsProviderCognitiveVR;
+
 	GENERATED_BODY()
 
 private:

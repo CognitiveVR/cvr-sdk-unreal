@@ -88,9 +88,6 @@ public:
 	EVisibility IsSceneVersionUpload() const;
 	EVisibility IsIntroNewVersionVisible() const;
 
-	//FReply Export_Selected();
-	//FReply Export_All();
-
 	EVisibility ARButtonVisibility() const;
 	FReply ARSkipExport();
 
@@ -153,12 +150,6 @@ public:
 	FReply ValidateAndRefresh();
 
 	FReply EvaluateExport();
-	//sets export variables, then calls evaluateexport
-	FReply EvaluateExportLow();
-	//sets export variables, then calls evaluateexport
-	FReply EvaluateExportMed();
-	//sets export variables, then calls evaluateexport
-	FReply EvaluateExportHigh();
 	bool NoExportGameplayMeshes = true;
 	ECheckBoxState GetNoExportGameplayMeshCheckbox() const;
 	void OnChangeNoExportGameplayMesh(ECheckBoxState newstate)
