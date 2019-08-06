@@ -76,7 +76,7 @@ public:
 		{
 			GLog->Log("CognitiveVRModule::StartupModule write defaults to ini");
 			FString defaultgateway = "data.cognitive3d.com";
-			FString defaultsessionviewer = "sceneexplorer.com/scene/";
+			FString defaultsessionviewer = "viewer.cognitive3d.com/scene/";
 			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), *defaultgateway, EngineIni);
 			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SessionViewer"), *defaultsessionviewer, EngineIni);
 
