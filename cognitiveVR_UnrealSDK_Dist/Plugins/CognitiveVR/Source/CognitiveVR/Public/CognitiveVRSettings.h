@@ -25,7 +25,7 @@ class UCognitiveVRSettings
 		FString Gateway = "data.cognitive3d.com";
 
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-		FString SessionViewer = "sceneexplorer.com/scene/";
+		FString SessionViewer = "viewer.cognitive3d.com/scene/";
 
 	/** The number of player snapshots that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Gaze")
