@@ -49,8 +49,8 @@ for tempPath, dirs, files in os.walk(exportPath):
 			originalImagePathes.append(newpath)
 			print ("======image src: " + newpath)
 			print ("======image dst: " + exportPath)
-			if os.path.isfile(newpath):
-				shutil.copy(newpath,exportPath)
+			#if os.path.isfile(newpath):
+			#	shutil.copy(newpath,exportPath)
 		if name.endswith('.mtl'):
 			mtlpath = os.path.join(tempPath, name)
 			print("found mtl path " + mtlpath)
@@ -58,24 +58,24 @@ for tempPath, dirs, files in os.walk(exportPath):
 			objPath = os.path.join(tempPath,name)
 
 #add empty line in beginning of mtlpath
-image_count=len(diffuse)
-if image_count > 0:
-	mo = open(mtlpath, encoding='utf-8-sig')
-	readString = mo.read()
-	outstrings=[]
-	outstrings.append('\n\n')
-	#==========================replace mtl with png references to textures
-	for line in readString.splitlines():
-		outstrings.append(line+'\n')
-	mo.close()
-
-	#remove the mtl
-	os.remove(mtlpath)
-
-	#write to new file (pngs)
-	nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
-	nmo.writelines(outstrings)
-	nmo.close()
+#image_count=len(diffuse)
+#if image_count > 0:
+#	mo = open(mtlpath, encoding='utf-8-sig')
+#	readString = mo.read()
+#	outstrings=[]
+#	outstrings.append('\n\n')
+#	#==========================replace mtl with png references to textures
+#	for line in readString.splitlines():
+#		outstrings.append(line+'\n')
+#	mo.close()
+#
+#	#remove the mtl
+#	os.remove(mtlpath)
+#
+#	#write to new file (pngs)
+#	nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
+#	nmo.writelines(outstrings)
+#	nmo.close()
 
 
 #import meshes
@@ -107,7 +107,7 @@ def DecimateMeshes():
 
 	#import fbx geometry brushes
 	if os.path.isfile(exportPath+"/"+fileName+".fbx"):
-		ops.import_scene.fbx(filepath=exportPath+"/"+fileName+".fbx")
+		ops.import_scene.fbx(global_scale=100.0,filepath=exportPath+"/"+fileName+".fbx")
 	else:
 		print("couldn't find "+exportPath+"/"+fileName+".fbx")
 		
@@ -287,9 +287,18 @@ def ConvertTextures():
 			#i2 = bpy.data.images.new()
 	print("==================================all files done")
 
-
 DecimateMeshes()
-FlattenTexturePaths(mtlpath)
+
+#sets masked materials to clipped blend mode
+for mat in bpy.data.materials:
+    for node in mat.node_tree.nodes:
+        print(node.type)
+        if node.type == "TEX_IMAGE":
+            if node.image.name.endswith('OM.bmp'):
+                print("set masked material "+mat.name)
+                mat.blend_method = 'CLIP'
+
+#FlattenTexturePaths(mtlpath)
 ConvertTextures()
 
 #write json settings file

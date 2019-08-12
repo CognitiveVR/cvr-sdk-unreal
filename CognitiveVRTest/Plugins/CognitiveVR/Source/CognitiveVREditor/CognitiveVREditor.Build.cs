@@ -2,7 +2,7 @@ using UnrealBuildTool;
 
 public class CognitiveVREditor : ModuleRules
 {
-	public CognitiveVREditor(TargetInfo Target)
+	public CognitiveVREditor(ReadOnlyTargetRules Target):base(Target)
 	{
         PublicDependencyModuleNames.AddRange(
             new string[]
@@ -10,7 +10,8 @@ public class CognitiveVREditor : ModuleRules
 				"CognitiveVR",
 				"HTTP",
 				"Json",
-				"JsonUtilities"
+				"JsonUtilities",
+				"MaterialBaking"
             });
 
         PrivateDependencyModuleNames.AddRange(
@@ -26,6 +27,7 @@ public class CognitiveVREditor : ModuleRules
 				"PropertyEditor",
                 "EditorStyle",
 				"LevelEditor",
+				"WorkspaceMenuStructure",
                 "MeshUtilities",
 				"MaterialUtilities",
                 "ImageWrapper",

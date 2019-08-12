@@ -25,10 +25,17 @@
 #include "IPluginManager.h"
 #include "AssetRegistryModule.h"
 #include "MaterialUtilities.h"
+#include "MaterialBakingStructures.h"
+//#include "MaterialBakingHelpers.h"
+#include "IMaterialBakingModule.h"
+#include "MaterialBakingModule.h"
+#include "MaterialOptions.h"
 #include "DynamicObject.h"
 #include "GenericPlatformFile.h"
 #include "Http.h"
 #include "UnrealClient.h"
+#include "IImageWrapper.h"
+#include "IImageWrapperModule.h"
 
 //all sorts of functionality for Cognitive SDK
 
@@ -81,6 +88,7 @@ public:
 	//WEB used to open scenes on sceneexplorer              https://sceneexplorer.com/scene/ :sceneId
 	FString SceneExplorerOpen(FString sceneid);
 
+	TSharedPtr<IImageWrapper> ImageWrapper;
 
 	bool HasSearchedForBlender = false; //to limit the searching directories. possibly not required
 
@@ -152,11 +160,13 @@ public:
 		FReply UploadScene();
 
 	void WizardExport();
+	void WizardExportMaterials();
+	void WizardConvert();
 	FProcHandle Reduce_Meshes_And_Textures();
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
 
-		FReply List_Materials();
-	void List_MaterialArgs(FString subdirectory,FString searchDirectory);
+	//	FReply List_Materials();
+	//void List_MaterialArgs(FString subdirectory,FString searchDirectory);
 
 	//dynamic objects
 	//Runs the built-in obj exporter with all meshses

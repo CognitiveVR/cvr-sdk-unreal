@@ -20,6 +20,7 @@
 #include "IImageWrapperModule.h"
 
 class FCognitiveTools;
+class FCognitiveVREditorModule;
 
 class SSceneSetupWidget : public SCompoundWidget
 {
@@ -150,6 +151,8 @@ public:
 	FReply ValidateAndRefresh();
 
 	FReply EvaluateExport();
+	FReply ConvertToGLTF();
+	FReply ExportMaterials();
 	bool NoExportGameplayMeshes = true;
 	ECheckBoxState GetNoExportGameplayMeshCheckbox() const;
 	void OnChangeNoExportGameplayMesh(ECheckBoxState newstate)

@@ -710,6 +710,47 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 
+			+ SVerticalBox::Slot()
+			.Padding(0, 0, 0, 4)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			.VAlign(VAlign_Center)
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.HeightOverride(64)
+					.WidthOverride(128)
+					[
+						SNew(SButton)
+						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+						.Text(FText::FromString("ExportMaterials"))
+						.OnClicked(this,&SSceneSetupWidget::ExportMaterials)
+					]
+				]
+			]
+
+			+ SVerticalBox::Slot()
+			.Padding(0, 0, 0, 4)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			.VAlign(VAlign_Center)
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.HeightOverride(64)
+					.WidthOverride(128)
+					[
+						SNew(SButton)
+						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+						.Text(FText::FromString("ConvertToGLTF"))
+						.OnClicked(this,&SSceneSetupWidget::ConvertToGLTF)
+					]
+				]
+			]
+
+
 #pragma endregion
 
 			//TODO formatting
@@ -1059,6 +1100,19 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 		BlenderLogoTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 78));
 }
 
+FReply SSceneSetupWidget::ConvertToGLTF()
+{
+	FCognitiveEditorTools::GetInstance()->WizardConvert();
+	SceneWasExported = true;
+	return FReply::Handled();
+}
+
+FReply SSceneSetupWidget::ExportMaterials()
+{
+	FCognitiveEditorTools::GetInstance()->WizardExportMaterials();
+	return FReply::Handled();
+}
+
 FReply SSceneSetupWidget::EvaluateExport()
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
@@ -1223,10 +1277,12 @@ void SSceneSetupWidget::GetScreenshotBrush()
 		delete ScreenshotTexture;
 	}
 
-	if (c3dmod.ImageWrapper.IsValid() && c3dmod.ImageWrapper->SetCompressed(RawFileData.GetData(), RawFileData.Num()))
+	auto imageWrapper = FCognitiveEditorTools::GetInstance()->ImageWrapper;
+
+	if (imageWrapper.IsValid() && imageWrapper->SetCompressed(RawFileData.GetData(), RawFileData.Num()))
 	{
-		ScreenshotWidth = c3dmod.ImageWrapper->GetWidth();
-		ScreenshotHeight = c3dmod.ImageWrapper->GetHeight();
+		ScreenshotWidth = imageWrapper->GetWidth();
+		ScreenshotHeight = imageWrapper->GetHeight();
 
 		if (ScreenshotHeight > ScreenshotWidth)
 		{

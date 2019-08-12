@@ -108,6 +108,8 @@ void FCognitiveEditorTools::Initialize()
 	//CognitiveEditorToolsInstance->BaseExportDirectory = FPaths::GameDir();
 
 	//should update both editor urls and session data urls
+	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(TEXT("ImageWrapper"));
+	CognitiveEditorToolsInstance->ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
 }
 
 //at any step in the uploading process
@@ -299,7 +301,9 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
 		//tempactor->SetActorScale3D(originalScale);
 
-		List_MaterialArgs(exportObjects[i]->MeshName, GetDynamicsExportDirectory());
+		//TODO bake materials for each dynamic object to disk
+
+		//List_MaterialArgs(exportObjects[i]->MeshName, GetDynamicsExportDirectory());
 	}
 	GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
 
@@ -889,7 +893,7 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 {
 	FString title = "Select Export Directory";
 	FString fileTypes = ".exe";
-	FString lastPath = FPaths::GameDir();
+	FString lastPath = FPaths::ProjectDir();
 	FString defaultfile = FString();
 	FString outFilename = FString();
 	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
@@ -1005,165 +1009,6 @@ void* FCognitiveEditorTools::ChooseParentWindowHandle()
 	}
 
 	return ParentWindowWindowHandle;
-}
-
-FReply FCognitiveEditorTools::List_Materials()
-{
-	List_MaterialArgs("", BaseExportDirectory + "/" + GetCurrentSceneName());
-	return FReply::Handled();
-}
-
-void FCognitiveEditorTools::List_MaterialArgs(FString subdirectory, FString searchDirectory)
-{
-	//look at export directory. find mtl file
-
-	FString result;
-	FString Ext;
-	//get all files in the export directory
-	IFileManager& FileManager = IFileManager::Get();
-	TArray<FString> Files;
-
-	if (Ext == "")
-	{
-		Ext = "*.*";
-	}
-	else
-	{
-		Ext = (Ext.Left(1) == ".") ? "*" + Ext : "*." + Ext;
-	}
-
-	FString FinalPath = searchDirectory;
-
-	if (!subdirectory.IsEmpty())
-	{
-		FinalPath += "/"+subdirectory;
-	}
-	FinalPath += "/" + Ext;
-
-	FileManager.FindFiles(Files, *FinalPath, true, false);
-
-	TArray<FColor> colors;
-	FIntPoint point = FIntPoint(256, 256);
-
-	for (int32 i = 0; i < Files.Num(); i++)
-	{
-		if (Files[i].EndsWith(".mtl"))
-		{
-
-			FString fullPath = searchDirectory+ "/" + subdirectory + "/" + Files[i];
-			FString contents;
-
-			if (FFileHelper::LoadFileToString(contents, *fullPath))
-			{
-				//GLog->Log("loaded " + Files[i] + "\n" = contents);
-			}
-			else
-			{
-				//GLog->Log("failed to load " + Files[i]);
-			}
-			TArray<FString> lines;
-			int32 lineCount = contents.ParseIntoArray(lines, TEXT("\n"), true);
-
-			for (int32 j = 0; j < lines.Num(); j++)
-			{
-				if (lines[j].Contains("newmtl"))
-				{
-					TArray<FString> matDirectories;
-					lines[j].RemoveFromStart("newmtl ");
-					lines[j].ParseIntoArray(matDirectories, TEXT("/"));
-
-					TArray<FString> lineParts;
-					matDirectories[matDirectories.Num() - 1].ParseIntoArray(lineParts, TEXT("_"));
-
-					int32 floor_count = FMath::FloorToInt(lineParts.Num() / (float)2);
-
-					FString trueMatName;
-					for (int32 k = 0; k < lineParts.Num(); k++)
-					{
-						if (k + 1 == floor_count)
-						{
-							trueMatName = trueMatName + lineParts[k] + ".";
-						}
-						else
-						{
-							trueMatName = trueMatName + lineParts[k] + "_";
-						}
-					}
-					trueMatName.RemoveFromEnd("_");
-
-					FString finalMatPath;
-					FString finalDirectory;
-					for (int32 l = 0; l < matDirectories.Num() - 1; l++)
-					{
-						finalMatPath = finalMatPath + matDirectories[l] + "/";
-						finalDirectory = finalMatPath + matDirectories[l] + "/";
-					}
-					finalMatPath = "/" + finalMatPath + trueMatName;
-					finalMatPath.RemoveAt(finalMatPath.Len() - 1);
-
-					FStringAssetReference assetRef = FStringAssetReference(finalMatPath);
-
-					UObject* assetRefLoaded = assetRef.TryLoad();
-
-					if (assetRefLoaded != NULL)
-					{
-						UMaterial* m = Cast<UMaterial>(assetRefLoaded);
-						UMaterialInstance* mi = Cast<UMaterialInstance>(assetRefLoaded);
-
-						if (m != NULL)
-						{
-							if (m->GetBlendMode() == EBlendMode::BLEND_Opaque)
-							{
-								continue;
-							}
-
-							//TODO export material property transparency
-							if (FMaterialUtilities::ExportMaterialProperty(m, EMaterialProperty::MP_BaseColor, point, colors))
-							{
-								FString BMPFilename;
-								if (subdirectory.IsEmpty())
-								{
-									BMPFilename = searchDirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
-								}
-								else
-								{
-									BMPFilename = searchDirectory+"/"+subdirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
-								}
-
-								//GLog->Log("writing base color for transparent material " + BMPFilename);
-								FFileHelper::CreateBitmap(*BMPFilename, point.X, point.Y, colors.GetData());
-							}
-						}
-						else
-						{
-							if (mi->GetBlendMode() == EBlendMode::BLEND_Opaque)
-							{
-								continue;
-							}
-
-							//TODO export material property transparency
-							if (FMaterialUtilities::ExportMaterialProperty(mi, EMaterialProperty::MP_BaseColor, point, colors))
-							{
-
-								FString BMPFilename;
-								if (subdirectory.IsEmpty())
-								{
-									BMPFilename = searchDirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
-								}
-								else
-								{
-									BMPFilename = searchDirectory + "/" + subdirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
-								}
-
-								//GLog->Log("writing base color for transparent material instance " + BMPFilename);
-								FFileHelper::CreateBitmap(*BMPFilename, point.X, point.Y, colors.GetData());
-							}
-						}
-					}
-				}
-			}
-		}
-	}
 }
 
 FReply FCognitiveEditorTools::UploadScene()
@@ -1977,7 +1822,7 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 	SceneData.Empty();
 
 	TArray<FString>scenstrings;
-	FString TestSyncFile = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
+	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
 
 	for (int i = 0; i < scenstrings.Num(); i++)
@@ -2117,7 +1962,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		//get array of scene data
 		TArray<FString> iniscenedata;
 
-		FString TestSyncFile = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
+		FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 		GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), iniscenedata, TestSyncFile);
 
 		//GLog->Log("found this many scene datas in ini " + FString::FromInt(iniscenedata.Num()));
@@ -2193,8 +2038,8 @@ ECheckBoxState FCognitiveEditorTools::HasFoundBlenderCheckbox() const
 
 FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 {
-	FString EngineIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
-	FString EditorIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEditor.ini"));
+	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 	//GLog->Log("FCognitiveTools::SaveAPIDeveloperKeysToFile save: " + CustomerId);
 
 	//GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
@@ -2211,7 +2056,7 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 
 void FCognitiveEditorTools::SaveAPIKeyToFile(FString key)
 {
-	FString EngineIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
+	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, EngineIni);
 	GConfig->Flush(false, GEngineIni);
 	ConfigFileHasChanged = true;
@@ -2222,7 +2067,7 @@ void FCognitiveEditorTools::SaveAPIKeyToFile(FString key)
 void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
 {
 	//FString EngineIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
-	FString EditorIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEditor.ini"));
+	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 	//GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, EditorIni);
 	GConfig->Flush(false, GEngineIni);
@@ -2265,7 +2110,7 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 
 	TArray<FString> scenePairs = TArray<FString>();
 
-	FString TestSyncFile = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
+	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, TestSyncFile);
 
 	bool didSetKey = false;
@@ -2304,9 +2149,126 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 	GConfig->Flush(false, GEngineIni);
 }
 
+TArray<FString> MaterialLine;
+
+void FCognitiveEditorTools::WizardExportMaterials()
+{
+	//TODO figure out how to deal with name collisions
+
+	//UWorld* tempworld = GEditor->GetEditorWorldContext().World();
+
+	//FMaterialBakingModule& BakingModule = FModuleManager::GetModuleChecked<FMaterialBakingModule>(TEXT("MaterialBaking"));
+	IMaterialBakingModule& MaterialBakingModule = FModuleManager::Get().LoadModuleChecked<IMaterialBakingModule>("MaterialBaking");
+
+	FIntPoint resolution = FIntPoint(256, 256);
+
+	TArray<FString>ExportedMaterialNames;
+	FString searchDirectory = BaseExportDirectory + "/" + GetCurrentSceneName();
+
+	MaterialLine.Add("");
+
+	for (TObjectIterator<UStaticMeshComponent> It; It; ++It)
+	{
+		UStaticMeshComponent* TempObject = *It;
+		if (TempObject != NULL)
+		{
+			TArray<UMaterialInterface*> mats = TempObject->GetMaterials();
+			for (int i = 0; i < mats.Num(); i++)
+			{
+				if (mats[i] != NULL)
+				{
+					if (ExportedMaterialNames.Contains(mats[i]->GetName())) { continue; }
+
+					TArray<FMeshData*> MeshSettingPtrs;
+					TArray<FMaterialData*> MaterialSettingPtrs;
+					GLog->Log(mats[i]->GetFullName());
+					FString n = mats[i]->GetPathName().Replace(TEXT("."), TEXT("_"));
+					MaterialLine.Add("newmtl " + n);
+
+					ExportedMaterialNames.Add(mats[i]->GetName());
+
+					FMaterialData MaterialSettings;
+					MaterialSettings.Material = mats[i];
+					//MaterialSettings.bPerformBorderSmear = false;
+					MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_BaseColor, resolution);
+					MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Normal, resolution);
+
+					if (mats[i]->GetBlendMode() == EBlendMode::BLEND_Masked)
+						MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_OpacityMask, resolution);
+					else if (mats[i]->GetBlendMode() == EBlendMode::BLEND_Translucent)
+						MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Opacity, resolution);
+					//MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_EmissiveColor, resolution);
+					MaterialSettingPtrs.Add(&MaterialSettings);
+
+
+
+					FMeshData meshdata;
+					//meshdata.RawMeshDescription = nullptr;
+					meshdata.TextureCoordinateBox = FBox2D(FVector2D(0.0f, 0.0f), FVector2D(1.0f, 1.0f));
+					meshdata.TextureCoordinateIndex = 0;
+					MeshSettingPtrs.Add(&meshdata);
+
+					TArray<FBakeOutput> BakeOutputs;
+					MaterialBakingModule.BakeMaterials(MaterialSettingPtrs, MeshSettingPtrs, BakeOutputs);
+
+					for (FBakeOutput& output : BakeOutputs)
+					{
+						//GLog->Log(FString::FromInt(output.PropertySizes[EMaterialProperty::MP_BaseColor].X) + "   " + FString::FromInt(output.PropertySizes[EMaterialProperty::MP_BaseColor].Y));
+
+						//writing materials with wrong uvs
+
+						FString BMPFilename;
+						//diffuse
+						BMPFilename = searchDirectory + "/" + mats[i]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+						FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_BaseColor].GetData());
+						MaterialLine.Add("map_Kd " + BMPFilename);
+
+						//normal
+						BMPFilename = searchDirectory + "/" + mats[i]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
+						FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Normal].GetData());
+						MaterialLine.Add("bump " + BMPFilename);
+
+						if (mats[i]->GetBlendMode() == EBlendMode::BLEND_Masked)
+						{
+							//	//mask
+							BMPFilename = searchDirectory + "/" + mats[i]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_OM.bmp");
+							FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_OpacityMask].GetData());
+							MaterialLine.Add("illum 4");
+							MaterialLine.Add("map_D " + BMPFilename);
+						}
+						else if (mats[i]->GetBlendMode() == EBlendMode::BLEND_Translucent)
+						{
+							//opacity
+							BMPFilename = searchDirectory + "/" + mats[i]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_O.bmp");
+							FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Opacity].GetData());
+							MaterialLine.Add("illum 4");
+							MaterialLine.Add("map_D " + BMPFilename);
+						}
+
+						//save to disk
+					}
+					MaterialLine.Add("");
+					MaterialLine.Add("");
+				}
+			}
+		}
+	}
+
+
+	//write MaterialLine over top mtl file
+	//IFileManager& FileManager = IFileManager::Get();
+
+
+	FString mtlfilename = searchDirectory + "/" + GetCurrentSceneName() + ".mtl";
+	FFileHelper::SaveStringArrayToFile(MaterialLine, *mtlfilename);
+
+	//if (FFileHelper::LoadFileToString(contents, *fullPath))
+
+}
+
 void FCognitiveEditorTools::WizardExport()
 {
-	List_Materials();
+	return;
 	
 	FProcHandle fph = Reduce_Meshes_And_Textures();
 	
@@ -2314,6 +2276,18 @@ void FCognitiveEditorTools::WizardExport()
 	{
 		FPlatformProcess::WaitForProc(fph);
 	
+		TakeScreenshot();
+	}
+}
+
+void FCognitiveEditorTools::WizardConvert()
+{
+	FProcHandle fph = Reduce_Meshes_And_Textures();
+
+	if (fph.IsValid())
+	{
+		FPlatformProcess::WaitForProc(fph);
+
 		TakeScreenshot();
 	}
 }

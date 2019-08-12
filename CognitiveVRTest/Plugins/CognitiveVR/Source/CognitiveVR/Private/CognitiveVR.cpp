@@ -376,7 +376,7 @@ void FAnalyticsProviderCognitiveVR::RecordEvent(const FString& EventName, const 
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
+			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
 		customevent->Send(EventName, properties);
@@ -472,7 +472,7 @@ void FAnalyticsProviderCognitiveVR::RecordError(const FString& Error, const TArr
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
+			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
 		customevent->Send(FString("c3d.recorderror"), properties);
@@ -495,7 +495,7 @@ void FAnalyticsProviderCognitiveVR::RecordProgress(const FString& ProgressType, 
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
+			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
 		customevent->Send(FString("c3d.recordprogress"), properties);
@@ -516,7 +516,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, in
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
+			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
 		customevent->Send(FString("c3d.recorditempurchase"), properties);
@@ -537,7 +537,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
+			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
 		customevent->Send(FString("RecordCurrencyPurchase"), properties);
@@ -558,7 +558,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
+			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
 		customevent->Send(FString("c3d.recordcurrencygiven"), properties);

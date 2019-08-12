@@ -2,6 +2,7 @@
 
 #include "CognitiveVREditorPrivatePCH.h"
 #include "BaseEditorTool.h"
+#include "coreminimal.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Input/Reply.h"
 #include "IDetailCustomization.h"

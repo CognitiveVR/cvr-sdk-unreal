@@ -77,7 +77,7 @@ public:
 };
 }
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FDynamicObjectSnapshot
 {
 	GENERATED_BODY()
