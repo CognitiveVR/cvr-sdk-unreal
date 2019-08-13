@@ -57,7 +57,7 @@ TSharedPtr<FAnalyticsProviderCognitiveVR> FAnalyticsCognitiveVR::GetCognitiveVRP
 FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR() :
 	Age(0)
 {
-	DeviceId = FPlatformMisc::GetUniqueDeviceId();
+	DeviceId = FPlatformMisc::GetDeviceId();
 }
 
 FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
@@ -618,7 +618,7 @@ FString FAnalyticsProviderCognitiveVR::GetCurrentSceneVersionNumber()
 void FAnalyticsProviderCognitiveVR::CacheSceneData()
 {
 	TArray<FString>scenstrings;
-	FString TestSyncFile = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
+	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
 
 	for (int i = 0; i < scenstrings.Num(); i++)

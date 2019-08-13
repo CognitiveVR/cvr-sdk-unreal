@@ -169,7 +169,7 @@ public:
 
 	//should this object record how the player is gazing?
 	UPROPERTY(EditAnywhere)
-	bool TrackGaze = false;
+	bool TrackGaze = true;
 
 	//snapshots
 

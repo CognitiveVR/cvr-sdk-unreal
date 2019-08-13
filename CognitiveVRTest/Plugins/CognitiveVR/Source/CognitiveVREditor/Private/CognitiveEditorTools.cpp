@@ -310,19 +310,11 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 			//bake + export materials
 			TArray< UStaticMeshComponent*> meshes;
 			meshes.Add(mesh);
-			WizardExportMaterials(GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/", meshes);
+			WizardExportMaterials(GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/", meshes, exportObjects[i]->MeshName);
 		}
 		//List_MaterialArgs(exportObjects[i]->MeshName, GetDynamicsExportDirectory());
 	}
 	GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
-
-
-
-	//convert all the dynamic objs to gltf
-
-	//TODO export transparent textures for dynamic objects
-	//
-	//ConvertDynamicTextures();
 
 	ConvertDynamicsToGLTF(DynamicMeshNames);
 
@@ -2161,7 +2153,7 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 
 TArray<FString> MaterialLine;
 
-void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<UStaticMeshComponent*> meshes)
+void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<UStaticMeshComponent*> meshes, FString mtlFileName)
 {
 	//TODO figure out how to deal with name collisions
 
@@ -2271,22 +2263,15 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 		}
 	}
 
-
-	//write MaterialLine over top mtl file
-	//IFileManager& FileManager = IFileManager::Get();
-
-
-	FString mtlfilename = directory + GetCurrentSceneName() + ".mtl";
-	FFileHelper::SaveStringArrayToFile(MaterialLine, *mtlfilename);
-
-	//if (FFileHelper::LoadFileToString(contents, *fullPath))
-
+	//write MaterialLine to mtl file
+	FString mtlPath = directory + mtlFileName + ".mtl";
+	FFileHelper::SaveStringArrayToFile(MaterialLine, *mtlPath);
 }
 
 void FCognitiveEditorTools::WizardPostSceneExport()
 {
 	//anything that needs to happen automatically after the scene has been exported
-	//TODO exporting 
+	
 }
 
 void FCognitiveEditorTools::WizardConvertScene()

@@ -710,45 +710,45 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 
-			+ SVerticalBox::Slot()
-			.Padding(0, 0, 0, 4)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.VAlign(VAlign_Center)
-			[
-				SNew(SHorizontalBox)
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.Text(FText::FromString("Export Scene Materials"))
-						.OnClicked(this,&SSceneSetupWidget::ExportSceneMaterials)
-					]
-				]
-			]
+			//+ SVerticalBox::Slot()
+			//.Padding(0, 0, 0, 4)
+			//.HAlign(EHorizontalAlignment::HAlign_Center)
+			//.VAlign(VAlign_Center)
+			//[
+			//	SNew(SHorizontalBox)
+			//	+SHorizontalBox::Slot()
+			//	[
+			//		SNew(SBox)
+			//		.HeightOverride(64)
+			//		.WidthOverride(128)
+			//		[
+			//			SNew(SButton)
+			//			.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+			//			.Text(FText::FromString("Export Scene Materials"))
+			//			.OnClicked(this,&SSceneSetupWidget::ExportSceneMaterials)
+			//		]
+			//	]
+			//]
 
-			+ SVerticalBox::Slot()
-			.Padding(0, 0, 0, 4)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.VAlign(VAlign_Center)
-			[
-				SNew(SHorizontalBox)
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.Text(FText::FromString("ConvertToGLTF"))
-						.OnClicked(this,&SSceneSetupWidget::ConvertSceneToGLTF)
-					]
-				]
-			]
+			//+ SVerticalBox::Slot()
+			//.Padding(0, 0, 0, 4)
+			//.HAlign(EHorizontalAlignment::HAlign_Center)
+			//.VAlign(VAlign_Center)
+			//[
+			//	SNew(SHorizontalBox)
+			//	+SHorizontalBox::Slot()
+			//	[
+			//		SNew(SBox)
+			//		.HeightOverride(64)
+			//		.WidthOverride(128)
+			//		[
+			//			SNew(SButton)
+			//			.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+			//			.Text(FText::FromString("ConvertToGLTF"))
+			//			.OnClicked(this,&SSceneSetupWidget::ConvertSceneToGLTF)
+			//		]
+			//	]
+			//]
 
 
 #pragma endregion
@@ -1100,36 +1100,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 		BlenderLogoTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 78));
 }
 
-FReply SSceneSetupWidget::ConvertSceneToGLTF()
-{
-	FCognitiveEditorTools::GetInstance()->WizardConvertScene();
-	SceneWasExported = true;
-	return FReply::Handled();
-}
-
-FReply SSceneSetupWidget::ExportSceneMaterials()
-{
-	TArray< UStaticMeshComponent*> sceneMeshes;
-	//iterate over all scene static meshes
-	for (TObjectIterator<UStaticMeshComponent> It; It; ++It)
-	{
-		//
-		UStaticMeshComponent* TempObject = *It;
-		if (TempObject == NULL) { continue; }
-
-		UActorComponent* dynamic = TempObject->GetOwner()->GetComponentByClass(UDynamicObject::StaticClass());
-		if (dynamic != NULL) { continue; }
-
-		sceneMeshes.Add(TempObject);
-	}
-
-	//FString sceneDirectory = BaseExportDirectory + "/" + GetCurrentSceneName() + "/";
-	FString sceneDirectory = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory();
-
-	FCognitiveEditorTools::GetInstance()->WizardExportMaterials(sceneDirectory,sceneMeshes);
-	return FReply::Handled();
-}
-
 FReply SSceneSetupWidget::EvaluateSceneExport()
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
@@ -1229,6 +1199,35 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 	GEditor->ExportMap(tempworld, *ExportedSceneFile2, true);
 
 	FCognitiveEditorTools::GetInstance()->WizardPostSceneExport();
+	SceneWasExported = true;
+
+
+	//Export Scene Materials
+	TArray< UStaticMeshComponent*> sceneMeshes;
+	//iterate over all scene static meshes
+	for (TObjectIterator<UStaticMeshComponent> It; It; ++It)
+	{
+		//
+		UStaticMeshComponent* TempObject = *It;
+		if (TempObject == NULL) { continue; }
+
+		if (TempObject->GetOwner() == NULL) { continue; }
+
+		UActorComponent* dynamic = TempObject->GetOwner()->GetComponentByClass(UDynamicObject::StaticClass());
+		if (dynamic != NULL) { continue; }
+
+		sceneMeshes.Add(TempObject);
+	}
+
+	//FString sceneDirectory = BaseExportDirectory + "/" + GetCurrentSceneName() + "/";
+	FString sceneDirectory = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory()+"/";
+
+	FCognitiveEditorTools::GetInstance()->WizardExportMaterials(sceneDirectory, sceneMeshes, FCognitiveEditorTools::GetInstance()->GetCurrentSceneName());
+
+
+
+	//Convert scene to GLTF
+	FCognitiveEditorTools::GetInstance()->WizardConvertScene();
 	SceneWasExported = true;
 
 	return FReply::Handled();

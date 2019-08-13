@@ -160,7 +160,7 @@ public:
 		FReply UploadScene();
 
 	void WizardPostSceneExport();
-	void WizardExportMaterials(FString directory, TArray<UStaticMeshComponent*> meshes);
+	void WizardExportMaterials(FString directory, TArray<UStaticMeshComponent*> meshes, FString mtlFileName);
 	void WizardConvertScene();
 	//also writes settings json file and removes bmp/obj/fbx source files
 	FProcHandle ConvertSceneToGLTF();
