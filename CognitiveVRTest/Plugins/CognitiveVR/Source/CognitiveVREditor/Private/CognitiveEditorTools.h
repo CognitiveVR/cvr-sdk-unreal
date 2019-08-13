@@ -159,10 +159,11 @@ public:
 
 		FReply UploadScene();
 
-	void WizardExport();
-	void WizardExportMaterials();
-	void WizardConvert();
-	FProcHandle Reduce_Meshes_And_Textures();
+	void WizardPostSceneExport();
+	void WizardExportMaterials(FString directory, TArray<UStaticMeshComponent*> meshes);
+	void WizardConvertScene();
+	//also writes settings json file and removes bmp/obj/fbx source files
+	FProcHandle ConvertSceneToGLTF();
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
 
 	//	FReply List_Materials();
@@ -170,7 +171,7 @@ public:
 
 	//dynamic objects
 	//Runs the built-in obj exporter with all meshses
-		FReply ExportDynamics();
+		FReply ExportAllDynamics();
 
 	//Runs the built-in obj exporter with selected meshes
 		FReply ExportSelectedDynamics();
@@ -178,7 +179,7 @@ public:
 	void ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
 
 	//used after dynamic object exporting
-	void ConvertToGLTF(TArray<FString> meshNames);
+	void ConvertDynamicsToGLTF(TArray<FString> meshNames);
 
 	//uploads each dynamic object using its directory to the current scene
 	UFUNCTION(Exec, Category = "Dynamics")

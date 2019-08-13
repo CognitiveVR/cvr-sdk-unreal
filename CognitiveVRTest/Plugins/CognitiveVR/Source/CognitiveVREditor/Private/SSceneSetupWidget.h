@@ -150,9 +150,9 @@ public:
 
 	FReply ValidateAndRefresh();
 
-	FReply EvaluateExport();
-	FReply ConvertToGLTF();
-	FReply ExportMaterials();
+	FReply EvaluateSceneExport();
+	FReply ConvertSceneToGLTF();
+	FReply ExportSceneMaterials();
 	bool NoExportGameplayMeshes = true;
 	ECheckBoxState GetNoExportGameplayMeshCheckbox() const;
 	void OnChangeNoExportGameplayMesh(ECheckBoxState newstate)

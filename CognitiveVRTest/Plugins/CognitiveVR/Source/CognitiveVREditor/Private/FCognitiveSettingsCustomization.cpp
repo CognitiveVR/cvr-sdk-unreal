@@ -391,7 +391,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 					SNew(SButton)
 					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasFoundBlenderAndDynamicExportDir)
 					.Text(FText::FromString("Export All Dynamic Object Meshes"))
-					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportDynamics)
+					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportAllDynamics)
 				]
 			]
 		+SHorizontalBox::Slot()
