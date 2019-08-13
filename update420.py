@@ -1,9 +1,9 @@
 import os
 import shutil
 import sys
+import time
 
 cwd = os.getcwd()
-targetdir = "cognitiveVR_UnrealSDK_temp"
 version = "0"
 enginesubversion = "20"
 
@@ -69,7 +69,7 @@ def insertline(file, targetline, insertline):
 	return;
 
 def getpluginversion():
-	plugin = open(cwd+"/"+targetdir+"/Plugins/CognitiveVR/CognitiveVR.uplugin","r")
+	plugin = open(cwd+"/Plugins/CognitiveVR/CognitiveVR.uplugin","r")
 	pluginreadstring = plugin.read()
 	print("=============================================get plugin version")
 	for line in pluginreadstring.splitlines():
@@ -78,54 +78,43 @@ def getpluginversion():
 			raw = vsplit[1][2:-2]
 			return raw.replace('.','_')
 
-	
-#if tree directory exists, don't try to copy it
-if not os.path.exists(cwd+"/"+targetdir):
-	shutil.copytree(cwd+"/cognitiveVR_UnrealSDK_Dist",cwd+"/"+targetdir)
-	
-#1 open and change uproject file
-replaceline(cwd+"/"+targetdir+"/YourProjectName.uproject",'	"EngineAssociation": "4.13",',' 	"EngineAssociation": "4.'+enginesubversion+'",')
 
-#2 get the version
+#copy plugin folder to temp directory
+print(cwd+"/CognitiveVRTest/Plugins/")
+print(cwd+"/cognitiveVR_UnrealSDK_Dist/")
+
+if os.path.exists(cwd+"/Plugins/"):
+	shutil.rmtree(cwd+"/Plugins/")
+	print("delete " + cwd+"/Plugins/")
+
+shutil.copytree(cwd+"/CognitiveVRTest/Plugins/",cwd+"/Plugins/")
+
+#delete binaries and intermediate if present
+if os.path.exists(cwd+"/Plugins/CognitiveVR/Binaries/"):
+	shutil.rmtree(cwd+"/Plugins/CognitiveVR/Binaries/")
+	print("delete " + cwd+"/Plugins/CognitiveVR/Binaries/")
+	
+if os.path.exists(cwd+"/Plugins/CognitiveVR/Intermediate/"):
+	shutil.rmtree(cwd+"/Plugins/CognitiveVR/Intermediate/")
+	print("delete " + cwd+"/Plugins/CognitiveVR/Intermediate/")
+
+#get the version
 version = getpluginversion()
 print (version)
 
-#3 add blueprinttype to dynamic data
-replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Public\DynamicObject.h","USTRUCT()","USTRUCT(BlueprintType)")
-
-#4 replace json attrvalue with json attrvaluestring
-replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVR.cpp","			properties->SetStringField(Attr.AttrName, Attr.AttrValue);","			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);")
-
-#5 insert xr and hmd function headers
-insertline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\playertracker.h",'#include "DynamicObject.h"','#include "Runtime/HeadMountedDisplay/Public/IXRTrackingSystem.h"')
-insertline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\playertracker.h",'#include "DynamicObject.h"','#include "HeadMountedDisplayFunctionLibrary.h"')
-
-#6 replace hmddevice with xrsystem
-replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\playertracker.cpp","	if (GEngine->HMDDevice.IsValid())","	if (GEngine->XRSystem.IsValid())")
-replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\playertracker.cpp","		DeviceName = GEngine->HMDDevice->GetDeviceName();","		DeviceName = GEngine->XRSystem->GetSystemName();")
-
-#7 add workspacemenustructre to editor module
-insertline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.cpp",'#include "SSceneSetupWidget.h"','#include "WorkspaceMenuStructure.h"')
-
-#8 add WorkspaceMenuStructure to module dependencies
-insertline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVREditor\CognitiveVREditor.Build.cs",'				"LevelEditor",','				"WorkspaceMenuStructure",')
-
-#9 readonlytargetinfo
-replaceline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVREditor\CognitiveVREditor.Build.cs","	public CognitiveVREditor(TargetInfo Target)","	public CognitiveVREditor(ReadOnlyTargetRules Target):base(Target)")
-replaceline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","		public CognitiveVR(TargetInfo Target)","		public CognitiveVR(ReadOnlyTargetRules Target): base(Target)")
-replaceline(cwd+"/"+targetdir+"\Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs",'		string DirectXSDKDir = UEBuildConfiguration.UEThirdPartySourceDirectory + "Windows/DirectX";','		string DirectXSDKDir = Target.UEThirdPartySourceDirectory + "Windows/DirectX";')
-
-#10 add core minimal to dynamiccomponentdetails
-insertline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DynamicComponentDetails.h",'#include "BaseEditorTool.h"','#include "coreminimal.h"')
-
-#11 replace editor selection code in dynamiccomponentdetails
-replaceline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DynamicComponentDetails.cpp","	const TArray< TWeakObjectPtr<UObject> >& SelectedObjects = DetailLayout.GetDetailsView().GetSelectedObjects();","	const TArray< TWeakObjectPtr<UObject> >& SelectedObjects = DetailLayout.GetSelectedObjects();")
+#do all the update stuff
 
 #12 add audio define to microphone header
-insertline(cwd+"/"+targetdir+"/Plugins\CognitiveVR\Source\CognitiveVR\Public\MicrophoneCaptureActor.h","#pragma once","#define NTDDI_THRESHOLD 0")
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Public\MicrophoneCaptureActor.h","#pragma once","#define NTDDI_THRESHOLD 0")
 
-print("made file changes")
+# save to zip archive
+output_filename = cwd+"/C3D_Plugin"+version+"_ue4"+enginesubversion
+shutil.make_archive(output_filename, 'zip', cwd+"/Plugins/")
 
-#finally rename the folder to the correct sdk version
+#delete the temp plugin directory
+shutil.rmtree(cwd+"/Plugins/")
+print("delete " + cwd+"/Plugins/")
 
-os.rename(cwd+"/"+targetdir,cwd+"/cognitiveVR_UnrealSDK_"+version+"_ue4"+enginesubversion)
+print("complete!")
+
+time.sleep(5)
