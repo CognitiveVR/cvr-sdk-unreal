@@ -1,9 +1,5 @@
-// Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
+// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
-#ifndef __COGNITIVEVRTEST_H__
-#define __COGNITIVEVRTEST_H__
+#pragma once
 
-#include "EngineMinimal.h"
-#include "Public/CognitiveVR.h"
-
-#endif
+#include "CoreMinimal.h"

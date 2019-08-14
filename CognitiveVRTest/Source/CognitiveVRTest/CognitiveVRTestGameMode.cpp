@@ -1,9 +1,9 @@
-// Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
+// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
-#include "CognitiveVRTest.h"
 #include "CognitiveVRTestGameMode.h"
 #include "CognitiveVRTestHUD.h"
 #include "CognitiveVRTestCharacter.h"
+#include "UObject/ConstructorHelpers.h"
 
 ACognitiveVRTestGameMode::ACognitiveVRTestGameMode()
 	: Super()

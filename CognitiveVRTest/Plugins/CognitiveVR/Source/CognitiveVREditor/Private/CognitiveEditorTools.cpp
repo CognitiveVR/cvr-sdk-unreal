@@ -2183,29 +2183,29 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 		UStaticMeshComponent* TempObject = meshes[i];
 		if (TempObject == NULL) { continue; }
 		TArray<UMaterialInterface*> mats = TempObject->GetMaterials();
-		for (int i = 0; i < mats.Num(); i++)
+		for (int j = 0; j < mats.Num(); j++)
 		{
-			if (mats[i] != NULL)
+			if (mats[j] != NULL)
 			{
-				if (ExportedMaterialNames.Contains(mats[i]->GetName())) { continue; }
+				if (ExportedMaterialNames.Contains(mats[j]->GetName())) { continue; }
 
 				TArray<FMeshData*> MeshSettingPtrs;
 				TArray<FMaterialData*> MaterialSettingPtrs;
-				GLog->Log(mats[i]->GetFullName());
-				FString n = mats[i]->GetPathName().Replace(TEXT("."), TEXT("_"));
+				GLog->Log(mats[j]->GetFullName());
+				FString n = mats[j]->GetPathName().Replace(TEXT("."), TEXT("_"));
 				MaterialLine.Add("newmtl " + n);
 
-				ExportedMaterialNames.Add(mats[i]->GetName());
+				ExportedMaterialNames.Add(mats[j]->GetName());
 
 				FMaterialData MaterialSettings;
-				MaterialSettings.Material = mats[i];
+				MaterialSettings.Material = mats[j];
 				//MaterialSettings.bPerformBorderSmear = false;
 				MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_BaseColor, resolution);
 				MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Normal, resolution);
 
-				if (mats[i]->GetBlendMode() == EBlendMode::BLEND_Masked)
+				if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
 					MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_OpacityMask, resolution);
-				else if (mats[i]->GetBlendMode() == EBlendMode::BLEND_Translucent)
+				else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent)
 					MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Opacity, resolution);
 				//MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_EmissiveColor, resolution);
 				MaterialSettingPtrs.Add(&MaterialSettings);
@@ -2229,27 +2229,27 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 
 					FString BMPFilename;
 					//diffuse
-					BMPFilename = directory + mats[i]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
 					FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_BaseColor].GetData());
 					MaterialLine.Add("map_Kd " + BMPFilename);
 
 					//normal
-					BMPFilename = directory + mats[i]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
+					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
 					FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Normal].GetData());
 					MaterialLine.Add("bump " + BMPFilename);
 
-					if (mats[i]->GetBlendMode() == EBlendMode::BLEND_Masked)
+					if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
 					{
 						//	//mask
-						BMPFilename = directory + mats[i]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_OM.bmp");
+						BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_OM.bmp");
 						FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_OpacityMask].GetData());
 						MaterialLine.Add("illum 4");
 						MaterialLine.Add("map_D " + BMPFilename);
 					}
-					else if (mats[i]->GetBlendMode() == EBlendMode::BLEND_Translucent)
+					else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent)
 					{
 						//opacity
-						BMPFilename = directory + mats[i]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_O.bmp");
+						BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_O.bmp");
 						FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Opacity].GetData());
 						MaterialLine.Add("illum 4");
 						MaterialLine.Add("map_D " + BMPFilename);

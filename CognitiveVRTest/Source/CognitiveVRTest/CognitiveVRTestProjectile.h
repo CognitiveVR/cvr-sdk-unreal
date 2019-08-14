@@ -1,8 +1,9 @@
-// Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
+// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+
 #pragma once
+
+#include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "DynamicObject.h"
-#include "Public/CognitiveVR.h"
 #include "CognitiveVRTestProjectile.generated.h"
 
 UCLASS(config=Game)
@@ -29,8 +30,5 @@ public:
 	FORCEINLINE class USphereComponent* GetCollisionComp() const { return CollisionComp; }
 	/** Returns ProjectileMovement subobject **/
 	FORCEINLINE class UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
-
-	static int boxesHit;
-	//void DebugCallback(cognitivevrapi::CognitiveVRResponse resp) {}
 };
 

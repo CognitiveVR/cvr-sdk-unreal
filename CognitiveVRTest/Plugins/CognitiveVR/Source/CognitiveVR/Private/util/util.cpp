@@ -1,6 +1,7 @@
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
+#include "CognitiveVR.h"
 #include "util/util.h"
 #include "GenericPlatformDriver.h"
 

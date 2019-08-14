@@ -78,7 +78,6 @@ def getpluginversion():
 			raw = vsplit[1][2:-2]
 			return raw.replace('.','_')
 
-
 #copy plugin folder to temp directory
 print(cwd+"/CognitiveVRTest/Plugins/")
 print(cwd+"/cognitiveVR_UnrealSDK_Dist/")
@@ -113,7 +112,7 @@ shutil.make_archive(output_filename, 'zip', cwd+"/Plugins/")
 
 #delete the temp plugin directory
 shutil.rmtree(cwd+"/Plugins/")
-print("delete " + cwd+"/Plugins
+print("delete " + cwd+"/Plugins/")
 
 print("complete!")
 
