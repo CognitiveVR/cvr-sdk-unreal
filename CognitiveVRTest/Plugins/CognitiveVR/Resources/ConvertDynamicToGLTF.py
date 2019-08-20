@@ -51,7 +51,7 @@ for dir in subdirectories:
     #foreach file in working directory
     #move image to root? do i need to?
     #add space at beginningl of mtl
-    if (mtlpaht != ''):
+    if (mtlpath != ''):
         mo = open(mtlpath, encoding='utf-8-sig')
         readString = mo.read()
         outstrings=[]
