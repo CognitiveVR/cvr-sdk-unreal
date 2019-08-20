@@ -112,6 +112,7 @@ def DecimateMeshes():
 		print("couldn't find "+exportPath+"/"+fileName+".fbx")
 		
 	print("=============================================import complete")
+	bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP',iterations=1)
 
 	#decimate. remesh bsp
 	#for obj in scene.objects:

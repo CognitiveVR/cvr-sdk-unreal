@@ -5,6 +5,7 @@ import bmesh
 import sys
 import os
 import shutil
+import os.path
 
 #arguments
 scene = bpy.context.scene
@@ -50,32 +51,35 @@ for dir in subdirectories:
     #foreach file in working directory
     #move image to root? do i need to?
     #add space at beginningl of mtl
-    mo = open(mtlpath, encoding='utf-8-sig')
-    readString = mo.read()
-    outstrings=[]
-    outstrings.append('\n\n')
-    #==========================replace mtl with png references to textures
-    for line in readString.splitlines():
-        outstrings.append(line+'\n')
-    mo.close()
-    
-    #remove the mtl
-    os.remove(mtlpath)
-    
-    #write to new file (pngs)
-    nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
-    nmo.writelines(outstrings)
-    nmo.close()
+    if (mtlpaht != ''):
+        mo = open(mtlpath, encoding='utf-8-sig')
+        readString = mo.read()
+        outstrings=[]
+        outstrings.append('\n\n')
+        #==========================replace mtl with png references to textures
+        for line in readString.splitlines():
+            outstrings.append(line+'\n')
+        mo.close()
+        
+        #remove the mtl
+        os.remove(mtlpath)
+        
+        #write to new file (pngs)
+        nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
+        nmo.writelines(outstrings)
+        nmo.close()
     
     
     #import workingdir +"/"+ dir+".obj"
     objname = workingdir + "/" + dir + ".obj"
-    ops.import_scene.obj(filepath=objname, use_edges=True, use_smooth_groups=True, use_split_objects=True, use_split_groups=True, use_groups_as_vgroups=False, use_image_search=True, split_mode='ON', axis_forward='-Z', axis_up='Y')
-    print("=============================================import complete")
-    
-    #export as gltf to workingdir+"/"+dir
-    gltfname = workingdir + "/" + dir + ".gltf"
-    ops.export_scene.gltf(export_format='GLTF_SEPARATE',export_animations=False,filepath=gltfname)
+    if os.path.exists(objname):
+        ops.import_scene.obj(filepath=objname, use_edges=True, use_smooth_groups=True, use_split_objects=True, use_split_groups=True, use_groups_as_vgroups=False, use_image_search=True, split_mode='ON', axis_forward='-Z', axis_up='Y')
+        print("=============================================import complete")
+        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP',iterations=1)
+        
+        #export as gltf to workingdir+"/"+dir
+        gltfname = workingdir + "/" + dir + ".gltf"
+        ops.export_scene.gltf(export_format='GLTF_SEPARATE',export_animations=False,filepath=gltfname)
     
     #remove all bmps, mtl and obj
     for tempPath, dirs, files in os.walk(workingdir):

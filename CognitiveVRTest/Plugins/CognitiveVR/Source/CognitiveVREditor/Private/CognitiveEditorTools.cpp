@@ -325,8 +325,13 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		BakeExportMaterials.Add(exportObjects[i]->MeshName, meshes);
 	}
 
+	float work = 0;
+	FScopedSlowTask SlowTask(BakeExportMaterials.Num(), FText::FromString("Baking Dynamic Object Materials"));
+	SlowTask.MakeDialog(false);
 	for (auto& elem : BakeExportMaterials)
 	{
+		work += 1;
+		SlowTask.EnterProgressFrame(work);
 		WizardExportMaterials(GetDynamicsExportDirectory() + "/" + elem.Key + "/", elem.Value, elem.Key);
 	}
 
@@ -2181,11 +2186,26 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 	MaterialLine.Empty();
 	MaterialLine.Add("");
 
+	float work = 0;
+	FScopedSlowTask* SlowTaskPtr = NULL;
+	
+	if (mtlFileName == FCognitiveEditorTools::GetInstance()->GetCurrentSceneName())
+	{
+		SlowTaskPtr = new FScopedSlowTask(meshes.Num(), FText::FromString("Baking Scene Materials"));
+		SlowTaskPtr->MakeDialog(false);
+	}
+
 	for (int i = 0; i < meshes.Num(); i++)
 	{
+		if (SlowTaskPtr != NULL)
+		{
+			work += 1;
+			SlowTaskPtr->EnterProgressFrame(work);
+		}
 		if (meshes[i] == NULL) { continue; }
 		UStaticMeshComponent* TempObject = meshes[i];
 		if (TempObject == NULL) { continue; }
+
 		TArray<UMaterialInterface*> mats = TempObject->GetMaterials();
 		for (int j = 0; j < mats.Num(); j++)
 		{
@@ -2292,6 +2312,11 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 				MaterialLine.Add("");
 			}
 		}
+	}
+
+	if (SlowTaskPtr != NULL)
+	{
+		delete SlowTaskPtr;
 	}
 
 	//write MaterialLine to mtl file
