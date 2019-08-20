@@ -36,6 +36,8 @@
 #include "UnrealClient.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
+#include "RenderingThread.h"
+#include "Classes/Engine/Level.h"
 
 //all sorts of functionality for Cognitive SDK
 

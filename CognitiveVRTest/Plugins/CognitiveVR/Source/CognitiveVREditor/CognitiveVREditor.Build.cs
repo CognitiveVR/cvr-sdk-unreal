@@ -35,7 +35,8 @@ public class CognitiveVREditor : ModuleRules
                 "UnrealEd",
                 "PluginBrowser",
                 "Projects",
-                "CognitiveVR"
+                "CognitiveVR",
+				"RenderCore"
             }
 		);
 	}

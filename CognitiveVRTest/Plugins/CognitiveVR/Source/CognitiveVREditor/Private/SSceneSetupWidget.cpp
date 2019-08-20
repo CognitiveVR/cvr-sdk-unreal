@@ -599,8 +599,27 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					[
 						SNew(SButton)
 						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-						.Text(FText::FromString("Export Meshes"))
+						.Text(FText::FromString("Export All Meshes"))
 						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportAllDynamics)
+					]
+				]
+			]
+			+ SVerticalBox::Slot()
+			.Padding(0, 0, 0, 4)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			.VAlign(VAlign_Center)
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.HeightOverride(64)
+					.WidthOverride(128)
+					[
+						SNew(SButton)
+						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+						.Text(FText::FromString("Export Selected Meshes"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportSelectedDynamics)
 					]
 				]
 			]
@@ -1131,6 +1150,8 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 		{
 			if (AActor* Actor = Cast<AActor>(*It))
 			{
+				ULevel* level = Actor->GetLevel();
+				if (level->bIsVisible == 0) { continue; } //sublevel probably. invisible
 				ToBeExported.Add(Actor);
 			}
 		}
@@ -1230,30 +1251,6 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 	FCognitiveEditorTools::GetInstance()->WizardConvertScene();
 	SceneWasExported = true;
 
-	return FReply::Handled();
-}
-
-FReply SSceneSetupWidget::DeselectTransparentMaterials()
-{
-	TArray<AActor*> ToBeExported;
-	for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
-	{
-		if (AActor* Actor = Cast<AActor>(*It))
-		{
-			ToBeExported.Add(Actor);
-		}
-	}
-	GEditor->SelectNone(false, true, false);
-	for (int32 i = 0; i < ToBeExported.Num(); i++)
-	{
-		//if actor.getcomponent<rendering>().material.type.alpha
-		//remove from tobeexported
-	}
-
-	for (int32 i = 0; i < ToBeExported.Num(); i++)
-	{
-		GEditor->SelectActor((ToBeExported[i]), true, false, true);
-	}
 	return FReply::Handled();
 }
 

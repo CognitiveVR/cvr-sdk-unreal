@@ -201,11 +201,9 @@ FReply FCognitiveEditorTools::ExportAllDynamics()
 		UDynamicObject* TempObject = *It;
 		if (TempObject != NULL)
 		{
-			if (!meshNames.Contains(TempObject->MeshName))
-			{
-				exportObjects.Add(TempObject);
-				meshNames.Add(TempObject->MeshName);
-			}
+			if (meshNames.Contains(TempObject->MeshName)) { continue; }
+			exportObjects.Add(TempObject);
+			meshNames.Add(TempObject->MeshName);
 		}
 	}
 
@@ -262,11 +260,10 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 	int32 ActorsExported = 0;
 
 	TArray<FString> DynamicMeshNames;
+	TMap<FString, TArray< UStaticMeshComponent*>> BakeExportMaterials;
 
 	for (int32 i = 0; i < exportObjects.Num(); i++)
 	{
-		DynamicMeshNames.Add(exportObjects[i]->MeshName);
-
 		GEditor->SelectNone(false, true, false);
 
 		if (exportObjects[i] == NULL)
@@ -277,18 +274,39 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		{
 			continue;
 		}
+		if (exportObjects[i]->MeshName.IsEmpty())
+		{
+			continue;
+		}
+
+		UActorComponent* actorComponent = exportObjects[i]->GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
+		UStaticMeshComponent* mesh = Cast<UStaticMeshComponent>(actorComponent);
+		if (mesh == NULL)
+		{
+			continue;
+		}
+		
+		ULevel* componentLevel = actorComponent->GetComponentLevel();
+		if (componentLevel->bIsVisible == 0)
+		{
+			continue;
+			//not visible! possibly on a disabled sublevel
+		}
+
+		DynamicMeshNames.Add(exportObjects[i]->MeshName);
+
 		originalLocation = exportObjects[i]->GetOwner()->GetActorLocation();
 		originalRotation = exportObjects[i]->GetOwner()->GetActorRotation();
-		//originalScale = tempactor->GetActorScale();
+		originalScale = exportObjects[i]->GetOwner()->GetActorScale();
 
 		exportObjects[i]->GetOwner()->SetActorLocation(FVector::ZeroVector);
 		exportObjects[i]->GetOwner()->SetActorRotation(FQuat::Identity);
-		//tempactor->SetActorScale3D(originalScale*0.01);
+		exportObjects[i]->GetOwner()->SetActorScale3D(FVector::OneVector);
 
 		FString ExportFilename = exportObjects[i]->MeshName + ".obj";
 
 		GEditor->SelectActor(exportObjects[i]->GetOwner(), true, false, true);
-		//ActorsExported++;
+		ActorsExported++;
 
 		FString tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
 
@@ -299,26 +317,26 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 
 		exportObjects[i]->GetOwner()->SetActorLocation(originalLocation);
 		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
-		//tempactor->SetActorScale3D(originalScale);
+		exportObjects[i]->GetOwner()->SetActorScale3D(originalScale);
 
-		UActorComponent* actorComponent = exportObjects[i]->GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
-
-		UStaticMeshComponent* mesh = Cast<UStaticMeshComponent>(actorComponent);
-
-		if (mesh != NULL)
-		{
-			//bake + export materials
-			TArray< UStaticMeshComponent*> meshes;
-			meshes.Add(mesh);
-			WizardExportMaterials(GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/", meshes, exportObjects[i]->MeshName);
-		}
-		//List_MaterialArgs(exportObjects[i]->MeshName, GetDynamicsExportDirectory());
+		//bake + export materials
+		TArray< UStaticMeshComponent*> meshes;
+		meshes.Add(mesh);
+		BakeExportMaterials.Add(exportObjects[i]->MeshName, meshes);
 	}
+
+	for (auto& elem : BakeExportMaterials)
+	{
+		WizardExportMaterials(GetDynamicsExportDirectory() + "/" + elem.Key + "/", elem.Value, elem.Key);
+	}
+
 	GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
 
-	ConvertDynamicsToGLTF(DynamicMeshNames);
-
-	FindAllSubDirectoryNames();
+	if (ActorsExported > 0)
+	{
+		ConvertDynamicsToGLTF(DynamicMeshNames);
+		FindAllSubDirectoryNames();
+	}
 }
 
 void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
@@ -2155,24 +2173,10 @@ TArray<FString> MaterialLine;
 
 void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<UStaticMeshComponent*> meshes, FString mtlFileName)
 {
-	//TODO figure out how to deal with name collisions
-
-	//UWorld* tempworld = GEditor->GetEditorWorldContext().World();
-
-	//FMaterialBakingModule& BakingModule = FModuleManager::GetModuleChecked<FMaterialBakingModule>(TEXT("MaterialBaking"));
 	IMaterialBakingModule& MaterialBakingModule = FModuleManager::Get().LoadModuleChecked<IMaterialBakingModule>("MaterialBaking");
 
 	FIntPoint resolution = FIntPoint(256, 256);
-
 	TArray<FString>ExportedMaterialNames;
-	
-	//FString dynamicDirectory = BaseExportDirectory + "/Dynamics/";
-	//FString searchDirectory = BaseExportDirectory + "/" + GetCurrentSceneName() + "/";
-
-
-
-	//for (TObjectIterator<UStaticMeshComponent> It; It; ++It)
-	//{
 
 	MaterialLine.Empty();
 	MaterialLine.Add("");
@@ -2188,6 +2192,33 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 			if (mats[j] != NULL)
 			{
 				if (ExportedMaterialNames.Contains(mats[j]->GetName())) { continue; }
+
+				if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Opaque)
+				{
+					FString n = mats[j]->GetPathName().Replace(TEXT("."), TEXT("_"));
+					MaterialLine.Add("newmtl " + n);
+
+					ExportedMaterialNames.Add(mats[j]->GetName());
+
+					SCOPED_SUSPEND_RENDERING_THREAD(true);
+					PRAGMA_DISABLE_DEPRECATION_WARNINGS
+					TArray<FColor> OutputBMP;
+					FIntPoint OutSize;
+					FString BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+					FMaterialUtilities::ExportMaterialProperty(mats[j], EMaterialProperty::MP_BaseColor, OutputBMP, OutSize);
+					FFileHelper::CreateBitmap(*BMPFilename, OutSize.X, OutSize.Y, OutputBMP.GetData());
+					MaterialLine.Add("map_Kd " + BMPFilename);
+
+					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
+					FMaterialUtilities::ExportMaterialProperty(mats[j], EMaterialProperty::MP_Normal, OutputBMP, OutSize);
+					FFileHelper::CreateBitmap(*BMPFilename, OutSize.X, OutSize.Y, OutputBMP.GetData());
+					MaterialLine.Add("bump " + BMPFilename);
+					PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+					MaterialLine.Add("");
+					MaterialLine.Add("");
+					continue;
+				}
 
 				TArray<FMeshData*> MeshSettingPtrs;
 				TArray<FMaterialData*> MaterialSettingPtrs;

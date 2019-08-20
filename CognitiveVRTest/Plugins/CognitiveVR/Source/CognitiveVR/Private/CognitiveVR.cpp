@@ -100,6 +100,11 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		//return false;
 	}
 
+	if (currentWorld == NULL)
+	{
+		GLog->Log("FAnalyticsProviderCognitiveVR::StartSession World not set. Are you missing a Cognitive3D::Player Tracker component on your camera?");
+		return false;
+	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
 
@@ -186,16 +191,13 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 
 
-	if (currentWorld != NULL)
+	if (currentWorld->WorldType == EWorldType::Game)
 	{
-		if (currentWorld->WorldType == EWorldType::Game)
-		{
-			SetSessionProperty("c3d.app.inEditor", "false");
-		}
-		else
-		{
-			SetSessionProperty("c3d.app.inEditor", "true");
-		}
+		SetSessionProperty("c3d.app.inEditor", "false");
+	}
+	else
+	{
+		SetSessionProperty("c3d.app.inEditor", "true");
 	}
 
 	SetSessionProperty("c3d.app.sdktype", "Default");

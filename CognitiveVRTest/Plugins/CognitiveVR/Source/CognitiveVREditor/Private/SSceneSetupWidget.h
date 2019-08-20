@@ -92,7 +92,6 @@ public:
 	EVisibility ARButtonVisibility() const;
 	FReply ARSkipExport();
 
-	TArray<TSharedPtr<FString>> NEWEXPORTFILES;
 	void GetScreenshotBrush();
 	FSlateBrush* ScreenshotTexture;
 	const FSlateBrush* GetScreenshotBrushTexture() const;
@@ -122,10 +121,7 @@ public:
 	FText DisplayDynamicObjectsCountInScene() const;
 	FReply RefreshDisplayDynamicObjectsCountInScene();
 	EVisibility GetDuplicateDyanmicObjectVisibility() const;
-
-	//FReply SetUniqueDynamicIds();
-	//bool DuplicateDynamicIdsInScene() const;
-
+	
 	int32 CountDynamicObjectsInScene() const;
 
 	FText DynamicCountInScene;
@@ -136,7 +132,6 @@ public:
 	FReply SelectDynamic(TSharedPtr<cognitivevrapi::FDynamicData> data);
 
 	FReply SelectAll();
-	FReply DeselectTransparentMaterials();
 
 	void RefreshList();
 
@@ -151,8 +146,6 @@ public:
 	FReply ValidateAndRefresh();
 
 	FReply EvaluateSceneExport();
-	FReply ConvertSceneToGLTF();
-	FReply ExportSceneMaterials();
 	bool NoExportGameplayMeshes = true;
 	ECheckBoxState GetNoExportGameplayMeshCheckbox() const;
 	void OnChangeNoExportGameplayMesh(ECheckBoxState newstate)

@@ -38,6 +38,13 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 						.DecoratorStyleSet(&FEditorStyle::Get())
 						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Id</>"))
 					]
+					+ SHeaderRow::Column("exported")
+					.FillWidth(1)
+					[
+						SNew(SRichTextBlock)
+						.DecoratorStyleSet(&FEditorStyle::Get())
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Exported File Type</>"))
+					]
 				)
 			]
 		];
@@ -69,26 +76,33 @@ TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<
 				]
 			]
 			+ SHorizontalBox::Slot()
-		.FillWidth(1)
-		.Padding(2.0f)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString(InItem->Name))
-		]
-	+ SHorizontalBox::Slot()
-		.FillWidth(1)
-		.Padding(2.0f)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString(InItem->MeshName))
-		]
-	+ SHorizontalBox::Slot()
-		.FillWidth(1)
-		.Padding(2.0f)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString(InItem->Id))
-		]
+			.FillWidth(1)
+			.Padding(2.0f)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(InItem->Name))
+			]
+			+ SHorizontalBox::Slot()
+			.FillWidth(1)
+			.Padding(2.0f)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(InItem->MeshName))
+			]
+			+ SHorizontalBox::Slot()
+			.FillWidth(1)
+			.Padding(2.0f)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(InItem->Id))
+			]
+			+ SHorizontalBox::Slot()
+			.FillWidth(1)
+			.Padding(2.0f)
+			[
+				SNew(STextBlock)
+				.Text(ExportStatusText(InItem))
+			]
 		];
 }
 
@@ -121,4 +135,28 @@ FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<cognitivevrapi::FDynam
 	}
 
 	return FReply::Handled();
+}
+
+FText SDynamicObjectListWidget::ExportStatusText(TSharedPtr<cognitivevrapi::FDynamicData> data)
+{
+	//check directory for obj/gltf files
+
+	auto tools = FCognitiveEditorTools::GetInstance();	
+	//
+	FString path = tools->GetDynamicsExportDirectory() + "/" + data->MeshName + "/" + data->MeshName;
+	FString objpath = path + ".obj";
+	FString gltfpath = path + ".gltf";
+	
+	if (FPaths::FileExists(*objpath))
+	{
+		return FText::FromString("obj");
+	}
+	if (FPaths::FileExists(*gltfpath))
+	{
+		return FText::FromString("gltf");
+	}
+
+	//get gltf or obj
+
+	return FText::FromString("none");
 }

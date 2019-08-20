@@ -316,14 +316,8 @@ onlydirectories = [d for d in os.listdir(exportPath) if os.path.isdir(os.path.jo
 #remove unused directories
 for dir in onlydirectories:
 	print (dir)
-
-	if dir.endswith("_delete"):
-		print("==========remove directory "+exportPath+"/"+dir)
-		shutil.rmtree(exportPath+'/'+dir)
-	if dir == "Game":
-		print("==========remove directory "+exportPath+"/"+dir)
-		shutil.rmtree(exportPath+'/'+dir)
-	if dir == "Engine":
+	
+	if dir != "screenshot":
 		print("==========remove directory "+exportPath+"/"+dir)
 		shutil.rmtree(exportPath+'/'+dir)
 
