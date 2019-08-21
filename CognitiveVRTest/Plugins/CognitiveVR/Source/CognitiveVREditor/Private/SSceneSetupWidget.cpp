@@ -22,6 +22,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 	DisplayAPIKey = FCognitiveEditorTools::GetInstance()->GetAPIKey().ToString();
 	DisplayDeveloperKey = FCognitiveEditorTools::GetInstance()->GetDeveloperKey().ToString();
 
+	float padding = 10;
+
 	ChildSlot
 		[
 			SNew(SOverlay)
@@ -43,14 +45,27 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
-			//TODO maybe overlay with a box to separate the space
 
 			+ SOverlay::Slot()
 			[
 				SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+				//.Padding(0, 0, 0, 40)
+			[
+				SNew(STextBlock)
+				//.Visibility(this, &SSceneSetupWidget::IsIntroVisible)
+				.Justification(ETextJustify::Center)
+				.AutoWrapText(true)
+				.Text(FText::FromString(""))
+			]
+
+
 #pragma region "intro screen"
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
+			//.VAlign(VAlign_Center)
+			.AutoHeight()
+				.Padding(0,0,0, padding)
 			[
 				SNew(SRichTextBlock)
 				.Justification(ETextJustify::Center)
@@ -59,7 +74,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Text(FText::FromString("Welcome to the <RichTextBlock.BoldHighlight>Cognitive3D Scene Setup</>"))
 			]
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
+			//.VAlign(VAlign_Center)
+			.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(STextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsIntroVisible)
@@ -70,6 +87,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 			+SVerticalBox::Slot()
 				.AutoHeight()
+				.Padding(0, 0, 0, padding)
 				.HAlign(HAlign_Center)
 				[
 					SNew(SHorizontalBox)
@@ -84,7 +102,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
+			//.VAlign(VAlign_Center)
+			.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsIntroNewVersionVisible)
@@ -94,7 +114,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Text(FText::FromString("<RichTextBlock.BoldHighlight>This scene has already been uploaded to SceneExplorer</>.\n\nUnless there are meaningful changes to the static scene geometry you probably don't need to upload this scene again."))
 			]
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
+			//.VAlign(VAlign_Center)
+			.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SRichTextBlock)
 				.AutoWrapText(true)
@@ -109,7 +131,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 #pragma region "key screen"
 
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
+			//.VAlign(VAlign_Center)
+			.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
@@ -120,6 +144,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 			+ SVerticalBox::Slot()
 			.MaxHeight(32)
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
 				.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
@@ -152,12 +178,16 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 			+ SVerticalBox::Slot()
 			.MaxHeight(8)
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(STextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
 			]
 			+ SVerticalBox::Slot()
 			.MaxHeight(32)
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
 				.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
@@ -194,7 +224,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 #pragma region "explain dynamics"
 
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
+			//.VAlign(VAlign_Center)
+			.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SRichTextBlock)
 				.Justification(ETextJustify::Center)
@@ -208,7 +240,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Top)
 			.AutoHeight()
-			.Padding(0,0,0,80)
+			.Padding(0,0,0,padding)
 			[
 				SNew(SBox)
 				.Visibility(this, &SSceneSetupWidget::IsExplainDynamicsVisible)
@@ -241,7 +273,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
+			//.VAlign(VAlign_Center)
+			.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsExplainDynamicsVisible)
@@ -256,7 +290,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 #pragma region "explain scene"
 
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
+			//.VAlign(VAlign_Center)
+			.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsExplainSceneVisible)
@@ -270,7 +306,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Top)
 			.AutoHeight()
-			.Padding(0, 0, 0, 80)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
 				.Visibility(this, &SSceneSetupWidget::IsExplainSceneVisible)
@@ -303,7 +339,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
+			//.VAlign(VAlign_Center)
+			.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsExplainSceneVisible)
@@ -317,12 +355,15 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 #pragma region "blender"
 			+SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
-			.HAlign(HAlign_Center)
+			.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
+				.HAlign(HAlign_Center)
+				.VAlign(VAlign_Center)
 				.WidthOverride(256)
 				.HeightOverride(78)
+				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 				[
 					SNew(SImage)
 					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
@@ -330,8 +371,10 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 
+
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
+			.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(STextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
@@ -342,6 +385,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Center)
 			.MaxHeight(30)
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(STextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
@@ -352,8 +397,11 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Center)
 			.MaxHeight(30)
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 				+SHorizontalBox::Slot()
 				.HAlign(HAlign_Center)
 				[
@@ -367,7 +415,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 			+ SVerticalBox::Slot()
 			.AutoHeight()
-			.Padding(FMargin(0.0f, 24.0f, 0.0f, 24.0f))
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SSeparator)
 				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
@@ -376,6 +424,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			//path to blender
 			+ SVerticalBox::Slot()
 			.MaxHeight(17)
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
 				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
@@ -383,6 +433,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.MaxWidth(200)
 				[
 					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 					.HeightOverride(17)
 					[
 						SNew(STextBlock)
@@ -394,6 +445,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Padding(1)
 				[
 					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 					.HeightOverride(17)
 					.MaxDesiredHeight(17)
 					[
@@ -406,10 +458,12 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.MaxWidth(17)
 				[
 					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 					.HeightOverride(17)
 					.WidthOverride(17)
 					[
 						SNew(SButton)
+						.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 						//PickerWidget = SAssignNew(BrowseButton, SButton)
 						.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
 						.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
@@ -419,6 +473,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						.IsFocusable(false)
 						[
 							SNew(SImage)
+							.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 							.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
 							.ColorAndOpacity(FSlateColor::UseForeground())
 						]
@@ -429,6 +484,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			//path to export directory
 			+ SVerticalBox::Slot()
 			.MaxHeight(17)
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
 				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
@@ -436,9 +493,11 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.MaxWidth(200)
 				[
 					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 					.HeightOverride(17)
 					[
 						SNew(STextBlock)
+						.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
 						.Text(FText::FromString("Path to Export Directory"))
 					]
@@ -447,10 +506,12 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Padding(1)
 				[
 					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 					.HeightOverride(17)
 					.MaxDesiredHeight(17)
 					[
 						SNew(SEditableTextBox)
+						.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBaseExportDirectoryDisplay)
 						.OnTextChanged(this, &SSceneSetupWidget::OnExportPathChanged)
 						//SNew(STextBlock)
@@ -461,10 +522,12 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.MaxWidth(17)
 				[
 					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 					.HeightOverride(17)
 					.WidthOverride(17)
 					[
 						SNew(SButton)
+						.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
 						//PickerWidget = SAssignNew(BrowseButton, SButton)
 						.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
 						.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
@@ -485,21 +548,34 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 #pragma region "dynamics screen"
 
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
+			//.VAlign(VAlign_Center)
+			.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
-				SNew(STextBlock)
+				//SNew(STextBlock)
+				//.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+				//.Justification(ETextJustify::Center)
+				//.Text(FText::FromString("These are all the Dynamic Objects components currently found in your scene."))
+
+				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
+				.DecoratorStyleSet(&FEditorStyle::Get())
 				.Text(FText::FromString("These are all the Dynamic Objects components currently found in your scene."))
+
 			]
 
 			+SVerticalBox::Slot()
+			//.VAlign(VAlign_Center)
 			.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
 				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
 				[
 					SNew(SHorizontalBox)
+					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
 					+SHorizontalBox::Slot()
 					.AutoWidth()
 					[
@@ -529,12 +605,11 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Text(FText::FromString("Dynamic Objects In Scene"))
 			]*/
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Fill)
-			.FillHeight(10)
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
 				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-				.HAlign(HAlign_Fill)
 				[
 					SAssignNew(SceneDynamicObjectList,SDynamicObjectListWidget)
 					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
@@ -551,6 +626,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Padding(8.0f)
 				[
 					SNew(SHorizontalBox)
+					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
 					+ SHorizontalBox::Slot()
 					.AutoWidth()
 					.VAlign(VAlign_Center)
@@ -561,11 +637,11 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					]
 						// Notice
 					+SHorizontalBox::Slot()
-					.FillWidth(1.5f)
 					.Padding(16.0f, 0.0f)
 					.VAlign(VAlign_Center)
 					[
 						SNew(STextBlock)
+						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
 						.ColorAndOpacity(FLinearColor::Black)
 						//.ShadowColorAndOpacity(FLinearColor::Black)
 						//.ShadowOffset(FVector2D::UnitVector)
@@ -575,6 +651,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					+SHorizontalBox::Slot()
 					[
 						SNew(SButton)
+						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
 						.OnClicked_Raw(this, &SSceneSetupWidget::ValidateAndRefresh)
 						[
 							SNew(STextBlock)
@@ -586,14 +663,17 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 			+ SVerticalBox::Slot()
-			.Padding(0, 0, 0, 4)
+				.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			.VAlign(VAlign_Center)
+				.AutoHeight()
 			[
 				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
 				+SHorizontalBox::Slot()
 				[
 					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
 					.HeightOverride(64)
 					.WidthOverride(128)
 					[
@@ -605,14 +685,17 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 			+ SVerticalBox::Slot()
-			.Padding(0, 0, 0, 4)
+				.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			.VAlign(VAlign_Center)
+				.AutoHeight()
 			[
 				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
 				+SHorizontalBox::Slot()
 				[
 					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
 					.HeightOverride(64)
 					.WidthOverride(128)
 					[
@@ -631,6 +714,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Center)
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(STextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
@@ -664,6 +749,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			+SVerticalBox::Slot()
 			.HAlign(HAlign_Center)
 			.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
 				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
@@ -686,10 +772,11 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 
 			+ SVerticalBox::Slot()
-			.Padding(0, 0, 0, 4)
+				.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			.VAlign(VAlign_Center)
 				.MaxHeight(40)
+				.AutoHeight()
 			[
 				SNew(SBox)
 				.WidthOverride(256)
@@ -703,16 +790,17 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 			+ SVerticalBox::Slot()
 			.AutoHeight()
-			.Padding(FMargin(0.0f, 24.0f, 0.0f, 24.0f))
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SSeparator)
 				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 			]
 
 			+ SVerticalBox::Slot()
-			.Padding(0, 0, 0, 4)
+				.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			.VAlign(VAlign_Center)
+				.AutoHeight()
 			[
 				SNew(SHorizontalBox)
 				+SHorizontalBox::Slot()
@@ -775,8 +863,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			//TODO formatting
 #pragma region "upload screen"
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Top)
 			.AutoHeight()
+				.Padding(0, 0, 0, padding)
+				.VAlign(VAlign_Top)
 			[
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsNewSceneUpload)
@@ -786,9 +875,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Upload New Scene</> including a screenshot, all the Scene Files listed below and all Dynamic Mesh Files listed below."))
 			]
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Top)
 			.AutoHeight()
-			.Padding(0,5,0,10)
+				.Padding(0, 0, 0, padding)
+				.VAlign(VAlign_Top)
 			[
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsSceneVersionUpload)
@@ -801,6 +890,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			+SVerticalBox::Slot()
 			.HAlign(HAlign_Center)
 			.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
 				.WidthOverride(this,&SSceneSetupWidget::GetScreenshotWidth)
@@ -816,7 +906,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			+ SVerticalBox::Slot()
 			.HAlign(HAlign_Center)
 			.AutoHeight()
-			.Padding(0, 0, 0, 10)
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
 				.HeightOverride(32)
@@ -831,11 +921,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 
 			+ SVerticalBox::Slot()
-			.HAlign(HAlign_Fill)
 			.MaxHeight(250)
-			.VAlign(VAlign_Fill)
-			.FillHeight(10)
-			.Padding(0, 0, 0, 20)
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SListView<TSharedPtr<FString>>)
 					.ItemHeight(16.0f)
@@ -845,7 +933,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.HeaderRow(
 					SNew(SHeaderRow)
 					+ SHeaderRow::Column("name")
-						.FillWidth(1)
 						[
 							SNew(SRichTextBlock)
 							.Justification(ETextJustify::Center)
@@ -855,11 +942,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					)
 			]
 			+ SVerticalBox::Slot()
-			.HAlign(HAlign_Fill)
-			.VAlign(VAlign_Fill)
-			.FillHeight(10)
+				.AutoHeight()
 			.MaxHeight(250)
-			.Padding(0, 0, 0, 20)
+				.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
 				.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
@@ -872,7 +957,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.HeaderRow(
 					SNew(SHeaderRow)
 					+ SHeaderRow::Column("name")
-						.FillWidth(1)
 						[
 							SNew(SRichTextBlock)
 							.Justification(ETextJustify::Center)
