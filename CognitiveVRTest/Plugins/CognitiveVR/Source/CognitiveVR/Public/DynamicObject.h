@@ -77,7 +77,7 @@ public:
 };
 }
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FDynamicObjectSnapshot
 {
 	GENERATED_BODY()
@@ -105,6 +105,8 @@ public:
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class COGNITIVEVR_API UDynamicObject : public USceneComponent //UActorComponent
 {
+	friend class FAnalyticsProviderCognitiveVR;
+
 	GENERATED_BODY()
 
 private:
@@ -167,7 +169,7 @@ public:
 
 	//should this object record how the player is gazing?
 	UPROPERTY(EditAnywhere)
-	bool TrackGaze = false;
+	bool TrackGaze = true;
 
 	//snapshots
 

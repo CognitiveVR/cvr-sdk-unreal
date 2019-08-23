@@ -57,7 +57,7 @@ TSharedPtr<FAnalyticsProviderCognitiveVR> FAnalyticsCognitiveVR::GetCognitiveVRP
 FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR() :
 	Age(0)
 {
-	DeviceId = FPlatformMisc::GetUniqueDeviceId();
+	DeviceId = FPlatformMisc::GetDeviceId();
 }
 
 FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
@@ -100,6 +100,11 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		//return false;
 	}
 
+	if (currentWorld == NULL)
+	{
+		GLog->Log("FAnalyticsProviderCognitiveVR::StartSession World not set. Are you missing a Cognitive3D::Player Tracker component on your camera?");
+		return false;
+	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
 
@@ -186,16 +191,13 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 
 
-	if (currentWorld != NULL)
+	if (currentWorld->WorldType == EWorldType::Game)
 	{
-		if (currentWorld->WorldType == EWorldType::Game)
-		{
-			SetSessionProperty("c3d.app.inEditor", "false");
-		}
-		else
-		{
-			SetSessionProperty("c3d.app.inEditor", "true");
-		}
+		SetSessionProperty("c3d.app.inEditor", "false");
+	}
+	else
+	{
+		SetSessionProperty("c3d.app.inEditor", "true");
 	}
 
 	SetSessionProperty("c3d.app.sdktype", "Default");
@@ -376,7 +378,7 @@ void FAnalyticsProviderCognitiveVR::RecordEvent(const FString& EventName, const 
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
+			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
 		customevent->Send(EventName, properties);
@@ -472,7 +474,7 @@ void FAnalyticsProviderCognitiveVR::RecordError(const FString& Error, const TArr
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
+			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
 		customevent->Send(FString("c3d.recorderror"), properties);
@@ -495,7 +497,7 @@ void FAnalyticsProviderCognitiveVR::RecordProgress(const FString& ProgressType, 
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
+			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
 		customevent->Send(FString("c3d.recordprogress"), properties);
@@ -516,7 +518,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, in
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
+			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
 		customevent->Send(FString("c3d.recorditempurchase"), properties);
@@ -537,7 +539,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
+			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
 		customevent->Send(FString("RecordCurrencyPurchase"), properties);
@@ -558,7 +560,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValue);
+			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
 		customevent->Send(FString("c3d.recordcurrencygiven"), properties);
@@ -618,7 +620,7 @@ FString FAnalyticsProviderCognitiveVR::GetCurrentSceneVersionNumber()
 void FAnalyticsProviderCognitiveVR::CacheSceneData()
 {
 	TArray<FString>scenstrings;
-	FString TestSyncFile = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
+	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
 
 	for (int i = 0; i < scenstrings.Num(); i++)

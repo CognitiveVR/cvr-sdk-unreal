@@ -8,10 +8,9 @@
 #include "Editor/WorkspaceMenuStructure/Public/WorkspaceMenuStructureModule.h"
 #include "Editor/EditorStyle/Public/EditorStyleSet.h"
 #include "SSceneSetupWidget.h"
+#include "WorkspaceMenuStructure.h"
 #include "FCognitiveSettingsCustomization.h"
 #include "Containers/Ticker.h"
-#include "IImageWrapper.h"
-#include "IImageWrapperModule.h"
 #include "DynamicComponentDetails.h"
 
 //sets up customization for settings
@@ -47,7 +46,7 @@ public:
 	FTickerDelegate TickDelegate;
 	FDelegateHandle TickDelegateHandle;
 
-	TSharedPtr<IImageWrapper> ImageWrapper;
+	
 
 	bool Tick(float deltatime)
 	{
@@ -65,8 +64,8 @@ public:
 
 		//FAnalyticsCognitiveVR::Get().DeveloperKey = "read from config";
 
-		FString EngineIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
-		FString EditorIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEditor.ini"));
+		FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 		//GLog->Log("FCognitiveTools::SaveAPIDeveloperKeysToFile save: " + CustomerId);
 
 		FString tempGateway;
@@ -76,7 +75,7 @@ public:
 		{
 			GLog->Log("CognitiveVRModule::StartupModule write defaults to ini");
 			FString defaultgateway = "data.cognitive3d.com";
-			FString defaultsessionviewer = "sceneexplorer.com/scene/";
+			FString defaultsessionviewer = "viewer.cognitive3d.com/scene/";
 			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), *defaultgateway, EngineIni);
 			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SessionViewer"), *defaultsessionviewer, EngineIni);
 
@@ -162,8 +161,6 @@ public:
 		PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FCognitiveSettingsCustomization::MakeInstance));
 		//PropertyModule.RegisterCustomClassLayout(TEXT("BaseEditorTool"), FOnGetDetailCustomizationInstance::CreateStatic(&FSetupCustomization::MakeInstance));
 		PropertyModule.RegisterCustomClassLayout(TEXT("DynamicObject"), FOnGetDetailCustomizationInstance::CreateStatic(&UDynamicObjectComponentDetails::MakeInstance));
-		IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(TEXT("ImageWrapper"));
-		ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
 #endif
 	}
 

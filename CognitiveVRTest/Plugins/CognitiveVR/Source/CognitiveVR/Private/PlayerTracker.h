@@ -10,6 +10,8 @@
 #include "SceneView.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "DynamicObject.h"
+#include "HeadMountedDisplayFunctionLibrary.h"
+#include "Runtime/HeadMountedDisplay/Public/IXRTrackingSystem.h"
 #if defined TOBII_EYETRACKING_ACTIVE
 #include "TobiiTypes.h"
 #include "ITobiiCore.h"

@@ -20,6 +20,7 @@
 #include "IImageWrapperModule.h"
 
 class FCognitiveTools;
+class FCognitiveVREditorModule;
 
 class SSceneSetupWidget : public SCompoundWidget
 {
@@ -88,13 +89,9 @@ public:
 	EVisibility IsSceneVersionUpload() const;
 	EVisibility IsIntroNewVersionVisible() const;
 
-	//FReply Export_Selected();
-	//FReply Export_All();
-
 	EVisibility ARButtonVisibility() const;
 	FReply ARSkipExport();
 
-	TArray<TSharedPtr<FString>> NEWEXPORTFILES;
 	void GetScreenshotBrush();
 	FSlateBrush* ScreenshotTexture;
 	const FSlateBrush* GetScreenshotBrushTexture() const;
@@ -124,10 +121,7 @@ public:
 	FText DisplayDynamicObjectsCountInScene() const;
 	FReply RefreshDisplayDynamicObjectsCountInScene();
 	EVisibility GetDuplicateDyanmicObjectVisibility() const;
-
-	//FReply SetUniqueDynamicIds();
-	//bool DuplicateDynamicIdsInScene() const;
-
+	
 	int32 CountDynamicObjectsInScene() const;
 
 	FText DynamicCountInScene;
@@ -138,7 +132,6 @@ public:
 	FReply SelectDynamic(TSharedPtr<cognitivevrapi::FDynamicData> data);
 
 	FReply SelectAll();
-	FReply DeselectTransparentMaterials();
 
 	void RefreshList();
 
@@ -152,13 +145,7 @@ public:
 
 	FReply ValidateAndRefresh();
 
-	FReply EvaluateExport();
-	//sets export variables, then calls evaluateexport
-	FReply EvaluateExportLow();
-	//sets export variables, then calls evaluateexport
-	FReply EvaluateExportMed();
-	//sets export variables, then calls evaluateexport
-	FReply EvaluateExportHigh();
+	FReply EvaluateSceneExport();
 	bool NoExportGameplayMeshes = true;
 	ECheckBoxState GetNoExportGameplayMeshCheckbox() const;
 	void OnChangeNoExportGameplayMesh(ECheckBoxState newstate)

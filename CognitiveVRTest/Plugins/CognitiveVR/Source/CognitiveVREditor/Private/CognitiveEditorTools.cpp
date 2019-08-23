@@ -108,6 +108,8 @@ void FCognitiveEditorTools::Initialize()
 	//CognitiveEditorToolsInstance->BaseExportDirectory = FPaths::GameDir();
 
 	//should update both editor urls and session data urls
+	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(TEXT("ImageWrapper"));
+	CognitiveEditorToolsInstance->ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
 }
 
 //at any step in the uploading process
@@ -148,7 +150,7 @@ bool FCognitiveEditorTools::HasAPIKey() const
 	return APIKey.Len() > 0;
 }
 
-FReply FCognitiveEditorTools::ExportDynamics()
+FReply FCognitiveEditorTools::ExportAllDynamics()
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
@@ -194,47 +196,18 @@ FReply FCognitiveEditorTools::ExportDynamics()
 		return FReply::Handled();
 	}
 
-	/*FString title = "Select Root Dynamic Directory";
-	FString fileTypes = "";
-	FString lastPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
-	FString defaultfile = FString();
-	FString outFilename = FString();
-	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorToolsCustomization::ExportDynamics - picked a directory"));
-
-		if (outFilename.EndsWith("/dynamics"))
-		{
-			DynamicsExportDirectory = outFilename;
-		}
-		else
-		{
-			BaseExportDirectory = outFilename;
-			FString dynamicsDir = BaseExportDirectory + "/dynamics";
-			if (VerifyOrCreateDirectory(dynamicsDir))
-			{
-				DynamicsExportDirectory = FPaths::Combine(*(BaseExportDirectory), TEXT("dynamics"));
-			}
-		}
-		GLog->Log("set DynamicsExportDirectory as " + DynamicsExportDirectory);
-	}
-	else
-	{
-		return FReply::Handled();
-	}*/
-
 	for (TObjectIterator<UDynamicObject> It; It; ++It)
 	{
 		UDynamicObject* TempObject = *It;
 		if (TempObject != NULL)
 		{
-			if (!meshNames.Contains(TempObject->MeshName))
-			{
-				exportObjects.Add(TempObject);
-				meshNames.Add(TempObject->MeshName);
-			}
+			if (meshNames.Contains(TempObject->MeshName)) { continue; }
+			exportObjects.Add(TempObject);
+			meshNames.Add(TempObject->MeshName);
 		}
 	}
+
+	
 
 	ExportDynamicObjectArray(exportObjects);
 
@@ -243,22 +216,6 @@ FReply FCognitiveEditorTools::ExportDynamics()
 
 FReply FCognitiveEditorTools::ExportSelectedDynamics()
 {
-	/*UWorld* World = GWorld;
-	FString title = "Select Root Dynamic Directory";
-	FString fileTypes = "";
-	FString lastPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
-	FString defaultfile = FString();
-	FString outFilename = FString();
-	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorToolsCustomization::ExportDynamics - picked a directory"));
-		DynamicsExportDirectory = outFilename;
-	}
-	else
-	{
-		return FReply::Handled();
-	}*/
-
 	TArray<FString> meshNames;
 	TArray<UDynamicObject*> SelectionSetCache;
 	for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
@@ -302,6 +259,9 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 	FVector originalScale;
 	int32 ActorsExported = 0;
 
+	TArray<FString> DynamicMeshNames;
+	TMap<FString, TArray< UStaticMeshComponent*>> BakeExportMaterials;
+
 	for (int32 i = 0; i < exportObjects.Num(); i++)
 	{
 		GEditor->SelectNone(false, true, false);
@@ -314,53 +274,147 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		{
 			continue;
 		}
+		if (exportObjects[i]->MeshName.IsEmpty())
+		{
+			continue;
+		}
+
+		UActorComponent* actorComponent = exportObjects[i]->GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
+		UStaticMeshComponent* mesh = Cast<UStaticMeshComponent>(actorComponent);
+		if (mesh == NULL)
+		{
+			continue;
+		}
+		
+		ULevel* componentLevel = actorComponent->GetComponentLevel();
+		if (componentLevel->bIsVisible == 0)
+		{
+			continue;
+			//not visible! possibly on a disabled sublevel
+		}
+
+		DynamicMeshNames.Add(exportObjects[i]->MeshName);
+
 		originalLocation = exportObjects[i]->GetOwner()->GetActorLocation();
 		originalRotation = exportObjects[i]->GetOwner()->GetActorRotation();
-		//originalScale = tempactor->GetActorScale();
+		originalScale = exportObjects[i]->GetOwner()->GetActorScale();
 
 		exportObjects[i]->GetOwner()->SetActorLocation(FVector::ZeroVector);
 		exportObjects[i]->GetOwner()->SetActorRotation(FQuat::Identity);
-		//tempactor->SetActorScale3D(originalScale*0.01);
+		exportObjects[i]->GetOwner()->SetActorScale3D(FVector::OneVector);
 
 		FString ExportFilename = exportObjects[i]->MeshName + ".obj";
 
 		GEditor->SelectActor(exportObjects[i]->GetOwner(), true, false, true);
-		//ActorsExported++;
+		ActorsExported++;
 
 		FString tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
 
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray exporting DynamicObject " + ExportFilename);
-
-		// @todo: extend this to multiple levels.
-		//UWorld* World = GWorld;
-		const FString LevelFilename = exportObjects[i]->MeshName;// FileHelpers::GetFilename(World);//->GetOutermost()->GetName() );
-
-		FString LastUsedPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
-
-		//FString FilterString = TEXT("Object (*.obj)|*.obj|Unreal Text (*.t3d)|*.t3d|Stereo Litho (*.stl)|*.stl|LOD Export (*.lod.obj)|*.lod.obj");
-
+		
 		GUnrealEd->ExportMap(GWorld, *tempObject, true);
-
-		//exported
-		//move textures to root. want to do this in python, but whatever
-
-		//run python on them after everything is finished? need to convert texture anyway
-
-		//DynamicsExportDirectory.RemoveFromEnd("/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj");
 
 		exportObjects[i]->GetOwner()->SetActorLocation(originalLocation);
 		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
-		//tempactor->SetActorScale3D(originalScale);
+		exportObjects[i]->GetOwner()->SetActorScale3D(originalScale);
 
-		List_MaterialArgs(exportObjects[i]->MeshName, GetDynamicsExportDirectory());
+		//bake + export materials
+		TArray< UStaticMeshComponent*> meshes;
+		meshes.Add(mesh);
+		BakeExportMaterials.Add(exportObjects[i]->MeshName, meshes);
 	}
+
+	float work = 0;
+	FScopedSlowTask SlowTask(BakeExportMaterials.Num(), FText::FromString("Baking Dynamic Object Materials"));
+	SlowTask.MakeDialog(false);
+	for (auto& elem : BakeExportMaterials)
+	{
+		work += 1;
+		SlowTask.EnterProgressFrame(work);
+		WizardExportMaterials(GetDynamicsExportDirectory() + "/" + elem.Key + "/", elem.Value, elem.Key);
+	}
+
 	GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
 
+	if (ActorsExported > 0)
+	{
+		ConvertDynamicsToGLTF(DynamicMeshNames);
+		FindAllSubDirectoryNames();
+	}
+}
 
-	//TODO export transparent textures for dynamic objects
-	//
-	ConvertDynamicTextures();
+void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
+{
+	//open blender
+	//pass in array of meshnames comma separated
+
+	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("ConvertDynamicToGLTF.py");
+	const TCHAR* charPath = *pythonscriptpath;
+
+	//found something
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ConvertToGLTF Python script path: %s"), charPath);
+
+
+	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
+	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+
+
+	TArray<FAssetData> ScriptList;
+	if (!AssetRegistry.GetAssetsByPath(FName(*pythonscriptpath), ScriptList))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ConvertToGLTF Could not find python script at path. Canceling"));
+		return;
+	}
+
+	FString stringurl = BlenderPath;
+
+	if (BlenderPath.Len() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ConvertToGLTF No path set for Blender.exe. Canceling"));
+		return;
+	}
+
+	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
+	if (!tempworld)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ConvertToGLTF World is null. canceling"));
+		return;
+	}
+
+	FString ObjPath = GetDynamicsExportDirectory();
+
+	if (ObjPath.Len() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ConvertToGLTF No know export directory. Canceling"));
+		return;
+	}
+
+	FString escapedMeshNameList = "'";
+	for (int i = 0; i < meshnames.Num(); i++)
+	{
+		if (i != 0)
+			escapedMeshNameList += ",";
+		escapedMeshNameList += meshnames[i];
+	}
+	escapedMeshNameList += "'";
+
+
+	//FString resizeFactor = FString::FromInt(TextureRefactor);
+
+	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
+	FString escapedTargetPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
+
+	FString stringparams = " -P " + escapedPythonPath + " " + escapedTargetPath + " " + escapedMeshNameList;// +" " + MaxPolyCount + " " + SceneName;
+
+	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
+
+	//UE_LOG(LogTemp, Warning, TEXT("Params: %s"), *stringParamSlashed);
+
+
+	const TCHAR* params = *stringParamSlashed;
+	int32 priorityMod = 0;
+	FProcHandle process = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
 }
 
 FReply FCognitiveEditorTools::SetUniqueDynamicIds()
@@ -571,17 +625,6 @@ void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, F
 	{
 		WizardUploading = false;
 	}
-
-	/*TSharedPtr<FEditorSceneData> scenedata = GetCurrentSceneData();
-
-	if (scenedata.IsValid())
-	{
-		SceneVersionRequest(*scenedata);
-	}
-	else
-	{
-		GLog->Log("FCognitiveEditorTools::OnUploadManifestCompleted failed to get current scene data and update the current version id");
-	}*/
 }
 
 FReply FCognitiveEditorTools::GetDynamicsManifest()
@@ -849,261 +892,12 @@ void FCognitiveEditorTools::FindAllSubDirectoryNames()
 	}
 }
 
-void FCognitiveEditorTools::ReexportDynamicMeshes(FString directory)
-{
-	//open blender and run a script
-	//TODO make openblender and run a script into a function, because this is used in a bunch of places
-
-	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("ExportDynamicMesh.py");
-	const TCHAR* charPath = *pythonscriptpath;
-
-	//found something
-	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ReexportDynamicMeshes Python script path: %s"), charPath);
-
-
-	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
-	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
-
-
-	TArray<FAssetData> ScriptList;
-	if (!AssetRegistry.GetAssetsByPath(FName(*pythonscriptpath), ScriptList))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ReexportDynamicMeshes Could not find ExportDynamicMesh.py script at path. Canceling"));
-		return;
-	}
-
-	FString stringurl = BlenderPath;
-
-	if (BlenderPath.Len() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ReexportDynamicMeshes No path set for Blender.exe. Canceling"));
-		return;
-	}
-
-	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
-	if (!tempworld)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ReexportDynamicMeshes World is null. canceling"));
-		return;
-	}
-
-	FString ObjPath = directory;
-
-	if (ObjPath.Len() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ReexportDynamicMeshes No know export directory. Canceling"));
-		return;
-	}
-
-	FString resizeFactor = FString::FromInt(TextureRefactor);
-
-	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
-	FString escapedTargetPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
-
-	FString stringparams = " -P " + escapedPythonPath + " " + escapedTargetPath;// +" " + resizeFactor;// +" " + MaxPolyCount + " " + SceneName;
-
-	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
-
-	//UE_LOG(LogTemp, Warning, TEXT("Params: %s"), *stringParamSlashed);
-
-
-	const TCHAR* params = *stringParamSlashed;
-	int32 priorityMod = 0;
-	FProcHandle procHandle = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
-}
-
-void FCognitiveEditorTools::ConvertDynamicTextures()
-{
-	//open blender and run a script
-	//TODO make openblender and run a script into a function, because this is used in a bunch of places
-
-	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("ConvertDynamicTextures.py");
-	const TCHAR* charPath = *pythonscriptpath;
-
-	//found something
-	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ConvertDynamicTextures Python script path: %s"), charPath);
-
-
-	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
-	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
-
-
-	TArray<FAssetData> ScriptList;
-	if (!AssetRegistry.GetAssetsByPath(FName(*pythonscriptpath), ScriptList))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ConvertDynamicTextures Could not find ConvertDynamicTextures.py script at path. Canceling"));
-		return;
-	}
-
-	FString stringurl = BlenderPath;
-
-	if (BlenderPath.Len() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ConvertDynamicTextures No path set for Blender.exe. Canceling"));
-		return;
-	}
-
-	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
-	if (!tempworld)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ConvertDynamicTextures World is null. canceling"));
-		return;
-	}
-
-	FString ObjPath = GetDynamicsExportDirectory();
-
-	if (ObjPath.Len() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ConvertDynamicTextures No know export directory. Canceling"));
-		return;
-	}
-
-	FString resizeFactor = FString::FromInt(TextureRefactor);
-
-	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
-	FString escapedTargetPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
-
-	FString stringparams = " -P " + escapedPythonPath + " " + escapedTargetPath + " " + resizeFactor;// +" " + MaxPolyCount + " " + SceneName;
-
-	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
-
-	//UE_LOG(LogTemp, Warning, TEXT("Params: %s"), *stringParamSlashed);
-
-
-	const TCHAR* params = *stringParamSlashed;
-	int32 priorityMod = 0;
-	FProcHandle process = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
-}
-
 void FCognitiveEditorTools::CreateExportFolderStructure()
 {
 
 	VerifyOrCreateDirectory(BaseExportDirectory);
 	FString temp = GetDynamicsExportDirectory();
 	VerifyOrCreateDirectory(temp);
-}
-
-FReply FCognitiveEditorTools::Export_Selected()
-{
-	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
-
-	FString exportDir = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
-
-	GEditor->ExportMap(tempworld, *exportDir, true);
-
-	//FEditorFileUtils::Export(true);
-
-	//BaseExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
-
-	//BaseExportDirectory = FPaths::ConvertRelativePathToFull(BaseExportDirectory);
-
-	/*if (DynamicsExportDirectory.Len() == 0)
-	{
-		FString targetDir = BaseExportDirectory + "/dynamics/";
-		if (VerifyOrCreateDirectory(targetDir))
-		{
-			DynamicsExportDirectory = targetDir;
-		}
-	}*/
-
-	return FReply::Handled();
-}
-
-FReply FCognitiveEditorTools::Export_All()
-{
-	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
-
-	FString exportDir = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
-
-	GEditor->ExportMap(tempworld, *exportDir, false);
-	//FEditorFileUtils::Export(false);
-
-	//BaseExportDirectory = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
-
-	//BaseExportDirectory = FPaths::ConvertRelativePathToFull(BaseExportDirectory);
-
-	return FReply::Handled();
-}
-
-FReply FCognitiveEditorTools::Select_Export_Meshes()
-{
-	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
-
-	if (!tempworld)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorToolsCustomization::Select_Export_Meshes world is null"));
-		return FReply::Handled();
-	}
-
-	//TODO also grab landscapes
-
-	GEditor->SelectNone(false, true, false);
-
-	int32 ActorsExported = 0;
-
-	for (TActorIterator<AActor> ObstacleItr(tempworld); ObstacleItr; ++ObstacleItr)
-	{
-		//get non-moveable static meshes only
-		if (StaticOnly)
-		{
-			EComponentMobility::Type mobility = EComponentMobility::Static;
-			const USceneComponent* sc = Cast<USceneComponent>(ObstacleItr->GetComponentByClass(UStaticMeshComponent::StaticClass())); //->GetStaticMeshComponent());
-			if (sc == NULL) { continue; }
-			if (sc->Mobility == EComponentMobility::Movable) { continue; }
-		}
-
-		//get meshes in size range
-		FVector origin;
-		FVector boxBounds;
-
-		ObstacleItr->GetActorBounds(false, origin, boxBounds);
-		double magnitude = FMath::Sqrt(boxBounds.X*boxBounds.X + boxBounds.Y*boxBounds.Y + boxBounds.Z*boxBounds.Z);
-
-		if (magnitude < MinimumSize)
-		{
-			continue;
-		}
-
-		if (magnitude > MaximumSize)
-		{
-			continue;
-		}
-
-		//get the selectable bit
-		/*AStaticMeshActor *tempactor = *ObstacleItr;
-		if (!tempactor)
-		{
-			GLog->Log("temp actor skip - not of type static mesh actor");
-			//continue;
-		}*/
-		UActorComponent* actorComponent = (*ObstacleItr)->GetComponentByClass(UStaticMeshComponent::StaticClass());
-		if (actorComponent == NULL)
-		{
-			continue;
-		}
-		UActorComponent* dynamicComponent = (*ObstacleItr)->GetComponentByClass(UDynamicObject::StaticClass());
-		if (dynamicComponent != NULL)
-		{
-			//skip dynamic objects
-			continue;
-		}
-
-		USceneComponent* sceneComponent = Cast<USceneComponent>(actorComponent);
-		if (sceneComponent == NULL)
-		{
-			continue;
-		}
-		if (!sceneComponent->bVisible || sceneComponent->bHiddenInGame)
-		{
-			continue;
-		}
-		
-
-		GEditor->SelectActor((*ObstacleItr), true, false, true);
-		ActorsExported++;
-	}
-	UE_LOG(LogTemp, Warning, TEXT("Found %d Static Meshes for Export"), ActorsExported);
-	return FReply::Handled();
 }
 
 FReply FCognitiveEditorTools::Select_Blender()
@@ -1124,7 +918,7 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 {
 	FString title = "Select Export Directory";
 	FString fileTypes = ".exe";
-	FString lastPath = FPaths::GameDir();
+	FString lastPath = FPaths::ProjectDir();
 	FString defaultfile = FString();
 	FString outFilename = FString();
 	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
@@ -1175,77 +969,6 @@ bool FCognitiveEditorTools::PickFile(const FString& Title, const FString& FileTy
 
 	return bFileChosen;
 }
-
-//unused. previously used to upload a screenshot for an existing scene
-/*FReply FCognitiveEditorTools::SelectUploadScreenshot()
-{
-	FString title = "Select Screenshot";
-	FString fileTypes = ".png";
-	FEditorDirectories::Get().SetLastDirectory(ELastDirectory::GENERIC_OPEN, FPaths::ScreenShotDir());
-	FString lastPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::GENERIC_OPEN);
-	//FString lastPath = FEditorDirectories::Get().
-
-	FString defaultfile = FString();
-	FString outFilename = FString();
-	if (PickFile(title, fileTypes, lastPath, defaultfile, outFilename))
-	{
-		//read outfilename bytes
-		TArray<uint8> byteResult;
-		FFileHelper::LoadFileToArray(byteResult, *outFilename);
-
-		//put in http request
-		if (byteResult.Num() == 0)
-		{
-			return FReply::Handled();
-		}
-
-
-		FString PngHeader;
-		TArray<uint8> AllBytes;
-
-		PngHeader.Append(TEXT("\r\n"));
-		PngHeader.Append("--cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i");
-		PngHeader.Append(TEXT("\r\n"));
-		PngHeader.Append("Content-Type: image/png");
-		PngHeader.Append(TEXT("\r\n"));
-		PngHeader.Append("Content-disposition: form-data; name=\"file\"; filename=\"screenshot.png\"");
-		PngHeader.Append(TEXT("\r\n"));
-		PngHeader.Append(TEXT("\r\n"));
-
-		FTCHARToUTF8 ConverterBody(*PngHeader);
-		auto bodydata = (const uint8*)ConverterBody.Get();
-
-		//file header
-		AllBytes.Append(bodydata, ConverterBody.Length());
-		//file binary
-		AllBytes.Append(byteResult);
-		//file end
-		FString EndString = TEXT("\r\n--cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i--\r\n");
-		FTCHARToUTF8 ConverterEnd2(*EndString);
-		auto enddata = (const uint8*)ConverterEnd2.Get();
-		
-		AllBytes.Append(enddata, ConverterEnd2.Length());
-
-
-
-		//send screenshot
-		TSharedPtr<FEditorSceneData> currentdata = GetCurrentSceneData();
-		FString url = PostScreenshot(currentdata->Id, FString::FromInt(currentdata->VersionNumber));
-
-		TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-		HttpRequest->SetURL(url);
-		HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=\"cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i\"");
-		HttpRequest->SetHeader("Accept-Encoding", "identity");
-		FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
-		HttpRequest->SetHeader("Authorization", AuthValue);
-		HttpRequest->SetVerb("POST");
-		HttpRequest->SetContent(AllBytes);
-
-		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadScreenshotCompleted);
-		HttpRequest->ProcessRequest();
-	}
-	return FReply::Handled();
-}*/
 
 FReply FCognitiveEditorTools::TakeScreenshot()
 {
@@ -1313,259 +1036,6 @@ void* FCognitiveEditorTools::ChooseParentWindowHandle()
 	return ParentWindowWindowHandle;
 }
 
-FReply FCognitiveEditorTools::List_Materials()
-{
-	List_MaterialArgs("", BaseExportDirectory + "/" + GetCurrentSceneName());
-	return FReply::Handled();
-}
-
-void FCognitiveEditorTools::List_MaterialArgs(FString subdirectory, FString searchDirectory)
-{
-	//look at export directory. find mtl file
-
-	FString result;
-	FString Ext;
-	//get all files in the export directory
-	IFileManager& FileManager = IFileManager::Get();
-	TArray<FString> Files;
-
-	if (Ext == "")
-	{
-		Ext = "*.*";
-	}
-	else
-	{
-		Ext = (Ext.Left(1) == ".") ? "*" + Ext : "*." + Ext;
-	}
-
-	FString FinalPath = searchDirectory;
-
-	if (!subdirectory.IsEmpty())
-	{
-		FinalPath += "/"+subdirectory;
-	}
-	FinalPath += "/" + Ext;
-
-	FileManager.FindFiles(Files, *FinalPath, true, false);
-
-	TArray<FColor> colors;
-	FIntPoint point = FIntPoint(256, 256);
-
-	for (int32 i = 0; i < Files.Num(); i++)
-	{
-		if (Files[i].EndsWith(".mtl"))
-		{
-
-			FString fullPath = searchDirectory+ "/" + subdirectory + "/" + Files[i];
-			FString contents;
-
-			if (FFileHelper::LoadFileToString(contents, *fullPath))
-			{
-				//GLog->Log("loaded " + Files[i] + "\n" = contents);
-			}
-			else
-			{
-				//GLog->Log("failed to load " + Files[i]);
-			}
-			TArray<FString> lines;
-			int32 lineCount = contents.ParseIntoArray(lines, TEXT("\n"), true);
-
-			for (int32 j = 0; j < lines.Num(); j++)
-			{
-				if (lines[j].Contains("newmtl"))
-				{
-					TArray<FString> matDirectories;
-					lines[j].RemoveFromStart("newmtl ");
-					lines[j].ParseIntoArray(matDirectories, TEXT("/"));
-
-					TArray<FString> lineParts;
-					matDirectories[matDirectories.Num() - 1].ParseIntoArray(lineParts, TEXT("_"));
-
-					int32 floor_count = FMath::FloorToInt(lineParts.Num() / (float)2);
-
-					FString trueMatName;
-					for (int32 k = 0; k < lineParts.Num(); k++)
-					{
-						if (k + 1 == floor_count)
-						{
-							trueMatName = trueMatName + lineParts[k] + ".";
-						}
-						else
-						{
-							trueMatName = trueMatName + lineParts[k] + "_";
-						}
-					}
-					trueMatName.RemoveFromEnd("_");
-
-					FString finalMatPath;
-					FString finalDirectory;
-					for (int32 l = 0; l < matDirectories.Num() - 1; l++)
-					{
-						finalMatPath = finalMatPath + matDirectories[l] + "/";
-						finalDirectory = finalMatPath + matDirectories[l] + "/";
-					}
-					finalMatPath = "/" + finalMatPath + trueMatName;
-					finalMatPath.RemoveAt(finalMatPath.Len() - 1);
-
-					FStringAssetReference assetRef = FStringAssetReference(finalMatPath);
-
-					UObject* assetRefLoaded = assetRef.TryLoad();
-
-					if (assetRefLoaded != NULL)
-					{
-						UMaterial* m = Cast<UMaterial>(assetRefLoaded);
-						UMaterialInstance* mi = Cast<UMaterialInstance>(assetRefLoaded);
-
-						if (m != NULL)
-						{
-							if (m->GetBlendMode() == EBlendMode::BLEND_Opaque)
-							{
-								continue;
-							}
-
-							//TODO export material property transparency
-							if (FMaterialUtilities::ExportMaterialProperty(m, EMaterialProperty::MP_BaseColor, point, colors))
-							{
-								FString BMPFilename;
-								if (subdirectory.IsEmpty())
-								{
-									BMPFilename = searchDirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
-								}
-								else
-								{
-									BMPFilename = searchDirectory+"/"+subdirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
-								}
-
-								//GLog->Log("writing base color for transparent material " + BMPFilename);
-								FFileHelper::CreateBitmap(*BMPFilename, point.X, point.Y, colors.GetData());
-							}
-						}
-						else
-						{
-							if (mi->GetBlendMode() == EBlendMode::BLEND_Opaque)
-							{
-								continue;
-							}
-
-							//TODO export material property transparency
-							if (FMaterialUtilities::ExportMaterialProperty(mi, EMaterialProperty::MP_BaseColor, point, colors))
-							{
-
-								FString BMPFilename;
-								if (subdirectory.IsEmpty())
-								{
-									BMPFilename = searchDirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
-								}
-								else
-								{
-									BMPFilename = searchDirectory + "/" + subdirectory + finalMatPath.Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
-								}
-
-								//GLog->Log("writing base color for transparent material instance " + BMPFilename);
-								FFileHelper::CreateBitmap(*BMPFilename, point.X, point.Y, colors.GetData());
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
-//run this as the next step after exporting the scene
-FReply FCognitiveEditorTools::Reduce_Meshes()
-{
-	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("DecimateExportedScene.py");
-	const TCHAR* charPath = *pythonscriptpath;
-
-	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
-	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
-
-	TArray<FAssetData> ScriptList;
-	if (!AssetRegistry.GetAssetsByPath(FName(*pythonscriptpath), ScriptList))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Meshes - Could not find decimateall.py script at path. Canceling"));
-		return FReply::Handled();
-	}
-
-	FString stringurl = BlenderPath;
-
-	if (BlenderPath.Len() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Meshes - No path set for Blender.exe. Canceling"));
-		return FReply::Handled();
-	}
-
-	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
-	if (!tempworld)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Meshes - World is null. canceling"));
-		return FReply::Handled();
-	}
-
-	FString SceneName = tempworld->GetMapName();
-	FString ObjPath = BaseExportDirectory;
-
-	if (ObjPath.Len() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Meshes No know export directory. Canceling"));
-		return FReply::Handled();
-	}
-
-	FString MinPolyCount = FString::FromInt(MinPolygon);
-	FString MaxPolyCount = FString::FromInt(MaxPolygon);
-
-	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
-	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
-
-	FString escapedExcludeMeshes = "IGNOREEXCLUDEMESHES";
-
-	FConfigSection* ExportSettings = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
-	if (ExportSettings != NULL)
-	{
-		for (FConfigSection::TIterator It(*ExportSettings); It; ++It)
-		{
-			if (It.Key() == TEXT("ExcludeMeshes"))
-			{
-				FName nameEscapedExcludeMeshes;
-				escapedExcludeMeshes = It.Value().GetValue();
-				break;
-			}
-		}
-	}
-
-	escapedExcludeMeshes = escapedExcludeMeshes.Replace(TEXT(" "), TEXT("\" \""));
-
-	FString productID = GetProductID();
-
-	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " " + MinPolyCount + " " + MaxPolyCount + " " + SceneName + " " + productID + " " + COGNITIVEVR_SDK_VERSION + " " + escapedExcludeMeshes;
-
-	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
-
-	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Meshes Params: %s"), *stringParamSlashed);
-
-
-	const TCHAR* params = *stringParamSlashed;
-	int32 priorityMod = 0;
-	FProcHandle procHandle = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
-
-	//TODO when procHandle is complete, upload exported files to sceneexplorer.com
-	return FReply::Handled();
-}
-
-FString FCognitiveEditorTools::GetProductID()
-{
-	return FString("UNUSED");
-	/*FString ValueReceived;
-	GConfig->GetString(
-		TEXT("Analytics"),
-		TEXT("CognitiveVRApiKey"),
-		ValueReceived,
-		GEngineIni
-	);
-	return ValueReceived;*/
-}
-
 FReply FCognitiveEditorTools::UploadScene()
 {
 	FString url = "";
@@ -1590,77 +1060,6 @@ FReply FCognitiveEditorTools::UploadScene()
 	//TODO listen for response. when the response returns, request the scene version with auth token
 	UploadFromDirectory(url, GetCurrentSceneExportDirectory(), "scene");
 
-	return FReply::Handled();
-}
-
-//run this as the next step after exporting the scene
-FReply FCognitiveEditorTools::Reduce_Textures()
-{
-	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("ConvertTextures.py");
-	const TCHAR* charPath = *pythonscriptpath;
-
-	//found something
-	//UE_LOG(LogTemp, Warning, TEXT("Python script path: %s"), charPath);
-
-
-	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
-	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
-
-
-	TArray<FAssetData> ScriptList;
-	if (!AssetRegistry.GetAssetsByPath(FName(*pythonscriptpath), ScriptList))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Textures Could not find decimateall.py script at path. Canceling"));
-		return FReply::Handled();
-	}
-
-	FString stringurl = BlenderPath;
-
-	if (BlenderPath.Len() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Textures No path set for Blender.exe. Canceling"));
-		return FReply::Handled();
-	}
-
-	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
-	if (!tempworld)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Textures World is null. canceling"));
-		return FReply::Handled();
-	}
-
-	FString SceneName = tempworld->GetMapName();
-	FString ObjPath = BaseExportDirectory;
-
-	if (ObjPath.Len() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Textures No know export directory. Canceling"));
-		return FReply::Handled();
-	}
-
-
-	FString MaxPolyCount = FString::FromInt(0);
-	FString resizeFactor = FString::FromInt(TextureRefactor);
-
-	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
-	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
-
-	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " " + resizeFactor + " " + MaxPolyCount + " " + SceneName;
-
-	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
-
-	const TCHAR* params = *stringParamSlashed;
-	int32 priorityMod = 0;
-	FProcHandle procHandle = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
-
-	//FString cmdPath = "C:\\Windows\\System32\\cmd.exe";
-	//FString cmdPathS = "cmd.exe";
-	//FProcHandle procHandle = FPlatformProcess::CreateProc(*cmdPath, NULL, false, false, false, NULL, priorityMod, 0, nullptr);
-
-	//TODO can i just create a process and add parameters or do i need to run through cmd line??
-	//system("cmd.exe");
-
-	//TODO when procHandle is complete, upload exported files to sceneexplorer.com
 	return FReply::Handled();
 }
 
@@ -1707,24 +1106,24 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 {
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
-	TArray<FString> filesInDirectory = GetAllFilesInDirectory(directory, true, filesStartingWith, filesStartingWith, pngextension,true);
+	TArray<FString> filesInDirectory = GetAllFilesInDirectory(directory, true, filesStartingWith, filesStartingWith, filesStartingWith,true);
 
-	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(directory, true, filesStartingWith, pngextension, filesStartingWith, true);
+	//TArray<FString> imagesInDirectory = GetAllFilesInDirectory(directory, true, filesStartingWith, pngextension, filesStartingWith, true);
 
-	imagesInDirectory.Remove(directory + "/screenshot/screenshot.png");
+	filesInDirectory.Remove(directory + "/screenshot/screenshot.png");
+	//imagesInDirectory.Remove(directory + "/screenshot/screenshot.png");
 	FString screenshotPath = directory + "/screenshot/screenshot.png";
 
 	TArray<cognitivevrapi::FContentContainer> contentArray;
 
-	UE_LOG(LogTemp, Log, TEXT("UploadScene image count%d"), imagesInDirectory.Num());
-	UE_LOG(LogTemp, Log, TEXT("UploadScene file count%d"), filesInDirectory.Num());
-	
+	//UE_LOG(LogTemp, Log, TEXT("UploadScene image count%d"), imagesInDirectory.Num());
+	UE_LOG(LogTemp, Log, TEXT("UploadScene all file count%d"), filesInDirectory.Num());
+
 	for (int32 i = 0; i < filesInDirectory.Num(); i++)
 	{
 		FString Content;
-		FString temp;
-		FString result;
-		if (FFileHelper::LoadFileToString(result, *filesInDirectory[i]))
+		TArray<uint8> byteResult;
+		if (FFileHelper::LoadFileToArray(byteResult, *filesInDirectory[i]))
 		{
 			cognitivevrapi::FContentContainer container = cognitivevrapi::FContentContainer();
 			UE_LOG(LogTemp, Log, TEXT("Loaded file %s"), *filesInDirectory[i]);
@@ -1740,42 +1139,13 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 			Content = Content.Append(TEXT("\r\n"));
 
 			container.Headers = Content;
-			container.BodyText = *result;
-
-			contentArray.Add(container);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("failed to load %s"), *filesInDirectory[i]);
-		}
-	}
-
-	for (int32 i = 0; i < imagesInDirectory.Num(); i++)
-	{
-		FString Content;
-		TArray<uint8> byteResult;
-		if (FFileHelper::LoadFileToArray(byteResult, *imagesInDirectory[i]))
-		{
-			cognitivevrapi::FContentContainer container = cognitivevrapi::FContentContainer();
-			UE_LOG(LogTemp, Log, TEXT("Loaded image %s"), *imagesInDirectory[i]);
-			//loaded the file
-			Content = Content.Append(TEXT("\r\n"));
-			Content = Content.Append("--cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i");
-			Content = Content.Append(TEXT("\r\n"));
-			Content = Content.Append("Content-Type: image/png");
-			Content = Content.Append(TEXT("\r\n"));
-			Content = Content.Append("Content-disposition: form-data; name=\"file\"; filename=\"" + FPaths::GetCleanFilename(imagesInDirectory[i]) + "\"");
-			Content = Content.Append(TEXT("\r\n"));
-			Content = Content.Append(TEXT("\r\n"));
-
-			container.Headers = Content;
 			container.BodyBinary = byteResult;
 
 			contentArray.Add(container);
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("failed to load image %s"), *imagesInDirectory[i]);
+			UE_LOG(LogTemp, Error, TEXT("failed to load %s"), *filesInDirectory[i]);
 		}
 	}
 
@@ -1883,24 +1253,6 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadObjectCompleted);
 	}
 
-	//DEBUGGING write http request contents to file
-	/*
-
-	FString SaveDirectory = FString("C:/Users/calder/Desktop");
-	FString FileName = FString("UploadContent.txt");
-
-	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-
-	if (PlatformFile.CreateDirectoryTree(*SaveDirectory))
-	{
-	// Get absolute file path
-	FString AbsoluteFilePath = SaveDirectory + "/" + FileName;
-
-	//FFileHelper::SaveStringToFile(Content, *AbsoluteFilePath);
-	FFileHelper::SaveArrayToFile(AllBytes, *AbsoluteFilePath);
-	}
-	*/
-
 	HttpRequest->ProcessRequest();
 }
 
@@ -1930,13 +1282,7 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 
 		FString currentSceneName = myworld->GetMapName();
 		currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
-
-		//FConfigSection* ScenePairs = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
-		//GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), *currentSceneName, *Response->GetContentAsString(), GEngineIni);
-
-
-		//GLog->Log(currentSceneName + " scene set with SceneKey " + *Response->GetContentAsString());
-
+		
 		FString responseNoQuotes = *Response->GetContentAsString().Replace(TEXT("\""), TEXT(""));
 
 		if (responseNoQuotes.Len() > 0)
@@ -2306,19 +1652,6 @@ FText FCognitiveEditorTools::GetUploadDynamicsToSceneText() const
 	return UploadDynamicsToSceneText;
 }
 
-void FCognitiveEditorTools::RefreshUploadDynamicsToSceneText()
-{
-	TSharedPtr<cognitivevrapi::FEditorSceneData> currentScene = GetCurrentSceneData();
-	if (!currentScene.IsValid())
-	{
-		UploadDynamicsToSceneText = FText::FromString("current scene is not valid!");
-		return;
-	}
-
-	//UploadDynamicsToSceneText = FText::FromString("Upload " + "numberofdirectoriesinexportdirectory" + " dynamic object meshes to " + currentScene->Name + " version " + currentScene->VersionNumber + " on Scene Explorer");
-	UploadDynamicsToSceneText = FText::FromString("upload x dynamic objects to current scene version y on scene explorer");
-}
-
 bool FCognitiveEditorTools::DuplicateDynamicIdsInScene() const
 {
 	//loop thorugh all dynamics in the scene
@@ -2514,7 +1847,7 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 	SceneData.Empty();
 
 	TArray<FString>scenstrings;
-	FString TestSyncFile = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
+	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
 
 	for (int i = 0; i < scenstrings.Num(); i++)
@@ -2654,7 +1987,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		//get array of scene data
 		TArray<FString> iniscenedata;
 
-		FString TestSyncFile = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
+		FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 		GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), iniscenedata, TestSyncFile);
 
 		//GLog->Log("found this many scene datas in ini " + FString::FromInt(iniscenedata.Num()));
@@ -2730,8 +2063,8 @@ ECheckBoxState FCognitiveEditorTools::HasFoundBlenderCheckbox() const
 
 FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 {
-	FString EngineIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
-	FString EditorIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEditor.ini"));
+	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 	//GLog->Log("FCognitiveTools::SaveAPIDeveloperKeysToFile save: " + CustomerId);
 
 	//GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
@@ -2748,7 +2081,7 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 
 void FCognitiveEditorTools::SaveAPIKeyToFile(FString key)
 {
-	FString EngineIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
+	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, EngineIni);
 	GConfig->Flush(false, GEngineIni);
 	ConfigFileHasChanged = true;
@@ -2759,25 +2092,13 @@ void FCognitiveEditorTools::SaveAPIKeyToFile(FString key)
 void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
 {
 	//FString EngineIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
-	FString EditorIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEditor.ini"));
+	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 	//GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, EditorIni);
 	GConfig->Flush(false, GEngineIni);
 	ConfigFileHasChanged = true;
 
 	FAnalyticsCognitiveVR::Get().DeveloperKey = key;
-}
-
-FReply FCognitiveEditorTools::ReexportDynamicMeshesCmd()
-{
-	ReexportDynamicMeshes(GetDynamicsExportDirectory());
-	return FReply::Handled();
-}
-
-FReply FCognitiveEditorTools::ExportDynamicTextures()
-{
-	ConvertDynamicTextures();
-	return FReply::Handled();
 }
 
 TSharedPtr<cognitivevrapi::FEditorSceneData> FCognitiveEditorTools::GetCurrentSceneData() const
@@ -2814,7 +2135,7 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 
 	TArray<FString> scenePairs = TArray<FString>();
 
-	FString TestSyncFile = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
+	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenePairs, TestSyncFile);
 
 	bool didSetKey = false;
@@ -2853,11 +2174,165 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 	GConfig->Flush(false, GEngineIni);
 }
 
-void FCognitiveEditorTools::WizardExport()
-{
-	List_Materials();
+TArray<FString> MaterialLine;
 
-	FProcHandle fph = Reduce_Meshes_And_Textures();
+void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<UStaticMeshComponent*> meshes, FString mtlFileName)
+{
+	IMaterialBakingModule& MaterialBakingModule = FModuleManager::Get().LoadModuleChecked<IMaterialBakingModule>("MaterialBaking");
+
+	FIntPoint resolution = FIntPoint(256, 256);
+	TArray<FString>ExportedMaterialNames;
+
+	MaterialLine.Empty();
+	MaterialLine.Add("");
+
+	float work = 0;
+	FScopedSlowTask* SlowTaskPtr = NULL;
+	
+	if (mtlFileName == FCognitiveEditorTools::GetInstance()->GetCurrentSceneName())
+	{
+		SlowTaskPtr = new FScopedSlowTask(meshes.Num(), FText::FromString("Baking Scene Materials"));
+		SlowTaskPtr->MakeDialog(false);
+	}
+
+	for (int i = 0; i < meshes.Num(); i++)
+	{
+		if (SlowTaskPtr != NULL)
+		{
+			work += 1;
+			SlowTaskPtr->EnterProgressFrame(work);
+		}
+		if (meshes[i] == NULL) { continue; }
+		UStaticMeshComponent* TempObject = meshes[i];
+		if (TempObject == NULL) { continue; }
+
+		TArray<UMaterialInterface*> mats = TempObject->GetMaterials();
+		for (int j = 0; j < mats.Num(); j++)
+		{
+			if (mats[j] != NULL)
+			{
+				if (ExportedMaterialNames.Contains(mats[j]->GetName())) { continue; }
+
+				if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Opaque)
+				{
+					FString n = mats[j]->GetPathName().Replace(TEXT("."), TEXT("_"));
+					MaterialLine.Add("newmtl " + n);
+
+					ExportedMaterialNames.Add(mats[j]->GetName());
+
+					SCOPED_SUSPEND_RENDERING_THREAD(true);
+					PRAGMA_DISABLE_DEPRECATION_WARNINGS
+					TArray<FColor> OutputBMP;
+					FIntPoint OutSize;
+					FString BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+					FMaterialUtilities::ExportMaterialProperty(mats[j], EMaterialProperty::MP_BaseColor, OutputBMP, OutSize);
+					FFileHelper::CreateBitmap(*BMPFilename, OutSize.X, OutSize.Y, OutputBMP.GetData());
+					MaterialLine.Add("map_Kd " + BMPFilename);
+
+					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
+					FMaterialUtilities::ExportMaterialProperty(mats[j], EMaterialProperty::MP_Normal, OutputBMP, OutSize);
+					FFileHelper::CreateBitmap(*BMPFilename, OutSize.X, OutSize.Y, OutputBMP.GetData());
+					MaterialLine.Add("bump " + BMPFilename);
+					PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+					MaterialLine.Add("");
+					MaterialLine.Add("");
+					continue;
+				}
+
+				TArray<FMeshData*> MeshSettingPtrs;
+				TArray<FMaterialData*> MaterialSettingPtrs;
+				GLog->Log(mats[j]->GetFullName());
+				FString n = mats[j]->GetPathName().Replace(TEXT("."), TEXT("_"));
+				MaterialLine.Add("newmtl " + n);
+
+				ExportedMaterialNames.Add(mats[j]->GetName());
+
+				FMaterialData MaterialSettings;
+				MaterialSettings.Material = mats[j];
+				//MaterialSettings.bPerformBorderSmear = false;
+				MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_BaseColor, resolution);
+				MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Normal, resolution);
+
+				if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
+					MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_OpacityMask, resolution);
+				else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent)
+					MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Opacity, resolution);
+				//MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_EmissiveColor, resolution);
+				MaterialSettingPtrs.Add(&MaterialSettings);
+
+
+
+				FMeshData meshdata;
+				//meshdata.RawMeshDescription = nullptr;
+				meshdata.TextureCoordinateBox = FBox2D(FVector2D(0.0f, 0.0f), FVector2D(1.0f, 1.0f));
+				meshdata.TextureCoordinateIndex = 0;
+				MeshSettingPtrs.Add(&meshdata);
+
+				TArray<FBakeOutput> BakeOutputs;
+				MaterialBakingModule.BakeMaterials(MaterialSettingPtrs, MeshSettingPtrs, BakeOutputs);
+
+				for (FBakeOutput& output : BakeOutputs)
+				{
+					//GLog->Log(FString::FromInt(output.PropertySizes[EMaterialProperty::MP_BaseColor].X) + "   " + FString::FromInt(output.PropertySizes[EMaterialProperty::MP_BaseColor].Y));
+
+					//writing materials with wrong uvs
+
+					FString BMPFilename;
+					//diffuse
+					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+					FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_BaseColor].GetData());
+					MaterialLine.Add("map_Kd " + BMPFilename);
+
+					//normal
+					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
+					FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Normal].GetData());
+					MaterialLine.Add("bump " + BMPFilename);
+
+					if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
+					{
+						//	//mask
+						BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_OM.bmp");
+						FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_OpacityMask].GetData());
+						MaterialLine.Add("illum 4");
+						MaterialLine.Add("map_D " + BMPFilename);
+					}
+					else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent)
+					{
+						//opacity
+						BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_O.bmp");
+						FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Opacity].GetData());
+						MaterialLine.Add("illum 4");
+						MaterialLine.Add("map_D " + BMPFilename);
+					}
+
+					//save to disk
+				}
+				MaterialLine.Add("");
+				MaterialLine.Add("");
+			}
+		}
+	}
+
+	if (SlowTaskPtr != NULL)
+	{
+		delete SlowTaskPtr;
+	}
+
+	//write MaterialLine to mtl file
+	FString mtlPath = directory + mtlFileName + ".mtl";
+	FFileHelper::SaveStringArrayToFile(MaterialLine, *mtlPath);
+}
+
+void FCognitiveEditorTools::WizardPostSceneExport()
+{
+	//anything that needs to happen automatically after the scene has been exported
+	
+}
+
+void FCognitiveEditorTools::WizardConvertScene()
+{
+	FProcHandle fph = ConvertSceneToGLTF();
 
 	if (fph.IsValid())
 	{
@@ -2880,7 +2355,7 @@ void FCognitiveEditorTools::WizardUpload()
 }
 
 //run this as the next step after exporting the scene
-FProcHandle FCognitiveEditorTools::Reduce_Meshes_And_Textures()
+FProcHandle FCognitiveEditorTools::ConvertSceneToGLTF()
 {
 	FProcHandle BlenderReduceAllWizardProc;
 
@@ -2893,7 +2368,7 @@ FProcHandle FCognitiveEditorTools::Reduce_Meshes_And_Textures()
 	TArray<FAssetData> ScriptList;
 	if (!AssetRegistry.GetAssetsByPath(FName(*pythonscriptpath), ScriptList))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures - Could not find decimateall.py script at path. Canceling"));
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures - Could not find script at path. Canceling"));
 		return BlenderReduceAllWizardProc;
 	}
 
@@ -2945,7 +2420,7 @@ FProcHandle FCognitiveEditorTools::Reduce_Meshes_And_Textures()
 
 	escapedExcludeMeshes = escapedExcludeMeshes.Replace(TEXT(" "), TEXT("\" \""));
 
-	FString productID = "UNUSED";// GetProductID();
+	FString productID = "UNUSED";
 
 	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " " + MinPolyCount + " " + MaxPolyCount + " " + SceneName + " " + productID + " " + COGNITIVEVR_SDK_VERSION + " " + escapedExcludeMeshes;
 

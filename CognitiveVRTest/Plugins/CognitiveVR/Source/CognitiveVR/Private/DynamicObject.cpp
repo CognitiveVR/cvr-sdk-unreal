@@ -18,7 +18,7 @@ int32 ExtremeBatchSize = 128;
 float NextSendTime = 0;
 float LastSendTime = -60;
 FTimerHandle CognitiveDynamicAutoSendHandle;
-static const FString DynamicObjectFileType = "obj";
+static const FString DynamicObjectFileType = "gltf";
 
 // Sets default values for this component's properties
 UDynamicObject::UDynamicObject()

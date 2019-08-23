@@ -14,14 +14,11 @@
 #include "STextComboBox.h"
 #include "SListView.h"
 
-class FCognitiveTools;
-
 class SDynamicObjectListWidget : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SDynamicObjectListWidget){}
 	SLATE_ARGUMENT(TArray<TSharedPtr<cognitivevrapi::FDynamicData>>, Items)
-	SLATE_ARGUMENT(FCognitiveTools*, CognitiveTools)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& Args);
@@ -31,7 +28,6 @@ public:
 
 	/* The list of strings */
 	TArray<TSharedPtr<cognitivevrapi::FDynamicData>> Items;
-	FCognitiveTools* CognitiveTools;
 
 	/* The actual UI list */
 	TSharedPtr< SListView< TSharedPtr<cognitivevrapi::FDynamicData> > > ListViewWidget;
@@ -39,4 +35,6 @@ public:
 	FReply SelectDynamic(TSharedPtr<cognitivevrapi::FDynamicData> data);
 
 	void RefreshList();
+
+	FText ExportStatusText(TSharedPtr<cognitivevrapi::FDynamicData> data);
 };

@@ -3,7 +3,7 @@ namespace UnrealBuildTool.Rules
 {
 	public class CognitiveVR : ModuleRules
 	{
-		public CognitiveVR(TargetInfo Target)
+		public CognitiveVR(ReadOnlyTargetRules Target): base(Target)
 		{
             PublicIncludePathModuleNames.AddRange(
                 new string[] {
@@ -51,13 +51,13 @@ namespace UnrealBuildTool.Rules
             Target.Platform == UnrealTargetPlatform.Win64)
         {
             // Add __WINDOWS_WASAPI__ so that RtAudio compiles with WASAPI
-            Definitions.Add("__WINDOWS_DS__");
+            PublicDefinitions.Add("__WINDOWS_DS__");
 
             // Allow us to use direct sound
             AddEngineThirdPartyPrivateStaticDependencies(Target, "DirectSound");
         }
 		
-		string DirectXSDKDir = UEBuildConfiguration.UEThirdPartySourceDirectory + "Windows/DirectX";
+		string DirectXSDKDir = Target.UEThirdPartySourceDirectory + "Windows/DirectX";
 		PublicSystemIncludePaths.Add( DirectXSDKDir + "/include");
 
 		if (Target.Platform == UnrealTargetPlatform.Win64)

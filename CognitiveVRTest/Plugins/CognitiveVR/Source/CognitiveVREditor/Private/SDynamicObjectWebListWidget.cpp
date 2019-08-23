@@ -42,7 +42,7 @@ void SDynamicObjectWebListWidget::Construct(const FArguments& Args)
 
 void SDynamicObjectWebListWidget::RefreshList()
 {	
-	Items = SceneExplorerDynamics;
+	//Items = SceneExplorerDynamics;
 	ListViewWidget->RequestListRefresh();
 }
 

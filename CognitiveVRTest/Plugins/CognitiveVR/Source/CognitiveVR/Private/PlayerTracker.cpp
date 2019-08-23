@@ -355,9 +355,9 @@ void UPlayerTracker::SendData()
 	FString DeviceNameString = "unknown";
 
 	//TODO get HMDdevice name on beginplay and cache
-	if (GEngine->HMDDevice.IsValid())
+	if (GEngine->XRSystem.IsValid())
 	{
-		DeviceName = GEngine->HMDDevice->GetDeviceName();
+		DeviceName = GEngine->XRSystem->GetSystemName();
 		DeviceNameString = cognitivevrapi::Util::GetDeviceName(DeviceName.ToString());
 	}
 
