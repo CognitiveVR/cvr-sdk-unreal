@@ -6,4 +6,4 @@ See [docs.cognitive3d.com](http://docs.cognitive3d.com/unreal/get-started/) for 
 
 This SDK supports both C++ and Blueprints.
 
-This has been tested on Vive and Oculus Rift on Windows 10. This plugin has been tested with Unreal verion 4.14.3. Newer versions may require additional steps to integrate.
+This has been tested on Vive and Oculus Rift on Windows 10. This plugin has been tested with Unreal verion 4.19.2. Newer versions may require additional steps to integrate.
