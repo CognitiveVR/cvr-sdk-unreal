@@ -161,102 +161,6 @@ def DecimateMeshes():
 	#ops.export_scene.obj(filepath=exportPath+"/"+fileName+".obj", use_edges=False, path_mode='RELATIVE')
 	ops.export_scene.gltf(export_format='GLTF_SEPARATE',export_animations=False,filepath=exportPath+"/"+"scene.gltf")
 	print("=============================================export complete")
-
-def FlattenTexturePaths(mtlpath):
-	print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-	print("++++++++++++++++++++++++++++++++++++++++++++flatten texture paths")
-	print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-	#get all subdirectories with images
-	for temp in os.listdir(exportPath):
-		tempdir = os.path.join(exportPath,temp)
-		print("============found file/dir: "+tempdir)
-		if os.path.isdir(tempdir):
-			if tempdir.endswith("dynamics"):
-				continue
-			img_dirs.append(tempdir)
-			print("============found dir: "+temp)
-
-	#mark directories for deletion
-	for dir in img_dirs:
-		print ("---------- dirs: " + dir)
-		os.rename(dir,dir+"_delete")
-
-	image_count=len(diffuse)                        # count of diffuse 
-	print("image_count " + str(image_count))       
-
-	#replace mtl bmps with pngs
-	readString = ''
-	#if image_count > 0:
-	#	print("============================ replace mtl bmps with pngs")
-	#	#==========================add a space at the beginning of the mtl
-	#	mo = open(mtlpath, encoding='utf-8-sig')
-	#	readString = mo.read()
-    #
-	#	outstrings=[]
-	#	outstrings.append('\n\n')
-    #
-	#	#==========================replace mtl with png references to textures
-	#	for line in readString.splitlines():
-	#		print("original line " + line)
-	#		if line.endswith('_D.bmp'):
-	#			outstrings.append(line.replace(".bmp",".png")+'\n')
-	#		elif not line.endswith('.bmp'):
-	#			outstrings.append(line.replace(".bmp",".png")+'\n')
-    #
-	#	mo.close()
-    #
-	#	#remove the mtl
-	#	os.remove(mtlpath)
-    #
-	#	#write to new file (pngs)
-	#	nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
-	#	nmo.writelines(outstrings)
-	#	nmo.close()
-	#	print("=============================================mtl fixed")
-	#else:
-	#	print("============================ no bmp images to fix!")
-	#	for tempPath, dirs, files in os.walk(exportPath):
-	#		for name in files:
-	#			if name.endswith(".mtl"):
-	#				mtlpath = os.path.join(tempPath, name)
-
-	if image_count > 0:
-		mo = open(mtlpath, encoding='utf-8-sig')
-		readString = mo.read()
-		finalmtlstrings=[]
-		print("=============================================mtl start")
-		#==========================replace mtl with png references to textures. remove path, since images will be copied to root in step 3
-		for line in readString.splitlines():
-			print("original line " + line)
-			if line.startswith("map_Kd"):
-				temppath = line.replace("map_Kd ","").replace(".bmp",".png")
-				head, tail = os.path.split(temppath)
-				tail = tail.replace(" ","")
-				finalmtlstrings.append("map_Kd " + tail+"\n")
-				
-				#if os.path.isfile(exportPath+"/"+tail[:-4]+".bmp"):
-				#	print(">>>>>append map_kd as " + tail)
-				#else:
-				#	print("^^^^^^^^^^^ couldn't find file " + tail)
-			elif line.startswith("Ka"):
-				finalmtlstrings.append("Ka 0 0 0"+"\n")
-			elif line.startswith("Ks"):
-				finalmtlstrings.append("Ks 0 0 0"+"\n")
-			elif line.endswith('.bmp'):
-				continue
-			else:
-				finalmtlstrings.append(line+"\n")
-				#print("????????unknown line as " + line)
-		mo.close()
-
-		#remove the mtl
-		os.remove(mtlpath)
-
-		#write to new file (BMP)
-		#nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
-		#nmo.writelines(finalmtlstrings)
-		#nmo.close()
-		print("=============================================mtl fixed")
 	
 def ConvertTextures():
 	print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
@@ -266,6 +170,9 @@ def ConvertTextures():
 	#downsize pngs
 
 	onlyfiles = [f for f in os.listdir(exportPath) if os.path.isfile(os.path.join(exportPath, f))]
+	image=''
+	image2=''
+	pixels=[]
 
 	for file in onlyfiles:
 		print("open"+file)
@@ -299,7 +206,6 @@ for mat in bpy.data.materials:
                 print("set masked material "+mat.name)
                 mat.blend_method = 'CLIP'
 
-#FlattenTexturePaths(mtlpath)
 ConvertTextures()
 
 #write json settings file

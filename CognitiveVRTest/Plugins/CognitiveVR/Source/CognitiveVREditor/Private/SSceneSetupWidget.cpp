@@ -606,6 +606,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]*/
 			+ SVerticalBox::Slot()
 				.AutoHeight()
+				.MaxHeight(250)
 				.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
