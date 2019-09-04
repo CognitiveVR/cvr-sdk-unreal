@@ -225,6 +225,14 @@ void UDynamicObject::Initialize()
 		{
 			MeshName = "vivetracker";
 		}
+		else if (CommonMeshName == ECommonMeshName::WindowsMixedRealityLeft)
+		{
+			MeshName = "windows_mixed_reality_controller_left";
+		}
+		else if (CommonMeshName == ECommonMeshName::WindowsMixedRealityRight)
+		{
+			MeshName = "windows_mixed_reality_controller_right";
+		}
 	}
 
 	if (SnapshotOnBeginPlay)
@@ -233,7 +241,6 @@ void UDynamicObject::Initialize()
 		{
 			return;
 		}
-		HasInitialized = true;
 
 		bool hasScaleChanged = true;
 		if (FMath::Abs(LastScale.Size() - GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
@@ -326,6 +333,11 @@ void UDynamicObject::GenerateObjectId()
 		}
 
 		cognitivevrapi::FDynamicObjectManifestEntry entry = cognitivevrapi::FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
+		if (IsController)
+		{
+			entry.ControllerType = ControllerType;
+			entry.IsRight = IsRightController;
+		}
 		manifest.Add(entry);
 		newManifest.Add(entry);
 	}
@@ -333,6 +345,11 @@ void UDynamicObject::GenerateObjectId()
 	{
 		ObjectID = MakeShareable(new cognitivevrapi::FDynamicObjectId(CustomId, MeshName));
 		cognitivevrapi::FDynamicObjectManifestEntry entry = cognitivevrapi::FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
+		if (IsController)
+		{
+			entry.ControllerType = ControllerType;
+			entry.IsRight = IsRightController;
+		}
 		manifest.Add(entry);
 		newManifest.Add(entry);
 	}
@@ -358,9 +375,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 	{
 		currentTime -= SnapshotInterval;
 
-		FVector currentForward = GetComponentTransform().TransformVector(FVector::ForwardVector);// GetOwner()->GetActorForwardVector();
-
-		currentForward.Normalize();
+		FVector currentForward = GetForwardVector();
 		
 		float dotRot = FVector::DotProduct(LastForward, currentForward);
 
@@ -403,13 +418,9 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 			}
 		}
 
-		//actor component
-		//LastPosition = GetOwner()->GetActorLocation();
-		//LastForward = GetOwner()->GetActorForwardVector();
-
 		//scene component
 		LastPosition = GetComponentLocation();
-		LastForward = GetComponentTransform().TransformVector(FVector::ForwardVector);
+		LastForward = currentForward;
 		if (hasScaleChanged)
 		{
 			LastScale = GetComponentTransform().GetScale3D();
@@ -613,6 +624,32 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 		snapObj->SetArrayField("engagements", engagements);
 	}
 
+	if (snapshot.Buttons.Num() > 0)
+	{
+		//write button properties
+
+		TSharedPtr<FJsonObject> buttons = MakeShareable(new FJsonObject);
+		
+		for (auto& Elem : snapshot.Buttons)
+		{
+			TSharedPtr<FJsonObject> button = MakeShareable(new FJsonObject);
+
+			if (Elem.Value.IsVector)
+			{
+				button->SetNumberField("buttonPercent", Elem.Value.AxisValue);
+				button->SetNumberField("x", Elem.Value.X);
+				button->SetNumberField("y", Elem.Value.Y);
+			}
+			else
+			{
+				button->SetNumberField("buttonPercent", Elem.Value.AxisValue);
+			}
+			buttons->SetObjectField(Elem.Key, button);
+		}
+
+		snapObj->SetObjectField("buttons", buttons);
+	}
+
 	//TSharedPtr< FJsonValueObject > outValue = MakeShareable(new FJsonValueObject(snapObj));
 
 	return MakeShareable(new FJsonValueObject(snapObj));
@@ -720,6 +757,13 @@ TSharedPtr<FJsonObject> UDynamicObject::DynamicObjectManifestToString()
 		entry->SetStringField("name", newManifest[i].Name);
 		entry->SetStringField("mesh", newManifest[i].MeshName);
 		entry->SetStringField("fileType", DynamicObjectFileType);
+		if (!newManifest[i].ControllerType.IsEmpty())
+		{
+			entry->SetStringField("controllerType", newManifest[i].ControllerType);
+			TSharedPtr<FJsonObject>controllerProps = MakeShareable(new FJsonObject);
+			controllerProps->SetStringField("controller", newManifest[i].IsRight ? "right" : "left");
+			entry->SetObjectField("properties", controllerProps);
+		}
 
 		manifestObject->SetObjectField(newManifest[i].Id, entry);
 	}
@@ -878,6 +922,80 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		jsonPart = 1;
 	}
 }
+
+//static
+UDynamicObject* UDynamicObject::SetupController(AActor* target, bool IsRight, EC3DControllerType controllerType)
+{
+	UDynamicObject* dyn = target->FindComponentByClass<UDynamicObject>();
+	if (dyn == NULL)
+	{
+		dyn = NewObject<UDynamicObject>(target);
+
+	}
+
+	dyn->IsRightController = IsRight;
+
+	switch (controllerType)
+	{
+	case EC3DControllerType::Vive:
+		dyn->ControllerType = "vivecontroller";
+		dyn->CommonMeshName = ECommonMeshName::ViveController;
+		break;
+	case EC3DControllerType::Oculus:
+		if (IsRight)
+		{
+			dyn->ControllerType = "oculustouchright";
+			dyn->CommonMeshName = ECommonMeshName::OculusTouchRight;
+		}
+		else
+		{
+			dyn->ControllerType = "oculustouchleft";
+			dyn->CommonMeshName = ECommonMeshName::OculusTouchLeft;
+		}
+		break;
+	case EC3DControllerType::WindowsMixedReality:
+		if (IsRight)
+		{
+			dyn->ControllerType = "windows_mixed_reality_controller_right";
+			dyn->CommonMeshName = ECommonMeshName::WindowsMixedRealityRight;
+		}
+		else
+		{
+			dyn->ControllerType = "windows_mixed_reality_controller_left";
+			dyn->CommonMeshName = ECommonMeshName::WindowsMixedRealityLeft;
+		}
+		break;
+	default:
+		break;
+	}
+	
+	dyn->UseCustomMeshName = false;
+	dyn->IsController = true;
+	
+	dyn->UseCustomId = true;
+	dyn->CustomId = FGuid::NewGuid().ToString();
+	return dyn;
+}
+
+void UDynamicObject::FlushButtons(FControllerInputStateCollection& target)
+{
+	//write an new snapshot and append input state
+	if (target.States.Num() == 0)
+	{
+		return;
+	}
+
+	FDynamicObjectSnapshot snap = MakeSnapshot(false);
+	snap.Buttons = target.States;
+	target.States.Empty();
+
+	snapshots.Add(snap);
+	if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
+	{
+		TrySendData();
+	}
+}
+
 
 cognitivevrapi::FDynamicObjectManifestEntry* cognitivevrapi::FDynamicObjectManifestEntry::SetProperty(FString key, FString value)
 {

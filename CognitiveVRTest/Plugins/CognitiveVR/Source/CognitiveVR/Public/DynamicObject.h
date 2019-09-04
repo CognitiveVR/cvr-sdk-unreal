@@ -18,7 +18,18 @@ enum class ECommonMeshName : uint8
 	ViveController,
 	OculusTouchLeft,
 	OculusTouchRight,
-	ViveTracker
+	ViveTracker,
+	WindowsMixedRealityLeft,
+	WindowsMixedRealityRight
+};
+
+//only used in blueprint to set up controllers using a macro
+UENUM(BlueprintType)
+enum class EC3DControllerType : uint8
+{
+	Vive,
+	Oculus,
+	WindowsMixedReality
 };
 
 namespace cognitivevrapi
@@ -47,6 +58,8 @@ public:
 	FString Name = "";
 	FString MeshName = "";
 	TMap<FString, FString> StringProperties;
+	FString ControllerType;
+	bool IsRight;
 
 	FDynamicObjectManifestEntry(FString id, FString name, FString mesh)
 	{
@@ -78,6 +91,40 @@ public:
 }
 
 USTRUCT(BlueprintType)
+struct COGNITIVEVR_API FControllerInputState
+{
+	GENERATED_BODY()
+
+	FString AxisName;
+	float AxisValue;
+	bool IsVector;
+	float X;
+	float Y;
+	FControllerInputState(){}
+	FControllerInputState(FString name, float value)
+	{
+		AxisName = name;
+		AxisValue = value;
+		IsVector = false;
+	}
+	FControllerInputState(FString name, FVector vector)
+	{
+		AxisName = name;
+		IsVector = true;
+		X = vector.X;
+		Y = vector.Y;
+		AxisValue = vector.Z;
+	}
+};
+
+USTRUCT(BlueprintType)
+struct COGNITIVEVR_API FControllerInputStateCollection
+{
+	GENERATED_BODY()
+	TMap<FString, FControllerInputState>States;
+};
+
+USTRUCT(BlueprintType)
 struct FDynamicObjectSnapshot
 {
 	GENERATED_BODY()
@@ -93,6 +140,8 @@ public:
 	TMap<FString, int32> IntegerProperties;
 	TMap<FString, float> FloatProperties;
 	TMap<FString, bool> BoolProperties;
+
+	TMap<FString, FControllerInputState> Buttons;
 
 	TArray<cognitivevrapi::FEngagementEvent> Engagements;
 
@@ -137,15 +186,24 @@ public:
 	static void OnSessionEnd();
 
 	//should this object be represented by a custom mesh. requires uploading this mesh to the dashboard
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool UseCustomMeshName = true;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool IsController = false;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool IsRightController = false;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString ControllerType;
 
 	//the name of the mesh to render on the dashboard
 	UPROPERTY(EditAnywhere)
 	FString MeshName;
 
 	//if not using a custom mesh, which common mesh to render on the dashboard to represent this object
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
 	ECommonMeshName CommonMeshName;
 
 	UPROPERTY(EditAnywhere, AdvancedDisplay)
@@ -239,6 +297,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		///this does not directly send a snapshot - it stores it until Flush is called or the number of stored dynamic snapshots reaches its limit
 		void SendDynamicObjectSnapshot(UPARAM(ref) FDynamicObjectSnapshot& target);
+
+	//adds a dynamic object component and applies all relevant settings
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
+		static UDynamicObject* SetupController(AActor* target, bool IsRight, EC3DControllerType controllerType);
+
+	//write all controller input states to snapshot to be written to json next frame
+	void FlushButtons(FControllerInputStateCollection& target);
 
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);
 
