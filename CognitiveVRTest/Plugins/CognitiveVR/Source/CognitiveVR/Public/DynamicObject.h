@@ -16,8 +16,8 @@ UENUM(BlueprintType)
 enum class ECommonMeshName : uint8
 {
 	ViveController,
-	OculusTouchLeft,
-	OculusTouchRight,
+	OculusRiftTouchLeft,
+	OculusRiftTouchRight,
 	ViveTracker,
 	WindowsMixedRealityLeft,
 	WindowsMixedRealityRight

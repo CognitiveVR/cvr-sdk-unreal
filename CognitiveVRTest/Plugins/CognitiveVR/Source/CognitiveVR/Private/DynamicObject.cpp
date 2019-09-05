@@ -209,13 +209,13 @@ void UDynamicObject::Initialize()
 	if (!UseCustomMeshName)
 	{
 		UseCustomMeshName = true;
-		if (CommonMeshName == ECommonMeshName::OculusTouchLeft)
+		if (CommonMeshName == ECommonMeshName::OculusRiftTouchLeft)
 		{
-			MeshName = "oculustouchleft";
+			MeshName = "oculusrifttouchleft";
 		}
-		else if (CommonMeshName == ECommonMeshName::OculusTouchRight)
+		else if (CommonMeshName == ECommonMeshName::OculusRiftTouchRight)
 		{
-			MeshName = "oculustouchright";
+			MeshName = "oculusrifttouchright";
 		}
 		else if (CommonMeshName == ECommonMeshName::ViveController)
 		{
@@ -944,13 +944,13 @@ UDynamicObject* UDynamicObject::SetupController(AActor* target, bool IsRight, EC
 	case EC3DControllerType::Oculus:
 		if (IsRight)
 		{
-			dyn->ControllerType = "oculustouchright";
-			dyn->CommonMeshName = ECommonMeshName::OculusTouchRight;
+			dyn->ControllerType = "oculusrifttouchright";
+			dyn->CommonMeshName = ECommonMeshName::OculusRiftTouchRight;
 		}
 		else
 		{
-			dyn->ControllerType = "oculustouchleft";
-			dyn->CommonMeshName = ECommonMeshName::OculusTouchLeft;
+			dyn->ControllerType = "oculusrifttouchleft";
+			dyn->CommonMeshName = ECommonMeshName::OculusRiftTouchLeft;
 		}
 		break;
 	case EC3DControllerType::WindowsMixedReality:
