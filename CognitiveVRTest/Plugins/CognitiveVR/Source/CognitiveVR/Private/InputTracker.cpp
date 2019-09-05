@@ -140,31 +140,126 @@ void AInputTracker::IntervalUpdate()
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		//triggers
+		float currentValue = InputComponent->GetAxisValue("LeftTriggerAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		if (LeftTriggerValue != icurrentValue)
+		{
+			auto b = FControllerInputState("vive_trigger", icurrentValue);
+			AppendInputState(false, b);
+			LeftTriggerValue = icurrentValue;
+		}
+		currentValue = InputComponent->GetAxisValue("RightTriggerAxis");
+		icurrentValue = (int32)(currentValue * 100);
+		if (RightTriggerValue != icurrentValue)
+		{
+			auto b = FControllerInputState("vive_trigger", icurrentValue);
+			AppendInputState(true, b);
+			RightTriggerValue = icurrentValue;
+		}
+
+		//touchpads
+		FVector currentLeftTouchpad = FVector(InputComponent->GetAxisValue("LeftTouchpadH"), InputComponent->GetAxisValue("LeftTouchpadV"), LeftTouchpadAxis.Z);
+		if (FVector::Distance(LeftTouchpadAxis, currentLeftTouchpad) > MinimumVectorChange)
+		{
+			//write new stuff
+			LeftTouchpadAxis = currentLeftTouchpad;
+			auto b = FControllerInputState("vive_touchpad", LeftTouchpadAxis);
+			AppendInputState(false, b);
+		}
+
+		FVector currentRightTouchpad = FVector(InputComponent->GetAxisValue("RightTouchpadH"), InputComponent->GetAxisValue("RightTouchpadV"), RightTouchpadAxis.Z);
+		if (FVector::Distance(RightTouchpadAxis, currentRightTouchpad) > MinimumVectorChange)
+		{
+			//write new stuff
+			RightTouchpadAxis = currentRightTouchpad;
+			auto b = FControllerInputState("vive_touchpad", RightTouchpadAxis);
+			AppendInputState(true, b);
+		}
 		break;
+	}
 	case EC3DControllerType::Oculus:
+	{
+		//triggers
+		float currentValue = InputComponent->GetAxisValue("LeftTriggerAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		if (LeftTriggerValue != icurrentValue)
+		{
+			auto b = FControllerInputState("rift_trigger", icurrentValue);
+			AppendInputState(false, b);
+			LeftTriggerValue = icurrentValue;
+		}
+		currentValue = InputComponent->GetAxisValue("RightTriggerAxis");
+		icurrentValue = (int32)(currentValue * 100);
+		if (RightTriggerValue != icurrentValue)
+		{
+			auto b = FControllerInputState("rift_trigger", icurrentValue);
+			AppendInputState(true, b);
+			RightTriggerValue = icurrentValue;
+		}
+
+		//grip
+		currentValue = InputComponent->GetAxisValue("LeftGripAxis");
+		icurrentValue = (int32)(currentValue * 100);
+		if (LeftGripValue != icurrentValue)
+		{
+			auto b = FControllerInputState("rift_grip", icurrentValue);
+			AppendInputState(false, b);
+			LeftGripValue = icurrentValue;
+		}
+		currentValue = InputComponent->GetAxisValue("RightGripAxis");
+		icurrentValue = (int32)(currentValue * 100);
+		if (RightGripValue != icurrentValue)
+		{
+			auto b = FControllerInputState("rift_grip", icurrentValue);
+			AppendInputState(true, b);
+			RightGripValue = icurrentValue;
+		}
+
+		//joysticks
+		FVector currentLeftJoystick = FVector(InputComponent->GetAxisValue("LeftJoystickH"), InputComponent->GetAxisValue("LeftJoystickV"), LeftJoystickAxis.Z);
+		if (FVector::Distance(LeftJoystickAxis, currentLeftJoystick) > MinimumVectorChange)
+		{
+			//write new stuff
+			LeftJoystickAxis = currentLeftJoystick;
+			auto b = FControllerInputState("rift_joystick", LeftJoystickAxis);
+			AppendInputState(false, b);
+		}
+
+		FVector currentRightJoystick = FVector(InputComponent->GetAxisValue("RightJoystickH"), InputComponent->GetAxisValue("RightJoystickV"), RightJoystickAxis.Z);
+		if (FVector::Distance(RightJoystickAxis, currentRightJoystick) > MinimumVectorChange)
+		{
+			//write new stuff
+			RightJoystickAxis = currentRightJoystick;
+			auto b = FControllerInputState("rift_joystick", RightJoystickAxis);
+			AppendInputState(true, b);
+		}
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 
 		//triggers
 		float currentValue = InputComponent->GetAxisValue("LeftTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		if (LeftTriggerValue != icurrentValue)
 		{
-			auto b = FControllerInputState("wmr_grip", icurrentValue);
+			auto b = FControllerInputState("wmr_trigger", icurrentValue);
 			AppendInputState(false, b);
 			LeftTriggerValue = icurrentValue;
 		}
 		currentValue = InputComponent->GetAxisValue("RightTriggerAxis");
 		icurrentValue = (int32)(currentValue * 100);
-		if (LeftTriggerValue != icurrentValue)
+		if (RightTriggerValue != icurrentValue)
 		{
-			auto b = FControllerInputState("wmr_grip", icurrentValue);
+			auto b = FControllerInputState("wmr_trigger", icurrentValue);
 			AppendInputState(true, b);
 			RightTriggerValue = icurrentValue;
 		}
 
 		//touchpads
-		
+
 		FVector currentLeftTouchpad = FVector(InputComponent->GetAxisValue("LeftTouchpadH"), InputComponent->GetAxisValue("LeftTouchpadV"), LeftTouchpadAxis.Z);
 		if (FVector::Distance(LeftTouchpadAxis, currentLeftTouchpad) > MinimumVectorChange)
 		{
@@ -201,8 +296,8 @@ void AInputTracker::IntervalUpdate()
 			auto b = FControllerInputState("wmr_joystick", RightJoystickAxis);
 			AppendInputState(true, b);
 		}
-
 		break;
+	}
 	}
 }
 
@@ -240,11 +335,12 @@ void AInputTracker::LeftFaceButtonOnePressed()
 	case EC3DControllerType::Vive:
 		break;
 	case EC3DControllerType::Oculus:
-		//LeftInputStates.States.Add()
-		break;
-	case EC3DControllerType::WindowsMixedReality:
-		auto b = FControllerInputState("leftbutton1", 100);
+	{
+		auto b = FControllerInputState("rift_xbtn", 100);
 		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::WindowsMixedReality:
 		break;
 	}
 }
@@ -256,10 +352,12 @@ void AInputTracker::LeftFaceButtonOneReleased()
 	case EC3DControllerType::Vive:
 		break;
 	case EC3DControllerType::Oculus:
-		break;
-	case EC3DControllerType::WindowsMixedReality:
-		auto b = FControllerInputState("leftbutton1", 0);
+	{
+		auto b = FControllerInputState("rift_xbtn", 0);
 		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::WindowsMixedReality:
 		break;
 	}
 }
@@ -271,10 +369,12 @@ void AInputTracker::LeftFaceButtonTwoPressed()
 	case EC3DControllerType::Vive:
 		break;
 	case EC3DControllerType::Oculus:
-		break;
-	case EC3DControllerType::WindowsMixedReality:
-		auto b = FControllerInputState("leftbutton2", 100);
+	{
+		auto b = FControllerInputState("rift_ybtn", 100);
 		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::WindowsMixedReality:
 		break;
 	}
 }
@@ -285,10 +385,12 @@ void AInputTracker::LeftFaceButtonTwoReleased()
 	case EC3DControllerType::Vive:
 		break;
 	case EC3DControllerType::Oculus:
-		break;
-	case EC3DControllerType::WindowsMixedReality:
-		auto b = FControllerInputState("leftbutton2", 0);
+	{
+		auto b = FControllerInputState("rift_ybtn", 0);
 		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::WindowsMixedReality:
 		break;
 	}
 }
@@ -298,13 +400,23 @@ void AInputTracker::LeftMenuButtonPressed()
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		auto b = FControllerInputState("vive_menubtn", 100);
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
+	{
+		auto b = FControllerInputState("rift_start", 100);
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		auto b = FControllerInputState("wmr_menu", 100);
 		AppendInputState(false, b);
 		break;
+	}
 	}
 }
 void AInputTracker::LeftMenuButtonReleased()
@@ -312,13 +424,23 @@ void AInputTracker::LeftMenuButtonReleased()
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		auto b = FControllerInputState("vive_menubtn", 0);
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
+	{
+		auto b = FControllerInputState("rift_start", 0);
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		auto b = FControllerInputState("wmr_menu", 0);
 		AppendInputState(false, b);
 		break;
+	}
 	}
 }
 
@@ -329,14 +451,23 @@ void AInputTracker::LeftJoystickPressed()
 	case EC3DControllerType::Vive:
 		break;
 	case EC3DControllerType::Oculus:
-		break;
-	case EC3DControllerType::WindowsMixedReality:
+	{
 		float x = InputComponent->GetAxisValue("LeftJoystickH");
 		float y = InputComponent->GetAxisValue("LeftJoystickV");
-		auto b = FControllerInputState("wmr_joystick", FVector(x,y,100));
+		auto b = FControllerInputState("rift_joystick", FVector(x, y, 100));
 		LeftJoystickAxis = FVector(x, y, 100);
 		AppendInputState(false, b);
 		break;
+	}
+	case EC3DControllerType::WindowsMixedReality:
+	{
+		float x = InputComponent->GetAxisValue("LeftJoystickH");
+		float y = InputComponent->GetAxisValue("LeftJoystickV");
+		auto b = FControllerInputState("wmr_joystick", FVector(x, y, 100));
+		LeftJoystickAxis = FVector(x, y, 100);
+		AppendInputState(false, b);
+		break;
+	}
 	}
 }
 void AInputTracker::LeftJoystickReleased()
@@ -346,14 +477,23 @@ void AInputTracker::LeftJoystickReleased()
 	case EC3DControllerType::Vive:
 		break;
 	case EC3DControllerType::Oculus:
+	{
+		float x = InputComponent->GetAxisValue("LeftJoystickH");
+		float y = InputComponent->GetAxisValue("LeftJoystickV");
+		auto b = FControllerInputState("rift_joystick", FVector(x, y, 0));
+		LeftJoystickAxis = FVector(x, y, 0);
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		float x = InputComponent->GetAxisValue("LeftJoystickH");
 		float y = InputComponent->GetAxisValue("LeftJoystickV");
 		auto b = FControllerInputState("wmr_joystick", FVector(x, y, 0));
 		LeftJoystickAxis = FVector(x, y, 0);
 		AppendInputState(false, b);
 		break;
+	}
 	}
 }
 
@@ -362,10 +502,18 @@ void AInputTracker::LeftTouchpadReleased()
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		float x = InputComponent->GetAxisValue("LeftTouchpadH");
+		float y = InputComponent->GetAxisValue("LeftTouchpadV");
+		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 0));
+		LeftTouchpadAxis = FVector(x, y, 0);
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		float x = InputComponent->GetAxisValue("LeftTouchpadH");
 		float y = InputComponent->GetAxisValue("LeftTouchpadV");
 		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 0));
@@ -373,16 +521,25 @@ void AInputTracker::LeftTouchpadReleased()
 		AppendInputState(false, b);
 		break;
 	}
+	}
 }
 void AInputTracker::LeftTouchpadTouched()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		float x = InputComponent->GetAxisValue("LeftTouchpadH");
+		float y = InputComponent->GetAxisValue("LeftTouchpadV");
+		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 50));
+		LeftTouchpadAxis = FVector(x, y, 50);
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		float x = InputComponent->GetAxisValue("LeftTouchpadH");
 		float y = InputComponent->GetAxisValue("LeftTouchpadV");
 		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 50));
@@ -390,22 +547,32 @@ void AInputTracker::LeftTouchpadTouched()
 		AppendInputState(false, b);
 		break;
 	}
+	}
 }
 void AInputTracker::LeftTouchpadPressed()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		float x = InputComponent->GetAxisValue("LeftTouchpadH");
+		float y = InputComponent->GetAxisValue("LeftTouchpadV");
+		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 100));
+		LeftTouchpadAxis = FVector(x, y, 100);
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		float x = InputComponent->GetAxisValue("LeftTouchpadH");
 		float y = InputComponent->GetAxisValue("LeftTouchpadV");
 		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 100));
 		LeftTouchpadAxis = FVector(x, y, 100);
 		AppendInputState(false, b);
 		break;
+	}
 	}
 }
 
@@ -417,7 +584,11 @@ void AInputTracker::RightFaceButtonOnePressed()
 	case EC3DControllerType::Vive:
 		break;
 	case EC3DControllerType::Oculus:
+	{
+		auto b = FControllerInputState("rift_abtn", 100);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
 		break;
 	}
@@ -429,7 +600,11 @@ void AInputTracker::RightFaceButtonOneReleased()
 	case EC3DControllerType::Vive:
 		break;
 	case EC3DControllerType::Oculus:
+	{
+		auto b = FControllerInputState("rift_abtn", 0);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
 		break;
 	}
@@ -442,7 +617,11 @@ void AInputTracker::RightFaceButtonTwoPressed()
 	case EC3DControllerType::Vive:
 		break;
 	case EC3DControllerType::Oculus:
+	{
+		auto b = FControllerInputState("rift_bbtn", 100);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
 		break;
 	}
@@ -454,6 +633,11 @@ void AInputTracker::RightFaceButtonTwoReleased()
 	case EC3DControllerType::Vive:
 		break;
 	case EC3DControllerType::Oculus:
+	{
+		auto b = FControllerInputState("rift_bbtn", 0);
+		AppendInputState(true, b);
+		break;
+	}
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 		break;
@@ -465,13 +649,23 @@ void AInputTracker::RightMenuButtonPressed()
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		auto b = FControllerInputState("vive_menubtn", 100);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
+	{
+		auto b = FControllerInputState("rift_start", 100);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		auto b = FControllerInputState("wmr_menu", 100);
 		AppendInputState(true, b);
 		break;
+	}
 	}
 }
 void AInputTracker::RightMenuButtonReleased()
@@ -479,13 +673,23 @@ void AInputTracker::RightMenuButtonReleased()
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		auto b = FControllerInputState("vive_menubtn", 0);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
+	{
+		auto b = FControllerInputState("rift_start", 0);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		auto b = FControllerInputState("wmr_menu", 0);
 		AppendInputState(true, b);
 		break;
+	}
 	}
 }
 
@@ -496,14 +700,23 @@ void AInputTracker::RightJoystickPressed()
 	case EC3DControllerType::Vive:
 		break;
 	case EC3DControllerType::Oculus:
+	{
+		float x = InputComponent->GetAxisValue("RightJoystickH");
+		float y = InputComponent->GetAxisValue("RightJoystickV");
+		auto b = FControllerInputState("`joystick", FVector(x, y, 100));
+		RightJoystickAxis = FVector(x, y, 100);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		float x = InputComponent->GetAxisValue("RightJoystickH");
 		float y = InputComponent->GetAxisValue("RightJoystickV");
 		auto b = FControllerInputState("wmr_joystick", FVector(x, y, 100));
 		RightJoystickAxis = FVector(x, y, 100);
 		AppendInputState(true, b);
 		break;
+	}
 	}
 }
 void AInputTracker::RightJoystickReleased()
@@ -513,14 +726,23 @@ void AInputTracker::RightJoystickReleased()
 	case EC3DControllerType::Vive:
 		break;
 	case EC3DControllerType::Oculus:
+	{
+		float x = InputComponent->GetAxisValue("RightJoystickH");
+		float y = InputComponent->GetAxisValue("RightJoystickV");
+		auto b = FControllerInputState("rift_joystick", FVector(x, y, 0));
+		RightJoystickAxis = FVector(x, y, 0);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		float x = InputComponent->GetAxisValue("RightJoystickH");
 		float y = InputComponent->GetAxisValue("RightJoystickV");
 		auto b = FControllerInputState("wmr_joystick", FVector(x, y, 0));
 		RightJoystickAxis = FVector(x, y, 0);
 		AppendInputState(true, b);
 		break;
+	}
 	}
 }
 
@@ -529,10 +751,18 @@ void AInputTracker::RightTouchpadReleased()
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		float x = InputComponent->GetAxisValue("RightTouchpadH");
+		float y = InputComponent->GetAxisValue("RightTouchpadV");
+		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 0));
+		RightTouchpadAxis = FVector(x, y, 0);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		float x = InputComponent->GetAxisValue("RightTouchpadH");
 		float y = InputComponent->GetAxisValue("RightTouchpadV");
 		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 0));
@@ -540,16 +770,25 @@ void AInputTracker::RightTouchpadReleased()
 		AppendInputState(true, b);
 		break;
 	}
+	}
 }
 void AInputTracker::RightTouchpadTouched()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		float x = InputComponent->GetAxisValue("RightTouchpadH");
+		float y = InputComponent->GetAxisValue("RightTouchpadV");
+		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 50));
+		RightTouchpadAxis = FVector(x, y, 50);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		float x = InputComponent->GetAxisValue("RightTouchpadH");
 		float y = InputComponent->GetAxisValue("RightTouchpadV");
 		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 50));
@@ -557,22 +796,32 @@ void AInputTracker::RightTouchpadTouched()
 		AppendInputState(true, b);
 		break;
 	}
+	}
 }
 void AInputTracker::RightTouchpadPressed()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		float x = InputComponent->GetAxisValue("RightTouchpadH");
+		float y = InputComponent->GetAxisValue("RightTouchpadV");
+		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 100));
+		RightTouchpadAxis = FVector(x, y, 100);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		float x = InputComponent->GetAxisValue("RightTouchpadH");
 		float y = InputComponent->GetAxisValue("RightTouchpadV");
 		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 100));
 		RightTouchpadAxis = FVector(x, y, 100);
 		AppendInputState(true, b);
 		break;
+	}
 	}
 }
 
@@ -581,13 +830,23 @@ void AInputTracker::RightGripPressed()
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		auto b = FControllerInputState("vive_grip", 100);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
+	{
+		auto b = FControllerInputState("rift_grip", 100);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		auto b = FControllerInputState("wmr_grip", 100);
 		AppendInputState(true, b);
 		break;
+	}
 	}
 }
 
@@ -596,13 +855,26 @@ void AInputTracker::RightGripReleased()
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		auto b = FControllerInputState("vive_grip", 0);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
+	{
+		float currentValue = InputComponent->GetAxisValue("RightGripAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		RightGripValue = icurrentValue;
+		auto b = FControllerInputState("rift_grip", icurrentValue);
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		auto b = FControllerInputState("wmr_grip", 0);
 		AppendInputState(true, b);
 		break;
+	}
 	}
 }
 
@@ -611,13 +883,23 @@ void AInputTracker::LeftGripPressed()
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		auto b = FControllerInputState("vive_grip", 100);
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
+	{
+		auto b = FControllerInputState("rift_grip", 100);
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		auto b = FControllerInputState("wmr_grip", 100);
 		AppendInputState(false, b);
 		break;
+	}
 	}
 }
 
@@ -626,13 +908,26 @@ void AInputTracker::LeftGripReleased()
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		auto b = FControllerInputState("vive_grip", 0);
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
+	{
+		float currentValue = InputComponent->GetAxisValue("LeftGripAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		LeftGripValue = icurrentValue;
+		auto b = FControllerInputState("rift_grip", icurrentValue);
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		auto b = FControllerInputState("wmr_grip", 0);
 		AppendInputState(false, b);
 		break;
+	}
 	}
 }
 
@@ -642,15 +937,26 @@ void AInputTracker::LeftTriggerPressed()
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		auto b = FControllerInputState("vive_trigger", 100);
+		LeftTriggerValue = 100;
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
-		//LeftInputStates.States.Add()
+	{
+		auto b = FControllerInputState("rift_trigger", 100);
+		LeftTriggerValue = 100;
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		auto b = FControllerInputState("wmr_trigger", 100);
 		LeftTriggerValue = 100;
 		AppendInputState(false, b);
 		break;
+	}
 	}
 }
 
@@ -659,16 +965,32 @@ void AInputTracker::LeftTriggerReleased()
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		float currentValue = InputComponent->GetAxisValue("LeftTriggerAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		LeftTriggerValue = icurrentValue;
+		auto b = FControllerInputState("vive_trigger", icurrentValue);
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
+	{
+		float currentValue = InputComponent->GetAxisValue("LeftTriggerAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		LeftTriggerValue = icurrentValue;
+		auto b = FControllerInputState("rift_trigger", icurrentValue);
+		AppendInputState(false, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		float currentValue = InputComponent->GetAxisValue("LeftTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		LeftTriggerValue = icurrentValue;
 		auto b = FControllerInputState("wmr_trigger", icurrentValue);
 		AppendInputState(false, b);
 		break;
+	}
 	}
 }
 
@@ -677,15 +999,26 @@ void AInputTracker::RightTriggerPressed()
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		auto b = FControllerInputState("vive_trigger", 100);
+		RightTriggerValue = 100;
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
-		//LeftInputStates.States.Add()
+	{
+		auto b = FControllerInputState("rift_trigger", 100);
+		RightTriggerValue = 100;
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		auto b = FControllerInputState("wmr_trigger", 100);
 		RightTriggerValue = 100;
 		AppendInputState(true, b);
 		break;
+	}
 	}
 }
 
@@ -694,15 +1027,31 @@ void AInputTracker::RightTriggerReleased()
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
+	{
+		float currentValue = InputComponent->GetAxisValue("RightTriggerAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		RightTriggerValue = icurrentValue;
+		auto b = FControllerInputState("vive_trigger", icurrentValue);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::Oculus:
+	{
+		float currentValue = InputComponent->GetAxisValue("RightTriggerAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		RightTriggerValue = icurrentValue;
+		auto b = FControllerInputState("rift_trigger", icurrentValue);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
+	{
 		float currentValue = InputComponent->GetAxisValue("RightTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		RightTriggerValue = icurrentValue;
 		auto b = FControllerInputState("wmr_trigger", icurrentValue);
 		AppendInputState(true, b);
 		break;
+	}
 	}
 }
