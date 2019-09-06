@@ -27,6 +27,7 @@ enum class ECommonMeshName : uint8
 UENUM(BlueprintType)
 enum class EC3DControllerType : uint8
 {
+	None,
 	Vive,
 	Oculus,
 	WindowsMixedReality

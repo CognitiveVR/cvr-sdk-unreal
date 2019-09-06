@@ -18,15 +18,13 @@ private:
 	UDynamicObject* RightHand;
 
 public:	
-	UPROPERTY(EditAnywhere)
-		EC3DControllerType ControllerType;
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.1))
 		float Interval = 0.1;
 	// Sets default values for this actor's properties
 	AInputTracker();
 
 private:
-	// Called when the game starts or when spawned
+	EC3DControllerType ControllerType;
 	virtual void BeginPlay() override;
 	void FindControllers();
 	virtual void Tick(float DeltaTime) override;

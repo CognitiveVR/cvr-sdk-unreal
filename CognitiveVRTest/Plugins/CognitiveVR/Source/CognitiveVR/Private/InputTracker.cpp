@@ -90,6 +90,20 @@ void AInputTracker::FindControllers()
 			if (left != NULL)
 			{
 				LeftHand = Cast<UDynamicObject>(left);
+				if (!LeftHand->IsController) { continue; }
+
+				if (LeftHand->ControllerType == "oculusrifttouchleft")
+				{
+					ControllerType = EC3DControllerType::Oculus;
+				}
+				else if (LeftHand->ControllerType == "windows_mixed_reality_controller_left")
+				{
+					ControllerType = EC3DControllerType::WindowsMixedReality;
+				}
+				else if (LeftHand->ControllerType == "vivecontroller")
+				{
+					ControllerType = EC3DControllerType::Vive;
+				}
 			}
 		}
 		else if (RightHand == NULL && Component->GetTrackingSource() == EControllerHand::Right)
@@ -98,6 +112,20 @@ void AInputTracker::FindControllers()
 			if (right != NULL)
 			{
 				RightHand = Cast<UDynamicObject>(right);
+				if (!RightHand->IsController) { continue; }
+
+				if (RightHand->ControllerType == "oculusrifttouchright")
+				{
+					ControllerType = EC3DControllerType::Oculus;
+				}
+				else if (RightHand->ControllerType == "windows_mixed_reality_controller_right")
+				{
+					ControllerType = EC3DControllerType::WindowsMixedReality;
+				}
+				else if (RightHand->ControllerType == "vivecontroller")
+				{
+					ControllerType = EC3DControllerType::Vive;
+				}
 			}
 		}
 	}
