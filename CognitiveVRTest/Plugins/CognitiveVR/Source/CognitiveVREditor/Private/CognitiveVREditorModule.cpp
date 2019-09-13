@@ -76,8 +76,10 @@ public:
 			GLog->Log("CognitiveVRModule::StartupModule write defaults to ini");
 			FString defaultgateway = "data.cognitive3d.com";
 			FString defaultsessionviewer = "viewer.cognitive3d.com/scene/";
+			FString defaultdashboard = "https://app.cognitive3d.com";
 			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), *defaultgateway, EngineIni);
 			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SessionViewer"), *defaultsessionviewer, EngineIni);
+			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Dashboard"), *defaultsessionviewer, EngineIni);
 
 			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("GazeBatchSize"), 64, EngineIni);
 
