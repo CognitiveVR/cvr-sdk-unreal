@@ -27,6 +27,9 @@ class UCognitiveVRSettings
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 		FString SessionViewer = "viewer.cognitive3d.com/scene/";
 
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+		FString Dashboard = "app.cognitive3d.com/";
+
 	/** The number of player snapshots that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Gaze")
 		int32 GazeBatchSize = 64;
