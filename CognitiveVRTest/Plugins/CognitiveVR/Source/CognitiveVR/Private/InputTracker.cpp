@@ -92,7 +92,7 @@ void AInputTracker::FindControllers()
 				LeftHand = Cast<UDynamicObject>(left);
 				if (!LeftHand->IsController) { continue; }
 
-				if (LeftHand->ControllerType == "oculusrifttouchleft")
+				if (LeftHand->ControllerType == "oculustouchleft")
 				{
 					ControllerType = EC3DControllerType::Oculus;
 				}
@@ -114,7 +114,7 @@ void AInputTracker::FindControllers()
 				RightHand = Cast<UDynamicObject>(right);
 				if (!RightHand->IsController) { continue; }
 
-				if (RightHand->ControllerType == "oculusrifttouchright")
+				if (RightHand->ControllerType == "oculustouchright")
 				{
 					ControllerType = EC3DControllerType::Oculus;
 				}
@@ -731,7 +731,7 @@ void AInputTracker::RightJoystickPressed()
 	{
 		float x = InputComponent->GetAxisValue("RightJoystickH");
 		float y = InputComponent->GetAxisValue("RightJoystickV");
-		auto b = FControllerInputState("`joystick", FVector(x, y, 100));
+		auto b = FControllerInputState("rift_joystick", FVector(x, y, 100));
 		RightJoystickAxis = FVector(x, y, 100);
 		AppendInputState(true, b);
 		break;

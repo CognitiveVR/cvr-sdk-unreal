@@ -9,6 +9,7 @@
 #include "Engine/Texture2D.h"
 #include "SceneView.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "MotionControllerComponent.h"
 //#include "KismetMathLibrary.h"
 #include "DynamicObject.generated.h"
 

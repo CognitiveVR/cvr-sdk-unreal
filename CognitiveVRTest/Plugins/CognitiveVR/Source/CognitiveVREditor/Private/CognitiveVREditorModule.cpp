@@ -4,7 +4,6 @@
 #include "LevelEditor.h"
 #include "CognitiveEditorTools.h"
 #include "SDockTab.h"
-#include "SceneSetupWindow.h"
 #include "Editor/WorkspaceMenuStructure/Public/WorkspaceMenuStructureModule.h"
 #include "Editor/EditorStyle/Public/EditorStyleSet.h"
 #include "SSceneSetupWidget.h"

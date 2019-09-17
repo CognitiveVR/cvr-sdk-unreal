@@ -211,11 +211,11 @@ void UDynamicObject::Initialize()
 		UseCustomMeshName = true;
 		if (CommonMeshName == ECommonMeshName::OculusRiftTouchLeft)
 		{
-			MeshName = "oculusrifttouchleft";
+			MeshName = "oculustouchleft";
 		}
 		else if (CommonMeshName == ECommonMeshName::OculusRiftTouchRight)
 		{
-			MeshName = "oculusrifttouchright";
+			MeshName = "oculustouchright";
 		}
 		else if (CommonMeshName == ECommonMeshName::ViveController)
 		{
@@ -233,6 +233,12 @@ void UDynamicObject::Initialize()
 		{
 			MeshName = "windows_mixed_reality_controller_right";
 		}
+	}
+
+	if (MeshName == "")
+	{
+		//hasn't been initialized correctly
+		return;
 	}
 
 	if (SnapshotOnBeginPlay)
@@ -929,8 +935,10 @@ UDynamicObject* UDynamicObject::SetupController(AActor* target, bool IsRight, EC
 	UDynamicObject* dyn = target->FindComponentByClass<UDynamicObject>();
 	if (dyn == NULL)
 	{
-		dyn = NewObject<UDynamicObject>(target);
-
+		auto mcc = target->FindComponentByClass< UMotionControllerComponent>();
+		dyn = NewObject<UDynamicObject>(target, UDynamicObject::StaticClass());
+		dyn->SetupAttachment(mcc);
+		dyn->RegisterComponent();
 	}
 
 	dyn->IsRightController = IsRight;
@@ -944,12 +952,12 @@ UDynamicObject* UDynamicObject::SetupController(AActor* target, bool IsRight, EC
 	case EC3DControllerType::Oculus:
 		if (IsRight)
 		{
-			dyn->ControllerType = "oculusrifttouchright";
+			dyn->ControllerType = "oculustouchright";
 			dyn->CommonMeshName = ECommonMeshName::OculusRiftTouchRight;
 		}
 		else
 		{
-			dyn->ControllerType = "oculusrifttouchleft";
+			dyn->ControllerType = "oculustouchleft";
 			dyn->CommonMeshName = ECommonMeshName::OculusRiftTouchLeft;
 		}
 		break;
@@ -974,6 +982,7 @@ UDynamicObject* UDynamicObject::SetupController(AActor* target, bool IsRight, EC
 	
 	dyn->UseCustomId = true;
 	dyn->CustomId = FGuid::NewGuid().ToString();
+	dyn->Initialize();
 	return dyn;
 }
 
