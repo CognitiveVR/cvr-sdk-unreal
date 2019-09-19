@@ -71,6 +71,7 @@ private:
 	void LeftTouchpadReleased();
 	void LeftTouchpadTouched();
 	void LeftTouchpadPressed();
+	void LeftTouchpadPressRelease();
 
 	void LeftTriggerReleased();
 	void LeftTriggerPressed();
@@ -94,6 +95,7 @@ private:
 	void RightTouchpadReleased();
 	void RightTouchpadTouched();
 	void RightTouchpadPressed();
+	void RightTouchpadPressRelease();
 
 	void RightTriggerReleased();
 	void RightTriggerPressed();

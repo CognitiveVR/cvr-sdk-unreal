@@ -38,12 +38,14 @@ void AInputTracker::BeginPlay()
 	InputComponent->BindAction("LeftGrip", EInputEvent::IE_Released, this, &AInputTracker::LeftGripReleased).bConsumeInput = 0;
 
 	InputComponent->BindAction("RightTouchpadPress", EInputEvent::IE_Pressed, this, &AInputTracker::RightTouchpadPressed).bConsumeInput = 0;
+	InputComponent->BindAction("RightTouchpadPress", EInputEvent::IE_Released, this, &AInputTracker::RightTouchpadPressRelease).bConsumeInput = 0;
 	InputComponent->BindAction("RightTouchpadTouch", EInputEvent::IE_Pressed, this, &AInputTracker::RightTouchpadTouched).bConsumeInput = 0;
-	InputComponent->BindAction("RightTouchpadReleased", EInputEvent::IE_Released, this, &AInputTracker::RightTouchpadReleased).bConsumeInput = 0;
+	InputComponent->BindAction("RightTouchpadTouch", EInputEvent::IE_Released, this, &AInputTracker::RightTouchpadReleased).bConsumeInput = 0;
 
 	InputComponent->BindAction("LeftTouchpadPress", EInputEvent::IE_Pressed, this, &AInputTracker::LeftTouchpadPressed).bConsumeInput = 0;
+	InputComponent->BindAction("LeftTouchpadPress", EInputEvent::IE_Released, this, &AInputTracker::LeftTouchpadPressRelease).bConsumeInput = 0;
 	InputComponent->BindAction("LeftTouchpadTouch", EInputEvent::IE_Pressed, this, &AInputTracker::LeftTouchpadTouched).bConsumeInput = 0;
-	InputComponent->BindAction("LeftTouchpadReleased", EInputEvent::IE_Released, this, &AInputTracker::LeftTouchpadReleased).bConsumeInput = 0;
+	InputComponent->BindAction("LeftTouchpadTouch", EInputEvent::IE_Released, this, &AInputTracker::LeftTouchpadReleased).bConsumeInput = 0;
 
 	InputComponent->BindAction("RightJoystick", EInputEvent::IE_Pressed, this, &AInputTracker::RightJoystickPressed).bConsumeInput = 0;
 	InputComponent->BindAction("RightJoystick", EInputEvent::IE_Released, this, &AInputTracker::RightJoystickReleased).bConsumeInput = 0;
@@ -441,7 +443,7 @@ void AInputTracker::LeftMenuButtonPressed()
 	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		auto b = FControllerInputState("wmr_menu", 100);
+		auto b = FControllerInputState("wmr_menubtn", 100);
 		AppendInputState(false, b);
 		break;
 	}
@@ -465,7 +467,7 @@ void AInputTracker::LeftMenuButtonReleased()
 	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		auto b = FControllerInputState("wmr_menu", 0);
+		auto b = FControllerInputState("wmr_menubtn", 0);
 		AppendInputState(false, b);
 		break;
 	}
@@ -604,6 +606,33 @@ void AInputTracker::LeftTouchpadPressed()
 	}
 }
 
+void AInputTracker::LeftTouchpadPressRelease()
+{
+	switch (ControllerType)
+	{
+	case EC3DControllerType::Vive:
+	{
+		float x = InputComponent->GetAxisValue("LeftTouchpadH");
+		float y = InputComponent->GetAxisValue("LeftTouchpadV");
+		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 50));
+		LeftTouchpadAxis = FVector(x, y, 50);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::Oculus:
+		break;
+	case EC3DControllerType::WindowsMixedReality:
+	{
+		float x = InputComponent->GetAxisValue("LeftTouchpadH");
+		float y = InputComponent->GetAxisValue("LeftTouchpadV");
+		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 50));
+		LeftTouchpadAxis = FVector(x, y, 50);
+		AppendInputState(false, b);
+		break;
+	}
+	}
+}
+
 
 void AInputTracker::RightFaceButtonOnePressed()
 {
@@ -690,7 +719,7 @@ void AInputTracker::RightMenuButtonPressed()
 	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		auto b = FControllerInputState("wmr_menu", 100);
+		auto b = FControllerInputState("wmr_menubtn", 100);
 		AppendInputState(true, b);
 		break;
 	}
@@ -714,7 +743,7 @@ void AInputTracker::RightMenuButtonReleased()
 	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		auto b = FControllerInputState("wmr_menu", 0);
+		auto b = FControllerInputState("wmr_menubtn", 0);
 		AppendInputState(true, b);
 		break;
 	}
@@ -847,6 +876,33 @@ void AInputTracker::RightTouchpadPressed()
 		float y = InputComponent->GetAxisValue("RightTouchpadV");
 		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 100));
 		RightTouchpadAxis = FVector(x, y, 100);
+		AppendInputState(true, b);
+		break;
+	}
+	}
+}
+
+void AInputTracker::RightTouchpadPressRelease()
+{
+	switch (ControllerType)
+	{
+	case EC3DControllerType::Vive:
+	{
+		float x = InputComponent->GetAxisValue("RightTouchpadH");
+		float y = InputComponent->GetAxisValue("RightTouchpadV");
+		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 50));
+		RightTouchpadAxis = FVector(x, y, 50);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::Oculus:
+		break;
+	case EC3DControllerType::WindowsMixedReality:
+	{
+		float x = InputComponent->GetAxisValue("RightTouchpadH");
+		float y = InputComponent->GetAxisValue("RightTouchpadV");
+		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 50));
+		RightTouchpadAxis = FVector(x, y, 50);
 		AppendInputState(true, b);
 		break;
 	}
