@@ -76,7 +76,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 	
 
 	
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+	LoginCategory.AddCustomRow(FText::FromString("Dev Key"))
 	.ValueContent()
 	.HAlign(HAlign_Fill)
 	[
@@ -98,7 +98,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 		]
 	];
 
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+	LoginCategory.AddCustomRow(FText::FromString("API Key"))
 	.ValueContent()
 	.HAlign(HAlign_Fill)
 	[
@@ -120,7 +120,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 		]
 	];
 
-	LoginCategory.AddCustomRow(FText::FromString("Commands"))
+	LoginCategory.AddCustomRow(FText::FromString("Save"))
 	.ValueContent()
 	.MinDesiredWidth(256)
 	[
@@ -145,7 +145,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 
 	IDetailCategoryBuilder& ExportedSceneData = DetailBuilder.EditCategory(TEXT("Exported Scene Data"));
 
-	ExportedSceneData.AddCustomRow(FText::FromString("Commands"))
+	ExportedSceneData.AddCustomRow(FText::FromString("Scene Management Buttons"))
 	[
 		SNew(SHorizontalBox)
 		+ SHorizontalBox::Slot()
@@ -161,7 +161,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 		]
 	];
 
-	ExportedSceneData.AddCustomRow(FText::FromString("Commands"))
+	ExportedSceneData.AddCustomRow(FText::FromString("Scene Management List"))
 	[
 			SNew(SBox)
 			.MaxDesiredHeight(200)
@@ -218,7 +218,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 
 	DynamicWorkflow.InitiallyCollapsed(true);
 
-	DynamicWorkflow.AddCustomRow(FText::FromString("Commands"))
+	DynamicWorkflow.AddCustomRow(FText::FromString("Paths"))
 	[
 		SNew(SVerticalBox)
 		+SVerticalBox::Slot()
@@ -364,7 +364,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 			]
 	];
 
-	DynamicWorkflow.AddCustomRow(FText::FromString("Commands"))
+	DynamicWorkflow.AddCustomRow(FText::FromString("Dynamic Object Upload Process"))
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
@@ -471,7 +471,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 
 	DynamicManifestWorkflow.InitiallyCollapsed(true);
 
-	DynamicManifestWorkflow.AddCustomRow(FText::FromString("Commands"))
+	DynamicManifestWorkflow.AddCustomRow(FText::FromString("Dynamic Object Summary"))
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()

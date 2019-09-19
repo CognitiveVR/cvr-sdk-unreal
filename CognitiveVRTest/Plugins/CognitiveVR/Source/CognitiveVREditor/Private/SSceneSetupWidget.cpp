@@ -1064,7 +1064,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.HAlign(HAlign_Center)
 					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 					.Text(FText::FromString("Open Dashboard"))
-					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://app.cognitive3d.com"))
+					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, "https://" + FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Dashboard", false))
 				]
 			]
 			+ SVerticalBox::Slot()

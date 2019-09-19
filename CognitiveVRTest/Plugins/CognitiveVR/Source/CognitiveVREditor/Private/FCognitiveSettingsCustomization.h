@@ -13,7 +13,7 @@
 #include "CognitiveEditorTools.h"
 #include "STextComboBox.h"
 #include "SDynamicObjectListWidget.h"
-#include "SDynamicObjectWebListWidget.h"
+//#include "SDynamicObjectWebListWidget.h"
 
 //customization ui for cognitive settings/preferences. most of this is interface code that calls FCognitiveEditorTools logic
 
@@ -37,7 +37,7 @@ public:
 	TSharedRef<ITableRow> OnGenerateDynamicRow(TSharedPtr<cognitivevrapi::FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
 
 	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
-	TSharedPtr<SDynamicObjectWebListWidget> WebDynamicList;
+	//TSharedPtr<SDynamicObjectWebListWidget> WebDynamicList;
 	TSharedPtr<SFStringListWidget> SubDirectoryListWidget;
 
 

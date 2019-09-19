@@ -4,7 +4,6 @@
 #include "LevelEditor.h"
 #include "CognitiveEditorTools.h"
 #include "SDockTab.h"
-#include "SceneSetupWindow.h"
 #include "Editor/WorkspaceMenuStructure/Public/WorkspaceMenuStructureModule.h"
 #include "Editor/EditorStyle/Public/EditorStyleSet.h"
 #include "SSceneSetupWidget.h"
@@ -76,8 +75,10 @@ public:
 			GLog->Log("CognitiveVRModule::StartupModule write defaults to ini");
 			FString defaultgateway = "data.cognitive3d.com";
 			FString defaultsessionviewer = "viewer.cognitive3d.com/scene/";
+			FString defaultdashboard = "app.cognitive3d.com";
 			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), *defaultgateway, EngineIni);
 			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SessionViewer"), *defaultsessionviewer, EngineIni);
+			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Dashboard"), *defaultdashboard, EngineIni);
 
 			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("GazeBatchSize"), 64, EngineIni);
 

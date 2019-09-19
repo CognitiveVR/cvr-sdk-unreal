@@ -451,10 +451,12 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 		FString finalMeshName = dynamic->MeshName;
 		if (!dynamic->UseCustomMeshName)
 		{
-			if (dynamic->CommonMeshName == ECommonMeshName::ViveController) { finalMeshName = "ViveController"; }
-			if (dynamic->CommonMeshName == ECommonMeshName::ViveTracker) { finalMeshName = "ViveTracker"; }
-			if (dynamic->CommonMeshName == ECommonMeshName::OculusTouchRight) { finalMeshName = "OculusTouchRight"; }
-			if (dynamic->CommonMeshName == ECommonMeshName::OculusTouchLeft) { finalMeshName = "OculusTouchLeft"; }
+			if (dynamic->CommonMeshName == ECommonMeshName::ViveController) { finalMeshName = "vivecontroller"; }
+			if (dynamic->CommonMeshName == ECommonMeshName::ViveTracker) { finalMeshName = "vivecontroller"; }
+			if (dynamic->CommonMeshName == ECommonMeshName::OculusRiftTouchRight) { finalMeshName = "oculusrifttouchright"; }
+			if (dynamic->CommonMeshName == ECommonMeshName::OculusRiftTouchLeft) { finalMeshName = "oculusrifttouchleft"; }
+			if (dynamic->CommonMeshName == ECommonMeshName::WindowsMixedRealityRight) { finalMeshName = "windows_mixed_reality_controller_right"; }
+			if (dynamic->CommonMeshName == ECommonMeshName::WindowsMixedRealityLeft) { finalMeshName = "windows_mixed_reality_controller_left"; }
 		}
 	}
 
