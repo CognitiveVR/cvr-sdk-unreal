@@ -4,8 +4,8 @@
 #include "CognitiveVR.h"
 #include "util/cognitive_log.h"
 
-bool ShowDebugLogs; //basic info/warning/errors
-bool ShowDevLogs; //development specific logs
+bool cognitivevrapi::CognitiveLog::ShowDebugLogs; //basic info/warning/errors
+bool cognitivevrapi::CognitiveLog::ShowDevLogs; //development specific logs
 
 void cognitivevrapi::CognitiveLog::Init()
 {

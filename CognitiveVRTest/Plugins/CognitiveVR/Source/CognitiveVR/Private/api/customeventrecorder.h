@@ -9,12 +9,17 @@
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 
 class FAnalyticsProviderCognitiveVR;
+struct FCustomEvent;
 
 namespace cognitivevrapi
 {
-	class COGNITIVEVR_API CustomEvent
+	class COGNITIVEVR_API CustomEventRecorder
 	{
 	private:
+
+		static uint64 lastFrameCount;
+		static int32 consecutiveFrame;
+
 		FAnalyticsProviderCognitiveVR* cog;
 		int32 jsonEventPart = 1;
 		int32 CustomEventBatchSize = 16;
@@ -31,7 +36,7 @@ namespace cognitivevrapi
 		void TrySendData();
 
 	public:
-		CustomEvent(FAnalyticsProviderCognitiveVR* cvr);
+		CustomEventRecorder(FAnalyticsProviderCognitiveVR* cvr);
 
 		void StartSession();
 
@@ -52,6 +57,8 @@ namespace cognitivevrapi
 		void Send(FString category, FVector Position);
 		//record event with name at a position with properties
 		void Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties);
+
+		void Send(FCustomEvent* customEvent);
 
 		//send all outstanding custom events to Cognitive dashboard
 		void SendData();

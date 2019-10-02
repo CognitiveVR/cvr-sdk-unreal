@@ -1059,8 +1059,8 @@ FReply FCognitiveEditorTools::UploadScene()
 	}
 
 	GLog->Log("FCognitiveEditorTools::UploadScene upload scene to " + url);
-	//TODO listen for response. when the response returns, request the scene version with auth token
 	UploadFromDirectory(url, GetCurrentSceneExportDirectory(), "scene");
+	//IMPROVEMENT listen for response. when the response returns, request the scene version with auth token
 
 	return FReply::Handled();
 }
@@ -2435,7 +2435,6 @@ FProcHandle FCognitiveEditorTools::ConvertSceneToGLTF()
 	int32 priorityMod = 0;
 	BlenderReduceAllWizardProc = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
 
-	//TODO when procHandle is complete, upload exported files to sceneexplorer.com
 	return BlenderReduceAllWizardProc;
 }
 

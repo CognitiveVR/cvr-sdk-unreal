@@ -7,6 +7,9 @@
 #include <stdexcept>
 #include "CognitiveVR.h"
 #include "CognitiveVRPrivatePCH.h"
+#include "Http.h"
+#include "ExitPoll.h"
+#include "network.h"
 
 class FAnalyticsProviderCognitiveVR;
 class HttpInterface;
@@ -18,14 +21,17 @@ namespace cognitivevrapi
 	private:
 		FAnalyticsProviderCognitiveVR* s;
 
+		static FHttpModule* Http;
+		static FString Gateway;
+
 	public:
 		Network(FAnalyticsProviderCognitiveVR* sp);
 
 		void NetworkCall(FString suburl, FString contents);
 
-		//TODO exitpoll with callback should be here
-		void NetworkExitPollGet(FString hook);
-		void NetworkExitPollPost(FString questionsetname, FString questionsetversion, FString contents);
+		static void OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+		void NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response);
+		void NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSetName, FExitPollResponse Responses);
 	};
 }
 #endif  // COGNITIVEVR_NETWORK_H_

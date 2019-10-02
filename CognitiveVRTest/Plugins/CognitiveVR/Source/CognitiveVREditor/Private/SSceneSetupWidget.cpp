@@ -861,7 +861,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 #pragma endregion
 
-			//TODO formatting
 #pragma region "upload screen"
 			+ SVerticalBox::Slot()
 			.AutoHeight()

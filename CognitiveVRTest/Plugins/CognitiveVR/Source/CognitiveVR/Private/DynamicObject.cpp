@@ -5,20 +5,19 @@
 //#include "CognitiveVRSettings.h"
 #include "Util.h"
 
-TArray<FDynamicObjectSnapshot> snapshots; //this should be cleared when session starts in PIE
-TArray<cognitivevrapi::FDynamicObjectManifestEntry> manifest;
-TArray<cognitivevrapi::FDynamicObjectManifestEntry> newManifest;
-TArray<TSharedPtr<cognitivevrapi::FDynamicObjectId>> allObjectIds;
-int32 jsonPart = 1;
-int32 MaxSnapshots = -1;
-
-int32 MinTimer = 5;
-int32 AutoTimer = 10;
-int32 ExtremeBatchSize = 128;
-float NextSendTime = 0;
-float LastSendTime = -60;
-FTimerHandle CognitiveDynamicAutoSendHandle;
-static const FString DynamicObjectFileType = "gltf";
+int32 UDynamicObject::jsonPart = 1;
+int32 UDynamicObject::MaxSnapshots = -1;
+int32 UDynamicObject::MinTimer = 5;
+int32 UDynamicObject::AutoTimer = 10;
+int32 UDynamicObject::ExtremeBatchSize = 128;
+float UDynamicObject::NextSendTime = 0;
+float UDynamicObject::LastSendTime = -60;
+FString UDynamicObject::DynamicObjectFileType = "gltf";
+TArray<FDynamicObjectSnapshot> UDynamicObject::snapshots;
+TArray<cognitivevrapi::FDynamicObjectManifestEntry> UDynamicObject::manifest;
+TArray<cognitivevrapi::FDynamicObjectManifestEntry> UDynamicObject::newManifest;
+TArray<TSharedPtr<cognitivevrapi::FDynamicObjectId>> UDynamicObject::allObjectIds;
+FTimerHandle UDynamicObject::CognitiveDynamicAutoSendHandle;
 
 // Sets default values for this component's properties
 UDynamicObject::UDynamicObject()
@@ -404,23 +403,10 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 			{
 				//rotated
 			}
-			else if (DirtyEngagements.Num() > 0)
-			{
-				//dirty engagements are written an inactive ones are removed in MakeSnapshot()
-			}
 			else
 			{
 				//hasn't moved enough
 				return;
-			}
-		}
-
-		if (DirtyEngagements.Num() > 0)
-		{
-			//engagement update
-			for (auto& element : DirtyEngagements)
-			{
-				element.EngagementTime += SnapshotInterval;
 			}
 		}
 
@@ -498,19 +484,6 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 	quat = rot.Quaternion();
 
 	snapshot.rotation = FQuat(quat.X, quat.Z, quat.Y, quat.W);
-
-	//TODO snapshot properties. eg size, color, texture
-
-	for (auto& element : DirtyEngagements)
-	{
-		//copying event because it could be removed below if inactive
-		auto engage = cognitivevrapi::FEngagementEvent(element.EngagementType, element.Parent, element.EngagementNumber);
-		engage.EngagementTime = element.EngagementTime;
-
-		snapshot.Engagements.Add(engage);
-	}
-
-	DirtyEngagements.RemoveAll([=](const cognitivevrapi::FEngagementEvent& engage) { return engage.Active == false; });
 
 	return snapshot;
 }
@@ -609,25 +582,6 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 	if (ObjArray.Num() > 0)
 	{
 		snapObj->SetArrayField("properties", ObjArray);
-	}
-
-	if (snapshot.Engagements.Num() > 0)
-	{
-		TArray< TSharedPtr<FJsonValue> > engagements;
-
-		for (auto& Elem : snapshot.Engagements)
-		{
-			TSharedPtr<FJsonObject>engagement = MakeShareable(new FJsonObject);
-
-			engagement->SetStringField("engagementtype", Elem.EngagementType);
-			engagement->SetStringField("engagementparent", Elem.Parent);
-			engagement->SetNumberField("engagement_time", Elem.EngagementTime);
-			engagement->SetNumberField("engagement_count", Elem.EngagementNumber);
-
-			TSharedPtr< FJsonValueObject > engagementValue = MakeShareable(new FJsonValueObject(engagement));
-			engagements.Add(engagementValue);
-		}
-		snapObj->SetArrayField("engagements", engagements);
 	}
 
 	if (snapshot.Buttons.Num() > 0)
@@ -828,78 +782,66 @@ void UDynamicObject::SendDynamicObjectSnapshot(UPARAM(ref)FDynamicObjectSnapshot
 	}
 }
 
-void UDynamicObject::BeginEngagement(UDynamicObject* target, FString engagementType)
+void UDynamicObject::BeginEngagement(UDynamicObject* target, FString engagementName, FString UniqueEngagementId)
 {
 	if (target != nullptr)
 	{
 		if (target->ObjectID.IsValid())
 		{
-			target->BeginEngagementId(engagementType, target->ObjectID->Id);
+			target->BeginEngagementId(target->ObjectID->Id, engagementName, UniqueEngagementId);
 		}
 	}
 }
 
-void UDynamicObject::BeginEngagementId(FString engagementName, FString parentObjectId)
+void UDynamicObject::BeginEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId)
 {
-	bool didFindEvent = false;
-	int32 previousEngagementCount = 0;
-
-	for (auto& e : Engagements)
+	if (UniqueEngagementId.IsEmpty())
 	{
-		if (e.EngagementType == engagementName)
-		{
-			previousEngagementCount++;
-			//foundEvent = &e;
-		}
-	}
-	cognitivevrapi::FEngagementEvent newEngagement = cognitivevrapi::FEngagementEvent(engagementName, parentObjectId, previousEngagementCount + 1);
-	DirtyEngagements.Add(newEngagement);
-	Engagements.Add(newEngagement);
-}
-
-void UDynamicObject::EndEngagement(UDynamicObject* target, FString engagementType)
-{
-	if (target != nullptr)
-	{
-		if (target->ObjectID.IsValid())
-		{
-			target->EndEngagementId(engagementType, target->ObjectID->Id);
-		}
-	}
-}
-
-void UDynamicObject::EndEngagementId(FString engagementName, FString parentObjectId)
-{
-	cognitivevrapi::FEngagementEvent* foundEvent = NULL;
-	for (auto& e : DirtyEngagements)
-	{
-		if (e.EngagementType == engagementName && (e.Parent == parentObjectId || parentObjectId == ""))
-		{
-			foundEvent = &e;
-			break;
-		}
+		UniqueEngagementId = parentDynamicObjectId + " " + engagementName;
 	}
 
-	if (foundEvent != nullptr)
+	FCustomEvent ce = FCustomEvent(engagementName);
+	ce.SetDynamicObject(parentDynamicObjectId);
+	if (!Engagements.Contains(UniqueEngagementId))
 	{
-		foundEvent->Active = false;
+		Engagements.Add(UniqueEngagementId, ce);
 	}
 	else
 	{
-		int32 previousEngagementCount = 0;
-		for (auto& e : Engagements)
-		{
-			if (e.EngagementType == engagementName)
-			{
-				previousEngagementCount++;
-				//foundEvent = &e;
-			}
-		}
+		Engagements[UniqueEngagementId].Send(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+		Engagements[UniqueEngagementId] = ce;
+	}
+}
 
-		cognitivevrapi::FEngagementEvent newEngagement = cognitivevrapi::FEngagementEvent(engagementName, parentObjectId, previousEngagementCount + 1);
-		newEngagement.Active = false;
-		DirtyEngagements.Add(newEngagement);
-		Engagements.Add(newEngagement);
+void UDynamicObject::EndEngagement(UDynamicObject* target, FString engagementName, FString UniqueEngagementId)
+{
+	if (target != nullptr)
+	{
+		if (target->ObjectID.IsValid())
+		{
+			target->EndEngagementId(target->ObjectID->Id, engagementName, UniqueEngagementId);
+		}
+	}
+}
+
+void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId)
+{
+	if (UniqueEngagementId.IsEmpty())
+	{
+		UniqueEngagementId = parentDynamicObjectId + " " + engagementName;
+	}
+
+	if (Engagements.Contains(UniqueEngagementId))
+	{
+		Engagements[UniqueEngagementId].Send(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+		Engagements.Remove(UniqueEngagementId);
+	}
+	else
+	{
+		//start and end event
+		FCustomEvent ce = FCustomEvent(engagementName);
+		ce.SetDynamicObject(parentDynamicObjectId);
+		ce.Send(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
 	}
 }
 

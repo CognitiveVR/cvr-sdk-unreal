@@ -9,19 +9,10 @@
 //#include "Private/util/config.h"
 #include "Private/util/cognitive_log.h"
 #include "Private/network/network.h"
-#include "Private/api/customevent.h"
+#include "Private/api/customeventrecorder.h"
 #include "Private/api/sensor.h"
 //#include "DynamicObject.h"
 #include "Engine.h"
-
-namespace cognitivevrapi
-{
-	// Only declaring class here
-	class Sensors;
-	class CustomEvent;
-	class Network;
-	//class ExitPoll;
-}
 
 namespace cognitivevrapi
 {
@@ -57,8 +48,8 @@ namespace cognitivevrapi
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
 	class cognitivevrapi::Network;
-	class cognitivevrapi::CustomEvent;
-	class CognitiveVRResponse;
+	class cognitivevrapi::CustomEventRecorder;
+	//class CognitiveVRResponse;
 	class cognitivevrapi::Sensors;
 	//class ExitPoll;
 	//class UDynamicObject;
@@ -82,7 +73,13 @@ namespace cognitivevrapi
 		FJsonObject SessionProperties;
 		//FJsonObject DeviceProperties;
 		//FJsonObject UserProperties;
+
+	private:
+		static UWorld* currentWorld;
+		
 	public:
+		static bool bHasSessionStarted;
+
 		FAnalyticsProviderCognitiveVR();
 		virtual ~FAnalyticsProviderCognitiveVR();
 
@@ -115,7 +112,7 @@ namespace cognitivevrapi
 		virtual void RecordError(const FString& Error, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		virtual void RecordProgress(const FString& ProgressType, const FString& ProgressHierarchy, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		
-		TSharedPtr<cognitivevrapi::CustomEvent> customevent;
+		TSharedPtr<cognitivevrapi::CustomEventRecorder> customeventrecorder;
 		TSharedPtr<cognitivevrapi::Network> network;
 		TSharedPtr<cognitivevrapi::Sensors> sensors;
 		//TSharedPtr<FJsonObject> initProperties; //optional properties sent when initializing. platform, ram, etc

@@ -37,7 +37,7 @@ void UCognitiveVRBlueprints::SendCustomEventToCore(FString Category, const TArra
 		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SendCustomEventToCore could not get provider!");
 		return;
 	}
-	if (!cog->customevent.IsValid())
+	if (!cog->customeventrecorder.IsValid())
 	{
 		return;
 	}
@@ -57,7 +57,7 @@ void UCognitiveVRBlueprints::SendCustomEventToCore(FString Category, const TArra
 		dynamicId = dynamic->GetObjectId()->Id;
 	}
 
-	cog->customevent->Send(Category, Position, properties, dynamicId);
+	cog->customeventrecorder->Send(Category, Position, properties, dynamicId);
 }
 
 void UCognitiveVRBlueprints::SendCustomEventPosition(FString Category, const TArray<FAnalyticsEventAttr>& Attributes, FVector Position)
@@ -135,9 +135,9 @@ void UCognitiveVRBlueprints::RecordSensor(const FString Name, const float Value)
 	cog->sensors->RecordSensor(Name, Value);
 }
 
-void UCognitiveVRBlueprints::GetQuestionSet(const FString Hook, const FCognitiveExitPollResponse response)
+void UCognitiveVRBlueprints::GetQuestionSet(const FString Hook, FCognitiveExitPollResponse response)
 {
-	ExitPoll::MakeQuestionSetRequest(Hook, response);
+	//ExitPoll::MakeQuestionSetRequest(Hook, response);
 }
 
 FExitPollQuestionSet UCognitiveVRBlueprints::GetCurrentExitPollQuestionSet()

@@ -354,7 +354,7 @@ void UPlayerTracker::SendData()
 	FName DeviceName(NAME_None);
 	FString DeviceNameString = "unknown";
 
-	//TODO get HMDdevice name on beginplay and cache
+	//get HMDdevice name on beginplay and cache
 	if (GEngine->XRSystem.IsValid())
 	{
 		DeviceName = GEngine->XRSystem->GetSystemName();
@@ -426,8 +426,7 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 			//this will send gaze and event data to scene explorer from THIS playertracker
 			SendData();
 
-			//TODO this why is endplay on gaze recorder not on core?
-			//cognitivevr manager can't find playercontroller0, but will send events to dash and dynamics+sensors to SE
+			//Q: this why is endplay on gaze recorder not on core? A: core probably doesn't get EndPlay or equivalent called
 			cog->EndSession();
 		}
 	}

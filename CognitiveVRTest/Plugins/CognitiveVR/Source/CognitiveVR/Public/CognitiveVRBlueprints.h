@@ -68,7 +68,7 @@ public:
 
 	//request a question set by a hook name from the Cognitive dashboard
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Exit Poll")
-	static void GetQuestionSet(const FString Hook, const FCognitiveExitPollResponse response);
+	static void GetQuestionSet(const FString Hook, FCognitiveExitPollResponse response);
 
 	//return the values of the current question set
 	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics|Exit Poll")

@@ -5,63 +5,53 @@
 #include "CognitiveVRSettings.h"
 #include "Util.h"
 
-FCognitiveExitPollResponse r;
-FExitPollQuestionSet currentSet;
-FString lastHook;
-TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider;
+FCognitiveExitPollResponse ExitPoll::lastResponse;
+FExitPollQuestionSet ExitPoll::currentQuestionSet;
+FString ExitPoll::lastHook;
 
-void ExitPoll::MakeQuestionSetRequest(const FString Hook, const FCognitiveExitPollResponse& response)
+void ExitPoll::MakeQuestionSetRequest(const FString Hook, FCognitiveExitPollResponse& response)
 {
-	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-
-	if (cogProvider.Get() == NULL)
+	auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (!cogProvider.IsValid() || !cogProvider->HasStartedSession())
 	{
-		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+		cognitivevrapi::CognitiveLog::Error("ExitPoll::MakeQuestionSetRequest could not get provider!");
+		return;
 	}
+	cogProvider->network->NetworkExitPollGetQuestionSet(Hook,response);
 
-	FString AuthValue = "APIKEY:DATA " + cogProvider->APIKey;
-	//TODO move exitpoll get request to network class. use config networkhost and config networkversion
-	FString url = "https://data.cognitive3d.com/v0/questionSetHooks/"+Hook+"/questionSet";
-	HttpRequest->SetURL(url);
-	HttpRequest->SetVerb("GET");
-	HttpRequest->SetHeader("Authorization", AuthValue);
-	r = response;
+	lastResponse = response;
 	lastHook = Hook;
-	HttpRequest->OnProcessRequestComplete().BindStatic(ExitPoll::OnResponseReceivedAsync);
-	HttpRequest->ProcessRequest();
 }
 
-void ExitPoll::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
 {
-	if (!Response.IsValid())
+	if (!successful)
 	{
-		cognitivevrapi::CognitiveLog::Error("ExitPoll::OnResponseReceivedAsync - No valid Response. Check internet connection");
-
-		if (r.IsBound())
+		if (lastResponse.IsBound())
 		{
-			r.Execute(FExitPollQuestionSet());
+			lastResponse.Execute(FExitPollQuestionSet());
 		}
 		return;
 	}
 
-	currentSet = FExitPollQuestionSet();
+	currentQuestionSet = FExitPollQuestionSet();
 
-	FString UE4Str = Response->GetContentAsString();
-	cognitivevrapi::CognitiveLog::Info("ExitPoll::OnResponseReceivedAsync - Response: " + UE4Str);
+	//FString UE4Str = Response->GetContentAsString();
+	cognitivevrapi::CognitiveLog::Info("ExitPoll::OnResponseReceived - Response: " + ResponseContent);
 
 	//CognitiveVRResponse response = Network::ParseResponse(content);
 
 	FExitPollQuestionSet set = FExitPollQuestionSet();
 	TSharedPtr<FJsonObject> jobject;
-	TSharedRef< TJsonReader<> > Reader = TJsonReaderFactory<>::Create(UE4Str);
+	TSharedRef< TJsonReader<> > Reader = TJsonReaderFactory<>::Create(ResponseContent);
 	if (FJsonSerializer::Deserialize(Reader, jobject))
 	{
 		if (!jobject->HasField(TEXT("customerId")))
 		{
 			cognitivevrapi::CognitiveLog::Info("ExitPoll::OnResponseReceivedAsync - no customerId in response - fail");
-			if (r.IsBound())
+			if (lastResponse.IsBound())
 			{
-				r.Execute(FExitPollQuestionSet());
+				lastResponse.Execute(FExitPollQuestionSet());
 			}
 			return;
 		}
@@ -135,168 +125,42 @@ void ExitPoll::OnResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr
 			set.questions.Add(q);
 		}
 
-		currentSet = set;
-		if (r.IsBound())
+		currentQuestionSet = set;
+		if (lastResponse.IsBound())
 		{
-			r.Execute(currentSet);
+			lastResponse.Execute(currentQuestionSet);
 		}
 	}
 	else
 	{
-		r.Execute(FExitPollQuestionSet());
+		lastResponse.Execute(FExitPollQuestionSet());
 	}
 }
 
 FExitPollQuestionSet ExitPoll::GetCurrentQuestionSet()
 {
-	return currentSet;
+	return currentQuestionSet;
 }
 
 void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 {
-	if (cogProvider.Get() == NULL)
-	{
-		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-	}
-
+	auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	if (!cogProvider.IsValid() || !cogProvider->HasStartedSession())
 	{
 		cognitivevrapi::CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
-
-	TSharedPtr<FJsonObject> ResponseObject = MakeShareable(new FJsonObject);
-	ResponseObject->SetStringField("userId", Responses.user);
-	ResponseObject->SetStringField("questionSetId", Responses.questionSetId);
-	ResponseObject->SetStringField("sessionId", Responses.sessionId);
-	ResponseObject->SetStringField("hook", Responses.hook);
-
-	auto scenedata = cogProvider->GetCurrentSceneData();
-	if (scenedata.IsValid())
-	{
-		ResponseObject->SetStringField("sceneId", scenedata->Id);
-		ResponseObject->SetNumberField("versionNumber", scenedata->VersionNumber);
-		ResponseObject->SetNumberField("versionId", scenedata->VersionId);
-	}
-
-	TArray<TSharedPtr<FJsonValue>> answerValues;
-
-	for (int32 i = 0; i < Responses.answers.Num(); i++)
-	{
-		TSharedPtr<FJsonObject> answerObject = MakeShareable(new FJsonObject);
-		answerObject->SetStringField("type",Responses.answers[i].type);
-		if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::String)
-		{
-			answerObject->SetStringField("value", Responses.answers[i].stringValue);
-		}
-		else if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::Number)
-		{
-			answerObject->SetNumberField("value", Responses.answers[i].numberValue);
-		}
-		else if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::Bool)
-		{
-			if (Responses.answers[i].boolValue == true)
-			{
-				answerObject->SetNumberField("value", 1);
-			}
-			else
-			{
-				answerObject->SetNumberField("value", 0);
-			}
-		}
-		else if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::Null)
-		{
-			answerObject->SetNumberField("value", -32768);
-		}
-		TSharedPtr<FJsonValueObject> ao = MakeShareable(new FJsonValueObject(answerObject));
-		answerValues.Add(ao);
-	}
-	ResponseObject->SetArrayField("answers", answerValues);
-
-	FString OutputString;
-	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
-	FJsonSerializer::Serialize(ResponseObject.ToSharedRef(), Writer);
-	
-	//serialize and send this json
-	
-	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-
-	//TODO move exitpoll send request to network class. use config networkhost and config networkversion
-	FString url = "https://data.cognitive3d.com/v0/questionSets/"+currentSet.name+"/"+FString::FromInt(currentSet.version)+"/responses";
-	FString AuthValue = "APIKEY:DATA " + cogProvider->APIKey;
-
-	HttpRequest->SetURL(url);
-	HttpRequest->SetHeader("Content-Type", "application/json");
-	HttpRequest->SetHeader("Authorization", AuthValue);
-	HttpRequest->SetVerb("POST");
-	HttpRequest->SetContentAsString(OutputString);
-	//HttpRequest->OnProcessRequestComplete().BindStatic(ExitPoll::OnQuestionResponse);
-	HttpRequest->ProcessRequest();
-
-
-
-	//send this as a transaction too
-	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	properties->SetStringField("userId", Responses.user);
-	properties->SetStringField("questionSetId", Responses.questionSetId);
-	properties->SetStringField("hook", Responses.hook);
-
-	for (int32 i = 0; i < Responses.answers.Num(); i++)
-	{
-		if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::Number)
-		{
-			properties->SetNumberField("Answer" + FString::FromInt(i), Responses.answers[i].numberValue);
-		}
-		else if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::Bool) //bool as number
-		{
-			if (Responses.answers[i].boolValue == true)
-			{
-				properties->SetNumberField("Answer" + FString::FromInt(i), 1);
-			}
-			else
-			{
-				properties->SetNumberField("Answer" + FString::FromInt(i), 0);
-			}
-		}
-		else if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::Null)
-		{
-			//skipped answer
-			properties->SetNumberField("Answer" + FString::FromInt(i), -32768);
-		}
-		else if (Responses.answers[i].AnswerValueType == EAnswerValueTypeReturn::String)
-		{
-			//voice answer. don't display on dashboard, but not skipped
-			properties->SetNumberField("Answer" + FString::FromInt(i), 0);
-		}
-	}
-	
-	cogProvider.Get()->customevent->Send(FString("c3d.exitpoll"), FVector(0,0,0), properties); //TODO custom event position should be exitpoll panel position
-
-	//then flush transactions
-	cogProvider.Get()->FlushEvents();
+	cogProvider->network->NetworkExitPollPostResponse(currentQuestionSet, Responses);
 }
-
-//for debugging responses from exitpoll microservice
-void ExitPoll::OnQuestionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-{
-	if (!Response.IsValid())
-	{
-		cognitivevrapi::CognitiveLog::Error("ExitPoll::OnQuestionResponse - No valid Response. Check internet connection");
-		return;
-	}
-
-	FString UE4Str = "ExitPoll::OnQuestionResponse: " + Response->GetContentAsString();
-	cognitivevrapi::CognitiveLog::Info(TCHAR_TO_UTF8(*UE4Str));
-}
-
 void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 {
+	auto provider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	auto questionSet = GetCurrentQuestionSet();
 	FExitPollResponse responses = FExitPollResponse();
 	responses.hook = lastHook;
-	responses.user = cogProvider->GetUserID();
+	responses.user = provider->GetUserID();
 	responses.questionSetId = questionSet.id;
-	responses.sessionId = cogProvider->GetSessionID();
+	responses.sessionId = provider->GetSessionID();
 	responses.answers = answers;
 	SendQuestionResponse(responses);
 }

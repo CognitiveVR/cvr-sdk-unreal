@@ -540,8 +540,6 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 	FHitResult Hit; // The hit result gets populated by the line trace
 
-
-					//TODO check if gaze hit a dynamic object
 	bool bHit = false;
 	FCollisionQueryParams gazeparams = FCollisionQueryParams(FName(), true);
 	bHit = world->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, gazeparams);

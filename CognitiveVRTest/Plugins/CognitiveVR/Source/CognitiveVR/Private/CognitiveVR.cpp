@@ -5,6 +5,7 @@
 #include "HeadMountedDisplay.h"
 #include "AnalyticsSettings.h"
 #include "CognitiveVRSettings.h"
+#include "ExitPoll.h"
 #include "PlayerTracker.h"
 #include "DynamicObject.h"
 #include "FixationRecorder.h"
@@ -13,7 +14,8 @@
 
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
-bool bHasSessionStarted = false;
+bool FAnalyticsProviderCognitiveVR::bHasSessionStarted = false;
+UWorld* FAnalyticsProviderCognitiveVR::currentWorld;
 
 void FAnalyticsCognitiveVR::StartupModule()
 {
@@ -65,7 +67,7 @@ FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
 	UE_LOG(LogTemp, Warning, TEXT("shutdown cognitivevr module"));
 }
 
-UWorld* currentWorld;
+
 void FAnalyticsProviderCognitiveVR::SetWorld(UWorld* world)
 {
 	currentWorld = world;
@@ -137,10 +139,10 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	APIKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
 
 	network = MakeShareable(new cognitivevrapi::Network(this));
-	customevent = MakeShareable(new cognitivevrapi::CustomEvent(this));
+	customeventrecorder = MakeShareable(new cognitivevrapi::CustomEventRecorder(this));
 	sensors = MakeShareable(new cognitivevrapi::Sensors(this));
 
-	customevent->StartSession();
+	customeventrecorder->StartSession();
 	sensors->StartSession();
 
 	cognitivevrapi::CognitiveLog::Info("FAnalyticsProviderCognitiveVR::StartSession");
@@ -208,7 +210,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	SetSessionProperty("c3d.deviceid", GetDeviceID());
 	SetSessionProperty("c3d.sessionname", SessionId);
 
-	customevent->Send(FString("c3d.sessionStart"));
+	customeventrecorder->Send(FString("c3d.sessionStart"));
 
 	if (currentWorld->WorldType != EWorldType::Game)
 	{
@@ -237,7 +239,7 @@ void FAnalyticsProviderCognitiveVR::SetSessionName(FString sessionName)
 
 void FAnalyticsProviderCognitiveVR::EndSession()
 {
-	if (!customevent.IsValid())
+	if (!customeventrecorder.IsValid())
 	{
 		return;
 	}
@@ -249,7 +251,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 	properties->SetNumberField("sessionlength", cognitivevrapi::Util::GetTimestamp() - GetSessionTimestamp());
 
-	customevent->Send(FString("c3d.sessionEnd"), properties);
+	customeventrecorder->Send(FString("c3d.sessionEnd"), properties);
 
 	FlushEvents();
 	cognitivevrapi::CognitiveLog::Info("Freeing CognitiveVR memory.");
@@ -260,7 +262,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	network = NULL;
 
 	//delete transaction;
-	customevent = NULL;
+	customeventrecorder = NULL;
 
 	//delete sensors;
 	sensors = NULL;
@@ -292,7 +294,7 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 	}
 
 	//send to dashboard
-	cog->customevent->SendData();
+	cog->customeventrecorder->SendData();
 
 	//send to scene explorer
 	sensors->SendData();
@@ -381,7 +383,7 @@ void FAnalyticsProviderCognitiveVR::RecordEvent(const FString& EventName, const 
 			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
-		customevent->Send(EventName, properties);
+		customeventrecorder->Send(EventName, properties);
 	}
 	else
 	{
@@ -399,7 +401,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, co
 		properties->SetNumberField("PerItemCost", PerItemCost);
 		properties->SetNumberField("ItemQuantity", ItemQuantity);
 
-		customevent->Send("c3d.recorditempurchase", properties);
+		customeventrecorder->Send("c3d.recorditempurchase", properties);
 	}
 	else
 	{
@@ -418,7 +420,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 		properties->SetNumberField("RealMoneyCost", RealMoneyCost);
 		properties->SetStringField("PaymentProvider", PaymentProvider);
 
-		customevent->Send("c3d.recordcurrencypurchase", properties);
+		customeventrecorder->Send("c3d.recordcurrencypurchase", properties);
 	}
 	else
 	{
@@ -434,7 +436,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 		properties->SetStringField("GameCurrencyType", GameCurrencyType);
 		properties->SetNumberField("GameCurrencyAmount", GameCurrencyAmount);
 
-		customevent->Send(FString("c3d.recordcurrencygiven"), properties);
+		customeventrecorder->Send(FString("c3d.recordcurrencygiven"), properties);
 	}
 	else
 	{
@@ -477,7 +479,7 @@ void FAnalyticsProviderCognitiveVR::RecordError(const FString& Error, const TArr
 			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
-		customevent->Send(FString("c3d.recorderror"), properties);
+		customeventrecorder->Send(FString("c3d.recorderror"), properties);
 
 		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProvideCognitiveVR::RecordError");
 	}
@@ -500,7 +502,7 @@ void FAnalyticsProviderCognitiveVR::RecordProgress(const FString& ProgressType, 
 			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
-		customevent->Send(FString("c3d.recordprogress"), properties);
+		customeventrecorder->Send(FString("c3d.recordprogress"), properties);
 	}
 	else
 	{
@@ -521,7 +523,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, in
 			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
-		customevent->Send(FString("c3d.recorditempurchase"), properties);
+		customeventrecorder->Send(FString("c3d.recorditempurchase"), properties);
 	}
 	else
 	{
@@ -542,7 +544,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
-		customevent->Send(FString("RecordCurrencyPurchase"), properties);
+		customeventrecorder->Send(FString("RecordCurrencyPurchase"), properties);
 	}
 	else
 	{
@@ -563,7 +565,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 		}
 
-		customevent->Send(FString("c3d.recordcurrencygiven"), properties);
+		customeventrecorder->Send(FString("c3d.recordcurrencygiven"), properties);
 	}
 	else
 	{
@@ -648,7 +650,7 @@ void FAnalyticsProviderCognitiveVR::CacheSceneData()
 
 FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 {
-	//TODO cache this and check for null. playercontrollers DO NOT persist across level changes
+	//IMPROVEMENT cache this and check for null. playercontrollers DO NOT persist across level changes
 
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);
