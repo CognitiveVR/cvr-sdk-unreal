@@ -11,6 +11,7 @@ cognitivevrapi::Sensors::Sensors(FAnalyticsProviderCognitiveVR* sp)
 	cog = sp;
 
 	FString ValueReceived;
+	LastSensorValues.Empty();
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorDataLimit", false);
 	if (ValueReceived.Len() > 0)
@@ -66,7 +67,7 @@ void cognitivevrapi::Sensors::StartSession()
 
 void cognitivevrapi::Sensors::RecordSensor(FString Name, float value)
 {
-	LastSensorValues[Name] = value;
+	LastSensorValues.Add(Name, value);
 
 	if (SensorDataPoints.Contains(Name))
 	{

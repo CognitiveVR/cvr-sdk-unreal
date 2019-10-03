@@ -74,7 +74,6 @@ void cognitivevrapi::Network::NetworkExitPollGetQuestionSet(FString hook, FCogni
 	FString url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/questionSetHooks/" + hook + "/questionSet";
 	//FString url = "https://data.cognitive3d.com/v0/questionSetHooks/"+ hook +"/questionSet";
 
-
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("GET");
 	HttpRequest->SetHeader("Authorization", AuthValue);
@@ -121,6 +120,7 @@ void cognitivevrapi::Network::NetworkExitPollPostResponse(FExitPollQuestionSet c
 	}
 
 	TArray<TSharedPtr<FJsonValue>> answerValues;
+	
 
 	for (int32 i = 0; i < Responses.answers.Num(); i++)
 	{
@@ -183,6 +183,7 @@ void cognitivevrapi::Network::NetworkExitPollPostResponse(FExitPollQuestionSet c
 	properties->SetStringField("userId", Responses.user);
 	properties->SetStringField("questionSetId", Responses.questionSetId);
 	properties->SetStringField("hook", Responses.hook);
+	properties->SetNumberField("duration", Responses.duration);
 
 	for (int32 i = 0; i < Responses.answers.Num(); i++)
 	{

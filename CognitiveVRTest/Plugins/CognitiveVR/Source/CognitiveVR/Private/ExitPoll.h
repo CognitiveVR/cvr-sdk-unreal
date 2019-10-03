@@ -132,6 +132,7 @@ public:
 		FString hook;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FExitPollAnswer> answers;
+	double duration;
 };
 
 DECLARE_DYNAMIC_DELEGATE_OneParam(FCognitiveExitPollResponse, FExitPollQuestionSet, QuestionSet);
@@ -140,6 +141,7 @@ class COGNITIVEVR_API ExitPoll
 {
 private:
 
+	static double lastStartTime;
 	static FCognitiveExitPollResponse lastResponse;
 	static FExitPollQuestionSet currentQuestionSet;
 	static FString lastHook;

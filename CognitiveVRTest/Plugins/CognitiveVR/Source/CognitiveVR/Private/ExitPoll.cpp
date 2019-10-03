@@ -8,6 +8,7 @@
 FCognitiveExitPollResponse ExitPoll::lastResponse;
 FExitPollQuestionSet ExitPoll::currentQuestionSet;
 FString ExitPoll::lastHook;
+double ExitPoll::lastStartTime;
 
 void ExitPoll::MakeQuestionSetRequest(const FString Hook, FCognitiveExitPollResponse& response)
 {
@@ -17,14 +18,14 @@ void ExitPoll::MakeQuestionSetRequest(const FString Hook, FCognitiveExitPollResp
 		cognitivevrapi::CognitiveLog::Error("ExitPoll::MakeQuestionSetRequest could not get provider!");
 		return;
 	}
-	cogProvider->network->NetworkExitPollGetQuestionSet(Hook,response);
-
 	lastResponse = response;
 	lastHook = Hook;
+	cogProvider->network->NetworkExitPollGetQuestionSet(Hook,response);
 }
 
 void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
 {
+	lastStartTime = cognitivevrapi::Util::GetTimestamp();
 	if (!successful)
 	{
 		if (lastResponse.IsBound())
@@ -157,6 +158,7 @@ void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 	auto provider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	auto questionSet = GetCurrentQuestionSet();
 	FExitPollResponse responses = FExitPollResponse();
+	responses.duration = cognitivevrapi::Util::GetTimestamp() - lastStartTime;
 	responses.hook = lastHook;
 	responses.user = provider->GetUserID();
 	responses.questionSetId = questionSet.id;

@@ -137,7 +137,7 @@ void UCognitiveVRBlueprints::RecordSensor(const FString Name, const float Value)
 
 void UCognitiveVRBlueprints::GetQuestionSet(const FString Hook, FCognitiveExitPollResponse response)
 {
-	//ExitPoll::MakeQuestionSetRequest(Hook, response);
+	ExitPoll::MakeQuestionSetRequest(Hook, response);
 }
 
 FExitPollQuestionSet UCognitiveVRBlueprints::GetCurrentExitPollQuestionSet()
