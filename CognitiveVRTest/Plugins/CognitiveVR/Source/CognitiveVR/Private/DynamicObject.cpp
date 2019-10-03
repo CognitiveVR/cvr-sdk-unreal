@@ -869,6 +869,17 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		newManifest.Empty();
 		jsonPart = 1;
 	}
+	else if (EndPlayReason == EEndPlayReason::Destroyed || EndPlayReason == EEndPlayReason::LevelTransition || EndPlayReason == EEndPlayReason::RemovedFromWorld)
+	{
+		//go through all engagements and send any that match this objectid
+		for (auto &Elem : Engagements)
+		{
+			if (Elem.Value.DynamicId == ObjectID->Id)
+			{
+				Elem.Value.Send(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+			}
+		}
+	}
 }
 
 //static

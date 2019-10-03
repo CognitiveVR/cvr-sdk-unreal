@@ -37,22 +37,6 @@ enum class EC3DControllerType : uint8
 
 namespace cognitivevrapi
 {
-/*class FEngagementEvent
-{
-public:
-	bool Active = true;
-	FString EngagementType = "";
-	FString Parent = "";
-	float EngagementTime = 0;
-	int32 EngagementNumber = 0;
-
-	FEngagementEvent(FString name, FString parent, int engagementNumber)
-	{
-		EngagementType = name;
-		Parent = parent;
-		EngagementNumber = engagementNumber;
-	}
-};*/
 
 class FDynamicObjectManifestEntry
 {
@@ -145,13 +129,6 @@ public:
 	TMap<FString, bool> BoolProperties;
 
 	TMap<FString, FControllerInputState> Buttons;
-
-	//TArray<cognitivevrapi::FEngagementEvent> Engagements;
-
-	/*FDynamicObjectSnapshot* SnapshotProperty(FString key, FString value);
-	FDynamicObjectSnapshot* SnapshotProperty(FString key, bool value);
-	FDynamicObjectSnapshot* SnapshotProperty(FString key, int32 value);
-	FDynamicObjectSnapshot* SnapshotProperty(FString key, double value);*/
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -162,12 +139,6 @@ class COGNITIVEVR_API UDynamicObject : public USceneComponent //UActorComponent
 	GENERATED_BODY()
 
 private:
-	//TArray<TSharedPtr<FJsonObject>> snapshots;
-	//extern TArray<TSharedPtr<FJsonObject>> snapshots;
-	//extern int32 jsonPart = 0;
-	//extern int32 MaxSnapshots = 64;
-
-
 	static TArray<FDynamicObjectSnapshot> snapshots; //this should be cleared when session starts in PIE
 	static TArray<cognitivevrapi::FDynamicObjectManifestEntry> manifest;
 	static TArray<cognitivevrapi::FDynamicObjectManifestEntry> newManifest;
