@@ -177,7 +177,7 @@ void cognitivevrapi::CustomEventRecorder::Send(FString category, FVector Positio
 	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Z)));
 	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Y)));
 
-	FJsonObject* eventObject = new FJsonObject;
+	TSharedPtr<FJsonObject>eventObject = MakeShareable(new FJsonObject);
 	eventObject->SetStringField("name", category);
 	eventObject->SetNumberField("time", ts);
 	if (dynamicObjectId != "")
@@ -188,8 +188,7 @@ void cognitivevrapi::CustomEventRecorder::Send(FString category, FVector Positio
 		eventObject->SetObjectField("properties", properties);
 	}
 
-	TSharedPtr<FJsonObject>snapObj = MakeShareable(eventObject);
-	events.Add(snapObj);
+	events.Add(eventObject);
 
 	if (events.Num() > CustomEventBatchSize)
 	{

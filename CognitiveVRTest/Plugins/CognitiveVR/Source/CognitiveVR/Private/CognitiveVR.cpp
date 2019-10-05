@@ -643,8 +643,7 @@ void FAnalyticsProviderCognitiveVR::CacheSceneData()
 			continue;
 		}
 
-		cognitivevrapi::FSceneData* tempscene = new cognitivevrapi::FSceneData(Array[0], Array[1], FCString::Atoi(*Array[2]), FCString::Atoi(*Array[3]));
-		SceneData.Add(MakeShareable(tempscene));
+		SceneData.Add(MakeShareable(new cognitivevrapi::FSceneData(Array[0], Array[1], FCString::Atoi(*Array[2]), FCString::Atoi(*Array[3]))));
 	}
 }
 

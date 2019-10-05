@@ -201,22 +201,22 @@ FCustomEvent UCognitiveVRBlueprints::MakeCustomEvent(FString eventName)
 
 FCustomEvent UCognitiveVRBlueprints::SetIntegerProperty(UPARAM(ref) FCustomEvent& target, FString key, int32 intValue)
 {
-	target.IntegerProperties.Add(key, intValue);
+	target.SetProperty(key, intValue);
 	return target;
 }
 FCustomEvent UCognitiveVRBlueprints::SetStringProperty(UPARAM(ref) FCustomEvent& target, FString key, FString stringValue)
 {
-	target.StringProperties.Add(key, stringValue);
+	target.SetProperty(key, stringValue);
 	return target;
 }
 FCustomEvent UCognitiveVRBlueprints::SetBoolProperty(UPARAM(ref) FCustomEvent& target, FString key, bool boolValue)
 {
-	target.BoolProperties.Add(key, boolValue);
+	target.SetProperty(key, boolValue);
 	return target;
 }
 FCustomEvent UCognitiveVRBlueprints::SetFloatProperty(UPARAM(ref) FCustomEvent& target, FString key, float floatValue)
 {
-	target.FloatProperties.Add(key, floatValue);
+	target.SetProperty(key, floatValue);
 	return target;
 }
 FCustomEvent UCognitiveVRBlueprints::SetDynamicObject(UPARAM(ref) FCustomEvent& target, UDynamicObject* dynamicObject)
@@ -225,7 +225,7 @@ FCustomEvent UCognitiveVRBlueprints::SetDynamicObject(UPARAM(ref) FCustomEvent& 
 	{
 		return target;
 	}
-	target.DynamicId = dynamicObject->GetObjectId()->Id;
+	target.SetDynamicObject(dynamicObject);
 	return target;
 }
 void UCognitiveVRBlueprints::Send(UPARAM(ref) FCustomEvent& target)

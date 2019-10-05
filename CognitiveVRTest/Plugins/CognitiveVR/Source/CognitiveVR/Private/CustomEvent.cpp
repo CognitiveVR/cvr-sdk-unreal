@@ -100,6 +100,17 @@ void FCustomEvent::SetDynamicObject(FString dynamicObjectId)
 	DynamicId = dynamicObjectId;
 }
 
+void FCustomEvent::SetDynamicObject(UDynamicObject* dynamicObject)
+{
+	if (dynamicObject == NULL) { return; }
+	DynamicId = dynamicObject->GetObjectId()->Id;
+}
+
+FString FCustomEvent::GetDynamicId()
+{
+	return DynamicId;
+}
+
 void FCustomEvent::SetProperty(FString key, FString value)
 {
 	StringProperties[key] = value;

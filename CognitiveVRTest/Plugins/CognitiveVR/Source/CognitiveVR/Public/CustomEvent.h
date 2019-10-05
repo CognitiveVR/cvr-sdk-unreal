@@ -12,16 +12,17 @@
 #include "CustomEvent.generated.h"
 
 class FAnalyticsProviderCognitiveVR;
+class UDynamicObject;
 
 USTRUCT(BlueprintType)
 struct FCustomEvent
 {
+	friend class cognitivevrapi::CustomEventRecorder;
+
 	GENERATED_BODY()
 
 private:
 	double StartTime;
-
-public:
 	FString Category;
 	FString DynamicId;
 	FVector Position = FVector(0, 0, 0);
@@ -29,6 +30,8 @@ public:
 	TMap<FString, int32> IntegerProperties;
 	TMap<FString, float> FloatProperties;
 	TMap<FString, bool> BoolProperties;
+
+public:
 
 	FCustomEvent();
 	FCustomEvent(FString category);
@@ -40,6 +43,8 @@ public:
 	void AppendSensors(TArray<FString> sensorNames);
 	
 	void SetDynamicObject(FString dynamicObjectId);
+	void SetDynamicObject(UDynamicObject* dynamicObject);
+	FString GetDynamicId();
 	
 	void SetProperty(FString key, FString value);
 	void SetProperty(FString key, int32 value);
