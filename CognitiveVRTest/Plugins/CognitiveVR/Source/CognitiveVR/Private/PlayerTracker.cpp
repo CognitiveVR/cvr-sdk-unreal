@@ -5,12 +5,15 @@
 //#include "CognitiveVRSettings.h"
 #include "Util.h"
 
+UPlayerTracker* UPlayerTracker::instance;
+
 // Sets default values for this component's properties
 UPlayerTracker::UPlayerTracker()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
 	FString ValueReceived;
+	instance = this;
 
 	//gaze batch size
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "GazeBatchSize", false);
@@ -28,7 +31,7 @@ void UPlayerTracker::BeginPlay()
 {
 	if (HasBegunPlay()) { return; }
 	UWorld* world = GetWorld();
-	if (GetWorld() == NULL) { GLog->Log("get world from player tracker is null!"); return; } //somehow world is null from playertracker
+	if (world == NULL) { GLog->Log("get world from player tracker is null!"); return; }
 
 	if (world->WorldType != EWorldType::PIE && world->WorldType != EWorldType::Game) { return; } //editor world. skip
 
@@ -431,4 +434,9 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		}
 	}
 	Super::EndPlay(EndPlayReason);
+}
+
+UPlayerTracker* UPlayerTracker::GetPlayerTracker()
+{
+	return instance;
 }

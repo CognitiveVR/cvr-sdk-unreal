@@ -32,20 +32,7 @@ void FCustomEvent::Send()
 	FloatProperties.Add("duration", duration);
 	cogProvider->customeventrecorder->Send(this);
 }
-void FCustomEvent::Send(FVector position)
-{
-	Position = position;
-	auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 
-	if (!cogProvider.IsValid())
-	{
-		cognitivevrapi::CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
-		return;
-	}
-	float duration = cognitivevrapi::Util::GetTimestamp() - StartTime;
-	FloatProperties.Add("duration", duration);
-	cogProvider->customeventrecorder->Send(this);
-}
 void FCustomEvent::AppendSensors()
 {
 	auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
@@ -104,6 +91,11 @@ void FCustomEvent::SetDynamicObject(UDynamicObject* dynamicObject)
 {
 	if (dynamicObject == NULL) { return; }
 	DynamicId = dynamicObject->GetObjectId()->Id;
+}
+
+void FCustomEvent::SetPosition(FVector position)
+{
+	Position = position;
 }
 
 FString FCustomEvent::GetDynamicId()

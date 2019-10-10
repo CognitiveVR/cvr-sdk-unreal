@@ -38,7 +38,7 @@ namespace cognitivevrapi
 	public:
 		CustomEventRecorder(FAnalyticsProviderCognitiveVR* cvr);
 
-		void StartSession();
+		void StartSession(); //IMPROVEMENT should be private and friend class cognitive core. namespace issues
 
 		//record event with name linked to a dynamic object
 		void Send(FString category, FString dynamicObjectId);

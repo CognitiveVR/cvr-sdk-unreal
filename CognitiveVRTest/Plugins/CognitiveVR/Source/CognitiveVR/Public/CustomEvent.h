@@ -37,13 +37,20 @@ public:
 	FCustomEvent(FString category);
 	
 	void Send();
-	void Send(FVector position);
+	//appends the most recent value of all sensors as properties
 	void AppendSensors();
+	//appends the most recent value of a sensor by name as a property
 	void AppendSensor(FString sensorName);
+	//appends the most recent value of each sensor specified by name as a property
 	void AppendSensors(TArray<FString> sensorNames);
 	
-	void SetDynamicObject(FString dynamicObjectId);
+	//set this custom event to be related to a dynamic object
 	void SetDynamicObject(UDynamicObject* dynamicObject);
+	//set this custom event to be related to a dynamic object by ObjectId
+	void SetDynamicObject(FString dynamicObjectId);
+	//set the position this event occurs at in world space
+	void SetPosition(FVector position);
+	//get the id that is currently associated with this event
 	FString GetDynamicId();
 	
 	void SetProperty(FString key, FString value);

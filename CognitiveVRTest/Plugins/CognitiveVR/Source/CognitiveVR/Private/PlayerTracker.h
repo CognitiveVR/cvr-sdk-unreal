@@ -28,6 +28,9 @@
 #endif
 #include "PlayerTracker.generated.h"
 
+//multicast delegates cannot be static. use static pointer to playertracker instance in BP
+//multicast also can't be used as argument in BP function (to implement custom bind function)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCognitiveSessionBegin, bool, Successful);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class COGNITIVEVR_API UPlayerTracker : public UActorComponent
@@ -48,6 +51,8 @@ private:
 	FVector LastDirection;
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 
+	static UPlayerTracker* instance;
+
 public:
 
 	UPROPERTY(EditAnywhere)
@@ -64,4 +69,10 @@ public:
 	void SendData();
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
+		static UPlayerTracker* GetPlayerTracker();
+
+	UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
+		FOnCognitiveSessionBegin OnSessionBegin;
 };

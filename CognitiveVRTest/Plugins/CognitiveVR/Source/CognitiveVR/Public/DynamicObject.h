@@ -154,12 +154,9 @@ private:
 	static FTimerHandle CognitiveDynamicAutoSendHandle;
 	static FString DynamicObjectFileType;
 
-
-
-
+	static TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider;
 
 	float currentTime = 0;
-	TSharedPtr<FAnalyticsProviderCognitiveVR> s;
 	TSharedPtr<cognitivevrapi::FDynamicObjectId> ObjectID;
 	FVector LastPosition;
 	FVector LastForward;
@@ -216,7 +213,7 @@ public:
 	bool UseCustomId;
 
 	//the custom id for registering this dynamic object. recommended for non-spawned actors
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
 	FString CustomId = "";
 
 	//should this object record how the player is gazing?
@@ -251,8 +248,6 @@ public:
 	void BeginEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
 	void EndEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
 
-
-	//virtual void OnComponentCreated() override;
 	virtual void BeginPlay() override;
 
 	TSharedPtr<cognitivevrapi::FDynamicObjectId> GetUniqueId(FString meshName);

@@ -44,7 +44,6 @@ namespace cognitivevrapi
 		kErrorUnknown = -7
 	};
 }
-
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
 	class cognitivevrapi::Network;
@@ -71,15 +70,18 @@ namespace cognitivevrapi
 		FString DeviceId;
 		double SessionTimestamp = -1;
 		FJsonObject SessionProperties;
-		//FJsonObject DeviceProperties;
-		//FJsonObject UserProperties;
+
+		
 
 	private:
 		static UWorld* currentWorld;
 		
-	public:
+		//reads all scene data from engine ini
+		void CacheSceneData();
+
 		static bool bHasSessionStarted;
 
+	public:
 		FAnalyticsProviderCognitiveVR();
 		virtual ~FAnalyticsProviderCognitiveVR();
 
@@ -115,52 +117,35 @@ namespace cognitivevrapi
 		TSharedPtr<cognitivevrapi::CustomEventRecorder> customeventrecorder;
 		TSharedPtr<cognitivevrapi::Network> network;
 		TSharedPtr<cognitivevrapi::Sensors> sensors;
-		//TSharedPtr<FJsonObject> initProperties; //optional properties sent when initializing. platform, ram, etc
+		
 		FString GetDeviceID() const;
-		//void SetDeviceID(const FString& InDeviceID);
-		//double LastSesisonTimestamp = 1;
 
 		void SetLobbyId(FString lobbyId);
 		FString LobbyId;
 
 		double GetSessionTimestamp() const;
 
-		//void AppendUD(TSharedPtr<FJsonValueArray> &json);
 		FVector GetPlayerHMDPosition();
-		//void SendDeviceInfo();
 
 		bool HasStartedSession();
 
-		//FString CustomerId;
 		FString APIKey;
 
 		FString GetCurrentSceneId();
 		FString GetCurrentSceneVersionNumber();
 		void SetSessionName(FString sessionName);
 
-		void OnLevelLoaded();
 		void SetWorld(UWorld* world);
 		UWorld* GetWorld();
 		//calls player tracker session begin (which sets the world). if not found, will return null
 		UWorld* EnsureGetWorld();
 
 		TArray<TSharedPtr<cognitivevrapi::FSceneData>> SceneData;
-		void CacheSceneData();
 		TSharedPtr<cognitivevrapi::FSceneData> GetSceneData(FString scenename);
 		TSharedPtr<cognitivevrapi::FSceneData> GetCurrentSceneData();
-
-		//FJsonObject GetDeviceProperties();
-		//FJsonObject GetUserProperties();
 		FJsonObject GetSessionProperties();
 
 		void SetSessionProperty(FString name, int32 value);
 		void SetSessionProperty(FString name, float value);
 		void SetSessionProperty(FString name, FString value);
-
-		//void SetDeviceProperty(FString name, int32 value);
-		//void SetDeviceProperty(FString name, float value);
-		//void SetDeviceProperty(FString name, FString value);
-		//void SetUserProperty(FString name, int32 value);
-		//void SetUserProperty(FString name, float value);
-		//void SetUserProperty(FString name, FString value);
 	};

@@ -18,6 +18,7 @@ TArray<cognitivevrapi::FDynamicObjectManifestEntry> UDynamicObject::manifest;
 TArray<cognitivevrapi::FDynamicObjectManifestEntry> UDynamicObject::newManifest;
 TArray<TSharedPtr<cognitivevrapi::FDynamicObjectId>> UDynamicObject::allObjectIds;
 FTimerHandle UDynamicObject::CognitiveDynamicAutoSendHandle;
+TSharedPtr<FAnalyticsProviderCognitiveVR> UDynamicObject::cogProvider;
 
 // Sets default values for this component's properties
 UDynamicObject::UDynamicObject()
@@ -90,8 +91,11 @@ void UDynamicObject::ClearSnapshots()
 //static
 void UDynamicObject::OnSessionBegin()
 {
-	auto cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-	UWorld* sessionWorld = cog->EnsureGetWorld();
+	if (!cogProvider.IsValid())
+	{
+		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	}
+	UWorld* sessionWorld = cogProvider->EnsureGetWorld();
 
 	if (sessionWorld == NULL)
 	{
@@ -138,8 +142,12 @@ void UDynamicObject::Initialize()
 		return;
 	}
 
-	s = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-	if (!s.IsValid())
+	if (!cogProvider.IsValid())
+	{
+		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	}
+
+	if (!cogProvider.IsValid())
 	{
 		GLog->Log("UDynamicObject::BeginPlay cannot find CognitiveVRProvider!");
 		return;
@@ -196,10 +204,6 @@ void UDynamicObject::Initialize()
 	//session must be started to send
 	//scene id must be valid to send
 
-	//actor component
-	//LastPosition = GetOwner()->GetActorLocation();
-	//LastForward = GetOwner()->GetActorForwardVector();
-
 	//scene component
 	LastPosition = GetComponentLocation();
 	LastForward = GetComponentTransform().TransformVector(FVector::ForwardVector);
@@ -242,7 +246,7 @@ void UDynamicObject::Initialize()
 
 	if (SnapshotOnBeginPlay)
 	{
-		if (!s->HasStartedSession())
+		if (!cogProvider->HasStartedSession())
 		{
 			return;
 		}
@@ -266,27 +270,6 @@ void UDynamicObject::Initialize()
 		}
 	}
 }
-
-/*FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, FString value)
-{
-	this->StringProperties.Add(key, value);	
-	return this;
-}
-FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, bool value)
-{
-	this->BoolProperties.Add(key, value);
-	return this;
-}
-FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, int32 value)
-{
-	this->IntegerProperties.Add(key, value);
-	return this;
-}
-FDynamicObjectSnapshot* FDynamicObjectSnapshot::SnapshotProperty(FString key, double value)
-{
-	this->DoubleProperties.Add(key, value);
-	return this;
-}*/
 
 TSharedPtr<cognitivevrapi::FDynamicObjectId> UDynamicObject::GetUniqueId(FString meshName)
 {
@@ -358,21 +341,14 @@ void UDynamicObject::GenerateObjectId()
 		manifest.Add(entry);
 		newManifest.Add(entry);
 	}
-
-	//if (manifest.Num() == 1)
-	//{
-		//cognitivevrapi::CognitiveLog::Info("DynamicObject::MakeSnapshot Register Provider->OnSendData for Dynamics");
-		//s->OnSendData.AddStatic(SendData);
-		//TODO register dynamic object send data to some event, or just call manually from core
-	//}
 }
 
 void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction )
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 
-	if (!s.IsValid()) { return; }
-	if (!s->HasStartedSession()) { return; }
+	if (!cogProvider.IsValid()) { return; }
+	if (!cogProvider->HasStartedSession()) { return; }
 	if (!SnapshotOnInterval) { return; }
 
 	currentTime += DeltaTime;
@@ -420,7 +396,6 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 		FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
 
-		//TODO allow recording of dynamics before session start, but don't 'leak' snapshots to a new session
 		if (snapObj.time > 1)
 		{
 			snapshots.Add(snapObj);
@@ -469,7 +444,6 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 
 	snapshot.time = ts;
 	snapshot.id = ObjectID->Id;
-	//snapshot.position = FVector(-(int32)GetOwner()->GetActorLocation().X, (int32)GetOwner()->GetActorLocation().Z, (int32)GetOwner()->GetActorLocation().Y);
 	snapshot.position = FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y);
 
 	if (hasChangedScale)
@@ -479,7 +453,6 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 	}
 
 	FQuat quat;
-	//FRotator rot = GetOwner()->GetActorRotation();
 	FRotator rot = GetComponentRotation();
 	quat = rot.Quaternion();
 
@@ -617,10 +590,12 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 
 void UDynamicObject::TrySendData()
 {
-	TSharedPtr<FAnalyticsProviderCognitiveVR> cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-	if (cog->GetWorld() != NULL)
+	if (!cogProvider.IsValid())
+		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+
+	if (cogProvider->GetWorld() != NULL)
 	{
-		bool withinMinTimer = LastSendTime + MinTimer > cog->GetWorld()->GetRealTimeSeconds();
+		bool withinMinTimer = LastSendTime + MinTimer > cogProvider->GetWorld()->GetRealTimeSeconds();
 		bool withinExtremeBatchSize = newManifest.Num() + snapshots.Num() < ExtremeBatchSize;
 
 		if (withinMinTimer && withinExtremeBatchSize)
@@ -634,13 +609,15 @@ void UDynamicObject::TrySendData()
 //static
 void UDynamicObject::SendData()
 {
-	TSharedPtr<FAnalyticsProviderCognitiveVR> cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-	if (!cog.IsValid() || !cog->HasStartedSession())
+	if (!cogProvider.IsValid())
+		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+
+	if (!cogProvider.IsValid() || !cogProvider->HasStartedSession())
 	{
 		return;
 	}
 
-	TSharedPtr<cognitivevrapi::FSceneData> currentscenedata = cog->GetCurrentSceneData();
+	TSharedPtr<cognitivevrapi::FSceneData> currentscenedata = cogProvider->GetCurrentSceneData();
 	if (!currentscenedata.IsValid())
 	{
 		GLog->Log("DynamicObject::SendData current scene data is invalid");
@@ -650,28 +627,28 @@ void UDynamicObject::SendData()
 	if (newManifest.Num() + snapshots.Num() == 0)
 	{
 		cognitivevrapi::CognitiveLog::Info("UDynamicObject::SendData no objects or data to send!");
-		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
+		cogProvider->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
 		return;
 	}
 
-	if (cog->GetWorld() != NULL)
+	if (cogProvider->GetWorld() != NULL)
 	{
-		LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
+		LastSendTime = cogProvider->GetWorld()->GetRealTimeSeconds();
 	}
 
-	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
+	cogProvider->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
 
 	TArray<TSharedPtr<FJsonValueObject>> EventArray = UDynamicObject::DynamicSnapshotsToString();
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 
-	wholeObj->SetStringField("userid", cog->GetUserID());
-	if (!cog->LobbyId.IsEmpty())
+	wholeObj->SetStringField("userid", cogProvider->GetUserID());
+	if (!cogProvider->LobbyId.IsEmpty())
 	{
-		wholeObj->SetStringField("lobbyId", cog->LobbyId);
+		wholeObj->SetStringField("lobbyId", cogProvider->LobbyId);
 	}
-	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", cog->GetSessionID());
+	wholeObj->SetNumberField("timestamp", (int32)cogProvider->GetSessionTimestamp());
+	wholeObj->SetStringField("sessionid", cogProvider->GetSessionID());
 	wholeObj->SetStringField("formatversion", "1.0");
 	wholeObj->SetNumberField("part", jsonPart);
 	jsonPart++;
@@ -702,7 +679,7 @@ void UDynamicObject::SendData()
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 	//cog->SendJson("dynamics", OutputString);
 	//FString sceneid = cog->GetCurrentSceneId();
-	cog->network->NetworkCall("dynamics", OutputString);
+	cogProvider->network->NetworkCall("dynamics", OutputString);
 
 	snapshots.Empty();
 }
@@ -741,13 +718,6 @@ TArray<TSharedPtr<FJsonValueObject>> UDynamicObject::DynamicSnapshotsToString()
 	}
 	return dataArray;
 }
-
-/*FDynamicObjectSnapshot UDynamicObject::NewSnapshot()
-{
-	FDynamicObjectSnapshot initSnapshot = MakeSnapshot();
-	snapshots.Add(initSnapshot);
-	return initSnapshot;
-}*/
 
 FDynamicObjectSnapshot UDynamicObject::SnapshotStringProperty(UPARAM(ref)FDynamicObjectSnapshot& snapshot, FString key, FString stringValue)
 {
@@ -808,7 +778,8 @@ void UDynamicObject::BeginEngagementId(FString parentDynamicObjectId, FString en
 	}
 	else
 	{
-		Engagements[UniqueEngagementId].Send(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+		Engagements[UniqueEngagementId].SetPosition(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+		Engagements[UniqueEngagementId].Send();
 		Engagements[UniqueEngagementId] = ce;
 	}
 }
@@ -833,7 +804,8 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 
 	if (Engagements.Contains(UniqueEngagementId))
 	{
-		Engagements[UniqueEngagementId].Send(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+		Engagements[UniqueEngagementId].SetPosition(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+		Engagements[UniqueEngagementId].Send();
 		Engagements.Remove(UniqueEngagementId);
 	}
 	else
@@ -841,13 +813,16 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 		//start and end event
 		FCustomEvent ce = FCustomEvent(engagementName);
 		ce.SetDynamicObject(parentDynamicObjectId);
-		ce.Send(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+		ce.SetPosition(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+		ce.Send();
 	}
 }
 
 void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (ReleaseIdOnDestroy && !TrackGaze && s->HasStartedSession())
+	if (!cogProvider.IsValid())
+		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (ReleaseIdOnDestroy && !TrackGaze && cogProvider->HasStartedSession())
 	{
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot(false);
 		SnapshotBoolProperty(initSnapshot, "enable", false);
@@ -876,7 +851,8 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		{
 			if (Elem.Value.GetDynamicId() == ObjectID->Id)
 			{
-				Elem.Value.Send(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+				Elem.Value.SetPosition(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+				Elem.Value.Send();
 			}
 		}
 	}

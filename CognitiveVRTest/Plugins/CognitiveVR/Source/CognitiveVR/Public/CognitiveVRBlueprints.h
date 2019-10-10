@@ -19,8 +19,6 @@
 #include "DynamicObject.h"
 #include "CognitiveVRBlueprints.generated.h"
 
-//class FExitPoll;
-
 class CognitiveVRResponse;
 
 UCLASS()
@@ -105,11 +103,11 @@ public:
 		static FCustomEvent SetBoolProperty(UPARAM(ref) FCustomEvent& target, FString key, bool boolValue);
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
 		static FCustomEvent SetDynamicObject(UPARAM(ref) FCustomEvent& target, UDynamicObject* dynamicObject);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
+		static FCustomEvent SetPosition(UPARAM(ref) FCustomEvent& target, FVector position);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
 		static void Send(UPARAM(ref) FCustomEvent& target);
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
-		static void SendAtPosition(UPARAM(ref) FCustomEvent& target, FVector position);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
 		static FCustomEvent AppendSensor(UPARAM(ref) FCustomEvent& target, FString sensorName);
@@ -117,4 +115,7 @@ public:
 		static FCustomEvent AppendSensors(UPARAM(ref) FCustomEvent& target, TArray<FString> sensorNames);
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
 		static FCustomEvent AppendAllSensors(UPARAM(ref) FCustomEvent& target);
+
+	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
+		static bool HasSessionStarted();
 };

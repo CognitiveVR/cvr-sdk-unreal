@@ -69,16 +69,12 @@ void cognitivevrapi::Network::NetworkExitPollGetQuestionSet(FString hook, FCogni
 	auto provider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	
 	FString AuthValue = "APIKEY:DATA " + provider->APIKey;
-	//TODO move exitpoll get request to network class. use config networkhost and config networkversion
 	
 	FString url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/questionSetHooks/" + hook + "/questionSet";
-	//FString url = "https://data.cognitive3d.com/v0/questionSetHooks/"+ hook +"/questionSet";
 
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("GET");
 	HttpRequest->SetHeader("Authorization", AuthValue);
-	//lastResponse = response;
-	//lastHook = Hook;
 	HttpRequest->OnProcessRequestComplete().BindStatic(Network::OnExitPollResponseReceivedAsync);
 	HttpRequest->ProcessRequest();
 }
@@ -158,14 +154,9 @@ void cognitivevrapi::Network::NetworkExitPollPostResponse(FExitPollQuestionSet c
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(ResponseObject.ToSharedRef(), Writer);
 
-	//serialize and send this json
-
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-
-	//TODO move exitpoll send request to network class. use config networkhost and config networkversion
 	
 	FString url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/questionSets/" + currentQuestionSet.name + "/" + FString::FromInt(currentQuestionSet.version) + "/responses";
-	//FString url = "https://data.cognitive3d.com/v0/questionSets/" + currentQuestionSet.name + "/" + FString::FromInt(currentQuestionSet.version) + "/responses";
 	FString AuthValue = "APIKEY:DATA " + cogProvider->APIKey;
 
 	HttpRequest->SetURL(url);
@@ -173,10 +164,7 @@ void cognitivevrapi::Network::NetworkExitPollPostResponse(FExitPollQuestionSet c
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetContentAsString(OutputString);
-	//HttpRequest->OnProcessRequestComplete().BindStatic(ExitPoll::OnQuestionResponse);
 	HttpRequest->ProcessRequest();
-
-
 
 	//send this as a transaction too
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);

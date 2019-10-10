@@ -7,12 +7,6 @@
 #include "Private/api/customeventrecorder.h"
 #include "Private/CognitiveVRProvider.h"
 
-//#include "IAnalyticsProviderModule.h"
-//#include "Core.h"
-//#include "ModuleManager.h"
-//#include "AnalyticsEventAttribute.h"
-
-//DECLARE_LOG_CATEGORY_EXTERN(CognitiveVR_Log, Log, All);
 DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);
 
 #define COGNITIVEVR_SDK_NAME "unreal"
@@ -20,6 +14,7 @@ DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);
 
 class IAnalyticsProvider;
 class FAnalyticsProviderCognitiveVR;
+
 
 /**
 	* The public interface to this module

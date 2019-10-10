@@ -6,8 +6,6 @@
 
 #include "CognitiveVRBlueprints.h"
 
-//using namespace cognitivevrapi;
-
 void UCognitiveVRBlueprints::SendCustomEvent(FString Category, const TArray<FAnalyticsEventAttr>& Attributes)
 {
 	FVector HMDPosition;
@@ -140,6 +138,17 @@ void UCognitiveVRBlueprints::GetQuestionSet(const FString Hook, FCognitiveExitPo
 	ExitPoll::MakeQuestionSetRequest(Hook, response);
 }
 
+bool UCognitiveVRBlueprints::HasSessionStarted()
+{
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (!cog.IsValid())
+	{
+		return false;
+	}
+
+	return cog->HasStartedSession();
+}
+
 FExitPollQuestionSet UCognitiveVRBlueprints::GetCurrentExitPollQuestionSet()
 {
 	return ExitPoll::GetCurrentQuestionSet();
@@ -228,13 +237,16 @@ FCustomEvent UCognitiveVRBlueprints::SetDynamicObject(UPARAM(ref) FCustomEvent& 
 	target.SetDynamicObject(dynamicObject);
 	return target;
 }
+FCustomEvent UCognitiveVRBlueprints::SetPosition(UPARAM(ref) FCustomEvent& target, FVector position)
+{
+	target.SetPosition(position);
+	return target;
+}
+
+
 void UCognitiveVRBlueprints::Send(UPARAM(ref) FCustomEvent& target)
 {
 	target.Send();
-}
-void UCognitiveVRBlueprints::SendAtPosition(UPARAM(ref) FCustomEvent& target, FVector position)
-{
-	target.Send(position);
 }
 
 FCustomEvent UCognitiveVRBlueprints::AppendAllSensors(UPARAM(ref) FCustomEvent& target)
