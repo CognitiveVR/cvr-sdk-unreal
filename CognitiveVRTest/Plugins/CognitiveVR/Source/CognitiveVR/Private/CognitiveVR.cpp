@@ -244,11 +244,6 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	FlushEvents();
 	cognitivevrapi::CognitiveLog::Info("Freeing CognitiveVR memory.");
 
-	//this IS called when stopped playing in editor! clear dynamics session manifest too!
-	UDynamicObject::manifest.Empty();
-	UDynamicObject::newManifest.Empty();
-	UDynamicObject::ClearSnapshots();
-
 	//delete network;
 	network.Reset();
 
