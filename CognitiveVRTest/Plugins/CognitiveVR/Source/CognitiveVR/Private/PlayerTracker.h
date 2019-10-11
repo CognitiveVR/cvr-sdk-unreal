@@ -28,136 +28,9 @@
 #endif
 #include "PlayerTracker.generated.h"
 
-USTRUCT(BlueprintType)
-struct FExitPollScaleRange
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(BlueprintReadOnly)
-		int32 start;
-	UPROPERTY(BlueprintReadOnly)
-		int32 end;
-};
-
-USTRUCT(BlueprintType)
-struct FExitPollMultipleChoice
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(BlueprintReadOnly)
-		FString answer;
-	UPROPERTY(BlueprintReadOnly)
-		bool icon;
-};
-
-USTRUCT(BlueprintType)
-struct FExitPollQuestion
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(BlueprintReadOnly)
-		FString title;
-	UPROPERTY(BlueprintReadOnly)
-		FString type;
-
-	//voice
-	UPROPERTY(BlueprintReadOnly)
-		int32 maxResponseLength;
-
-	//scale
-	UPROPERTY(BlueprintReadOnly)
-		FString minLabel;
-	UPROPERTY(BlueprintReadOnly)
-		FString maxLabel;
-	UPROPERTY(BlueprintReadOnly)
-		FExitPollScaleRange range;
-
-	//multple choice
-	UPROPERTY(BlueprintReadWrite)
-		TArray<FExitPollMultipleChoice> answers;
-};
-
-USTRUCT(BlueprintType)
-struct FExitPollQuestionSet
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(BlueprintReadOnly)
-		FString customerId;
-	UPROPERTY(BlueprintReadOnly)
-		//question set id
-		FString id;
-	UPROPERTY(BlueprintReadOnly)
-		//question set name
-		FString name;
-	UPROPERTY(BlueprintReadOnly)
-		int32 version;
-	UPROPERTY(BlueprintReadOnly)
-		FString title;
-	UPROPERTY(BlueprintReadOnly)
-		FString status;
-	UPROPERTY(BlueprintReadOnly)
-		TArray<FExitPollQuestion> questions;
-};
-
-UENUM(BlueprintType)
-enum class EAnswerValueTypeReturn : uint8
-{
-	Number,
-	Bool,
-	String, //used for voice
-	Null
-};
-
-USTRUCT(BlueprintType)
-struct FExitPollAnswer
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		FString type; //question type
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		EAnswerValueTypeReturn AnswerValueType;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		int32 numberValue;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		bool boolValue; //converted to 0 or 1
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		FString stringValue; //for base64 voice
-};
-
-USTRUCT(BlueprintType)
-struct FExitPollResponse
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		FString user;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		FString questionSetId;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		FString sessionId;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		FString hook;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TArray<FExitPollAnswer> answers;
-};
-
-
-
-//DECLARE_DYNAMIC_DELEGATE_OneParam(FExitPollQuestionHookRequestDelegate, FExitPollQuestionSet, QuestionSet);
-//static FExitPollQuestionSet ExitPollRequestDelegate;
-
-//DECLARE_DYNAMIC_DELEGATE_OneParam(FOnlineUserImageRetrievedDelegate, UTexture2D*, Texture);
-
-//TODO why is the exitpoll response declared in the gaze tracking script? who knows
-DECLARE_DYNAMIC_DELEGATE_OneParam(FCognitiveExitPollResponse, FExitPollQuestionSet, QuestionSet);
+//multicast delegates cannot be static. use static pointer to playertracker instance in BP
+//multicast also can't be used as argument in BP function (to implement custom bind function)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCognitiveSessionBegin, bool, Successful);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class COGNITIVEVR_API UPlayerTracker : public UActorComponent
@@ -178,8 +51,9 @@ private:
 	FVector LastDirection;
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 
+	static UPlayerTracker* instance;
+
 public:
-	FCognitiveExitPollResponse OnExitPollResponse;
 
 	UPROPERTY(EditAnywhere)
 		float PlayerSnapshotInterval = 0.1;
@@ -195,4 +69,10 @@ public:
 	void SendData();
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
+		static UPlayerTracker* GetPlayerTracker();
+
+	UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
+		FOnCognitiveSessionBegin OnSessionBegin;
 };

@@ -11,6 +11,8 @@ UFixationRecorder::UFixationRecorder()
 
 	FString ValueReceived;
 
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationBatchSize", false);
 	if (ValueReceived.Len() > 0)
 	{
@@ -62,7 +64,6 @@ int32 UFixationRecorder::GetIndex(int32 offset)
 
 void UFixationRecorder::BeginPlay()
 {
-	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	world = GetWorld();
 	if (cog.IsValid())
 	{
@@ -540,8 +541,6 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 	FHitResult Hit; // The hit result gets populated by the line trace
 
-
-					//TODO check if gaze hit a dynamic object
 	bool bHit = false;
 	FCollisionQueryParams gazeparams = FCollisionQueryParams(FName(), true);
 	bHit = world->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, gazeparams);
@@ -875,4 +874,9 @@ void UFixationRecorder::SendData()
 		cog->network->NetworkCall("fixations", OutputString);
 	}
 	Fixations.Empty();
+}
+
+void UFixationRecorder::EndSession()
+{
+	cog.Reset();
 }

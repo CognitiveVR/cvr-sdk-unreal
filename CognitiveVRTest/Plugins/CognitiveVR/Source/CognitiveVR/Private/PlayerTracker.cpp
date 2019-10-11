@@ -5,12 +5,15 @@
 //#include "CognitiveVRSettings.h"
 #include "Util.h"
 
+UPlayerTracker* UPlayerTracker::instance;
+
 // Sets default values for this component's properties
 UPlayerTracker::UPlayerTracker()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
 	FString ValueReceived;
+	instance = this;
 
 	//gaze batch size
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "GazeBatchSize", false);
@@ -28,11 +31,11 @@ void UPlayerTracker::BeginPlay()
 {
 	if (HasBegunPlay()) { return; }
 	UWorld* world = GetWorld();
-	if (GetWorld() == NULL) { GLog->Log("get world from player tracker is null!"); return; } //somehow world is null from playertracker
+	if (world == NULL) { GLog->Log("get world from player tracker is null!"); return; }
 
 	if (world->WorldType != EWorldType::PIE && world->WorldType != EWorldType::Game) { return; } //editor world. skip
 
-	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (cog.IsValid())
 	{
 		cog->SetWorld(world);
@@ -354,7 +357,7 @@ void UPlayerTracker::SendData()
 	FName DeviceName(NAME_None);
 	FString DeviceNameString = "unknown";
 
-	//TODO get HMDdevice name on beginplay and cache
+	//get HMDdevice name on beginplay and cache
 	if (GEngine->XRSystem.IsValid())
 	{
 		DeviceName = GEngine->XRSystem->GetSystemName();
@@ -423,13 +426,16 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		if (shouldEndSession)
 		{
-			//this will send gaze and event data to scene explorer from THIS playertracker
-			SendData();
-
-			//TODO this why is endplay on gaze recorder not on core?
-			//cognitivevr manager can't find playercontroller0, but will send events to dash and dynamics+sensors to SE
+			//Q: this why is endplay on gaze recorder not on core? A: core probably doesn't get EndPlay or equivalent called
 			cog->EndSession();
 		}
+		cog.Reset();
 	}
+	instance = NULL;
 	Super::EndPlay(EndPlayReason);
+}
+
+UPlayerTracker* UPlayerTracker::GetPlayerTracker()
+{
+	return instance;
 }

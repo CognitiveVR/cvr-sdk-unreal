@@ -9,13 +9,19 @@
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 
 class FAnalyticsProviderCognitiveVR;
+struct FCustomEvent;
 
 namespace cognitivevrapi
 {
-	class COGNITIVEVR_API CustomEvent
+	class COGNITIVEVR_API CustomEventRecorder
 	{
 	private:
-		FAnalyticsProviderCognitiveVR* cog;
+
+		static uint64 lastFrameCount;
+		static int32 consecutiveFrame;
+
+		
+		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 		int32 jsonEventPart = 1;
 		int32 CustomEventBatchSize = 16;
 
@@ -31,9 +37,9 @@ namespace cognitivevrapi
 		void TrySendData();
 
 	public:
-		CustomEvent(FAnalyticsProviderCognitiveVR* cvr);
+		CustomEventRecorder();
 
-		void StartSession();
+		void StartSession(); //IMPROVEMENT should be private and friend class cognitive core. namespace issues
 
 		//record event with name linked to a dynamic object
 		void Send(FString category, FString dynamicObjectId);
@@ -52,6 +58,8 @@ namespace cognitivevrapi
 		void Send(FString category, FVector Position);
 		//record event with name at a position with properties
 		void Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties);
+
+		void Send(FCustomEvent* customEvent);
 
 		//send all outstanding custom events to Cognitive dashboard
 		void SendData();

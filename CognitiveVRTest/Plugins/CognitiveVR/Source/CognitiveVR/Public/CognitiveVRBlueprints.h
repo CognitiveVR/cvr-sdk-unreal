@@ -12,23 +12,24 @@
 //#include "EngineAnalytics.h"
 #include "Runtime/Analytics/Analytics/Public/AnalyticsEventAttribute.h"
 //#include "IAnalyticsProvider.h"
-//#include "DynamicObject.h"
+#include "DynamicObject.h"
 #include "PlayerTracker.h"
 #include "ExitPoll.h"
 //#include "LatentActions.h"
 #include "DynamicObject.h"
 #include "CognitiveVRBlueprints.generated.h"
 
-//class FExitPoll;
-
 class CognitiveVRResponse;
 
 UCLASS()
 class COGNITIVEVR_API UCognitiveVRBlueprints : public UBlueprintFunctionLibrary
 {
+	friend class FAnalyticsProviderCognitiveVR;
+
 	GENERATED_BODY()
 
 		static void SendCustomEventToCore(FString Name, const TArray<FAnalyticsEventAttr>& Attributes, FVector Position, UDynamicObject* dynamic);
+		static TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 public:
 
 	//record an event with attributes at a position associated to a dynamic object
@@ -68,7 +69,7 @@ public:
 
 	//request a question set by a hook name from the Cognitive dashboard
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Exit Poll")
-	static void GetQuestionSet(const FString Hook, const FCognitiveExitPollResponse response);
+	static void GetQuestionSet(const FString Hook, FCognitiveExitPollResponse response);
 
 	//return the values of the current question set
 	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics|Exit Poll")
@@ -92,4 +93,32 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
 	static void SetUserId(const FString Name);
 
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
+		static FCustomEvent MakeCustomEvent(FString eventName);
+
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
+		static FCustomEvent SetFloatProperty(UPARAM(ref) FCustomEvent& target, FString key, float floatValue);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
+		static FCustomEvent SetIntegerProperty(UPARAM(ref) FCustomEvent& target, FString key, int32 intValue);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
+		static FCustomEvent SetStringProperty(UPARAM(ref) FCustomEvent& target, FString key, FString stringValue);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
+		static FCustomEvent SetBoolProperty(UPARAM(ref) FCustomEvent& target, FString key, bool boolValue);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
+		static FCustomEvent SetDynamicObject(UPARAM(ref) FCustomEvent& target, UDynamicObject* dynamicObject);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
+		static FCustomEvent SetPosition(UPARAM(ref) FCustomEvent& target, FVector position);
+
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
+		static void Send(UPARAM(ref) FCustomEvent& target);
+
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
+		static FCustomEvent AppendSensor(UPARAM(ref) FCustomEvent& target, FString sensorName);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
+		static FCustomEvent AppendSensors(UPARAM(ref) FCustomEvent& target, TArray<FString> sensorNames);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
+		static FCustomEvent AppendAllSensors(UPARAM(ref) FCustomEvent& target);
+
+	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
+		static bool HasSessionStarted();
 };
