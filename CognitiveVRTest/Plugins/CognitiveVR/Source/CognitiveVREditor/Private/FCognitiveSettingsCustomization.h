@@ -22,6 +22,8 @@ class UCognitiveVRSettings;
 class FCognitiveSettingsCustomization : public IDetailCustomization
 {
 public:
+
+	static FCognitiveSettingsCustomization* CognitiveSettingsCustomizationInstance;
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
 
 	static TSharedRef<IDetailCustomization> MakeInstance();

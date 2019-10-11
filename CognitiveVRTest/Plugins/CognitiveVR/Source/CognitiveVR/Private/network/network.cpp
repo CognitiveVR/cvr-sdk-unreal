@@ -9,28 +9,28 @@
 FHttpModule* cognitivevrapi::Network::Http;
 FString cognitivevrapi::Network::Gateway;
 
-cognitivevrapi::Network::Network(FAnalyticsProviderCognitiveVR* sp)
+cognitivevrapi::Network::Network()
 {
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
-    s = sp;
 	if (Http == NULL)
 		Http = &FHttpModule::Get();
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 }
 
 void cognitivevrapi::Network::NetworkCall(FString suburl, FString contents)
 {
-	if (s == NULL)
+	if (!cog.IsValid())
 	{
 		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
 		return;
 	}
 
-	if (s->GetCurrentSceneId().Len() == 0)
+	if (cog->GetCurrentSceneId().Len() == 0)
 	{
 		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
 		return;
 	}
-	if (s->GetCurrentSceneVersionNumber().Len() == 0)
+	if (cog->GetCurrentSceneVersionNumber().Len() == 0)
 	{
 		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
 		return;
@@ -43,9 +43,9 @@ void cognitivevrapi::Network::NetworkCall(FString suburl, FString contents)
 	}
 
 	//json to scene endpoint
-	FString url = "https://"+ Gateway +"/v"+FString::FromInt(0)+"/"+suburl+"/"+s->GetCurrentSceneId() + "?version=" + s->GetCurrentSceneVersionNumber();
+	FString url = "https://"+ Gateway +"/v"+FString::FromInt(0)+"/"+suburl+"/"+cog->GetCurrentSceneId() + "?version=" + cog->GetCurrentSceneVersionNumber();
 
-	FString AuthValue = "APIKEY:DATA " + s->APIKey;
+	FString AuthValue = "APIKEY:DATA " + cog->APIKey;
 
 	TSharedRef<IHttpRequest> HttpRequest = Http->CreateRequest();
 	HttpRequest->SetContentAsString(contents);
@@ -57,18 +57,13 @@ void cognitivevrapi::Network::NetworkCall(FString suburl, FString contents)
 
 	if (cognitivevrapi::CognitiveLog::DevLogEnabled())
 		cognitivevrapi::CognitiveLog::DevLog(url + "\n" + contents);
-
-	return;
 }
 
 void cognitivevrapi::Network::NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response)
 {
-
 	TSharedRef<IHttpRequest> HttpRequest = Http->CreateRequest();
 	
-	auto provider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-	
-	FString AuthValue = "APIKEY:DATA " + provider->APIKey;
+	FString AuthValue = "APIKEY:DATA " + cog->APIKey;
 	
 	FString url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/questionSetHooks/" + hook + "/questionSet";
 
@@ -93,9 +88,9 @@ void cognitivevrapi::Network::OnExitPollResponseReceivedAsync(FHttpRequestPtr Re
 
 void cognitivevrapi::Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSet, FExitPollResponse Responses)
 {
-	auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	//auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 
-	if (!cogProvider.IsValid() || !cogProvider->HasStartedSession())
+	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
 		cognitivevrapi::CognitiveLog::Error("Network::NetworkExitPollPostResponse could not get provider!");
 		return;
@@ -107,7 +102,7 @@ void cognitivevrapi::Network::NetworkExitPollPostResponse(FExitPollQuestionSet c
 	ResponseObject->SetStringField("sessionId", Responses.sessionId);
 	ResponseObject->SetStringField("hook", Responses.hook);
 
-	auto scenedata = cogProvider->GetCurrentSceneData();
+	auto scenedata = cog->GetCurrentSceneData();
 	if (scenedata.IsValid())
 	{
 		ResponseObject->SetStringField("sceneId", scenedata->Id);
@@ -157,7 +152,7 @@ void cognitivevrapi::Network::NetworkExitPollPostResponse(FExitPollQuestionSet c
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 	
 	FString url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/questionSets/" + currentQuestionSet.name + "/" + FString::FromInt(currentQuestionSet.version) + "/responses";
-	FString AuthValue = "APIKEY:DATA " + cogProvider->APIKey;
+	FString AuthValue = "APIKEY:DATA " + cog->APIKey;
 
 	HttpRequest->SetURL(url);
 	HttpRequest->SetHeader("Content-Type", "application/json");
@@ -203,8 +198,8 @@ void cognitivevrapi::Network::NetworkExitPollPostResponse(FExitPollQuestionSet c
 	}
 
 	//IMPROVEMENT custom event position should be exitpoll panel position. how to get panel position?
-	cogProvider.Get()->customeventrecorder->Send(FString("c3d.exitpoll"), FVector(0, 0, 0), properties);
+	cog->customEventRecorder->Send(FString("c3d.exitpoll"), FVector(0, 0, 0), properties);
 
 	//then flush transactions
-	cogProvider.Get()->FlushEvents();
+	cog->FlushEvents();
 }

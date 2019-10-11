@@ -114,7 +114,7 @@ namespace cognitivevrapi
 		virtual void RecordError(const FString& Error, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		virtual void RecordProgress(const FString& ProgressType, const FString& ProgressHierarchy, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		
-		TSharedPtr<cognitivevrapi::CustomEventRecorder> customeventrecorder;
+		TSharedPtr<cognitivevrapi::CustomEventRecorder> customEventRecorder;
 		TSharedPtr<cognitivevrapi::Network> network;
 		TSharedPtr<cognitivevrapi::Sensors> sensors;
 		

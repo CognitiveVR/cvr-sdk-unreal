@@ -13,14 +13,14 @@ double ExitPoll::lastStartTime;
 void ExitPoll::MakeQuestionSetRequest(const FString Hook, FCognitiveExitPollResponse& response)
 {
 	auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-	if (!cogProvider.IsValid() || !cogProvider->HasStartedSession())
+	if (!cogProvider.IsValid() || !cogProvider.Pin()->HasStartedSession())
 	{
 		cognitivevrapi::CognitiveLog::Error("ExitPoll::MakeQuestionSetRequest could not get provider!");
 		return;
 	}
 	lastResponse = response;
 	lastHook = Hook;
-	cogProvider->network->NetworkExitPollGetQuestionSet(Hook,response);
+	cogProvider.Pin()->network->NetworkExitPollGetQuestionSet(Hook,response);
 }
 
 void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
@@ -146,12 +146,12 @@ FExitPollQuestionSet ExitPoll::GetCurrentQuestionSet()
 void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 {
 	auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-	if (!cogProvider.IsValid() || !cogProvider->HasStartedSession())
+	if (!cogProvider.IsValid() || !cogProvider.Pin()->HasStartedSession())
 	{
 		cognitivevrapi::CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
-	cogProvider->network->NetworkExitPollPostResponse(currentQuestionSet, Responses);
+	cogProvider.Pin()->network->NetworkExitPollPostResponse(currentQuestionSet, Responses);
 }
 void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 {
@@ -160,9 +160,9 @@ void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 	FExitPollResponse responses = FExitPollResponse();
 	responses.duration = cognitivevrapi::Util::GetTimestamp() - lastStartTime;
 	responses.hook = lastHook;
-	responses.user = provider->GetUserID();
+	responses.user = provider.Pin()->GetUserID();
 	responses.questionSetId = questionSet.id;
-	responses.sessionId = provider->GetSessionID();
+	responses.sessionId = provider.Pin()->GetSessionID();
 	responses.answers = answers;
 	SendQuestionResponse(responses);
 }

@@ -5,8 +5,8 @@
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
 //TSharedRef<FCognitiveEditorTools> ToolsInstance;
-FCognitiveEditorTools* CognitiveEditorToolsInstance;
-FString Gateway;
+FCognitiveEditorTools* FCognitiveEditorTools::CognitiveEditorToolsInstance;
+FString FCognitiveEditorTools::Gateway;
 
 FCognitiveEditorTools* FCognitiveEditorTools::GetInstance()
 {

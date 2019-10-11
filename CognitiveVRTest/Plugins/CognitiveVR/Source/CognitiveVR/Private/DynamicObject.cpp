@@ -93,13 +93,13 @@ void UDynamicObject::OnSessionBegin()
 {
 	if (!cogProvider.IsValid())
 	{
-		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	}
 	UWorld* sessionWorld = cogProvider->EnsureGetWorld();
 
 	if (sessionWorld == NULL)
 	{
-		GLog->Log("sessionWorld is null! need to make playertracker initialize first");
+		GLog->Log("UDynamicObject::OnSessionBegin SessionWorld is null! Need to make playertracker initialize first");
 		return;
 	}
 
@@ -116,19 +116,6 @@ void UDynamicObject::OnSessionBegin()
 	}
 }
 
-//static
-void UDynamicObject::OnSessionEnd()
-{
-	for (TObjectIterator<UDynamicObject> Itr; Itr; ++Itr)
-	{
-		if (Itr->SnapshotOnBeginPlay)
-		{
-			Itr->HasInitialized = false;
-		}
-	}
-	snapshots.Empty();
-}
-
 void UDynamicObject::BeginPlay()
 {
 	Super::BeginPlay();
@@ -139,17 +126,6 @@ void UDynamicObject::Initialize()
 {
 	if (HasInitialized)
 	{
-		return;
-	}
-
-	if (!cogProvider.IsValid())
-	{
-		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-	}
-
-	if (!cogProvider.IsValid())
-	{
-		GLog->Log("UDynamicObject::BeginPlay cannot find CognitiveVRProvider!");
 		return;
 	}
 
@@ -244,6 +220,15 @@ void UDynamicObject::Initialize()
 		return;
 	}
 
+	if (!cogProvider.IsValid())
+		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+
+	if (!cogProvider.IsValid())
+	{
+		GLog->Log("UDynamicObject::BeginPlay cannot find CognitiveVRProvider!");
+		return;
+	}
+
 	if (SnapshotOnBeginPlay)
 	{
 		if (!cogProvider->HasStartedSession())
@@ -269,6 +254,7 @@ void UDynamicObject::Initialize()
 			TrySendData();
 		}
 	}
+	HasInitialized = true;
 }
 
 TSharedPtr<cognitivevrapi::FDynamicObjectId> UDynamicObject::GetUniqueId(FString meshName)
@@ -590,8 +576,7 @@ TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectS
 
 void UDynamicObject::TrySendData()
 {
-	if (!cogProvider.IsValid())
-		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (!cogProvider.IsValid()) { return; }
 
 	if (cogProvider->GetWorld() != NULL)
 	{
@@ -609,8 +594,7 @@ void UDynamicObject::TrySendData()
 //static
 void UDynamicObject::SendData()
 {
-	if (!cogProvider.IsValid())
-		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (!cogProvider.IsValid()) { return; }
 
 	if (!cogProvider.IsValid() || !cogProvider->HasStartedSession())
 	{
@@ -818,10 +802,14 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 	}
 }
 
+//instance
 void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (!cogProvider.IsValid())
-		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	{
+		//will get an 'EndPlay' when PIE closes
+		return;
+	}
 	if (ReleaseIdOnDestroy && !TrackGaze && cogProvider->HasStartedSession())
 	{
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot(false);
@@ -838,11 +826,15 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	if (EndPlayReason == EEndPlayReason::EndPlayInEditor)
 	{
-		snapshots.Empty();
-		allObjectIds.Empty();
-		manifest.Empty();
-		newManifest.Empty();
-		jsonPart = 1;
+		//go through all engagements and send any that match this objectid
+		for (auto &Elem : Engagements)
+		{
+			if (Elem.Value.GetDynamicId() == ObjectID->Id)
+			{
+				Elem.Value.SetPosition(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+				Elem.Value.Send();
+			}
+		}
 	}
 	else if (EndPlayReason == EEndPlayReason::Destroyed || EndPlayReason == EEndPlayReason::LevelTransition || EndPlayReason == EEndPlayReason::RemovedFromWorld)
 	{
@@ -856,6 +848,26 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 			}
 		}
 	}
+}
+
+//static
+void UDynamicObject::OnSessionEnd()
+{
+	snapshots.Empty();
+	allObjectIds.Empty();
+	manifest.Empty();
+	newManifest.Empty();
+	jsonPart = 1;
+
+	for (TObjectIterator<UDynamicObject> Itr; Itr; ++Itr)
+	{
+		if (Itr->SnapshotOnBeginPlay)
+		{
+			Itr->HasInitialized = false;
+		}
+	}
+
+	cogProvider = NULL;
 }
 
 //static

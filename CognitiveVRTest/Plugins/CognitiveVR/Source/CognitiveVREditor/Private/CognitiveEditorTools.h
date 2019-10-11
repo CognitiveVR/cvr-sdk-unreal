@@ -47,7 +47,9 @@ class FCognitiveEditorTools
 public:
 
 	static void Initialize();
+	static FString Gateway;
 
+	static FCognitiveEditorTools* CognitiveEditorToolsInstance;
 	static FCognitiveEditorTools* GetInstance();
 
 	void Tick(float deltatime);
@@ -69,25 +71,25 @@ public:
 
 	FString GetDynamicObjectManifest(FString versionid);
 
-	//POST dynamic object manifest                          https://data.sceneexplorer.com/objects/:sceneId?version=:versionNumber
+	//POST dynamic object manifest
 	FString PostDynamicObjectManifest(FString sceneid, int32 versionnumber);
 
-	//POST dynamic object mesh data							https://data.sceneexplorer.com/objects/:sceneId/:exportDirectory?version=:versionNumber
+	//POST dynamic object mesh data
 	FString PostDynamicObjectMeshData(FString sceneid, int32 versionnumber, FString exportdirectory);
 
-	//GET scene settings and read scene version             https://api.sceneexplorer.com/scenes/:sceneId
+	//GET scene settings and read scene version
 	FString GetSceneVersion(FString sceneid);
 
-	//POST scene screenshot                                 https://data.sceneexplorer.com/scenes/:sceneId/screenshot?version=:versionNumber
+	//POST scene screenshot
 	FString PostScreenshot(FString sceneid, FString versionnumber);
 
-	//POST upload decimated scene                           https://data.sceneexplorer.com/scenes
+	//POST upload decimated scene
 	FString PostNewScene();
 
-	//POST upload and replace existing scene                https://data.sceneexplorer.com/scenes/:sceneId
+	//POST upload and replace existing scene
 	FString PostUpdateScene(FString sceneid);
 
-	//WEB used to open scenes on sceneexplorer              https://sceneexplorer.com/scene/ :sceneId
+	//WEB used to open scenes on sceneexplorer
 	FString SceneExplorerOpen(FString sceneid);
 
 	TSharedPtr<IImageWrapper> ImageWrapper;

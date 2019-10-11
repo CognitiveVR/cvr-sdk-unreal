@@ -43,7 +43,7 @@ FString cognitivevrapi::Util::GetDeviceName(FString DeviceName)
 
 void cognitivevrapi::Util::SetHardwareSessionProperties()
 {
-	auto cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	auto cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 
 	FString appName;
 	GConfig->GetString(TEXT("/Script/EngineSettings.GeneralProjectSettings"), TEXT("ProjectName"), appName, GGameIni);

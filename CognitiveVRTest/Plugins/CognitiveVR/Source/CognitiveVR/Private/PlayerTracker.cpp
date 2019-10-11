@@ -35,7 +35,7 @@ void UPlayerTracker::BeginPlay()
 
 	if (world->WorldType != EWorldType::PIE && world->WorldType != EWorldType::Game) { return; } //editor world. skip
 
-	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (cog.IsValid())
 	{
 		cog->SetWorld(world);
@@ -426,13 +426,12 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		if (shouldEndSession)
 		{
-			//this will send gaze and event data to scene explorer from THIS playertracker
-			SendData();
-
 			//Q: this why is endplay on gaze recorder not on core? A: core probably doesn't get EndPlay or equivalent called
 			cog->EndSession();
 		}
+		cog.Reset();
 	}
+	instance = NULL;
 	Super::EndPlay(EndPlayReason);
 }
 

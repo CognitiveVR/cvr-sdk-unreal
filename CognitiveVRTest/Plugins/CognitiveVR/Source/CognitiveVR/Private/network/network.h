@@ -19,13 +19,12 @@ namespace cognitivevrapi
 	class Network
 	{
 	private:
-		FAnalyticsProviderCognitiveVR* s;
-
 		static FHttpModule* Http;
 		static FString Gateway;
+		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 
 	public:
-		Network(FAnalyticsProviderCognitiveVR* sp);
+		Network();
 
 		void NetworkCall(FString suburl, FString contents);
 

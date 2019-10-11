@@ -6,9 +6,9 @@
 
 //using namespace cognitivevrapi;
 
-cognitivevrapi::Sensors::Sensors(FAnalyticsProviderCognitiveVR* sp)
+cognitivevrapi::Sensors::Sensors()
 {
-	cog = sp;
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 
 	FString ValueReceived;
 	LastSensorValues.Empty();
@@ -102,7 +102,7 @@ void cognitivevrapi::Sensors::TrySendData()
 
 void cognitivevrapi::Sensors::SendData()
 {
-	if (cog == NULL || !cog->HasStartedSession())
+	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
 		return;
 	}

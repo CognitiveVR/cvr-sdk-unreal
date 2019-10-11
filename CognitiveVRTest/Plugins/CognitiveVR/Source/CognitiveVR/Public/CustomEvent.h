@@ -11,13 +11,13 @@
 #include "Private/api/sensor.h"
 #include "CustomEvent.generated.h"
 
-class FAnalyticsProviderCognitiveVR;
 class UDynamicObject;
 
 USTRUCT(BlueprintType)
 struct FCustomEvent
 {
 	friend class cognitivevrapi::CustomEventRecorder;
+	friend class FAnalyticsProviderCognitiveVR;
 
 	GENERATED_BODY()
 
@@ -30,6 +30,8 @@ private:
 	TMap<FString, int32> IntegerProperties;
 	TMap<FString, float> FloatProperties;
 	TMap<FString, bool> BoolProperties;
+
+	static TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 
 public:
 

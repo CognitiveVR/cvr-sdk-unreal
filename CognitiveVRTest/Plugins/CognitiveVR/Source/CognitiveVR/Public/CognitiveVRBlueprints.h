@@ -24,9 +24,12 @@ class CognitiveVRResponse;
 UCLASS()
 class COGNITIVEVR_API UCognitiveVRBlueprints : public UBlueprintFunctionLibrary
 {
+	friend class FAnalyticsProviderCognitiveVR;
+
 	GENERATED_BODY()
 
 		static void SendCustomEventToCore(FString Name, const TArray<FAnalyticsEventAttr>& Attributes, FVector Position, UDynamicObject* dynamic);
+		static TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 public:
 
 	//record an event with attributes at a position associated to a dynamic object

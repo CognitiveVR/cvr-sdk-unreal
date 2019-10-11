@@ -22,7 +22,8 @@ class FAnalyticsProviderCognitiveVR;
 class FAnalyticsCognitiveVR : public IAnalyticsProviderModule
 {
 	/** Singleton for analytics */
-	TSharedPtr<IAnalyticsProvider> CognitiveVRProvider;
+	TSharedPtr<IAnalyticsProvider> AnalyticsProvider;
+	TWeakPtr<FAnalyticsProviderCognitiveVR> CognitiveVRProvider;
 
 	//--------------------------------------------------------------------------
 	// Module functionality
@@ -50,7 +51,7 @@ public:
 		* The keys required exactly match the field names in the Config object. 
 		*/
 	virtual TSharedPtr<IAnalyticsProvider> CreateAnalyticsProvider(const FAnalyticsProviderConfigurationDelegate& GetConfigValue) const override;
-	virtual TSharedPtr<FAnalyticsProviderCognitiveVR> GetCognitiveVRProvider() const;
+	virtual TWeakPtr<FAnalyticsProviderCognitiveVR> GetCognitiveVRProvider() const;
 
 	FString DeveloperKey;
 		

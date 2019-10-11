@@ -20,7 +20,8 @@ namespace cognitivevrapi
 		static uint64 lastFrameCount;
 		static int32 consecutiveFrame;
 
-		FAnalyticsProviderCognitiveVR* cog;
+		
+		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 		int32 jsonEventPart = 1;
 		int32 CustomEventBatchSize = 16;
 
@@ -36,7 +37,7 @@ namespace cognitivevrapi
 		void TrySendData();
 
 	public:
-		CustomEventRecorder(FAnalyticsProviderCognitiveVR* cvr);
+		CustomEventRecorder();
 
 		void StartSession(); //IMPROVEMENT should be private and friend class cognitive core. namespace issues
 

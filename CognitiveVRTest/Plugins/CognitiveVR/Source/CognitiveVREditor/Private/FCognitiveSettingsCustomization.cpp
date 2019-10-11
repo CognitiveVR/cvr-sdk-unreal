@@ -9,7 +9,7 @@
 //includes any details needed to make the ui work
 
 //TSharedRef<FCognitiveTools> ToolsInstance;
-FCognitiveSettingsCustomization* CognitiveSettingsCustomizationInstance;
+FCognitiveSettingsCustomization* FCognitiveSettingsCustomization::CognitiveSettingsCustomizationInstance;
 
 TSharedRef<IDetailCustomization> FCognitiveSettingsCustomization::MakeInstance()
 {

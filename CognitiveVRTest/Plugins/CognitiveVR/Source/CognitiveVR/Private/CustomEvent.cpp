@@ -4,8 +4,7 @@
 #include "CognitiveVR.h"
 #include "CustomEvent.h"
 
-//original cognitive provider in exitpoll header
-//TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider2;
+TSharedPtr<FAnalyticsProviderCognitiveVR> FCustomEvent::cog;
 
 FCustomEvent::FCustomEvent(FString category)
 {
@@ -20,9 +19,10 @@ FCustomEvent::FCustomEvent()
 
 void FCustomEvent::Send()
 {
-	auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 
-	if (!cogProvider.IsValid())
+	if (!cog.IsValid())
 	{
 		cognitivevrapi::CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
@@ -30,19 +30,20 @@ void FCustomEvent::Send()
 
 	float duration = cognitivevrapi::Util::GetTimestamp() - StartTime;
 	FloatProperties.Add("duration", duration);
-	cogProvider->customeventrecorder->Send(this);
+	cog->customEventRecorder->Send(this);
 }
 
 void FCustomEvent::AppendSensors()
 {
-	auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	
-	if (!cogProvider.IsValid())
+	if (!cog.IsValid())
 	{
 		cognitivevrapi::CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
-	auto sensorValues = cogProvider->sensors->GetLastSensorValues();
+	auto sensorValues = cog->sensors->GetLastSensorValues();
 	for (auto& Elem : sensorValues)
 	{
 		FloatProperties.Add(Elem.Key, Elem.Value);
@@ -50,14 +51,15 @@ void FCustomEvent::AppendSensors()
 }
 void FCustomEvent::AppendSensors(TArray<FString> sensorNames)
 {
-	auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 
-	if (!cogProvider.IsValid())
+	if (!cog.IsValid())
 	{
 		cognitivevrapi::CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
-	auto sensorValues = cogProvider->sensors->GetLastSensorValues();
+	auto sensorValues = cog->sensors->GetLastSensorValues();
 	for (auto& Elem : sensorValues)
 	{
 		if (sensorNames.Contains(Elem.Key))
@@ -69,14 +71,15 @@ void FCustomEvent::AppendSensors(TArray<FString> sensorNames)
 
 void FCustomEvent::AppendSensor(FString sensorName)
 {
-	auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 
-	if (!cogProvider.IsValid())
+	if (!cog.IsValid())
 	{
 		cognitivevrapi::CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
-	auto sensorValues = cogProvider->sensors->GetLastSensorValues();
+	auto sensorValues = cog->sensors->GetLastSensorValues();
 	
 	if (sensorValues.Contains(sensorName))
 		FloatProperties.Add(sensorName, sensorValues[sensorName]);

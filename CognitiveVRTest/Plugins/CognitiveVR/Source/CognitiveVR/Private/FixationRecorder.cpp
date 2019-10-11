@@ -11,6 +11,8 @@ UFixationRecorder::UFixationRecorder()
 
 	FString ValueReceived;
 
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationBatchSize", false);
 	if (ValueReceived.Len() > 0)
 	{
@@ -62,7 +64,6 @@ int32 UFixationRecorder::GetIndex(int32 offset)
 
 void UFixationRecorder::BeginPlay()
 {
-	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	world = GetWorld();
 	if (cog.IsValid())
 	{
@@ -873,4 +874,9 @@ void UFixationRecorder::SendData()
 		cog->network->NetworkCall("fixations", OutputString);
 	}
 	Fixations.Empty();
+}
+
+void UFixationRecorder::EndSession()
+{
+	cog.Reset();
 }

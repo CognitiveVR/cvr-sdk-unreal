@@ -10,9 +10,9 @@
 uint64 cognitivevrapi::CustomEventRecorder::lastFrameCount = 0;
 int32 cognitivevrapi::CustomEventRecorder::consecutiveFrame = 0;
 
-cognitivevrapi::CustomEventRecorder::CustomEventRecorder(FAnalyticsProviderCognitiveVR* cvr)
+cognitivevrapi::CustomEventRecorder::CustomEventRecorder()
 {
-	cog = cvr;
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	FString ValueReceived;
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventBatchSize", false);
@@ -58,7 +58,7 @@ cognitivevrapi::CustomEventRecorder::CustomEventRecorder(FAnalyticsProviderCogni
 
 void cognitivevrapi::CustomEventRecorder::StartSession()
 {
-	if (cog == NULL) {
+	if (!cog.IsValid()) {
 		return;
 	}
 	if (cog->GetWorld() == NULL)
@@ -147,7 +147,7 @@ void cognitivevrapi::CustomEventRecorder::Send(FString category, FVector Positio
 		consecutiveFrame = 0;
 	}
 
-	if (cog == NULL || !cog->HasStartedSession())
+	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
 		CognitiveLog::Warning("CustomEvent::Send - FAnalyticsProviderCognitiveVR is null!");
 		return;
@@ -212,7 +212,7 @@ void cognitivevrapi::CustomEventRecorder::TrySendData()
 
 void cognitivevrapi::CustomEventRecorder::SendData()
 {
-	if (cog == NULL || !cog->HasStartedSession())
+	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
 		CognitiveLog::Warning("CustomEvent::SendData - FAnalyticsProviderCognitiveVR is null!");
 		return;
