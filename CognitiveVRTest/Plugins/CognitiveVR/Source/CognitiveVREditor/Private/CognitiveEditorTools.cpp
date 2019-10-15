@@ -5,8 +5,8 @@
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
 //TSharedRef<FCognitiveEditorTools> ToolsInstance;
-FCognitiveEditorTools* CognitiveEditorToolsInstance;
-FString Gateway;
+FCognitiveEditorTools* FCognitiveEditorTools::CognitiveEditorToolsInstance;
+FString FCognitiveEditorTools::Gateway;
 
 FCognitiveEditorTools* FCognitiveEditorTools::GetInstance()
 {
@@ -1059,8 +1059,8 @@ FReply FCognitiveEditorTools::UploadScene()
 	}
 
 	GLog->Log("FCognitiveEditorTools::UploadScene upload scene to " + url);
-	//TODO listen for response. when the response returns, request the scene version with auth token
 	UploadFromDirectory(url, GetCurrentSceneExportDirectory(), "scene");
+	//IMPROVEMENT listen for response. when the response returns, request the scene version with auth token
 
 	return FReply::Handled();
 }
@@ -1870,8 +1870,7 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 			continue;
 		}
 
-		cognitivevrapi::FEditorSceneData* tempscene = new cognitivevrapi::FEditorSceneData(Array[0], Array[1], FCString::Atoi(*Array[2]), FCString::Atoi(*Array[3]));
-		SceneData.Add(MakeShareable(tempscene));
+		SceneData.Add(MakeShareable(new cognitivevrapi::FEditorSceneData(Array[0], Array[1], FCString::Atoi(*Array[2]), FCString::Atoi(*Array[3]))));
 	}
 
 	GLog->Log("FCognitiveTools::RefreshSceneData found this many scenes: " + FString::FromInt(SceneData.Num()));
@@ -2435,7 +2434,6 @@ FProcHandle FCognitiveEditorTools::ConvertSceneToGLTF()
 	int32 priorityMod = 0;
 	BlenderReduceAllWizardProc = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
 
-	//TODO when procHandle is complete, upload exported files to sceneexplorer.com
 	return BlenderReduceAllWizardProc;
 }
 

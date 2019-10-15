@@ -4,22 +4,17 @@
 
 #include "Private/CognitiveVRPrivatePCH.h"
 #include "Runtime/Analytics/Analytics/Public/Interfaces/IAnalyticsProviderModule.h"
-#include "Private/api/customevent.h"
+#include "Private/api/customeventrecorder.h"
 #include "Private/CognitiveVRProvider.h"
 
-//#include "IAnalyticsProviderModule.h"
-//#include "Core.h"
-//#include "ModuleManager.h"
-//#include "AnalyticsEventAttribute.h"
-
-//DECLARE_LOG_CATEGORY_EXTERN(CognitiveVR_Log, Log, All);
 DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);
 
 #define COGNITIVEVR_SDK_NAME "unreal"
-#define COGNITIVEVR_SDK_VERSION "0.8.1"
+#define COGNITIVEVR_SDK_VERSION "0.9.0"
 
 class IAnalyticsProvider;
 class FAnalyticsProviderCognitiveVR;
+
 
 /**
 	* The public interface to this module
@@ -27,7 +22,8 @@ class FAnalyticsProviderCognitiveVR;
 class FAnalyticsCognitiveVR : public IAnalyticsProviderModule
 {
 	/** Singleton for analytics */
-	TSharedPtr<IAnalyticsProvider> CognitiveVRProvider;
+	TSharedPtr<IAnalyticsProvider> AnalyticsProvider;
+	TWeakPtr<FAnalyticsProviderCognitiveVR> CognitiveVRProvider;
 
 	//--------------------------------------------------------------------------
 	// Module functionality
@@ -55,7 +51,7 @@ public:
 		* The keys required exactly match the field names in the Config object. 
 		*/
 	virtual TSharedPtr<IAnalyticsProvider> CreateAnalyticsProvider(const FAnalyticsProviderConfigurationDelegate& GetConfigValue) const override;
-	virtual TSharedPtr<FAnalyticsProviderCognitiveVR> GetCognitiveVRProvider() const;
+	virtual TWeakPtr<FAnalyticsProviderCognitiveVR> GetCognitiveVRProvider() const;
 
 	FString DeveloperKey;
 		

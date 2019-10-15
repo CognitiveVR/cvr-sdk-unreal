@@ -15,9 +15,10 @@ namespace cognitivevrapi
 	class COGNITIVEVR_API Sensors
 	{
 	private:
-		FAnalyticsProviderCognitiveVR* cog;
+		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 
-		TMap<FString, FString> somedatapoints;
+		//Q: why is a map of string values instead of floats? A: because formatting it in json
+		TMap<FString, FString> SensorDataPoints;
 
 		int32 jsonPart = 1;
 		int32 sensorDataCount = 0;
@@ -32,12 +33,15 @@ namespace cognitivevrapi
 		//checks minimum send timer before sending recorded data to dashboard
 		void TrySendData();
 
+		TMap<FString, float> LastSensorValues;
+
 	public:
-		Sensors(FAnalyticsProviderCognitiveVR* sp);
+		Sensors();
 		void StartSession();
 		void RecordSensor(FString Name, float value);
 		void SendData();
-
+		
+		TMap<FString, float> GetLastSensorValues();
 	};
 }
 

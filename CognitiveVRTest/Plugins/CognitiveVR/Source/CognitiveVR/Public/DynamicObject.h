@@ -8,6 +8,7 @@
 #include "Engine/Texture.h"
 #include "Engine/Texture2D.h"
 #include "SceneView.h"
+#include "CustomEvent.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "MotionControllerComponent.h"
 //#include "KismetMathLibrary.h"
@@ -36,22 +37,6 @@ enum class EC3DControllerType : uint8
 
 namespace cognitivevrapi
 {
-class FEngagementEvent
-{
-public:
-	bool Active = true;
-	FString EngagementType = "";
-	FString Parent = "";
-	float EngagementTime = 0;
-	int32 EngagementNumber = 0;
-
-	FEngagementEvent(FString name, FString parent, int engagementNumber)
-	{
-		EngagementType = name;
-		Parent = parent;
-		EngagementNumber = engagementNumber;
-	}
-};
 
 class FDynamicObjectManifestEntry
 {
@@ -144,13 +129,6 @@ public:
 	TMap<FString, bool> BoolProperties;
 
 	TMap<FString, FControllerInputState> Buttons;
-
-	TArray<cognitivevrapi::FEngagementEvent> Engagements;
-
-	/*FDynamicObjectSnapshot* SnapshotProperty(FString key, FString value);
-	FDynamicObjectSnapshot* SnapshotProperty(FString key, bool value);
-	FDynamicObjectSnapshot* SnapshotProperty(FString key, int32 value);
-	FDynamicObjectSnapshot* SnapshotProperty(FString key, double value);*/
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -161,13 +139,24 @@ class COGNITIVEVR_API UDynamicObject : public USceneComponent //UActorComponent
 	GENERATED_BODY()
 
 private:
-	//TArray<TSharedPtr<FJsonObject>> snapshots;
-	//extern TArray<TSharedPtr<FJsonObject>> snapshots;
-	//extern int32 jsonPart = 0;
-	//extern int32 MaxSnapshots = 64;
+	static TArray<FDynamicObjectSnapshot> snapshots; //this should be cleared when session starts in PIE
+	static TArray<cognitivevrapi::FDynamicObjectManifestEntry> manifest;
+	static TArray<cognitivevrapi::FDynamicObjectManifestEntry> newManifest;
+	static TArray<TSharedPtr<cognitivevrapi::FDynamicObjectId>> allObjectIds;
+	static int32 jsonPart;// = 1;
+	static int32 MaxSnapshots;// = -1;
+
+	static int32 MinTimer;// = 5;
+	static int32 AutoTimer;// = 10;
+	static int32 ExtremeBatchSize;// = 128;
+	static float NextSendTime;// = 0;
+	static float LastSendTime;// = -60;
+	static FTimerHandle CognitiveDynamicAutoSendHandle;
+	static FString DynamicObjectFileType;
+
+	static TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider;
 
 	float currentTime = 0;
-	TSharedPtr<FAnalyticsProviderCognitiveVR> s;
 	TSharedPtr<cognitivevrapi::FDynamicObjectId> ObjectID;
 	FVector LastPosition;
 	FVector LastForward;
@@ -224,7 +213,7 @@ public:
 	bool UseCustomId;
 
 	//the custom id for registering this dynamic object. recommended for non-spawned actors
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
 	FString CustomId = "";
 
 	//should this object record how the player is gazing?
@@ -254,13 +243,11 @@ public:
 	void TryGenerateCustomIdAndMesh();
 	
 	//engagements
-	TArray<cognitivevrapi::FEngagementEvent> DirtyEngagements;
-	TArray<cognitivevrapi::FEngagementEvent> Engagements;
-	void BeginEngagementId(FString engagementName, FString parentDynamicObjectId);
-	void EndEngagementId(FString engagementName, FString parentDynamicObjectId);
+	TMap<FString, FCustomEvent> Engagements;
 
+	void BeginEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
+	void EndEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
 
-	//virtual void OnComponentCreated() override;
 	virtual void BeginPlay() override;
 
 	TSharedPtr<cognitivevrapi::FDynamicObjectId> GetUniqueId(FString meshName);
@@ -291,10 +278,10 @@ public:
 		FDynamicObjectSnapshot SnapshotFloatProperty(UPARAM(ref) FDynamicObjectSnapshot& target, FString key, float floatValue);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
-		static void BeginEngagement(UDynamicObject* target, FString engagementType);
+		static void BeginEngagement(UDynamicObject* target, FString engagementName, FString UniqueEngagementId);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
-		static void EndEngagement(UDynamicObject* target, FString engagementType);
+		static void EndEngagement(UDynamicObject* target, FString engagementType, FString UniqueEngagementId);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		///this does not directly send a snapshot - it stores it until Flush is called or the number of stored dynamic snapshots reaches its limit

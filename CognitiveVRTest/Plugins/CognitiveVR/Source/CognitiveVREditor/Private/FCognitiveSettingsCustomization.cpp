@@ -9,7 +9,7 @@
 //includes any details needed to make the ui work
 
 //TSharedRef<FCognitiveTools> ToolsInstance;
-FCognitiveSettingsCustomization* CognitiveSettingsCustomizationInstance;
+FCognitiveSettingsCustomization* FCognitiveSettingsCustomization::CognitiveSettingsCustomizationInstance;
 
 TSharedRef<IDetailCustomization> FCognitiveSettingsCustomization::MakeInstance()
 {
@@ -513,7 +513,6 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 						[
 							SNew(SButton)
 							.OnClicked(this,&FCognitiveSettingsCustomization::ValidateAndRefresh)
-							//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SetUniqueDynamicIds) // TODO should refresh list
 							[
 								SNew(STextBlock)
 								.Justification(ETextJustify::Center)
@@ -532,7 +531,6 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 					[
 						SNew(SButton)
 						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-						//.ToolTip(SNew(SToolTip).Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SendDynamicsToSceneExplorerTooltip))
 						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::UploadDynamicsManifest)
 						[
 							SNew(STextBlock)

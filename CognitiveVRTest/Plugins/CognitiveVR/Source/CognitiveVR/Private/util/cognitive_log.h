@@ -17,6 +17,10 @@ namespace cognitivevrapi
 {
     class CognitiveLog
     {
+	private:
+		static bool ShowDebugLogs; //basic info/warning/errors
+		static bool ShowDevLogs; //development specific logs
+
         public:
 			static void Init();
 			static void DevLog(FString s);
