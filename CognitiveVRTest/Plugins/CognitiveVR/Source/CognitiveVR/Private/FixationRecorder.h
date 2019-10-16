@@ -35,7 +35,6 @@ private:
 	TArray<TSharedPtr<FJsonObject>> Fixations;
 	TArray<FEyeCapture> EyeCaptures;
 
-	int32 jsonGazePart = 1;
 	int32 index;
 	//number of samples to hold on to before registering a fixation
 	int32 CachedEyeCaptureCount = 100;
@@ -44,6 +43,7 @@ private:
 	TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 
 	UWorld* world;
+	static UFixationRecorder* instance;
 
 	FFixation ActiveFixation;
 	bool IsGazeOutOfRange(FEyeCapture eyeCapture);
@@ -68,7 +68,7 @@ private:
 	int64 GetEyeCaptureTimestamp();
 #endif
 
-	bool IsFixating;
+	bool isFixating;
 	TArray<FVector> CachedEyeCapturePositions;
 	UDynamicObject* FixationTransform;
 
@@ -84,7 +84,7 @@ private:
 	int32 AutoTimer = 2;
 	int32 MinTimer = 2;
 	int32 ExtremeBatchSize = 64;
-	int32 LastSendTime = -60;
+	float LastSendTime = -60;
 	FTimerHandle AutoSendHandle;
 
 
@@ -130,5 +130,13 @@ public:
 
 	void SendData();
 
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	void EndSession();
+
+	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
+		static UFixationRecorder* GetFixationRecorder();
+
+	float GetLastSendTime() { return LastSendTime; }
+	int32 GetPartNumber() { return jsonFixationPart; }
+	bool IsFixating() { return isFixating; }
 };

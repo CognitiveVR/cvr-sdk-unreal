@@ -271,6 +271,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	UDynamicObject::OnSessionEnd();
 
 	cognitivevrapi::CognitiveLog::Info("CognitiveVR EndSession");
+	currentWorld = NULL;
 }
 
 void FAnalyticsProviderCognitiveVR::FlushEvents()
@@ -286,10 +287,9 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 	if (pt != NULL)
 		pt->SendData();
 
-	for (TObjectIterator<UFixationRecorder> Itr; Itr; ++Itr)
-	{
-		Itr->SendData();
-	}
+	auto fix = UFixationRecorder::GetFixationRecorder();
+	if (fix != NULL)
+		fix->SendData();
 }
 
 void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)

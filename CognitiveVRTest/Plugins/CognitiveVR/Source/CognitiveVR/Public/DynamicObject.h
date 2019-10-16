@@ -296,4 +296,7 @@ public:
 
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);
 
+	float static GetLastSendTime() { return LastSendTime; }
+	int32 static GetPartNumber() { return jsonPart; }
+
 };

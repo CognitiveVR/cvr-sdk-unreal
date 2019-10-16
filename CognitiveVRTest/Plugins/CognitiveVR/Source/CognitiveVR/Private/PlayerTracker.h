@@ -12,6 +12,7 @@
 #include "DynamicObject.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Runtime/HeadMountedDisplay/Public/IXRTrackingSystem.h"
+#include "Widgets/Text/STextBlock.h"
 #if defined TOBII_EYETRACKING_ACTIVE
 #include "TobiiTypes.h"
 #include "ITobiiCore.h"
@@ -52,6 +53,7 @@ private:
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 
 	static UPlayerTracker* instance;
+	float LastSendTime = -60;
 
 public:
 
@@ -75,4 +77,7 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
 		FOnCognitiveSessionBegin OnSessionBegin;
+
+	float GetLastSendTime() { return LastSendTime; }
+	int32 GetPartNumber() { return jsonGazePart; }
 };

@@ -3,6 +3,7 @@
 #include "CognitiveVREditorPrivatePCH.h"
 #include "CognitiveVRSettings.h"
 #include "CognitiveEditorData.h"
+#include "DebugCanvasHolder.h"
 #include "IDetailCustomization.h"
 #include "PropertyEditing.h"
 //#include "DetailCustomizationsPrivatePCH.h"

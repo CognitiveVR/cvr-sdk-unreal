@@ -162,7 +162,7 @@ bool UCognitiveVRBlueprints::HasSessionStarted()
 
 FExitPollQuestionSet UCognitiveVRBlueprints::GetCurrentExitPollQuestionSet()
 {
-	return ExitPoll::GetCurrentQuestionSet();
+	return FExitPollQuestionSet();
 }
 
 void UCognitiveVRBlueprints::SendExitPollAnswers(const TArray<FExitPollAnswer>& Answers)
@@ -280,4 +280,224 @@ FCustomEvent UCognitiveVRBlueprints::AppendSensor(UPARAM(ref) FCustomEvent& targ
 {
 	target.AppendSensor(key);
 	return target;
+}
+
+
+
+//debug stuff
+FString UCognitiveVRBlueprints::GetSessionName()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return ""; }
+	return cog->GetSessionID();
+}
+
+float UCognitiveVRBlueprints::GetSessionDuration()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return -1; }
+	if (!cog->HasStartedSession()) { return 0; }
+
+	float dur = cognitivevrapi::Util::GetTimestamp() - cog->GetSessionTimestamp();
+	return dur;
+}
+
+FString UCognitiveVRBlueprints::GetSceneName()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return ""; }
+	if (!cog->HasStartedSession()){ return ""; }
+
+	auto data = cog->GetCurrentSceneData();
+
+	if (data.IsValid())
+	{
+		return data->Name;
+	}
+	return "invalid";
+}
+
+FString UCognitiveVRBlueprints::GetSceneId()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return ""; }
+	if (!cog->HasStartedSession()) { return ""; }
+
+	auto data = cog->GetCurrentSceneData();
+
+	if (data.IsValid())
+	{
+		return data->Id;
+	}
+	return "invalid";
+}
+
+
+float UCognitiveVRBlueprints::GetLastEventSendTime()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+	return cog->customEventRecorder->GetLastSendTime();
+}
+
+float UCognitiveVRBlueprints::GetLastGazeSendTime()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+
+	if (UPlayerTracker::GetPlayerTracker() == nullptr)
+	{
+		return 0;
+	}
+
+	return UPlayerTracker::GetPlayerTracker()->GetLastSendTime();
+}
+
+float UCognitiveVRBlueprints::GetLastDynamicSendTime()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+	return UDynamicObject::GetLastSendTime();
+}
+
+float UCognitiveVRBlueprints::GetLastSensorSendTime()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+	return cog->sensors->GetLastSendTime();
+}
+
+float UCognitiveVRBlueprints::GetLastFixationSendTime()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+
+	if (UFixationRecorder::GetFixationRecorder() == nullptr)
+	{
+		return 0;
+	}
+	return UFixationRecorder::GetFixationRecorder()->GetLastSendTime();
+}
+
+
+TArray<FString> UCognitiveVRBlueprints::GetDebugQuestionSet()
+{
+	auto qs = ExitPoll::GetCurrentQuestionSet();
+	TArray<FString> questions;
+
+	for (auto& Elem : qs.questions)
+	{
+		questions.Add(Elem.title);
+	}
+	return questions;
+}
+
+TArray<FString> UCognitiveVRBlueprints::GetSensorKeys()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return TArray<FString>(); }
+	if (!HasSessionStarted()) { return TArray<FString>(); }
+
+	auto map = cog->sensors->GetLastSensorValues();
+	
+	TArray<FString> keys;
+
+	for (auto& Elem : map)
+	{
+		keys.Add(Elem.Key);
+	}
+	return keys;
+}
+
+TArray<FString> UCognitiveVRBlueprints::GetSensorValues()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return TArray<FString>(); }
+	if (!HasSessionStarted()) { return TArray<FString>(); }
+
+	auto map = cog->sensors->GetLastSensorValues();
+
+	TArray<FString> values;
+
+	
+
+	for (auto& Elem : map)
+	{
+		values.Add(FString::SanitizeFloat(Elem.Value));
+	}
+	return values;
+}
+
+bool UCognitiveVRBlueprints::IsFixating()
+{
+	auto fixptr = UFixationRecorder::GetFixationRecorder();
+	if (fixptr == NULL) { return false; }
+	return fixptr->IsFixating();
+}
+			 
+int32 UCognitiveVRBlueprints::GetEventPartNumber()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+	return cog->customEventRecorder->GetPartNumber();
+}
+			 
+int32 UCognitiveVRBlueprints::GetGazePartNumber()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+
+	auto gazeptr = UPlayerTracker::GetPlayerTracker();
+	if (gazeptr == NULL) { return 0; }
+	return gazeptr->GetPartNumber();
+}
+			 
+int32 UCognitiveVRBlueprints::GetDynamicPartNumber()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+	return UDynamicObject::GetPartNumber();
+}
+
+int32 UCognitiveVRBlueprints::GetSensorPartNumber()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+	return cog->sensors->GetPartNumber();
+}
+
+int32 UCognitiveVRBlueprints::GetFixationPartNumber()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+	
+	auto fixptr = UFixationRecorder::GetFixationRecorder();
+	if (fixptr == NULL) { return 0; }
+	return fixptr->GetPartNumber();
 }
