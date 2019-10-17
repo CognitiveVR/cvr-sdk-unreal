@@ -45,7 +45,8 @@ namespace UnrealBuildTool.Rules
 					"Projects",
 					"HTTP",
 					"Json",
-                    "JsonUtilities"
+                    "JsonUtilities",
+					"UMG"
                 }
 				);
 				
