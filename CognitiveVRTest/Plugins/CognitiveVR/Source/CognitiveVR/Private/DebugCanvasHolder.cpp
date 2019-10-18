@@ -15,7 +15,9 @@ ADebugCanvasHolder::ADebugCanvasHolder()
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
 
-	RootComponent->SetWorldScale3D(FVector(0.1, 0.1, 0.1));
+	WidgetComponent->SetWorldScale3D(FVector(0.1, 0.1, 0.1));
+	RootComponent->SetRelativeLocation(FVector(0, 0, 0));
+	WidgetComponent->SetRelativeLocation(FVector(0, 0, 0));
 
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	static ConstructorHelpers::FClassFinder<UUserWidget> LoadedSearchResultWidgetClass(TEXT("/CognitiveVR/DebugWidget"));
@@ -44,7 +46,7 @@ void ADebugCanvasHolder::BeginPlay()
 	//add widget found at path (see constructor) to screen
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	UUserWidget* SearchResultWidget = CreateWidget<UUserWidget>(GWorld->GetWorld(), WidgetClass);
-	SearchResultWidget->AddToViewport();
+	//SearchResultWidget->AddToViewport();
 	SearchResultWidget->SetVisibility(ESlateVisibility::Visible);
 
 	//make a 3d widget component. parent that to the main camera
@@ -64,6 +66,7 @@ void ADebugCanvasHolder::Tick(float delta)
 	FRotator captureRotation = CameraManager->GetCameraRotation();
 	FRotator r = FRotator(0, 180, 0);
 
+	//BUG doesn't work correctly if there isn't a pawn/controller in the scene (camera manager doesn't return correct position)
 	FVector End = CameraManager->GetCameraLocation() + captureRotation.Vector() * forwardOffset;
 
 	captureRotation = FRotator(captureRotation.Quaternion() * FQuat(r));
