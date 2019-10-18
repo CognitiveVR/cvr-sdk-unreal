@@ -28,7 +28,7 @@ namespace cognitivevrapi
 		int32 AutoTimer = 2;
 		int32 MinTimer = 2;
 		int32 ExtremeBatchSize = 64;
-		int32 LastSendTime = -60;
+		float LastSendTime = -60;
 		FTimerHandle AutoSendHandle;
 
 		TArray<TSharedPtr<FJsonObject>> events;
@@ -63,6 +63,9 @@ namespace cognitivevrapi
 
 		//send all outstanding custom events to Cognitive dashboard
 		void SendData();
+
+		float GetLastSendTime() { return LastSendTime; }
+		int32 GetPartNumber() { return jsonEventPart; }
 	};
 }
 #endif  // COGNITIVEVR_TRANSACTION_H_

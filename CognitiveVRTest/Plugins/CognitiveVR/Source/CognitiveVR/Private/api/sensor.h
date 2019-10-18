@@ -27,7 +27,7 @@ namespace cognitivevrapi
 		int32 AutoTimer = 2;
 		int32 MinTimer = 2;
 		int32 ExtremeBatchSize = 64;
-		int32 LastSendTime = -60;
+		float LastSendTime = -60;
 		FTimerHandle AutoSendHandle;
 
 		//checks minimum send timer before sending recorded data to dashboard
@@ -42,6 +42,9 @@ namespace cognitivevrapi
 		void SendData();
 		
 		TMap<FString, float> GetLastSensorValues();
+
+		float GetLastSendTime() { return LastSendTime; }
+		int32 GetPartNumber() { return jsonPart; }
 	};
 }
 

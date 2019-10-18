@@ -2327,8 +2327,22 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 
 void FCognitiveEditorTools::WizardPostSceneExport()
 {
-	//anything that needs to happen automatically after the scene has been exported
+	GLog->Log("FCognitiveEditorTools::WizardPostSceneExport");
+
+	FTransform transform;
 	
+	int32 count = 0;
+	for (TObjectIterator<ADebugCanvasHolder> Itr; Itr; ++Itr)
+	{
+		count++;
+	}
+	if (count == 0)
+	{
+		ULevel* level = GWorld->GetCurrentLevel();
+		UClass* ObjectClass = ADebugCanvasHolder::StaticClass();		
+		AActor* spawned = GEditor->AddActor(level, ObjectClass, transform);
+		GLog->Log("FCognitiveEditorTools::WizardPostSceneExport add debug canvas");
+	}
 }
 
 void FCognitiveEditorTools::WizardConvertScene()

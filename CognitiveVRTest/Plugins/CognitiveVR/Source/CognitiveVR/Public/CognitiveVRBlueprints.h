@@ -15,6 +15,7 @@
 #include "DynamicObject.h"
 #include "PlayerTracker.h"
 #include "ExitPoll.h"
+#include "FixationRecorder.h"
 //#include "LatentActions.h"
 #include "DynamicObject.h"
 #include "CognitiveVRBlueprints.generated.h"
@@ -121,4 +122,48 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
 		static bool HasSessionStarted();
+
+
+	//debug
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static FString GetSessionName();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static float GetSessionDuration();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static FString GetSceneName();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static FString GetSceneId();
+
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static float GetLastEventSendTime();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static float GetLastGazeSendTime();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static float GetLastDynamicSendTime();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static float GetLastSensorSendTime();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static float GetLastFixationSendTime();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static bool IsFixating();
+
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static int32 GetEventPartNumber();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static int32 GetGazePartNumber();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static int32 GetDynamicPartNumber();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static int32 GetSensorPartNumber();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static int32 GetFixationPartNumber();
+
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static TArray<FString> GetDebugQuestionSet();
+
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static TArray<FString> GetSensorKeys();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static TArray<FString> GetSensorValues();
+
 };

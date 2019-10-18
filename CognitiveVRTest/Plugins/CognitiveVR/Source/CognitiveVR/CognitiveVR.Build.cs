@@ -27,7 +27,9 @@ namespace UnrealBuildTool.Rules
             PrivateDependencyModuleNames.AddRange(
                 new string[]
                 {
-                    "HeadMountedDisplay"
+                    "HeadMountedDisplay",
+					"Slate",
+					"SlateCore"
                 }
                 );
 
@@ -43,7 +45,8 @@ namespace UnrealBuildTool.Rules
 					"Projects",
 					"HTTP",
 					"Json",
-                    "JsonUtilities"
+                    "JsonUtilities",
+					"UMG"
                 }
 				);
 				

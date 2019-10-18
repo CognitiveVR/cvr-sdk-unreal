@@ -13,7 +13,6 @@ UPlayerTracker::UPlayerTracker()
 	PrimaryComponentTick.bCanEverTick = true;
 
 	FString ValueReceived;
-	instance = this;
 
 	//gaze batch size
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "GazeBatchSize", false);
@@ -30,6 +29,8 @@ UPlayerTracker::UPlayerTracker()
 void UPlayerTracker::BeginPlay()
 {
 	if (HasBegunPlay()) { return; }
+	instance = this;
+
 	UWorld* world = GetWorld();
 	if (world == NULL) { GLog->Log("get world from player tracker is null!"); return; }
 
@@ -395,6 +396,8 @@ void UPlayerTracker::SendData()
 		cog->network->NetworkCall("gaze", OutputString);
 	}
 	snapshots.Empty();
+
+	LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
 }
 
 
@@ -437,5 +440,14 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 UPlayerTracker* UPlayerTracker::GetPlayerTracker()
 {
+	if (instance == NULL)
+	{
+		for (TObjectIterator<UPlayerTracker> Itr; Itr; ++Itr)
+		{
+			instance = *Itr;
+			break;
+		}
+	}
+
 	return instance;
 }

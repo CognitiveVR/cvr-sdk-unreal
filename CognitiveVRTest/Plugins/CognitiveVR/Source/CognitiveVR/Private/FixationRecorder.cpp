@@ -3,6 +3,7 @@
 #include "CognitiveVR.h"
 #include "FixationRecorder.h"
 
+UFixationRecorder* UFixationRecorder::instance;
 
 // Sets default values for this component's properties
 UFixationRecorder::UFixationRecorder()
@@ -64,6 +65,9 @@ int32 UFixationRecorder::GetIndex(int32 offset)
 
 void UFixationRecorder::BeginPlay()
 {
+	if (HasBegunPlay()) { return; }
+	instance = this;
+
 	world = GetWorld();
 	if (cog.IsValid())
 	{
@@ -84,7 +88,7 @@ void UFixationRecorder::BeginPlay()
 
 bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 {
-	if (!IsFixating) { return true; }
+	if (!isFixating) { return true; }
 
 	if (ActiveFixation.IsLocal)
 	{
@@ -274,7 +278,7 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 }
 bool UFixationRecorder::IsGazeOffTransform(FEyeCapture eyeCapture)
 {
-	if (!IsFixating) { return true; }
+	if (!isFixating) { return true; }
 	if (eyeCapture.HitDynamicTransform != FixationTransform) { return true; }
 
 	return false;
@@ -418,18 +422,18 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		return;
 	}
 
-	if (!IsFixating)
+	if (!isFixating)
 	{
 		if (TryBeginLocalFixation())
 		{
 			ActiveFixation.IsLocal = true;
-			IsFixating = true;
+			isFixating = true;
 		}
 		else if (TryBeginFixation())
 		{
 			ActiveFixation.IsLocal = false;
 			FixationTransform = NULL;
-			IsFixating = true;
+			isFixating = true;
 		}
 		//try to begin a fixation
 	}
@@ -454,7 +458,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		if (CheckEndFixation(ActiveFixation))
 		{
 			RecordFixationEnd(ActiveFixation);
-			IsFixating = false;
+			isFixating = false;
 			if (ActiveFixation.IsLocal)
 				FixationTransform = NULL;
 			CachedEyeCapturePositions.Empty();
@@ -876,7 +880,17 @@ void UFixationRecorder::SendData()
 	Fixations.Empty();
 }
 
+void UFixationRecorder::EndPlay(EEndPlayReason::Type EndPlayReason)
+{
+	instance = NULL;
+}
+
 void UFixationRecorder::EndSession()
 {
 	cog.Reset();
+}
+
+UFixationRecorder* UFixationRecorder::GetFixationRecorder()
+{
+	return instance;
 }

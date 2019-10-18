@@ -17,9 +17,13 @@ class UCognitiveVRSettings
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 		bool EnableLogging = true;
 
-	/** Mute error messages from cognitiveVR. */
+	/** Show extra developer specific messages */
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 		bool EnableDevLogging = false;
+
+	/** Show debug canvas overlay */
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+		bool EnableDebugCanvas = true;
 
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 		FString Gateway = "data.cognitive3d.com";

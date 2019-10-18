@@ -35,6 +35,7 @@ void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
 		return;
 	}
 
+
 	currentQuestionSet = FExitPollQuestionSet();
 
 	//FString UE4Str = Response->GetContentAsString();
@@ -42,7 +43,7 @@ void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
 
 	//CognitiveVRResponse response = Network::ParseResponse(content);
 
-	FExitPollQuestionSet set = FExitPollQuestionSet();
+	//FExitPollQuestionSet set = FExitPollQuestionSet();
 	TSharedPtr<FJsonObject> jobject;
 	TSharedRef< TJsonReader<> > Reader = TJsonReaderFactory<>::Create(ResponseContent);
 	if (FJsonSerializer::Deserialize(Reader, jobject))
@@ -57,12 +58,12 @@ void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
 			return;
 		}
 
-		set.customerId = jobject->GetStringField(TEXT("customerId"));
-		set.id = jobject->GetStringField(TEXT("id"));
-		set.name = jobject->GetStringField(TEXT("name"));
-		set.version = jobject->GetNumberField(TEXT("version"));
-		set.title = jobject->GetStringField(TEXT("title"));
-		set.status = jobject->GetStringField(TEXT("status"));
+		currentQuestionSet.customerId = jobject->GetStringField(TEXT("customerId"));
+		currentQuestionSet.id = jobject->GetStringField(TEXT("id"));
+		currentQuestionSet.name = jobject->GetStringField(TEXT("name"));
+		currentQuestionSet.version = jobject->GetNumberField(TEXT("version"));
+		currentQuestionSet.title = jobject->GetStringField(TEXT("title"));
+		currentQuestionSet.status = jobject->GetStringField(TEXT("status"));
 
 		TArray<TSharedPtr<FJsonValue>> questions = jobject->GetArrayField(TEXT("questions"));
 		for (int32 i = 0; i < questions.Num(); i++)
@@ -123,10 +124,9 @@ void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
 				}
 			}
 
-			set.questions.Add(q);
+			currentQuestionSet.questions.Add(q);
 		}
 
-		currentQuestionSet = set;
 		if (lastResponse.IsBound())
 		{
 			lastResponse.Execute(currentQuestionSet);
@@ -152,7 +152,9 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 		return;
 	}
 	cogProvider.Pin()->network->NetworkExitPollPostResponse(currentQuestionSet, Responses);
+	currentQuestionSet = FExitPollQuestionSet();
 }
+
 void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 {
 	auto provider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
