@@ -45,6 +45,7 @@ namespace cognitivevrapi
 
 		float GetLastSendTime() { return LastSendTime; }
 		int32 GetPartNumber() { return jsonPart; }
+		int32 GetDataPoints() { return sensorDataCount; }
 	};
 }
 

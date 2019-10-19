@@ -570,3 +570,92 @@ int32 UCognitiveVRBlueprints::GetFixationPartNumber()
 	return 0;
 #endif
 }
+
+
+int32 UCognitiveVRBlueprints::GetEventDataPointCount()
+{
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+	return cog->customEventRecorder->GetDataPoints();
+#else
+return 0;
+#endif
+}
+
+int32 UCognitiveVRBlueprints::GetGazePointCount()
+{
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+	auto gazeptr = UPlayerTracker::GetPlayerTracker();
+	if (gazeptr == NULL) { return 0; }
+	return gazeptr->GetDataPoints();
+#else
+	return 0;
+#endif
+}
+
+int32 UCognitiveVRBlueprints::GetDynamicDataCount()
+{
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+
+	return UDynamicObject::GetDataPoints();
+#else
+	return 0;
+#endif
+}
+
+int32 UCognitiveVRBlueprints::GetDynamicObjectCount()
+{
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+	
+	return UDynamicObject::GetDynamicObjectCount();
+#else
+	return 0;
+#endif
+}
+
+int32 UCognitiveVRBlueprints::GetFixationPointCount()
+{
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+	
+	if (UFixationRecorder::GetFixationRecorder() == nullptr)
+	{
+		return 0;
+	}
+	return UFixationRecorder::GetFixationRecorder()->GetDataPoints();
+
+#else
+	return 0;
+#endif
+}
+
+int32 UCognitiveVRBlueprints::GetSensorDataPointCount()
+{
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return 0; }
+	if (!HasSessionStarted()) { return 0; }
+	return cog->sensors->GetDataPoints();
+#else
+	return 0;
+#endif
+}
