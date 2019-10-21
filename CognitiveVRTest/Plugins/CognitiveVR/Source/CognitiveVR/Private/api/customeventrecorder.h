@@ -66,6 +66,7 @@ namespace cognitivevrapi
 
 		float GetLastSendTime() { return LastSendTime; }
 		int32 GetPartNumber() { return jsonEventPart; }
+		int32 GetDataPoints() { return events.Num(); }
 	};
 }
 #endif  // COGNITIVEVR_TRANSACTION_H_

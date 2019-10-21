@@ -12,12 +12,10 @@ ADebugCanvasHolder::ADebugCanvasHolder()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
+	RootComponent = WidgetComponent;
 
 	WidgetComponent->SetWorldScale3D(FVector(0.1, 0.1, 0.1));
-	RootComponent->SetRelativeLocation(FVector(0, 0, 0));
-	WidgetComponent->SetRelativeLocation(FVector(0, 0, 0));
 
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	static ConstructorHelpers::FClassFinder<UUserWidget> LoadedSearchResultWidgetClass(TEXT("/CognitiveVR/DebugWidget"));
@@ -45,11 +43,10 @@ void ADebugCanvasHolder::BeginPlay()
 
 	//add widget found at path (see constructor) to screen
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
-	UUserWidget* SearchResultWidget = CreateWidget<UUserWidget>(GWorld->GetWorld(), WidgetClass);
-	//SearchResultWidget->AddToViewport();
-	SearchResultWidget->SetVisibility(ESlateVisibility::Visible);
-
-	//make a 3d widget component. parent that to the main camera
+	WidgetComponent->SetRelativeLocation(FVector(0, 0, 0));
+	WidgetComponent->SetWorldScale3D(FVector(0.1, 0.1, 0.1));
+	WidgetInstance = CreateWidget<UUserWidget>(GetWorld(), WidgetClass);
+	WidgetInstance->SetVisibility(ESlateVisibility::Visible);
 
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 	GEngine->GetAllLocalPlayerControllers(controllers);

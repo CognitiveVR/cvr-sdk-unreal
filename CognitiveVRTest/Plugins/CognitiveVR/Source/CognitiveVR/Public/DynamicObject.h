@@ -298,5 +298,6 @@ public:
 
 	float static GetLastSendTime() { return LastSendTime; }
 	int32 static GetPartNumber() { return jsonPart; }
-
+	int32 static GetDataPoints() { return snapshots.Num(); }
+	int32 static GetDynamicObjectCount() { return manifest.Num(); }
 };

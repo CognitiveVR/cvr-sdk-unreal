@@ -166,4 +166,17 @@ public:
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
 		static TArray<FString> GetSensorValues();
 
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static int32 GetEventDataPointCount();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static int32 GetGazePointCount();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static int32 GetDynamicDataCount();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static int32 GetDynamicObjectCount();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static int32 GetFixationPointCount();
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2", DevelopmentOnly), Category = "CognitiveVR Analytics|Debug")
+		static int32 GetSensorDataPointCount();
+
 };

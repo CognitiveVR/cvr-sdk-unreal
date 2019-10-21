@@ -139,4 +139,5 @@ public:
 	float GetLastSendTime() { return LastSendTime; }
 	int32 GetPartNumber() { return jsonFixationPart; }
 	bool IsFixating() { return isFixating; }
+	int32 GetDataPoints() { return Fixations.Num(); }
 };
