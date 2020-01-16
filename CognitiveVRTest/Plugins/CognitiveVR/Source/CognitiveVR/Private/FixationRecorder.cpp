@@ -570,6 +570,8 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		EyeCaptures[index].WorldPosition = End; //direction of gaze 100m out
 	}
 
+	UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(EyeCaptures[index].WorldPosition, CurrentEyePositionScreen);
+
 	index = (index + 1) % CachedEyeCaptureCount;
 }
 
@@ -890,7 +892,23 @@ void UFixationRecorder::EndSession()
 	cog.Reset();
 }
 
+float UFixationRecorder::GetDPIScale()
+{
+	FVector2D viewportSize;
+	GEngine->GameViewport->GetViewportSize(viewportSize);
+
+	int32 X = FGenericPlatformMath::FloorToInt(viewportSize.X);
+	int32 Y = FGenericPlatformMath::FloorToInt(viewportSize.Y);
+
+	return GetDefault<UUserInterfaceSettings>(UUserInterfaceSettings::StaticClass())->GetDPIScaleBasedOnSize(FIntPoint(X, Y));
+}
+
 UFixationRecorder* UFixationRecorder::GetFixationRecorder()
 {
 	return instance;
+}
+
+FVector2D UFixationRecorder::GetEyePositionScreen()
+{
+	return CurrentEyePositionScreen;
 }

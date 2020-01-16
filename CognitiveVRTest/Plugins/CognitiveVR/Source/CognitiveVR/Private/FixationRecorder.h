@@ -22,6 +22,7 @@
 #if defined VARJOEYETRACKER_API
 #include "VarjoEyeTrackerFunctionLibrary.h"
 #endif
+#include "Runtime/Engine/Classes/Engine/UserInterfaceSettings.h" //for getting ui dpi for active session view
 #include "FixationRecorder.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -86,6 +87,7 @@ private:
 	int32 ExtremeBatchSize = 64;
 	float LastSendTime = -60;
 	FTimerHandle AutoSendHandle;
+	FVector2D CurrentEyePositionScreen;
 
 
 public:
@@ -135,6 +137,12 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
 		static UFixationRecorder* GetFixationRecorder();
+
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
+		FVector2D GetEyePositionScreen();
+
+	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
+		static float GetDPIScale();
 
 	float GetLastSendTime() { return LastSendTime; }
 	int32 GetPartNumber() { return jsonFixationPart; }
