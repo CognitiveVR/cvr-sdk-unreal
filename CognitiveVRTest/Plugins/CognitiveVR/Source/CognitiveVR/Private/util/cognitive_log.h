@@ -1,20 +1,20 @@
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
-#ifndef COGNITIVEVR_LOG_H_
-#define COGNITIVEVR_LOG_H_
+#pragma once
 
+#include "CognitiveVR.h"
 #include <iostream>
 #include <ctime>
 
-#include "CognitiveVR.h"
-#include "CognitiveVRPrivatePCH.h"
+//#include "CognitiveVR.h"
+//#include "CognitiveVRPrivatePCH.h"
 //#include "Private/util/config.h"
 
-#include "CognitiveVR.h"
+//#include "CognitiveVR.h"
 
-namespace cognitivevrapi
-{
+//namespace cognitivevrapi
+//{
     class CognitiveLog
     {
 	private:
@@ -30,5 +30,4 @@ namespace cognitivevrapi
 
 			static bool DevLogEnabled();
     };
-}
-#endif  // COGNITIVEVR_LOG_H_
+//}

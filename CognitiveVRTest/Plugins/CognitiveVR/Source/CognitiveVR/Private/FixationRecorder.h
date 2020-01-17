@@ -4,6 +4,7 @@
 #pragma once
 
 #include "CognitiveVR.h"
+#include "Kismet/GameplayStatics.h"
 #include "DynamicObject.h"
 #include "Fixations.h"
 #include "EyeCapture.h"

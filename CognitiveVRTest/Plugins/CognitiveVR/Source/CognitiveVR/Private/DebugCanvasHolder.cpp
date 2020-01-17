@@ -1,10 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "CognitiveVR.h"
 #include "DebugCanvasHolder.h"
-#include "Blueprint/UserWidget.h"
-#include "UObject/ConstructorHelpers.h"
-#include "Blueprint/WidgetBlueprintGeneratedClass.h"
 
 // Sets default values
 ADebugCanvasHolder::ADebugCanvasHolder()

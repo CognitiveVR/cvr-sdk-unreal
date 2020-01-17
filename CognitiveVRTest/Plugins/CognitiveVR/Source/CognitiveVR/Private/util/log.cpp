@@ -1,13 +1,12 @@
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
-#include "CognitiveVR.h"
 #include "util/cognitive_log.h"
 
-bool cognitivevrapi::CognitiveLog::ShowDebugLogs; //basic info/warning/errors
-bool cognitivevrapi::CognitiveLog::ShowDevLogs; //development specific logs
+bool CognitiveLog::ShowDebugLogs; //basic info/warning/errors
+bool CognitiveLog::ShowDevLogs; //development specific logs
 
-void cognitivevrapi::CognitiveLog::Init()
+void CognitiveLog::Init()
 {
 	ShowDebugLogs = true;
 	ShowDevLogs = false;
@@ -31,30 +30,30 @@ void cognitivevrapi::CognitiveLog::Init()
 	}
 }
 
-bool cognitivevrapi::CognitiveLog::DevLogEnabled()
+bool CognitiveLog::DevLogEnabled()
 {
 	return ShowDevLogs;
 }
 
-void cognitivevrapi::CognitiveLog::DevLog(FString s)
+void CognitiveLog::DevLog(FString s)
 {
 	if (!ShowDevLogs) { return; }
 	UE_LOG(CognitiveVR_Log, Log, TEXT("%s"), *s);
 }
 
-void cognitivevrapi::CognitiveLog::Info(FString s)
+void CognitiveLog::Info(FString s)
 {
 	if (!ShowDebugLogs) { return; }
 	UE_LOG(CognitiveVR_Log, Log, TEXT("%s"), *s);
 }
 
-void cognitivevrapi::CognitiveLog::Warning(FString s)
+void CognitiveLog::Warning(FString s)
 {
 	if (!ShowDebugLogs) { return; }
 	UE_LOG(CognitiveVR_Log, Warning, TEXT("%s"), *s);
 }
 
-void cognitivevrapi::CognitiveLog::Error(FString s)
+void CognitiveLog::Error(FString s)
 {
 	if (!ShowDebugLogs) { return; }
 	UE_LOG(CognitiveVR_Log, Error, TEXT("%s"), *s);

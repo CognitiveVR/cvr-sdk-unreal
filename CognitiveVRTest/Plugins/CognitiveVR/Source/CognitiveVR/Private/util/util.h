@@ -1,10 +1,11 @@
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
-#ifndef COGNITIVEVR_UTIL_H_
-#define COGNITIVEVR_UTIL_H_
+
+#pragma once
 
 #include "CognitiveVR.h"
+#include "GenericPlatformDriver.h"
 #include <sstream>
 #include <ctime>
 #include <string>
@@ -15,8 +16,8 @@
 #include "Json.h"
 #include "Windows/WindowsPlatformMisc.h"
 
-namespace cognitivevrapi
-{
+//namespace cognitivevrapi
+//{
     class Util
     {
         public:
@@ -27,5 +28,4 @@ namespace cognitivevrapi
 			//record several default hardware values to session properties
 			static void SetHardwareSessionProperties();
     };
-}
-#endif  // COGNITIVEVR_UTIL_H_
+//}

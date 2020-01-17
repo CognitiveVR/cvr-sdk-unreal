@@ -4,7 +4,7 @@
 
 #include "CognitiveVR.h"
 #include "CognitiveVRProvider.h"
-#include "Private/CognitiveVRPrivatePCH.h"
+//#include "Private/CognitiveVRPrivatePCH.h"
 #include "GameFramework/Actor.h"
 #include "rtaudio/CRtAudio.h"
 #include "Base64.h"

@@ -3,6 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CognitiveVR.h"
+#include "Blueprint/UserWidget.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Blueprint/WidgetBlueprintGeneratedClass.h"
 #include "GameFramework/Actor.h"
 #include "Components/Widget.h"
 #include "WidgetComponent.h"

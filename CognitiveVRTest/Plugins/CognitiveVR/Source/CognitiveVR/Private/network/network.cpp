@@ -1,15 +1,14 @@
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
-#include "CognitiveVR.h"
+
 #include "network.h"
 //#include "AnalyticsSettings.h"
 
-//using namespace cognitivevrapi;
-FHttpModule* cognitivevrapi::Network::Http;
-FString cognitivevrapi::Network::Gateway;
+FHttpModule* Network::Http;
+FString Network::Gateway;
 
-cognitivevrapi::Network::Network()
+Network::Network()
 {
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
 	if (Http == NULL)
@@ -17,28 +16,28 @@ cognitivevrapi::Network::Network()
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 }
 
-void cognitivevrapi::Network::NetworkCall(FString suburl, FString contents)
+void Network::NetworkCall(FString suburl, FString contents)
 {
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
 		return;
 	}
 
 	if (cog->GetCurrentSceneId().Len() == 0)
 	{
-		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
 		return;
 	}
 	if (cog->GetCurrentSceneVersionNumber().Len() == 0)
 	{
-		cognitivevrapi::CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
 		return;
 	}
 
 	if (Http == NULL)
 	{
-		cognitivevrapi::CognitiveLog::Warning("Cognitive Provider::SendJson Http module not initialized! likely hasn't started session");
+		CognitiveLog::Warning("Cognitive Provider::SendJson Http module not initialized! likely hasn't started session");
 		return;
 	}
 
@@ -55,11 +54,11 @@ void cognitivevrapi::Network::NetworkCall(FString suburl, FString contents)
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->ProcessRequest();
 
-	if (cognitivevrapi::CognitiveLog::DevLogEnabled())
-		cognitivevrapi::CognitiveLog::DevLog(url + "\n" + contents);
+	if (CognitiveLog::DevLogEnabled())
+		CognitiveLog::DevLog(url + "\n" + contents);
 }
 
-void cognitivevrapi::Network::NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response)
+void Network::NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response)
 {
 	TSharedRef<IHttpRequest> HttpRequest = Http->CreateRequest();
 	
@@ -74,11 +73,11 @@ void cognitivevrapi::Network::NetworkExitPollGetQuestionSet(FString hook, FCogni
 	HttpRequest->ProcessRequest();
 }
 
-void cognitivevrapi::Network::OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void Network::OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (!Response.IsValid() || !bWasSuccessful)
 	{
-		cognitivevrapi::CognitiveLog::Error("Network::OnExitPollResponseReceivedAsync - No valid Response. Check internet connection");
+		CognitiveLog::Error("Network::OnExitPollResponseReceivedAsync - No valid Response. Check internet connection");
 	
 		ExitPoll::OnResponseReceived("", false);
 		return;
@@ -86,13 +85,13 @@ void cognitivevrapi::Network::OnExitPollResponseReceivedAsync(FHttpRequestPtr Re
 	ExitPoll::OnResponseReceived(Response->GetContentAsString(), true);
 }
 
-void cognitivevrapi::Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSet, FExitPollResponse Responses)
+void Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSet, FExitPollResponse Responses)
 {
 	//auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 
 	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
-		cognitivevrapi::CognitiveLog::Error("Network::NetworkExitPollPostResponse could not get provider!");
+		CognitiveLog::Error("Network::NetworkExitPollPostResponse could not get provider!");
 		return;
 	}
 

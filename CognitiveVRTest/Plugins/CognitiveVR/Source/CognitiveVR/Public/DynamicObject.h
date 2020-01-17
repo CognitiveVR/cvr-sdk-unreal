@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "CognitiveVR.h"
 #include "Components/SceneComponent.h"
 //#include "Json.h"
 #include "Engine/SceneCapture2D.h"
@@ -35,8 +36,8 @@ enum class EC3DControllerType : uint8
 	WindowsMixedReality
 };
 
-namespace cognitivevrapi
-{
+//namespace cognitivevrapi
+//{
 
 class FDynamicObjectManifestEntry
 {
@@ -75,7 +76,7 @@ public:
 
 	FDynamicObjectId() {}
 };
-}
+//}
 
 USTRUCT(BlueprintType)
 struct COGNITIVEVR_API FControllerInputState
@@ -140,9 +141,9 @@ class COGNITIVEVR_API UDynamicObject : public USceneComponent //UActorComponent
 
 private:
 	static TArray<FDynamicObjectSnapshot> snapshots; //this should be cleared when session starts in PIE
-	static TArray<cognitivevrapi::FDynamicObjectManifestEntry> manifest;
-	static TArray<cognitivevrapi::FDynamicObjectManifestEntry> newManifest;
-	static TArray<TSharedPtr<cognitivevrapi::FDynamicObjectId>> allObjectIds;
+	static TArray<FDynamicObjectManifestEntry> manifest;
+	static TArray<FDynamicObjectManifestEntry> newManifest;
+	static TArray<TSharedPtr<FDynamicObjectId>> allObjectIds;
 	static int32 jsonPart;// = 1;
 	static int32 MaxSnapshots;// = -1;
 
@@ -157,7 +158,7 @@ private:
 	static TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider;
 
 	float currentTime = 0;
-	TSharedPtr<cognitivevrapi::FDynamicObjectId> ObjectID;
+	TSharedPtr<FDynamicObjectId> ObjectID;
 	FVector LastPosition;
 	FVector LastForward;
 	FVector LastScale;
@@ -250,8 +251,8 @@ public:
 
 	virtual void BeginPlay() override;
 
-	TSharedPtr<cognitivevrapi::FDynamicObjectId> GetUniqueId(FString meshName);
-	TSharedPtr<cognitivevrapi::FDynamicObjectId> GetObjectId();
+	TSharedPtr<FDynamicObjectId> GetUniqueId(FString meshName);
+	TSharedPtr<FDynamicObjectId> GetObjectId();
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 	FDynamicObjectSnapshot MakeSnapshot(bool hasChangedScale);

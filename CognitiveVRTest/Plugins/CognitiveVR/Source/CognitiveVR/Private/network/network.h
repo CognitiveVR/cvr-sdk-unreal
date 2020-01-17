@@ -1,21 +1,21 @@
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
-#ifndef COGNITIVEVR_NETWORK_H_
-#define COGNITIVEVR_NETWORK_H_
+#pragma once
 
 #include <stdexcept>
 #include "CognitiveVR.h"
-#include "CognitiveVRPrivatePCH.h"
+#include "Private/ExitPoll.h"
 #include "Http.h"
-#include "ExitPoll.h"
-#include "network.h"
 
 class FAnalyticsProviderCognitiveVR;
 class HttpInterface;
+class FCognitiveExitPollResponse;
+struct FExitPollQuestionSet;
+struct FExitPollResponse;
 
-namespace cognitivevrapi
-{
+//namespace cognitivevrapi
+//{
 	class Network
 	{
 	private:
@@ -32,5 +32,4 @@ namespace cognitivevrapi
 		void NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response);
 		void NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSetName, FExitPollResponse Responses);
 	};
-}
-#endif  // COGNITIVEVR_NETWORK_H_
+//}

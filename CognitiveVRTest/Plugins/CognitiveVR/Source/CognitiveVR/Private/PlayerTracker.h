@@ -4,12 +4,14 @@
 
 #include "Components/SceneComponent.h"
 //#include "Json.h"
+#include "CognitiveVR.h"
+#include "Private/util/util.h"
 #include "Engine/SceneCapture2D.h"
 #include "Engine/Texture.h"
 #include "Engine/Texture2D.h"
 #include "SceneView.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "DynamicObject.h"
+#include "Public/DynamicObject.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Runtime/HeadMountedDisplay/Public/IXRTrackingSystem.h"
 #include "Widgets/Text/STextBlock.h"
@@ -32,6 +34,8 @@
 //multicast delegates cannot be static. use static pointer to playertracker instance in BP
 //multicast also can't be used as argument in BP function (to implement custom bind function)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCognitiveSessionBegin, bool, Successful);
+
+class FAnalyticsProviderCognitiveVR;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class COGNITIVEVR_API UPlayerTracker : public UActorComponent

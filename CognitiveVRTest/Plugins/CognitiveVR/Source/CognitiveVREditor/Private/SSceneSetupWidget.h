@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CognitiveVREditorPrivatePCH.h"
+//#include "CognitiveVREditorPrivatePCH.h"
 #include "CognitiveEditorTools.h"
 #include "CognitiveEditorData.h"
 #include "CognitiveVRSettings.h"
@@ -26,7 +26,7 @@ class SSceneSetupWidget : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SSceneSetupWidget){}
-	SLATE_ARGUMENT(TArray<TSharedPtr<cognitivevrapi::FDynamicData>>, Items)
+	SLATE_ARGUMENT(TArray<TSharedPtr<FDynamicData>>, Items)
 		SLATE_ARGUMENT(FSlateBrush*,ScreenshotTexture)
 	//SLATE_ARGUMENT(FCognitiveEditorTools*, CognitiveEditorTools)
 	SLATE_END_ARGS()
@@ -44,13 +44,13 @@ public:
 
 
 
-	TArray<TSharedPtr<cognitivevrapi::FDynamicData>> GetSceneDynamics();
+	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 
 	/* Adds a new textbox with the string to the list */
-	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<cognitivevrapi::FDynamicData> Item, const TSharedRef<STableViewBase>& OwnerTable);
+	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FDynamicData> Item, const TSharedRef<STableViewBase>& OwnerTable);
 
 	/* The list of strings */
-	TArray<TSharedPtr<cognitivevrapi::FDynamicData>> Items;
+	TArray<TSharedPtr<FDynamicData>> Items;
 	//FCognitiveTools* CognitiveTools;
 
 	int32 CurrentPage = 0;
@@ -127,9 +127,9 @@ public:
 	FText DynamicCountInScene;
 
 	/* The actual UI list */
-	TSharedPtr< SListView< TSharedPtr<cognitivevrapi::FDynamicData> > > ListViewWidget;
+	TSharedPtr< SListView< TSharedPtr<FDynamicData> > > ListViewWidget;
 
-	FReply SelectDynamic(TSharedPtr<cognitivevrapi::FDynamicData> data);
+	FReply SelectDynamic(TSharedPtr<FDynamicData> data);
 
 	FReply SelectAll();
 

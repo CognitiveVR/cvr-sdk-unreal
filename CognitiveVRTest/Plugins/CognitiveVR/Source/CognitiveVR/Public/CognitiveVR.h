@@ -2,9 +2,19 @@
 
 #pragma once
 
-#include "Private/CognitiveVRPrivatePCH.h"
-#include "Runtime/Analytics/Analytics/Public/Interfaces/IAnalyticsProviderModule.h"
-#include "Private/api/customeventrecorder.h"
+//#include "Private/CognitiveVRPrivatePCH.h"
+#include "CoreMinimal.h"
+#include "Interfaces/IAnalyticsProviderModule.h"
+#include "Modules/ModuleManager.h"
+//#include "HeadMountedDisplay.h"
+//#include "AnalyticsSettings.h"
+//#include "CognitiveVRSettings.h"
+//#include "Private/ExitPoll.h"
+//#include "Private/PlayerTracker.h"
+//#include "Public/DynamicObject.h"
+//#include "Private/FixationRecorder.h"
+//#include "Public/CognitiveVRBlueprints.h"
+//#include "Private/api/customeventrecorder.h"
 #include "Private/CognitiveVRProvider.h"
 
 DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);

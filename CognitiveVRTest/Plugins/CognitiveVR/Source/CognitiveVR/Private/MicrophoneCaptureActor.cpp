@@ -1,8 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "CognitiveVR.h"
-#include "CognitiveVRProvider.h"
-#include "Private/CognitiveVRPrivatePCH.h"
+
+//#include "Private/CognitiveVRPrivatePCH.h"
 #include "MicrophoneCaptureActor.h"
 
 static int32 OnAudioCaptureCallback(void *OutBuffer, void* InBuffer, uint32 InBufferFrames, double StreamTime, CRtAudioStreamStatus AudioStreamStatus, void* InUserData)
@@ -45,13 +44,13 @@ bool AMicrophoneCaptureActor::BeginRecording(float RecordingDurationSec)
 
 	if (!ADC.getDeviceInfo((int32)ADC.getDefaultInputDevice()).isDefaultInput)
 	{
-		cognitivevrapi::CognitiveLog::Warning("MicrophoneCaptureActor BeginRecording no default input source!");
+		CognitiveLog::Warning("MicrophoneCaptureActor BeginRecording no default input source!");
 		return false;
 	}
 
 	if (RecordingDurationSec == 0)
 	{
-		cognitivevrapi::CognitiveLog::Warning("MicrophoneCaptureActor BeginRecording duration is 0 seconds!");
+		CognitiveLog::Warning("MicrophoneCaptureActor BeginRecording duration is 0 seconds!");
 		return false;
 	}
 

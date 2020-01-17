@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "CognitiveVR.h"
 #include "FixationRecorder.h"
 
 UFixationRecorder* UFixationRecorder::instance;
@@ -376,7 +375,7 @@ bool UFixationRecorder::AreEyesClosed()
 
 int64 UFixationRecorder::GetEyeCaptureTimestamp()
 {
-	int64 ts = (int64)(cognitivevrapi::Util::GetTimestamp() * 1000);
+	int64 ts = (int64)(Util::GetTimestamp() * 1000);
 	return ts;
 }
 #elif defined VARJOEYETRACKER_API
@@ -397,7 +396,7 @@ bool UFixationRecorder::AreEyesClosed()
 
 int64 UFixationRecorder::GetEyeCaptureTimestamp()
 {
-	int64 ts = (int64)(cognitivevrapi::Util::GetTimestamp() * 1000);
+	int64 ts = (int64)(Util::GetTimestamp() * 1000);
 	return ts;
 }
 #else
@@ -490,7 +489,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	{
 		if (controllers.Num() == 0)
 		{
-			cognitivevrapi::CognitiveLog::Info("FixationRecorder::TickComponent - no controllers");
+			CognitiveLog::Info("FixationRecorder::TickComponent - no controllers");
 			return;
 		}
 
@@ -534,7 +533,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
 
 	EyeCaptures[index].Discard = true;
-	cognitivevrapi::CognitiveLog::Error("FixationRecorder::TickComponent - no eye tracking SDKs found!");
+	CognitiveLog::Error("FixationRecorder::TickComponent - no eye tracking SDKs found!");
 
 	FVector Start = FVector::ZeroVector;
 	FVector End = FVector::ZeroVector;
