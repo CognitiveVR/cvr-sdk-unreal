@@ -91,6 +91,25 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
 		.ToolTipText(FText::FromString("Export Directory must be set. See CognitiveVR Settings"))
+		.OnClicked(this, &UDynamicObjectComponentDetails::TakeScreenshot)
+		[
+			SNew( STextBlock )
+			.Font( IDetailLayoutBuilder::GetDetailFont() )
+			.Text(FText::FromString("Take Screenshot") )
+		]
+	];
+	DetailLayout.EditCategory( "DynamicObject" )
+	.AddCustomRow( NSLOCTEXT("SkyLightDetails", "UpdateSkyLight", "Recapture Scene") )
+	.ValueContent()
+	.MaxDesiredWidth(200.f)
+	.MinDesiredWidth(200.f)
+	[
+		SNew(SButton)
+		.ContentPadding(1)
+		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasOwnerAndExportDir)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Center)
+		.ToolTipText(FText::FromString("Export Directory must be set. See CognitiveVR Settings"))
 		.OnClicked(this, &UDynamicObjectComponentDetails::Upload)
 		[
 			SNew( STextBlock )

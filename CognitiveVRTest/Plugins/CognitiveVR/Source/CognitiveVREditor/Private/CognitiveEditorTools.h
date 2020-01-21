@@ -165,6 +165,8 @@ public:
 		FReply UploadScene();
 
 	void WizardPostSceneExport();
+
+	//bakes textures from translucent and masked materials
 	void WizardExportMaterials(FString directory, TArray<UStaticMeshComponent*> meshes, FString mtlFileName);
 	void WizardConvertScene();
 	//also writes settings json file and removes bmp/obj/fbx source files
