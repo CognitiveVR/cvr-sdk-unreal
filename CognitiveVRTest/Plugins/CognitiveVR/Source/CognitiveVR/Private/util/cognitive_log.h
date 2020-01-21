@@ -4,14 +4,7 @@
 #pragma once
 
 #include "CognitiveVR.h"
-#include <iostream>
-#include <ctime>
-
-//#include "CognitiveVR.h"
-//#include "CognitiveVRPrivatePCH.h"
-//#include "Private/util/config.h"
-
-//#include "CognitiveVR.h"
+#include "CoreMinimal.h"
 
 //namespace cognitivevrapi
 //{

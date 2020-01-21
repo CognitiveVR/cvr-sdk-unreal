@@ -6,18 +6,13 @@
 #include "CoreMinimal.h"
 #include "CognitiveVR.h"
 #include "Private/CognitiveVRProvider.h"
-//#include "Private/CognitiveVRPrivatePCH.h"
-//#include "Engine.h"
 #include "Classes/AnalyticsBlueprintLibrary.h"
-//#include "EngineAnalytics.h"
 #include "Runtime/Analytics/Analytics/Public/AnalyticsEventAttribute.h"
-//#include "IAnalyticsProvider.h"
 #include "Public/DynamicObject.h"
 #include "Private/PlayerTracker.h"
 #include "Private/ExitPoll.h"
 #include "Private/FixationRecorder.h"
 #include "Public/CustomEvent.h"
-//#include "LatentActions.h"
 #include "CognitiveVRBlueprints.generated.h"
 
 class CognitiveVRResponse;

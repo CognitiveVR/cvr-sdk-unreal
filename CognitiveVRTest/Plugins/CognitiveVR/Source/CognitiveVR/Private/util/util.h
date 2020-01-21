@@ -6,13 +6,13 @@
 
 #include "CognitiveVR.h"
 #include "GenericPlatformDriver.h"
-#include <sstream>
+//#include <sstream>
 #include <ctime>
-#include <string>
-#include <algorithm>
-#include <functional>
-#include <cctype>
-#include <locale>
+//#include <string>
+//#include <algorithm>
+//#include <functional>
+//#include <cctype>
+//#include <locale>
 #include "Json.h"
 #include "Windows/WindowsPlatformMisc.h"
 

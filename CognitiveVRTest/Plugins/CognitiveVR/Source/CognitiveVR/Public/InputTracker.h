@@ -4,7 +4,6 @@
 
 #include "CognitiveVR.h"
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
 #include "DynamicObject.h"
 #include "MotionControllerComponent.h"
 #include "InputTracker.generated.h"

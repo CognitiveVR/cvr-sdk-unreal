@@ -4,15 +4,10 @@
 
 #include "CognitiveVR.h"
 #include "Components/SceneComponent.h"
-//#include "Json.h"
-#include "Engine/SceneCapture2D.h"
-#include "Engine/Texture.h"
-#include "Engine/Texture2D.h"
-#include "SceneView.h"
+#include "TimerManager.h"
+#include "CoreMinimal.h"
 #include "CustomEvent.h"
-#include "Engine/TextureRenderTarget2D.h"
 #include "MotionControllerComponent.h"
-//#include "KismetMathLibrary.h"
 #include "DynamicObject.generated.h"
 
 UENUM(BlueprintType)

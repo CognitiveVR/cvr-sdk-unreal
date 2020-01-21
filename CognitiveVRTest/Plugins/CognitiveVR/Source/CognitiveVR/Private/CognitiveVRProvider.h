@@ -7,26 +7,19 @@
 #include "Interfaces/IAnalyticsProvider.h"
 #include "CognitiveVR.h"
 #include "Public/CognitiveVRBlueprints.h"
-//#include "Runtime/Analytics/Analytics/Public/Interfaces/IAnalyticsProviderModule.h"
-//#include "CognitiveVRPrivatePCH.h"
 
 #include "HeadMountedDisplay.h"
-//#include "AnalyticsSettings.h"
 #include "CognitiveVRSettings.h"
 #include "Private/ExitPoll.h"
 #include "Private/PlayerTracker.h"
 #include "Public/DynamicObject.h"
 #include "Private/FixationRecorder.h"
-//#include "Public/CognitiveVRBlueprints.h"
-//#include "Private/api/customeventrecorder.h"
 
 #include "Private/util/util.h"
-//#include "Private/util/config.h"
 #include "Private/util/cognitive_log.h"
 #include "Private/network/network.h"
 #include "Private/api/customeventrecorder.h"
 #include "Private/api/sensor.h"
-//#include "DynamicObject.h"
 #include "Engine/Engine.h"
 
 //namespace cognitivevrapi

@@ -3,14 +3,13 @@
 #pragma once
 
 #include "Components/SceneComponent.h"
-//#include "Json.h"
 #include "CognitiveVR.h"
 #include "Private/util/util.h"
-#include "Engine/SceneCapture2D.h"
-#include "Engine/Texture.h"
-#include "Engine/Texture2D.h"
+//#include "Engine/SceneCapture2D.h"
+//#include "Engine/Texture.h"
+//#include "Engine/Texture2D.h"
 #include "SceneView.h"
-#include "Engine/TextureRenderTarget2D.h"
+//#include "Engine/TextureRenderTarget2D.h"
 #include "Public/DynamicObject.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Runtime/HeadMountedDisplay/Public/IXRTrackingSystem.h"

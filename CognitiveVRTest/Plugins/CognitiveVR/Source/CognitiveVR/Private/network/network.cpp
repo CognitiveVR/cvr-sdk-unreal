@@ -3,7 +3,6 @@
 */
 
 #include "network.h"
-//#include "AnalyticsSettings.h"
 
 FHttpModule* Network::Http;
 FString Network::Gateway;

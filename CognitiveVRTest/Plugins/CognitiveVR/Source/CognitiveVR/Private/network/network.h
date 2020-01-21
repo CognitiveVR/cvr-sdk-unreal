@@ -3,7 +3,7 @@
 */
 #pragma once
 
-#include <stdexcept>
+//#include <stdexcept>
 #include "CognitiveVR.h"
 #include "Private/ExitPoll.h"
 #include "Http.h"

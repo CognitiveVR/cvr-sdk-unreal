@@ -3,7 +3,7 @@
 */
 #pragma once
 
-//#include "Private/CognitiveVRPrivatePCH.h"
+#include "TimerManager.h"
 #include "Analytics.h"
 #include "Private/CognitiveVRProvider.h"
 #include "Private/util/util.h"
