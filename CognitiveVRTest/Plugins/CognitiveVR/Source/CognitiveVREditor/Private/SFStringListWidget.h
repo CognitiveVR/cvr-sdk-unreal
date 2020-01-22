@@ -1,6 +1,5 @@
 #pragma once
 
-#include "CognitiveVREditorPrivatePCH.h"
 #include "CognitiveEditorTools.h"
 #include "CognitiveEditorData.h"
 #include "CognitiveVRSettings.h"
