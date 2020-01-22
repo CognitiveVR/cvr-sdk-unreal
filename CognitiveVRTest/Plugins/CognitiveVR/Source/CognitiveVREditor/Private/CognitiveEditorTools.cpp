@@ -340,8 +340,7 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 	{
 		work += 1;
 		SlowTask.EnterProgressFrame(work);
-		//TEMPORARY skip transparent and masked texture export
-		//WizardExportMaterials(GetDynamicsExportDirectory() + "/" + elem.Key + "/", elem.Value, elem.Key);
+		WizardExportMaterials(GetDynamicsExportDirectory() + "/" + elem.Key + "/", elem.Value, elem.Key);
 	}
 
 	GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
