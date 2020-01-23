@@ -68,7 +68,7 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 	[
 		SNew(SButton)
 		.ContentPadding(1)
-		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasOwnerAndExportDir)
+		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasOwnerAndExportDirAndName)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
 		.ToolTipText(FText::FromString("Export Directory must be set. See CognitiveVR Settings"))
@@ -87,7 +87,26 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 	[
 		SNew(SButton)
 		.ContentPadding(1)
-		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasOwnerAndExportDir)
+		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasOwnerAndExportDirAndName)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Center)
+		.ToolTipText(FText::FromString("Export Directory must be set. See CognitiveVR Settings"))
+		.OnClicked(this, &UDynamicObjectComponentDetails::TakeScreenshot)
+		[
+			SNew( STextBlock )
+			.Font( IDetailLayoutBuilder::GetDetailFont() )
+			.Text(FText::FromString("Take Screenshot") )
+		]
+	];
+	DetailLayout.EditCategory( "DynamicObject" )
+	.AddCustomRow( NSLOCTEXT("SkyLightDetails", "UpdateSkyLight", "Recapture Scene") )
+	.ValueContent()
+	.MaxDesiredWidth(200.f)
+	.MinDesiredWidth(200.f)
+	[
+		SNew(SButton)
+		.ContentPadding(1)
+		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasOwnerAndExportDirAndName)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
 		.ToolTipText(FText::FromString("Export Directory must be set. See CognitiveVR Settings"))
@@ -109,6 +128,13 @@ bool UDynamicObjectComponentDetails::HasOwnerAndExportDir() const
 {
 	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return false; }
 	return HasOwner();
+}
+bool UDynamicObjectComponentDetails::HasOwnerAndExportDirAndName() const
+{
+	if (!HasOwner()) { return false; }
+	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return false; }
+	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return false; }
+	return true;
 }
 
 FReply UDynamicObjectComponentDetails::OnUpdateMeshAndId()
