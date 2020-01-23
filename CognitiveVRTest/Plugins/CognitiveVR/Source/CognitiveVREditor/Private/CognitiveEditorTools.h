@@ -369,6 +369,8 @@ public:
 	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
 	FReply TakeScreenshot();
 	FReply TakeDynamicScreenshot(FString dynamicName);
+
+	void DelayScreenshot(FString filePath, FLevelEditorViewportClient* perspectiveView, FVector startPos, FRotator startRot);
 	
 	FText GetDynamicsOnSceneExplorerTooltip() const;
 	FText SendDynamicsToSceneExplorerTooltip() const;

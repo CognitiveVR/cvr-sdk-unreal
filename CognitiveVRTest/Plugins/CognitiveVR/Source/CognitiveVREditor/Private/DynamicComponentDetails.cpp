@@ -160,8 +160,56 @@ FReply UDynamicObjectComponentDetails::Export()
 
 	FCognitiveEditorTools::GetInstance()->ExportSelectedDynamics();
 
+	/*
+	FLevelEditorViewportClient* perspectiveView = NULL;
+	
+	for (int32 i = 0; i < GEditor->LevelViewportClients.Num(); i++)
+	{
+		if (GEditor->LevelViewportClients[i]->ViewportType == LVT_Perspective)
+		{
+			perspectiveView = GEditor->LevelViewportClients[i];
+			break;
+		}
+	}
+	if (perspectiveView != NULL)
+	{
+		FVector startPosition = perspectiveView->GetViewLocation();
+		FRotator startRotation = perspectiveView->GetViewRotation();
+		FTimerHandle DelayScreenshotHandle;
+		GEditor->GetTimerManager()->SetTimer(DelayScreenshotHandle, FTimerDelegate::CreateRaw(this, &UDynamicObjectComponentDetails::DelayScreenshot, perspectiveView, startPosition, startRotation), 1, false);
+
+		//set camera to look at object
+		perspectiveView->SetViewLocation(FVector(100, 0, 100));
+		perspectiveView->SetViewRotation(FRotator(0, 0, 0));
+
+		perspectiveView->bNeedsRedraw = true;
+	}
+	else
+	{
+		GLog->Log("viewport null!!");
+	}*/
+
 	return FReply::Handled();
 }
+
+/*void UDynamicObjectComponentDetails::DelayScreenshot(FLevelEditorViewportClient* perspectiveView, FVector startPos, FRotator startRot )
+{
+	//FLevelEditorViewportClient* perspectiveView = NULL;
+	//
+	//for (int32 i = 0; i < GEditor->LevelViewportClients.Num(); i++)
+	//{
+	//	if (GEditor->LevelViewportClients[i]->ViewportType == LVT_Perspective)
+	//	{
+	//		perspectiveView = GEditor->LevelViewportClients[i];
+	//		break;
+	//	}
+	//}
+	UThumbnailManager::CaptureProjectThumbnail(perspectiveView->Viewport, "C:/Users/calder/Desktop/samplethumbnail.png", false);
+	GLog->Log("save thumbnail");
+	perspectiveView->SetViewLocation(startPos);
+	perspectiveView->SetViewRotation(startRot);
+	perspectiveView->bNeedsRedraw = true;
+}*/
 
 FReply UDynamicObjectComponentDetails::Upload()
 {

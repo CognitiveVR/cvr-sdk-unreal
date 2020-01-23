@@ -331,6 +331,49 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		//bake + export materials			
 
 		BakeExportMaterials.Add(exportObjects[i]->MeshName, meshes);
+
+
+		//automatic screenshot
+		FLevelEditorViewportClient* perspectiveView = NULL;
+
+		for (int32 i = 0; i < GEditor->LevelViewportClients.Num(); i++)
+		{
+			if (GEditor->LevelViewportClients[i]->ViewportType == LVT_Perspective)
+			{
+				perspectiveView = GEditor->LevelViewportClients[i];
+				break;
+			}
+		}
+		if (perspectiveView != NULL)
+		{
+			FVector startPosition = perspectiveView->GetViewLocation();
+			FRotator startRotation = perspectiveView->GetViewRotation();
+			FString dir = BaseExportDirectory + "/dynamics/" + exportObjects[i]->MeshName + "/";
+			FTimerHandle DelayScreenshotHandle;
+			
+			
+			//calc position
+
+			//calculating bounds seems wrong
+
+			FVector origin;
+			FVector extents;
+			exportObjects[i]->GetOwner()->GetActorBounds(false, origin, extents);
+
+			float radius = extents.Size();
+			FVector calculatedPosition = exportObjects[i]->GetComponentLocation() + (FVector(-1, -1, 1) * radius * 2);
+			FVector calcDir = exportObjects[i]->GetComponentLocation() - calculatedPosition;
+			
+			FRotator calcRot = FRotator(calcDir.ToOrientationQuat());
+
+			perspectiveView->SetViewLocation(calculatedPosition);
+			perspectiveView->SetViewRotation(calcRot);
+
+			perspectiveView->bNeedsRedraw = true;
+			perspectiveView->Viewport->Draw(false);
+			FCognitiveEditorTools::DelayScreenshot(dir, perspectiveView, startPosition, startRotation);
+		}
+
 	}
 
 	float work = 0;
@@ -350,6 +393,17 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		ConvertDynamicsToGLTF(DynamicMeshNames);
 		FindAllSubDirectoryNames();
 	}
+}
+
+
+void FCognitiveEditorTools::DelayScreenshot(FString filePath, FLevelEditorViewportClient* perspectiveView, FVector startPos, FRotator startRot)
+{
+	UThumbnailManager::CaptureProjectThumbnail(perspectiveView->Viewport, filePath+"cvr_object_thumbnail.png", false);
+	
+	perspectiveView->SetViewLocation(startPos);
+	perspectiveView->SetViewRotation(startRot);
+	perspectiveView->bNeedsRedraw = true;
+	perspectiveView->RedrawRequested(perspectiveView->Viewport);
 }
 
 void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
