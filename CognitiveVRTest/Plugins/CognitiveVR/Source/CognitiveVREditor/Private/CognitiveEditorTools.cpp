@@ -279,10 +279,7 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 			continue;
 		}
 
-		//UActorComponent* actorComponent = exportObjects[i]->GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
-
 		TArray<UActorComponent*> actorComponents = exportObjects[i]->GetOwner()->GetComponentsByClass(UStaticMeshComponent::StaticClass());
-
 		TArray< UStaticMeshComponent*> meshes;
 
 		for (int32 j = 0; j < actorComponents.Num(); j++)
@@ -320,7 +317,6 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		FString tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
 
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
-		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray exporting DynamicObject " + ExportFilename);
 
 		GUnrealEd->ExportMap(GWorld, *tempObject, true);
 
@@ -354,14 +350,12 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 			
 			//calc position
 
-			//calculating bounds seems wrong
-
 			FVector origin;
 			FVector extents;
 			exportObjects[i]->GetOwner()->GetActorBounds(false, origin, extents);
 
 			float radius = extents.Size();
-			FVector calculatedPosition = exportObjects[i]->GetComponentLocation() + (FVector(-1, -1, 1) * radius * 2);
+			FVector calculatedPosition = exportObjects[i]->GetComponentLocation() + (FVector(-1, -1, 1) * radius);
 			FVector calcDir = exportObjects[i]->GetComponentLocation() - calculatedPosition;
 			
 			FRotator calcRot = FRotator(calcDir.ToOrientationQuat());

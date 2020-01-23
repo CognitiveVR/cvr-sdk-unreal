@@ -28,4 +28,5 @@ private:
 
 	bool HasOwner() const;
 	bool HasOwnerAndExportDir() const;
+	bool HasOwnerAndExportDirAndName() const;
 };
