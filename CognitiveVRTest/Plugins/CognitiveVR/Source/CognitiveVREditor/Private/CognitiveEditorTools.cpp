@@ -279,20 +279,26 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 			continue;
 		}
 
-		UActorComponent* actorComponent = exportObjects[i]->GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
-		UStaticMeshComponent* mesh = Cast<UStaticMeshComponent>(actorComponent);
-		if (mesh == NULL)
-		{
-			continue;
-		}
-		
-		ULevel* componentLevel = actorComponent->GetComponentLevel();
-		if (componentLevel->bIsVisible == 0)
-		{
-			continue;
-			//not visible! possibly on a disabled sublevel
-		}
+		TArray<UActorComponent*> actorComponents = exportObjects[i]->GetOwner()->GetComponentsByClass(UStaticMeshComponent::StaticClass());
+		TArray< UStaticMeshComponent*> meshes;
 
+		for (int32 j = 0; j < actorComponents.Num(); j++)
+		{
+			UStaticMeshComponent* mesh = Cast<UStaticMeshComponent>(actorComponents[j]);
+			if (mesh == NULL)
+			{
+				continue;
+			}
+
+			ULevel* componentLevel = actorComponents[j]->GetComponentLevel();
+			if (componentLevel->bIsVisible == 0)
+			{
+				continue;
+				//not visible! possibly on a disabled sublevel
+			}
+
+			meshes.Add(mesh);
+		}
 		DynamicMeshNames.Add(exportObjects[i]->MeshName);
 
 		originalLocation = exportObjects[i]->GetOwner()->GetActorLocation();
@@ -311,18 +317,57 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		FString tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
 
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
-		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray exporting DynamicObject " + ExportFilename);
-		
+
 		GUnrealEd->ExportMap(GWorld, *tempObject, true);
 
 		exportObjects[i]->GetOwner()->SetActorLocation(originalLocation);
 		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
 		exportObjects[i]->GetOwner()->SetActorScale3D(originalScale);
 
-		//bake + export materials
-		TArray< UStaticMeshComponent*> meshes;
-		meshes.Add(mesh);
+		//bake + export materials			
+
 		BakeExportMaterials.Add(exportObjects[i]->MeshName, meshes);
+
+
+		//automatic screenshot
+		FLevelEditorViewportClient* perspectiveView = NULL;
+
+		for (int32 i = 0; i < GEditor->LevelViewportClients.Num(); i++)
+		{
+			if (GEditor->LevelViewportClients[i]->ViewportType == LVT_Perspective)
+			{
+				perspectiveView = GEditor->LevelViewportClients[i];
+				break;
+			}
+		}
+		if (perspectiveView != NULL)
+		{
+			FVector startPosition = perspectiveView->GetViewLocation();
+			FRotator startRotation = perspectiveView->GetViewRotation();
+			FString dir = BaseExportDirectory + "/dynamics/" + exportObjects[i]->MeshName + "/";
+			FTimerHandle DelayScreenshotHandle;
+			
+			
+			//calc position
+
+			FVector origin;
+			FVector extents;
+			exportObjects[i]->GetOwner()->GetActorBounds(false, origin, extents);
+
+			float radius = extents.Size();
+			FVector calculatedPosition = exportObjects[i]->GetComponentLocation() + (FVector(-1, -1, 1) * radius);
+			FVector calcDir = exportObjects[i]->GetComponentLocation() - calculatedPosition;
+			
+			FRotator calcRot = FRotator(calcDir.ToOrientationQuat());
+
+			perspectiveView->SetViewLocation(calculatedPosition);
+			perspectiveView->SetViewRotation(calcRot);
+
+			perspectiveView->bNeedsRedraw = true;
+			perspectiveView->Viewport->Draw(false);
+			FCognitiveEditorTools::DelayScreenshot(dir, perspectiveView, startPosition, startRotation);
+		}
+
 	}
 
 	float work = 0;
@@ -342,6 +387,17 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		ConvertDynamicsToGLTF(DynamicMeshNames);
 		FindAllSubDirectoryNames();
 	}
+}
+
+
+void FCognitiveEditorTools::DelayScreenshot(FString filePath, FLevelEditorViewportClient* perspectiveView, FVector startPos, FRotator startRot)
+{
+	UThumbnailManager::CaptureProjectThumbnail(perspectiveView->Viewport, filePath+"cvr_object_thumbnail.png", false);
+	
+	perspectiveView->SetViewLocation(startPos);
+	perspectiveView->SetViewRotation(startRot);
+	perspectiveView->bNeedsRedraw = true;
+	perspectiveView->RedrawRequested(perspectiveView->Viewport);
 }
 
 void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
@@ -391,7 +447,7 @@ void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
 	}
 
 	FString escapedMeshNameList = "'";
-	for (int i = 0; i < meshnames.Num(); i++)
+	for (int32 i = 0; i < meshnames.Num(); i++)
 	{
 		if (i != 0)
 			escapedMeshNameList += ",";
@@ -686,7 +742,7 @@ void FCognitiveEditorTools::OnDynamicManifestResponse(FHttpRequestPtr Request, F
 		{
 			int32 count = JsonDynamics->AsArray().Num();
 			GLog->Log("FCognitiveEditorTools::OnDynamicManifestResponse returned " + FString::FromInt(count) + " objects");
-			for (int i = 0; i < count; i++)
+			for (int32 i = 0; i < count; i++)
 			{
 				TSharedPtr<FJsonObject> jsonobject = JsonDynamics->AsArray()[i]->AsObject();
 				FString name = jsonobject->GetStringField("name");
@@ -1852,7 +1908,7 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
 
-	for (int i = 0; i < scenstrings.Num(); i++)
+	for (int32 i = 0; i < scenstrings.Num(); i++)
 	{
 		TArray<FString> Array;
 		scenstrings[i].ParseIntoArray(Array, TEXT(","), true);
@@ -1960,7 +2016,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		int32 versionNumber = 0;
 		int32 versionId = 0;
 		TArray<TSharedPtr<FJsonValue>> versions = JsonSceneSettings->GetArrayField("versions");
-		for (int i = 0; i < versions.Num(); i++) {
+		for (int32 i = 0; i < versions.Num(); i++) {
 
 			int32 tempversion = versions[i]->AsObject()->GetNumberField("versionnumber");
 			if (tempversion > versionNumber)
@@ -1997,7 +2053,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		int32 lastVersionNumber = 0;
 
 		//update current scene
-		for (int i = 0; i < iniscenedata.Num(); i++)
+		for (int32 i = 0; i < iniscenedata.Num(); i++)
 		{
 			//GLog->Log("looking at data " + iniscenedata[i]);
 
@@ -2114,7 +2170,7 @@ TSharedPtr<FEditorSceneData> FCognitiveEditorTools::GetCurrentSceneData() const
 FString lastSceneName;
 TSharedPtr<FEditorSceneData> FCognitiveEditorTools::GetSceneData(FString scenename) const
 {
-	for (int i = 0; i < SceneData.Num(); i++)
+	for (int32 i = 0; i < SceneData.Num(); i++)
 	{
 		if (!SceneData[i].IsValid()) { continue; }
 		if (SceneData[i]->Name == scenename)
@@ -2196,7 +2252,7 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 		SlowTaskPtr->MakeDialog(false);
 	}
 
-	for (int i = 0; i < meshes.Num(); i++)
+	for (int32 i = 0; i < meshes.Num(); i++)
 	{
 		if (SlowTaskPtr != NULL)
 		{
@@ -2205,10 +2261,10 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 		}
 		if (meshes[i] == NULL) { continue; }
 		UStaticMeshComponent* TempObject = meshes[i];
-		if (TempObject == NULL) { continue; }
+		//if (TempObject == NULL) { continue; }
 
 		TArray<UMaterialInterface*> mats = TempObject->GetMaterials();
-		for (int j = 0; j < mats.Num(); j++)
+		for (int32 j = 0; j < mats.Num(); j++)
 		{
 			if (mats[j] != NULL)
 			{
