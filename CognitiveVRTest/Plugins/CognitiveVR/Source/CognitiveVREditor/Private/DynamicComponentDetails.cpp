@@ -2,10 +2,7 @@
 
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
-//#include "CognitiveVREditorPrivatePCH.h"
 #include "DynamicComponentDetails.h"
-
-//#define LOCTEXT_NAMESPACE "SkyLightComponentDetails"
 
 TSharedRef<IDetailCustomization> UDynamicObjectComponentDetails::MakeInstance()
 {

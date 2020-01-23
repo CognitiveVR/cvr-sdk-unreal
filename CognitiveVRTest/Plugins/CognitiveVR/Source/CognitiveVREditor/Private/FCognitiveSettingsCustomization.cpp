@@ -1,5 +1,4 @@
 
-//#include "CognitiveVREditorPrivatePCH.h"
 #include "FCognitiveSettingsCustomization.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"

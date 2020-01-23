@@ -1,5 +1,4 @@
 
-//#include "CognitiveVREditorPrivatePCH.h"
 #include "CognitiveEditorTools.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
@@ -332,11 +331,11 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		//automatic screenshot
 		FLevelEditorViewportClient* perspectiveView = NULL;
 
-		for (int32 i = 0; i < GEditor->LevelViewportClients.Num(); i++)
+		for (int32 j = 0; j < GEditor->LevelViewportClients.Num(); j++)
 		{
-			if (GEditor->LevelViewportClients[i]->ViewportType == LVT_Perspective)
+			if (GEditor->LevelViewportClients[j]->ViewportType == LVT_Perspective)
 			{
-				perspectiveView = GEditor->LevelViewportClients[i];
+				perspectiveView = GEditor->LevelViewportClients[j];
 				break;
 			}
 		}

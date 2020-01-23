@@ -1,6 +1,5 @@
 #pragma once
 
-//#include "CognitiveVREditorPrivatePCH.h"
 #include "Components/SceneComponent.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/Text/STextBlock.h"

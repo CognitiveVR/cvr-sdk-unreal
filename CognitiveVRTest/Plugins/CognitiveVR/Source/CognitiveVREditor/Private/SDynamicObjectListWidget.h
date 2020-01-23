@@ -1,12 +1,10 @@
 #pragma once
 
-//#include "CognitiveVREditorPrivatePCH.h"
 #include "CognitiveEditorTools.h"
 #include "CognitiveEditorData.h"
 #include "CognitiveVRSettings.h"
 #include "IDetailCustomization.h"
 #include "PropertyEditing.h"
-//#include "DetailCustomizationsPrivatePCH.h"
 #include "PropertyCustomizationHelpers.h"
 #include "Json.h"
 #include "SCheckBox.h"
