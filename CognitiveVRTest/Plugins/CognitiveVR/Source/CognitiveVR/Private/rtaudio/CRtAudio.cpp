@@ -42,7 +42,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /************************************************************************/
 
 // RtAudio: Version 4.1.2
-#include "CognitiveVR.h"
 #include "CRtAudio.h"
 //#include "AudioCapture.h"
 

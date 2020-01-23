@@ -1,18 +1,20 @@
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
-#ifndef COGNITIVEVR_TRANSACTION_H_
-#define COGNITIVEVR_TRANSACTION_H_
+#pragma once
 
-#include "Private/CognitiveVRPrivatePCH.h"
+#include "TimerManager.h"
+#include "Analytics.h"
+#include "Private/CognitiveVRProvider.h"
 #include "Private/util/util.h"
+#include "Private/PlayerTracker.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 
 class FAnalyticsProviderCognitiveVR;
 struct FCustomEvent;
 
-namespace cognitivevrapi
-{
+//namespace cognitivevrapi
+//{
 	class COGNITIVEVR_API CustomEventRecorder
 	{
 	private:
@@ -68,5 +70,4 @@ namespace cognitivevrapi
 		int32 GetPartNumber() { return jsonEventPart; }
 		int32 GetDataPoints() { return events.Num(); }
 	};
-}
-#endif  // COGNITIVEVR_TRANSACTION_H_
+//}

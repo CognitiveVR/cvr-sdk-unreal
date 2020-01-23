@@ -1,9 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "CognitiveVR.h"
 #include "ExitPoll.h"
-#include "CognitiveVRSettings.h"
-#include "Util.h"
 
 FCognitiveExitPollResponse ExitPoll::lastResponse;
 FExitPollQuestionSet ExitPoll::currentQuestionSet;
@@ -15,7 +12,7 @@ void ExitPoll::MakeQuestionSetRequest(const FString Hook, FCognitiveExitPollResp
 	auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	if (!cogProvider.IsValid() || !cogProvider.Pin()->HasStartedSession())
 	{
-		cognitivevrapi::CognitiveLog::Error("ExitPoll::MakeQuestionSetRequest could not get provider!");
+		CognitiveLog::Error("ExitPoll::MakeQuestionSetRequest could not get provider!");
 		return;
 	}
 	lastResponse = response;
@@ -25,7 +22,7 @@ void ExitPoll::MakeQuestionSetRequest(const FString Hook, FCognitiveExitPollResp
 
 void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
 {
-	lastStartTime = cognitivevrapi::Util::GetTimestamp();
+	lastStartTime = Util::GetTimestamp();
 	if (!successful)
 	{
 		if (lastResponse.IsBound())
@@ -39,7 +36,7 @@ void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
 	currentQuestionSet = FExitPollQuestionSet();
 
 	//FString UE4Str = Response->GetContentAsString();
-	cognitivevrapi::CognitiveLog::Info("ExitPoll::OnResponseReceived - Response: " + ResponseContent);
+	CognitiveLog::Info("ExitPoll::OnResponseReceived - Response: " + ResponseContent);
 
 	//CognitiveVRResponse response = Network::ParseResponse(content);
 
@@ -50,7 +47,7 @@ void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
 	{
 		if (!jobject->HasField(TEXT("customerId")))
 		{
-			cognitivevrapi::CognitiveLog::Info("ExitPoll::OnResponseReceivedAsync - no customerId in response - fail");
+			CognitiveLog::Info("ExitPoll::OnResponseReceivedAsync - no customerId in response - fail");
 			if (lastResponse.IsBound())
 			{
 				lastResponse.Execute(FExitPollQuestionSet());
@@ -148,7 +145,7 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 	auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	if (!cogProvider.IsValid() || !cogProvider.Pin()->HasStartedSession())
 	{
-		cognitivevrapi::CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	cogProvider.Pin()->network->NetworkExitPollPostResponse(currentQuestionSet, Responses);
@@ -160,7 +157,7 @@ void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 	auto provider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
 	auto questionSet = GetCurrentQuestionSet();
 	FExitPollResponse responses = FExitPollResponse();
-	responses.duration = cognitivevrapi::Util::GetTimestamp() - lastStartTime;
+	responses.duration = Util::GetTimestamp() - lastStartTime;
 	responses.hook = lastHook;
 	responses.user = provider.Pin()->GetUserID();
 	responses.questionSetId = questionSet.id;

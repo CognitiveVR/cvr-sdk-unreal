@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "Private/CognitiveVRPrivatePCH.h"
-#include "Runtime/Analytics/Analytics/Public/Interfaces/IAnalyticsProviderModule.h"
-#include "Private/api/customeventrecorder.h"
+#include "CoreMinimal.h"
+#include "Interfaces/IAnalyticsProviderModule.h"
+#include "Modules/ModuleManager.h"
 #include "Private/CognitiveVRProvider.h"
 
 DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);

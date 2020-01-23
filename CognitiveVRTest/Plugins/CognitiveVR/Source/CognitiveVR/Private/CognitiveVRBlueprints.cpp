@@ -1,10 +1,8 @@
 /*
 	
 */
-#include "CognitiveVR.h"
-#include "Private/CognitiveVRPrivatePCH.h"
-
 #include "CognitiveVRBlueprints.h"
+//#include "Private/CognitiveVRPrivatePCH.h"
 
 TSharedPtr<FAnalyticsProviderCognitiveVR> UCognitiveVRBlueprints::cog;
 
@@ -36,7 +34,7 @@ void UCognitiveVRBlueprints::SendCustomEventToCore(FString Category, const TArra
 	
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SendCustomEventToCore could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SendCustomEventToCore could not get provider!");
 		return;
 	}
 	if (!cog->customEventRecorder.IsValid())
@@ -73,7 +71,7 @@ void UCognitiveVRBlueprints::UpdateSessionInt(const FString name, const int32 va
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::UpdateSessionInt could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateSessionInt could not get provider!");
 		return;
 	}
 	cog->SetSessionProperty(name, value);
@@ -85,7 +83,7 @@ void UCognitiveVRBlueprints::UpdateSessionFloat(const FString name, const float 
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::UpdateSessionFloat could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateSessionFloat could not get provider!");
 		return;
 	}
 	cog->SetSessionProperty(name, value);
@@ -97,7 +95,7 @@ void UCognitiveVRBlueprints::UpdateSessionString(const FString name, const FStri
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::UpdateSessionString could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateSessionString could not get provider!");
 		return;
 	}
 	cog->SetSessionProperty(name, value);
@@ -109,7 +107,7 @@ void UCognitiveVRBlueprints::SetSessionName(const FString name)
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SetSessionName could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetSessionName could not get provider!");
 		return;
 	}
 	cog->SetSessionName(name);
@@ -121,7 +119,7 @@ void UCognitiveVRBlueprints::SetLobbyId(const FString lobbyId)
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
 		return;
 	}
 	cog->SetLobbyId(lobbyId);
@@ -133,7 +131,7 @@ void UCognitiveVRBlueprints::RecordSensor(const FString Name, const float Value)
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::RecordSensor could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::RecordSensor could not get provider!");
 		return;
 	}
 	if (!cog->sensors.IsValid())
@@ -176,7 +174,7 @@ void UCognitiveVRBlueprints::FlushEvents()
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
 		return;
 	}
 	cog->FlushEvents();
@@ -188,7 +186,7 @@ bool UCognitiveVRBlueprints::StartSession()
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
 		return false;
 	}
 	return cog->StartSession(TArray<FAnalyticsEventAttribute>());
@@ -200,7 +198,7 @@ void UCognitiveVRBlueprints::EndSession()
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
 		return;
 	}
 	cog->EndSession();
@@ -212,7 +210,7 @@ void UCognitiveVRBlueprints::SetUserId(const FString Name)
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
 		return;
 	}
 	cog->SetUserID(Name);
@@ -305,7 +303,7 @@ float UCognitiveVRBlueprints::GetSessionDuration()
 	if (!cog.IsValid()) { return -1; }
 	if (!cog->HasStartedSession()) { return 0; }
 
-	float dur = cognitivevrapi::Util::GetTimestamp() - cog->GetSessionTimestamp();
+	float dur = Util::GetTimestamp() - cog->GetSessionTimestamp();
 	return dur;
 #else
 	return 0;

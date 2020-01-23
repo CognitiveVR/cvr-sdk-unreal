@@ -1,11 +1,10 @@
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
-#include "CognitiveVR.h"
-#include "util/util.h"
-#include "GenericPlatformDriver.h"
 
-double cognitivevrapi::Util::GetTimestamp()
+#include "util/util.h"
+
+double Util::GetTimestamp()
 {
 	#pragma warning(push)
 	#pragma warning(disable:4244) //Disable warning regarding loss of accuracy, no concern.
@@ -20,7 +19,7 @@ double cognitivevrapi::Util::GetTimestamp()
 	#pragma warning(pop)
 }
 
-FString cognitivevrapi::Util::GetDeviceName(FString DeviceName)
+FString Util::GetDeviceName(FString DeviceName)
 {
 	if (DeviceName == "OculusRift")
 	{
@@ -41,7 +40,7 @@ FString cognitivevrapi::Util::GetDeviceName(FString DeviceName)
 	return FString("unknown");
 }
 
-void cognitivevrapi::Util::SetHardwareSessionProperties()
+void Util::SetHardwareSessionProperties()
 {
 	auto cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 

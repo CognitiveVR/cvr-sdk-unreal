@@ -1,17 +1,18 @@
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
-#ifndef COGNITIVEVR_SENSORS_H_
-#define COGNITIVEVR_SENSORS_H_
 
-#include "Private/CognitiveVRPrivatePCH.h"
+#pragma once
+
+#include "CognitiveVR.h"
+#include "TimerManager.h"
 #include "Private/util/util.h"
-#include "Runtime/Engine/Classes/Engine/EngineTypes.h"
+#include "CoreMinimal.h"
 
 class FAnalyticsProviderCognitiveVR;
 
-namespace cognitivevrapi
-{
+//namespace cognitivevrapi
+//{
 	class COGNITIVEVR_API Sensors
 	{
 	private:
@@ -47,6 +48,4 @@ namespace cognitivevrapi
 		int32 GetPartNumber() { return jsonPart; }
 		int32 GetDataPoints() { return sensorDataCount; }
 	};
-}
-
-#endif  // COGNITIVEVR_SENSORS_H_
+//}

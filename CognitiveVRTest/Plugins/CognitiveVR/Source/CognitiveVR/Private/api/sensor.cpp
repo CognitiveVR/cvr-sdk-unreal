@@ -1,12 +1,12 @@
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
-#include "CognitiveVR.h"
+
 #include "Private/api/sensor.h"
 
 //using namespace cognitivevrapi;
 
-cognitivevrapi::Sensors::Sensors()
+Sensors::Sensors()
 {
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 
@@ -54,7 +54,7 @@ cognitivevrapi::Sensors::Sensors()
 	}
 }
 
-void cognitivevrapi::Sensors::StartSession()
+void Sensors::StartSession()
 {
 	if (cog->GetWorld() == NULL)
 	{
@@ -65,7 +65,7 @@ void cognitivevrapi::Sensors::StartSession()
 	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, false);
 }
 
-void cognitivevrapi::Sensors::RecordSensor(FString Name, float value)
+void Sensors::RecordSensor(FString Name, float value)
 {
 	LastSensorValues.Add(Name, value);
 
@@ -85,7 +85,7 @@ void cognitivevrapi::Sensors::RecordSensor(FString Name, float value)
 	}
 }
 
-void cognitivevrapi::Sensors::TrySendData()
+void Sensors::TrySendData()
 {
 	if (cog->GetWorld() != NULL)
 	{
@@ -100,7 +100,7 @@ void cognitivevrapi::Sensors::TrySendData()
 	SendData();
 }
 
-void cognitivevrapi::Sensors::SendData()
+void Sensors::SendData()
 {
 	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
@@ -157,7 +157,7 @@ void cognitivevrapi::Sensors::SendData()
 	sensorDataCount = 0;
 }
 
-TMap<FString, float> cognitivevrapi::Sensors::GetLastSensorValues()
+TMap<FString, float> Sensors::GetLastSensorValues()
 {
 	return LastSensorValues;
 }

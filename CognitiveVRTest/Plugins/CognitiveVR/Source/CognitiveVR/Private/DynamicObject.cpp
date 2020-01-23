@@ -1,9 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "CognitiveVR.h"
 #include "DynamicObject.h"
 //#include "CognitiveVRSettings.h"
-#include "Util.h"
+//#include "Util.h"
 
 int32 UDynamicObject::jsonPart = 1;
 int32 UDynamicObject::MaxSnapshots = -1;
@@ -14,9 +13,9 @@ float UDynamicObject::NextSendTime = 0;
 float UDynamicObject::LastSendTime = -60;
 FString UDynamicObject::DynamicObjectFileType = "gltf";
 TArray<FDynamicObjectSnapshot> UDynamicObject::snapshots;
-TArray<cognitivevrapi::FDynamicObjectManifestEntry> UDynamicObject::manifest;
-TArray<cognitivevrapi::FDynamicObjectManifestEntry> UDynamicObject::newManifest;
-TArray<TSharedPtr<cognitivevrapi::FDynamicObjectId>> UDynamicObject::allObjectIds;
+TArray<FDynamicObjectManifestEntry> UDynamicObject::manifest;
+TArray<FDynamicObjectManifestEntry> UDynamicObject::newManifest;
+TArray<TSharedPtr<FDynamicObjectId>> UDynamicObject::allObjectIds;
 FTimerHandle UDynamicObject::CognitiveDynamicAutoSendHandle;
 TSharedPtr<FAnalyticsProviderCognitiveVR> UDynamicObject::cogProvider;
 
@@ -257,17 +256,17 @@ void UDynamicObject::Initialize()
 	HasInitialized = true;
 }
 
-TSharedPtr<cognitivevrapi::FDynamicObjectId> UDynamicObject::GetUniqueId(FString meshName)
+TSharedPtr<FDynamicObjectId> UDynamicObject::GetUniqueId(FString meshName)
 {
-	TSharedPtr<cognitivevrapi::FDynamicObjectId> freeId;
+	TSharedPtr<FDynamicObjectId> freeId;
 	static int32 originalId = 1000;
 	originalId++;
 
-	freeId = MakeShareable(new cognitivevrapi::FDynamicObjectId(FString::FromInt(originalId), meshName));
+	freeId = MakeShareable(new FDynamicObjectId(FString::FromInt(originalId), meshName));
 	return freeId;
 }
 
-TSharedPtr<cognitivevrapi::FDynamicObjectId> UDynamicObject::GetObjectId()
+TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
 {
 	if (!ObjectID.IsValid() || ObjectID->Id == "")
 	{
@@ -280,7 +279,7 @@ void UDynamicObject::GenerateObjectId()
 {
 	if (!UseCustomId || CustomId.IsEmpty())
 	{
-		TSharedPtr<cognitivevrapi::FDynamicObjectId> recycledId;
+		TSharedPtr<FDynamicObjectId> recycledId;
 		bool foundRecycleId = false;
 
 		for (int32 i = 0; i < allObjectIds.Num(); i++)
@@ -296,17 +295,17 @@ void UDynamicObject::GenerateObjectId()
 		{
 			ObjectID = recycledId;
 			ObjectID->Used = true;
-			cognitivevrapi::CognitiveLog::Info("UDynamicObject::Recycle ObjectID! " + MeshName);
+			CognitiveLog::Info("UDynamicObject::Recycle ObjectID! " + MeshName);
 		}
 		else
 		{
-			cognitivevrapi::CognitiveLog::Info("UDynamicObject::Get new ObjectID! " + MeshName);
+			CognitiveLog::Info("UDynamicObject::Get new ObjectID! " + MeshName);
 			ObjectID = GetUniqueId(MeshName);
 
 			allObjectIds.Add(ObjectID);
 		}
 
-		cognitivevrapi::FDynamicObjectManifestEntry entry = cognitivevrapi::FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
+		FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
 		if (IsController)
 		{
 			entry.ControllerType = ControllerType;
@@ -317,8 +316,8 @@ void UDynamicObject::GenerateObjectId()
 	}
 	else
 	{
-		ObjectID = MakeShareable(new cognitivevrapi::FDynamicObjectId(CustomId, MeshName));
-		cognitivevrapi::FDynamicObjectManifestEntry entry = cognitivevrapi::FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
+		ObjectID = MakeShareable(new FDynamicObjectId(CustomId, MeshName));
+		FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
 		if (IsController)
 		{
 			entry.ControllerType = ControllerType;
@@ -403,7 +402,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 	}
 	else
 	{
-		cognitivevrapi::FDynamicObjectManifestEntry entry;
+		FDynamicObjectManifestEntry entry;
 		bool foundEntry = false;
 		for (int32 i = 0; i < manifest.Num(); i++)
 		{
@@ -426,7 +425,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 
 	FDynamicObjectSnapshot snapshot = FDynamicObjectSnapshot();
 
-	double ts = cognitivevrapi::Util::GetTimestamp();
+	double ts = Util::GetTimestamp();
 
 	snapshot.time = ts;
 	snapshot.id = ObjectID->Id;
@@ -601,7 +600,7 @@ void UDynamicObject::SendData()
 		return;
 	}
 
-	TSharedPtr<cognitivevrapi::FSceneData> currentscenedata = cogProvider->GetCurrentSceneData();
+	TSharedPtr<FSceneData> currentscenedata = cogProvider->GetCurrentSceneData();
 	if (!currentscenedata.IsValid())
 	{
 		GLog->Log("DynamicObject::SendData current scene data is invalid");
@@ -610,7 +609,7 @@ void UDynamicObject::SendData()
 
 	if (newManifest.Num() + snapshots.Num() == 0)
 	{
-		cognitivevrapi::CognitiveLog::Info("UDynamicObject::SendData no objects or data to send!");
+		CognitiveLog::Info("UDynamicObject::SendData no objects or data to send!");
 		cogProvider->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
 		return;
 	}
@@ -947,7 +946,7 @@ void UDynamicObject::FlushButtons(FControllerInputStateCollection& target)
 }
 
 
-cognitivevrapi::FDynamicObjectManifestEntry* cognitivevrapi::FDynamicObjectManifestEntry::SetProperty(FString key, FString value)
+FDynamicObjectManifestEntry* FDynamicObjectManifestEntry::SetProperty(FString key, FString value)
 {
 	this->StringProperties.Add(key, value);
 	return this;

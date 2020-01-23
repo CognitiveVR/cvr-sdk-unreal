@@ -1,4 +1,4 @@
-#include "CognitiveVREditorPrivatePCH.h"
+
 #include "SDynamicObjectListWidget.h"
 
 void SDynamicObjectListWidget::Construct(const FArguments& Args)
@@ -9,7 +9,7 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 			+SVerticalBox::Slot()
 			//.FillHeight(1)
 			[
-				SAssignNew(ListViewWidget, SListView<TSharedPtr<cognitivevrapi::FDynamicData>>)
+				SAssignNew(ListViewWidget, SListView<TSharedPtr<FDynamicData>>)
 				.ItemHeight(24)
 				.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneDynamics) //The Items array is the source of this listview
 				.OnGenerateRow(this, &SDynamicObjectListWidget::OnGenerateRowForList)
@@ -55,10 +55,10 @@ void SDynamicObjectListWidget::RefreshList()
 	ListViewWidget->RequestListRefresh();
 }
 
-TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<cognitivevrapi::FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
+TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	return
-		SNew(SComboRow< TSharedPtr<cognitivevrapi::FDynamicData> >, OwnerTable)
+		SNew(SComboRow< TSharedPtr<FDynamicData> >, OwnerTable)
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
@@ -106,7 +106,7 @@ TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<
 		];
 }
 
-FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<cognitivevrapi::FDynamicData> data)
+FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
 {
 	GEditor->SelectNone(false, true, false);
 
@@ -137,7 +137,7 @@ FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<cognitivevrapi::FDynam
 	return FReply::Handled();
 }
 
-FText SDynamicObjectListWidget::ExportStatusText(TSharedPtr<cognitivevrapi::FDynamicData> data)
+FText SDynamicObjectListWidget::ExportStatusText(TSharedPtr<FDynamicData> data)
 {
 	//check directory for obj/gltf files
 

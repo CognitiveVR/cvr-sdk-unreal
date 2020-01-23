@@ -1,18 +1,16 @@
 #pragma once
 
-#include "CognitiveVREditorPrivatePCH.h"
 #include "CognitiveVRSettings.h"
 #include "CognitiveEditorData.h"
 #include "DebugCanvasHolder.h"
 #include "IDetailCustomization.h"
 #include "PropertyEditing.h"
-//#include "DetailCustomizationsPrivatePCH.h"
 #include "PropertyCustomizationHelpers.h"
 #include "Json.h"
 
 #include "UnrealEd.h"
-#include "Engine.h"
-#include "Editor.h"
+//#include "Engine.h"
+//#include "Editor.h"
 #include "FileHelpers.h"
 #include "BusyCursor.h"
 #include "Classes/Components/SceneComponent.h"
@@ -58,8 +56,8 @@ public:
 	void SaveSceneData(FString sceneName, FString sceneKey);
 
 	//gets all the dynamics in the scene and saves them to SceneDynamics
-	TArray<TSharedPtr<cognitivevrapi::FDynamicData>> SceneDynamics;
-	TArray<TSharedPtr<cognitivevrapi::FDynamicData>> GetSceneDynamics();
+	TArray<TSharedPtr<FDynamicData>> SceneDynamics;
+	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 
 	void OnAPIKeyChanged(const FText& Text);
 	void OnDeveloperKeyChanged(const FText& Text);
@@ -319,9 +317,9 @@ public:
 	}
 
 
-	TArray<TSharedPtr<cognitivevrapi::FEditorSceneData>> SceneData;
+	TArray<TSharedPtr<FEditorSceneData>> SceneData;
 	//returns SceneData array
-	TArray<TSharedPtr<cognitivevrapi::FEditorSceneData>> GetSceneData() const;
+	TArray<TSharedPtr<FEditorSceneData>> GetSceneData() const;
 
 	FReply OpenSceneInBrowser(FString sceneid);
 	FReply OpenCurrentSceneInBrowser();
@@ -338,9 +336,9 @@ public:
 	FReply ButtonCurrentSceneVersionRequest();
 	
 	//returns data about a scene by name
-	TSharedPtr<cognitivevrapi::FEditorSceneData> GetSceneData(FString scenename) const;
+	TSharedPtr<FEditorSceneData> GetSceneData(FString scenename) const;
 	//returns data about a scene by the currently open scene
-	TSharedPtr<cognitivevrapi::FEditorSceneData> GetCurrentSceneData() const;
+	TSharedPtr<FEditorSceneData> GetCurrentSceneData() const;
 
 	//has json file and no bmp files in export directory
 	bool HasConvertedFilesInDirectory() const;
@@ -350,11 +348,11 @@ public:
 
 	ECheckBoxState HasFoundBlenderCheckbox() const;
 
-	void SceneVersionRequest(cognitivevrapi::FEditorSceneData data);
+	void SceneVersionRequest(FEditorSceneData data);
 	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	FText GetDynamicsFromManifest() const;
-	TArray<TSharedPtr<cognitivevrapi::FDynamicData>> SceneExplorerDynamics;
+	TArray<TSharedPtr<FDynamicData>> SceneExplorerDynamics;
 	TArray<TSharedPtr<FString>> SubDirectoryNames;
 
 	void RefreshSceneUploadFiles();
@@ -400,8 +398,8 @@ public:
 	void CreateExportFolderStructure();
 };
 
-namespace cognitivevrapi
-{
+//namespace cognitivevrapi
+//{
 	//used for uploading multiple dynamics at once
 	class FContentContainer
 	{
@@ -410,4 +408,4 @@ namespace cognitivevrapi
 		FString BodyText;
 		TArray<uint8> BodyBinary;
 	};
-}
+//}

@@ -2,20 +2,28 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
+#include "AnalyticsEventAttribute.h"
+#include "Interfaces/IAnalyticsProvider.h"
 #include "CognitiveVR.h"
-#include "CognitiveVRPrivatePCH.h"
+#include "Public/CognitiveVRBlueprints.h"
+
+#include "HeadMountedDisplay.h"
+#include "CognitiveVRSettings.h"
+#include "Private/ExitPoll.h"
+#include "Private/PlayerTracker.h"
+#include "Public/DynamicObject.h"
+#include "Private/FixationRecorder.h"
 
 #include "Private/util/util.h"
-//#include "Private/util/config.h"
 #include "Private/util/cognitive_log.h"
 #include "Private/network/network.h"
 #include "Private/api/customeventrecorder.h"
 #include "Private/api/sensor.h"
-//#include "DynamicObject.h"
-#include "Engine.h"
+#include "Engine/Engine.h"
 
-namespace cognitivevrapi
-{
+//namespace cognitivevrapi
+//{
 	class FSceneData
 	{
 	public:
@@ -43,13 +51,14 @@ namespace cognitivevrapi
 		kErrorRequestTimedOut = -6,
 		kErrorUnknown = -7
 	};
-}
+//}
+
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
-	class cognitivevrapi::Network;
-	class cognitivevrapi::CustomEventRecorder;
+	class Network;
+	class CustomEventRecorder;
 	//class CognitiveVRResponse;
-	class cognitivevrapi::Sensors;
+	class Sensors;
 	//class ExitPoll;
 	//class UDynamicObject;
 
@@ -114,9 +123,9 @@ namespace cognitivevrapi
 		virtual void RecordError(const FString& Error, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		virtual void RecordProgress(const FString& ProgressType, const FString& ProgressHierarchy, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		
-		TSharedPtr<cognitivevrapi::CustomEventRecorder> customEventRecorder;
-		TSharedPtr<cognitivevrapi::Network> network;
-		TSharedPtr<cognitivevrapi::Sensors> sensors;
+		TSharedPtr<CustomEventRecorder> customEventRecorder;
+		TSharedPtr<Network> network;
+		TSharedPtr<Sensors> sensors;
 		
 		FString GetDeviceID() const;
 
@@ -140,9 +149,9 @@ namespace cognitivevrapi
 		//calls player tracker session begin (which sets the world). if not found, will return null
 		UWorld* EnsureGetWorld();
 
-		TArray<TSharedPtr<cognitivevrapi::FSceneData>> SceneData;
-		TSharedPtr<cognitivevrapi::FSceneData> GetSceneData(FString scenename);
-		TSharedPtr<cognitivevrapi::FSceneData> GetCurrentSceneData();
+		TArray<TSharedPtr<FSceneData>> SceneData;
+		TSharedPtr<FSceneData> GetSceneData(FString scenename);
+		TSharedPtr<FSceneData> GetCurrentSceneData();
 		FJsonObject GetSessionProperties();
 
 		void SetSessionProperty(FString name, int32 value);

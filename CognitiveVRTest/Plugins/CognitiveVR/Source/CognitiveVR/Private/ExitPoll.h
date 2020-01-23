@@ -4,12 +4,10 @@
 
 #pragma once
 
-//#include "Engine.h"
-//#include "Kismet/BlueprintFunctionLibrary.h"
-//#include "ExitPoll.generated.h"
-//#include "CognitiveVRBlueprints.h"
+#include "CognitiveVR.h"
+#include "CognitiveVRSettings.h"
+#include "Private/util/util.h"
 #include "PlayerTracker.h"
-//#include "Http.h"
 #include "ExitPoll.generated.h"
 
 
