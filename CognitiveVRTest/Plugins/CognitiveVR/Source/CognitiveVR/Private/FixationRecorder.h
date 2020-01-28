@@ -9,6 +9,7 @@
 #include "Fixations.h"
 #include "EyeCapture.h"
 #include "SceneView.h"
+#include "Engine/LocalPlayer.h"
 #if defined TOBII_EYETRACKING_ACTIVE
 #include "TobiiTypes.h"
 #include "ITobiiCore.h"
@@ -90,6 +91,7 @@ private:
 	FTimerHandle AutoSendHandle;
 	FVector2D CurrentEyePositionScreen;
 
+	TArray<FVector4> recentFixationPoints;
 
 public:
 
@@ -144,6 +146,10 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
 		static float GetDPIScale();
+
+	//returns the last 50 fixations in x,y,z world space, with w as the radius of the fixation
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
+		TArray<FVector4> GetRecentFixationPoints();
 
 	float GetLastSendTime() { return LastSendTime; }
 	int32 GetPartNumber() { return jsonFixationPart; }

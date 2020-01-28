@@ -788,6 +788,11 @@ bool UFixationRecorder::TryBeginFixation()
 			CachedEyeCapturePositions.Add(EyeCaptures[GetIndex(i)].WorldPosition);
 		}
 		//DrawDebugSphere(world, averageWorldPos, 10, 3, FColor::Red, false, 10);
+		recentFixationPoints.Add(FVector4(averageWorldPos.X, averageWorldPos.Y, averageWorldPos.Z, opposite));
+		if (recentFixationPoints.Num() > 50)
+		{
+			recentFixationPoints.RemoveAt(0);
+		}
 		return true;
 	}
 	return false;
@@ -910,4 +915,9 @@ UFixationRecorder* UFixationRecorder::GetFixationRecorder()
 FVector2D UFixationRecorder::GetEyePositionScreen()
 {
 	return CurrentEyePositionScreen;
+}
+
+TArray<FVector4> UFixationRecorder::GetRecentFixationPoints()
+{
+	return recentFixationPoints;
 }
