@@ -571,6 +571,12 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 	UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(EyeCaptures[index].WorldPosition, CurrentEyePositionScreen);
 
+	recentEyePositions.Add(CurrentEyePositionScreen);
+	if (recentEyePositions.Num() > 50)
+	{
+		recentEyePositions.RemoveAt(0);
+	}
+
 	index = (index + 1) % CachedEyeCaptureCount;
 }
 
@@ -920,4 +926,9 @@ FVector2D UFixationRecorder::GetEyePositionScreen()
 TArray<FVector4> UFixationRecorder::GetRecentFixationPoints()
 {
 	return recentFixationPoints;
+}
+
+TArray<FVector2D> UFixationRecorder::GetRecentEyePositions()
+{
+	return recentEyePositions;
 }

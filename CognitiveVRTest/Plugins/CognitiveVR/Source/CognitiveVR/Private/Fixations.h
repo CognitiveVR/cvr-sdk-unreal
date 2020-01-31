@@ -3,6 +3,24 @@
 #pragma once
 #include "EyeCapture.h"
 #include "Runtime/Engine/Classes/Components/SceneComponent.h"
+#include "Fixations.generated.h"
+
+//TODO use this struct for drawing saccade lines/fixations in active session view on dynamics
+USTRUCT(BlueprintType)
+struct FC3DFixation
+{
+	GENERATED_BODY()
+
+//public:
+	UPROPERTY(BlueprintReadWrite)
+	float radius;
+	UPROPERTY(BlueprintReadWrite)
+	USceneComponent* Parent;
+	UPROPERTY(BlueprintReadWrite)
+	bool IsLocalFixation;
+	UPROPERTY(BlueprintReadWrite)
+	FVector Position = FVector(0, 0, 0);
+};
 
 class COGNITIVEVR_API FFixation
 {
