@@ -1,6 +1,7 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 
-#include "CognitiveVR.h"
+#include "Public/CognitiveVR.h"
+#include "Public/CognitiveVRProvider.h"
 
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
@@ -121,7 +122,15 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	}
 
 	SessionTimestamp = Util::GetTimestamp();
-	SessionId = FString::FromInt(GetSessionTimestamp()) + TEXT("_") + UserId;
+	if (SessionId.IsEmpty())
+	{
+		SessionId = FString::FromInt(GetSessionTimestamp()) + TEXT("_") + UserId;
+	}
+
+	for (auto Attr : Attributes)
+	{
+		properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
+	}
 
 	APIKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
 
@@ -321,7 +330,8 @@ bool FAnalyticsProviderCognitiveVR::SetSessionID(const FString& InSessionID)
 {
 	if (!bHasSessionStarted)
 	{
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SetSessionID automatically sets session id. Ignoring");
+		SessionId = InSessionID;
+		//CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SetSessionID automatically sets session id. Ignoring");
 	}
 	else
 	{
