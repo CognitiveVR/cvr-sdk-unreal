@@ -2,10 +2,11 @@
 
 #pragma once
 
+#include "UObject/UObjectIterator.h"
 #include "CoreMinimal.h"
 #include "Interfaces/IAnalyticsProviderModule.h"
 #include "Modules/ModuleManager.h"
-#include "Private/CognitiveVRProvider.h"
+#include "Public/CognitiveVRProvider.h"
 
 DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);
 
