@@ -3,14 +3,30 @@
 #pragma once
 #include "EyeCapture.h"
 #include "Runtime/Engine/Classes/Components/SceneComponent.h"
+#include "Fixations.generated.h"
+
+USTRUCT(BlueprintType)
+struct FC3DGazePoint
+{
+	GENERATED_BODY()
+
+		//public:
+		UPROPERTY(BlueprintReadWrite)
+		USceneComponent* Parent = NULL;
+	UPROPERTY(BlueprintReadWrite)
+		bool IsLocal = false;
+	UPROPERTY(BlueprintReadWrite)
+		FVector WorldPosition = FVector(0, 0, 0);
+	UPROPERTY(BlueprintReadWrite)
+		FVector LocalPosition = FVector(0, 0, 0);
+};
 
 class COGNITIVEVR_API FFixation
 {
 public:
 	FVector WorldPosition;
 	FVector LocalPosition;
-	//UDynamicObject* LocalTransform;
-	USceneComponent* LocalTransform;
+	USceneComponent* LocalTransform = NULL;
 
 	float DebugScale;
 	int64 LastUpdated;
@@ -23,7 +39,7 @@ public:
 	float StartDistance;
 	float MaxRadius;
 	bool IsLocal;
-	FString DynamicObjectId;
+	FString DynamicObjectId = "";
 	
 	void AddEyeCapture(FEyeCapture eyeCapture)
 	{
