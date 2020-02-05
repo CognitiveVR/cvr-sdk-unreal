@@ -649,7 +649,6 @@ bool UFixationRecorder::TryBeginLocalFixation()
 
 	bool withinRadius = true;
 
-	FVector WorldPosition = EyeCaptures[index].WorldPosition;
 	FSceneViewProjectionData ProjectionData;
 	FViewport* viewport = NULL;
 	EStereoscopicPass pass = EStereoscopicPass::eSSP_FULL;
@@ -661,7 +660,7 @@ bool UFixationRecorder::TryBeginLocalFixation()
 	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
 
 	float rescale = 1;
-	if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(WorldPosition, screenPos))
+	if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(EyeCaptures[index].WorldPosition, screenPos))
 	{
 		FVector2D viewport2d = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
 		float screenDist = FVector2D::Distance(viewport2d, FVector2D(0.5f, 0.5f));
@@ -672,7 +671,7 @@ bool UFixationRecorder::TryBeginLocalFixation()
 
 	for (int32 i = 0; i < sampleCount; i++)
 	{
-		FVector lookDir = (EyeCaptures[GetIndex(i)].HMDPosition - mostUsed->GetComponentTransform().TransformPosition(EyeCaptures[GetIndex(i)].LocalPosition)); //should be projected into world space?
+		FVector lookDir = (EyeCaptures[GetIndex(i)].HMDPosition - mostUsed->GetComponentTransform().TransformPosition(EyeCaptures[GetIndex(i)].LocalPosition));
 		lookDir.Normalize();
 		FVector fixationDir = EyeCaptures[GetIndex(i)].HMDPosition - averageLocalPosition;
 		fixationDir.Normalize();
@@ -705,6 +704,11 @@ bool UFixationRecorder::TryBeginLocalFixation()
 			if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage) { continue; }
 			CachedEyeCapturePositions.Add(EyeCaptures[GetIndex(i)].LocalPosition);
 		}
+		recentFixationPoints.Add(ActiveFixation);
+		if (recentFixationPoints.Num() > 50)
+		{
+			recentFixationPoints.RemoveAt(0);
+		}
 		return true;
 	}
 	return false;
@@ -733,7 +737,6 @@ bool UFixationRecorder::TryBeginFixation()
 
 	bool withinRadius = true;
 
-	FVector WorldPosition = EyeCaptures[index].WorldPosition;
 	FSceneViewProjectionData ProjectionData;
 	FViewport* viewport = NULL;
 	EStereoscopicPass pass = EStereoscopicPass::eSSP_FULL;
@@ -745,7 +748,7 @@ bool UFixationRecorder::TryBeginFixation()
 	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
 
 	float rescale = 1;
-	if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(WorldPosition, screenPos))
+	if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(EyeCaptures[index].WorldPosition, screenPos))
 	{
 		FVector2D viewport2d = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
 		float screenDist = FVector2D::Distance(viewport2d, FVector2D(0.5f, 0.5f));
