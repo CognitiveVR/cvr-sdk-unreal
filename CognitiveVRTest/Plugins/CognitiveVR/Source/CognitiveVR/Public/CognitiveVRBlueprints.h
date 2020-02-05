@@ -5,7 +5,7 @@
 
 #include "CoreMinimal.h"
 #include "CognitiveVR.h"
-#include "Private/CognitiveVRProvider.h"
+#include "Public/CognitiveVRProvider.h"
 #include "Classes/AnalyticsBlueprintLibrary.h"
 #include "Runtime/Analytics/Analytics/Public/AnalyticsEventAttribute.h"
 #include "Public/DynamicObject.h"

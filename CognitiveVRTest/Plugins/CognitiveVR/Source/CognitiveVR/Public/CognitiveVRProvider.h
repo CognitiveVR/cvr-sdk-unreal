@@ -5,11 +5,11 @@
 #include "CoreMinimal.h"
 #include "AnalyticsEventAttribute.h"
 #include "Interfaces/IAnalyticsProvider.h"
-#include "CognitiveVR.h"
+#include "Public/CognitiveVR.h"
 #include "Public/CognitiveVRBlueprints.h"
 
 #include "HeadMountedDisplay.h"
-#include "CognitiveVRSettings.h"
+#include "Public/CognitiveVRSettings.h"
 #include "Private/ExitPoll.h"
 #include "Private/PlayerTracker.h"
 #include "Public/DynamicObject.h"

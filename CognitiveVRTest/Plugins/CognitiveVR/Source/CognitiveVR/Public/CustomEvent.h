@@ -13,7 +13,7 @@
 class UDynamicObject;
 
 USTRUCT(BlueprintType)
-struct FCustomEvent
+struct COGNITIVEVR_API FCustomEvent
 {
 	friend class CustomEventRecorder;
 	friend class FAnalyticsProviderCognitiveVR;
