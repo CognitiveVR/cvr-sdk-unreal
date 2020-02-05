@@ -438,16 +438,6 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	}
 	else
 	{
-		if (ActiveFixation.IsLocal)
-		{
-			FVector localtoworld = ActiveFixation.LocalTransform->GetComponentTransform().TransformPosition(ActiveFixation.LocalPosition);
-			//DrawDebugSphere(world, localtoworld, ActiveFixation.MaxRadius, 8, FColor::Magenta, false);
-		}
-		else
-		{
-			//DrawDebugSphere(world, ActiveFixation.WorldPosition, ActiveFixation.MaxRadius, 8, FColor::Orange, false);
-		}
-
 		EyeCaptures[index].OffTransform = IsGazeOffTransform(EyeCaptures[index]);
 		EyeCaptures[index].OutOfRange = IsGazeOutOfRange(EyeCaptures[index]);
 		ActiveFixation.AddEyeCapture(EyeCaptures[index]);
@@ -539,6 +529,8 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	FVector End = FVector::ZeroVector;
 #endif
 
+	TSharedPtr<FC3DGazePoint> currentGazePoint = MakeShareable(new FC3DGazePoint);
+
 	FCollisionQueryParams Params; // You can use this to customize various properties about the trace
 								  //Params.AddIgnoredActor(GetOwner()); // Ignore the player's pawn
 
@@ -549,30 +541,31 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	bHit = world->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, gazeparams);
 	if (bHit)
 	{
-		if (Hit.Actor.IsValid())
+		if (Hit.GetActor() != NULL)
 		{
 			UDynamicObject* dyn = Hit.Actor->FindComponentByClass<UDynamicObject>();
 			if (dyn != NULL)
 			{
 				EyeCaptures[index].HitDynamicTransform = dyn;
 				EyeCaptures[index].LocalPosition = dyn->GetComponentTransform().InverseTransformPosition(Hit.ImpactPoint);
+				currentGazePoint->LocalPosition = EyeCaptures[index].LocalPosition;
+				currentGazePoint->IsLocal = true;
+				currentGazePoint->Parent = dyn;
 			}
 		}
 
-		//DrawDebugSphere(world, Hit.ImpactPoint, 3, 3, FColor::White, false, 0.2);
+		currentGazePoint->WorldPosition = Hit.ImpactPoint;
 		EyeCaptures[index].WorldPosition = Hit.ImpactPoint;
 	}
 	else
 	{
 		EyeCaptures[index].SkipPositionForFixationAverage = true;
-		EyeCaptures[index].HitDynamicTransform = NULL;
 		EyeCaptures[index].WorldPosition = End; //direction of gaze 100m out
+		currentGazePoint->WorldPosition = End;
 	}
 
-	UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(EyeCaptures[index].WorldPosition, CurrentEyePositionScreen);
-
-	recentEyePositions.Add(CurrentEyePositionScreen);
-	if (recentEyePositions.Num() > 50)
+	recentEyePositions.Add(currentGazePoint);
+	if (recentEyePositions.Num() > 200)
 	{
 		recentEyePositions.RemoveAt(0);
 	}
@@ -593,22 +586,20 @@ bool UFixationRecorder::TryBeginLocalFixation()
 	TArray<UDynamicObject*> hitTransforms;
 	hitTransforms.Init(NULL, sampleCount);
 
+	int32 anyHitTransformCount = 0;
 	for (int32 i = 0; i < sampleCount; i++)
 	{
 		if (EyeCaptures[GetIndex(i)].HitDynamicTransform != NULL)
 		{
 			hitTransforms[i] = EyeCaptures[GetIndex(i)].HitDynamicTransform;
+			anyHitTransformCount++;
 		}
 	}
 
-	int32 anyHitTransformCount = 0;
-	for (int32 i = 0; i < sampleCount; i++)
+	if (anyHitTransformCount == 0)
 	{
-		if (hitTransforms[i] != NULL)
-			anyHitTransformCount++;
-	}
-
-	if (anyHitTransformCount == 0) { return false; } //early escape for not looking at any dynamic objects
+		return false;
+	} //early escape for not looking at any dynamic objects
 
 	TMap<UDynamicObject*, int32> transformUseCount;
 	for (int i = 0; i < sampleCount; i++)
@@ -644,13 +635,13 @@ bool UFixationRecorder::TryBeginLocalFixation()
 	{
 		if (EyeCaptures[GetIndex(i)].HitDynamicTransform == mostUsed)
 		{
-			averageLocalPosition += EyeCaptures[GetIndex(i)].LocalPosition;
+			averageLocalPosition += EyeCaptures[GetIndex(i)].HitDynamicTransform->GetComponentTransform().TransformPosition(EyeCaptures[GetIndex(i)].LocalPosition);
 		}
 	}
 
 	if (mostUsed == NULL)
 	{
-		GLog->Log("most used dynamic object is null! should be impossible");
+		GLog->Log("fixation recorder:: most used dynamic object is null! should be impossible");
 		return false;
 	}
 
@@ -681,7 +672,7 @@ bool UFixationRecorder::TryBeginLocalFixation()
 
 	for (int32 i = 0; i < sampleCount; i++)
 	{
-		FVector lookDir = (EyeCaptures[GetIndex(i)].HMDPosition - EyeCaptures[GetIndex(i)].LocalPosition);
+		FVector lookDir = (EyeCaptures[GetIndex(i)].HMDPosition - mostUsed->GetComponentTransform().TransformPosition(EyeCaptures[GetIndex(i)].LocalPosition)); //should be projected into world space?
 		lookDir.Normalize();
 		FVector fixationDir = EyeCaptures[GetIndex(i)].HMDPosition - averageLocalPosition;
 		fixationDir.Normalize();
@@ -695,7 +686,7 @@ bool UFixationRecorder::TryBeginLocalFixation()
 
 	if (withinRadius)
 	{
-		ActiveFixation.LocalPosition = averageLocalPosition;
+		ActiveFixation.LocalPosition = mostUsed->GetComponentTransform().InverseTransformPosition(averageLocalPosition);
 		ActiveFixation.WorldPosition = mostUsed->GetComponentTransform().TransformPosition(averageLocalPosition);
 
 		FixationTransform = mostUsed;
@@ -794,7 +785,8 @@ bool UFixationRecorder::TryBeginFixation()
 			CachedEyeCapturePositions.Add(EyeCaptures[GetIndex(i)].WorldPosition);
 		}
 		//DrawDebugSphere(world, averageWorldPos, 10, 3, FColor::Red, false, 10);
-		recentFixationPoints.Add(FVector4(averageWorldPos.X, averageWorldPos.Y, averageWorldPos.Z, opposite));
+		recentFixationPoints.Add(ActiveFixation);
+		//recentFixationPoints.Add(FVector4(averageWorldPos.X, averageWorldPos.Y, averageWorldPos.Z, opposite));
 		if (recentFixationPoints.Num() > 50)
 		{
 			recentFixationPoints.RemoveAt(0);
@@ -923,12 +915,12 @@ FVector2D UFixationRecorder::GetEyePositionScreen()
 	return CurrentEyePositionScreen;
 }
 
-TArray<FVector4> UFixationRecorder::GetRecentFixationPoints()
+TArray<FFixation> UFixationRecorder::GetRecentFixationPoints()
 {
 	return recentFixationPoints;
 }
 
-TArray<FVector2D> UFixationRecorder::GetRecentEyePositions()
+TArray<TSharedPtr<FC3DGazePoint>> UFixationRecorder::GetRecentEyePositions()
 {
 	return recentEyePositions;
 }

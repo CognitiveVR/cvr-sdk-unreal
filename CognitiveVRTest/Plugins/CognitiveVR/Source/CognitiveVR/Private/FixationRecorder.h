@@ -91,8 +91,8 @@ private:
 	FTimerHandle AutoSendHandle;
 	FVector2D CurrentEyePositionScreen;
 
-	TArray<FVector4> recentFixationPoints;
-	TArray<FVector2D> recentEyePositions;
+	TArray<FFixation> recentFixationPoints;
+	TArray<TSharedPtr<FC3DGazePoint>> recentEyePositions;
 
 public:
 
@@ -149,12 +149,10 @@ public:
 		static float GetDPIScale();
 
 	//returns the last 50 fixations in x,y,z world space, with w as the radius of the fixation
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
-		TArray<FVector4> GetRecentFixationPoints();
+	TArray<FFixation> GetRecentFixationPoints();
 
 	//returns the last 50 eye positions in x,y,z world space, to be used for drawing saccade lines on screen space
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
-		TArray<FVector2D> GetRecentEyePositions();
+	TArray<TSharedPtr<FC3DGazePoint>> GetRecentEyePositions();
 
 	float GetLastSendTime() { return LastSendTime; }
 	int32 GetPartNumber() { return jsonFixationPart; }

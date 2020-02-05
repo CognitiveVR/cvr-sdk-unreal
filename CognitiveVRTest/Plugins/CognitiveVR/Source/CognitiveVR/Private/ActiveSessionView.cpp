@@ -40,6 +40,8 @@ void AActiveSessionView::BeginPlay()
 		GLog->Log("CognitiveVR::ActiveSessionView::BeginPlay cannot find FixationRecorder in scene!");
 	}
 
+	PlayerController = UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController();
+
 	//pass reference of this active session view to widget, so it can pull values to display
 	auto widgetInstance = WidgetComponent->GetUserWidgetObject();
 	if (widgetInstance != NULL)
@@ -67,7 +69,7 @@ void AActiveSessionView::DelaySetupWidget()
 
 void AActiveSessionView::Tick(float delta)
 {
-
+	
 }
 
 TArray<FVector> AActiveSessionView::GetProjectedFixations()
@@ -77,13 +79,23 @@ TArray<FVector> AActiveSessionView::GetProjectedFixations()
 
 	TArray<FVector> RecentFixations;
 
-	TArray<FVector4> points = FixationRecorder->GetRecentFixationPoints();
+	//TODO should return actual fixations, instead of v4s
+	TArray<FFixation> points = FixationRecorder->GetRecentFixationPoints();
 	FVector worldPosition;
 
 	for (int32 i = 0; i < points.Num(); i++)
 	{
+		if (points[i].IsLocal && points[i].LocalTransform != NULL)
+		{
+			worldPosition = points[i].LocalTransform->GetComponentTransform().TransformPosition(points[i].LocalPosition);
+
+		}
+		else
+		{
+			worldPosition = points[i].WorldPosition;
+		}
+
 		//project from world to screen
-		worldPosition = FVector(points[i].X, points[i].Y, points[i].Z);
 		FVector2D screenPosition;
 		PlayerController->ProjectWorldLocationToScreen(worldPosition, screenPosition);
 
@@ -95,7 +107,7 @@ TArray<FVector> AActiveSessionView::GetProjectedFixations()
 		x += 64;
 
 		//add to array
-		RecentFixations.Add(FVector(x, y, points[i].W));
+		RecentFixations.Add(FVector(x, y, points[i].MaxRadius));
 	}
 
 	return RecentFixations;
@@ -104,14 +116,29 @@ TArray<FVector> AActiveSessionView::GetProjectedFixations()
 TArray<FVector2D> AActiveSessionView::GetProjectedSaccades()
 {
 	if (FixationRecorder == NULL) { return TArray<FVector2D>(); }
-	TArray<FVector2D> eyePositions = FixationRecorder->GetRecentEyePositions();
+	if (PlayerController == NULL) { return TArray<FVector2D>(); }
+	TArray<TSharedPtr<FC3DGazePoint>> eyePositions = FixationRecorder->GetRecentEyePositions();
 	TArray<FVector2D> adjustedEyePositions;
+
+	FVector worldPosition;
 
 	for (int32 i = 0; i < eyePositions.Num(); i++)
 	{
+		if (eyePositions[i]->IsLocal && eyePositions[i]->Parent != NULL)
+		{
+			worldPosition = eyePositions[i]->Parent->GetComponentTransform().TransformPosition(eyePositions[i]->LocalPosition);
+		}
+		else
+		{
+			worldPosition = eyePositions[i]->WorldPosition;
+		}
+		
+		FVector2D screenPosition;
+		PlayerController->ProjectWorldLocationToScreen(worldPosition, screenPosition);
+
 		//remap from hmd to spectator view
-		float x = Remap(eyePositions[i].X, 0, 2880, 0, 1280);
-		float y = Remap(eyePositions[i].Y, 0, 1600, 0, 720);
+		float x = Remap(screenPosition.X, 0, 2880, 0, 1280);
+		float y = Remap(screenPosition.Y, 0, 1600, 0, 720);
 
 		//slightly shift the x value (because projection is off center)
 		x += 64;

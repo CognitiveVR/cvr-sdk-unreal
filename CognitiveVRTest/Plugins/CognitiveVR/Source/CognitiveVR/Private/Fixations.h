@@ -5,21 +5,20 @@
 #include "Runtime/Engine/Classes/Components/SceneComponent.h"
 #include "Fixations.generated.h"
 
-//TODO use this struct for drawing saccade lines/fixations in active session view on dynamics
 USTRUCT(BlueprintType)
-struct FC3DFixation
+struct FC3DGazePoint
 {
 	GENERATED_BODY()
 
-//public:
+		//public:
+		UPROPERTY(BlueprintReadWrite)
+		USceneComponent* Parent = NULL;
 	UPROPERTY(BlueprintReadWrite)
-	float radius;
+		bool IsLocal = false;
 	UPROPERTY(BlueprintReadWrite)
-	USceneComponent* Parent;
+		FVector WorldPosition = FVector(0, 0, 0);
 	UPROPERTY(BlueprintReadWrite)
-	bool IsLocalFixation;
-	UPROPERTY(BlueprintReadWrite)
-	FVector Position = FVector(0, 0, 0);
+		FVector LocalPosition = FVector(0, 0, 0);
 };
 
 class COGNITIVEVR_API FFixation
@@ -27,8 +26,7 @@ class COGNITIVEVR_API FFixation
 public:
 	FVector WorldPosition;
 	FVector LocalPosition;
-	//UDynamicObject* LocalTransform;
-	USceneComponent* LocalTransform;
+	USceneComponent* LocalTransform = NULL;
 
 	float DebugScale;
 	int64 LastUpdated;
@@ -41,7 +39,7 @@ public:
 	float StartDistance;
 	float MaxRadius;
 	bool IsLocal;
-	FString DynamicObjectId;
+	FString DynamicObjectId = "";
 	
 	void AddEyeCapture(FEyeCapture eyeCapture)
 	{
