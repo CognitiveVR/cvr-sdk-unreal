@@ -205,7 +205,10 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	SetSessionProperty("c3d.username", GetUserID());
 	SetSessionProperty("c3d.deviceid", GetDeviceID());
-	SetSessionProperty("c3d.sessionname", SessionId);
+	if (!SessionProperties.HasField("c3d.sessionname"))
+	{
+		SetSessionProperty("c3d.sessionname", SessionId);
+	}
 
 	customEventRecorder->Send(FString("c3d.sessionStart"));
 	

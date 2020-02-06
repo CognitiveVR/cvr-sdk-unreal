@@ -34,12 +34,6 @@ void AActiveSessionView::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FixationRecorder = UFixationRecorder::GetFixationRecorder();
-	if (FixationRecorder == NULL)
-	{
-		GLog->Log("CognitiveVR::ActiveSessionView::BeginPlay cannot find FixationRecorder in scene!");
-	}
-
 	PlayerController = UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController();
 
 	//pass reference of this active session view to widget, so it can pull values to display
@@ -57,6 +51,12 @@ void AActiveSessionView::BeginPlay()
 
 void AActiveSessionView::DelaySetupWidget()
 {
+	FixationRecorder = UFixationRecorder::GetFixationRecorder();
+	if (FixationRecorder == NULL)
+	{
+		GLog->Log("CognitiveVR::ActiveSessionView::BeginPlay cannot find FixationRecorder in scene!");
+	}
+
 	if (WidgetComponent != NULL)
 	{
 		auto widgetInstance = WidgetComponent->GetUserWidgetObject();
