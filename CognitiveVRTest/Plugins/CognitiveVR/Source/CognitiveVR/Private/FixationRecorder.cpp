@@ -578,9 +578,9 @@ bool UFixationRecorder::TryBeginLocalFixation()
 	int32 sampleCount = 0;
 	for (int32 i = 0; i < CachedEyeCaptureCount; i++)
 	{
-		if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
 		if (EyeCaptures[GetIndex(i)].Discard || EyeCaptures[GetIndex(i)].EyesClosed) { return false; }
 		sampleCount++;
+		if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
 	}
 
 	TArray<UDynamicObject*> hitTransforms;
@@ -722,12 +722,12 @@ bool UFixationRecorder::TryBeginFixation()
 
 	for (int32 i = 0; i < CachedEyeCaptureCount; i++)
 	{
-		if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
 		if (EyeCaptures[GetIndex(i)].Discard || EyeCaptures[GetIndex(i)].EyesClosed) { return false; }
 		sampleCount++;
 		if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage) { continue; }
 		averageWorldPos += EyeCaptures[GetIndex(i)].WorldPosition;
 		averageWorldSamples++;
+		if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
 	}
 	if (averageWorldSamples == 0)
 	{

@@ -5,7 +5,7 @@ import time
 
 cwd = os.getcwd()
 version = "0"
-enginesubversion = "22"
+enginesubversion = "24"
 
 def replaceline(file, linesrc, linedst):
 
@@ -117,11 +117,14 @@ replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\IActiveSessionV
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\SSceneSetupWidget.cpp","	UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();","	UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();")
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\SSceneSetupWidget.cpp","		UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();","		UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();")
 
+#12 add legacy header to build.cs
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","			PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;","			bLegacyPublicIncludePaths = true;")
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\CognitiveVREditor.Build.cs","		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;","		bLegacyPublicIncludePaths = true;")
+
 #get level viewport
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.cpp","		for (int32 j = 0; j < GEditor->LevelViewportClients.Num(); j++)","		for (int32 j = 0; j < GEditor->GetLevelViewportClients().Num(); j++)")
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.cpp","			if (GEditor->LevelViewportClients[j]->ViewportType == LVT_Perspective)","			if (GEditor->GetLevelViewportClients()[j]->ViewportType == LVT_Perspective)")
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.cpp","				perspectiveView = GEditor->LevelViewportClients[j];","				perspectiveView = GEditor->GetLevelViewportClients()[j];")
-
 
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue4"+enginesubversion
