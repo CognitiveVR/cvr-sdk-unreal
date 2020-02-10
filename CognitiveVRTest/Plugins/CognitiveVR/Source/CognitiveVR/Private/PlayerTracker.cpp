@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "CognitiveVR.h"
+//#include "CognitiveVR.h"
 #include "PlayerTracker.h"
 //#include "CognitiveVRSettings.h"
-#include "Util.h"
+//#include "Util.h"
 
 UPlayerTracker* UPlayerTracker::instance;
 
@@ -114,12 +114,12 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	currentTime -= PlayerSnapshotInterval;
 
 	
-	double time = cognitivevrapi::Util::GetTimestamp();
+	double time = Util::GetTimestamp();
 	FString objectid = "";
 
 	if (controllers.Num() == 0)
 	{
-		cognitivevrapi::CognitiveLog::Info("UPlayerTracker::TickComponent--------------------------no controllers. skip");
+		CognitiveLog::Info("UPlayerTracker::TickComponent--------------------------no controllers. skip");
 		return;
 	}
 
@@ -362,7 +362,7 @@ void UPlayerTracker::SendData()
 	if (GEngine->XRSystem.IsValid())
 	{
 		DeviceName = GEngine->XRSystem->GetSystemName();
-		DeviceNameString = cognitivevrapi::Util::GetDeviceName(DeviceName.ToString());
+		DeviceNameString = Util::GetDeviceName(DeviceName.ToString());
 	}
 
 	wholeObj->SetStringField("formatversion", "1.0");

@@ -1,10 +1,8 @@
 /*
 	
 */
-#include "CognitiveVR.h"
-#include "Private/CognitiveVRPrivatePCH.h"
-
 #include "CognitiveVRBlueprints.h"
+//#include "Private/CognitiveVRPrivatePCH.h"
 
 TSharedPtr<FAnalyticsProviderCognitiveVR> UCognitiveVRBlueprints::cog;
 
@@ -36,7 +34,7 @@ void UCognitiveVRBlueprints::SendCustomEventToCore(FString Category, const TArra
 	
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SendCustomEventToCore could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SendCustomEventToCore could not get provider!");
 		return;
 	}
 	if (!cog->customEventRecorder.IsValid())
@@ -73,7 +71,7 @@ void UCognitiveVRBlueprints::UpdateSessionInt(const FString name, const int32 va
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::UpdateSessionInt could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateSessionInt could not get provider!");
 		return;
 	}
 	cog->SetSessionProperty(name, value);
@@ -85,7 +83,7 @@ void UCognitiveVRBlueprints::UpdateSessionFloat(const FString name, const float 
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::UpdateSessionFloat could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateSessionFloat could not get provider!");
 		return;
 	}
 	cog->SetSessionProperty(name, value);
@@ -97,7 +95,7 @@ void UCognitiveVRBlueprints::UpdateSessionString(const FString name, const FStri
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::UpdateSessionString could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::UpdateSessionString could not get provider!");
 		return;
 	}
 	cog->SetSessionProperty(name, value);
@@ -109,7 +107,7 @@ void UCognitiveVRBlueprints::SetSessionName(const FString name)
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SetSessionName could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetSessionName could not get provider!");
 		return;
 	}
 	cog->SetSessionName(name);
@@ -121,7 +119,7 @@ void UCognitiveVRBlueprints::SetLobbyId(const FString lobbyId)
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
 		return;
 	}
 	cog->SetLobbyId(lobbyId);
@@ -133,7 +131,7 @@ void UCognitiveVRBlueprints::RecordSensor(const FString Name, const float Value)
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::RecordSensor could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::RecordSensor could not get provider!");
 		return;
 	}
 	if (!cog->sensors.IsValid())
@@ -176,7 +174,7 @@ void UCognitiveVRBlueprints::FlushEvents()
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
 		return;
 	}
 	cog->FlushEvents();
@@ -188,7 +186,7 @@ bool UCognitiveVRBlueprints::StartSession()
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
 		return false;
 	}
 	return cog->StartSession(TArray<FAnalyticsEventAttribute>());
@@ -200,7 +198,7 @@ void UCognitiveVRBlueprints::EndSession()
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
 		return;
 	}
 	cog->EndSession();
@@ -212,7 +210,7 @@ void UCognitiveVRBlueprints::SetUserId(const FString Name)
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
 		return;
 	}
 	cog->SetUserID(Name);
@@ -287,34 +285,25 @@ FCustomEvent UCognitiveVRBlueprints::AppendSensor(UPARAM(ref) FCustomEvent& targ
 //debug stuff
 FString UCognitiveVRBlueprints::GetSessionName()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return ""; }
 	return cog->GetSessionID();
-#else
-	return "";
-#endif
 }
 
 float UCognitiveVRBlueprints::GetSessionDuration()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return -1; }
 	if (!cog->HasStartedSession()) { return 0; }
 
-	float dur = cognitivevrapi::Util::GetTimestamp() - cog->GetSessionTimestamp();
+	float dur = Util::GetTimestamp() - cog->GetSessionTimestamp();
 	return dur;
-#else
-	return 0;
-#endif
 }
 
 FString UCognitiveVRBlueprints::GetSceneName()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return ""; }
@@ -327,14 +316,10 @@ FString UCognitiveVRBlueprints::GetSceneName()
 		return data->Name;
 	}
 	return "invalid";
-#else
-	return "";
-#endif
 }
 
 FString UCognitiveVRBlueprints::GetSceneId()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return ""; }
@@ -347,32 +332,24 @@ FString UCognitiveVRBlueprints::GetSceneId()
 		return data->Id;
 	}
 	return "invalid";
-#else
-	return "";
-#endif
 }
 
 
 float UCognitiveVRBlueprints::GetLastEventSendTime()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	if (!cog.IsValid()) { return 0; }
-	if (!HasSessionStarted()) { return 0; }
+	if (!cog.IsValid()) { return -1; }
+	if (!HasSessionStarted()) { return -1; }
 	return cog->customEventRecorder->GetLastSendTime();
-#else
-	return 0;
-#endif
 }
 
 float UCognitiveVRBlueprints::GetLastGazeSendTime()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	if (!cog.IsValid()) { return 0; }
-	if (!HasSessionStarted()) { return 0; }
+	if (!cog.IsValid()) { return -1; }
+	if (!HasSessionStarted()) { return -1; }
 
 	if (UPlayerTracker::GetPlayerTracker() == nullptr)
 	{
@@ -380,59 +357,43 @@ float UCognitiveVRBlueprints::GetLastGazeSendTime()
 	}
 
 	return UPlayerTracker::GetPlayerTracker()->GetLastSendTime();
-#else
-	return 0;
-#endif
 }
 
 float UCognitiveVRBlueprints::GetLastDynamicSendTime()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	if (!cog.IsValid()) { return 0; }
-	if (!HasSessionStarted()) { return 0; }
+	if (!cog.IsValid()) { return -1; }
+	if (!HasSessionStarted()) { return -1; }
 	return UDynamicObject::GetLastSendTime();
-#else
-	return 0;
-#endif
 }
 
 float UCognitiveVRBlueprints::GetLastSensorSendTime()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	if (!cog.IsValid()) { return 0; }
-	if (!HasSessionStarted()) { return 0; }
+	if (!cog.IsValid()) { return -1; }
+	if (!HasSessionStarted()) { return -1; }
 	return cog->sensors->GetLastSendTime();
-#else
-	return 0;
-#endif
 }
 
 float UCognitiveVRBlueprints::GetLastFixationSendTime()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	if (!cog.IsValid()) { return 0; }
-	if (!HasSessionStarted()) { return 0; }
+	if (!cog.IsValid()) { return -1; }
+	if (!HasSessionStarted()) { return -1; }
 
-	if (UFixationRecorder::GetFixationRecorder() == nullptr)
+	if (UFixationRecorder::GetFixationRecorder() == NULL)
 	{
-		return 0;
+		return -1;
 	}
 	return UFixationRecorder::GetFixationRecorder()->GetLastSendTime();
-#else
-	return 0;
-#endif
 }
 
 
 TArray<FString> UCognitiveVRBlueprints::GetDebugQuestionSet()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	auto qs = ExitPoll::GetCurrentQuestionSet();
 	TArray<FString> questions;
 
@@ -441,14 +402,11 @@ TArray<FString> UCognitiveVRBlueprints::GetDebugQuestionSet()
 		questions.Add(Elem.title);
 	}
 	return questions;
-#else
-	return TArray<FString>();
-#endif
+
 }
 
 TArray<FString> UCognitiveVRBlueprints::GetSensorKeys()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return TArray<FString>(); }
@@ -463,14 +421,10 @@ TArray<FString> UCognitiveVRBlueprints::GetSensorKeys()
 		keys.Add(Elem.Key);
 	}
 	return keys;
-#else
-	return TArray<FString>();
-#endif
 }
 
 TArray<FString> UCognitiveVRBlueprints::GetSensorValues()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return TArray<FString>(); }
@@ -484,38 +438,26 @@ TArray<FString> UCognitiveVRBlueprints::GetSensorValues()
 		values.Add(FString::SanitizeFloat(Elem.Value));
 	}
 	return values;
-#else
-	return TArray<FString>();
-#endif
 }
 
 bool UCognitiveVRBlueprints::IsFixating()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	auto fixptr = UFixationRecorder::GetFixationRecorder();
 	if (fixptr == NULL) { return false; }
 	return fixptr->IsFixating();
-#else
-	return false;
-#endif
 }
 			 
 int32 UCognitiveVRBlueprints::GetEventPartNumber()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	return cog->customEventRecorder->GetPartNumber();
-#else
-	return 0;
-#endif
 }
 			 
 int32 UCognitiveVRBlueprints::GetGazePartNumber()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
@@ -524,40 +466,28 @@ int32 UCognitiveVRBlueprints::GetGazePartNumber()
 	auto gazeptr = UPlayerTracker::GetPlayerTracker();
 	if (gazeptr == NULL) { return 0; }
 	return gazeptr->GetPartNumber();
-#else
-	return 0;
-#endif
 }
 			 
 int32 UCognitiveVRBlueprints::GetDynamicPartNumber()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	return UDynamicObject::GetPartNumber();
-#else
-	return 0;
-#endif
 }
 
 int32 UCognitiveVRBlueprints::GetSensorPartNumber()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	return cog->sensors->GetPartNumber();
-#else
-	return 0;
-#endif
 }
 
 int32 UCognitiveVRBlueprints::GetFixationPartNumber()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
@@ -566,28 +496,20 @@ int32 UCognitiveVRBlueprints::GetFixationPartNumber()
 	auto fixptr = UFixationRecorder::GetFixationRecorder();
 	if (fixptr == NULL) { return 0; }
 	return fixptr->GetPartNumber();
-#else
-	return 0;
-#endif
 }
 
 
 int32 UCognitiveVRBlueprints::GetEventDataPointCount()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	return cog->customEventRecorder->GetDataPoints();
-#else
-return 0;
-#endif
 }
 
 int32 UCognitiveVRBlueprints::GetGazePointCount()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
@@ -595,42 +517,30 @@ int32 UCognitiveVRBlueprints::GetGazePointCount()
 	auto gazeptr = UPlayerTracker::GetPlayerTracker();
 	if (gazeptr == NULL) { return 0; }
 	return gazeptr->GetDataPoints();
-#else
-	return 0;
-#endif
 }
 
 int32 UCognitiveVRBlueprints::GetDynamicDataCount()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 
 	return UDynamicObject::GetDataPoints();
-#else
-	return 0;
-#endif
 }
 
 int32 UCognitiveVRBlueprints::GetDynamicObjectCount()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	
 	return UDynamicObject::GetDynamicObjectCount();
-#else
-	return 0;
-#endif
 }
 
 int32 UCognitiveVRBlueprints::GetFixationPointCount()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
@@ -641,21 +551,13 @@ int32 UCognitiveVRBlueprints::GetFixationPointCount()
 		return 0;
 	}
 	return UFixationRecorder::GetFixationRecorder()->GetDataPoints();
-
-#else
-	return 0;
-#endif
 }
 
 int32 UCognitiveVRBlueprints::GetSensorDataPointCount()
 {
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	return cog->sensors->GetDataPoints();
-#else
-	return 0;
-#endif
 }

@@ -1,4 +1,4 @@
-#include "CognitiveVREditorPrivatePCH.h"
+
 #include "SFStringListWidget.h"
 
 void SFStringListWidget::Construct(const FArguments& Args)

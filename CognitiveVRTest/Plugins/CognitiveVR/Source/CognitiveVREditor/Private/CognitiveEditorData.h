@@ -1,7 +1,7 @@
 #pragma once
 
-namespace cognitivevrapi
-{
+//namespace cognitivevrapi
+//{
 	class FEditorSceneData
 	{
 	public:
@@ -33,4 +33,4 @@ namespace cognitivevrapi
 			Id = id;
 		}
 	};
-}
+//}

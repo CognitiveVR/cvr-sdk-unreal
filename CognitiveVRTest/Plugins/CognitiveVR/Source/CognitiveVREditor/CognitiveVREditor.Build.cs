@@ -4,6 +4,8 @@ public class CognitiveVREditor : ModuleRules
 {
 	public CognitiveVREditor(ReadOnlyTargetRules Target):base(Target)
 	{
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		
         PublicDependencyModuleNames.AddRange(
             new string[]
             {

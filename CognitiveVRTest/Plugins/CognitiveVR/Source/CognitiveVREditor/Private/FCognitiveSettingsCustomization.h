@@ -1,10 +1,8 @@
 #pragma once
 
-#include "CognitiveVREditorPrivatePCH.h"
 #include "CognitiveVRSettings.h"
 #include "IDetailCustomization.h"
 #include "PropertyEditing.h"
-//#include "DetailCustomizationsPrivatePCH.h"
 #include "PropertyCustomizationHelpers.h"
 #include "Json.h"
 #include "SCheckBox.h"
@@ -13,7 +11,6 @@
 #include "CognitiveEditorTools.h"
 #include "STextComboBox.h"
 #include "SDynamicObjectListWidget.h"
-//#include "SDynamicObjectWebListWidget.h"
 
 //customization ui for cognitive settings/preferences. most of this is interface code that calls FCognitiveEditorTools logic
 
@@ -30,13 +27,13 @@ public:
 	UCognitiveVRSettings *Settings;
 	IDetailLayoutBuilder *DetailLayoutPtr;
 
-	TArray<TSharedPtr<cognitivevrapi::FDynamicData>> GetSceneDynamics();
+	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 	FReply RefreshDisplayDynamicObjectsCountInScene();
 
 	//TSharedPtr<SVerticalBox> SetDynamicBoxContent();
 
-	TSharedRef<ITableRow> OnGenerateWorkspaceRow(TSharedPtr<cognitivevrapi::FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
-	TSharedRef<ITableRow> OnGenerateDynamicRow(TSharedPtr<cognitivevrapi::FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
+	TSharedRef<ITableRow> OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
+	TSharedRef<ITableRow> OnGenerateDynamicRow(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
 
 	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
 	//TSharedPtr<SDynamicObjectWebListWidget> WebDynamicList;

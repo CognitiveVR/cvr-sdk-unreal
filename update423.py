@@ -5,7 +5,7 @@ import time
 
 cwd = os.getcwd()
 version = "0"
-enginesubversion = "21"
+enginesubversion = "23"
 
 def replaceline(file, linesrc, linedst):
 
@@ -78,6 +78,7 @@ def getpluginversion():
 			raw = vsplit[1][2:-2]
 			return raw.replace('.','_')
 
+
 #copy plugin folder to temp directory
 print(cwd+"/CognitiveVRTest/Plugins/")
 print(cwd+"/cognitiveVR_UnrealSDK_Dist/")
@@ -111,6 +112,16 @@ replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\ActiveSessionVi
 
 #remove implementation of initialize interface
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\IActiveSessionViewRequired.cpp","void IActiveSessionViewRequired::Initialize_Implementation(AActiveSessionView* asv){}","//void IActiveSessionViewRequired::Initialize_Implementation(AActiveSessionView* asv){}")
+
+#14 replace editor selection code in dynamiccomponentdetails
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\SSceneSetupWidget.cpp","	UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();","	UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();")
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\SSceneSetupWidget.cpp","		UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();","		UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();")
+
+#get level viewport
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.cpp","		for (int32 j = 0; j < GEditor->LevelViewportClients.Num(); j++)","		for (int32 j = 0; j < GEditor->GetLevelViewportClients().Num(); j++)")
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.cpp","			if (GEditor->LevelViewportClients[j]->ViewportType == LVT_Perspective)","			if (GEditor->GetLevelViewportClients()[j]->ViewportType == LVT_Perspective)")
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.cpp","				perspectiveView = GEditor->LevelViewportClients[j];","				perspectiveView = GEditor->GetLevelViewportClients()[j];")
+
 
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue4"+enginesubversion

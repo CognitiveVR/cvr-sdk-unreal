@@ -3,7 +3,6 @@
 */
 #pragma once
 
-#include "Private/CognitiveVRPrivatePCH.h"
 #include "CognitiveVR.h"
 #include "Private/util/util.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
@@ -14,9 +13,9 @@
 class UDynamicObject;
 
 USTRUCT(BlueprintType)
-struct FCustomEvent
+struct COGNITIVEVR_API FCustomEvent
 {
-	friend class cognitivevrapi::CustomEventRecorder;
+	friend class CustomEventRecorder;
 	friend class FAnalyticsProviderCognitiveVR;
 
 	GENERATED_BODY()

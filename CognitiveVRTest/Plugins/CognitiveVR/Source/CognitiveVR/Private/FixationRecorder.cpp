@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "CognitiveVR.h"
 #include "FixationRecorder.h"
 
 UFixationRecorder* UFixationRecorder::instance;
@@ -376,7 +375,7 @@ bool UFixationRecorder::AreEyesClosed()
 
 int64 UFixationRecorder::GetEyeCaptureTimestamp()
 {
-	int64 ts = (int64)(cognitivevrapi::Util::GetTimestamp() * 1000);
+	int64 ts = (int64)(Util::GetTimestamp() * 1000);
 	return ts;
 }
 #elif defined VARJOEYETRACKER_API
@@ -397,7 +396,7 @@ bool UFixationRecorder::AreEyesClosed()
 
 int64 UFixationRecorder::GetEyeCaptureTimestamp()
 {
-	int64 ts = (int64)(cognitivevrapi::Util::GetTimestamp() * 1000);
+	int64 ts = (int64)(Util::GetTimestamp() * 1000);
 	return ts;
 }
 #else
@@ -439,16 +438,6 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	}
 	else
 	{
-		if (ActiveFixation.IsLocal)
-		{
-			FVector localtoworld = ActiveFixation.LocalTransform->GetComponentTransform().TransformPosition(ActiveFixation.LocalPosition);
-			//DrawDebugSphere(world, localtoworld, ActiveFixation.MaxRadius, 8, FColor::Magenta, false);
-		}
-		else
-		{
-			//DrawDebugSphere(world, ActiveFixation.WorldPosition, ActiveFixation.MaxRadius, 8, FColor::Orange, false);
-		}
-
 		EyeCaptures[index].OffTransform = IsGazeOffTransform(EyeCaptures[index]);
 		EyeCaptures[index].OutOfRange = IsGazeOutOfRange(EyeCaptures[index]);
 		ActiveFixation.AddEyeCapture(EyeCaptures[index]);
@@ -490,7 +479,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	{
 		if (controllers.Num() == 0)
 		{
-			cognitivevrapi::CognitiveLog::Info("FixationRecorder::TickComponent - no controllers");
+			CognitiveLog::Info("FixationRecorder::TickComponent - no controllers");
 			return;
 		}
 
@@ -534,11 +523,13 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
 
 	EyeCaptures[index].Discard = true;
-	cognitivevrapi::CognitiveLog::Error("FixationRecorder::TickComponent - no eye tracking SDKs found!");
+	CognitiveLog::Error("FixationRecorder::TickComponent - no eye tracking SDKs found!");
 
 	FVector Start = FVector::ZeroVector;
 	FVector End = FVector::ZeroVector;
 #endif
+
+	TSharedPtr<FC3DGazePoint> currentGazePoint = MakeShareable(new FC3DGazePoint);
 
 	FCollisionQueryParams Params; // You can use this to customize various properties about the trace
 								  //Params.AddIgnoredActor(GetOwner()); // Ignore the player's pawn
@@ -550,24 +541,33 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	bHit = world->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, gazeparams);
 	if (bHit)
 	{
-		if (Hit.Actor.IsValid())
+		if (Hit.GetActor() != NULL)
 		{
 			UDynamicObject* dyn = Hit.Actor->FindComponentByClass<UDynamicObject>();
 			if (dyn != NULL)
 			{
 				EyeCaptures[index].HitDynamicTransform = dyn;
 				EyeCaptures[index].LocalPosition = dyn->GetComponentTransform().InverseTransformPosition(Hit.ImpactPoint);
+				currentGazePoint->LocalPosition = EyeCaptures[index].LocalPosition;
+				currentGazePoint->IsLocal = true;
+				currentGazePoint->Parent = dyn;
 			}
 		}
 
-		//DrawDebugSphere(world, Hit.ImpactPoint, 3, 3, FColor::White, false, 0.2);
+		currentGazePoint->WorldPosition = Hit.ImpactPoint;
 		EyeCaptures[index].WorldPosition = Hit.ImpactPoint;
 	}
 	else
 	{
 		EyeCaptures[index].SkipPositionForFixationAverage = true;
-		EyeCaptures[index].HitDynamicTransform = NULL;
 		EyeCaptures[index].WorldPosition = End; //direction of gaze 100m out
+		currentGazePoint->WorldPosition = End;
+	}
+
+	recentEyePositions.Add(currentGazePoint);
+	if (recentEyePositions.Num() > 200)
+	{
+		recentEyePositions.RemoveAt(0);
 	}
 
 	index = (index + 1) % CachedEyeCaptureCount;
@@ -578,30 +578,28 @@ bool UFixationRecorder::TryBeginLocalFixation()
 	int32 sampleCount = 0;
 	for (int32 i = 0; i < CachedEyeCaptureCount; i++)
 	{
-		if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
 		if (EyeCaptures[GetIndex(i)].Discard || EyeCaptures[GetIndex(i)].EyesClosed) { return false; }
 		sampleCount++;
+		if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
 	}
 
 	TArray<UDynamicObject*> hitTransforms;
 	hitTransforms.Init(NULL, sampleCount);
 
+	int32 anyHitTransformCount = 0;
 	for (int32 i = 0; i < sampleCount; i++)
 	{
 		if (EyeCaptures[GetIndex(i)].HitDynamicTransform != NULL)
 		{
 			hitTransforms[i] = EyeCaptures[GetIndex(i)].HitDynamicTransform;
+			anyHitTransformCount++;
 		}
 	}
 
-	int32 anyHitTransformCount = 0;
-	for (int32 i = 0; i < sampleCount; i++)
+	if (anyHitTransformCount == 0)
 	{
-		if (hitTransforms[i] != NULL)
-			anyHitTransformCount++;
-	}
-
-	if (anyHitTransformCount == 0) { return false; } //early escape for not looking at any dynamic objects
+		return false;
+	} //early escape for not looking at any dynamic objects
 
 	TMap<UDynamicObject*, int32> transformUseCount;
 	for (int i = 0; i < sampleCount; i++)
@@ -637,13 +635,13 @@ bool UFixationRecorder::TryBeginLocalFixation()
 	{
 		if (EyeCaptures[GetIndex(i)].HitDynamicTransform == mostUsed)
 		{
-			averageLocalPosition += EyeCaptures[GetIndex(i)].LocalPosition;
+			averageLocalPosition += EyeCaptures[GetIndex(i)].HitDynamicTransform->GetComponentTransform().TransformPosition(EyeCaptures[GetIndex(i)].LocalPosition);
 		}
 	}
 
 	if (mostUsed == NULL)
 	{
-		GLog->Log("most used dynamic object is null! should be impossible");
+		GLog->Log("fixation recorder:: most used dynamic object is null! should be impossible");
 		return false;
 	}
 
@@ -651,7 +649,6 @@ bool UFixationRecorder::TryBeginLocalFixation()
 
 	bool withinRadius = true;
 
-	FVector WorldPosition = EyeCaptures[index].WorldPosition;
 	FSceneViewProjectionData ProjectionData;
 	FViewport* viewport = NULL;
 	EStereoscopicPass pass = EStereoscopicPass::eSSP_FULL;
@@ -663,7 +660,7 @@ bool UFixationRecorder::TryBeginLocalFixation()
 	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
 
 	float rescale = 1;
-	if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(WorldPosition, screenPos))
+	if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(EyeCaptures[index].WorldPosition, screenPos))
 	{
 		FVector2D viewport2d = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
 		float screenDist = FVector2D::Distance(viewport2d, FVector2D(0.5f, 0.5f));
@@ -674,7 +671,7 @@ bool UFixationRecorder::TryBeginLocalFixation()
 
 	for (int32 i = 0; i < sampleCount; i++)
 	{
-		FVector lookDir = (EyeCaptures[GetIndex(i)].HMDPosition - EyeCaptures[GetIndex(i)].LocalPosition);
+		FVector lookDir = (EyeCaptures[GetIndex(i)].HMDPosition - mostUsed->GetComponentTransform().TransformPosition(EyeCaptures[GetIndex(i)].LocalPosition));
 		lookDir.Normalize();
 		FVector fixationDir = EyeCaptures[GetIndex(i)].HMDPosition - averageLocalPosition;
 		fixationDir.Normalize();
@@ -688,7 +685,7 @@ bool UFixationRecorder::TryBeginLocalFixation()
 
 	if (withinRadius)
 	{
-		ActiveFixation.LocalPosition = averageLocalPosition;
+		ActiveFixation.LocalPosition = mostUsed->GetComponentTransform().InverseTransformPosition(averageLocalPosition);
 		ActiveFixation.WorldPosition = mostUsed->GetComponentTransform().TransformPosition(averageLocalPosition);
 
 		FixationTransform = mostUsed;
@@ -707,6 +704,11 @@ bool UFixationRecorder::TryBeginLocalFixation()
 			if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage) { continue; }
 			CachedEyeCapturePositions.Add(EyeCaptures[GetIndex(i)].LocalPosition);
 		}
+		recentFixationPoints.Add(ActiveFixation);
+		if (recentFixationPoints.Num() > 50)
+		{
+			recentFixationPoints.RemoveAt(0);
+		}
 		return true;
 	}
 	return false;
@@ -720,12 +722,12 @@ bool UFixationRecorder::TryBeginFixation()
 
 	for (int32 i = 0; i < CachedEyeCaptureCount; i++)
 	{
-		if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
 		if (EyeCaptures[GetIndex(i)].Discard || EyeCaptures[GetIndex(i)].EyesClosed) { return false; }
 		sampleCount++;
 		if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage) { continue; }
 		averageWorldPos += EyeCaptures[GetIndex(i)].WorldPosition;
 		averageWorldSamples++;
+		if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
 	}
 	if (averageWorldSamples == 0)
 	{
@@ -735,7 +737,6 @@ bool UFixationRecorder::TryBeginFixation()
 
 	bool withinRadius = true;
 
-	FVector WorldPosition = EyeCaptures[index].WorldPosition;
 	FSceneViewProjectionData ProjectionData;
 	FViewport* viewport = NULL;
 	EStereoscopicPass pass = EStereoscopicPass::eSSP_FULL;
@@ -747,7 +748,7 @@ bool UFixationRecorder::TryBeginFixation()
 	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
 
 	float rescale = 1;
-	if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(WorldPosition, screenPos))
+	if (FocusSizeFromCenter && UGameplayStatics::GetGameInstance(this)->GetFirstLocalPlayerController()->ProjectWorldLocationToScreen(EyeCaptures[index].WorldPosition, screenPos))
 	{
 		FVector2D viewport2d = FVector2D(screenPos.X / ViewportSize.X, screenPos.Y / ViewportSize.Y);
 		float screenDist = FVector2D::Distance(viewport2d, FVector2D(0.5f, 0.5f));
@@ -787,6 +788,12 @@ bool UFixationRecorder::TryBeginFixation()
 			CachedEyeCapturePositions.Add(EyeCaptures[GetIndex(i)].WorldPosition);
 		}
 		//DrawDebugSphere(world, averageWorldPos, 10, 3, FColor::Red, false, 10);
+		recentFixationPoints.Add(ActiveFixation);
+		//recentFixationPoints.Add(FVector4(averageWorldPos.X, averageWorldPos.Y, averageWorldPos.Z, opposite));
+		if (recentFixationPoints.Num() > 50)
+		{
+			recentFixationPoints.RemoveAt(0);
+		}
 		return true;
 	}
 	return false;
@@ -890,7 +897,33 @@ void UFixationRecorder::EndSession()
 	cog.Reset();
 }
 
+float UFixationRecorder::GetDPIScale()
+{
+	FVector2D viewportSize;
+	GEngine->GameViewport->GetViewportSize(viewportSize);
+
+	int32 X = FGenericPlatformMath::FloorToInt(viewportSize.X);
+	int32 Y = FGenericPlatformMath::FloorToInt(viewportSize.Y);
+
+	return GetDefault<UUserInterfaceSettings>(UUserInterfaceSettings::StaticClass())->GetDPIScaleBasedOnSize(FIntPoint(X, Y));
+}
+
 UFixationRecorder* UFixationRecorder::GetFixationRecorder()
 {
 	return instance;
+}
+
+FVector2D UFixationRecorder::GetEyePositionScreen()
+{
+	return CurrentEyePositionScreen;
+}
+
+TArray<FFixation> UFixationRecorder::GetRecentFixationPoints()
+{
+	return recentFixationPoints;
+}
+
+TArray<TSharedPtr<FC3DGazePoint>> UFixationRecorder::GetRecentEyePositions()
+{
+	return recentEyePositions;
 }

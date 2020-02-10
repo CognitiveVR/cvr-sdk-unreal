@@ -1,7 +1,7 @@
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
-#include "CognitiveVR.h"
+
 #include "CustomEvent.h"
 
 TSharedPtr<FAnalyticsProviderCognitiveVR> FCustomEvent::cog;
@@ -9,12 +9,12 @@ TSharedPtr<FAnalyticsProviderCognitiveVR> FCustomEvent::cog;
 FCustomEvent::FCustomEvent(FString category)
 {
 	Category = category;
-	StartTime = cognitivevrapi::Util::GetTimestamp();
+	StartTime = Util::GetTimestamp();
 }
 
 FCustomEvent::FCustomEvent()
 {
-	StartTime = cognitivevrapi::Util::GetTimestamp();
+	StartTime = Util::GetTimestamp();
 }
 
 void FCustomEvent::Send()
@@ -24,11 +24,11 @@ void FCustomEvent::Send()
 
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 
-	float duration = cognitivevrapi::Util::GetTimestamp() - StartTime;
+	float duration = Util::GetTimestamp() - StartTime;
 	FloatProperties.Add("duration", duration);
 	cog->customEventRecorder->Send(this);
 }
@@ -40,7 +40,7 @@ void FCustomEvent::AppendSensors()
 	
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	auto sensorValues = cog->sensors->GetLastSensorValues();
@@ -56,7 +56,7 @@ void FCustomEvent::AppendSensors(TArray<FString> sensorNames)
 
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	auto sensorValues = cog->sensors->GetLastSensorValues();
@@ -76,7 +76,7 @@ void FCustomEvent::AppendSensor(FString sensorName)
 
 	if (!cog.IsValid())
 	{
-		cognitivevrapi::CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	auto sensorValues = cog->sensors->GetLastSensorValues();

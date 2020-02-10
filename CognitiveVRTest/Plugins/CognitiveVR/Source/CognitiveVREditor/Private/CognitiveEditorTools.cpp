@@ -1,5 +1,4 @@
 
-#include "CognitiveVREditorPrivatePCH.h"
 #include "CognitiveEditorTools.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
@@ -130,12 +129,12 @@ void FCognitiveEditorTools::Tick(float deltatime)
 
 
 
-TArray<TSharedPtr<cognitivevrapi::FDynamicData>> SceneExplorerDynamics;
+TArray<TSharedPtr<FDynamicData>> SceneExplorerDynamics;
 TArray<TSharedPtr<FString>> SubDirectoryNames;
 
 //deals with all the exporting and non-display stuff in the editor preferences
 
-TArray<TSharedPtr<cognitivevrapi::FDynamicData>> FCognitiveEditorTools::GetSceneDynamics()
+TArray<TSharedPtr<FDynamicData>> FCognitiveEditorTools::GetSceneDynamics()
 {
 	return SceneDynamics;
 }
@@ -279,20 +278,26 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 			continue;
 		}
 
-		UActorComponent* actorComponent = exportObjects[i]->GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
-		UStaticMeshComponent* mesh = Cast<UStaticMeshComponent>(actorComponent);
-		if (mesh == NULL)
-		{
-			continue;
-		}
-		
-		ULevel* componentLevel = actorComponent->GetComponentLevel();
-		if (componentLevel->bIsVisible == 0)
-		{
-			continue;
-			//not visible! possibly on a disabled sublevel
-		}
+		TArray<UActorComponent*> actorComponents = exportObjects[i]->GetOwner()->GetComponentsByClass(UStaticMeshComponent::StaticClass());
+		TArray< UStaticMeshComponent*> meshes;
 
+		for (int32 j = 0; j < actorComponents.Num(); j++)
+		{
+			UStaticMeshComponent* mesh = Cast<UStaticMeshComponent>(actorComponents[j]);
+			if (mesh == NULL)
+			{
+				continue;
+			}
+
+			ULevel* componentLevel = actorComponents[j]->GetComponentLevel();
+			if (componentLevel->bIsVisible == 0)
+			{
+				continue;
+				//not visible! possibly on a disabled sublevel
+			}
+
+			meshes.Add(mesh);
+		}
 		DynamicMeshNames.Add(exportObjects[i]->MeshName);
 
 		originalLocation = exportObjects[i]->GetOwner()->GetActorLocation();
@@ -311,18 +316,57 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		FString tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
 
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
-		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray exporting DynamicObject " + ExportFilename);
-		
+
 		GUnrealEd->ExportMap(GWorld, *tempObject, true);
 
 		exportObjects[i]->GetOwner()->SetActorLocation(originalLocation);
 		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
 		exportObjects[i]->GetOwner()->SetActorScale3D(originalScale);
 
-		//bake + export materials
-		TArray< UStaticMeshComponent*> meshes;
-		meshes.Add(mesh);
+		//bake + export materials			
+
 		BakeExportMaterials.Add(exportObjects[i]->MeshName, meshes);
+
+
+		//automatic screenshot
+		FLevelEditorViewportClient* perspectiveView = NULL;
+
+		for (int32 j = 0; j < GEditor->LevelViewportClients.Num(); j++)
+		{
+			if (GEditor->LevelViewportClients[j]->ViewportType == LVT_Perspective)
+			{
+				perspectiveView = GEditor->LevelViewportClients[j];
+				break;
+			}
+		}
+		if (perspectiveView != NULL)
+		{
+			FVector startPosition = perspectiveView->GetViewLocation();
+			FRotator startRotation = perspectiveView->GetViewRotation();
+			FString dir = BaseExportDirectory + "/dynamics/" + exportObjects[i]->MeshName + "/";
+			FTimerHandle DelayScreenshotHandle;
+			
+			
+			//calc position
+
+			FVector origin;
+			FVector extents;
+			exportObjects[i]->GetOwner()->GetActorBounds(false, origin, extents);
+
+			float radius = extents.Size();
+			FVector calculatedPosition = exportObjects[i]->GetComponentLocation() + (FVector(-1, -1, 1) * radius);
+			FVector calcDir = exportObjects[i]->GetComponentLocation() - calculatedPosition;
+			
+			FRotator calcRot = FRotator(calcDir.ToOrientationQuat());
+
+			perspectiveView->SetViewLocation(calculatedPosition);
+			perspectiveView->SetViewRotation(calcRot);
+
+			perspectiveView->bNeedsRedraw = true;
+			perspectiveView->Viewport->Draw(false);
+			FCognitiveEditorTools::DelayScreenshot(dir, perspectiveView, startPosition, startRotation);
+		}
+
 	}
 
 	float work = 0;
@@ -342,6 +386,17 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		ConvertDynamicsToGLTF(DynamicMeshNames);
 		FindAllSubDirectoryNames();
 	}
+}
+
+
+void FCognitiveEditorTools::DelayScreenshot(FString filePath, FLevelEditorViewportClient* perspectiveView, FVector startPos, FRotator startRot)
+{
+	UThumbnailManager::CaptureProjectThumbnail(perspectiveView->Viewport, filePath+"cvr_object_thumbnail.png", false);
+	
+	perspectiveView->SetViewLocation(startPos);
+	perspectiveView->SetViewRotation(startRot);
+	perspectiveView->bNeedsRedraw = true;
+	perspectiveView->RedrawRequested(perspectiveView->Viewport);
 }
 
 void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
@@ -391,7 +446,7 @@ void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
 	}
 
 	FString escapedMeshNameList = "'";
-	for (int i = 0; i < meshnames.Num(); i++)
+	for (int32 i = 0; i < meshnames.Num(); i++)
 	{
 		if (i != 0)
 			escapedMeshNameList += ",";
@@ -424,7 +479,7 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 
 	//make a list of all the used objectids
 
-	TArray<cognitivevrapi::FDynamicObjectId> usedIds;
+	TArray<FDynamicObjectId> usedIds;
 
 	//get all the dynamic objects in the scene
 	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
@@ -477,14 +532,14 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 		}						  
 		FString findId = dynamic->CustomId;
 
-		cognitivevrapi::FDynamicObjectId* FoundId = usedIds.FindByPredicate([findId](const cognitivevrapi::FDynamicObjectId& InItem)
+		FDynamicObjectId* FoundId = usedIds.FindByPredicate([findId](const FDynamicObjectId& InItem)
 		{
 			return InItem.Id == findId;
 		});
 
 		if (FoundId == NULL && dynamic->CustomId != "")
 		{
-			usedIds.Add(cognitivevrapi::FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
+			usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
 		}
 		else
 		{
@@ -496,7 +551,7 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 	for (auto& dynamic : UnassignedDynamics)
 	{
 		dynamic->GenerateCustomId();
-		usedIds.Add(cognitivevrapi::FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
+		usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
 		changedDynamics++;
 	}
 
@@ -563,7 +618,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 
 
 	//get scene id
-	TSharedPtr<cognitivevrapi::FEditorSceneData> currentSceneData = GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
 	if (!currentSceneData.IsValid())
 	{
 		GLog->Log("FCognitiveEditorTools::UploadDynamicObjectManifest could not find current scene id");
@@ -631,7 +686,7 @@ void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, F
 
 FReply FCognitiveEditorTools::GetDynamicsManifest()
 {
-	TSharedPtr<cognitivevrapi::FEditorSceneData> currentSceneData = GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
 	if (!currentSceneData.IsValid())
 	{
 		GLog->Log("CognitiveTools::GetDyanmicManifest could not find current scene data");
@@ -686,14 +741,14 @@ void FCognitiveEditorTools::OnDynamicManifestResponse(FHttpRequestPtr Request, F
 		{
 			int32 count = JsonDynamics->AsArray().Num();
 			GLog->Log("FCognitiveEditorTools::OnDynamicManifestResponse returned " + FString::FromInt(count) + " objects");
-			for (int i = 0; i < count; i++)
+			for (int32 i = 0; i < count; i++)
 			{
 				TSharedPtr<FJsonObject> jsonobject = JsonDynamics->AsArray()[i]->AsObject();
 				FString name = jsonobject->GetStringField("name");
 				FString meshname = jsonobject->GetStringField("meshName");
 				FString id = jsonobject->GetStringField("sdkId");
 
-				SceneExplorerDynamics.Add(MakeShareable(new cognitivevrapi::FDynamicData(name, meshname, id)));
+				SceneExplorerDynamics.Add(MakeShareable(new FDynamicData(name, meshname, id)));
 			}
 		}
 	}
@@ -740,7 +795,7 @@ FReply FCognitiveEditorTools::UploadDynamics()
 	ReadSceneDataFromFile();
 
 	GLog->Log("FCognitiveEditorTools::UploadDynamics found " + FString::FromInt(dynamicNames.Num()) + " exported dynamic objects");
-	TSharedPtr<cognitivevrapi::FEditorSceneData> currentSceneData = GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
 
 	if (!currentSceneData.IsValid())
 	{
@@ -818,7 +873,7 @@ FReply FCognitiveEditorTools::UploadDynamic(FString directory)
 	ReadSceneDataFromFile();
 
 	GLog->Log("FCognitiveEditorTools::UploadDynamics found " + FString::FromInt(dynamicNames.Num()) + " exported dynamic objects");
-	TSharedPtr<cognitivevrapi::FEditorSceneData> currentSceneData = GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
 
 	if (!currentSceneData.IsValid())
 	{
@@ -1044,7 +1099,7 @@ FReply FCognitiveEditorTools::UploadScene()
 
 	//get scene name
 	//look if scene name has an entry in the scene datas
-	TSharedPtr<cognitivevrapi::FEditorSceneData> sceneData = GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> sceneData = GetCurrentSceneData();
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
 	{
 		//GLog->Log("post update existing scene");
@@ -1116,7 +1171,7 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 	//imagesInDirectory.Remove(directory + "/screenshot/screenshot.png");
 	FString screenshotPath = directory + "/screenshot/screenshot.png";
 
-	TArray<cognitivevrapi::FContentContainer> contentArray;
+	TArray<FContentContainer> contentArray;
 
 	//UE_LOG(LogTemp, Log, TEXT("UploadScene image count%d"), imagesInDirectory.Num());
 	UE_LOG(LogTemp, Log, TEXT("UploadScene all file count%d"), filesInDirectory.Num());
@@ -1127,7 +1182,7 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 		TArray<uint8> byteResult;
 		if (FFileHelper::LoadFileToArray(byteResult, *filesInDirectory[i]))
 		{
-			cognitivevrapi::FContentContainer container = cognitivevrapi::FContentContainer();
+			FContentContainer container = FContentContainer();
 			UE_LOG(LogTemp, Log, TEXT("Loaded file %s"), *filesInDirectory[i]);
 			//loaded the file
 
@@ -1158,7 +1213,7 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 	{
 		if (FFileHelper::LoadFileToArray(byteResult, *screenshotPath))
 		{
-			cognitivevrapi::FContentContainer container = cognitivevrapi::FContentContainer();
+			FContentContainer container = FContentContainer();
 			//UE_LOG(LogTemp, Log, TEXT("Loaded image %s"), *imagesInDirectory[i]);
 			//loaded the file
 			Content = Content.Append(TEXT("\r\n"));
@@ -1475,7 +1530,7 @@ bool FCognitiveEditorTools::HasFoundBlenderDynamicExportDirSelection() const
 bool FCognitiveEditorTools::CurrentSceneHasSceneId() const
 {
 	if (!HasDeveloperKey()) { return false; }
-	TSharedPtr<cognitivevrapi::FEditorSceneData> currentscene = GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> currentscene = GetCurrentSceneData();
 	if (!currentscene.IsValid())
 	{
 		return false;
@@ -1628,7 +1683,7 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 		{
 			continue;
 		}
-		SceneDynamics.Add(MakeShareable(new cognitivevrapi::FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, dynamic->CustomId)));
+		SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, dynamic->CustomId)));
 		//dynamics.Add(dynamic);
 	}
 
@@ -1660,7 +1715,7 @@ bool FCognitiveEditorTools::DuplicateDynamicIdsInScene() const
 	TArray<UDynamicObject*> dynamics;
 
 	//make a list of all the used objectids
-	TArray<cognitivevrapi::FDynamicObjectId> usedIds;
+	TArray<FDynamicObjectId> usedIds;
 
 	//get all the dynamic objects in the scene
 	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
@@ -1694,14 +1749,14 @@ bool FCognitiveEditorTools::DuplicateDynamicIdsInScene() const
 
 		FString findId = dynamic->CustomId;
 
-		cognitivevrapi::FDynamicObjectId* FoundId = usedIds.FindByPredicate([findId](const cognitivevrapi::FDynamicObjectId& InItem)
+		FDynamicObjectId* FoundId = usedIds.FindByPredicate([findId](const FDynamicObjectId& InItem)
 		{
 			return InItem.Id == findId;
 		});
 
 		if (FoundId == NULL && dynamic->CustomId != "")
 		{
-			usedIds.Add(cognitivevrapi::FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
+			usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
 		}
 		else
 		{
@@ -1807,7 +1862,7 @@ FReply FCognitiveEditorTools::ButtonCurrentSceneVersionRequest()
 
 void FCognitiveEditorTools::CurrentSceneVersionRequest()
 {
-	TSharedPtr<cognitivevrapi::FEditorSceneData> scenedata = GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> scenedata = GetCurrentSceneData();
 
 	if (scenedata.IsValid())
 	{
@@ -1832,7 +1887,7 @@ FReply FCognitiveEditorTools::OpenSceneInBrowser(FString sceneid)
 
 FReply FCognitiveEditorTools::OpenCurrentSceneInBrowser()
 {
-	TSharedPtr<cognitivevrapi::FEditorSceneData> scenedata = GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> scenedata = GetCurrentSceneData();
 
 	if (!scenedata.IsValid())
 	{
@@ -1852,7 +1907,7 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
 
-	for (int i = 0; i < scenstrings.Num(); i++)
+	for (int32 i = 0; i < scenstrings.Num(); i++)
 	{
 		TArray<FString> Array;
 		scenstrings[i].ParseIntoArray(Array, TEXT(","), true);
@@ -1870,7 +1925,7 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 			continue;
 		}
 
-		SceneData.Add(MakeShareable(new cognitivevrapi::FEditorSceneData(Array[0], Array[1], FCString::Atoi(*Array[2]), FCString::Atoi(*Array[3]))));
+		SceneData.Add(MakeShareable(new FEditorSceneData(Array[0], Array[1], FCString::Atoi(*Array[2]), FCString::Atoi(*Array[3]))));
 	}
 
 	GLog->Log("FCognitiveTools::RefreshSceneData found this many scenes: " + FString::FromInt(SceneData.Num()));
@@ -1879,7 +1934,7 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 	//return FReply::Handled();
 }
 
-void FCognitiveEditorTools::SceneVersionRequest(cognitivevrapi::FEditorSceneData data)
+void FCognitiveEditorTools::SceneVersionRequest(FEditorSceneData data)
 {
 	if (!HasDeveloperKey())
 	{
@@ -1960,7 +2015,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		int32 versionNumber = 0;
 		int32 versionId = 0;
 		TArray<TSharedPtr<FJsonValue>> versions = JsonSceneSettings->GetArrayField("versions");
-		for (int i = 0; i < versions.Num(); i++) {
+		for (int32 i = 0; i < versions.Num(); i++) {
 
 			int32 tempversion = versions[i]->AsObject()->GetNumberField("versionnumber");
 			if (tempversion > versionNumber)
@@ -1977,7 +2032,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		}
 
 		//check that there is scene data in ini
-		TSharedPtr<cognitivevrapi::FEditorSceneData> currentSceneData = GetCurrentSceneData();
+		TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
 		if (!currentSceneData.IsValid())
 		{
 			GLog->Log("FCognitiveTools::SceneVersionResponse can't find current scene data in ini files");
@@ -1997,7 +2052,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		int32 lastVersionNumber = 0;
 
 		//update current scene
-		for (int i = 0; i < iniscenedata.Num(); i++)
+		for (int32 i = 0; i < iniscenedata.Num(); i++)
 		{
 			//GLog->Log("looking at data " + iniscenedata[i]);
 
@@ -2050,7 +2105,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 	}
 }
 
-TArray<TSharedPtr<cognitivevrapi::FEditorSceneData>> FCognitiveEditorTools::GetSceneData() const
+TArray<TSharedPtr<FEditorSceneData>> FCognitiveEditorTools::GetSceneData() const
 {
 	return SceneData;
 }
@@ -2102,7 +2157,7 @@ void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
 	FAnalyticsCognitiveVR::Get().DeveloperKey = key;
 }
 
-TSharedPtr<cognitivevrapi::FEditorSceneData> FCognitiveEditorTools::GetCurrentSceneData() const
+TSharedPtr<FEditorSceneData> FCognitiveEditorTools::GetCurrentSceneData() const
 {
 	UWorld* myworld = GWorld->GetWorld();
 
@@ -2112,9 +2167,9 @@ TSharedPtr<cognitivevrapi::FEditorSceneData> FCognitiveEditorTools::GetCurrentSc
 }
 
 FString lastSceneName;
-TSharedPtr<cognitivevrapi::FEditorSceneData> FCognitiveEditorTools::GetSceneData(FString scenename) const
+TSharedPtr<FEditorSceneData> FCognitiveEditorTools::GetSceneData(FString scenename) const
 {
-	for (int i = 0; i < SceneData.Num(); i++)
+	for (int32 i = 0; i < SceneData.Num(); i++)
 	{
 		if (!SceneData[i].IsValid()) { continue; }
 		if (SceneData[i]->Name == scenename)
@@ -2196,7 +2251,7 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 		SlowTaskPtr->MakeDialog(false);
 	}
 
-	for (int i = 0; i < meshes.Num(); i++)
+	for (int32 i = 0; i < meshes.Num(); i++)
 	{
 		if (SlowTaskPtr != NULL)
 		{
@@ -2205,10 +2260,10 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 		}
 		if (meshes[i] == NULL) { continue; }
 		UStaticMeshComponent* TempObject = meshes[i];
-		if (TempObject == NULL) { continue; }
+		//if (TempObject == NULL) { continue; }
 
 		TArray<UMaterialInterface*> mats = TempObject->GetMaterials();
-		for (int j = 0; j < mats.Num(); j++)
+		for (int32 j = 0; j < mats.Num(); j++)
 		{
 			if (mats[j] != NULL)
 			{
@@ -2328,21 +2383,6 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 void FCognitiveEditorTools::WizardPostSceneExport()
 {
 	GLog->Log("FCognitiveEditorTools::WizardPostSceneExport");
-
-	FTransform transform;
-	
-	int32 count = 0;
-	for (TObjectIterator<ADebugCanvasHolder> Itr; Itr; ++Itr)
-	{
-		count++;
-	}
-	if (count == 0)
-	{
-		ULevel* level = GWorld->GetCurrentLevel();
-		UClass* ObjectClass = ADebugCanvasHolder::StaticClass();		
-		AActor* spawned = GEditor->AddActor(level, ObjectClass, transform);
-		GLog->Log("FCognitiveEditorTools::WizardPostSceneExport add debug canvas");
-	}
 }
 
 void FCognitiveEditorTools::WizardConvertScene()

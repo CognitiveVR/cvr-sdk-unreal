@@ -2,9 +2,8 @@
 
 #pragma once
 
-//#include "CognitiveVREditorPrivatePCH.h"
 #include "CognitiveVR.h"
-#include "AnalyticsSettings.h"
+#include "Classes/AnalyticsSettings.h"
 #include "CognitiveVRSettings.generated.h"
 
 UCLASS(config = Engine, defaultconfig)

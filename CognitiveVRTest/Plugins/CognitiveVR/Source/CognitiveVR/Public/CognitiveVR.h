@@ -2,15 +2,16 @@
 
 #pragma once
 
-#include "Private/CognitiveVRPrivatePCH.h"
-#include "Runtime/Analytics/Analytics/Public/Interfaces/IAnalyticsProviderModule.h"
-#include "Private/api/customeventrecorder.h"
-#include "Private/CognitiveVRProvider.h"
+#include "UObject/UObjectIterator.h"
+#include "CoreMinimal.h"
+#include "Interfaces/IAnalyticsProviderModule.h"
+#include "Modules/ModuleManager.h"
+#include "Public/CognitiveVRProvider.h"
 
 DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);
 
 #define COGNITIVEVR_SDK_NAME "unreal"
-#define COGNITIVEVR_SDK_VERSION "0.9.2"
+#define COGNITIVEVR_SDK_VERSION "0.10.0"
 
 class IAnalyticsProvider;
 class FAnalyticsProviderCognitiveVR;

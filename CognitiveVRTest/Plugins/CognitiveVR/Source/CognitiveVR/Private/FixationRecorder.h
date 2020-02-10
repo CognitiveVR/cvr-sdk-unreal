@@ -4,10 +4,12 @@
 #pragma once
 
 #include "CognitiveVR.h"
+#include "Kismet/GameplayStatics.h"
 #include "DynamicObject.h"
 #include "Fixations.h"
 #include "EyeCapture.h"
 #include "SceneView.h"
+#include "Engine/LocalPlayer.h"
 #if defined TOBII_EYETRACKING_ACTIVE
 #include "TobiiTypes.h"
 #include "ITobiiCore.h"
@@ -22,6 +24,7 @@
 #if defined VARJOEYETRACKER_API
 #include "VarjoEyeTrackerFunctionLibrary.h"
 #endif
+#include "Runtime/Engine/Classes/Engine/UserInterfaceSettings.h" //for getting ui dpi for active session view
 #include "FixationRecorder.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -86,7 +89,10 @@ private:
 	int32 ExtremeBatchSize = 64;
 	float LastSendTime = -60;
 	FTimerHandle AutoSendHandle;
+	FVector2D CurrentEyePositionScreen;
 
+	TArray<FFixation> recentFixationPoints;
+	TArray<TSharedPtr<FC3DGazePoint>> recentEyePositions;
 
 public:
 
@@ -135,6 +141,18 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
 		static UFixationRecorder* GetFixationRecorder();
+
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
+		FVector2D GetEyePositionScreen();
+
+	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
+		static float GetDPIScale();
+
+	//returns the last 50 fixations in x,y,z world space, with w as the radius of the fixation
+	TArray<FFixation> GetRecentFixationPoints();
+
+	//returns the last 50 eye positions in x,y,z world space, to be used for drawing saccade lines on screen space
+	TArray<TSharedPtr<FC3DGazePoint>> GetRecentEyePositions();
 
 	float GetLastSendTime() { return LastSendTime; }
 	int32 GetPartNumber() { return jsonFixationPart; }

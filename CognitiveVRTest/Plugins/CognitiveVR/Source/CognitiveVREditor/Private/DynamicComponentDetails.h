@@ -1,6 +1,16 @@
 #pragma once
 
-#include "CognitiveVREditorPrivatePCH.h"
+#include "Components/SceneComponent.h"
+#include "Widgets/DeclarativeSyntaxSupport.h"
+#include "Widgets/Text/STextBlock.h"
+#include "Widgets/Input/SButton.h"
+#include "PropertyHandle.h"
+#include "DetailLayoutBuilder.h"
+#include "DetailWidgetRow.h"
+#include "DetailCategoryBuilder.h"
+#include "IDetailsView.h"
+#include "DynamicObject.h"
+#include "CognitiveEditorTools.h"
 #include "BaseEditorTool.h"
 #include "coreminimal.h"
 #include "UObject/WeakObjectPtr.h"
@@ -24,7 +34,9 @@ private:
 	FReply Upload();
 	private:
 	TWeakObjectPtr<UDynamicObject> SelectedDynamicObject;
+	void DelayScreenshot(FLevelEditorViewportClient* perspectiveView, FVector startPos, FRotator startRot);
 
 	bool HasOwner() const;
 	bool HasOwnerAndExportDir() const;
+	bool HasOwnerAndExportDirAndName() const;
 };

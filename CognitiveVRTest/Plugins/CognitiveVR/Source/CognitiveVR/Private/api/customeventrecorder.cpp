@@ -1,16 +1,12 @@
 /*
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
-#include "CognitiveVR.h"
 #include "Private/api/customeventrecorder.h"
-#include "PlayerTracker.h"
 
-//using namespace cognitivevrapi;
+uint64 CustomEventRecorder::lastFrameCount = 0;
+int32 CustomEventRecorder::consecutiveFrame = 0;
 
-uint64 cognitivevrapi::CustomEventRecorder::lastFrameCount = 0;
-int32 cognitivevrapi::CustomEventRecorder::consecutiveFrame = 0;
-
-cognitivevrapi::CustomEventRecorder::CustomEventRecorder()
+CustomEventRecorder::CustomEventRecorder()
 {
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	FString ValueReceived;
@@ -56,7 +52,7 @@ cognitivevrapi::CustomEventRecorder::CustomEventRecorder()
 	}
 }
 
-void cognitivevrapi::CustomEventRecorder::StartSession()
+void CustomEventRecorder::StartSession()
 {
 	if (!cog.IsValid()) {
 		return;
@@ -72,42 +68,42 @@ void cognitivevrapi::CustomEventRecorder::StartSession()
 	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEventRecorder::SendData), AutoTimer, false);
 }
 
-void cognitivevrapi::CustomEventRecorder::Send(FString category)
+void CustomEventRecorder::Send(FString category)
 {
 	CustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), NULL, "");
 }
 
-void cognitivevrapi::CustomEventRecorder::Send(FString category, TSharedPtr<FJsonObject> properties)
+void CustomEventRecorder::Send(FString category, TSharedPtr<FJsonObject> properties)
 {
 	CustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), properties, "");
 }
 
-void cognitivevrapi::CustomEventRecorder::Send(FString category, FVector Position)
+void CustomEventRecorder::Send(FString category, FVector Position)
 {
 	CustomEventRecorder::Send(category, Position, NULL, "");
 }
 
-void cognitivevrapi::CustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties)
+void CustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties)
 {
 	CustomEventRecorder::Send(category, Position, properties, "");
 }
 
-void cognitivevrapi::CustomEventRecorder::Send(FString category, FString dynamicObjectId)
+void CustomEventRecorder::Send(FString category, FString dynamicObjectId)
 {
 	CustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), NULL, dynamicObjectId);
 }
 
-void cognitivevrapi::CustomEventRecorder::Send(FString category, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
+void CustomEventRecorder::Send(FString category, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
 {
 	CustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), properties, dynamicObjectId);
 }
 
-void cognitivevrapi::CustomEventRecorder::Send(FString category, FVector Position, FString dynamicObjectId)
+void CustomEventRecorder::Send(FString category, FVector Position, FString dynamicObjectId)
 {
 	CustomEventRecorder::Send(category, Position, NULL, dynamicObjectId);
 }
 
-void cognitivevrapi::CustomEventRecorder::Send(FCustomEvent* customEvent)
+void CustomEventRecorder::Send(FCustomEvent* customEvent)
 {
 	if (customEvent == NULL) { return; }
 	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject);
@@ -127,7 +123,7 @@ void cognitivevrapi::CustomEventRecorder::Send(FCustomEvent* customEvent)
 	CustomEventRecorder::Send(customEvent->Category, customEvent->Position, jsonObject, customEvent->DynamicId);
 }
 
-void cognitivevrapi::CustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
+void CustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
 {
 	if (lastFrameCount >= GFrameCounter - 1)
 	{
@@ -196,7 +192,7 @@ void cognitivevrapi::CustomEventRecorder::Send(FString category, FVector Positio
 	}
 }
 
-void cognitivevrapi::CustomEventRecorder::TrySendData()
+void CustomEventRecorder::TrySendData()
 {
 	if (cog->GetWorld() != NULL)
 	{
@@ -210,7 +206,7 @@ void cognitivevrapi::CustomEventRecorder::TrySendData()
 	}
 }
 
-void cognitivevrapi::CustomEventRecorder::SendData()
+void CustomEventRecorder::SendData()
 {
 	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
