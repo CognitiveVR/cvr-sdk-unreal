@@ -48,6 +48,9 @@ private:
 	UWorld* world;
 	static UFixationRecorder* instance;
 
+	bool WasCaptureDiscardedLastFrame = false;
+	bool WasOutOfDispersionLastFrame = false;
+
 	FFixation ActiveFixation;
 	bool IsGazeOutOfRange(FEyeCapture eyeCapture);
 	bool IsGazeOffTransform(FEyeCapture eyeCapture);

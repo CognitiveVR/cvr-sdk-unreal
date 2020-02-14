@@ -20,5 +20,6 @@ public:
 	bool EyesClosed;
 	bool OutOfRange;
 	bool OffTransform;
+	FVector2D ScreenPos;
 	UDynamicObject* HitDynamicTransform;
 };

@@ -5,6 +5,8 @@
 #include "Runtime/Engine/Classes/Components/SceneComponent.h"
 #include "Fixations.generated.h"
 
+
+//used to pass basic eye data into active session view to draw on screen
 USTRUCT(BlueprintType)
 struct FC3DGazePoint
 {
@@ -28,7 +30,7 @@ public:
 	FVector LocalPosition;
 	USceneComponent* LocalTransform = NULL;
 
-	float DebugScale;
+	//float DebugScale;
 	int64 LastUpdated;
 	int64 DurationMs;
 	int64 StartMs;
@@ -79,7 +81,7 @@ public:
 		if (flag)
 		{
 			LastUpdated = eyeCapture.Time;
-			DurationMs = StartMs - LastUpdated;
+			DurationMs = eyeCapture.Time - StartMs;
 		}
 	}
 };
