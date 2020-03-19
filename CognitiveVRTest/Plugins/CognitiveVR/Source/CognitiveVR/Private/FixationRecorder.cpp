@@ -50,7 +50,7 @@ UFixationRecorder::UFixationRecorder()
 		if (parsedValue > 0)
 		{
 			AutoTimer = parsedValue;
-			cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UFixationRecorder::SendData, AutoTimer, false);
+			cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UFixationRecorder::SendData, AutoTimer, true);
 		}
 	}
 }
@@ -782,11 +782,11 @@ void UFixationRecorder::RecordFixationEnd(FFixation fixation)
 	{
 		TArray<TSharedPtr<FJsonValue>> posArray;
 		TSharedPtr<FJsonValueNumber> JsonValue;
-		JsonValue = MakeShareable(new FJsonValueNumber(-(int32)fixation.LocalPosition.X)); //right
+		JsonValue = MakeShareable(new FJsonValueNumber(-fixation.LocalPosition.X)); //right
 		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)fixation.LocalPosition.Z)); //up
+		JsonValue = MakeShareable(new FJsonValueNumber(fixation.LocalPosition.Z)); //up
 		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)fixation.LocalPosition.Y));  //forward
+		JsonValue = MakeShareable(new FJsonValueNumber(fixation.LocalPosition.Y));  //forward
 		posArray.Add(JsonValue);
 
 		fixObj->SetArrayField("p", posArray);
@@ -797,11 +797,11 @@ void UFixationRecorder::RecordFixationEnd(FFixation fixation)
 	{
 		TArray<TSharedPtr<FJsonValue>> posArray;
 		TSharedPtr<FJsonValueNumber> JsonValue;
-		JsonValue = MakeShareable(new FJsonValueNumber(-(int32)fixation.WorldPosition.X)); //right
+		JsonValue = MakeShareable(new FJsonValueNumber(-fixation.WorldPosition.X)); //right
 		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)fixation.WorldPosition.Z)); //up
+		JsonValue = MakeShareable(new FJsonValueNumber(fixation.WorldPosition.Z)); //up
 		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)fixation.WorldPosition.Y));  //forward
+		JsonValue = MakeShareable(new FJsonValueNumber(fixation.WorldPosition.Y));  //forward
 		posArray.Add(JsonValue);
 
 		fixObj->SetArrayField("p", posArray);
@@ -828,7 +828,7 @@ void UFixationRecorder::SendData()
 
 	wholeObj->SetStringField("userid", cog->GetUserID());
 	wholeObj->SetStringField("sessionid", cog->GetSessionID());
-	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
+	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
 	wholeObj->SetNumberField("part", jsonFixationPart);
 	jsonFixationPart++;
 	wholeObj->SetStringField("formatversion", "1.0");

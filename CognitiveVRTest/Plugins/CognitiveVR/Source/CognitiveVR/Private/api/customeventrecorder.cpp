@@ -65,7 +65,7 @@ void CustomEventRecorder::StartSession()
 	if (cog->GetWorld()->GetGameInstance() == NULL) {
 		return;
 	}
-	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEventRecorder::SendData), AutoTimer, false);
+	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEventRecorder::SendData), AutoTimer, true);
 }
 
 void CustomEventRecorder::Send(FString category)
@@ -169,9 +169,9 @@ void CustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJ
 	}
 
 	TArray< TSharedPtr<FJsonValue> > pos;
-	pos.Add(MakeShareable(new FJsonValueNumber((int32)-Position.X)));
-	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Z)));
-	pos.Add(MakeShareable(new FJsonValueNumber((int32)Position.Y)));
+	pos.Add(MakeShareable(new FJsonValueNumber(-Position.X)));
+	pos.Add(MakeShareable(new FJsonValueNumber(Position.Z)));
+	pos.Add(MakeShareable(new FJsonValueNumber(Position.Y)));
 
 	TSharedPtr<FJsonObject>eventObject = MakeShareable(new FJsonObject);
 	eventObject->SetStringField("name", category);
@@ -216,7 +216,6 @@ void CustomEventRecorder::SendData()
 
 	if (events.Num() == 0)
 	{
-		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEventRecorder::SendData), AutoTimer, false);
 		return;
 	}
 
@@ -224,8 +223,6 @@ void CustomEventRecorder::SendData()
 	{
 		LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
 	}
-
-	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEventRecorder::SendData), AutoTimer, false);
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
@@ -235,7 +232,7 @@ void CustomEventRecorder::SendData()
 	{
 		wholeObj->SetStringField("lobbyId", cog->LobbyId);
 	}
-	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
+	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonEventPart);
 	wholeObj->SetStringField("formatversion", "1.0");

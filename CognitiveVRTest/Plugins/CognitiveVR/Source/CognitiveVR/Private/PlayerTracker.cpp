@@ -208,11 +208,11 @@ void UPlayerTracker::BuildSnapshot(FVector position, FVector gaze, FRotator rota
 	//positions
 	TArray<TSharedPtr<FJsonValue>> posArray;
 	TSharedPtr<FJsonValueNumber> JsonValue;
-	JsonValue = MakeShareable(new FJsonValueNumber(-(int32)position.X)); //right
+	JsonValue = MakeShareable(new FJsonValueNumber(-position.X)); //right
 	posArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber((int32)position.Z)); //up
+	JsonValue = MakeShareable(new FJsonValueNumber(position.Z)); //up
 	posArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber((int32)position.Y));  //forward
+	JsonValue = MakeShareable(new FJsonValueNumber(position.Y));  //forward
 	posArray.Add(JsonValue);
 
 	snapObj->SetArrayField("p", posArray);
@@ -223,11 +223,11 @@ void UPlayerTracker::BuildSnapshot(FVector position, FVector gaze, FRotator rota
 	}
 
 	TArray<TSharedPtr<FJsonValue>> gazeArray;
-	JsonValue = MakeShareable(new FJsonValueNumber(-(int32)gaze.X));
+	JsonValue = MakeShareable(new FJsonValueNumber(-gaze.X));
 	gazeArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber((int32)gaze.Z));
+	JsonValue = MakeShareable(new FJsonValueNumber(gaze.Z));
 	gazeArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber((int32)gaze.Y));
+	JsonValue = MakeShareable(new FJsonValueNumber(gaze.Y));
 	gazeArray.Add(JsonValue);
 
 	snapObj->SetArrayField("g", gazeArray);
@@ -255,11 +255,11 @@ void UPlayerTracker::BuildSnapshot(FVector position, FVector gaze, FRotator rota
 	{
 		//floor position
 		TArray<TSharedPtr<FJsonValue>> floorArray;
-		JsonValue = MakeShareable(new FJsonValueNumber(-(int32)floorHitPos.X)); //right
+		JsonValue = MakeShareable(new FJsonValueNumber(-floorHitPos.X)); //right
 		floorArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)floorHitPos.Z)); //up
+		JsonValue = MakeShareable(new FJsonValueNumber(floorHitPos.Z)); //up
 		floorArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)floorHitPos.Y));  //forward
+		JsonValue = MakeShareable(new FJsonValueNumber(floorHitPos.Y));  //forward
 		floorArray.Add(JsonValue);
 
 		snapObj->SetArrayField("f", floorArray);
@@ -281,11 +281,11 @@ void UPlayerTracker::BuildSnapshot(FVector position, FRotator rotation, double t
 	//positions
 	TArray<TSharedPtr<FJsonValue>> posArray;
 	TSharedPtr<FJsonValueNumber> JsonValue;
-	JsonValue = MakeShareable(new FJsonValueNumber(-(int32)position.X)); //right
+	JsonValue = MakeShareable(new FJsonValueNumber(-position.X)); //right
 	posArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber((int32)position.Z)); //up
+	JsonValue = MakeShareable(new FJsonValueNumber(position.Z)); //up
 	posArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber((int32)position.Y));  //forward
+	JsonValue = MakeShareable(new FJsonValueNumber(position.Y));  //forward
 	posArray.Add(JsonValue);
 
 	snapObj->SetArrayField("p", posArray);
@@ -313,11 +313,11 @@ void UPlayerTracker::BuildSnapshot(FVector position, FRotator rotation, double t
 	{
 		//floor position
 		TArray<TSharedPtr<FJsonValue>> floorArray;
-		JsonValue = MakeShareable(new FJsonValueNumber(-(int32)floorHitPos.X)); //right
+		JsonValue = MakeShareable(new FJsonValueNumber(-floorHitPos.X)); //right
 		floorArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)floorHitPos.Z)); //up
+		JsonValue = MakeShareable(new FJsonValueNumber(floorHitPos.Z)); //up
 		floorArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber((int32)floorHitPos.Y));  //forward
+		JsonValue = MakeShareable(new FJsonValueNumber(floorHitPos.Y));  //forward
 		floorArray.Add(JsonValue);
 
 		snapObj->SetArrayField("f", floorArray);
@@ -349,7 +349,7 @@ void UPlayerTracker::SendData()
 	{
 		wholeObj->SetStringField("lobbyId", cog->LobbyId);
 	}
-	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
+	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonGazePart);
 	wholeObj->SetStringField("formatversion", "1.0");

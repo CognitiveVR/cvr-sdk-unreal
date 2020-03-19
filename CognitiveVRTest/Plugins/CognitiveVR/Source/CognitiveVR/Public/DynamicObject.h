@@ -4,6 +4,8 @@
 
 #include "CognitiveVR.h"
 #include "Components/SceneComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 #include "TimerManager.h"
 #include "CoreMinimal.h"
 #include "CustomEvent.h"

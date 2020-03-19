@@ -21,7 +21,7 @@ class COGNITIVEVR_API IActiveSessionViewRequired
 	GENERATED_IINTERFACE_BODY()
 
 public:
-	//classes using this interface may implement ReactToMidnight
+	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "CognitiveVR Analytics")
 		void Initialize(AActiveSessionView* asv);
 };

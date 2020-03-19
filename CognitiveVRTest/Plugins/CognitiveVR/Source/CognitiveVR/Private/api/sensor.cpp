@@ -62,7 +62,7 @@ void Sensors::StartSession()
 		return;
 	}
 
-	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, false);
+	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, true);
 }
 
 void Sensors::RecordSensor(FString Name, float value)
@@ -109,7 +109,6 @@ void Sensors::SendData()
 
 	if (SensorDataPoints.Num() == 0)
 	{
-		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, false);
 		return;
 	}
 
@@ -118,8 +117,6 @@ void Sensors::SendData()
 		LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
 	}
 
-	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, false);
-
 	TSharedPtr<FJsonObject> wholeObj = MakeShareable(new FJsonObject);
 
 	wholeObj->SetStringField("name", cog->GetUserID());
@@ -127,7 +124,7 @@ void Sensors::SendData()
 	{
 		wholeObj->SetStringField("lobbyId", cog->LobbyId);
 	}
-	wholeObj->SetNumberField("timestamp", (int32)cog->GetSessionTimestamp());
+	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonPart);
 	wholeObj->SetStringField("formatversion", "1.0");
