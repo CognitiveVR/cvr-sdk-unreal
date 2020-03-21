@@ -89,6 +89,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
 	static void SetUserId(const FString Name);
 
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
+	static void SetParticipant(const FString Name, const FString Id);
+
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
 		static FCustomEvent MakeCustomEvent(FString eventName);
 

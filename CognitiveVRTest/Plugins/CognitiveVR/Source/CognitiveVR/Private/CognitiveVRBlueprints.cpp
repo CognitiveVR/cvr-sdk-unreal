@@ -216,6 +216,18 @@ void UCognitiveVRBlueprints::SetUserId(const FString Name)
 	cog->SetUserID(Name);
 }
 
+void UCognitiveVRBlueprints::SetParticipant(const FString Name, const FString Id)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
+		return;
+	}
+	cog->SetParticipantData(Name, Id);
+}
+
 FCustomEvent UCognitiveVRBlueprints::MakeCustomEvent(FString eventName)
 {
 	return FCustomEvent(eventName);

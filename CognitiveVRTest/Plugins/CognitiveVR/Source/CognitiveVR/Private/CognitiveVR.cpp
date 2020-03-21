@@ -98,33 +98,23 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
 
-	//get attributes
-	//userid
-	//deviceid
-	//initProperties
 	if (Age != 0)
 	{
-		properties->SetNumberField("Age", Age);
+		properties->SetNumberField("c3d.participant.age", Age);
 	}
 	if (Gender.Len() > 0)
 	{
-		properties->SetStringField("Gender", Gender);
+		properties->SetStringField("c3d.participant.gender", Gender);
 	}
 	if (Location.Len() > 0)
 	{
-		properties->SetStringField("Location", Location);
-	}
-
-	if (GetUserID().IsEmpty())
-	{
-		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::StartSession user id is empty!");
-		SetUserID("anonymous_"+DeviceId);
+		properties->SetStringField("c3d.location", Location);
 	}
 
 	SessionTimestamp = Util::GetTimestamp();
 	if (SessionId.IsEmpty())
 	{
-		SessionId = FString::FromInt(GetSessionTimestamp()) + TEXT("_") + UserId;
+		SessionId = FString::FromInt(GetSessionTimestamp()) + TEXT("_") + DeviceId;
 	}
 
 	for (auto Attr : Attributes)
@@ -203,7 +193,8 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	SetSessionProperty("c3d.app.engine", "Unreal");
 
-	SetSessionProperty("c3d.username", GetUserID());
+	SetSessionProperty("c3d.participant.username", GetUserName());
+	SetSessionProperty("c3d.participant.id", GetUserID());
 	SetSessionProperty("c3d.deviceid", GetDeviceID());
 	if (!SessionProperties.HasField("c3d.sessionname"))
 	{
@@ -299,7 +290,7 @@ void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
 {
 	if (!bHasSessionStarted)
 	{
-		UserId = InUserID;
+		ParticipantId = InUserID;
 		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetUserID set user id");
 	}
 	else
@@ -309,9 +300,29 @@ void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
 	}
 }
 
+void FAnalyticsProviderCognitiveVR::SetParticipantData(FString participantName, FString participantId)
+{
+	if (!bHasSessionStarted)
+	{
+		ParticipantName = participantName;
+		ParticipantId = participantId;
+		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetParticipantData set user id");
+	}
+	else
+	{
+		// Log that we shouldn't switch users during a session
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SetParticipantData called while session is in progress. Ignoring");
+	}
+}
+
 FString FAnalyticsProviderCognitiveVR::GetUserID() const
 {
-	return UserId;
+	return ParticipantId;
+}
+
+FString FAnalyticsProviderCognitiveVR::GetUserName() const
+{
+	return ParticipantName;
 }
 
 FString FAnalyticsProviderCognitiveVR::GetDeviceID() const

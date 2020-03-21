@@ -17,12 +17,52 @@ FOptionalSize SSceneSetupWidget::GetScreenshotHeight() const
 	return FOptionalSize(FMath::Max(ScreenshotWidth, ScreenshotHeight));
 }
 
+void SSceneSetupWidget::CheckForExpiredDeveloperKey()
+{
+	if (FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
+	{
+		TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
+		Request->OnProcessRequestComplete().BindRaw(this, &SSceneSetupWidget::OnDeveloperKeyResponseReceived);
+		//This is the url on which to process the request
+		//Request->SetURL("http://example.com");
+		//Request->SetVerb("GET");
+		//Request->SetHeader(TEXT("User-Agent"), "X-UnrealEngine-Agent");
+		//Request->SetHeader("Content-Type", TEXT("application/json"));
+		Request->ProcessRequest();
+	}
+}
+
+void SSceneSetupWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (Response.IsValid() == false)
+	{
+		SGenericDialogWidget::OpenDialog(FText::FromString("Your developer key has expired"), SNew(STextBlock).Text(FText::FromString("Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.")));
+
+		GLog->Log("response is invalid");
+		return;
+	}
+
+	int32 responseCode = Response->GetResponseCode();
+	if (responseCode == 200)
+	{
+		GLog->Log("response code is good");
+	}
+	else
+	{
+		SGenericDialogWidget::OpenDialog(FText::FromString("Your developer key has expired"), SNew(STextBlock).Text(FText::FromString("Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.")));
+		GLog->Log("response code is bad");
+	}
+}
+
 void SSceneSetupWidget::Construct(const FArguments& Args)
 {
 	DisplayAPIKey = FCognitiveEditorTools::GetInstance()->GetAPIKey().ToString();
 	DisplayDeveloperKey = FCognitiveEditorTools::GetInstance()->GetDeveloperKey().ToString();
 
 	float padding = 10;
+
+	CheckForExpiredDeveloperKey();
+
 
 	ChildSlot
 		[

@@ -74,8 +74,9 @@
 		FString Gender;
 		/** Holds the build info if set */
 		FString BuildInfo;
+		FString ParticipantName;
 		/** Id representing the user the analytics are recording for */
-		FString UserId;
+		FString ParticipantId;
 		FString DeviceId;
 		double SessionTimestamp = -1;
 		FJsonObject SessionProperties;
@@ -98,8 +99,11 @@
 		virtual void EndSession() override;
 		virtual void FlushEvents() override;
 
+		DEPRECATED(4.19, "Use SetParticipant instead")
 		virtual void SetUserID(const FString& InUserID) override;
+		//returns unique participant id
 		virtual FString GetUserID() const override;
+		FString GetUserName() const;
 
 		virtual FString GetSessionID() const override;
 		virtual bool SetSessionID(const FString& InSessionID) override;
@@ -153,6 +157,8 @@
 		TSharedPtr<FSceneData> GetSceneData(FString scenename);
 		TSharedPtr<FSceneData> GetCurrentSceneData();
 		FJsonObject GetSessionProperties();
+
+		void SetParticipantData(FString participantName, FString participantId);
 
 		void SetSessionProperty(FString name, int32 value);
 		void SetSessionProperty(FString name, float value);

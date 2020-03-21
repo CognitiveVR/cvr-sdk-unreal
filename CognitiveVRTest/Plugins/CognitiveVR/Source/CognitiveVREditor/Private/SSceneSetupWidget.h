@@ -16,6 +16,7 @@
 #include "Runtime/SlateCore/Public/Layout/Visibility.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
+#include "Runtime/Online/HTTP/Public/Http.h"
 
 class FCognitiveTools;
 class FCognitiveVREditorModule;
@@ -30,7 +31,8 @@ public:
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& Args);
-
+	void CheckForExpiredDeveloperKey();
+	void OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	FString DisplayAPIKey;
 	FText GetDisplayAPIKey() const;
