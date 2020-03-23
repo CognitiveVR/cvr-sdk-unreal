@@ -33,9 +33,6 @@ enum class EC3DControllerType : uint8
 	WindowsMixedReality
 };
 
-//namespace cognitivevrapi
-//{
-
 class FDynamicObjectManifestEntry
 {
 public:
@@ -73,7 +70,6 @@ public:
 
 	FDynamicObjectId() {}
 };
-//}
 
 USTRUCT(BlueprintType)
 struct COGNITIVEVR_API FControllerInputState
@@ -178,13 +174,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool UseCustomMeshName = true;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsController = false;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsRightController = false;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString ControllerType;
 
 	//the name of the mesh to render on the dashboard

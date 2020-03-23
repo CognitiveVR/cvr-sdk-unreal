@@ -22,8 +22,7 @@
 #include "Private/api/sensor.h"
 #include "Engine/Engine.h"
 
-//namespace cognitivevrapi
-//{
+
 	class FSceneData
 	{
 	public:
@@ -51,7 +50,7 @@
 		kErrorRequestTimedOut = -6,
 		kErrorUnknown = -7
 	};
-//}
+
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
@@ -67,11 +66,6 @@
 		/** Unique Id representing the session the analytics are recording for */
 		FString SessionId;
 		/** Holds the Age if set */
-		int32 Age;
-		/** Holds the Location of the user if set */
-		FString Location;
-		/** Holds the Gender of the user if set */
-		FString Gender;
 		/** Holds the build info if set */
 		FString BuildInfo;
 		FString ParticipantName;
@@ -103,9 +97,11 @@
 		virtual void SetUserID(const FString& InUserID) override;
 		//returns unique participant id
 		virtual FString GetUserID() const override;
+		//returns participant name
 		FString GetUserName() const;
 
 		virtual FString GetSessionID() const override;
+		//allows developers to manually set a sesison id instead of generating one
 		virtual bool SetSessionID(const FString& InSessionID) override;
 
 		virtual void RecordEvent(const FString& EventName, const TArray<FAnalyticsEventAttribute>& Attributes) override;
@@ -158,7 +154,11 @@
 		TSharedPtr<FSceneData> GetCurrentSceneData();
 		FJsonObject GetSessionProperties();
 
-		void SetParticipantData(FString participantName, FString participantId);
+		void SetParticipantFullName(FString participantName);
+		void SetParticipantId(FString participantId);
+		void SetParticipantProperty(FString name, int32 value);
+		void SetParticipantProperty(FString name, float value);
+		void SetParticipantProperty(FString name, FString value);
 
 		void SetSessionProperty(FString name, int32 value);
 		void SetSessionProperty(FString name, float value);

@@ -3,7 +3,6 @@
 */
 #pragma once
 
-//#include <stdexcept>
 #include "CognitiveVR.h"
 #include "Private/ExitPoll.h"
 #include "Http.h"
@@ -14,8 +13,7 @@ class FCognitiveExitPollResponse;
 struct FExitPollQuestionSet;
 struct FExitPollResponse;
 
-//namespace cognitivevrapi
-//{
+
 	class Network
 	{
 	private:
@@ -32,4 +30,3 @@ struct FExitPollResponse;
 		void NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response);
 		void NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSetName, FExitPollResponse Responses);
 	};
-//}

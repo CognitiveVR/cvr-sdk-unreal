@@ -38,8 +38,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 /************************************************************************/
 
-//namespace cognitivevrapi
-//{
 
 /*!
 \file CRtAudio.h
@@ -1200,4 +1198,3 @@ private:
 // End:
 //
 // vim: et sts=2 sw=2
-//}

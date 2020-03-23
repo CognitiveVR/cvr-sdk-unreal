@@ -11,8 +11,6 @@
 
 class FAnalyticsProviderCognitiveVR;
 
-//namespace cognitivevrapi
-//{
 	class COGNITIVEVR_API Sensors
 	{
 	private:
@@ -48,4 +46,3 @@ class FAnalyticsProviderCognitiveVR;
 		int32 GetPartNumber() { return jsonPart; }
 		int32 GetDataPoints() { return sensorDataCount; }
 	};
-//}

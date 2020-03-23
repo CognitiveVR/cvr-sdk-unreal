@@ -43,13 +43,13 @@ public:
 	static void SendCustomEventPosition(FString Name, const TArray<FAnalyticsEventAttr>& Attributes, FVector Position);
 
 	//add an integer value to the session properties
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Properties")
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Properties", DisplayName = "Set Session Property Int")
 		static void UpdateSessionInt(const FString name, const int32 value);
 	//add a float value to the session properties
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Properties")
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Properties", DisplayName = "Set Session Property Float")
 		static void UpdateSessionFloat(const FString name, const float value);
 	//add a string value to the session properties
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Properties")
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Properties", DisplayName = "Set Session Property String")
 		static void UpdateSessionString(const FString name, const FString value);
 
 	//label this session to a human-friendly on the Cognitive dashboard
@@ -85,12 +85,22 @@ public:
 	//sends all outstanding data and stops recording data
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
 	static void EndSession();
-	//set a human-friendly name to label the user on the Cognitive dashboard
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
-	static void SetUserId(const FString Name);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
-	static void SetParticipant(const FString Name, const FString Id);
+	static void SetParticipantFullName(const FString Name);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
+	static void SetParticipantId(const FString Id);
+
+	//add an integer value to the session properties
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Properties")
+		static void SetParticipantPropertyInt(const FString name, const int32 value);
+	//add a float value to the session properties
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Properties")
+		static void SetParticipantPropertyFloat(const FString name, const float value);
+	//add a string value to the session properties
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Properties")
+		static void SetParticipantPropertyString(const FString name, const FString value);
+
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
 		static FCustomEvent MakeCustomEvent(FString eventName);

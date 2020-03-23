@@ -36,11 +36,7 @@ TWeakPtr<FAnalyticsProviderCognitiveVR> FAnalyticsCognitiveVR::GetCognitiveVRPro
 	return CognitiveVRProvider;
 }
 
-// Provider
-
-
-FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR() :
-	Age(0)
+FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR()
 {
 	DeviceId = FPlatformMisc::GetDeviceId();
 }
@@ -97,19 +93,6 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
-
-	if (Age != 0)
-	{
-		properties->SetNumberField("c3d.participant.age", Age);
-	}
-	if (Gender.Len() > 0)
-	{
-		properties->SetStringField("c3d.participant.gender", Gender);
-	}
-	if (Location.Len() > 0)
-	{
-		properties->SetStringField("c3d.location", Location);
-	}
 
 	SessionTimestamp = Util::GetTimestamp();
 	if (SessionId.IsEmpty())
@@ -193,8 +176,8 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	SetSessionProperty("c3d.app.engine", "Unreal");
 
-	SetSessionProperty("c3d.participant.username", GetUserName());
-	SetSessionProperty("c3d.participant.id", GetUserID());
+	SetParticipantFullName(GetUserName());
+	SetParticipantId(GetUserID());
 	SetSessionProperty("c3d.deviceid", GetDeviceID());
 	if (!SessionProperties.HasField("c3d.sessionname"))
 	{
@@ -288,31 +271,20 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 
 void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
 {
-	if (!bHasSessionStarted)
-	{
-		ParticipantId = InUserID;
-		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetUserID set user id");
-	}
-	else
-	{
-		// Log that we shouldn't switch users during a session
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SetUserID called while session is in progress. Ignoring");
-	}
+	ParticipantId = InUserID;
+	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetUserID set user id");
 }
 
-void FAnalyticsProviderCognitiveVR::SetParticipantData(FString participantName, FString participantId)
+void FAnalyticsProviderCognitiveVR::SetParticipantId(FString participantId)
 {
-	if (!bHasSessionStarted)
-	{
-		ParticipantName = participantName;
-		ParticipantId = participantId;
-		CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetParticipantData set user id");
-	}
-	else
-	{
-		// Log that we shouldn't switch users during a session
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SetParticipantData called while session is in progress. Ignoring");
-	}
+	ParticipantId = participantId;
+	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetParticipantData set user id");
+}
+
+void FAnalyticsProviderCognitiveVR::SetParticipantFullName(FString participantName)
+{
+	ParticipantName = participantName;
+	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetParticipantData set user id");
 }
 
 FString FAnalyticsProviderCognitiveVR::GetUserID() const
@@ -345,7 +317,6 @@ bool FAnalyticsProviderCognitiveVR::SetSessionID(const FString& InSessionID)
 	if (!bHasSessionStarted)
 	{
 		SessionId = InSessionID;
-		//CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SetSessionID automatically sets session id. Ignoring");
 	}
 	else
 	{
@@ -430,20 +401,17 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 
 void FAnalyticsProviderCognitiveVR::SetAge(const int32 InAge)
 {
-	SetSessionProperty("Age", InAge);
-	Age = InAge;
+	SetParticipantProperty("age", InAge);
 }
 
 void FAnalyticsProviderCognitiveVR::SetLocation(const FString& InLocation)
 {
-	SetSessionProperty("Location", Location);
-	Location = InLocation;
+	SetSessionProperty("location", InLocation);
 }
 
 void FAnalyticsProviderCognitiveVR::SetGender(const FString& InGender)
 {
-	SetSessionProperty("Gender", InGender);
-	Gender = InGender;
+	SetParticipantProperty("gender", InGender);
 }
 
 void FAnalyticsProviderCognitiveVR::SetBuildInfo(const FString& InBuildInfo)
@@ -666,6 +634,31 @@ void FAnalyticsProviderCognitiveVR::SetSessionProperty(FString name, FString val
 		SessionProperties.Values[name] = MakeShareable(new FJsonValueString(value));
 	else
 		SessionProperties.SetStringField(name, value);
+}
+
+void FAnalyticsProviderCognitiveVR::SetParticipantProperty(FString name, int32 value)
+{
+	FString completeName = "c3d.participant." + name;
+	if (SessionProperties.HasField(completeName))
+		SessionProperties.Values[completeName] = MakeShareable(new FJsonValueNumber(value));
+	else
+		SessionProperties.SetNumberField(completeName, (int32)value);
+}
+void FAnalyticsProviderCognitiveVR::SetParticipantProperty(FString name, float value)
+{
+	FString completeName = "c3d.participant." + name;
+	if (SessionProperties.HasField(completeName))
+		SessionProperties.Values[completeName] = MakeShareable(new FJsonValueNumber(value));
+	else
+		SessionProperties.SetNumberField(completeName, (float)value);
+}
+void FAnalyticsProviderCognitiveVR::SetParticipantProperty(FString name, FString value)
+{
+	FString completeName = "c3d.participant." + name;
+	if (SessionProperties.HasField(completeName))
+		SessionProperties.Values[completeName] = MakeShareable(new FJsonValueString(value));
+	else
+		SessionProperties.SetStringField(completeName, value);
 }
 
 FJsonObject FAnalyticsProviderCognitiveVR::GetSessionProperties()

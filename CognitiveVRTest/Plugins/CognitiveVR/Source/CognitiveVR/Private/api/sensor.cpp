@@ -4,8 +4,6 @@
 
 #include "Private/api/sensor.h"
 
-//using namespace cognitivevrapi;
-
 Sensors::Sensors()
 {
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();

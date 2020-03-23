@@ -13,8 +13,7 @@
 class FAnalyticsProviderCognitiveVR;
 struct FCustomEvent;
 
-//namespace cognitivevrapi
-//{
+
 	class COGNITIVEVR_API CustomEventRecorder
 	{
 	private:
@@ -70,4 +69,3 @@ struct FCustomEvent;
 		int32 GetPartNumber() { return jsonEventPart; }
 		int32 GetDataPoints() { return events.Num(); }
 	};
-//}
