@@ -23,11 +23,11 @@ void SSceneSetupWidget::CheckForExpiredDeveloperKey()
 	{
 		TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
 		Request->OnProcessRequestComplete().BindRaw(this, &SSceneSetupWidget::OnDeveloperKeyResponseReceived);
-		//This is the url on which to process the request
-		//Request->SetURL("http://example.com");
-		//Request->SetVerb("GET");
-		//Request->SetHeader(TEXT("User-Agent"), "X-UnrealEngine-Agent");
-		//Request->SetHeader("Content-Type", TEXT("application/json"));
+		FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+		FString url = "https://" + gateway + "/v0/apiKeys/verify";
+		Request->SetURL(url);
+		Request->SetVerb("GET");
+		Request->SetHeader(TEXT("Authorization"), "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey);
 		Request->ProcessRequest();
 	}
 }
