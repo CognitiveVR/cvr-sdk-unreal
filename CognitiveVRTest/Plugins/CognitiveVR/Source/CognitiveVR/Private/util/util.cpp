@@ -6,8 +6,8 @@
 
 double Util::GetTimestamp()
 {
-	#pragma warning(push)
-	#pragma warning(disable:4244) //Disable warning regarding loss of accuracy, no concern.
+	//#pragma warning(push)
+	//#pragma warning(disable:4244) //Disable warning regarding loss of accuracy, no concern.
 
 	long ts = time(0);
 	double miliseconds = FDateTime::UtcNow().GetMillisecond();
@@ -16,7 +16,7 @@ double Util::GetTimestamp()
 	return finalTime;
 	//http://stackoverflow.com/questions/997946/how-to-get-current-time-and-date-in-c
 
-	#pragma warning(pop)
+	//#pragma warning(pop)
 }
 
 FString Util::GetDeviceName(FString DeviceName)
@@ -74,6 +74,7 @@ void Util::SetHardwareSessionProperties()
 		cog->SetSessionProperty("c3d.device.type", "Unknown");
 	}
 
+#if !PLATFORM_ANDROID
 
 	cog->SetSessionProperty("c3d.device.cpu", FWindowsPlatformMisc::GetCPUBrand());
 
@@ -85,6 +86,7 @@ void Util::SetHardwareSessionProperties()
 	FString osSubVersionOut;
 	FWindowsPlatformMisc::GetOSVersions(osVersionOut, osSubVersionOut);
 	cog->SetSessionProperty("c3d.device.os", osVersionOut + " " + osSubVersionOut);
+#endif
 
 	const FPlatformMemoryConstants& MemoryConstants = FPlatformMemory::GetConstants();
 	cog->SetSessionProperty("c3d.device.memory", (int)MemoryConstants.TotalPhysicalGB);
