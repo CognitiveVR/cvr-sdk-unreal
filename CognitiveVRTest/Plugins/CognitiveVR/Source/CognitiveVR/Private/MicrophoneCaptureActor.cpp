@@ -145,9 +145,9 @@ void AMicrophoneCaptureActor::EndRecording()
 			NumRecordedSamples = FMath::Min(NumFramesToRecord * NumInputChannels, CurrentRecordedPCMData.Num());
 
 			//UE_LOG(LogTemp, Log, TEXT("Stopping mic recording. Recorded %d frames of audio (%.4f seconds). Detected %d buffer overflows."),
-			NumRecordedSamples,
-				(float)NumRecordedSamples / RecordingSampleRate,
-				NumOverflowsDetected);
+			//NumRecordedSamples,
+			//	(float)NumRecordedSamples / RecordingSampleRate,
+			//	NumOverflowsDetected);
 
 				// Get a ptr to the buffer we're actually going to serialize
 				TArray<int16>* PCMDataToSerialize = nullptr;

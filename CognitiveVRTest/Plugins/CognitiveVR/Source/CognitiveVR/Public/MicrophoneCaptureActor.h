@@ -5,7 +5,9 @@
 #include "CognitiveVR.h"
 #include "CognitiveVRProvider.h"
 #include "CoreMinimal.h"
+#if !PLATFORM_ANDROID
 #include "rtaudio/CRtAudio.h"
+#endif
 #include "Base64.h"
 #include "MicrophoneCaptureActor.generated.h"
 
@@ -17,6 +19,8 @@ class AMicrophoneCaptureActor : public AActor
 private:
 	//uint8* RecordedData;
 	
+#if !PLATFORM_ANDROID
+
 	//TArray<uint8> QueuedAudio;
 	//FThreadSafeCounter AvailableByteCount;
 	//void QueueAudio(const uint8* AudioData, const int32 BufferSize);
@@ -73,6 +77,8 @@ private:
 
 	// Num input channels
 	int32 NumInputChannels = 1;
+
+#endif //platform android
 
 public:
 
