@@ -11,7 +11,7 @@
 DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);
 
 #define COGNITIVEVR_SDK_NAME "unreal"
-#define COGNITIVEVR_SDK_VERSION "0.10.0"
+#define COGNITIVEVR_SDK_VERSION "0.11.0"
 
 class IAnalyticsProvider;
 class FAnalyticsProviderCognitiveVR;
@@ -55,7 +55,7 @@ public:
 	virtual TWeakPtr<FAnalyticsProviderCognitiveVR> GetCognitiveVRProvider() const;
 
 	FString DeveloperKey;
-		
+
 private:
 	//mutable TMap<FString, TSharedPtr<IAnalyticsProvider>> Analytics;
 	virtual void StartupModule() override;

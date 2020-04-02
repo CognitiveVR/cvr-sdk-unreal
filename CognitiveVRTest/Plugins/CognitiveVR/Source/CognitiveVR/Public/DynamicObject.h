@@ -4,6 +4,8 @@
 
 #include "CognitiveVR.h"
 #include "Components/SceneComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 #include "TimerManager.h"
 #include "CoreMinimal.h"
 #include "CustomEvent.h"
@@ -30,9 +32,6 @@ enum class EC3DControllerType : uint8
 	Oculus,
 	WindowsMixedReality
 };
-
-//namespace cognitivevrapi
-//{
 
 class FDynamicObjectManifestEntry
 {
@@ -71,7 +70,6 @@ public:
 
 	FDynamicObjectId() {}
 };
-//}
 
 USTRUCT(BlueprintType)
 struct COGNITIVEVR_API FControllerInputState
@@ -176,13 +174,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool UseCustomMeshName = true;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsController = false;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsRightController = false;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString ControllerType;
 
 	//the name of the mesh to render on the dashboard

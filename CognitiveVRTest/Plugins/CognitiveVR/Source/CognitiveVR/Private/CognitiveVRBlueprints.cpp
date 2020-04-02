@@ -101,6 +101,42 @@ void UCognitiveVRBlueprints::UpdateSessionString(const FString name, const FStri
 	cog->SetSessionProperty(name, value);
 }
 
+void UCognitiveVRBlueprints::SetParticipantPropertyInt(const FString name, const int32 value)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetParticipantPropertyInt could not get provider!");
+		return;
+	}
+	cog->SetParticipantProperty(name, value);
+}
+
+void UCognitiveVRBlueprints::SetParticipantPropertyFloat(const FString name, const float value)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetParticipantPropertyFloat could not get provider!");
+		return;
+	}
+	cog->SetParticipantProperty(name, value);
+}
+
+void UCognitiveVRBlueprints::SetParticipantPropertyString(const FString name, const FString value)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetParticipantPropertyString could not get provider!");
+		return;
+	}
+	cog->SetParticipantProperty(name, value);
+}
+
 void UCognitiveVRBlueprints::SetSessionName(const FString name)
 {
 	if (!cog.IsValid())
@@ -174,7 +210,7 @@ void UCognitiveVRBlueprints::FlushEvents()
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::FlushEvents could not get provider!");
 		return;
 	}
 	cog->FlushEvents();
@@ -186,7 +222,7 @@ bool UCognitiveVRBlueprints::StartSession()
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::StartSession could not get provider!");
 		return false;
 	}
 	return cog->StartSession(TArray<FAnalyticsEventAttribute>());
@@ -198,22 +234,33 @@ void UCognitiveVRBlueprints::EndSession()
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::EndSession could not get provider!");
 		return;
 	}
 	cog->EndSession();
 }
 
-void UCognitiveVRBlueprints::SetUserId(const FString Name)
+void UCognitiveVRBlueprints::SetParticipantFullName(const FString Name)
 {
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitiveVRBlueprints::SetLobbyId could not get provider!");
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetParticipantFullName could not get provider!");
 		return;
 	}
-	cog->SetUserID(Name);
+	cog->SetParticipantFullName(Name);
+}
+void UCognitiveVRBlueprints::SetParticipantId(const FString Id)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetParticipantId could not get provider!");
+		return;
+	}
+	cog->SetParticipantId(Id);
 }
 
 FCustomEvent UCognitiveVRBlueprints::MakeCustomEvent(FString eventName)

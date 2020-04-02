@@ -8,8 +8,6 @@
 #include "Json.h"
 
 #include "UnrealEd.h"
-//#include "Engine.h"
-//#include "Editor.h"
 #include "FileHelpers.h"
 #include "BusyCursor.h"
 #include "Classes/Components/SceneComponent.h"
@@ -24,7 +22,6 @@
 #include "AssetRegistryModule.h"
 #include "MaterialUtilities.h"
 #include "MaterialBakingStructures.h"
-//#include "MaterialBakingHelpers.h"
 #include "IMaterialBakingModule.h"
 #include "MaterialBakingModule.h"
 #include "MaterialOptions.h"
@@ -118,7 +115,6 @@ public:
 
 	FText UploadDynamicsToSceneText;
 	FText GetUploadDynamicsToSceneText() const;
-	//TSharedPtr<SVerticalBox> SetDynamicBoxContent();
 
 	float MinimumSize = 1;
 	float MaximumSize = 10000;
@@ -170,9 +166,6 @@ public:
 	FProcHandle ConvertSceneToGLTF();
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
 
-	//	FReply List_Materials();
-	//void List_MaterialArgs(FString subdirectory,FString searchDirectory);
-
 	//dynamic objects
 	//Runs the built-in obj exporter with all meshses
 		FReply ExportAllDynamics();
@@ -210,17 +203,7 @@ public:
 	bool PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
 	void* ChooseParentWindowHandle();
 
-	//UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional, meta = (DisplayName = "BlenderPath", ShowForTools = "SceneExport"))
-	//UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
 	FString BlenderPath;
-	//UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
-		//FString ExportDirectory;
-	//UPROPERTY(Category = "Scene Export Settings", EditAnywhere, NonTransactional)
-		//FString ExportDynamicsDirectory;
-	//FText GetExportDirectory() const;
-
-
-
 
 	FString BaseExportDirectory;
 
@@ -325,9 +308,6 @@ public:
 	bool HasDeveloperKey() const;
 	bool HasAPIKey() const;
 	
-	//returns true if email + password fields lengths both greater than 0
-	//bool HasValidLogInFields() const;
-
 	//reads scene data from ini
 	void ReadSceneDataFromFile();
 
@@ -379,9 +359,6 @@ public:
 	EVisibility BlenderValidVisibility() const;
 	EVisibility BlenderInvalidVisibility() const;
 
-	//FReply OpenProductOnDashboard();
-	//bool EnableOpenProductOnDashboard() const;
-
 	bool HasFoundBlenderHasSelection() const;
 	bool HasSetDynamicExportDirectoryHasSceneId() const;
 	FReply SaveAPIDeveloperKeysToFile();
@@ -397,8 +374,7 @@ public:
 	void CreateExportFolderStructure();
 };
 
-//namespace cognitivevrapi
-//{
+
 	//used for uploading multiple dynamics at once
 	class FContentContainer
 	{
@@ -407,4 +383,3 @@ public:
 		FString BodyText;
 		TArray<uint8> BodyBinary;
 	};
-//}

@@ -170,7 +170,7 @@ void UDynamicObject::Initialize()
 			if (parsedValue > 0)
 			{
 				AutoTimer = parsedValue;
-				GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
+				GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, true);
 			}
 		}
 	}
@@ -429,7 +429,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 
 	snapshot.time = ts;
 	snapshot.id = ObjectID->Id;
-	snapshot.position = FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y);
+	snapshot.position = FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y);
 
 	if (hasChangedScale)
 	{
@@ -610,7 +610,6 @@ void UDynamicObject::SendData()
 	if (newManifest.Num() + snapshots.Num() == 0)
 	{
 		CognitiveLog::Info("UDynamicObject::SendData no objects or data to send!");
-		cogProvider->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
 		return;
 	}
 
@@ -618,8 +617,6 @@ void UDynamicObject::SendData()
 	{
 		LastSendTime = cogProvider->GetWorld()->GetRealTimeSeconds();
 	}
-
-	cogProvider->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, false);
 
 	TArray<TSharedPtr<FJsonValueObject>> EventArray = UDynamicObject::DynamicSnapshotsToString();
 
@@ -630,7 +627,7 @@ void UDynamicObject::SendData()
 	{
 		wholeObj->SetStringField("lobbyId", cogProvider->LobbyId);
 	}
-	wholeObj->SetNumberField("timestamp", (int32)cogProvider->GetSessionTimestamp());
+	wholeObj->SetNumberField("timestamp", cogProvider->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionid", cogProvider->GetSessionID());
 	wholeObj->SetStringField("formatversion", "1.0");
 	wholeObj->SetNumberField("part", jsonPart);
@@ -761,7 +758,7 @@ void UDynamicObject::BeginEngagementId(FString parentDynamicObjectId, FString en
 	}
 	else
 	{
-		Engagements[UniqueEngagementId].SetPosition(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+		Engagements[UniqueEngagementId].SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
 		Engagements[UniqueEngagementId].Send();
 		Engagements[UniqueEngagementId] = ce;
 	}
@@ -787,7 +784,7 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 
 	if (Engagements.Contains(UniqueEngagementId))
 	{
-		Engagements[UniqueEngagementId].SetPosition(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+		Engagements[UniqueEngagementId].SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
 		Engagements[UniqueEngagementId].Send();
 		Engagements.Remove(UniqueEngagementId);
 	}
@@ -796,7 +793,7 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 		//start and end event
 		FCustomEvent ce = FCustomEvent(engagementName);
 		ce.SetDynamicObject(parentDynamicObjectId);
-		ce.SetPosition(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+		ce.SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
 		ce.Send();
 	}
 }
@@ -830,7 +827,7 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		{
 			if (Elem.Value.GetDynamicId() == ObjectID->Id)
 			{
-				Elem.Value.SetPosition(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+				Elem.Value.SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
 				Elem.Value.Send();
 			}
 		}
@@ -842,7 +839,7 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		{
 			if (Elem.Value.GetDynamicId() == ObjectID->Id)
 			{
-				Elem.Value.SetPosition(FVector(-(int32)GetComponentLocation().X, (int32)GetComponentLocation().Z, (int32)GetComponentLocation().Y));
+				Elem.Value.SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
 				Elem.Value.Send();
 			}
 		}

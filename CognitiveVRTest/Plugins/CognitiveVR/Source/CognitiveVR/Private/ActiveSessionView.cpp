@@ -79,7 +79,6 @@ TArray<FVector> AActiveSessionView::GetProjectedFixations()
 
 	TArray<FVector> RecentFixations;
 
-	//TODO should return actual fixations, instead of v4s
 	TArray<FFixation> points = FixationRecorder->GetRecentFixationPoints();
 	FVector worldPosition;
 

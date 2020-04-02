@@ -6,8 +6,6 @@
 #include "CognitiveVR.h"
 #include "CoreMinimal.h"
 
-//namespace cognitivevrapi
-//{
     class CognitiveLog
     {
 	private:
@@ -23,4 +21,3 @@
 
 			static bool DevLogEnabled();
     };
-//}
