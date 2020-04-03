@@ -360,6 +360,19 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 	int64 ts = (int64)(Util::GetTimestamp() * 1000);
 	return ts;
 }
+#elif defined PICOMOBILE_API
+bool UFixationRecorder::AreEyesClosed()
+{
+	FVector Origin;
+	FVector Dir;
+	return !UPicoBlueprintFunctionLibrary::PicoGetEyeTrackingGazeRay(Origin, Dir);
+}
+
+int64 UFixationRecorder::GetEyeCaptureTimestamp()
+{
+	int64 ts = (int64)(Util::GetTimestamp() * 1000);
+	return ts;
+}
 #else
 
 bool UFixationRecorder::AreEyesClosed()
@@ -475,6 +488,23 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		//the gaze transformed into world space
 		UVarjoEyeTrackerFunctionLibrary::GetGazeRay(Start, WorldDirection, ignored);
 
+		End = Start + WorldDirection * 10000.0f;
+	}
+	else
+	{
+		EyeCaptures[index].Discard = true;
+	}
+
+#elif defined PICOMOBILE_API
+	EyeCaptures[index].EyesClosed = AreEyesClosed();
+	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
+
+	FVector Start = FVector::ZeroVector;
+	FVector WorldDirection = FVector::ZeroVector;
+	FVector End = FVector::ZeroVector;
+
+	if (UPicoBlueprintFunctionLibrary::PicoGetEyeTrackingGazeRay(Start, WorldDirection))
+	{
 		End = Start + WorldDirection * 10000.0f;
 	}
 	else

@@ -20,7 +20,9 @@ enum class ECommonMeshName : uint8
 	OculusRiftTouchRight,
 	ViveTracker,
 	WindowsMixedRealityLeft,
-	WindowsMixedRealityRight
+	WindowsMixedRealityRight,
+	PicoNeo2EyeControllerLeft,
+	PicoNeo2EyeControllerRight
 };
 
 //only used in blueprint to set up controllers using a macro
@@ -30,7 +32,8 @@ enum class EC3DControllerType : uint8
 	None,
 	Vive,
 	Oculus,
-	WindowsMixedReality
+	WindowsMixedReality,
+	PicoNeo2Eye
 };
 
 class FDynamicObjectManifestEntry

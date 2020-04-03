@@ -211,6 +211,14 @@ void UDynamicObject::Initialize()
 		{
 			MeshName = "windows_mixed_reality_controller_right";
 		}
+		else if (CommonMeshName == ECommonMeshName::PicoNeo2EyeControllerLeft)
+		{
+			MeshName = "pico_neo_2_eye_controller_left";
+		}
+		else if (CommonMeshName == ECommonMeshName::PicoNeo2EyeControllerRight)
+		{
+			MeshName = "pico_neo_2_eye_controller_right";
+		}
 	}
 
 	if (MeshName == "")
