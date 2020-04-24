@@ -39,6 +39,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /************************************************************************/
 
 
+#if PLATFORM_ANDROID
+#include "Platform.h"
+#else
+
 /*!
 \file CRtAudio.h
 */
@@ -1198,3 +1202,4 @@ private:
 // End:
 //
 // vim: et sts=2 sw=2
+#endif //platform android

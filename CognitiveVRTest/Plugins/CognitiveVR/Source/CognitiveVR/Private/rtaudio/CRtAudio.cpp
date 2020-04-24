@@ -45,6 +45,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "CRtAudio.h"
 //#include "AudioCapture.h"
 
+#if !PLATFORM_ANDROID
 #include "AllowWindowsPlatformTypes.h"
 
 THIRD_PARTY_INCLUDES_START
@@ -10269,3 +10270,4 @@ void CRtApi::byteSwapBuffer(char *buffer, unsigned int samples, CRtAudioFormat f
 //
 // vim: et sts=2 sw=2
 
+#endif //platform android

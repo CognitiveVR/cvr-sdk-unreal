@@ -8,7 +8,9 @@
 #include "GenericPlatformDriver.h"
 #include <ctime>
 #include "Json.h"
+#if !PLATFORM_ANDROID
 #include "Windows/WindowsPlatformMisc.h"
+#endif
 
 
     class Util

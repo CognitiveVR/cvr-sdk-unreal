@@ -28,6 +28,9 @@
 #if defined VARJOEYETRACKER_API
 #include "VarjoEyeTrackerFunctionLibrary.h"
 #endif
+#if defined PICOMOBILE_API
+#include "PicoBlueprintFunctionLibrary.h"
+#endif
 #include "PlayerTracker.generated.h"
 
 //multicast delegates cannot be static. use static pointer to playertracker instance in BP

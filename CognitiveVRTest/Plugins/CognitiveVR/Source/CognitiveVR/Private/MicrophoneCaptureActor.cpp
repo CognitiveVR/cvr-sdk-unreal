@@ -4,6 +4,31 @@
 //#include "Private/CognitiveVRPrivatePCH.h"
 #include "MicrophoneCaptureActor.h"
 
+#if PLATFORM_ANDROID
+
+FString& AMicrophoneCaptureActor::GetMicrophoneRecording() { return wav64string; }
+bool AMicrophoneCaptureActor::BeginRecording(float t) { return false; }
+void AMicrophoneCaptureActor::EndRecording() {}
+AMicrophoneCaptureActor::AMicrophoneCaptureActor()
+{
+	PrimaryActorTick.bCanEverTick = true;
+}
+
+void AMicrophoneCaptureActor::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void AMicrophoneCaptureActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+}
+int32 AMicrophoneCaptureActor::OnAudioCapture(void* InBuffer, uint32 InBufferFrames, double StreamTime, bool bOverflow)
+{
+	return 0;
+}
+#else
+
 static int32 OnAudioCaptureCallback(void *OutBuffer, void* InBuffer, uint32 InBufferFrames, double StreamTime, CRtAudioStreamStatus AudioStreamStatus, void* InUserData)
 {
 	// Cast the user data to the mic recorder
@@ -20,12 +45,12 @@ AMicrophoneCaptureActor::AMicrophoneCaptureActor()
 
 void AMicrophoneCaptureActor::BeginPlay()
 {
-	Super::BeginPlay();	
+	Super::BeginPlay();
 }
 
-void AMicrophoneCaptureActor::Tick( float DeltaTime )
+void AMicrophoneCaptureActor::Tick(float DeltaTime)
 {
-	Super::Tick( DeltaTime );
+	Super::Tick(DeltaTime);
 }
 
 bool AMicrophoneCaptureActor::BeginRecording(float RecordingDurationSec)
@@ -119,52 +144,52 @@ void AMicrophoneCaptureActor::EndRecording()
 		{
 			NumRecordedSamples = FMath::Min(NumFramesToRecord * NumInputChannels, CurrentRecordedPCMData.Num());
 
-			/*UE_LOG(LogTemp, Log, TEXT("Stopping mic recording. Recorded %d frames of audio (%.4f seconds). Detected %d buffer overflows."),
-				NumRecordedSamples,
-				(float)NumRecordedSamples / RecordingSampleRate,
-				NumOverflowsDetected);*/
+			//UE_LOG(LogTemp, Log, TEXT("Stopping mic recording. Recorded %d frames of audio (%.4f seconds). Detected %d buffer overflows."),
+			//NumRecordedSamples,
+			//	(float)NumRecordedSamples / RecordingSampleRate,
+			//	NumOverflowsDetected);
 
-			// Get a ptr to the buffer we're actually going to serialize
-			TArray<int16>* PCMDataToSerialize = nullptr;
+				// Get a ptr to the buffer we're actually going to serialize
+				TArray<int16>* PCMDataToSerialize = nullptr;
 
-			// If our sample rate isn't 44100, then we need to do a SampleRateConvert
-			PCMDataToSerialize = &CurrentRecordedPCMData;
+				// If our sample rate isn't 44100, then we need to do a SampleRateConvert
+				PCMDataToSerialize = &CurrentRecordedPCMData;
 
-			// Scale by the linear gain if it's been set to something (0.0f is ctor default and impossible to set by dB)
-			if (InputGain != 0.0f)
-			{
-				for (int32 i = 0; i < NumRecordedSamples; ++i)
+				// Scale by the linear gain if it's been set to something (0.0f is ctor default and impossible to set by dB)
+				if (InputGain != 0.0f)
 				{
-					// Scale by input gain, clamp to prevent integer overflow when casting back to int16. Will still clip.
-					(*PCMDataToSerialize)[i] = (int16)FMath::Clamp(InputGain * (float)(*PCMDataToSerialize)[i], -32767.0f, 32767.0f);
+					for (int32 i = 0; i < NumRecordedSamples; ++i)
+					{
+						// Scale by input gain, clamp to prevent integer overflow when casting back to int16. Will still clip.
+						(*PCMDataToSerialize)[i] = (int16)FMath::Clamp(InputGain * (float)(*PCMDataToSerialize)[i], -32767.0f, 32767.0f);
+					}
 				}
-			}
 
-			// Get the raw data
-			const uint8* RawData = (const uint8*)PCMDataToSerialize->GetData();
-			int32 NumBytes = NumRecordedSamples * sizeof(int16);
+				// Get the raw data
+				const uint8* RawData = (const uint8*)PCMDataToSerialize->GetData();
+				int32 NumBytes = NumRecordedSamples * sizeof(int16);
 
-			// Create a raw .wav file to stuff the raw PCM data in so when we create the sound wave asset it's identical to a normal imported asset
-			//SerializeWaveFile(RawWaveData, RawData, NumBytes);
-			EncodeToWav(RawWaveData, RawData, NumBytes);
+				// Create a raw .wav file to stuff the raw PCM data in so when we create the sound wave asset it's identical to a normal imported asset
+				//SerializeWaveFile(RawWaveData, RawData, NumBytes);
+				EncodeToWav(RawWaveData, RawData, NumBytes);
 
 
-			//DEBUG save wav to disk
-			/*
-			FString SaveDirectory = FString("C:/Users/calder/Desktop");
-			FString FileName = FString("recordedAudio" + FString::FromInt(NumBytes) + ".wav");
+				//DEBUG save wav to disk
 
-			IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-
-			if (PlatformFile.CreateDirectoryTree(*SaveDirectory))
-			{
-				// Get absolute file path
-				FString AbsoluteFilePath = SaveDirectory + "/" + FileName;
-
-				//FFileHelper::SaveStringToFile(Content, *AbsoluteFilePath);
-				FFileHelper::SaveArrayToFile(RawWaveData, *AbsoluteFilePath);
-				//UE_LOG(LogTemp, Warning, TEXT("AMicrophoneCaptureActor::EndRecording saved wav file to desktop"));
-			}*/
+				//FString SaveDirectory = FString("C:/Users/calder/Desktop");
+				//FString FileName = FString("recordedAudio" + FString::FromInt(NumBytes) + ".wav");
+				//
+				//IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+				//
+				//if (PlatformFile.CreateDirectoryTree(*SaveDirectory))
+				//{
+				//	// Get absolute file path
+				//	FString AbsoluteFilePath = SaveDirectory + "/" + FileName;
+				//
+				//	//FFileHelper::SaveStringToFile(Content, *AbsoluteFilePath);
+				//	FFileHelper::SaveArrayToFile(RawWaveData, *AbsoluteFilePath);
+				//	//UE_LOG(LogTemp, Warning, TEXT("AMicrophoneCaptureActor::EndRecording saved wav file to desktop"));
+				//}
 		}
 	}
 }
@@ -287,3 +312,4 @@ FString& AMicrophoneCaptureActor::GetMicrophoneRecording()
 {
 	return wav64string;
 }
+#endif

@@ -103,30 +103,30 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
-		static FCustomEvent MakeCustomEvent(FString eventName);
+		static UCustomEvent* MakeCustomEvent(FString eventName);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
-		static FCustomEvent SetFloatProperty(UPARAM(ref) FCustomEvent& target, FString key, float floatValue);
+		static UCustomEvent* SetFloatProperty(UCustomEvent* target, FString key, float floatValue);
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
-		static FCustomEvent SetIntegerProperty(UPARAM(ref) FCustomEvent& target, FString key, int32 intValue);
+		static UCustomEvent* SetIntegerProperty(UCustomEvent* target, FString key, int32 intValue);
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
-		static FCustomEvent SetStringProperty(UPARAM(ref) FCustomEvent& target, FString key, FString stringValue);
+		static UCustomEvent* SetStringProperty(UCustomEvent* target, FString key, FString stringValue);
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
-		static FCustomEvent SetBoolProperty(UPARAM(ref) FCustomEvent& target, FString key, bool boolValue);
+		static UCustomEvent* SetBoolProperty(UCustomEvent* target, FString key, bool boolValue);
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
-		static FCustomEvent SetDynamicObject(UPARAM(ref) FCustomEvent& target, UDynamicObject* dynamicObject);
+		static UCustomEvent* SetDynamicObject(UCustomEvent* target, UDynamicObject* dynamicObject);
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
-		static FCustomEvent SetPosition(UPARAM(ref) FCustomEvent& target, FVector position);
+		static UCustomEvent* SetPosition(UCustomEvent* target, FVector position);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
-		static void Send(UPARAM(ref) FCustomEvent& target);
+		static void Send(UCustomEvent* target);
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
-		static FCustomEvent AppendSensor(UPARAM(ref) FCustomEvent& target, FString sensorName);
+		static UCustomEvent* AppendSensor(UCustomEvent* target, FString sensorName);
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
-		static FCustomEvent AppendSensors(UPARAM(ref) FCustomEvent& target, TArray<FString> sensorNames);
+		static UCustomEvent* AppendSensors(UCustomEvent* target, TArray<FString> sensorNames);
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
-		static FCustomEvent AppendAllSensors(UPARAM(ref) FCustomEvent& target);
+		static UCustomEvent* AppendAllSensors(UCustomEvent* target);
 
 	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
 		static bool HasSessionStarted();

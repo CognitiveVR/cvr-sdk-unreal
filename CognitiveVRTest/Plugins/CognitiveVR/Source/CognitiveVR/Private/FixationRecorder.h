@@ -24,6 +24,9 @@
 #if defined VARJOEYETRACKER_API
 #include "VarjoEyeTrackerFunctionLibrary.h"
 #endif
+#if defined PICOMOBILE_API
+#include "PicoBlueprintFunctionLibrary.h"
+#endif
 #include "Runtime/Engine/Classes/Engine/UserInterfaceSettings.h" //for getting ui dpi for active session view
 #include "FixationRecorder.generated.h"
 
@@ -69,6 +72,9 @@ private:
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
 	FVarjoEyeTrackingData* data;
+#elif defined PICOMOBILE_API
+	bool AreEyesClosed();
+	int64 GetEyeCaptureTimestamp();
 #else
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();

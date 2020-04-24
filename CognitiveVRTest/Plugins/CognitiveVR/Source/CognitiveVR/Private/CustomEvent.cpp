@@ -4,20 +4,19 @@
 
 #include "CustomEvent.h"
 
-TSharedPtr<FAnalyticsProviderCognitiveVR> FCustomEvent::cog;
+TSharedPtr<FAnalyticsProviderCognitiveVR> UCustomEvent::cog;
 
-FCustomEvent::FCustomEvent(FString category)
+UCustomEvent::UCustomEvent()
+{
+	StartTime = Util::GetTimestamp();
+}
+
+void UCustomEvent::SetCategory(FString category)
 {
 	Category = category;
-	StartTime = Util::GetTimestamp();
 }
 
-FCustomEvent::FCustomEvent()
-{
-	StartTime = Util::GetTimestamp();
-}
-
-void FCustomEvent::Send()
+void UCustomEvent::Send()
 {
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
@@ -33,7 +32,7 @@ void FCustomEvent::Send()
 	cog->customEventRecorder->Send(this);
 }
 
-void FCustomEvent::AppendSensors()
+void UCustomEvent::AppendSensors()
 {
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
@@ -49,7 +48,7 @@ void FCustomEvent::AppendSensors()
 		FloatProperties.Add(Elem.Key, Elem.Value);
 	}
 }
-void FCustomEvent::AppendSensors(TArray<FString> sensorNames)
+void UCustomEvent::AppendSensors(TArray<FString> sensorNames)
 {
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
@@ -69,7 +68,7 @@ void FCustomEvent::AppendSensors(TArray<FString> sensorNames)
 	}
 }
 
-void FCustomEvent::AppendSensor(FString sensorName)
+void UCustomEvent::AppendSensor(FString sensorName)
 {
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
@@ -85,40 +84,40 @@ void FCustomEvent::AppendSensor(FString sensorName)
 		FloatProperties.Add(sensorName, sensorValues[sensorName]);
 }
 
-void FCustomEvent::SetDynamicObject(FString dynamicObjectId)
+void UCustomEvent::SetDynamicObject(FString dynamicObjectId)
 {
 	DynamicId = dynamicObjectId;
 }
 
-void FCustomEvent::SetDynamicObject(UDynamicObject* dynamicObject)
+void UCustomEvent::SetDynamicObject(UDynamicObject* dynamicObject)
 {
 	if (dynamicObject == NULL) { return; }
 	DynamicId = dynamicObject->GetObjectId()->Id;
 }
 
-void FCustomEvent::SetPosition(FVector position)
+void UCustomEvent::SetPosition(FVector position)
 {
 	Position = position;
 }
 
-FString FCustomEvent::GetDynamicId()
+FString UCustomEvent::GetDynamicId()
 {
 	return DynamicId;
 }
 
-void FCustomEvent::SetProperty(FString key, FString value)
+void UCustomEvent::SetProperty(FString key, FString value)
 {
-	StringProperties[key] = value;
+	StringProperties.Add(key, value);
 }
-void FCustomEvent::SetProperty(FString key, int32 value)
+void UCustomEvent::SetProperty(FString key, int32 value)
 {
-	IntegerProperties[key] = value;
+	IntegerProperties.Add(key, value);
 }
-void FCustomEvent::SetProperty(FString key, float value)
+void UCustomEvent::SetProperty(FString key, float value)
 {
-	FloatProperties[key] = value;
+	FloatProperties.Add(key, value);
 }
-void FCustomEvent::SetProperty(FString key, bool value)
+void UCustomEvent::SetProperty(FString key, bool value)
 {
-	BoolProperties[key] = value;
+	BoolProperties.Add(key, value);
 }

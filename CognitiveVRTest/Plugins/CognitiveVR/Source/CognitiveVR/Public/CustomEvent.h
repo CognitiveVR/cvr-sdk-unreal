@@ -12,8 +12,8 @@
 
 class UDynamicObject;
 
-USTRUCT(BlueprintType)
-struct COGNITIVEVR_API FCustomEvent
+UCLASS(BlueprintType)
+class COGNITIVEVR_API UCustomEvent : public UObject
 {
 	friend class CustomEventRecorder;
 	friend class FAnalyticsProviderCognitiveVR;
@@ -34,9 +34,9 @@ private:
 
 public:
 
-	FCustomEvent();
-	FCustomEvent(FString category);
-	
+	UCustomEvent();
+	void SetCategory(FString category);
+
 	void Send();
 	//appends the most recent value of all sensors as properties
 	void AppendSensors();

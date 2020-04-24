@@ -512,6 +512,8 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 			if (dynamic->CommonMeshName == ECommonMeshName::OculusRiftTouchLeft) { finalMeshName = "oculusrifttouchleft"; }
 			if (dynamic->CommonMeshName == ECommonMeshName::WindowsMixedRealityRight) { finalMeshName = "windows_mixed_reality_controller_right"; }
 			if (dynamic->CommonMeshName == ECommonMeshName::WindowsMixedRealityLeft) { finalMeshName = "windows_mixed_reality_controller_left"; }
+			if (dynamic->CommonMeshName == ECommonMeshName::PicoNeo2EyeControllerRight) { finalMeshName = "pico_neo_2_eye_controller_right"; }
+			if (dynamic->CommonMeshName == ECommonMeshName::PicoNeo2EyeControllerLeft) { finalMeshName = "pico_neo_2_eye_controller_left"; }
 		}
 	}
 

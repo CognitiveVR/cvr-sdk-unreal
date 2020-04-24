@@ -211,6 +211,14 @@ void UDynamicObject::Initialize()
 		{
 			MeshName = "windows_mixed_reality_controller_right";
 		}
+		else if (CommonMeshName == ECommonMeshName::PicoNeo2EyeControllerLeft)
+		{
+			MeshName = "pico_neo_2_eye_controller_left";
+		}
+		else if (CommonMeshName == ECommonMeshName::PicoNeo2EyeControllerRight)
+		{
+			MeshName = "pico_neo_2_eye_controller_right";
+		}
 	}
 
 	if (MeshName == "")
@@ -750,16 +758,17 @@ void UDynamicObject::BeginEngagementId(FString parentDynamicObjectId, FString en
 		UniqueEngagementId = parentDynamicObjectId + " " + engagementName;
 	}
 
-	FCustomEvent ce = FCustomEvent(engagementName);
-	ce.SetDynamicObject(parentDynamicObjectId);
+	UCustomEvent* ce = NewObject<UCustomEvent>(this);
+	ce->SetCategory(engagementName);
+	ce->SetDynamicObject(parentDynamicObjectId);
 	if (!Engagements.Contains(UniqueEngagementId))
 	{
 		Engagements.Add(UniqueEngagementId, ce);
 	}
 	else
 	{
-		Engagements[UniqueEngagementId].SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
-		Engagements[UniqueEngagementId].Send();
+		Engagements[UniqueEngagementId]->SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
+		Engagements[UniqueEngagementId]->Send();
 		Engagements[UniqueEngagementId] = ce;
 	}
 }
@@ -784,17 +793,18 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 
 	if (Engagements.Contains(UniqueEngagementId))
 	{
-		Engagements[UniqueEngagementId].SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
-		Engagements[UniqueEngagementId].Send();
+		Engagements[UniqueEngagementId]->SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
+		Engagements[UniqueEngagementId]->Send();
 		Engagements.Remove(UniqueEngagementId);
 	}
 	else
 	{
 		//start and end event
-		FCustomEvent ce = FCustomEvent(engagementName);
-		ce.SetDynamicObject(parentDynamicObjectId);
-		ce.SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
-		ce.Send();
+		UCustomEvent* ce = NewObject<UCustomEvent>(this);
+		ce->SetCategory(engagementName);
+		ce->SetDynamicObject(parentDynamicObjectId);
+		ce->SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
+		ce->Send();
 	}
 }
 
@@ -825,10 +835,10 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		//go through all engagements and send any that match this objectid
 		for (auto &Elem : Engagements)
 		{
-			if (Elem.Value.GetDynamicId() == ObjectID->Id)
+			if (Elem.Value->GetDynamicId() == ObjectID->Id)
 			{
-				Elem.Value.SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
-				Elem.Value.Send();
+				Elem.Value->SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
+				Elem.Value->Send();
 			}
 		}
 	}
@@ -837,10 +847,10 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		//go through all engagements and send any that match this objectid
 		for (auto &Elem : Engagements)
 		{
-			if (Elem.Value.GetDynamicId() == ObjectID->Id)
+			if (Elem.Value->GetDynamicId() == ObjectID->Id)
 			{
-				Elem.Value.SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
-				Elem.Value.Send();
+				Elem.Value->SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
+				Elem.Value->Send();
 			}
 		}
 	}
@@ -910,13 +920,90 @@ UDynamicObject* UDynamicObject::SetupController(AActor* target, bool IsRight, EC
 			dyn->CommonMeshName = ECommonMeshName::WindowsMixedRealityLeft;
 		}
 		break;
+	case EC3DControllerType::PicoNeo2Eye:
+		if (IsRight)
+		{
+			dyn->ControllerType = "pico_neo_2_eye_controller_right";
+			dyn->CommonMeshName = ECommonMeshName::PicoNeo2EyeControllerRight;
+		}
+		else
+		{
+			dyn->ControllerType = "pico_neo_2_eye_controller_left";
+			dyn->CommonMeshName = ECommonMeshName::PicoNeo2EyeControllerLeft;
+		}
+		break;
 	default:
 		break;
 	}
-	
+
 	dyn->UseCustomMeshName = false;
 	dyn->IsController = true;
-	
+
+	dyn->UseCustomId = true;
+	dyn->CustomId = FGuid::NewGuid().ToString();
+	dyn->Initialize();
+	return dyn;
+}
+
+//static
+UDynamicObject* UDynamicObject::SetupControllerComponent(UDynamicObject* dyn, bool IsRight, EC3DControllerType controllerType)
+{
+	if (dyn == NULL)
+	{
+		return NULL;
+	}
+
+	dyn->IsRightController = IsRight;
+
+	switch (controllerType)
+	{
+	case EC3DControllerType::Vive:
+		dyn->ControllerType = "vivecontroller";
+		dyn->CommonMeshName = ECommonMeshName::ViveController;
+		break;
+	case EC3DControllerType::Oculus:
+		if (IsRight)
+		{
+			dyn->ControllerType = "oculustouchright";
+			dyn->CommonMeshName = ECommonMeshName::OculusRiftTouchRight;
+		}
+		else
+		{
+			dyn->ControllerType = "oculustouchleft";
+			dyn->CommonMeshName = ECommonMeshName::OculusRiftTouchLeft;
+		}
+		break;
+	case EC3DControllerType::PicoNeo2Eye:
+		if (IsRight)
+		{
+			dyn->ControllerType = "pico_neo_2_eye_controller_right";
+			dyn->CommonMeshName = ECommonMeshName::PicoNeo2EyeControllerRight;
+		}
+		else
+		{
+			dyn->ControllerType = "pico_neo_2_eye_controller_left";
+			dyn->CommonMeshName = ECommonMeshName::PicoNeo2EyeControllerLeft;
+		}
+		break;
+	case EC3DControllerType::WindowsMixedReality:
+		if (IsRight)
+		{
+			dyn->ControllerType = "windows_mixed_reality_controller_right";
+			dyn->CommonMeshName = ECommonMeshName::WindowsMixedRealityRight;
+		}
+		else
+		{
+			dyn->ControllerType = "windows_mixed_reality_controller_left";
+			dyn->CommonMeshName = ECommonMeshName::WindowsMixedRealityLeft;
+		}
+		break;
+	default:
+		break;
+	}
+
+	dyn->UseCustomMeshName = false;
+	dyn->IsController = true;
+
 	dyn->UseCustomId = true;
 	dyn->CustomId = FGuid::NewGuid().ToString();
 	dyn->Initialize();
