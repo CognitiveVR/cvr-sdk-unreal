@@ -25,7 +25,7 @@
 #include "VarjoEyeTrackerFunctionLibrary.h"
 #endif
 #if defined PICOMOBILE_API
-#include "PicoGetEyeTrackingGazeRay.h"
+#include "PicoBlueprintFunctionLibrary.h"
 #endif
 #include "Runtime/Engine/Classes/Engine/UserInterfaceSettings.h" //for getting ui dpi for active session view
 #include "FixationRecorder.generated.h"

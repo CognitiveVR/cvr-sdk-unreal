@@ -11,7 +11,7 @@
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 
 class FAnalyticsProviderCognitiveVR;
-struct FCustomEvent;
+class UCustomEvent;
 
 
 	class COGNITIVEVR_API CustomEventRecorder
@@ -60,7 +60,7 @@ struct FCustomEvent;
 		//record event with name at a position with properties
 		void Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties);
 
-		void Send(FCustomEvent* customEvent);
+		void Send(UCustomEvent* customEvent);
 
 		//send all outstanding custom events to Cognitive dashboard
 		void SendData();

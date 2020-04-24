@@ -12,6 +12,8 @@
 #include "MotionControllerComponent.h"
 #include "DynamicObject.generated.h"
 
+class UCustomEvent;
+
 UENUM(BlueprintType)
 enum class ECommonMeshName : uint8
 {
@@ -237,7 +239,8 @@ public:
 	void TryGenerateCustomIdAndMesh();
 	
 	//engagements
-	TMap<FString, FCustomEvent> Engagements;
+	UPROPERTY()//needeed to keep from custom events from being garbage collected
+	TMap<FString, UCustomEvent*> Engagements;
 
 	void BeginEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
 	void EndEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
@@ -284,6 +287,9 @@ public:
 	//adds a dynamic object component and applies all relevant settings
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		static UDynamicObject* SetupController(AActor* target, bool IsRight, EC3DControllerType controllerType);
+
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
+		static UDynamicObject* SetupControllerComponent(UDynamicObject* target, bool IsRight, EC3DControllerType controllerType);
 
 	//write all controller input states to snapshot to be written to json next frame
 	void FlushButtons(FControllerInputStateCollection& target);
