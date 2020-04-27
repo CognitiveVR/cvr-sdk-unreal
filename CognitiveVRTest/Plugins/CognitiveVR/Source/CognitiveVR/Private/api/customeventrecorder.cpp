@@ -103,7 +103,7 @@ void CustomEventRecorder::Send(FString category, FVector Position, FString dynam
 	CustomEventRecorder::Send(category, Position, NULL, dynamicObjectId);
 }
 
-void CustomEventRecorder::Send(FCustomEvent* customEvent)
+void CustomEventRecorder::Send(UCustomEvent* customEvent)
 {
 	if (customEvent == NULL) { return; }
 	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject);

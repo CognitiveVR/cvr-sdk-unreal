@@ -23,10 +23,18 @@ public:
 	// Sets default values for this actor's properties
 	AInputTracker();
 
+	//IMPROVEMENT fix the OnBeginPlay delegate that isn't being called from UPlayerTracker instead of singleton find an input tracker
+		static AInputTracker* GetInputTracker();
+
+	UFUNCTION() //must be a ufunction to listen for OnBeginSession event
+		void FindControllers(bool ignored);
+
 private:
+
+	static AInputTracker* inputTrackerInstance;
+
 	EC3DControllerType ControllerType;
 	virtual void BeginPlay() override;
-	void FindControllers();
 	virtual void Tick(float DeltaTime) override;
 	void IntervalUpdate();
 

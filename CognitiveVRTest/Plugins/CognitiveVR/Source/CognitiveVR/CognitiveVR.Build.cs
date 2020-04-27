@@ -51,7 +51,7 @@ namespace UnrealBuildTool.Rules
 					"UMG"
                 }
 				);
-				
+		
 		if (Target.Platform == UnrealTargetPlatform.Win32 ||
             Target.Platform == UnrealTargetPlatform.Win64)
         {
@@ -60,26 +60,26 @@ namespace UnrealBuildTool.Rules
 
             // Allow us to use direct sound
             AddEngineThirdPartyPrivateStaticDependencies(Target, "DirectSound");
+			
+			string DirectXSDKDir = Target.UEThirdPartySourceDirectory + "Windows/DirectX";
+			PublicSystemIncludePaths.Add( DirectXSDKDir + "/include");
+
+			if (Target.Platform == UnrealTargetPlatform.Win64)
+			{
+				PublicLibraryPaths.Add( DirectXSDKDir + "/Lib/x64");
+			}
+			else if (Target.Platform == UnrealTargetPlatform.Win32)
+			{
+				PublicLibraryPaths.Add( DirectXSDKDir + "/Lib/x86");
+			}
+
+			PublicAdditionalLibraries.AddRange(
+					new string[] {
+					"dxguid.lib",
+					"dsound.lib"
+					}
+				);
+			}
         }
-		
-		string DirectXSDKDir = Target.UEThirdPartySourceDirectory + "Windows/DirectX";
-		PublicSystemIncludePaths.Add( DirectXSDKDir + "/include");
-
-		if (Target.Platform == UnrealTargetPlatform.Win64)
-		{
-			PublicLibraryPaths.Add( DirectXSDKDir + "/Lib/x64");
-		}
-		else if (Target.Platform == UnrealTargetPlatform.Win32)
-		{
-			PublicLibraryPaths.Add( DirectXSDKDir + "/Lib/x86");
-		}
-
-		PublicAdditionalLibraries.AddRange(
-				new string[] {
- 				"dxguid.lib",
- 				"dsound.lib"
- 				}
-			);
-		}
 	}
 }

@@ -88,6 +88,16 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	}
 	End = start + LastDirection * 100000.0f;
 	return End;
+#elif defined PICOMOBILE_API
+	FVector Start = FVector::ZeroVector;
+	FVector WorldDirection = FVector::ZeroVector;
+	FVector End = FVector::ZeroVector;
+	
+	if (UPicoBlueprintFunctionLibrary::PicoGetEyeTrackingGazeRay(Start, WorldDirection))
+	{
+		End = Start + WorldDirection * 10000.0f;
+	}
+	return End;
 #else
 	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
 	FVector End = start + captureRotation.Vector() * 10000.0f;

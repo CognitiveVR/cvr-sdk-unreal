@@ -2,6 +2,8 @@
 
 #include "InputTracker.h"
 
+AInputTracker* AInputTracker::inputTrackerInstance;
+
 // Sets default values
 AInputTracker::AInputTracker()
 {
@@ -74,12 +76,16 @@ void AInputTracker::BeginPlay()
 	InputComponent->BindAxis(TEXT("LeftGripAxis")).bConsumeInput = 0;
 	InputComponent->BindAxis(TEXT("RightGripAxis")).bConsumeInput = 0;
 
-	FindControllers();
+	//IMPROVMENT figure out why FindControllers isn't called from this
+	/*UPlayerTracker* playerTracker = UPlayerTracker::GetPlayerTracker();
+	if (playerTracker != NULL)
+	{
+		playerTracker->OnSessionBegin.AddDynamic(this, &AInputTracker::FindControllers);
+	}*/
 }
 
-void AInputTracker::FindControllers()
+void AInputTracker::FindControllers(bool ignored)
 {
-
 	for (TObjectIterator<UMotionControllerComponent> Itr; Itr; ++Itr)
 	{
 		UMotionControllerComponent *Component = *Itr;
@@ -104,6 +110,10 @@ void AInputTracker::FindControllers()
 				{
 					ControllerType = EC3DControllerType::Vive;
 				}
+				else if (LeftHand->ControllerType == "pico_neo_2_eye_controller_left")
+				{
+					ControllerType = EC3DControllerType::PicoNeo2Eye;
+				}
 			}
 		}
 		else if (RightHand == NULL && Component->GetTrackingSource() == EControllerHand::Right)
@@ -125,6 +135,10 @@ void AInputTracker::FindControllers()
 				else if (RightHand->ControllerType == "vivecontroller")
 				{
 					ControllerType = EC3DControllerType::Vive;
+				}
+				else if (RightHand->ControllerType == "pico_neo_2_eye_controller_right")
+				{
+					ControllerType = EC3DControllerType::PicoNeo2Eye;
 				}
 			}
 		}
@@ -155,10 +169,14 @@ void AInputTracker::Tick(float DeltaTime)
 	if (CurrentIntervalTime > Interval)
 	{
 		if (LeftHand == NULL || RightHand == NULL)
-			FindControllers();
-
+		{
+			//FindControllers(false);
+		}
+		else
+		{
+			IntervalUpdate();
+		}
 		CurrentIntervalTime -= Interval;
-		IntervalUpdate();
 	}
 }
 
@@ -326,9 +344,48 @@ void AInputTracker::IntervalUpdate()
 		}
 		break;
 	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		//triggers
+		float currentValue = InputComponent->GetAxisValue("LeftTriggerAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		if (LeftTriggerValue != icurrentValue)
+		{
+			auto b = FControllerInputState("pico_trigger", icurrentValue);
+			AppendInputState(false, b);
+			LeftTriggerValue = icurrentValue;
+		}
+		currentValue = InputComponent->GetAxisValue("RightTriggerAxis");
+		icurrentValue = (int32)(currentValue * 100);
+		if (RightTriggerValue != icurrentValue)
+		{
+			auto b = FControllerInputState("pico_trigger", icurrentValue);
+			AppendInputState(true, b);
+			RightTriggerValue = icurrentValue;
+		}
+
+		//joysticks
+		FVector currentLeftJoystick = FVector(InputComponent->GetAxisValue("LeftJoystickH"), InputComponent->GetAxisValue("LeftJoystickV"), LeftJoystickAxis.Z);
+		if (FVector::Distance(LeftJoystickAxis, currentLeftJoystick) > MinimumVectorChange)
+		{
+			//write new stuff
+			LeftJoystickAxis = currentLeftJoystick;
+			auto b = FControllerInputState("pico_joystick", LeftJoystickAxis);
+			AppendInputState(false, b);
+		}
+
+		FVector currentRightJoystick = FVector(InputComponent->GetAxisValue("RightJoystickH"), InputComponent->GetAxisValue("RightJoystickV"), RightJoystickAxis.Z);
+		if (FVector::Distance(RightJoystickAxis, currentRightJoystick) > MinimumVectorChange)
+		{
+			//write new stuff
+			RightJoystickAxis = currentRightJoystick;
+			auto b = FControllerInputState("pico_joystick", RightJoystickAxis);
+			AppendInputState(true, b);
+		}
+		break;
+	}
 	}
 }
-
 void AInputTracker::AppendInputState(bool right, FControllerInputState state)
 {
 	//append or change value
@@ -340,7 +397,7 @@ void AInputTracker::AppendInputState(bool right, FControllerInputState state)
 		}
 		else
 		{
-			RightInputStates.States.Add(state.AxisName,state);
+			RightInputStates.States.Add(state.AxisName, state);
 		}
 	}
 	else
@@ -368,6 +425,12 @@ void AInputTracker::LeftFaceButtonOnePressed()
 		AppendInputState(false, b);
 		break;
 	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_xbtn", 100);
+		AppendInputState(false, b);
+		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
 		break;
 	}
@@ -382,6 +445,12 @@ void AInputTracker::LeftFaceButtonOneReleased()
 	case EC3DControllerType::Oculus:
 	{
 		auto b = FControllerInputState("rift_xbtn", 0);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_xbtn", 0);
 		AppendInputState(false, b);
 		break;
 	}
@@ -402,6 +471,12 @@ void AInputTracker::LeftFaceButtonTwoPressed()
 		AppendInputState(false, b);
 		break;
 	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_ybtn", 100);
+		AppendInputState(false, b);
+		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
 		break;
 	}
@@ -415,6 +490,12 @@ void AInputTracker::LeftFaceButtonTwoReleased()
 	case EC3DControllerType::Oculus:
 	{
 		auto b = FControllerInputState("rift_ybtn", 0);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_ybtn", 0);
 		AppendInputState(false, b);
 		break;
 	}
@@ -436,6 +517,12 @@ void AInputTracker::LeftMenuButtonPressed()
 	case EC3DControllerType::Oculus:
 	{
 		auto b = FControllerInputState("rift_start", 100);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_menubtn", 100);
 		AppendInputState(false, b);
 		break;
 	}
@@ -463,6 +550,12 @@ void AInputTracker::LeftMenuButtonReleased()
 		AppendInputState(false, b);
 		break;
 	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_menubtn", 0);
+		AppendInputState(false, b);
+		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
 		auto b = FControllerInputState("wmr_menubtn", 0);
@@ -483,6 +576,15 @@ void AInputTracker::LeftJoystickPressed()
 		float x = InputComponent->GetAxisValue("LeftJoystickH");
 		float y = InputComponent->GetAxisValue("LeftJoystickV");
 		auto b = FControllerInputState("rift_joystick", FVector(x, y, 100));
+		LeftJoystickAxis = FVector(x, y, 100);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		float x = InputComponent->GetAxisValue("LeftJoystickH");
+		float y = InputComponent->GetAxisValue("LeftJoystickV");
+		auto b = FControllerInputState("pico_joystick", FVector(x, y, 100));
 		LeftJoystickAxis = FVector(x, y, 100);
 		AppendInputState(false, b);
 		break;
@@ -509,6 +611,15 @@ void AInputTracker::LeftJoystickReleased()
 		float x = InputComponent->GetAxisValue("LeftJoystickH");
 		float y = InputComponent->GetAxisValue("LeftJoystickV");
 		auto b = FControllerInputState("rift_joystick", FVector(x, y, 0));
+		LeftJoystickAxis = FVector(x, y, 0);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		float x = InputComponent->GetAxisValue("LeftJoystickH");
+		float y = InputComponent->GetAxisValue("LeftJoystickV");
+		auto b = FControllerInputState("pico_joystick", FVector(x, y, 0));
 		LeftJoystickAxis = FVector(x, y, 0);
 		AppendInputState(false, b);
 		break;
@@ -644,6 +755,12 @@ void AInputTracker::RightFaceButtonOnePressed()
 		AppendInputState(true, b);
 		break;
 	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_abtn", 100);
+		AppendInputState(true, b);
+		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
 		break;
 	}
@@ -657,6 +774,12 @@ void AInputTracker::RightFaceButtonOneReleased()
 	case EC3DControllerType::Oculus:
 	{
 		auto b = FControllerInputState("rift_abtn", 0);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_abtn", 0);
 		AppendInputState(true, b);
 		break;
 	}
@@ -677,6 +800,12 @@ void AInputTracker::RightFaceButtonTwoPressed()
 		AppendInputState(true, b);
 		break;
 	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_bbtn", 100);
+		AppendInputState(true, b);
+		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
 		break;
 	}
@@ -693,7 +822,12 @@ void AInputTracker::RightFaceButtonTwoReleased()
 		AppendInputState(true, b);
 		break;
 	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_bbtn", 0);
+		AppendInputState(true, b);
 		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
 		break;
 	}
@@ -712,6 +846,12 @@ void AInputTracker::RightMenuButtonPressed()
 	case EC3DControllerType::Oculus:
 	{
 		auto b = FControllerInputState("rift_start", 100);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_menubtn", 100);
 		AppendInputState(true, b);
 		break;
 	}
@@ -739,6 +879,12 @@ void AInputTracker::RightMenuButtonReleased()
 		AppendInputState(true, b);
 		break;
 	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_menubtn", 0);
+		AppendInputState(true, b);
+		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
 		auto b = FControllerInputState("wmr_menubtn", 0);
@@ -759,6 +905,15 @@ void AInputTracker::RightJoystickPressed()
 		float x = InputComponent->GetAxisValue("RightJoystickH");
 		float y = InputComponent->GetAxisValue("RightJoystickV");
 		auto b = FControllerInputState("rift_joystick", FVector(x, y, 100));
+		RightJoystickAxis = FVector(x, y, 100);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		float x = InputComponent->GetAxisValue("RightJoystickH");
+		float y = InputComponent->GetAxisValue("RightJoystickV");
+		auto b = FControllerInputState("pico_joystick", FVector(x, y, 100));
 		RightJoystickAxis = FVector(x, y, 100);
 		AppendInputState(true, b);
 		break;
@@ -785,6 +940,15 @@ void AInputTracker::RightJoystickReleased()
 		float x = InputComponent->GetAxisValue("RightJoystickH");
 		float y = InputComponent->GetAxisValue("RightJoystickV");
 		auto b = FControllerInputState("rift_joystick", FVector(x, y, 0));
+		RightJoystickAxis = FVector(x, y, 0);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		float x = InputComponent->GetAxisValue("RightJoystickH");
+		float y = InputComponent->GetAxisValue("RightJoystickV");
+		auto b = FControllerInputState("pico_joystick", FVector(x, y, 0));
 		RightJoystickAxis = FVector(x, y, 0);
 		AppendInputState(true, b);
 		break;
@@ -923,6 +1087,12 @@ void AInputTracker::RightGripPressed()
 		AppendInputState(true, b);
 		break;
 	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_grip", 100);
+		AppendInputState(true, b);
+		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
 		auto b = FControllerInputState("wmr_grip", 100);
@@ -951,6 +1121,12 @@ void AInputTracker::RightGripReleased()
 		AppendInputState(false, b);
 		break;
 	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_grip", 0);
+		AppendInputState(true, b);
+		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
 		auto b = FControllerInputState("wmr_grip", 0);
@@ -973,6 +1149,12 @@ void AInputTracker::LeftGripPressed()
 	case EC3DControllerType::Oculus:
 	{
 		auto b = FControllerInputState("rift_grip", 100);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_grip", 100);
 		AppendInputState(false, b);
 		break;
 	}
@@ -1004,6 +1186,12 @@ void AInputTracker::LeftGripReleased()
 		AppendInputState(false, b);
 		break;
 	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_grip", 0);
+		AppendInputState(false, b);
+		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
 		auto b = FControllerInputState("wmr_grip", 0);
@@ -1028,6 +1216,13 @@ void AInputTracker::LeftTriggerPressed()
 	case EC3DControllerType::Oculus:
 	{
 		auto b = FControllerInputState("rift_trigger", 100);
+		LeftTriggerValue = 100;
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_trigger", 100);
 		LeftTriggerValue = 100;
 		AppendInputState(false, b);
 		break;
@@ -1064,6 +1259,13 @@ void AInputTracker::LeftTriggerReleased()
 		AppendInputState(false, b);
 		break;
 	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_trigger", 0);
+		LeftTriggerValue = 0;
+		AppendInputState(false, b);
+		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
 		float currentValue = InputComponent->GetAxisValue("LeftTriggerAxis");
@@ -1090,6 +1292,13 @@ void AInputTracker::RightTriggerPressed()
 	case EC3DControllerType::Oculus:
 	{
 		auto b = FControllerInputState("rift_trigger", 100);
+		RightTriggerValue = 100;
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_trigger", 100);
 		RightTriggerValue = 100;
 		AppendInputState(true, b);
 		break;
@@ -1126,6 +1335,13 @@ void AInputTracker::RightTriggerReleased()
 		AppendInputState(true, b);
 		break;
 	}
+	case EC3DControllerType::PicoNeo2Eye:
+	{
+		auto b = FControllerInputState("pico_trigger", 0);
+		RightTriggerValue = 0;
+		AppendInputState(true, b);
+		break;
+	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
 		float currentValue = InputComponent->GetAxisValue("RightTriggerAxis");
@@ -1136,4 +1352,18 @@ void AInputTracker::RightTriggerReleased()
 		break;
 	}
 	}
+}
+
+AInputTracker* AInputTracker::GetInputTracker()
+{
+	if (inputTrackerInstance == NULL)
+	{
+		for (TObjectIterator<AInputTracker> Itr; Itr; ++Itr)
+		{
+			inputTrackerInstance = *Itr;
+			break;
+		}
+	}
+
+	return inputTrackerInstance;
 }

@@ -12,6 +12,8 @@
 #include "MotionControllerComponent.h"
 #include "DynamicObject.generated.h"
 
+class UCustomEvent;
+
 UENUM(BlueprintType)
 enum class ECommonMeshName : uint8
 {
@@ -20,7 +22,9 @@ enum class ECommonMeshName : uint8
 	OculusRiftTouchRight,
 	ViveTracker,
 	WindowsMixedRealityLeft,
-	WindowsMixedRealityRight
+	WindowsMixedRealityRight,
+	PicoNeo2EyeControllerLeft,
+	PicoNeo2EyeControllerRight
 };
 
 //only used in blueprint to set up controllers using a macro
@@ -30,7 +34,8 @@ enum class EC3DControllerType : uint8
 	None,
 	Vive,
 	Oculus,
-	WindowsMixedReality
+	WindowsMixedReality,
+	PicoNeo2Eye
 };
 
 class FDynamicObjectManifestEntry
@@ -234,7 +239,8 @@ public:
 	void TryGenerateCustomIdAndMesh();
 	
 	//engagements
-	TMap<FString, FCustomEvent> Engagements;
+	UPROPERTY()//needeed to keep from custom events from being garbage collected
+	TMap<FString, UCustomEvent*> Engagements;
 
 	void BeginEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
 	void EndEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
@@ -281,6 +287,9 @@ public:
 	//adds a dynamic object component and applies all relevant settings
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		static UDynamicObject* SetupController(AActor* target, bool IsRight, EC3DControllerType controllerType);
+
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
+		static UDynamicObject* SetupControllerComponent(UDynamicObject* target, bool IsRight, EC3DControllerType controllerType);
 
 	//write all controller input states to snapshot to be written to json next frame
 	void FlushButtons(FControllerInputStateCollection& target);

@@ -2,6 +2,8 @@
 
 #include "Public/CognitiveVR.h"
 #include "Public/CognitiveVRProvider.h"
+//IMPROVEMENT this should be in the header, but can't find ControllerType enum
+#include "Public/InputTracker.h"
 
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
@@ -189,6 +191,13 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	UDynamicObject::OnSessionBegin();
 
 	pt->OnSessionBegin.Broadcast(true);
+
+	AInputTracker* it = AInputTracker::GetInputTracker();
+	if (it != NULL)
+	{
+		it->FindControllers(false);
+	}
+
 	return bHasSessionStarted;
 }
 
@@ -232,7 +241,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 	UCognitiveVRBlueprints::cog.Reset();
 
-	FCustomEvent::cog.Reset();
+	UCustomEvent::cog.Reset();
 
 
 	for (TObjectIterator<UFixationRecorder> Itr; Itr; ++Itr)
