@@ -212,10 +212,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
 	FString CustomId = "";
 
-	//should this object record how the player is gazing?
-	UPROPERTY(EditAnywhere)
-	bool TrackGaze = true;
-
 	//snapshots
 
 	//time in seconds between checking if position and rotation updates need to be recorded

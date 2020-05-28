@@ -176,7 +176,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 			if (hitActorComponent != NULL)
 			{
 				UDynamicObject* hitDynamicObject = Cast<UDynamicObject>(hitActorComponent);
-				if (hitDynamicObject != NULL && hitDynamicObject->TrackGaze && hitDynamicObject->GetObjectId().IsValid())
+				if (hitDynamicObject != NULL && hitDynamicObject->GetObjectId().IsValid())
 				{
 					hitDynamic = true;
 
