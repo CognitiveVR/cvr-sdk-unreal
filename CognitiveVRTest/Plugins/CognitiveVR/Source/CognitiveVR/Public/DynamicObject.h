@@ -239,10 +239,17 @@ public:
 	void TryGenerateCustomIdAndMesh();
 	
 	//engagements
-	UPROPERTY()//needeed to keep from custom events from being garbage collected
+	UPROPERTY()//need uproperty to keep from custom events from being garbage collected
 	TMap<FString, UCustomEvent*> Engagements;
 
+	// Alternate method for beginning a Custom Event and setting a Dynamic Object as the target using the DynamicObjectID
+	// engagement name will be displayed as the event name
+	// engagement id should be used when multiple events of the same type are active on a dynamic object
 	void BeginEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
+	
+	// Alternate method for ending a Custom Event by DynamicObjectID
+	// the name of the event to end. if there isn't an active event, will immediately create and end the event
+	// engagement id should be used to cancel a specific event on a dynamic object if multiple with the same name are present
 	void EndEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
 
 	virtual void BeginPlay() override;
@@ -274,14 +281,20 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		FDynamicObjectSnapshot SnapshotFloatProperty(UPARAM(ref) FDynamicObjectSnapshot& target, FString key, float floatValue);
 
+	// Alternate method for beginning a Custom Event and setting this Dynamic Object as the target
+	// engagement name will be displayed as the event name
+	// engagement id should be used when multiple events of the same type are active on a dynamic object
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		static void BeginEngagement(UDynamicObject* target, FString engagementName, FString UniqueEngagementId);
 
+	// Alternate method for ending a Custom Event on a specific dynamic object
+	// the name of the event to end. if there isn't an active event, will immediately create and end the event
+	// engagement id should be used to cancel a specific event on a dynamic object if multiple with the same name are present
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		static void EndEngagement(UDynamicObject* target, FString engagementType, FString UniqueEngagementId);
 
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
-		///this does not directly send a snapshot - it stores it until Flush is called or the number of stored dynamic snapshots reaches its limit
+	//this does not directly send a snapshot - it stores it until Flush is called or the number of stored dynamic snapshots reaches its limit
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object", DisplayName = "Record Dynamic Object")
 		void SendDynamicObjectSnapshot(UPARAM(ref) FDynamicObjectSnapshot& target);
 
 	//adds a dynamic object component and applies all relevant settings

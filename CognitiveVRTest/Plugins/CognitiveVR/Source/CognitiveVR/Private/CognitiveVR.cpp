@@ -281,18 +281,21 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
 {
 	ParticipantId = InUserID;
+	SetParticipantProperty("id", InUserID);
 	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetUserID set user id");
 }
 
 void FAnalyticsProviderCognitiveVR::SetParticipantId(FString participantId)
 {
 	ParticipantId = participantId;
+	SetParticipantProperty("id", participantId);
 	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetParticipantData set user id");
 }
 
 void FAnalyticsProviderCognitiveVR::SetParticipantFullName(FString participantName)
 {
 	ParticipantName = participantName;
+	SetParticipantProperty("name", participantName);
 	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetParticipantData set user id");
 }
 
