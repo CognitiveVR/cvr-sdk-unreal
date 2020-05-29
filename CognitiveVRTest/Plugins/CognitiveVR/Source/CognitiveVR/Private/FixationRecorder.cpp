@@ -342,13 +342,13 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 #elif defined VARJOEYETRACKER_API
 bool UFixationRecorder::AreEyesClosed()
 {
-	FVarjoEyeTrackingData data;
-	UVarjoEyeTrackerFunctionLibrary::GetEyeTrackerGazeData(data);
-	if (data.leftStatus == 0)
+	FVarjoEyeTrackingData eyeTrackingData;
+	UVarjoEyeTrackerFunctionLibrary::GetEyeTrackerGazeData(eyeTrackingData);
+	if (eyeTrackingData.leftStatus == 0)
 	{
 		return true;
 	}
-	if (data.rightStatus == 0)
+	if (eyeTrackingData.rightStatus == 0)
 	{
 		return true;
 	}
@@ -481,9 +481,9 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	FVector End = FVector::ZeroVector;
 	float ignored = 0;
 
-	FVarjoEyeTrackingData data;
+	FVarjoEyeTrackingData eyeTrackingData;
 
-	if (UVarjoEyeTrackerFunctionLibrary::GetEyeTrackerGazeData(data)) //if the data is valid
+	if (UVarjoEyeTrackerFunctionLibrary::GetEyeTrackerGazeData(eyeTrackingData)) //if the data is valid
 	{
 		//the gaze transformed into world space
 		UVarjoEyeTrackerFunctionLibrary::GetGazeRay(Start, WorldDirection, ignored);
