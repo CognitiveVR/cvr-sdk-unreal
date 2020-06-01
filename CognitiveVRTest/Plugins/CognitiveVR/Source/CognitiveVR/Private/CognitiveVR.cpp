@@ -178,10 +178,12 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	SetSessionProperty("c3d.app.engine", "Unreal");
 
-	SetParticipantFullName(GetUserName());
-	SetParticipantId(GetUserID());
+	if (!GetUserName().IsEmpty())
+		SetParticipantFullName(GetUserName());
+	if (!GetUserID().IsEmpty())
+		SetParticipantId(GetUserID());
 	SetSessionProperty("c3d.deviceid", GetDeviceID());
-	if (!SessionProperties.HasField("c3d.sessionname"))
+	if (!AllSessionProperties.HasField("c3d.sessionname"))
 	{
 		SetSessionProperty("c3d.sessionname", SessionId);
 	}
@@ -550,7 +552,18 @@ TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetCurrentSceneData()
 
 	FString currentSceneName = myworld->GetMapName();
 	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
-	return GetSceneData(currentSceneName);
+	TSharedPtr<FSceneData> currentScenePtr = GetSceneData(currentSceneName);
+
+	if (currentScenePtr.IsValid() && CurrentTrackingScene.Id != currentScenePtr->Id)
+	{
+		ForceWriteSessionMetadata = true;
+		CurrentTrackingScene = *currentScenePtr;
+	}
+	else
+	{
+		CurrentTrackingScene.Id.Empty();
+	}
+	return currentScenePtr;
 }
 
 TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetSceneData(FString scenename)
@@ -628,54 +641,84 @@ FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 
 void FAnalyticsProviderCognitiveVR::SetSessionProperty(FString name, int32 value)
 {
-	if (SessionProperties.HasField(name))
-		SessionProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
+	if (NewSessionProperties.HasField(name))
+		NewSessionProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
 	else
-		SessionProperties.SetNumberField(name, (int32)value);
+		NewSessionProperties.SetNumberField(name, (int32)value);
+	if (AllSessionProperties.HasField(name))
+		AllSessionProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
+	else
+		AllSessionProperties.SetNumberField(name, (int32)value);
 }
 void FAnalyticsProviderCognitiveVR::SetSessionProperty(FString name, float value)
 {
-	if (SessionProperties.HasField(name))
-		SessionProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
+	if (NewSessionProperties.HasField(name))
+		NewSessionProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
 	else
-		SessionProperties.SetNumberField(name, (float)value);
+		NewSessionProperties.SetNumberField(name, (float)value);
+	if (AllSessionProperties.HasField(name))
+		AllSessionProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
+	else
+		AllSessionProperties.SetNumberField(name, (float)value);
 }
 void FAnalyticsProviderCognitiveVR::SetSessionProperty(FString name, FString value)
 {
-	if (SessionProperties.HasField(name))
-		SessionProperties.Values[name] = MakeShareable(new FJsonValueString(value));
+	if (NewSessionProperties.HasField(name))
+		NewSessionProperties.Values[name] = MakeShareable(new FJsonValueString(value));
 	else
-		SessionProperties.SetStringField(name, value);
+		NewSessionProperties.SetStringField(name, value);
+	if (AllSessionProperties.HasField(name))
+		AllSessionProperties.Values[name] = MakeShareable(new FJsonValueString(value));
+	else
+		AllSessionProperties.SetStringField(name, value);
 }
 
 void FAnalyticsProviderCognitiveVR::SetParticipantProperty(FString name, int32 value)
 {
 	FString completeName = "c3d.participant." + name;
-	if (SessionProperties.HasField(completeName))
-		SessionProperties.Values[completeName] = MakeShareable(new FJsonValueNumber(value));
+	if (NewSessionProperties.HasField(completeName))
+		NewSessionProperties.Values[completeName] = MakeShareable(new FJsonValueNumber(value));
 	else
-		SessionProperties.SetNumberField(completeName, (int32)value);
+		NewSessionProperties.SetNumberField(completeName, (int32)value);
+	if (AllSessionProperties.HasField(completeName))
+		AllSessionProperties.Values[completeName] = MakeShareable(new FJsonValueNumber(value));
+	else
+		AllSessionProperties.SetNumberField(completeName, (int32)value);
 }
 void FAnalyticsProviderCognitiveVR::SetParticipantProperty(FString name, float value)
 {
 	FString completeName = "c3d.participant." + name;
-	if (SessionProperties.HasField(completeName))
-		SessionProperties.Values[completeName] = MakeShareable(new FJsonValueNumber(value));
+	if (NewSessionProperties.HasField(completeName))
+		NewSessionProperties.Values[completeName] = MakeShareable(new FJsonValueNumber(value));
 	else
-		SessionProperties.SetNumberField(completeName, (float)value);
+		NewSessionProperties.SetNumberField(completeName, (float)value);
+	if (AllSessionProperties.HasField(completeName))
+		AllSessionProperties.Values[completeName] = MakeShareable(new FJsonValueNumber(value));
+	else
+		AllSessionProperties.SetNumberField(completeName, (float)value);
 }
 void FAnalyticsProviderCognitiveVR::SetParticipantProperty(FString name, FString value)
 {
 	FString completeName = "c3d.participant." + name;
-	if (SessionProperties.HasField(completeName))
-		SessionProperties.Values[completeName] = MakeShareable(new FJsonValueString(value));
+	if (NewSessionProperties.HasField(completeName))
+		NewSessionProperties.Values[completeName] = MakeShareable(new FJsonValueString(value));
 	else
-		SessionProperties.SetStringField(completeName, value);
+		NewSessionProperties.SetStringField(completeName, value);
+	if (AllSessionProperties.HasField(completeName))
+		AllSessionProperties.Values[completeName] = MakeShareable(new FJsonValueString(value));
+	else
+		AllSessionProperties.SetStringField(completeName, value);
 }
 
-FJsonObject FAnalyticsProviderCognitiveVR::GetSessionProperties()
+FJsonObject FAnalyticsProviderCognitiveVR::GetNewSessionProperties()
 {
-	FJsonObject returnobject = FJsonObject(SessionProperties);
-	SessionProperties = FJsonObject();
+	FJsonObject returnobject = FJsonObject(NewSessionProperties);
+	NewSessionProperties = FJsonObject();
+	return returnobject;
+}
+
+FJsonObject FAnalyticsProviderCognitiveVR::GetAllSessionProperties()
+{
+	FJsonObject returnobject = FJsonObject(AllSessionProperties);
 	return returnobject;
 }

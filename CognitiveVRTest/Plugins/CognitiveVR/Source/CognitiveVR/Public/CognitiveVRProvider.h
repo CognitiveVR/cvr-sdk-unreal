@@ -38,6 +38,7 @@
 			VersionNumber = versionnumber;
 			VersionId = versionid;
 		}
+		FSceneData(){}
 	};
 
 	enum CognitiveVRError {
@@ -73,7 +74,8 @@
 		FString ParticipantId;
 		FString DeviceId;
 		double SessionTimestamp = -1;
-		FJsonObject SessionProperties;
+		FJsonObject NewSessionProperties;
+		FJsonObject AllSessionProperties;
 
 		
 
@@ -143,6 +145,7 @@
 		FString GetCurrentSceneId();
 		FString GetCurrentSceneVersionNumber();
 		void SetSessionName(FString sessionName);
+		FSceneData CurrentTrackingScene;
 
 		void SetWorld(UWorld* world);
 		UWorld* GetWorld();
@@ -152,7 +155,10 @@
 		TArray<TSharedPtr<FSceneData>> SceneData;
 		TSharedPtr<FSceneData> GetSceneData(FString scenename);
 		TSharedPtr<FSceneData> GetCurrentSceneData();
-		FJsonObject GetSessionProperties();
+		FJsonObject GetNewSessionProperties();
+		FJsonObject GetAllSessionProperties();
+
+		bool ForceWriteSessionMetadata = false;
 
 		void SetParticipantFullName(FString participantName);
 		void SetParticipantId(FString participantId);
