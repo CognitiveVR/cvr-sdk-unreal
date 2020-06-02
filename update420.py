@@ -104,6 +104,9 @@ print (version)
 
 #do all the update stuff
 
+#remove implementation of initialize interface
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\IActiveSessionViewRequired.cpp","void IActiveSessionViewRequired::Initialize_Implementation(AActiveSessionView* asv){}","//void IActiveSessionViewRequired::Initialize_Implementation(AActiveSessionView* asv){}")
+
 #12 add audio define to microphone header
 insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Public\MicrophoneCaptureActor.h","#pragma once","#define NTDDI_THRESHOLD 0")
 
