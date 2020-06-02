@@ -51,7 +51,54 @@ namespace UnrealBuildTool.Rules
 					"UMG"
                 }
 				);
+		var pluginsDirectory = System.IO.Path.Combine(Target.ProjectFile.Directory.ToString(),"Plugins");
 		
+		//Varjo
+		if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory,"Varjo")))
+		{
+			System.Console.WriteLine("CognitiveVR.Build.cs found Varjo Plugin folder");
+			PublicDependencyModuleNames.Add("VarjoHMD");
+			PublicDependencyModuleNames.Add("VarjoEyeTracker");
+		}
+		
+		//TobiiEyeTracking
+		if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory,"TobiiEyeTracking")))
+		{
+			System.Console.WriteLine("CognitiveVR.Build.cs found TobiiEyeTracking Plugin folder");
+			PrivateIncludePaths.AddRange(
+				new string[] {
+					"../../TobiiEyeTracking/Source/TobiiCore/Private",
+					"../../TobiiEyeTracking/Source/TobiiCore/Public"
+				});
+
+			PublicDependencyModuleNames.Add("TobiiCore");
+		}
+		
+		//Vive Pro Eye (SRanipal)
+		if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory,"SRanipal")))
+		{
+			System.Console.WriteLine("CognitiveVR.Build.cs found SRanipal Plugin folder");
+			PrivateIncludePaths.AddRange(
+				new string[] {
+					"../../SRanipal/Source/SRanipal/Private",
+					"../../SRanipal/Source/SRanipal/Public"
+				});
+
+			PublicDependencyModuleNames.Add("SRanipal");
+
+			string BaseDirectory = System.IO.Path.GetFullPath(System.IO.Path.Combine(ModuleDirectory, "..", "..", ".."));
+			string SRanipalDir = System.IO.Path.Combine(BaseDirectory,"SRanipal","Binaries",Target.Platform.ToString());
+			PublicAdditionalLibraries.Add(System.IO.Path.Combine(SRanipalDir,"SRanipal.lib"));
+			PublicDelayLoadDLLs.Add(System.IO.Path.Combine(SRanipalDir,"SRanipal.dll"));
+		}
+
+		//Pico Neo 2 Eye
+		if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory,"PicoMobile")))
+		{
+			System.Console.WriteLine("CognitiveVR.Build.cs found Pico Plugin folder");
+			PublicDependencyModuleNames.Add("PicoMobile");
+		}
+
 		if (Target.Platform == UnrealTargetPlatform.Win32 ||
             Target.Platform == UnrealTargetPlatform.Win64)
         {
