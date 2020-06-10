@@ -144,9 +144,9 @@ bool FCognitiveEditorTools::HasDeveloperKey() const
 	return FAnalyticsCognitiveVR::Get().DeveloperKey.Len() > 0;
 }
 
-bool FCognitiveEditorTools::HasAPIKey() const
+bool FCognitiveEditorTools::HasApplicationKey() const
 {
-	return APIKey.Len() > 0;
+	return ApplicationKey.Len() > 0;
 }
 
 FReply FCognitiveEditorTools::ExportAllDynamics()
@@ -1776,16 +1776,16 @@ bool FCognitiveEditorTools::DuplicateDynamicIdsInScene() const
 }
 
 
-void FCognitiveEditorTools::OnAPIKeyChanged(const FText& Text)
+void FCognitiveEditorTools::OnApplicationKeyChanged(const FText& Text)
 {
-	APIKey = Text.ToString();
+	ApplicationKey = Text.ToString();
 	//FAnalyticsCognitiveVR::GetCognitiveVRProvider()->APIKey = APIKey;
 	//FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
 }
 
-FText FCognitiveEditorTools::GetAPIKey() const
+FText FCognitiveEditorTools::GetApplicationKey() const
 {
-	return FText::FromString(APIKey);
+	return FText::FromString(ApplicationKey);
 }
 
 FText FCognitiveEditorTools::GetDeveloperKey() const
@@ -2126,7 +2126,7 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 	//GLog->Log("FCognitiveTools::SaveAPIDeveloperKeysToFile save: " + CustomerId);
 
 	//GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *APIKey, EngineIni);
+	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, EngineIni);
 
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
 
@@ -2137,14 +2137,14 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 	return FReply::Handled();
 }
 
-void FCognitiveEditorTools::SaveAPIKeyToFile(FString key)
+void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 {
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, EngineIni);
 	GConfig->Flush(false, GEngineIni);
 	ConfigFileHasChanged = true;
 
-	APIKey = key;
+	ApplicationKey = key;
 }
 
 void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)

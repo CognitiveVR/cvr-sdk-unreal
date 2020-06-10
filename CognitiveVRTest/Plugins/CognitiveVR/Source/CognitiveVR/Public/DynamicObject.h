@@ -277,6 +277,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		FDynamicObjectSnapshot SnapshotFloatProperty(UPARAM(ref) FDynamicObjectSnapshot& target, FString key, float floatValue);
 
+	//IMPROVEMENT investigate CallableWithoutWorldContext ufunction keyword
 	// Alternate method for beginning a Custom Event and setting this Dynamic Object as the target
 	// engagement name will be displayed as the event name
 	// engagement id should be used when multiple events of the same type are active on a dynamic object

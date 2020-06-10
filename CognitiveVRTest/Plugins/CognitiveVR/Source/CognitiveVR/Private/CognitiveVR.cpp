@@ -72,6 +72,11 @@ UWorld* FAnalyticsProviderCognitiveVR::EnsureGetWorld()
 	return currentWorld;
 }
 
+bool FAnalyticsProviderCognitiveVR::StartSession()
+{
+	return StartSession(TArray<FAnalyticsEventAttribute>());
+}
+
 bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	CognitiveLog::Init();
@@ -107,7 +112,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
 	}
 
-	APIKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
+	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
 
 	network = MakeShareable(new Network());
 	customEventRecorder = MakeShareable(new CustomEventRecorder());

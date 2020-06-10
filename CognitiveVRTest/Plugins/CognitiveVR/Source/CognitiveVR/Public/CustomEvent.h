@@ -39,7 +39,7 @@ public:
 
 	void Send();
 	//appends the most recent value of all sensors as properties
-	void AppendSensors();
+	void AppendAllSensors();
 	//appends the most recent value of a sensor by name as a property
 	void AppendSensor(FString sensorName);
 	//appends the most recent value of each sensor specified by name as a property

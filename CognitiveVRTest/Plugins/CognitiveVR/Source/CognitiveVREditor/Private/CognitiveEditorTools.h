@@ -55,13 +55,13 @@ public:
 	TArray<TSharedPtr<FDynamicData>> SceneDynamics;
 	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 
-	void OnAPIKeyChanged(const FText& Text);
+	void OnApplicationKeyChanged(const FText& Text);
 	void OnDeveloperKeyChanged(const FText& Text);
 
-	FText GetAPIKey() const;
+	FText GetApplicationKey() const;
 	FText GetDeveloperKey() const;
 
-	FString APIKey;
+	FString ApplicationKey;
 	//FString DeveloperKey;
 
 	FString GetDynamicObjectManifest(FString versionid);
@@ -306,7 +306,7 @@ public:
 	FReply OpenSceneInBrowser(FString sceneid);
 	FReply OpenCurrentSceneInBrowser();
 	bool HasDeveloperKey() const;
-	bool HasAPIKey() const;
+	bool HasApplicationKey() const;
 	
 	//reads scene data from ini
 	void ReadSceneDataFromFile();
@@ -363,7 +363,7 @@ public:
 	bool HasSetDynamicExportDirectoryHasSceneId() const;
 	FReply SaveAPIDeveloperKeysToFile();
 
-	void SaveAPIKeyToFile(FString key);
+	void SaveApplicationKeyToFile(FString key);
 	void SaveDeveloperKeyToFile(FString key);
 
 	void WizardUpload();

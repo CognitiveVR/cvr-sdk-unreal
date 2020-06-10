@@ -43,7 +43,7 @@ void Network::NetworkCall(FString suburl, FString contents)
 	//json to scene endpoint
 	FString url = "https://"+ Gateway +"/v"+FString::FromInt(0)+"/"+suburl+"/"+cog->GetCurrentSceneId() + "?version=" + cog->GetCurrentSceneVersionNumber();
 
-	FString AuthValue = "APIKEY:DATA " + cog->APIKey;
+	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
 
 	TSharedRef<IHttpRequest> HttpRequest = Http->CreateRequest();
 	HttpRequest->SetContentAsString(contents);
@@ -61,7 +61,7 @@ void Network::NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResp
 {
 	TSharedRef<IHttpRequest> HttpRequest = Http->CreateRequest();
 	
-	FString AuthValue = "APIKEY:DATA " + cog->APIKey;
+	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
 	
 	FString url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/questionSetHooks/" + hook + "/questionSet";
 
@@ -150,7 +150,7 @@ void Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSe
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 	
 	FString url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/questionSets/" + currentQuestionSet.name + "/" + FString::FromInt(currentQuestionSet.version) + "/responses";
-	FString AuthValue = "APIKEY:DATA " + cog->APIKey;
+	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
 
 	HttpRequest->SetURL(url);
 	HttpRequest->SetHeader("Content-Type", "application/json");

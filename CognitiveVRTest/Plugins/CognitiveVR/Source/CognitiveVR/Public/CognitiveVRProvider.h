@@ -91,6 +91,7 @@
 		FAnalyticsProviderCognitiveVR();
 		virtual ~FAnalyticsProviderCognitiveVR();
 
+		bool StartSession();
 		virtual bool StartSession(const TArray<FAnalyticsEventAttribute>& Attributes) override;
 		virtual void EndSession() override;
 		virtual void FlushEvents() override;
@@ -140,7 +141,7 @@
 
 		bool HasStartedSession();
 
-		FString APIKey;
+		FString ApplicationKey;
 
 		FString GetCurrentSceneId();
 		FString GetCurrentSceneVersionNumber();

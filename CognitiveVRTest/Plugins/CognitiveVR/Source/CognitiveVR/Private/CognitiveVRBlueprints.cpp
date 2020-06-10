@@ -318,7 +318,7 @@ void UCognitiveVRBlueprints::Send(UCustomEvent* target)
 
 UCustomEvent* UCognitiveVRBlueprints::AppendAllSensors(UCustomEvent* target)
 {
-	target->AppendSensors();
+	target->AppendAllSensors();
 	return target;
 }
 

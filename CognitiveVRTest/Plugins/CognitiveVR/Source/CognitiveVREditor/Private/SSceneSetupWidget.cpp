@@ -56,7 +56,7 @@ void SSceneSetupWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, 
 
 void SSceneSetupWidget::Construct(const FArguments& Args)
 {
-	DisplayAPIKey = FCognitiveEditorTools::GetInstance()->GetAPIKey().ToString();
+	DisplayAPIKey = FCognitiveEditorTools::GetInstance()->GetApplicationKey().ToString();
 	DisplayDeveloperKey = FCognitiveEditorTools::GetInstance()->GetDeveloperKey().ToString();
 
 	float padding = 10;
@@ -1610,7 +1610,7 @@ FReply SSceneSetupWidget::NextPage()
 {
 	if (CurrentPage == 1)
 	{
-		FCognitiveEditorTools::GetInstance()->SaveAPIKeyToFile(DisplayAPIKey);
+		FCognitiveEditorTools::GetInstance()->SaveApplicationKeyToFile(DisplayAPIKey);
 		FCognitiveEditorTools::GetInstance()->SaveDeveloperKeyToFile(DisplayDeveloperKey);
 		FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
 	}
