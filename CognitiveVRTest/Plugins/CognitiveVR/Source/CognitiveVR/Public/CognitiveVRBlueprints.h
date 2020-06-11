@@ -187,4 +187,7 @@ public:
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContextObject", CallableWithoutWorldContext, AdvancedDisplay = "2"), Category = "CognitiveVR Analytics|Debug")
 		static int32 GetSensorDataPointCount();
 
+	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
+		static FString GetAttributionParameters();
+
 };
