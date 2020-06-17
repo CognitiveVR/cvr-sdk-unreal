@@ -969,6 +969,8 @@ FReply FCognitiveEditorTools::Select_Blender()
 	if (PickFile(title, fileTypes, lastPath, defaultfile, outFilename))
 	{
 		BlenderPath = outFilename;
+		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+		GConfig->SetString(TEXT("Analytics"), TEXT("BlenderPath"), *FCognitiveEditorTools::GetInstance()->BlenderPath, EditorIni);
 	}
 	return FReply::Handled();
 }
@@ -2257,8 +2259,8 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 	{
 		if (SlowTaskPtr != NULL)
 		{
-			work += 1;
-			SlowTaskPtr->EnterProgressFrame(work);
+			//work += 1;
+			SlowTaskPtr->EnterProgressFrame(1);
 		}
 		if (meshes[i] == NULL) { continue; }
 		UStaticMeshComponent* TempObject = meshes[i];

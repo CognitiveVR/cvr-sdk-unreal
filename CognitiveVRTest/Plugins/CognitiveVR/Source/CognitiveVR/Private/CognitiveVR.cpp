@@ -224,6 +224,10 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	{
 		return;
 	}
+	if (bHasSessionStarted == false)
+	{
+		return;
+	}
 
 	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::EndSession");
 
