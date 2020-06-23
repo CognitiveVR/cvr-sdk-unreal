@@ -124,4 +124,5 @@ public:
 	FText UploadAllText() const;
 	FText UploadSelectedText() const;
 	FText ExportSelectedText() const;
+	FText GetSettingsButtonText() const;
 };

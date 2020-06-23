@@ -160,20 +160,11 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 	FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
 
-	CopyDynamicSubDirectories();
-
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 
 	GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, EngineIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
-}
-
-FReply FCognitiveSettingsCustomization::SelectAndRefreshExportDirectory()
-{
-	FCognitiveEditorTools::GetInstance()->SelectBaseExportDirectory();
-	CopyDynamicSubDirectories();
-	return FReply::Handled();
 }
 
 TSharedRef<ITableRow> FCognitiveSettingsCustomization::OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
@@ -219,54 +210,6 @@ TSharedRef<ITableRow> FCognitiveSettingsCustomization::OnGenerateWorkspaceRow(TS
 				.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenSceneInBrowser,InItem->Id)
 			]
 		];
-}
-
-TSharedRef<ITableRow> FCognitiveSettingsCustomization::OnGenerateDynamicRow(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
-{
-	return
-		SNew(SComboRow< TSharedPtr<FDynamicData> >, OwnerTable)
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			.FillWidth(1)
-			.Padding(2.0f)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString(InItem->Name))
-			]
-			+ SHorizontalBox::Slot()
-			.FillWidth(1)
-			.Padding(2.0f)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString(InItem->MeshName))
-			]
-			+ SHorizontalBox::Slot()
-			.FillWidth(0.3)
-			.Padding(2.0f)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString(InItem->Id))
-			]
-		];
-}
-
-FReply FCognitiveSettingsCustomization::CopyDynamicSubDirectories()
-{
-	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory())
-	{
-		return FReply::Handled();
-	}
-
-	FCognitiveEditorTools::GetInstance()->RefreshDynamicSubDirectory();
-
-	SubDirectoryListWidget->Items = FCognitiveEditorTools::GetInstance()->GetSubDirectoryNames();
-
-	GLog->Log("this many dynamics " + FString::FromInt(FCognitiveEditorTools::GetInstance()->GetSubDirectoryNames().Num()));
-
-	SubDirectoryListWidget->RefreshList();
-
-	return FReply::Handled();
 }
 
 void FCognitiveSettingsCustomization::OnCommitedExportMinimumSize(float InNewValue, ETextCommit::Type CommitType)
@@ -326,13 +269,6 @@ void FCognitiveSettingsCustomization::OnCommitedExportTextureRefactor(int32 InNe
 	FCognitiveEditorTools::GetInstance()->TextureRefactor = InNewValue;
 }
 
-FReply FCognitiveSettingsCustomization::RefreshDisplayDynamicObjectsCountInScene()
-{
-	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
-	SceneDynamicObjectList->RefreshList();
-	return FReply::Handled();
-}
-
 void FCognitiveSettingsCustomization::OnBlenderPathChanged(const FText& Text)
 {
 	FCognitiveEditorTools::GetInstance()->BlenderPath = Text.ToString();
@@ -341,14 +277,6 @@ void FCognitiveSettingsCustomization::OnBlenderPathChanged(const FText& Text)
 void FCognitiveSettingsCustomization::OnExportPathChanged(const FText& Text)
 {
 	FCognitiveEditorTools::GetInstance()->BaseExportDirectory = Text.ToString();
-}
-
-FReply FCognitiveSettingsCustomization::ValidateAndRefresh()
-{
-	FCognitiveEditorTools::GetInstance()->SetUniqueDynamicIds();
-	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
-	SceneDynamicObjectList->RefreshList();
-	return FReply::Handled();
 }
 
 #undef LOCTEXT_NAMESPACE

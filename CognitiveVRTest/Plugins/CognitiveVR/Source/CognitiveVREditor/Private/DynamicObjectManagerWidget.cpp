@@ -240,7 +240,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				[
 					SNew(SButton)
 					.HAlign(HAlign_Center)
-					.Text(FText::FromString("Settings"))
+					.Text(this, &SDynamicObjectManagerWidget::GetSettingsButtonText)
 					//.IsEnabled(this,&SSceneSetupWidget::NextButtonEnabled)
 					//.Visibility(this, &SSceneSetupWidget::NextButtonVisibility)
 					.OnClicked(this, &SDynamicObjectManagerWidget::ToggleSettingsVisible)
@@ -397,7 +397,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					.VAlign(VAlign_Center)
 					[
 						SNew(SImage)
-						//.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
+						.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
 						.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
 					]
 						// Notice
@@ -593,6 +593,7 @@ void SDynamicObjectManagerWidget::OnBlenderPathChanged(const FText& Text)
 void SDynamicObjectManagerWidget::OnExportPathChanged(const FText& Text)
 {
 	FCognitiveEditorTools::GetInstance()->BaseExportDirectory = Text.ToString();
+	RefreshList();
 }
 
 EVisibility SDynamicObjectManagerWidget::AreSettingsVisible() const
@@ -713,7 +714,7 @@ bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
 			FString objpath = path + ".obj";
 			FString gltfpath = path + ".gltf";
 
-			if (!FPaths::FileExists(*objpath) && !FPaths::FileExists(*gltfpath))
+			if (FPaths::FileExists(*gltfpath) || FPaths::FileExists(*objpath))
 			{
 				continue;
 			}
@@ -751,7 +752,7 @@ FText SDynamicObjectManagerWidget::UploadSelectedText() const
 			FString objpath = path + ".obj";
 			FString gltfpath = path + ".gltf";
 
-			if (!FPaths::FileExists(*objpath) && !FPaths::FileExists(*gltfpath))
+			if (FPaths::FileExists(*gltfpath) || FPaths::FileExists(*objpath))
 			{
 				continue;
 			}
@@ -789,7 +790,7 @@ FText SDynamicObjectManagerWidget::UploadAllText() const
 			FString objpath = path + ".obj";
 			FString gltfpath = path + ".gltf";
 
-			if (!FPaths::FileExists(*objpath) && !FPaths::FileExists(*gltfpath))
+			if (FPaths::FileExists(*gltfpath) || FPaths::FileExists(*objpath))
 			{
 				continue;
 			}
@@ -823,4 +824,12 @@ FText SDynamicObjectManagerWidget::ExportSelectedText() const
 	}
 
 	return FText::FromString("Export " + FString::FromInt(validExportCount) + " Selected");
+}
+
+FText SDynamicObjectManagerWidget::GetSettingsButtonText() const
+{
+	if (bSettingsVisible)
+		return FText::FromString("Hide Settings");
+	else
+		return FText::FromString("Show Settings");
 }

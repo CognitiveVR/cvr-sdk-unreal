@@ -28,20 +28,8 @@ public:
 	IDetailLayoutBuilder *DetailLayoutPtr;
 
 	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
-	FReply RefreshDisplayDynamicObjectsCountInScene();
-
-	//TSharedPtr<SVerticalBox> SetDynamicBoxContent();
 
 	TSharedRef<ITableRow> OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
-	TSharedRef<ITableRow> OnGenerateDynamicRow(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
-
-	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
-	//TSharedPtr<SDynamicObjectWebListWidget> WebDynamicList;
-	TSharedPtr<SFStringListWidget> SubDirectoryListWidget;
-
-
-	FReply CopyDynamicSubDirectories();
-	//TArray<TSharedPtr<FString>>DynamicSubDirectories;
 
 
 	void OnChangedExcludeMesh(const FText& InNewValue);
@@ -65,10 +53,6 @@ public:
 
 	void OnBlenderPathChanged(const FText& Text);
 	void OnExportPathChanged(const FText& Text);
-
-	FReply SelectAndRefreshExportDirectory();
-
-	FReply ValidateAndRefresh();
 
 	TSharedPtr<SWidget> PickerWidget;
 	TSharedPtr<SButton> BrowseButton;

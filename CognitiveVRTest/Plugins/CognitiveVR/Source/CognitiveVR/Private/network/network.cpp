@@ -4,9 +4,6 @@
 
 #include "network.h"
 
-//FHttpModule* Network::Http;
-//FString Network::Gateway;
-
 Network::Network()
 {
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
@@ -68,7 +65,7 @@ void Network::NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResp
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("GET");
 	HttpRequest->SetHeader("Authorization", AuthValue);
-	//HttpRequest->OnProcessRequestComplete().BindStatic(Network::OnExitPollResponseReceivedAsync); //TODO correct binding type
+	HttpRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnExitPollResponseReceivedAsync);
 	HttpRequest->ProcessRequest();
 }
 
@@ -78,17 +75,13 @@ void Network::OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResp
 	{
 		CognitiveLog::Error("Network::OnExitPollResponseReceivedAsync - No valid Response. Check internet connection");
 		cog->exitpoll->OnResponseReceived("", false);
-		//ExitPoll::OnResponseReceived("", false);
 		return;
 	}
-	//ExitPoll::OnResponseReceived(Response->GetContentAsString(), true);
 	cog->exitpoll->OnResponseReceived(Response->GetContentAsString(), true);
 }
 
 void Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSet, FExitPollResponse Responses)
 {
-	//auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-
 	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
 		CognitiveLog::Error("Network::NetworkExitPollPostResponse could not get provider!");

@@ -783,6 +783,8 @@ public:
 				}
 			}
 		}
+
+
 	}
 
 	virtual const ItemType* Private_ItemFromWidget(const ITableRow* TheWidget) const override
@@ -804,8 +806,6 @@ public:
 	virtual bool Private_IsItemSelected(const ItemType& TheItem) const override
 	{
 		//iterate through selected actosr in scene
-
-		//MAYBE
 		for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
 		{
 			if (AActor* Actor = Cast<AActor>(*It))

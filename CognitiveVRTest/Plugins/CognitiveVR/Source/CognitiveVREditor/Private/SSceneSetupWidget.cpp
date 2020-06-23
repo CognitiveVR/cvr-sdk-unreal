@@ -657,6 +657,43 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.Items(GetSceneDynamics())
 				]
 			]
+			
+			+ SVerticalBox::Slot()
+			.Padding(0, 0, 0, padding)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			.VAlign(VAlign_Center)
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+				+SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+					.HeightOverride(64)
+					.WidthOverride(128)
+					[
+						SNew(SButton)
+						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+						.Text(FText::FromString("Export All Meshes"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportAllDynamics)
+					]
+				]
+				+SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+					.HeightOverride(64)
+					.WidthOverride(128)
+					[
+						SNew(SButton)
+						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+						.Text(FText::FromString("Export Selected Meshes"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportSelectedDynamics)
+					]
+				]
+			]
+
 			+SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(FMargin(64, 24, 64, 24))
@@ -700,50 +737,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 							.AutoWrapText(true)
 							.Text(FText::FromString("Validate Mesh Names and Unique Ids"))
 						]
-					]
-				]
-			]
-			+ SVerticalBox::Slot()
-				.Padding(0, 0, 0, padding)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.VAlign(VAlign_Center)
-				.AutoHeight()
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-						.Text(FText::FromString("Export All Meshes"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportAllDynamics)
-					]
-				]
-			]
-			+ SVerticalBox::Slot()
-				.Padding(0, 0, 0, padding)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.VAlign(VAlign_Center)
-				.AutoHeight()
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-						.Text(FText::FromString("Export Selected Meshes"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportSelectedDynamics)
 					]
 				]
 			]
