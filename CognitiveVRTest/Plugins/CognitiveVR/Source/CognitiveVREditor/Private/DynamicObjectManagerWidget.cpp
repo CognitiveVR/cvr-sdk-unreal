@@ -690,6 +690,7 @@ bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
 	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlenderAndExportDir()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
 	
+	auto tools = FCognitiveEditorTools::GetInstance();
 	for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
 	{
 		if (AActor* Actor = Cast<AActor>(*It))
@@ -708,7 +709,6 @@ bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
 
 			//check directory for obj/gltf files
 
-			auto tools = FCognitiveEditorTools::GetInstance();
 			//
 			FString path = tools->GetDynamicsExportDirectory() + "/" + dynamicComponent->MeshName + "/" + dynamicComponent->MeshName;
 			FString objpath = path + ".obj";
@@ -716,9 +716,8 @@ bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
 
 			if (FPaths::FileExists(*gltfpath) || FPaths::FileExists(*objpath))
 			{
-				continue;
+				return true;
 			}
-			return true;
 		}
 	}
 
@@ -728,6 +727,7 @@ bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
 FText SDynamicObjectManagerWidget::UploadSelectedText() const
 {
 	int32 validExportCount = 0;
+	auto tools = FCognitiveEditorTools::GetInstance();
 	for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
 	{
 		if (AActor* Actor = Cast<AActor>(*It))
@@ -744,19 +744,14 @@ FText SDynamicObjectManagerWidget::UploadSelectedText() const
 				continue;
 			}
 
-			//check directory for obj/gltf files
-
-			auto tools = FCognitiveEditorTools::GetInstance();
-			//
 			FString path = tools->GetDynamicsExportDirectory() + "/" + dynamicComponent->MeshName + "/" + dynamicComponent->MeshName;
 			FString objpath = path + ".obj";
 			FString gltfpath = path + ".gltf";
 
 			if (FPaths::FileExists(*gltfpath) || FPaths::FileExists(*objpath))
 			{
-				continue;
+				validExportCount++;
 			}
-			validExportCount++;
 		}
 	}
 

@@ -1286,12 +1286,12 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 		}
 		else
 		{
-			GLog->Log("couldn't find screenshot to upload");
+			//GLog->Log("couldn't find screenshot to upload");
 		}
 	}
 	else
 	{
-		GLog->Log("screenshot path doesn't exist -------- " + screenshotPath);
+		//GLog->Log("screenshot path doesn't exist -------- " + screenshotPath);
 	}
 
 	TArray<uint8> AllBytes;
