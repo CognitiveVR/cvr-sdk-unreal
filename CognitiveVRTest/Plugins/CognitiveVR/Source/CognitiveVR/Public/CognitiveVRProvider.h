@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "CommonTypes.h"
 #include "CoreMinimal.h"
 #include "AnalyticsEventAttribute.h"
 #include "Interfaces/IAnalyticsProvider.h"
@@ -23,34 +24,6 @@
 #include "Engine/Engine.h"
 
 
-	class FSceneData
-	{
-	public:
-		FString Name = "";
-		FString Id = "";
-		int32 VersionNumber = 1;
-		int32 VersionId = 0;
-
-		FSceneData(FString name, FString id, int32 versionnumber, int32 versionid)
-		{
-			Name = name;
-			Id = id;
-			VersionNumber = versionnumber;
-			VersionId = versionid;
-		}
-		FSceneData(){}
-	};
-
-	enum CognitiveVRError {
-		kErrorSuccess = 0,
-		kErrorGeneric = -1,
-		kErrorNotInitialized = -2,
-		kErrorNotFound = -3,
-		kErrorInvalidArgs = -4,
-		kErrorMissingId = -5,
-		kErrorRequestTimedOut = -6,
-		kErrorUnknown = -7
-	};
 
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
@@ -59,7 +32,7 @@
 	class CustomEventRecorder;
 	//class CognitiveVRResponse;
 	class Sensors;
-	//class ExitPoll;
+	class ExitPoll;
 	//class UDynamicObject;
 
 	class COGNITIVEVR_API FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
@@ -129,7 +102,8 @@
 		TSharedPtr<CustomEventRecorder> customEventRecorder;
 		TSharedPtr<Network> network;
 		TSharedPtr<Sensors> sensors;
-		
+		TSharedPtr<ExitPoll> exitpoll;
+
 		FString GetDeviceID() const;
 
 		void SetLobbyId(FString lobbyId);

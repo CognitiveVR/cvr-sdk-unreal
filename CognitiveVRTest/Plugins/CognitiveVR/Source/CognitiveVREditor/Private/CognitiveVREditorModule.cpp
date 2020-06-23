@@ -144,6 +144,11 @@ public:
 				.SetGroup(WorkspaceMenu::GetMenuStructure().GetToolsCategory())
 				.SetDisplayName(LOCTEXT("SceneSetupTabTitle", "Cognitive Scene Setup"))
 				.SetTooltipText(LOCTEXT("SceneSetupTooltipText", "Open the Cognitive Scene Setup Wizard"));
+
+			LocalLevelEditorModule.GetLevelEditorTabManager()->RegisterTabSpawner(FName("CognitiveDynamicObjectManager"), FOnSpawnTab::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveDynamicTab))
+				.SetGroup(WorkspaceMenu::GetMenuStructure().GetToolsCategory())
+				.SetDisplayName(LOCTEXT("DynamicObjectManagerTabTitle", "Cognitive Dynamic Object Manager"))
+				.SetTooltipText(LOCTEXT("DynamicObjectManagerTooltipText", "Open the Cognitive Dynamic Object Manager"));
 				//.SetIcon(FSlateIcon(StyleSet.Get()->GetStyleSetName(), "CognitiveSceneWizardTabIcon"));
 		});
 
@@ -180,6 +185,18 @@ public:
 	void OnToolWindowClosed(const TSharedRef<SWindow>& Window, UBaseEditorTool* Instance)
 	{
 		Instance->RemoveFromRoot();
+	}
+
+	static TSharedRef<SDockTab> SpawnCognitiveDynamicTab(const FSpawnTabArgs& SpawnTabArgs)
+	{
+		const TSharedRef<SDockTab> MajorTab =
+			SNew(SDockTab)
+			//.Icon(FEditorStyle::Get().GetBrush("SequenceRecorder.TabIcon"))
+			.TabRole(ETabRole::MajorTab);
+
+		MajorTab->SetContent(SNew(SDynamicObjectManagerWidget));
+
+		return MajorTab;
 	}
 
 	static TSharedRef<SDockTab> SpawnCognitiveSceneSetupTab(const FSpawnTabArgs& SpawnTabArgs)

@@ -115,6 +115,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
 
 	network = MakeShareable(new Network());
+	exitpoll = MakeShareable(new ExitPoll());
 	customEventRecorder = MakeShareable(new CustomEventRecorder());
 	sensors = MakeShareable(new Sensors());
 

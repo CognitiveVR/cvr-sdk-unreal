@@ -4,8 +4,8 @@
 
 #include "network.h"
 
-FHttpModule* Network::Http;
-FString Network::Gateway;
+//FHttpModule* Network::Http;
+//FString Network::Gateway;
 
 Network::Network()
 {
@@ -68,7 +68,7 @@ void Network::NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResp
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("GET");
 	HttpRequest->SetHeader("Authorization", AuthValue);
-	HttpRequest->OnProcessRequestComplete().BindStatic(Network::OnExitPollResponseReceivedAsync);
+	//HttpRequest->OnProcessRequestComplete().BindStatic(Network::OnExitPollResponseReceivedAsync); //TODO correct binding type
 	HttpRequest->ProcessRequest();
 }
 
@@ -77,11 +77,12 @@ void Network::OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResp
 	if (!Response.IsValid() || !bWasSuccessful)
 	{
 		CognitiveLog::Error("Network::OnExitPollResponseReceivedAsync - No valid Response. Check internet connection");
-	
-		ExitPoll::OnResponseReceived("", false);
+		cog->exitpoll->OnResponseReceived("", false);
+		//ExitPoll::OnResponseReceived("", false);
 		return;
 	}
-	ExitPoll::OnResponseReceived(Response->GetContentAsString(), true);
+	//ExitPoll::OnResponseReceived(Response->GetContentAsString(), true);
+	cog->exitpoll->OnResponseReceived(Response->GetContentAsString(), true);
 }
 
 void Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSet, FExitPollResponse Responses)
@@ -95,7 +96,7 @@ void Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSe
 	}
 
 	TSharedPtr<FJsonObject> ResponseObject = MakeShareable(new FJsonObject);
-	ResponseObject->SetStringField("userId", Responses.user);
+	ResponseObject->SetStringField("participantId", Responses.participantId);
 	ResponseObject->SetStringField("questionSetId", Responses.questionSetId);
 	ResponseObject->SetStringField("sessionId", Responses.sessionId);
 	ResponseObject->SetStringField("hook", Responses.hook);
@@ -161,7 +162,7 @@ void Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSe
 
 	//send this as a transaction too
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	properties->SetStringField("userId", Responses.user);
+	properties->SetStringField("participantid", Responses.participantId);
 	properties->SetStringField("questionSetId", Responses.questionSetId);
 	properties->SetStringField("hook", Responses.hook);
 	properties->SetNumberField("duration", Responses.duration);
