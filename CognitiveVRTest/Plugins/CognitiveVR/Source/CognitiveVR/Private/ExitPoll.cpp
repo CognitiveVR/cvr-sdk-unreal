@@ -164,6 +164,7 @@ void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 	FExitPollResponse responses = FExitPollResponse();
 	responses.duration = Util::GetTimestamp() - lastStartTime;
 	responses.hook = lastHook;
+	responses.userId = provider.Pin()->GetDeviceID();
 	responses.participantId = provider.Pin()->GetUserID();
 	responses.questionSetId = questionSet.id;
 	responses.sessionId = provider.Pin()->GetSessionID();

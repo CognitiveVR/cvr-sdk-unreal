@@ -42,6 +42,8 @@ struct FExitPollResponse
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FString userId;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FString participantId;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FString questionSetId;

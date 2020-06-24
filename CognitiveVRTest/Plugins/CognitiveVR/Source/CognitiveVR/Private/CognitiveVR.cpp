@@ -256,7 +256,6 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 	UCustomEvent::cog.Reset();
 
-
 	for (TObjectIterator<UFixationRecorder> Itr; Itr; ++Itr)
 	{
 		Itr->EndSession();
@@ -265,6 +264,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	SessionTimestamp = -1;
 	SessionId = "";
 
+	bHasCustomSessionName = false;
 	bHasSessionStarted = false;
 
 	UDynamicObject::OnSessionEnd();

@@ -88,6 +88,7 @@ void Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSe
 	}
 
 	TSharedPtr<FJsonObject> ResponseObject = MakeShareable(new FJsonObject);
+	ResponseObject->SetStringField("userId", Responses.userId);
 	ResponseObject->SetStringField("participantId", Responses.participantId);
 	ResponseObject->SetStringField("questionSetId", Responses.questionSetId);
 	ResponseObject->SetStringField("sessionId", Responses.sessionId);
@@ -154,7 +155,8 @@ void Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSe
 
 	//send this as a transaction too
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	properties->SetStringField("participantid", Responses.participantId);
+	properties->SetStringField("userId", Responses.userId);
+	properties->SetStringField("participantId", Responses.participantId);
 	properties->SetStringField("questionSetId", Responses.questionSetId);
 	properties->SetStringField("hook", Responses.hook);
 	properties->SetNumberField("duration", Responses.duration);
