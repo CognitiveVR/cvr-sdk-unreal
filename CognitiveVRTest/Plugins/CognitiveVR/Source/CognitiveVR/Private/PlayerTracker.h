@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "CommonTypes.h"
 #include "Components/SceneComponent.h"
 #include "CognitiveVR.h"
 #include "Private/util/util.h"
@@ -32,10 +33,6 @@
 #include "PicoBlueprintFunctionLibrary.h"
 #endif
 #include "PlayerTracker.generated.h"
-
-//multicast delegates cannot be static. use static pointer to playertracker instance in BP
-//multicast also can't be used as argument in BP function (to implement custom bind function)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCognitiveSessionBegin, bool, Successful);
 
 class FAnalyticsProviderCognitiveVR;
 

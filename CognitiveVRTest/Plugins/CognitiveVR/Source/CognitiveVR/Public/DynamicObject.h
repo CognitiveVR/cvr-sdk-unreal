@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "CommonTypes.h"
 #include "CognitiveVR.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -13,122 +14,6 @@
 #include "DynamicObject.generated.h"
 
 class UCustomEvent;
-
-UENUM(BlueprintType)
-enum class ECommonMeshName : uint8
-{
-	ViveController,
-	OculusRiftTouchLeft,
-	OculusRiftTouchRight,
-	ViveTracker,
-	WindowsMixedRealityLeft,
-	WindowsMixedRealityRight,
-	PicoNeo2EyeControllerLeft,
-	PicoNeo2EyeControllerRight
-};
-
-//only used in blueprint to set up controllers using a macro
-UENUM(BlueprintType)
-enum class EC3DControllerType : uint8
-{
-	None,
-	Vive,
-	Oculus,
-	WindowsMixedReality,
-	PicoNeo2Eye
-};
-
-class FDynamicObjectManifestEntry
-{
-public:
-	FString Id = "";
-	FString Name = "";
-	FString MeshName = "";
-	TMap<FString, FString> StringProperties;
-	FString ControllerType;
-	bool IsRight;
-
-	FDynamicObjectManifestEntry(FString id, FString name, FString mesh)
-	{
-		Id = id;
-		Name = name;
-		MeshName = mesh;
-	}
-	
-	FDynamicObjectManifestEntry(){}
-
-	FDynamicObjectManifestEntry* SetProperty(FString key, FString value);
-};
-
-class FDynamicObjectId
-{
-public:
-	FString Id = "";
-	bool Used = true;
-	FString MeshName = "";
-
-	FDynamicObjectId(FString id, FString meshName)
-	{
-		Id = id;
-		MeshName = meshName;
-	}
-
-	FDynamicObjectId() {}
-};
-
-USTRUCT(BlueprintType)
-struct COGNITIVEVR_API FControllerInputState
-{
-	GENERATED_BODY()
-
-	FString AxisName;
-	float AxisValue;
-	bool IsVector;
-	float X;
-	float Y;
-	FControllerInputState(){}
-	FControllerInputState(FString name, float value)
-	{
-		AxisName = name;
-		AxisValue = value;
-		IsVector = false;
-	}
-	FControllerInputState(FString name, FVector vector)
-	{
-		AxisName = name;
-		IsVector = true;
-		X = vector.X;
-		Y = vector.Y;
-		AxisValue = vector.Z;
-	}
-};
-
-USTRUCT(BlueprintType)
-struct COGNITIVEVR_API FControllerInputStateCollection
-{
-	GENERATED_BODY()
-	TMap<FString, FControllerInputState>States;
-};
-
-USTRUCT(BlueprintType)
-struct FDynamicObjectSnapshot
-{
-	GENERATED_BODY()
-
-public:
-	FVector position = FVector(0, 0, 0);
-	FVector scale = FVector(1, 1, 1);
-	bool hasScaleChanged = false;
-	FQuat rotation = FQuat(0, 0, 0, 1);
-	double time = 0;
-	FString id = "";
-	TMap<FString, FString> StringProperties;
-	TMap<FString, int32> IntegerProperties;
-	TMap<FString, float> FloatProperties;
-	TMap<FString, bool> BoolProperties;
-
-	TMap<FString, FControllerInputState> Buttons;
-};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class COGNITIVEVR_API UDynamicObject : public USceneComponent //UActorComponent

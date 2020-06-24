@@ -3,6 +3,7 @@
 */
 #pragma once
 
+#include "CommonTypes.h"
 #include "CognitiveVR.h"
 #include "Private/util/util.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"

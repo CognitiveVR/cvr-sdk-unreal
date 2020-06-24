@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "CommonTypes.h"
 #include "UObject/UObjectIterator.h"
 #include "CoreMinimal.h"
 #include "Interfaces/IAnalyticsProviderModule.h"
@@ -15,7 +16,6 @@ DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);
 
 class IAnalyticsProvider;
 class FAnalyticsProviderCognitiveVR;
-
 
 /**
 	* The public interface to this module

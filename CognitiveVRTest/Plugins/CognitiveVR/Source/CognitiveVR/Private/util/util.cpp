@@ -78,7 +78,7 @@ void Util::SetHardwareSessionProperties()
 
 	cog->SetSessionProperty("c3d.device.cpu", FWindowsPlatformMisc::GetCPUBrand());
 
-	//TODO device model, especially for phones
+	//IMPROVEMENT include device model, especially for phones
 
 	cog->SetSessionProperty("c3d.device.gpu", FWindowsPlatformMisc::GetPrimaryGPUBrand());
 

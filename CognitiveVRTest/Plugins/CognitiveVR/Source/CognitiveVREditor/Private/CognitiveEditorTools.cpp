@@ -245,6 +245,56 @@ FReply FCognitiveEditorTools::ExportSelectedDynamics()
 	return FReply::Handled();
 }
 
+FReply FCognitiveEditorTools::ExportDynamicData(TArray< TSharedPtr<FDynamicData>> dynamicData)
+{
+	//find all meshes in scene that are contained in the dynamicData list
+
+	TArray<FString> meshNames;
+	TArray<UDynamicObject*> SelectionSetCache;
+	for (TActorIterator<AActor> It(GWorld); It; ++It)
+	{
+		if (AActor* Actor = Cast<AActor>(*It))
+		{
+			//SelectionSetCache.Add(Actor);
+			UActorComponent* actorComponent = Actor->GetComponentByClass(UDynamicObject::StaticClass());
+			if (actorComponent == NULL)
+			{
+				continue;
+			}
+			UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+			if (dynamicComponent == NULL)
+			{
+				continue;
+			}
+
+			if (meshNames.Contains(dynamicComponent->MeshName))
+			{
+				//mesh will already be exported
+				continue;
+			}
+
+			bool exportActor = false;
+			for (auto &elem : dynamicData)
+			{
+				if (elem->MeshName == dynamicComponent->MeshName)
+				{
+					exportActor = true;
+					break;
+				}
+			}
+			if (exportActor)
+			{
+				SelectionSetCache.Add(dynamicComponent);
+				meshNames.Add(dynamicComponent->MeshName);
+			}
+		}
+	}
+
+	ExportDynamicObjectArray(SelectionSetCache);
+
+	return FReply::Handled();
+}
+
 void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects)
 {
 	if (!HasFoundBlender())
@@ -916,7 +966,7 @@ FReply FCognitiveEditorTools::UploadDynamic(FString directory)
 	}
 	else
 	{
-		GLog->Log("FCognitiveEditorTools::UploadDynamics uploaded a thing");
+		GLog->Log("FCognitiveEditorTools::UploadDynamics uploaded a Mesh");
 	}
 
 	return FReply::Handled();
@@ -1236,12 +1286,12 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 		}
 		else
 		{
-			GLog->Log("couldn't find screenshot to upload");
+			//GLog->Log("couldn't find screenshot to upload");
 		}
 	}
 	else
 	{
-		GLog->Log("screenshot path doesn't exist -------- " + screenshotPath);
+		//GLog->Log("screenshot path doesn't exist -------- " + screenshotPath);
 	}
 
 	TArray<uint8> AllBytes;
@@ -1592,6 +1642,30 @@ bool FCognitiveEditorTools::HasSetDynamicExportDirectory() const
 	return true;
 }
 
+bool FCognitiveEditorTools::HasExportedAnyDynamicMeshes() const
+{
+	if (GetBaseExportDirectory().Len() == 0) { return false; }
+
+	FString filesStartingWith = TEXT("");
+	FString pngextension = TEXT("png");
+	TArray<FString> filesInDirectory = GetAllFilesInDirectory(BaseExportDirectory + "/dynamics", true, filesStartingWith, filesStartingWith, pngextension, false);
+
+	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(BaseExportDirectory + "/dynamics", true, filesStartingWith, pngextension, filesStartingWith, false);
+
+	//DynamicUploadFiles.Empty();
+	for (int32 i = 0; i < filesInDirectory.Num(); i++)
+	{
+		return true;
+		//DynamicUploadFiles.Add(MakeShareable(new FString(filesInDirectory[i])));
+	}
+	for (int32 i = 0; i < imagesInDirectory.Num(); i++)
+	{
+		//DynamicUploadFiles.Add(MakeShareable(new FString(imagesInDirectory[i])));
+	}
+	
+	return false;
+}
+
 bool FCognitiveEditorTools::HasSetDynamicExportDirectoryHasSceneId() const
 {
 	if (!HasDeveloperKey()) { return false; }
@@ -1610,18 +1684,6 @@ bool FCognitiveEditorTools::HasFoundBlenderHasSelection() const
 FText FCognitiveEditorTools::GetBlenderPath() const
 {
 	return FText::FromString(BlenderPath);
-}
-
-void FCognitiveEditorTools::SearchForBlender()
-{
-	//try to find blender in program files
-	FString testApp = "C:/Program Files/Blender Foundation/Blender/blender.exe";
-
-	if (VerifyFileExists(testApp))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("SearchForBlender - Found Blender in Program Files"));
-		BlenderPath = testApp;
-	}
 }
 
 int32 FCognitiveEditorTools::CountDynamicObjectsInScene() const
