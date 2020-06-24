@@ -7,9 +7,8 @@
 Network::Network()
 {
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
-	if (Http == NULL)
-		Http = &FHttpModule::Get();
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	Http = &FHttpModule::Get();
 }
 
 void Network::NetworkCall(FString suburl, FString contents)
