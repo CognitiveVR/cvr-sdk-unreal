@@ -119,6 +119,8 @@
 
 		FString GetCurrentSceneId();
 		FString GetCurrentSceneVersionNumber();
+		//if a session name has been explicitly set. otherwise will use participant name when that is set
+		bool bHasCustomSessionName;
 		void SetSessionName(FString sessionName);
 		FSceneData CurrentTrackingScene;
 

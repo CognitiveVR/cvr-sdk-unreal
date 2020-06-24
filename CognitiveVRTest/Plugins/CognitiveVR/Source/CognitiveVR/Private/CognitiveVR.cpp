@@ -216,6 +216,7 @@ void FAnalyticsProviderCognitiveVR::SetLobbyId(FString lobbyId)
 
 void FAnalyticsProviderCognitiveVR::SetSessionName(FString sessionName)
 {
+	bHasCustomSessionName = true;
 	SetSessionProperty("c3d.sessionname", sessionName);
 }
 
@@ -309,6 +310,8 @@ void FAnalyticsProviderCognitiveVR::SetParticipantFullName(FString participantNa
 	ParticipantName = participantName;
 	SetParticipantProperty("name", participantName);
 	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetParticipantData set user id");
+	if (!bHasCustomSessionName)
+		SetSessionProperty("c3d.sessionname", participantName);
 }
 
 FString FAnalyticsProviderCognitiveVR::GetUserID() const
