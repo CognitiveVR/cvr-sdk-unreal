@@ -91,7 +91,7 @@ public:
 		}
 	}
 
-	bool bSettingsVisible = false;
+	bool bSettingsVisible = true;
 	FReply ToggleSettingsVisible();
 
 	bool OnlyExportSelected;
@@ -120,9 +120,11 @@ public:
 
 	bool IsUploadAllEnabled() const;
 	bool IsUploadSelectedEnabled() const;
+	bool IsUploadIdsEnabled() const;
 
 	FText UploadAllText() const;
 	FText UploadSelectedText() const;
 	FText ExportSelectedText() const;
 	FText GetSettingsButtonText() const;
+	FText GetSceneText() const;
 };

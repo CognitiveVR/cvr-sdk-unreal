@@ -65,18 +65,18 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 
 			//developer key
 			+ SVerticalBox::Slot()
-			.MaxHeight(17)
+			.MaxHeight(20)
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
 				.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
 				+SHorizontalBox::Slot()
-				.MaxWidth(200)
+				//.MaxWidth(200)
 				[
 					SNew(SBox)
 					.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-					.HeightOverride(17)
+					.HeightOverride(20)
 					[
 						SNew(STextBlock)
 						//.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
@@ -88,7 +88,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				[
 					SNew(SBox)
 					.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-					.HeightOverride(17)
+					.HeightOverride(20)
 					.MaxDesiredHeight(17)
 					[
 						//SNew(SEditableTextBox)
@@ -105,18 +105,18 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 
 			//path to blender
 			+ SVerticalBox::Slot()
-			.MaxHeight(17)
+			.MaxHeight(20)
 				.AutoHeight()
 				.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
 				.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
 				+SHorizontalBox::Slot()
-				.MaxWidth(200)
+				//.MaxWidth(200)
 				[
 					SNew(SBox)
 					.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-					.HeightOverride(17)
+					.HeightOverride(20)
 					[
 						SNew(STextBlock)
 						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
@@ -128,7 +128,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				[
 					SNew(SBox)
 					.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-					.HeightOverride(17)
+					.HeightOverride(20)
 					.MaxDesiredHeight(17)
 					[
 						SNew(SEditableTextBox)
@@ -165,18 +165,18 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 
 			//path to export directory
 			+ SVerticalBox::Slot()
-			.MaxHeight(17)
+			.MaxHeight(20)
 				.AutoHeight()
 				.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
 				.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
 				+SHorizontalBox::Slot()
-				.MaxWidth(200)
+				//.MaxWidth(200)
 				[
 					SNew(SBox)
 					.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-					.HeightOverride(17)
+					.HeightOverride(20)
 					[
 						SNew(STextBlock)
 						.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
@@ -189,7 +189,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				[
 					SNew(SBox)
 					//.Visibility(this, &SDynamicObjectManagerWidget::IsBlenderVisible)
-					.HeightOverride(17)
+					.HeightOverride(20)
 					.MaxDesiredHeight(17)
 					[
 						SNew(SEditableTextBox)
@@ -225,12 +225,48 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
+
+
+			//scene name and id
+			+ SVerticalBox::Slot()
+			.MaxHeight(20)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
+				+SHorizontalBox::Slot()
+				//.MaxWidth(500)
+				[
+					SNew(SBox)
+					.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
+					.HeightOverride(20)
+					[
+						SNew(STextBlock)
+						.IsEnabled(false)
+						//.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
+						.Text(this, &SDynamicObjectManagerWidget::GetSceneText)
+					]
+				]
+				//+ SHorizontalBox::Slot()
+				//.Padding(1)
+				//[
+				//	SNew(SButton)
+				//	.HAlign(HAlign_Center)
+				//	.Text(this, &SDynamicObjectManagerWidget::GetSettingsButtonText)
+				//	//.IsEnabled(this,&SSceneSetupWidget::NextButtonEnabled)
+				//	//.Visibility(this, &SSceneSetupWidget::NextButtonVisibility)
+				//	.OnClicked(this, &SDynamicObjectManagerWidget::ToggleSettingsVisible)
+				//]
+			]
+
 #pragma endregion
 
 #pragma region "settings button and separator"
 
 			+ SVerticalBox::Slot()
-			.MaxHeight(30)
+			.MaxHeight(20)
+			.AutoHeight()
 			.VAlign(VAlign_Center)
 			.Padding(0, 0, 0, padding)
 			[
@@ -436,7 +472,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				.HeightOverride(64)
 				[
 					SNew(SButton)
-					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
+					.IsEnabled_Raw(this,&SDynamicObjectManagerWidget::IsUploadIdsEnabled)
 					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::UploadDynamicsManifest)
 					[
 						SNew(STextBlock)
@@ -680,13 +716,24 @@ bool SDynamicObjectManagerWidget::IsExportSelectedEnabled() const
 
 bool SDynamicObjectManagerWidget::IsUploadAllEnabled() const
 {
-	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlenderAndExportDir()) { return false; }
+	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
+	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return false; }
+	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->HasExportedAnyDynamicMeshes()) { return false; }
 	return true;
 }
+
+bool SDynamicObjectManagerWidget::IsUploadIdsEnabled() const
+{
+	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
+	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
+	return true;
+}
+
 bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
 {
+	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlenderAndExportDir()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
 	
@@ -827,4 +874,15 @@ FText SDynamicObjectManagerWidget::GetSettingsButtonText() const
 		return FText::FromString("Hide Settings");
 	else
 		return FText::FromString("Show Settings");
+}
+
+FText SDynamicObjectManagerWidget::GetSceneText() const
+{
+	auto tools = FCognitiveEditorTools::GetInstance();
+	if (tools->CurrentSceneHasSceneId())
+	{
+		auto data = tools->GetCurrentSceneData();
+		return FText::FromString("SceneName: " + data->Name + "   Id: " + data->Id);
+	}
+	return FText::FromString("Scene has not been exported!");
 }
