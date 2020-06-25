@@ -176,7 +176,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 			if (hitActorComponent != NULL)
 			{
 				UDynamicObject* hitDynamicObject = Cast<UDynamicObject>(hitActorComponent);
-				if (hitDynamicObject != NULL && hitDynamicObject->TrackGaze && hitDynamicObject->GetObjectId().IsValid())
+				if (hitDynamicObject != NULL && hitDynamicObject->GetObjectId().IsValid())
 				{
 					hitDynamic = true;
 
@@ -347,9 +347,9 @@ void UPlayerTracker::SendData()
 	if (!cog->GetCurrentSceneData().IsValid()){return;}
 
 	//GAZE
-	FJsonObject props = cog->GetSessionProperties();
+	FJsonObject newProps = cog->GetNewSessionProperties();
 
-	if (snapshots.Num() == 0 && props.Values.Num() == 0) { return; }
+	if (snapshots.Num() == 0 && newProps.Values.Num() == 0 && cog->ForceWriteSessionMetadata == false) { return; }
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
@@ -389,10 +389,21 @@ void UPlayerTracker::SendData()
 
 	wholeObj->SetArrayField("data", dataArray);
 
-	if (props.Values.Num() > 0)
+	if (cog->ForceWriteSessionMetadata)
+	{
+		cog->ForceWriteSessionMetadata = false;
+		FJsonObject allProps = cog->GetAllSessionProperties();
+		if (allProps.Values.Num() > 0)
+		{
+			TSharedPtr<FJsonObject> sessionValue;
+			sessionValue = MakeShareable(new FJsonObject(allProps));
+			wholeObj->SetObjectField("properties", sessionValue);
+		}
+	}
+	else if (newProps.Values.Num() > 0)
 	{
 		TSharedPtr<FJsonObject> sessionValue;
-		sessionValue = MakeShareable(new FJsonObject(props));
+		sessionValue = MakeShareable(new FJsonObject(newProps));
 
 		wholeObj->SetObjectField("properties", sessionValue);
 	}
@@ -418,12 +429,15 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	switch (EndPlayReason)
 	{
 	case EEndPlayReason::Destroyed: reason = "destroyed";
-		//this should never be destroyed, only when changing level. pro tips - doesn't actually use the 'level transition' reason for endplay
+		//this should normally never be destroyed. 4.19 bug - this is called instead of level transition
+		cog->FlushEvents();
 		shouldEndSession = false;
 		break;
 	case EEndPlayReason::EndPlayInEditor: reason = "end PIE";
 		break;
 	case EEndPlayReason::LevelTransition: reason = "level transition";
+		//this is called correctly in 4.24. possibly earlier versions
+		cog->FlushEvents();
 		shouldEndSession = false;
 		break;
 	case EEndPlayReason::Quit: reason = "quit";
@@ -439,7 +453,7 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		if (shouldEndSession)
 		{
-			//Q: this why is endplay on gaze recorder not on core? A: core probably doesn't get EndPlay or equivalent called
+			//Q: this why is endplay on gaze recorder not on core? A: core isn't an actor and doesn't have EndPlay to call
 			cog->EndSession();
 		}
 		cog.Reset();

@@ -816,7 +816,7 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		//will get an 'EndPlay' when PIE closes
 		return;
 	}
-	if (ReleaseIdOnDestroy && !TrackGaze && cogProvider->HasStartedSession())
+	if (ReleaseIdOnDestroy && cogProvider->HasStartedSession())
 	{
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot(false);
 		SnapshotBoolProperty(initSnapshot, "enable", false);

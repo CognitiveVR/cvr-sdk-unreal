@@ -144,9 +144,9 @@ bool FCognitiveEditorTools::HasDeveloperKey() const
 	return FAnalyticsCognitiveVR::Get().DeveloperKey.Len() > 0;
 }
 
-bool FCognitiveEditorTools::HasAPIKey() const
+bool FCognitiveEditorTools::HasApplicationKey() const
 {
-	return APIKey.Len() > 0;
+	return ApplicationKey.Len() > 0;
 }
 
 FReply FCognitiveEditorTools::ExportAllDynamics()
@@ -233,6 +233,56 @@ FReply FCognitiveEditorTools::ExportSelectedDynamics()
 				continue;
 			}
 			if (!meshNames.Contains(dynamicComponent->MeshName))
+			{
+				SelectionSetCache.Add(dynamicComponent);
+				meshNames.Add(dynamicComponent->MeshName);
+			}
+		}
+	}
+
+	ExportDynamicObjectArray(SelectionSetCache);
+
+	return FReply::Handled();
+}
+
+FReply FCognitiveEditorTools::ExportDynamicData(TArray< TSharedPtr<FDynamicData>> dynamicData)
+{
+	//find all meshes in scene that are contained in the dynamicData list
+
+	TArray<FString> meshNames;
+	TArray<UDynamicObject*> SelectionSetCache;
+	for (TActorIterator<AActor> It(GWorld); It; ++It)
+	{
+		if (AActor* Actor = Cast<AActor>(*It))
+		{
+			//SelectionSetCache.Add(Actor);
+			UActorComponent* actorComponent = Actor->GetComponentByClass(UDynamicObject::StaticClass());
+			if (actorComponent == NULL)
+			{
+				continue;
+			}
+			UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+			if (dynamicComponent == NULL)
+			{
+				continue;
+			}
+
+			if (meshNames.Contains(dynamicComponent->MeshName))
+			{
+				//mesh will already be exported
+				continue;
+			}
+
+			bool exportActor = false;
+			for (auto &elem : dynamicData)
+			{
+				if (elem->MeshName == dynamicComponent->MeshName)
+				{
+					exportActor = true;
+					break;
+				}
+			}
+			if (exportActor)
 			{
 				SelectionSetCache.Add(dynamicComponent);
 				meshNames.Add(dynamicComponent->MeshName);
@@ -916,7 +966,7 @@ FReply FCognitiveEditorTools::UploadDynamic(FString directory)
 	}
 	else
 	{
-		GLog->Log("FCognitiveEditorTools::UploadDynamics uploaded a thing");
+		GLog->Log("FCognitiveEditorTools::UploadDynamics uploaded a Mesh");
 	}
 
 	return FReply::Handled();
@@ -969,6 +1019,8 @@ FReply FCognitiveEditorTools::Select_Blender()
 	if (PickFile(title, fileTypes, lastPath, defaultfile, outFilename))
 	{
 		BlenderPath = outFilename;
+		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+		GConfig->SetString(TEXT("Analytics"), TEXT("BlenderPath"), *FCognitiveEditorTools::GetInstance()->BlenderPath, EditorIni);
 	}
 	return FReply::Handled();
 }
@@ -1234,12 +1286,12 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 		}
 		else
 		{
-			GLog->Log("couldn't find screenshot to upload");
+			//GLog->Log("couldn't find screenshot to upload");
 		}
 	}
 	else
 	{
-		GLog->Log("screenshot path doesn't exist -------- " + screenshotPath);
+		//GLog->Log("screenshot path doesn't exist -------- " + screenshotPath);
 	}
 
 	TArray<uint8> AllBytes;
@@ -1590,6 +1642,30 @@ bool FCognitiveEditorTools::HasSetDynamicExportDirectory() const
 	return true;
 }
 
+bool FCognitiveEditorTools::HasExportedAnyDynamicMeshes() const
+{
+	if (GetBaseExportDirectory().Len() == 0) { return false; }
+
+	FString filesStartingWith = TEXT("");
+	FString pngextension = TEXT("png");
+	TArray<FString> filesInDirectory = GetAllFilesInDirectory(BaseExportDirectory + "/dynamics", true, filesStartingWith, filesStartingWith, pngextension, false);
+
+	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(BaseExportDirectory + "/dynamics", true, filesStartingWith, pngextension, filesStartingWith, false);
+
+	//DynamicUploadFiles.Empty();
+	for (int32 i = 0; i < filesInDirectory.Num(); i++)
+	{
+		return true;
+		//DynamicUploadFiles.Add(MakeShareable(new FString(filesInDirectory[i])));
+	}
+	for (int32 i = 0; i < imagesInDirectory.Num(); i++)
+	{
+		//DynamicUploadFiles.Add(MakeShareable(new FString(imagesInDirectory[i])));
+	}
+	
+	return false;
+}
+
 bool FCognitiveEditorTools::HasSetDynamicExportDirectoryHasSceneId() const
 {
 	if (!HasDeveloperKey()) { return false; }
@@ -1608,18 +1684,6 @@ bool FCognitiveEditorTools::HasFoundBlenderHasSelection() const
 FText FCognitiveEditorTools::GetBlenderPath() const
 {
 	return FText::FromString(BlenderPath);
-}
-
-void FCognitiveEditorTools::SearchForBlender()
-{
-	//try to find blender in program files
-	FString testApp = "C:/Program Files/Blender Foundation/Blender/blender.exe";
-
-	if (VerifyFileExists(testApp))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("SearchForBlender - Found Blender in Program Files"));
-		BlenderPath = testApp;
-	}
 }
 
 int32 FCognitiveEditorTools::CountDynamicObjectsInScene() const
@@ -1776,16 +1840,16 @@ bool FCognitiveEditorTools::DuplicateDynamicIdsInScene() const
 }
 
 
-void FCognitiveEditorTools::OnAPIKeyChanged(const FText& Text)
+void FCognitiveEditorTools::OnApplicationKeyChanged(const FText& Text)
 {
-	APIKey = Text.ToString();
+	ApplicationKey = Text.ToString();
 	//FAnalyticsCognitiveVR::GetCognitiveVRProvider()->APIKey = APIKey;
 	//FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
 }
 
-FText FCognitiveEditorTools::GetAPIKey() const
+FText FCognitiveEditorTools::GetApplicationKey() const
 {
-	return FText::FromString(APIKey);
+	return FText::FromString(ApplicationKey);
 }
 
 FText FCognitiveEditorTools::GetDeveloperKey() const
@@ -2126,7 +2190,7 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 	//GLog->Log("FCognitiveTools::SaveAPIDeveloperKeysToFile save: " + CustomerId);
 
 	//GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *APIKey, EngineIni);
+	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, EngineIni);
 
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
 
@@ -2137,14 +2201,14 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 	return FReply::Handled();
 }
 
-void FCognitiveEditorTools::SaveAPIKeyToFile(FString key)
+void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 {
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, EngineIni);
 	GConfig->Flush(false, GEngineIni);
 	ConfigFileHasChanged = true;
 
-	APIKey = key;
+	ApplicationKey = key;
 }
 
 void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
@@ -2257,8 +2321,8 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 	{
 		if (SlowTaskPtr != NULL)
 		{
-			work += 1;
-			SlowTaskPtr->EnterProgressFrame(work);
+			//work += 1;
+			SlowTaskPtr->EnterProgressFrame(1);
 		}
 		if (meshes[i] == NULL) { continue; }
 		UStaticMeshComponent* TempObject = meshes[i];

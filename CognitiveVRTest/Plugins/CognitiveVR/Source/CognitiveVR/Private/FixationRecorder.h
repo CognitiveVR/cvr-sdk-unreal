@@ -66,12 +66,10 @@ private:
 #elif defined SRANIPAL_API
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
-	ViveSR::anipal::Eye::EyeData* data;
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 #elif defined VARJOEYETRACKER_API
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
-	FVarjoEyeTrackingData* data;
 #elif defined PICOMOBILE_API
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();

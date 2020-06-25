@@ -203,6 +203,7 @@ void CustomEventRecorder::TrySendData()
 		{
 			return;
 		}
+		SendData();
 	}
 }
 

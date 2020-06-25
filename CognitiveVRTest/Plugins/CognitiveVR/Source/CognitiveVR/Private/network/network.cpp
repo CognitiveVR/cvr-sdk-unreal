@@ -4,15 +4,11 @@
 
 #include "network.h"
 
-FHttpModule* Network::Http;
-FString Network::Gateway;
-
 Network::Network()
 {
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
-	if (Http == NULL)
-		Http = &FHttpModule::Get();
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	Http = &FHttpModule::Get();
 }
 
 void Network::NetworkCall(FString suburl, FString contents)
@@ -43,7 +39,7 @@ void Network::NetworkCall(FString suburl, FString contents)
 	//json to scene endpoint
 	FString url = "https://"+ Gateway +"/v"+FString::FromInt(0)+"/"+suburl+"/"+cog->GetCurrentSceneId() + "?version=" + cog->GetCurrentSceneVersionNumber();
 
-	FString AuthValue = "APIKEY:DATA " + cog->APIKey;
+	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
 
 	TSharedRef<IHttpRequest> HttpRequest = Http->CreateRequest();
 	HttpRequest->SetContentAsString(contents);
@@ -61,14 +57,14 @@ void Network::NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResp
 {
 	TSharedRef<IHttpRequest> HttpRequest = Http->CreateRequest();
 	
-	FString AuthValue = "APIKEY:DATA " + cog->APIKey;
+	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
 	
 	FString url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/questionSetHooks/" + hook + "/questionSet";
 
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("GET");
 	HttpRequest->SetHeader("Authorization", AuthValue);
-	HttpRequest->OnProcessRequestComplete().BindStatic(Network::OnExitPollResponseReceivedAsync);
+	HttpRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnExitPollResponseReceivedAsync);
 	HttpRequest->ProcessRequest();
 }
 
@@ -77,17 +73,14 @@ void Network::OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResp
 	if (!Response.IsValid() || !bWasSuccessful)
 	{
 		CognitiveLog::Error("Network::OnExitPollResponseReceivedAsync - No valid Response. Check internet connection");
-	
-		ExitPoll::OnResponseReceived("", false);
+		cog->exitpoll->OnResponseReceived("", false);
 		return;
 	}
-	ExitPoll::OnResponseReceived(Response->GetContentAsString(), true);
+	cog->exitpoll->OnResponseReceived(Response->GetContentAsString(), true);
 }
 
 void Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSet, FExitPollResponse Responses)
 {
-	//auto cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
-
 	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
 		CognitiveLog::Error("Network::NetworkExitPollPostResponse could not get provider!");
@@ -95,7 +88,8 @@ void Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSe
 	}
 
 	TSharedPtr<FJsonObject> ResponseObject = MakeShareable(new FJsonObject);
-	ResponseObject->SetStringField("userId", Responses.user);
+	ResponseObject->SetStringField("userId", Responses.userId);
+	ResponseObject->SetStringField("participantId", Responses.participantId);
 	ResponseObject->SetStringField("questionSetId", Responses.questionSetId);
 	ResponseObject->SetStringField("sessionId", Responses.sessionId);
 	ResponseObject->SetStringField("hook", Responses.hook);
@@ -150,7 +144,7 @@ void Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSe
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 	
 	FString url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/questionSets/" + currentQuestionSet.name + "/" + FString::FromInt(currentQuestionSet.version) + "/responses";
-	FString AuthValue = "APIKEY:DATA " + cog->APIKey;
+	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
 
 	HttpRequest->SetURL(url);
 	HttpRequest->SetHeader("Content-Type", "application/json");
@@ -161,7 +155,8 @@ void Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSe
 
 	//send this as a transaction too
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	properties->SetStringField("userId", Responses.user);
+	properties->SetStringField("userId", Responses.userId);
+	properties->SetStringField("participantId", Responses.participantId);
 	properties->SetStringField("questionSetId", Responses.questionSetId);
 	properties->SetStringField("hook", Responses.hook);
 	properties->SetNumberField("duration", Responses.duration);

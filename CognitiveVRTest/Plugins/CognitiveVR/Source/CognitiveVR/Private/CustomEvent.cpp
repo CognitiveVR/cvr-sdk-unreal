@@ -32,7 +32,7 @@ void UCustomEvent::Send()
 	cog->customEventRecorder->Send(this);
 }
 
-void UCustomEvent::AppendSensors()
+void UCustomEvent::AppendAllSensors()
 {
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();

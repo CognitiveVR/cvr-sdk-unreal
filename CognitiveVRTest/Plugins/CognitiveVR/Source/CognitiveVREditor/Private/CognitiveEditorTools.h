@@ -55,13 +55,13 @@ public:
 	TArray<TSharedPtr<FDynamicData>> SceneDynamics;
 	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 
-	void OnAPIKeyChanged(const FText& Text);
+	void OnApplicationKeyChanged(const FText& Text);
 	void OnDeveloperKeyChanged(const FText& Text);
 
-	FText GetAPIKey() const;
+	FText GetApplicationKey() const;
 	FText GetDeveloperKey() const;
 
-	FString APIKey;
+	FString ApplicationKey;
 	//FString DeveloperKey;
 
 	FString GetDynamicObjectManifest(FString versionid);
@@ -91,7 +91,6 @@ public:
 
 	bool HasSearchedForBlender = false; //to limit the searching directories. possibly not required
 
-	void SearchForBlender();
 	bool HasFoundBlender() const;
 	bool HasFoundBlenderAndHasSelection() const;
 	bool CurrentSceneHasSceneId() const;
@@ -172,6 +171,7 @@ public:
 
 	//Runs the built-in obj exporter with selected meshes
 		FReply ExportSelectedDynamics();
+		FReply ExportDynamicData(TArray< TSharedPtr<FDynamicData>> dynamicData);
 	
 	void ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
 
@@ -306,7 +306,7 @@ public:
 	FReply OpenSceneInBrowser(FString sceneid);
 	FReply OpenCurrentSceneInBrowser();
 	bool HasDeveloperKey() const;
-	bool HasAPIKey() const;
+	bool HasApplicationKey() const;
 	
 	//reads scene data from ini
 	void ReadSceneDataFromFile();
@@ -363,7 +363,7 @@ public:
 	bool HasSetDynamicExportDirectoryHasSceneId() const;
 	FReply SaveAPIDeveloperKeysToFile();
 
-	void SaveAPIKeyToFile(FString key);
+	void SaveApplicationKeyToFile(FString key);
 	void SaveDeveloperKeyToFile(FString key);
 
 	void WizardUpload();
@@ -372,6 +372,8 @@ public:
 	//set to 500, 404, 401 or some other junk if uploading from the wizard encountered and error
 	FString WizardUploadError;
 	void CreateExportFolderStructure();
+
+	bool HasExportedAnyDynamicMeshes() const;
 };
 
 

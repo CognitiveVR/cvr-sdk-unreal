@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "CommonTypes.h"
 #include "CoreMinimal.h"
 #include "AnalyticsEventAttribute.h"
 #include "Interfaces/IAnalyticsProvider.h"
@@ -23,33 +24,6 @@
 #include "Engine/Engine.h"
 
 
-	class FSceneData
-	{
-	public:
-		FString Name = "";
-		FString Id = "";
-		int32 VersionNumber = 1;
-		int32 VersionId = 0;
-
-		FSceneData(FString name, FString id, int32 versionnumber, int32 versionid)
-		{
-			Name = name;
-			Id = id;
-			VersionNumber = versionnumber;
-			VersionId = versionid;
-		}
-	};
-
-	enum CognitiveVRError {
-		kErrorSuccess = 0,
-		kErrorGeneric = -1,
-		kErrorNotInitialized = -2,
-		kErrorNotFound = -3,
-		kErrorInvalidArgs = -4,
-		kErrorMissingId = -5,
-		kErrorRequestTimedOut = -6,
-		kErrorUnknown = -7
-	};
 
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
@@ -58,7 +32,7 @@
 	class CustomEventRecorder;
 	//class CognitiveVRResponse;
 	class Sensors;
-	//class ExitPoll;
+	class ExitPoll;
 	//class UDynamicObject;
 
 	class COGNITIVEVR_API FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
@@ -73,7 +47,8 @@
 		FString ParticipantId;
 		FString DeviceId;
 		double SessionTimestamp = -1;
-		FJsonObject SessionProperties;
+		FJsonObject NewSessionProperties;
+		FJsonObject AllSessionProperties;
 
 		
 
@@ -89,6 +64,7 @@
 		FAnalyticsProviderCognitiveVR();
 		virtual ~FAnalyticsProviderCognitiveVR();
 
+		bool StartSession();
 		virtual bool StartSession(const TArray<FAnalyticsEventAttribute>& Attributes) override;
 		virtual void EndSession() override;
 		virtual void FlushEvents() override;
@@ -126,7 +102,8 @@
 		TSharedPtr<CustomEventRecorder> customEventRecorder;
 		TSharedPtr<Network> network;
 		TSharedPtr<Sensors> sensors;
-		
+		TSharedPtr<ExitPoll> exitpoll;
+
 		FString GetDeviceID() const;
 
 		void SetLobbyId(FString lobbyId);
@@ -138,11 +115,14 @@
 
 		bool HasStartedSession();
 
-		FString APIKey;
+		FString ApplicationKey;
 
 		FString GetCurrentSceneId();
 		FString GetCurrentSceneVersionNumber();
+		//if a session name has been explicitly set. otherwise will use participant name when that is set
+		bool bHasCustomSessionName;
 		void SetSessionName(FString sessionName);
+		FSceneData CurrentTrackingScene;
 
 		void SetWorld(UWorld* world);
 		UWorld* GetWorld();
@@ -152,7 +132,10 @@
 		TArray<TSharedPtr<FSceneData>> SceneData;
 		TSharedPtr<FSceneData> GetSceneData(FString scenename);
 		TSharedPtr<FSceneData> GetCurrentSceneData();
-		FJsonObject GetSessionProperties();
+		FJsonObject GetNewSessionProperties();
+		FJsonObject GetAllSessionProperties();
+
+		bool ForceWriteSessionMetadata = false;
 
 		void SetParticipantFullName(FString participantName);
 		void SetParticipantId(FString participantId);

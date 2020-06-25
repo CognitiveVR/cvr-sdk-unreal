@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "CommonTypes.h"
 #include "UObject/UObjectIterator.h"
 #include "CoreMinimal.h"
 #include "Interfaces/IAnalyticsProviderModule.h"
@@ -11,11 +12,10 @@
 DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);
 
 #define COGNITIVEVR_SDK_NAME "unreal"
-#define COGNITIVEVR_SDK_VERSION "0.12.0"
+#define COGNITIVEVR_SDK_VERSION "0.14.0"
 
 class IAnalyticsProvider;
 class FAnalyticsProviderCognitiveVR;
-
 
 /**
 	* The public interface to this module

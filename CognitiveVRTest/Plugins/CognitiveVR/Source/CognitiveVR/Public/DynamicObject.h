@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "CommonTypes.h"
 #include "CognitiveVR.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -13,122 +14,6 @@
 #include "DynamicObject.generated.h"
 
 class UCustomEvent;
-
-UENUM(BlueprintType)
-enum class ECommonMeshName : uint8
-{
-	ViveController,
-	OculusRiftTouchLeft,
-	OculusRiftTouchRight,
-	ViveTracker,
-	WindowsMixedRealityLeft,
-	WindowsMixedRealityRight,
-	PicoNeo2EyeControllerLeft,
-	PicoNeo2EyeControllerRight
-};
-
-//only used in blueprint to set up controllers using a macro
-UENUM(BlueprintType)
-enum class EC3DControllerType : uint8
-{
-	None,
-	Vive,
-	Oculus,
-	WindowsMixedReality,
-	PicoNeo2Eye
-};
-
-class FDynamicObjectManifestEntry
-{
-public:
-	FString Id = "";
-	FString Name = "";
-	FString MeshName = "";
-	TMap<FString, FString> StringProperties;
-	FString ControllerType;
-	bool IsRight;
-
-	FDynamicObjectManifestEntry(FString id, FString name, FString mesh)
-	{
-		Id = id;
-		Name = name;
-		MeshName = mesh;
-	}
-	
-	FDynamicObjectManifestEntry(){}
-
-	FDynamicObjectManifestEntry* SetProperty(FString key, FString value);
-};
-
-class FDynamicObjectId
-{
-public:
-	FString Id = "";
-	bool Used = true;
-	FString MeshName = "";
-
-	FDynamicObjectId(FString id, FString meshName)
-	{
-		Id = id;
-		MeshName = meshName;
-	}
-
-	FDynamicObjectId() {}
-};
-
-USTRUCT(BlueprintType)
-struct COGNITIVEVR_API FControllerInputState
-{
-	GENERATED_BODY()
-
-	FString AxisName;
-	float AxisValue;
-	bool IsVector;
-	float X;
-	float Y;
-	FControllerInputState(){}
-	FControllerInputState(FString name, float value)
-	{
-		AxisName = name;
-		AxisValue = value;
-		IsVector = false;
-	}
-	FControllerInputState(FString name, FVector vector)
-	{
-		AxisName = name;
-		IsVector = true;
-		X = vector.X;
-		Y = vector.Y;
-		AxisValue = vector.Z;
-	}
-};
-
-USTRUCT(BlueprintType)
-struct COGNITIVEVR_API FControllerInputStateCollection
-{
-	GENERATED_BODY()
-	TMap<FString, FControllerInputState>States;
-};
-
-USTRUCT(BlueprintType)
-struct FDynamicObjectSnapshot
-{
-	GENERATED_BODY()
-
-public:
-	FVector position = FVector(0, 0, 0);
-	FVector scale = FVector(1, 1, 1);
-	bool hasScaleChanged = false;
-	FQuat rotation = FQuat(0, 0, 0, 1);
-	double time = 0;
-	FString id = "";
-	TMap<FString, FString> StringProperties;
-	TMap<FString, int32> IntegerProperties;
-	TMap<FString, float> FloatProperties;
-	TMap<FString, bool> BoolProperties;
-
-	TMap<FString, FControllerInputState> Buttons;
-};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class COGNITIVEVR_API UDynamicObject : public USceneComponent //UActorComponent
@@ -212,10 +97,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
 	FString CustomId = "";
 
-	//should this object record how the player is gazing?
-	UPROPERTY(EditAnywhere)
-	bool TrackGaze = true;
-
 	//snapshots
 
 	//time in seconds between checking if position and rotation updates need to be recorded
@@ -239,10 +120,17 @@ public:
 	void TryGenerateCustomIdAndMesh();
 	
 	//engagements
-	UPROPERTY()//needeed to keep from custom events from being garbage collected
+	UPROPERTY()//need uproperty to keep from custom events from being garbage collected
 	TMap<FString, UCustomEvent*> Engagements;
 
+	// Alternate method for beginning a Custom Event and setting a Dynamic Object as the target using the DynamicObjectID
+	// engagement name will be displayed as the event name
+	// engagement id should be used when multiple events of the same type are active on a dynamic object
 	void BeginEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
+	
+	// Alternate method for ending a Custom Event by DynamicObjectID
+	// the name of the event to end. if there isn't an active event, will immediately create and end the event
+	// engagement id should be used to cancel a specific event on a dynamic object if multiple with the same name are present
 	void EndEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
 
 	virtual void BeginPlay() override;
@@ -274,14 +162,21 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		FDynamicObjectSnapshot SnapshotFloatProperty(UPARAM(ref) FDynamicObjectSnapshot& target, FString key, float floatValue);
 
+	//IMPROVEMENT investigate CallableWithoutWorldContext ufunction keyword
+	// Alternate method for beginning a Custom Event and setting this Dynamic Object as the target
+	// engagement name will be displayed as the event name
+	// engagement id should be used when multiple events of the same type are active on a dynamic object
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		static void BeginEngagement(UDynamicObject* target, FString engagementName, FString UniqueEngagementId);
 
+	// Alternate method for ending a Custom Event on a specific dynamic object
+	// the name of the event to end. if there isn't an active event, will immediately create and end the event
+	// engagement id should be used to cancel a specific event on a dynamic object if multiple with the same name are present
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		static void EndEngagement(UDynamicObject* target, FString engagementType, FString UniqueEngagementId);
 
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
-		///this does not directly send a snapshot - it stores it until Flush is called or the number of stored dynamic snapshots reaches its limit
+	//this does not directly send a snapshot - it stores it until Flush is called or the number of stored dynamic snapshots reaches its limit
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object", DisplayName = "Record Dynamic Object")
 		void SendDynamicObjectSnapshot(UPARAM(ref) FDynamicObjectSnapshot& target);
 
 	//adds a dynamic object component and applies all relevant settings

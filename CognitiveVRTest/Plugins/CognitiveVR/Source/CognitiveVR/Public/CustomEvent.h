@@ -3,6 +3,7 @@
 */
 #pragma once
 
+#include "CommonTypes.h"
 #include "CognitiveVR.h"
 #include "Private/util/util.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
@@ -39,7 +40,7 @@ public:
 
 	void Send();
 	//appends the most recent value of all sensors as properties
-	void AppendSensors();
+	void AppendAllSensors();
 	//appends the most recent value of a sensor by name as a property
 	void AppendSensor(FString sensorName);
 	//appends the most recent value of each sensor specified by name as a property
