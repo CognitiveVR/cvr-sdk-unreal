@@ -122,6 +122,8 @@ replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\Cognitive
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.cpp","			if (GEditor->LevelViewportClients[j]->ViewportType == LVT_Perspective)","			if (GEditor->GetLevelViewportClients()[j]->ViewportType == LVT_Perspective)")
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.cpp","				perspectiveView = GEditor->LevelViewportClients[j];","				perspectiveView = GEditor->GetLevelViewportClients()[j];")
 
+#15 replace editor selection code in dynamic object manager widget
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DynamicObjectManagerWidget.cpp","	UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();","	UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();")
 
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue4"+enginesubversion

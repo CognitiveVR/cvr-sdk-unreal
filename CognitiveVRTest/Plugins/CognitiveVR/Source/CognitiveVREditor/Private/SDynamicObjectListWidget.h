@@ -32,7 +32,7 @@ public:
 	TArray<TSharedPtr<FDynamicData>> Items;
 
 	/* The actual UI list */
-	TSharedPtr< SActorListView< TSharedPtr<FDynamicData> > > ListViewWidget;
+	TSharedPtr< SActorListView > ListViewWidget;
 
 	FReply SelectDynamic(TSharedPtr<FDynamicData> data);
 
