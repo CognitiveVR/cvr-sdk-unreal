@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CommonTypes.h"
+#include "C3DCommonTypes.h"
 #include "Components/SceneComponent.h"
 #include "CognitiveVR.h"
 #include "Private/util/util.h"

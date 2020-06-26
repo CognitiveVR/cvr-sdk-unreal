@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CommonTypes.generated.h"
+#include "C3DCommonTypes.generated.h"
 
 //multicast delegates cannot be static. use static pointer to playertracker instance in BP
 //multicast also can't be used as argument in BP function (to implement custom bind function)
