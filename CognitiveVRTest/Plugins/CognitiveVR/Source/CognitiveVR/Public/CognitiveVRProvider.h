@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CommonTypes.h"
+#include "C3DCommonTypes.h"
 #include "CoreMinimal.h"
 #include "AnalyticsEventAttribute.h"
 #include "Interfaces/IAnalyticsProvider.h"

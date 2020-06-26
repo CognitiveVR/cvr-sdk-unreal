@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CommonTypes.h"
+#include "C3DCommonTypes.h"
 #include "CognitiveVR.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
