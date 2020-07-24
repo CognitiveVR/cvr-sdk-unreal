@@ -33,6 +33,7 @@
 #include "IImageWrapperModule.h"
 #include "RenderingThread.h"
 #include "Classes/Engine/Level.h"
+#include "CoreMisc.h"
 
 //all sorts of functionality for Cognitive SDK
 
@@ -374,6 +375,10 @@ public:
 	void CreateExportFolderStructure();
 
 	bool HasExportedAnyDynamicMeshes() const;
+
+	FString BuildDebugFileContents() const;
+
+	void AppendDirectoryContents(FString FullPath, int32 depth, FString& outputString);
 };
 
 

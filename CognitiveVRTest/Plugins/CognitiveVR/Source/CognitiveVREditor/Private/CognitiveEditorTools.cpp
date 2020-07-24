@@ -2460,6 +2460,15 @@ void FCognitiveEditorTools::WizardConvertScene()
 		FPlatformProcess::WaitForProc(fph);
 
 		TakeScreenshot();
+		//write debug.log including unreal data, scene contents, folder contents
+		//should happen after blender finishes/next button is pressed
+
+
+		FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
+		FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
+		FString fullPath = escapedOutPath + "/debug.log";
+		FString fileContents = BuildDebugFileContents();
+		bool success = FFileHelper::SaveStringToFile(fileContents, *fullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	}
 }
 
@@ -2593,6 +2602,160 @@ EVisibility FCognitiveEditorTools::BlenderInvalidVisibility() const
 	if (HasFoundBlender())
 		return EVisibility::Collapsed;
 	return EVisibility::Visible;
+}
+
+FString FCognitiveEditorTools::BuildDebugFileContents() const
+{
+	FString outputString;
+
+	//unreal version
+	outputString += "engine version " + FEngineVersion::Current().ToString();
+	outputString += "\n";
+
+	//sdk version
+	outputString += FString("cognitive sdk version ") + FString(COGNITIVEVR_SDK_VERSION);
+	outputString += "\n";
+
+	//os name
+	outputString += FString("platform name ") + FPlatformProperties::IniPlatformName();
+	outputString += "\n";
+
+	//plugin folder contents
+	FString pluginDir = FPaths::ProjectDir() + "/Plugins/";
+	//TArray<FString> DirectoriesToSkip;
+	//TArray<FString> DirectoriesToNotRecurse;
+	//IPlatformFile &PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	//FLocalTimestampDirectoryVisitor Visitor(PlatformFile, DirectoriesToSkip, DirectoriesToNotRecurse, true);
+	//IFileManager::Get().IterateDirectory(*pluginDir, Visitor);
+	//Visitor.Visit(*pluginDir, true);
+	//for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
+
+	if (IFileManager::Get().DirectoryExists(*(pluginDir + "Varjo")))
+	{
+		outputString += FString("plugin Varjo");
+		outputString += "\n";
+	}
+	if (IFileManager::Get().DirectoryExists(*(pluginDir + "TobiiEyeTracking")))
+	{
+		outputString += FString("plugin TobiiEyeTracking");
+		outputString += "\n";
+	}
+	if (IFileManager::Get().DirectoryExists(*(pluginDir + "SRanipal")))
+	{
+		outputString += FString("plugin SRanipal");
+		outputString += "\n";
+	}
+	if (IFileManager::Get().DirectoryExists(*(pluginDir + "PicoMobile")))
+	{
+		outputString += FString("plugin PicoMobile");
+		outputString += "\n";
+	}
+
+	//date + time
+	outputString += FString("date ") + FDateTime::Now().ToString();
+	outputString += "\n";
+
+	//project directory
+	outputString += FString("project name ") + FPaths::ProjectDir();
+	outputString += "\n";
+
+	//api key ****
+	FString tempApiKey = FCognitiveEditorTools::GetInstance()->GetApplicationKey().ToString();
+	outputString += FString("api key ****") + tempApiKey.RightChop(tempApiKey.Len() - 4);
+	outputString += "\n";
+
+	//dev key ****
+	FString tempDevKey = FAnalyticsCognitiveVR::Get().DeveloperKey;
+	outputString += FString("dev key ****") + tempDevKey.RightChop(tempDevKey.Len() - 4);
+	outputString += "\n";
+
+	//config settings (batch sizes, etc)
+	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventBatchSize", false);
+
+	TSharedPtr<FEditorSceneData> currentLevelSceneData;
+	//scene settings (name, id, version)
+	for (auto &elem : FCognitiveEditorTools::GetInstance()->SceneData)
+	{
+		outputString += FString("scene: ") + elem->Name + FString("  id: ") + elem->Id + FString("  version: ") + FString::FromInt(elem->VersionNumber);
+		outputString += "\n";
+
+		if (elem->Name == UGameplayStatics::GetCurrentLevelName(GWorld))
+		{
+			currentLevelSceneData = elem;
+		}
+	}
+
+	//current scene info
+	if (currentLevelSceneData.IsValid())
+	{
+		outputString += FString("current scene: ") + currentLevelSceneData->Name + FString("  id: ") + currentLevelSceneData->Id + FString("  version: ") + FString::FromInt(currentLevelSceneData->VersionNumber);
+		outputString += "\n";
+	}
+
+	//find dynamics in scene
+	TArray<UDynamicObject*> foundDynamics;
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
+		if (actorComponent == NULL)
+		{
+			continue;
+		}
+		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
+		if (dynamic == NULL)
+		{
+			continue;
+		}
+		foundDynamics.Add(dynamic);
+	}
+
+	//dynamics in scene count
+	outputString += FString("dynamics in scene: ") + FString::FromInt(foundDynamics.Num());
+	outputString += "\n";
+
+	//dynamics in scene names
+	for (auto &elem : foundDynamics)
+	{
+		outputString += FString("dynamic mesh name: ") + elem->MeshName + FString("  id: ") + elem->CustomId;
+		outputString += "\n";
+	}
+
+	//tree list folders in export directory + contents
+	FString dir = FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory();
+
+	FCognitiveEditorTools::GetInstance()->AppendDirectoryContents(dir, 0, outputString);
+
+	return outputString;
+}
+
+void FCognitiveEditorTools::AppendDirectoryContents(FString FullPath, int32 depth, FString& outputString)
+{
+	FString searchPath = FullPath + "/*";
+
+	//add all files to output
+	TArray<FString> files;
+	IFileManager::Get().FindFiles(files, *searchPath, true, false);
+
+	for (auto &elem : files)
+	{
+		for (int32 i = 0; i < depth; i++)
+			outputString += "    ";
+		outputString += elem + " (" + FString::FromInt(IFileManager::Get().FileSize(FullPath + "/" + elem)) + ")";
+		outputString += "\n";
+	}
+
+	//call this again for each directory
+	TArray<FString> directories;
+	IFileManager::Get().FindFiles(directories, *searchPath, false, true);
+
+	for (auto &elem : directories)
+	{
+		for (int32 i = 0; i < depth; i++)
+			outputString += "    ";
+		outputString += "/" + elem;
+		outputString += "\n";
+		AppendDirectoryContents(FullPath+"/"+elem, depth+1, outputString);
+	}
 }
 
 #undef LOCTEXT_NAMESPACE
