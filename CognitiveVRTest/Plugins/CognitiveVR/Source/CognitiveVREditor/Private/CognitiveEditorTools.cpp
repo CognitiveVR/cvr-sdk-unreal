@@ -2740,7 +2740,15 @@ void FCognitiveEditorTools::AppendDirectoryContents(FString FullPath, int32 dept
 	{
 		for (int32 i = 0; i < depth; i++)
 			outputString += "    ";
-		outputString += elem + " (" + FString::FromInt(IFileManager::Get().FileSize(FullPath + "/" + elem)) + ")";
+
+		int32 bytecount = IFileManager::Get().FileSize(*(FullPath + "/" + elem));
+		float mbcount = bytecount * 0.000001;
+		TArray<FString> parseArray;
+		FString sizeString = FString::SanitizeFloat(mbcount, 2);
+		sizeString.ParseIntoArray(parseArray, TEXT("."));
+		FString finalString = parseArray[0] + "." + parseArray[1].Left(2)+ "mb";
+
+		outputString += elem + " (" + finalString + ")";
 		outputString += "\n";
 	}
 
