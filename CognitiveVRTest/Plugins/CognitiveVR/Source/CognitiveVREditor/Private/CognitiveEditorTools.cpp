@@ -2608,16 +2608,28 @@ FString FCognitiveEditorTools::BuildDebugFileContents() const
 {
 	FString outputString;
 
-	//unreal version
-	outputString += "engine version " + FEngineVersion::Current().ToString();
-	outputString += "\n";
+	outputString += "*****************************\n";
+	outputString += "***********SYSTEM************\n";
+	outputString += "*****************************\n";
 
-	//sdk version
-	outputString += FString("cognitive sdk version ") + FString(COGNITIVEVR_SDK_VERSION);
+	//unreal version
+	outputString += "Unreal Engine Version: " + FEngineVersion::Current().ToString();
 	outputString += "\n";
 
 	//os name
-	outputString += FString("platform name ") + FPlatformProperties::IniPlatformName();
+	outputString += FString("Platform Name: ") + FPlatformProperties::IniPlatformName();
+	outputString += "\n";
+
+	//date + time
+	outputString += FString("System Time: ") + FDateTime::Now().ToString();
+	outputString += "\n";
+
+	outputString += "*****************************\n";
+	outputString += "***********PROJECT***********\n";
+	outputString += "*****************************\n";
+
+	//sdk version
+	outputString += FString("Cognitive SDK version: ") + FString(COGNITIVEVR_SDK_VERSION);
 	outputString += "\n";
 
 	//plugin folder contents
@@ -2632,51 +2644,115 @@ FString FCognitiveEditorTools::BuildDebugFileContents() const
 
 	if (IFileManager::Get().DirectoryExists(*(pluginDir + "Varjo")))
 	{
-		outputString += FString("plugin Varjo");
+		outputString += FString("Plugins: Varjo");
 		outputString += "\n";
 	}
 	if (IFileManager::Get().DirectoryExists(*(pluginDir + "TobiiEyeTracking")))
 	{
-		outputString += FString("plugin TobiiEyeTracking");
+		outputString += FString("Plugins: TobiiEyeTracking");
 		outputString += "\n";
 	}
 	if (IFileManager::Get().DirectoryExists(*(pluginDir + "SRanipal")))
 	{
-		outputString += FString("plugin SRanipal");
+		outputString += FString("Plugins: SRanipal");
 		outputString += "\n";
 	}
 	if (IFileManager::Get().DirectoryExists(*(pluginDir + "PicoMobile")))
 	{
-		outputString += FString("plugin PicoMobile");
+		outputString += FString("Plugins: PicoMobile");
 		outputString += "\n";
 	}
 
-	//date + time
-	outputString += FString("date ") + FDateTime::Now().ToString();
+	//project directory
+	outputString += FString("Project Name: ") + FPaths::ProjectDir();
 	outputString += "\n";
 
-	//project directory
-	outputString += FString("project name ") + FPaths::ProjectDir();
+	//gateway
+	FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	outputString += "Gateway: " + gateway;
 	outputString += "\n";
 
 	//api key ****
 	FString tempApiKey = FCognitiveEditorTools::GetInstance()->GetApplicationKey().ToString();
-	outputString += FString("api key ****") + tempApiKey.RightChop(tempApiKey.Len() - 4);
+	outputString += FString("API Key: ****") + tempApiKey.RightChop(tempApiKey.Len() - 4);
 	outputString += "\n";
 
 	//dev key ****
 	FString tempDevKey = FAnalyticsCognitiveVR::Get().DeveloperKey;
-	outputString += FString("dev key ****") + tempDevKey.RightChop(tempDevKey.Len() - 4);
+	outputString += FString("DEV Key: ****") + tempDevKey.RightChop(tempDevKey.Len() - 4);
 	outputString += "\n";
 
 	//config settings (batch sizes, etc)
 	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventBatchSize", false);
+	outputString += "Event Snapshot Batch Size: " + ValueReceived;
+	outputString += "\n";
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventExtremeLimit", false);
+	outputString += "Event Extreme Batch Size: " + ValueReceived;
+	outputString += "\n";
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventMinTimer", false);
+	outputString += "Event Minimum Send Timer: " + ValueReceived;
+	outputString += "\n";
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventAutoTimer", false);
+	outputString += "Event Auto Send Timer: " + ValueReceived;
+	outputString += "\n";
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorBatchSize", false);
+	outputString += "Sensor Snapshot Batch Size: " + ValueReceived;
+	outputString += "\n";
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorExtremeLimit", false);
+	outputString += "Sensor Extreme Batch Size: " + ValueReceived;
+	outputString += "\n";
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorMinTimer", false);
+	outputString += "Sensor Minimum Send Timer: " + ValueReceived;
+	outputString += "\n";
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorAutoTimer", false);
+	outputString += "Sensor Auto Send Timer: " + ValueReceived;
+	outputString += "\n";
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicBatchSize", false);
+	outputString += "Dynamic Snapshot Batch Size: " + ValueReceived;
+	outputString += "\n";
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicExtremeLimit", false);
+	outputString += "Dynamic Extreme Batch Size: " + ValueReceived;
+	outputString += "\n";
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicMinTimer", false);
+	outputString += "Dynamic Minimum Send Timer: " + ValueReceived;
+	outputString += "\n";
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicAutoTimer", false);
+	outputString += "Dynamic Auto Send Timer: " + ValueReceived;
+	outputString += "\n";
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "GazeBatchSize", false);
+	outputString += "Gaze Snapshot Batch Size: " + ValueReceived;
+	outputString += "\n";
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationBatchSize", false);
+	outputString += "Fixation Snapshot Batch Size: " + ValueReceived;
+	outputString += "\n";
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationExtremeLimit", false);
+	outputString += "Fixation Extreme Batch Size: " + ValueReceived;
+	outputString += "\n";
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationMinTimer", false);
+	outputString += "Fixation Minimum Send Timer: " + ValueReceived;
+	outputString += "\n";
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationAutoTimer", false);
+	outputString += "Fixation Auto Send Timer: " + ValueReceived;
+	outputString += "\n";
+
+	outputString += "Scene Settings:";
+	outputString += "\n";
 
 	TSharedPtr<FEditorSceneData> currentLevelSceneData;
 	//scene settings (name, id, version)
 	for (auto &elem : FCognitiveEditorTools::GetInstance()->SceneData)
 	{
-		outputString += FString("scene: ") + elem->Name + FString("  id: ") + elem->Id + FString("  version: ") + FString::FromInt(elem->VersionNumber);
+		outputString += FString("    Scene Name: ") + elem->Name;
+		outputString += "\n";
+		outputString += FString("        Scene Id: ") + elem->Id;
+		outputString += "\n";
+		outputString += FString("        Version Number: ") + FString::FromInt(elem->VersionNumber);
+		outputString += "\n";
+		outputString += FString("        Version Id: ") + FString::FromInt(elem->VersionId);
 		outputString += "\n";
 
 		if (elem->Name == UGameplayStatics::GetCurrentLevelName(GWorld))
@@ -2685,15 +2761,30 @@ FString FCognitiveEditorTools::BuildDebugFileContents() const
 		}
 	}
 
+	outputString += "*****************************\n";
+	outputString += "********CURRENT SCENE********\n";
+	outputString += "*****************************\n";
+
 	//current scene info
 	if (currentLevelSceneData.IsValid())
 	{
-		outputString += FString("current scene: ") + currentLevelSceneData->Name + FString("  id: ") + currentLevelSceneData->Id + FString("  version: ") + FString::FromInt(currentLevelSceneData->VersionNumber);
+		outputString += FString("Scene Name: ") + currentLevelSceneData->Name;
+		outputString += "\n";
+		outputString += FString("Scene Id: ") + currentLevelSceneData->Id;
+		outputString += "\n";
+		outputString += FString("Version Number: ") + FString::FromInt(currentLevelSceneData->VersionNumber);
+		outputString += "\n";
+		outputString += FString("Version Id: ") + FString::FromInt(currentLevelSceneData->VersionId);
 		outputString += "\n";
 	}
 
+	outputString += "*****************************\n";
+	outputString += "****CURRENT SCENE OBJECTS****\n";
+	outputString += "*****************************\n";
+
 	//find dynamics in scene
 	TArray<UDynamicObject*> foundDynamics;
+	TArray<AActor*> foundActors;
 	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 	{
 		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
@@ -2707,18 +2798,29 @@ FString FCognitiveEditorTools::BuildDebugFileContents() const
 			continue;
 		}
 		foundDynamics.Add(dynamic);
+		foundActors.Add(*ActorItr);
 	}
 
 	//dynamics in scene count
-	outputString += FString("dynamics in scene: ") + FString::FromInt(foundDynamics.Num());
+	outputString += FString("Dynamic Object Count: ") + FString::FromInt(foundDynamics.Num());
 	outputString += "\n";
 
-	//dynamics in scene names
-	for (auto &elem : foundDynamics)
+	for (int32 i = 0; i < foundDynamics.Num(); i++)
 	{
-		outputString += FString("dynamic mesh name: ") + elem->MeshName + FString("  id: ") + elem->CustomId;
+		outputString += FString("    ") + foundActors[i]->GetFName().ToString();
 		outputString += "\n";
+		outputString += FString("        Mesh Name: ") + foundDynamics[i]->MeshName;
+		outputString += "\n";
+		if (foundDynamics[i]->UseCustomId)
+		{
+			outputString += FString("        Id: ") + foundDynamics[i]->CustomId;
+			outputString += "\n";
+		}
 	}
+
+	outputString += "*****************************\n";
+	outputString += "********EXPORT FOLDER********\n";
+	outputString += "*****************************\n";
 
 	//tree list folders in export directory + contents
 	FString dir = FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory();
@@ -2741,6 +2843,7 @@ void FCognitiveEditorTools::AppendDirectoryContents(FString FullPath, int32 dept
 		for (int32 i = 0; i < depth; i++)
 			outputString += "    ";
 
+		//file size
 		int32 bytecount = IFileManager::Get().FileSize(*(FullPath + "/" + elem));
 		float mbcount = bytecount * 0.000001;
 		TArray<FString> parseArray;
@@ -2760,6 +2863,10 @@ void FCognitiveEditorTools::AppendDirectoryContents(FString FullPath, int32 dept
 	{
 		for (int32 i = 0; i < depth; i++)
 			outputString += "    ";
+
+		//directory size returns -1?
+		//FFileStatData dirStats = IFileManager::Get().GetStatData(*(FullPath + "/" + elem));
+
 		outputString += "/" + elem;
 		outputString += "\n";
 		AppendDirectoryContents(FullPath+"/"+elem, depth+1, outputString);
