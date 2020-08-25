@@ -708,6 +708,76 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 	return FReply::Handled();
 }
 
+FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FString meshName, FString prefabName)
+{
+	GLog->Log("CognitiveVR Tools uploading manifest for " + FString::FromInt(ids.Num()) + " objects");
+
+	bool wroteAnyObjects = false;
+	FString objectManifest = "{\"objects\":[";
+	//write preset customids to manifest
+	for (int32 i = 0; i < ids.Num(); i++)
+	{
+		//if they have a customid -> add them to the objectmanifest string
+		if (ids[i] != "")
+		{
+			wroteAnyObjects = true;
+			objectManifest += "{";
+			objectManifest += "\"id\":\"" + ids[i] + "\",";
+			objectManifest += "\"mesh\":\"" + meshName + "\",";
+			objectManifest += "\"name\":\"" + prefabName + "\"";
+			objectManifest += "},";
+		}
+	}
+	if (!wroteAnyObjects)
+	{
+		GLog->Log("Couldn't find any dynamic objects to put into the aggregation manifest!");
+		return FReply::Handled();
+	}
+	//remove last comma
+	objectManifest.RemoveFromEnd(",");
+	//add ]}
+	objectManifest += "]}";
+
+
+	//get scene id
+	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
+	if (!currentSceneData.IsValid())
+	{
+		GLog->Log("FCognitiveEditorTools::UploadDynamicObjectManifest could not find current scene id");
+		return FReply::Handled();
+	}
+
+	if (currentSceneData->Id == "")
+	{
+		GLog->Log("CognitiveToolsCustomization::UploadDynamicsManifest couldn't find sceneid for current scene");
+		return FReply::Handled();
+	}
+	if (currentSceneData->VersionNumber == 0)
+	{
+		GLog->Log("CognitiveTools::UploadDynamicsManifest current scene does not have valid version number. GetSceneVersions and try again");
+		return FReply::Handled();
+	}
+
+	FString url = PostDynamicObjectManifest(currentSceneData->Id, currentSceneData->VersionNumber);
+
+	//send manifest to api/objects/sceneid
+
+	GLog->Log("CognitiveTools::UploadDynamicsManifest send dynamic object aggregation manifest");
+	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
+	HttpRequest->SetURL(url);
+	HttpRequest->SetVerb("POST");
+	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
+	HttpRequest->SetHeader("Authorization", AuthValue);
+	HttpRequest->SetContentAsString(objectManifest);
+
+	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestCompleted);
+
+	HttpRequest->ProcessRequest();
+
+	return FReply::Handled();
+}
+
 void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful)

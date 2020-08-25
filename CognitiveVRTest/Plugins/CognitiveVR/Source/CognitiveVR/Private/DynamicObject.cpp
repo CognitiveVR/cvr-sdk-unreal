@@ -285,6 +285,17 @@ TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
 
 void UDynamicObject::GenerateObjectId()
 {
+	if (UseIdPool)
+	{
+		FString poolId;
+		HasValidPoolId = IDPool->GetId(poolId);
+		ObjectID = MakeShareable(new FDynamicObjectId(poolId, MeshName));
+		FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
+		manifest.Add(entry);
+		newManifest.Add(entry);
+		return;
+	}
+
 	if (!UseCustomId || CustomId.IsEmpty())
 	{
 		TSharedPtr<FDynamicObjectId> recycledId;
@@ -811,6 +822,15 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 //instance
 void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (UseIdPool && HasValidPoolId && IDPool != NULL)
+	{
+		if (ObjectID.IsValid() && !ObjectID->Id.IsEmpty())
+		{
+			IDPool->ReturnId(ObjectID->Id);
+			HasValidPoolId = false;
+		}
+	}
+
 	if (!cogProvider.IsValid())
 	{
 		//will get an 'EndPlay' when PIE closes

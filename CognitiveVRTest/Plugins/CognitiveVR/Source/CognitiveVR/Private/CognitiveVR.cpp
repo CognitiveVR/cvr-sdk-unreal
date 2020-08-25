@@ -275,6 +275,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 void FAnalyticsProviderCognitiveVR::FlushEvents()
 {
+	if (!bHasSessionStarted) { CognitiveLog::Warning("CognitiveVR Flush Events, but Session has not started!"); return; }
 	//send to dashboard
 	this->customEventRecorder->SendData();
 

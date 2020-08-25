@@ -10,6 +10,7 @@
 #include "TimerManager.h"
 #include "CoreMinimal.h"
 #include "CustomEvent.h"
+#include "DynamicIdPoolAsset.h"
 #include "MotionControllerComponent.h"
 #include "DynamicObject.generated.h"
 
@@ -96,6 +97,13 @@ public:
 	//the custom id for registering this dynamic object. recommended for non-spawned actors
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
 	FString CustomId = "";
+
+	UPROPERTY(EditAnywhere, AdvancedDisplay)
+	bool UseIdPool;
+
+	bool HasValidPoolId = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
+	UDynamicIdPoolAsset* IDPool;
 
 	//snapshots
 

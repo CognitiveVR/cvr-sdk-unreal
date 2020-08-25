@@ -8,7 +8,7 @@
 
 #define LOCTEXT_NAMESPACE "DemoTools"
 
-class FCognitiveVREditorModule : public IModuleInterface
+class FCognitiveVREditorModule : public IModuleInterface, IHasMenuExtensibility, IHasToolBarExtensibility
 {
 public:
 
@@ -42,20 +42,33 @@ public:
 		FCognitiveEditorTools::GetInstance()->Tick(deltatime);
 		return true;
 	}
+	
+	public:
+
+	//~ IHasMenuExtensibility interface
+
+	virtual TSharedPtr<FExtensibilityManager> GetMenuExtensibilityManager() override
+	{
+		return MenuExtensibilityManager;
+	}
+
+public:
+
+	//~ IHasToolBarExtensibility interface
+
+	virtual TSharedPtr<FExtensibilityManager> GetToolBarExtensibilityManager() override
+	{
+		return ToolBarExtensibilityManager;
+	}
 
 	virtual void StartupModule() override
 	{
+		
 #if WITH_EDITOR
 		// Create the Extender that will add content to the menu
 		FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-		
-
-
-		//FAnalyticsCognitiveVR::Get().DeveloperKey = "read from config";
-
 		FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
-		//GLog->Log("FCognitiveTools::SaveAPIDeveloperKeysToFile save: " + CustomerId);
 
 		FString tempGateway;
 		GConfig->GetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), tempGateway, EngineIni);
@@ -158,6 +171,7 @@ public:
 		PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FCognitiveSettingsCustomization::MakeInstance));
 		//PropertyModule.RegisterCustomClassLayout(TEXT("BaseEditorTool"), FOnGetDetailCustomizationInstance::CreateStatic(&FSetupCustomization::MakeInstance));
 		PropertyModule.RegisterCustomClassLayout(TEXT("DynamicObject"), FOnGetDetailCustomizationInstance::CreateStatic(&UDynamicObjectComponentDetails::MakeInstance));
+		PropertyModule.RegisterCustomClassLayout(TEXT("DynamicIdPoolAsset"), FOnGetDetailCustomizationInstance::CreateStatic(&UDynamicIdPoolAssetDetails::MakeInstance));
 #endif
 	}
 
@@ -180,6 +194,11 @@ public:
 			}
 		}
 #endif
+	}
+	
+	virtual bool SupportsDynamicReloading() override
+	{
+		return true;
 	}
 
 	void OnToolWindowClosed(const TSharedRef<SWindow>& Window, UBaseEditorTool* Instance)
@@ -212,6 +231,54 @@ public:
 	}
 
 	FDelegateHandle LevelEditorTabManagerChangedHandle;
+	
+	protected:
+
+	/** Unregisters asset tool actions. */
+	void UnregisterAssetTools()
+	{
+		FAssetToolsModule* AssetToolsModule = FModuleManager::GetModulePtr<FAssetToolsModule>("AssetTools");
+
+		if (AssetToolsModule != nullptr)
+		{
+			IAssetTools& AssetTools = AssetToolsModule->Get();
+
+			for (auto Action : RegisteredAssetTypeActions)
+			{
+				AssetTools.UnregisterAssetTypeActions(Action);
+			}
+		}
+	}
+
+protected:
+
+	/** Registers main menu and tool bar menu extensions. */
+	void RegisterMenuExtensions()
+	{
+		MenuExtensibilityManager = MakeShareable(new FExtensibilityManager);
+		ToolBarExtensibilityManager = MakeShareable(new FExtensibilityManager);
+	}
+
+	/** Unregisters main menu and tool bar menu extensions. */
+	void UnregisterMenuExtensions()
+	{
+		MenuExtensibilityManager.Reset();
+		ToolBarExtensibilityManager.Reset();
+	}
+
+private:
+
+	/** Holds the menu extensibility manager. */
+	TSharedPtr<FExtensibilityManager> MenuExtensibilityManager;
+
+	/** The collection of registered asset type actions. */
+	TArray<TSharedRef<IAssetTypeActions>> RegisteredAssetTypeActions;
+
+	/** Holds the plug-ins style set. */
+	//TSharedPtr<ISlateStyle> Style;
+
+	/** Holds the tool bar extensibility manager. */
+	TSharedPtr<FExtensibilityManager> ToolBarExtensibilityManager;
 };
 IMPLEMENT_MODULE(FCognitiveVREditorModule, CognitiveVREditor);
 

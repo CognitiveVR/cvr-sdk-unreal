@@ -190,6 +190,9 @@ public:
 		FReply UploadDynamicsManifest();
 
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
+		FReply UploadDynamicsManifestIds(TArray<FString> ids, FString meshName, FString prefabName);
+
+	UFUNCTION(Exec, Category = "Dynamics Manifest")
 		FReply SetUniqueDynamicIds();
 
 	FReply GetDynamicsManifest();
@@ -244,6 +247,19 @@ public:
 		return myworld->GetMapName();
 	}
 
+	bool DynamicMeshDirectoryExists(FString meshname)
+	{
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		FString path = FPaths::Combine(GetDynamicsExportDirectory(), meshname);
+		return PlatformFile.DirectoryExists(*path);
+	}
+
+	bool CurrentSceneDirectoryExists()
+	{
+		FString scenePath = GetSceneExportDirectory(GetCurrentSceneName());
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		return PlatformFile.DirectoryExists(*scenePath);
+	}
 
 	void CurrentSceneVersionRequest();
 
