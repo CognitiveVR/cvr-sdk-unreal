@@ -648,7 +648,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 	for (int32 i = 0; i < dynamics.Num(); i++)
 	{
 		//if they have a customid -> add them to the objectmanifest string
-		if (dynamics[i]->UseCustomId && dynamics[i]->CustomId != "")
+		if (dynamics[i]->IdSourceType == EIdSourceType::CustomId && dynamics[i]->CustomId != "")
 		{
 			wroteAnyObjects = true;
 			objectManifest += "{";
@@ -2881,7 +2881,7 @@ FString FCognitiveEditorTools::BuildDebugFileContents() const
 		outputString += "\n";
 		outputString += FString("        Mesh Name: ") + foundDynamics[i]->MeshName;
 		outputString += "\n";
-		if (foundDynamics[i]->UseCustomId)
+		if (foundDynamics[i]->IdSourceType == EIdSourceType::CustomId)
 		{
 			outputString += FString("        Id: ") + foundDynamics[i]->CustomId;
 			outputString += "\n";

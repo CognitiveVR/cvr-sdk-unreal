@@ -49,7 +49,7 @@ void UDynamicObject::TryGenerateMeshName()
 
 void UDynamicObject::GenerateCustomId()
 {
-	UseCustomId = true;
+	IdSourceType = EIdSourceType::CustomId;
 	CustomId = FGuid::NewGuid().ToString();
 }
 
@@ -73,7 +73,7 @@ void UDynamicObject::TryGenerateCustomIdAndMesh()
 			return;
 		}
 		UseCustomMeshName = true;
-		UseCustomId = true;
+		//UseCustomId = true;
 		MeshName = staticmeshComponent->GetStaticMesh()->GetName();
 		CustomId = FGuid::NewGuid().ToString();
 		GWorld->MarkPackageDirty();
@@ -285,7 +285,7 @@ TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
 
 void UDynamicObject::GenerateObjectId()
 {
-	if (UseIdPool)
+	if (IdSourceType == EIdSourceType::PoolId)
 	{
 		FString poolId;
 		HasValidPoolId = IDPool->GetId(poolId);
@@ -296,7 +296,7 @@ void UDynamicObject::GenerateObjectId()
 		return;
 	}
 
-	if (!UseCustomId || CustomId.IsEmpty())
+	if (IdSourceType != EIdSourceType::CustomId || CustomId.IsEmpty())
 	{
 		TSharedPtr<FDynamicObjectId> recycledId;
 		bool foundRecycleId = false;
@@ -822,7 +822,7 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 //instance
 void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (UseIdPool && HasValidPoolId && IDPool != NULL)
+	if (IdSourceType == EIdSourceType::PoolId && HasValidPoolId && IDPool != NULL)
 	{
 		if (ObjectID.IsValid() && !ObjectID->Id.IsEmpty())
 		{
@@ -959,7 +959,7 @@ UDynamicObject* UDynamicObject::SetupController(AActor* target, bool IsRight, EC
 	dyn->UseCustomMeshName = false;
 	dyn->IsController = true;
 
-	dyn->UseCustomId = true;
+	dyn->IdSourceType = EIdSourceType::CustomId;
 	dyn->CustomId = FGuid::NewGuid().ToString();
 	dyn->Initialize();
 	return dyn;
@@ -1024,7 +1024,7 @@ UDynamicObject* UDynamicObject::SetupControllerComponent(UDynamicObject* dyn, bo
 	dyn->UseCustomMeshName = false;
 	dyn->IsController = true;
 
-	dyn->UseCustomId = true;
+	dyn->IdSourceType = EIdSourceType::CustomId;
 	dyn->CustomId = FGuid::NewGuid().ToString();
 	dyn->Initialize();
 	return dyn;
