@@ -6,6 +6,7 @@
 
 TSharedRef<IDetailCustomization> UDynamicIdPoolAssetDetails::MakeInstance()
 {
+	FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
 	return MakeShareable( new UDynamicIdPoolAssetDetails);
 }
 
@@ -29,17 +30,40 @@ void UDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLa
 		}
 	}
 
-	//IMPROVEMENT add export directory field
-	DetailLayout.EditCategory( "Scene Explorer" )
-	.AddCustomRow( NSLOCTEXT("SkyLightDetails", "UpdateSkyLight", "Recapture Scene") )
+	//IMPROVEMENT add export directory field?
+
+	DetailLayout.EditCategory("Scene Explorer")
+	.AddCustomRow(NSLOCTEXT("SkyLightDetails", "UpdateSkyLight", "Recapture Scene"))
 	.ValueContent()
-	.MaxDesiredWidth(200.f)
-	.MinDesiredWidth(200.f)
+	.MaxDesiredWidth(500.f)
+	.MinDesiredWidth(400.f)
 	[
-		SNew(STextBlock)
+		SNew(SBorder)
+		.BorderImage(FEditorStyle::GetBrush("ToolPanel.LightGroupBorder"))
 		.Visibility_Raw(this, &UDynamicIdPoolAssetDetails::HasMeshBeenExported)
-		.Font(IDetailLayoutBuilder::GetDetailFont())
-		.Text(FText::FromString("Mesh Name not found. Has this Mesh been exported?"))
+		.Padding(8.0f)
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.VAlign(VAlign_Center)
+			[
+				SNew(SImage)
+				.Visibility_Raw(this, &UDynamicIdPoolAssetDetails::HasMeshBeenExported)
+				.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
+			]
+				// Notice
+			+SHorizontalBox::Slot()
+			.Padding(16.0f, 0.0f)
+			.VAlign(VAlign_Center)
+			[
+				SNew(STextBlock)
+				.ColorAndOpacity(FLinearColor::Black)
+				.Visibility_Raw(this, &UDynamicIdPoolAssetDetails::HasMeshBeenExported)
+				.AutoWrapText(true)
+				.Text(FText::FromString("Check that the Mesh has been exported.\nThis window will only upload Ids for objects for aggregation.\nA mesh should already by uploaded to visualize these objects on the dashboard."))
+			]
+		]
 	];
 
 	DetailLayout.EditCategory( "Scene Explorer" )
@@ -75,7 +99,7 @@ void UDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLa
 		[
 			SNew( STextBlock )
 			.Font( IDetailLayoutBuilder::GetDetailFont() )
-			.Text(FText::FromString("Generate Id") )
+			.Text(FText::FromString("Add Id") )
 		]
 	];
 }

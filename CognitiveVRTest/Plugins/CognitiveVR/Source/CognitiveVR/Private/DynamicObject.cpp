@@ -288,12 +288,29 @@ void UDynamicObject::GenerateObjectId()
 	if (IdSourceType == EIdSourceType::PoolId)
 	{
 		FString poolId;
-		HasValidPoolId = IDPool->GetId(poolId);
-		ObjectID = MakeShareable(new FDynamicObjectId(poolId, MeshName));
-		FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
-		manifest.Add(entry);
-		newManifest.Add(entry);
-		return;
+		if (IDPool == NULL)
+		{
+			ObjectID = GetUniqueId(MeshName);
+			allObjectIds.Add(ObjectID);
+			FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
+			if (IsController)
+			{
+				entry.ControllerType = ControllerType;
+				entry.IsRight = IsRightController;
+			}
+			manifest.Add(entry);
+			newManifest.Add(entry);
+			return;
+		}
+		else
+		{
+			HasValidPoolId = IDPool->GetId(poolId);
+			ObjectID = MakeShareable(new FDynamicObjectId(poolId, MeshName));
+			FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
+			manifest.Add(entry);
+			newManifest.Add(entry);
+			return;
+		}
 	}
 
 	if (IdSourceType != EIdSourceType::CustomId || CustomId.IsEmpty())
