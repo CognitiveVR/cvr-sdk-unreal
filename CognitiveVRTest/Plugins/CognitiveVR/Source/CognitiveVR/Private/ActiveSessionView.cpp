@@ -83,10 +83,9 @@ TArray<FVector> AActiveSessionView::GetProjectedFixations()
 
 	for (int32 i = 0; i < points.Num(); i++)
 	{
-		if (points[i].IsLocal && points[i].LocalTransform != NULL)
+		if (points[i].IsLocal)
 		{
-			worldPosition = points[i].LocalTransform->GetComponentTransform().TransformPosition(points[i].LocalPosition);
-
+			worldPosition = points[i].Transformation.TransformPosition(points[i].LocalPosition);
 		}
 		else
 		{

@@ -10,6 +10,7 @@
 #include "EyeCapture.h"
 #include "SceneView.h"
 #include "Engine/LocalPlayer.h"
+#include "DrawDebugHelpers.h"
 #if defined TOBII_EYETRACKING_ACTIVE
 #include "TobiiTypes.h"
 #include "ITobiiCore.h"
@@ -80,7 +81,6 @@ private:
 
 	bool isFixating;
 	TArray<FVector> CachedEyeCapturePositions;
-	UDynamicObject* FixationTransform;
 
 	bool TryBeginLocalFixation();
 	bool TryBeginFixation();
@@ -102,6 +102,9 @@ private:
 	TArray<TSharedPtr<FC3DGazePoint>> recentEyePositions;
 
 public:
+
+	UPROPERTY(EditAnywhere)
+		float MaxFixationDistance = 10000;
 
 	//configurable fixation variables
 	/* the time that gaze must be within the max fixation angle before a fixation occurs */

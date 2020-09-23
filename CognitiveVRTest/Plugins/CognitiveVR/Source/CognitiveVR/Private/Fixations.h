@@ -28,20 +28,25 @@ class COGNITIVEVR_API FFixation
 public:
 	FVector WorldPosition;
 	FVector LocalPosition;
-	USceneComponent* LocalTransform = NULL;
+	//USceneComponent* LocalTransform = NULL;
 
 	//float DebugScale;
 	int64 LastUpdated;
 	int64 DurationMs;
 	int64 StartMs;
+	
 	int64 LastNonDiscardedTime;
 	int64 LastEyesOpen;
 	int64 LastInRange;
 	int64 LastOnTransform;
+
 	float StartDistance;
 	float MaxRadius;
 	bool IsLocal;
 	FString DynamicObjectId = "";
+	
+	//set in begin local fixation and updated while fixation is active
+	FTransform Transformation;
 	
 	void AddEyeCapture(FEyeCapture eyeCapture)
 	{
@@ -82,6 +87,11 @@ public:
 		{
 			LastUpdated = eyeCapture.Time;
 			DurationMs = eyeCapture.Time - StartMs;
+		}
+
+		if (IsLocal && eyeCapture.HitDynamicId == DynamicObjectId)
+		{
+			Transformation = eyeCapture.CaptureMatrix;
 		}
 	}
 };

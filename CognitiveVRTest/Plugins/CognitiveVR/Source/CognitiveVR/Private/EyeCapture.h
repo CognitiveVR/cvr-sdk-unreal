@@ -13,13 +13,18 @@ class COGNITIVEVR_API FEyeCapture
 public:
 	FVector WorldPosition;
 	FVector LocalPosition;
+	
+	FTransform CaptureMatrix;
+	bool UseCaptureMatrix;
+	FString HitDynamicId;
+
 	bool SkipPositionForFixationAverage;
 	FVector HMDPosition;
 	int64 Time;
+	
 	bool Discard = true;
 	bool EyesClosed;
 	bool OutOfRange;
 	bool OffTransform;
 	FVector2D ScreenPos;
-	UDynamicObject* HitDynamicTransform;
 };
