@@ -32,6 +32,9 @@
 #if defined PICOMOBILE_API
 #include "PicoBlueprintFunctionLibrary.h"
 #endif
+#if defined HPGLIA_API
+#include "HPGliaClient.h"
+#endif
 #include "PlayerTracker.generated.h"
 
 class FAnalyticsProviderCognitiveVR;

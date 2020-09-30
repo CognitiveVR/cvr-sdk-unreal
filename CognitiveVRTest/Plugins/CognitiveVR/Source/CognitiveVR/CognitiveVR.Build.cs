@@ -99,6 +99,13 @@ namespace UnrealBuildTool.Rules
 			PublicDependencyModuleNames.Add("PicoMobile");
 		}
 
+        //HP Omnicept
+		if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory, "HPGlia")))
+		{
+			System.Console.WriteLine("CognitiveVR.Build.cs found HP Glia Omnicept folder");
+			PublicDependencyModuleNames.Add("HPGlia");
+		}
+
 		if (Target.Platform == UnrealTargetPlatform.Win32 ||
             Target.Platform == UnrealTargetPlatform.Win64)
         {

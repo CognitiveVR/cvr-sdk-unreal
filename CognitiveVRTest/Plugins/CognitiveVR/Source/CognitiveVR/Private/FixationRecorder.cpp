@@ -77,6 +77,9 @@ void UFixationRecorder::BeginPlay()
 #if defined SRANIPAL_API
 		GEngine->GetAllLocalPlayerControllers(controllers);
 #endif
+#if defined HPGLIA_API
+		GEngine->GetAllLocalPlayerControllers(controllers);
+#endif
 		Super::BeginPlay();
 	}
 	else
@@ -373,6 +376,23 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 	int64 ts = (int64)(Util::GetTimestamp() * 1000);
 	return ts;
 }
+#elif defined HPGLIA_API
+bool UFixationRecorder::AreEyesClosed()
+{
+	FEyeTracking eyeTrackingData;
+	if (UHPGliaClient::GetEyeTracking(eyeTrackingData))
+	{
+		if (eyeTrackingData.LeftEyeOpenness > 0.4f) { return false; }
+		if (eyeTrackingData.RightEyeOpenness > 0.4f) { return false; }
+	}
+	return true;
+}
+
+int64 UFixationRecorder::GetEyeCaptureTimestamp()
+{
+	int64 ts = (int64)(Util::GetTimestamp() * 1000);
+	return ts;
+}
 #else
 
 bool UFixationRecorder::AreEyesClosed()
@@ -506,6 +526,33 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	if (UPicoBlueprintFunctionLibrary::PicoGetEyeTrackingGazeRay(Start, WorldDirection))
 	{
 		End = Start + WorldDirection * 10000.0f;
+	}
+	else
+	{
+		EyeCaptures[index].Discard = true;
+	}
+
+#elif defined HPGLIA_API
+	EyeCaptures[index].EyesClosed = AreEyesClosed();
+	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
+
+	FVector Start = FVector::ZeroVector;
+	FVector WorldDirection = FVector::ZeroVector;
+	FVector End = FVector::ZeroVector;
+
+	FEyeTracking eyeTrackingData;
+	if (UHPGliaClient::GetEyeTracking(eyeTrackingData))
+	{
+		if (eyeTrackingData.CombinedGazeConfidence < 0.4f) { EyeCaptures[index].Discard = true; }
+		else
+		{
+			FVector dir = FVector(eyeTrackingData.CombinedGaze.Z, eyeTrackingData.CombinedGaze.X, eyeTrackingData.CombinedGaze.Y);
+			WorldDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(dir);
+
+			FVector captureLocation = controllers[0]->PlayerCameraManager->GetCameraLocation();
+			Start = captureLocation;
+			End = captureLocation + WorldDirection * 100000.0f;
+		}
 	}
 	else
 	{

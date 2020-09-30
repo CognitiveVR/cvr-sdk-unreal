@@ -98,6 +98,24 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 		End = Start + WorldDirection * 10000.0f;
 	}
 	return End;
+#elif defined HPGLIA_API
+	FVector End = FVector::ZeroVector;
+	FVector TempStart = controllers[0]->PlayerCameraManager->GetCameraLocation();
+	FVector LocalDirection = FVector::ZeroVector;
+
+	FEyeTracking eyeTrackingData;
+	if (UHPGliaClient::GetEyeTracking(eyeTrackingData))
+	{
+		if (eyeTrackingData.CombinedGazeConfidence > 0.4f)
+		{
+			FVector dir = FVector(eyeTrackingData.CombinedGaze.Z, eyeTrackingData.CombinedGaze.X, -eyeTrackingData.CombinedGaze.Y);
+			LastDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(dir);
+			End = TempStart + LastDirection * 100000.0f;
+			return End;
+		}
+	}
+	End = TempStart + LastDirection * 100000.0f;
+	return End;
 #else
 	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
 	FVector End = start + captureRotation.Vector() * 10000.0f;
