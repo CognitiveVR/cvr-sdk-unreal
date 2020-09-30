@@ -41,5 +41,10 @@ public class CognitiveVREditor : ModuleRules
 				"RenderCore"
             }
 		);
+		PrivateIncludePathModuleNames.AddRange(
+			new string[] {
+				"AssetTools",
+				"UnrealEd"
+			});
 	}
 }

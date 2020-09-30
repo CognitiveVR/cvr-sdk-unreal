@@ -3,6 +3,7 @@
 */
 #pragma once
 
+#include "C3DCommonTypes.h"
 #include "CoreMinimal.h"
 #include "CognitiveVR.h"
 #include "Public/CognitiveVRProvider.h"

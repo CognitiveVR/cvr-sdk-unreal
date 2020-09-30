@@ -17,8 +17,8 @@ struct FExitPollResponse;
 	class Network
 	{
 	private:
-		static FHttpModule* Http;
-		static FString Gateway;
+		FHttpModule* Http;
+		FString Gateway;
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 
 	public:
@@ -26,7 +26,7 @@ struct FExitPollResponse;
 
 		void NetworkCall(FString suburl, FString contents);
 
-		static void OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+		void OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 		void NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response);
 		void NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSetName, FExitPollResponse Responses);
 	};

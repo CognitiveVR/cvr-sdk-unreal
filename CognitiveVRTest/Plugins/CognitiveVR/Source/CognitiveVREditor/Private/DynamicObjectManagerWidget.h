@@ -21,12 +21,11 @@
 class FCognitiveTools;
 class FCognitiveVREditorModule;
 
-class SSceneSetupWidget : public SCompoundWidget
+class SDynamicObjectManagerWidget : public SCompoundWidget
 {
 public:
-	SLATE_BEGIN_ARGS(SSceneSetupWidget){}
+	SLATE_BEGIN_ARGS(SDynamicObjectManagerWidget){}
 	SLATE_ARGUMENT(TArray<TSharedPtr<FDynamicData>>, Items)
-		SLATE_ARGUMENT(FSlateBrush*,ScreenshotTexture)
 	//SLATE_ARGUMENT(FCognitiveEditorTools*, CognitiveEditorTools)
 	SLATE_END_ARGS()
 
@@ -34,15 +33,9 @@ public:
 	void CheckForExpiredDeveloperKey();
 	void OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	FString DisplayAPIKey;
-	FText GetDisplayAPIKey() const;
-	void OnAPIKeyChanged(const FText& Text);
-
 	FString DisplayDeveloperKey;
 	FText GetDisplayDeveloperKey() const;
 	void OnDeveloperKeyChanged(const FText& Text);
-
-
 
 	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 
@@ -56,64 +49,10 @@ public:
 	int32 CurrentPage = 0;
 	bool SceneWasExported = false;
 
-	FReply DebugNextPage();
-	FReply DebugPreviousPage();
-	
-	//FString APIKey;
-	//FText GetAPIKey() const;
-
-	//FText GetDeveloperKey() const;
-
-	
-	FText GetHeaderTitle() const;
-	EVisibility IsIntroVisible() const;
-	EVisibility IsKeysVisible() const;
-	EVisibility IsBlenderVisible() const;
-	EVisibility IsExplainDynamicsVisible() const;
-	EVisibility IsExplainSceneVisible() const;
-	EVisibility IsDynamicsVisible() const;
-	EVisibility IsExportVisible() const;
-	EVisibility IsUploadVisible() const;
-	EVisibility IsCompleteVisible() const;
-	EVisibility IsUploadComplete() const;
-	FReply NextPage();
-	EVisibility NextButtonVisibility() const;
-	bool NextButtonEnabled() const;
-	FText NextButtonText() const;
-	EVisibility BackButtonVisibility() const;
-	FReply LastPage();
 	EVisibility UploadErrorVisibility() const;
 	FText UploadErrorText() const;
 
-	EVisibility IsNewSceneUpload() const;
-	EVisibility IsSceneVersionUpload() const;
-	EVisibility IsIntroNewVersionVisible() const;
-
-	EVisibility ARButtonVisibility() const;
-	FReply ARSkipExport();
-
-	void GetScreenshotBrush();
-	FSlateBrush* ScreenshotTexture;
-	const FSlateBrush* GetScreenshotBrushTexture() const;
-
-	const FSlateBrush* GetDynamicsGreyTexture() const;
-	FSlateBrush* DynamicsGreyTexture;
-	const FSlateBrush* GetDynamicsBlueTexture() const;
-	FSlateBrush* DynamicsBlueTexture;
-	const FSlateBrush* GetSceneGreyTexture() const;
-	FSlateBrush* SceneGreyTexture;
-	const FSlateBrush* GetSceneBlueTexture() const;
-	FSlateBrush* SceneBlueTexture;
-
-	const FSlateBrush* GetBlenderLogo() const;
-	FSlateBrush* BlenderLogoTexture;
-
-	const FSlateBrush* GetBlueprintStartTexture() const;
-	FSlateBrush* BlueprintStartTexture;
-
-	TSharedRef<ITableRow> OnGenerateSceneExportFileRow(TSharedPtr<FString> InItem, const TSharedRef<STableViewBase>& OwnerTable);
-	EVisibility DisplayWizardThrobber() const;
-	
+	//TSharedRef<ITableRow> OnGenerateSceneExportFileRow(TSharedPtr<FString> InItem, const TSharedRef<STableViewBase>& OwnerTable);
 
 	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
 	TSharedPtr<SImage> ScreenshotImage;
@@ -127,7 +66,7 @@ public:
 	FText DynamicCountInScene;
 
 	/* The actual UI list */
-	TSharedPtr< SListView< TSharedPtr<FDynamicData> > > ListViewWidget;
+	//TSharedPtr< SListView< TSharedPtr<FDynamicData> > > ListViewWidget;
 
 	FReply SelectDynamic(TSharedPtr<FDynamicData> data);
 
@@ -135,17 +74,26 @@ public:
 
 	void RefreshList();
 
-	FReply TakeScreenshot();
-
-	int32 ScreenshotWidth = 256;
-	int32 ScreenshotHeight = 256;
-
-	FOptionalSize GetScreenshotWidth() const;
-	FOptionalSize GetScreenshotHeight() const;
-
 	FReply ValidateAndRefresh();
 
-	FReply EvaluateSceneExport();
+	//FReply EvaluateSceneExport();
+	bool NoExportGameplayMeshes = true;
+	ECheckBoxState GetNoExportGameplayMeshCheckbox() const;
+	void OnChangeNoExportGameplayMesh(ECheckBoxState newstate)
+	{
+		if (newstate == ECheckBoxState::Checked)
+		{
+			NoExportGameplayMeshes = true;
+		}
+		else
+		{
+			NoExportGameplayMeshes = false;
+		}
+	}
+
+	bool bSettingsVisible = true;
+	FReply ToggleSettingsVisible();
+
 	bool OnlyExportSelected;
 	ECheckBoxState GetOnlyExportSelectedCheckbox() const;
 	void OnChangeOnlyExportSelected(ECheckBoxState newstate)
@@ -162,4 +110,21 @@ public:
 
 	void OnExportPathChanged(const FText& Text);
 	void OnBlenderPathChanged(const FText& Text);
+	EVisibility AreSettingsVisible() const;
+
+	FReply ExportSelectedDynamicData();
+	FReply UploadSelectedDynamicData();
+
+	bool IsExportAllEnabled() const;
+	bool IsExportSelectedEnabled() const;
+
+	bool IsUploadAllEnabled() const;
+	bool IsUploadSelectedEnabled() const;
+	bool IsUploadIdsEnabled() const;
+
+	FText UploadAllText() const;
+	FText UploadSelectedText() const;
+	FText ExportSelectedText() const;
+	FText GetSettingsButtonText() const;
+	FText GetSceneText() const;
 };

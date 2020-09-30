@@ -179,7 +179,9 @@ void UCognitiveVRBlueprints::RecordSensor(const FString Name, const float Value)
 
 void UCognitiveVRBlueprints::GetQuestionSet(const FString Hook, FCognitiveExitPollResponse response)
 {
-	ExitPoll::MakeQuestionSetRequest(Hook, response);
+	if (!cog.IsValid()) { return; }
+	if (!cog->exitpoll.IsValid()) { return; }
+	cog->exitpoll->MakeQuestionSetRequest(Hook, response);
 }
 
 bool UCognitiveVRBlueprints::HasSessionStarted()
@@ -201,7 +203,9 @@ FExitPollQuestionSet UCognitiveVRBlueprints::GetCurrentExitPollQuestionSet()
 
 void UCognitiveVRBlueprints::SendExitPollAnswers(const TArray<FExitPollAnswer>& Answers)
 {
-	ExitPoll::SendQuestionAnswers(Answers);
+	if (!cog.IsValid()) { return; }
+	if (!cog->exitpoll.IsValid()) { return; }
+	cog->exitpoll->SendQuestionAnswers(Answers);
 }
 
 void UCognitiveVRBlueprints::FlushEvents()
@@ -448,15 +452,16 @@ float UCognitiveVRBlueprints::GetLastFixationSendTime()
 
 TArray<FString> UCognitiveVRBlueprints::GetDebugQuestionSet()
 {
-	auto qs = ExitPoll::GetCurrentQuestionSet();
 	TArray<FString> questions;
 
+	if (!cog.IsValid()) { return questions; }
+	if (!cog->exitpoll.IsValid()) { return questions; }
+	auto qs = cog->exitpoll->GetCurrentQuestionSet();
 	for (auto& Elem : qs.questions)
 	{
 		questions.Add(Elem.title);
 	}
 	return questions;
-
 }
 
 TArray<FString> UCognitiveVRBlueprints::GetSensorKeys()

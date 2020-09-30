@@ -253,7 +253,7 @@ bool UFixationRecorder::CheckEndFixation(FFixation testFixation)
 	{
 		return true;
 	}
-	if (EyeCaptures[index].Time > testFixation.LastNonDiscardedTime + MaxConsecutiveDiscardMs) //TODO add 'was discarded last frame'
+	if (EyeCaptures[index].Time > testFixation.LastNonDiscardedTime + MaxConsecutiveDiscardMs)
 	{
 		if (WasCaptureDiscardedLastFrame)
 			return true;

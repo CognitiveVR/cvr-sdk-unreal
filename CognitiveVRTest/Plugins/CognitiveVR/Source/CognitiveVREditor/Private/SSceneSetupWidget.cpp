@@ -657,6 +657,43 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.Items(GetSceneDynamics())
 				]
 			]
+			
+			+ SVerticalBox::Slot()
+			.Padding(0, 0, 0, padding)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			.VAlign(VAlign_Center)
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+				+SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+					.HeightOverride(64)
+					.WidthOverride(128)
+					[
+						SNew(SButton)
+						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+						.Text(FText::FromString("Export All Meshes"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportAllDynamics)
+					]
+				]
+				+SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+					.HeightOverride(64)
+					.WidthOverride(128)
+					[
+						SNew(SButton)
+						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
+						.Text(FText::FromString("Export Selected Meshes"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportSelectedDynamics)
+					]
+				]
+			]
+
 			+SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(FMargin(64, 24, 64, 24))
@@ -700,50 +737,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 							.AutoWrapText(true)
 							.Text(FText::FromString("Validate Mesh Names and Unique Ids"))
 						]
-					]
-				]
-			]
-			+ SVerticalBox::Slot()
-				.Padding(0, 0, 0, padding)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.VAlign(VAlign_Center)
-				.AutoHeight()
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-						.Text(FText::FromString("Export All Meshes"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportAllDynamics)
-					]
-				]
-			]
-			+ SVerticalBox::Slot()
-				.Padding(0, 0, 0, padding)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.VAlign(VAlign_Center)
-				.AutoHeight()
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-						.Text(FText::FromString("Export Selected Meshes"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportSelectedDynamics)
 					]
 				]
 			]
@@ -1215,7 +1208,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 		FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
 		FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
-		FCognitiveEditorTools::GetInstance()->SearchForBlender();
 		FCognitiveEditorTools::GetInstance()->WizardUploadError = "";
 
 		FString texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("objects_grey.png");
@@ -1254,8 +1246,6 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 	}
 
 	TArray<AActor*> ToBeExported;
-	TArray<AActor*> ToBeExportedFinal;
-
 	if (OnlyExportSelected) //only export selected
 	{
 		for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
@@ -1281,51 +1271,39 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 		}
 	}
 
-
-	if (NoExportGameplayMeshes)
+	TArray<AActor*> ToBeExportedFinal;
+	for (int32 i = 0; i < ToBeExported.Num(); i++)
 	{
-		for (int32 i = 0; i < ToBeExported.Num(); i++)
+		if (ToBeExported[i]->GetName().StartsWith("SkySphereBlueprint"))
 		{
-			if (ToBeExported[i]->GetName().StartsWith("SkySphereBlueprint"))
-			{
-				continue;
-			}
-			UActorComponent* cameraComponent = ToBeExported[i]->GetComponentByClass(UCameraComponent::StaticClass());
-			if (cameraComponent != NULL)
-			{
-				continue;
-			}
+			continue;
+		}
+		UActorComponent* cameraComponent = ToBeExported[i]->GetComponentByClass(UCameraComponent::StaticClass());
+		if (cameraComponent != NULL)
+		{
+			continue;
+		}
 
-			UActorComponent* actorComponent = ToBeExported[i]->GetComponentByClass(UDynamicObject::StaticClass());
-			if (actorComponent != NULL)
-			{
-				continue;
-			}
-			ToBeExportedFinal.Add(ToBeExported[i]);
-		}
-	}
-	else
-	{
-		//export everything, it's fine
-		for (int32 i = 0; i < ToBeExported.Num(); i++)
+		UActorComponent* actorComponent = ToBeExported[i]->GetComponentByClass(UDynamicObject::StaticClass());
+		if (actorComponent != NULL)
 		{
-			ToBeExportedFinal.Add(ToBeExported[i]);
+			continue;
 		}
+		ToBeExportedFinal.Add(ToBeExported[i]);
 	}
 
 	
+	//--------------------export actor meshes
 	GEditor->SelectNone(false, true, false);
 	for (int32 i = 0; i < ToBeExportedFinal.Num(); i++)
 	{
 		GEditor->SelectActor((ToBeExportedFinal[i]), true, false, true);
 	}
 	FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
-
 	GEditor->ExportMap(tempworld, *ExportedSceneFile, true);
 
-
+	//--------------------export geometry as fbx
 	//always export all bsp geometry brushes
-	//export geometry as fbx
 	GEditor->SelectNone(false, true, false);
 
 	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
@@ -1340,35 +1318,48 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 	}
 
 	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".fbx";
-
 	GEditor->ExportMap(tempworld, *ExportedSceneFile2, true);
 
+	//--------------------export materials
 	FCognitiveEditorTools::GetInstance()->WizardPostSceneExport();
 	SceneWasExported = true;
-
-
-	//Export Scene Materials
 	TArray< UStaticMeshComponent*> sceneMeshes;
-	//iterate over all scene static meshes
-	for (TObjectIterator<UStaticMeshComponent> It; It; ++It)
+
+	if (OnlyExportSelected)
 	{
-		//
-		UStaticMeshComponent* TempObject = *It;
-		if (TempObject == NULL) { continue; }
+		for (auto &elem : ToBeExportedFinal)
+		{
+			auto TempObject = elem->GetComponentByClass(UStaticMeshComponent::StaticClass());
+			if (TempObject == NULL) { continue; }
+			auto staticTempObject = (UStaticMeshComponent*)TempObject;
 
-		if (TempObject->GetOwner() == NULL) { continue; }
+			if (staticTempObject->GetOwner() == NULL) { continue; }
 
-		UActorComponent* dynamic = TempObject->GetOwner()->GetComponentByClass(UDynamicObject::StaticClass());
-		if (dynamic != NULL) { continue; }
+			UActorComponent* dynamic = staticTempObject->GetOwner()->GetComponentByClass(UDynamicObject::StaticClass());
+			if (dynamic != NULL) { continue; }
 
-		sceneMeshes.Add(TempObject);
+			sceneMeshes.Add(staticTempObject);
+		}
 	}
-
-	//FString sceneDirectory = BaseExportDirectory + "/" + GetCurrentSceneName() + "/";
+	else
+	{
+		for (TObjectIterator<UStaticMeshComponent> It; It; ++It)
+		{
+			//
+			UStaticMeshComponent* TempObject = *It;
+			if (TempObject == NULL) { continue; }
+		
+			if (TempObject->GetOwner() == NULL) { continue; }
+		
+			UActorComponent* dynamic = TempObject->GetOwner()->GetComponentByClass(UDynamicObject::StaticClass());
+			if (dynamic != NULL) { continue; }
+		
+			sceneMeshes.Add(TempObject);
+		}
+	}
+	
 	FString sceneDirectory = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory()+"/";
-
 	FCognitiveEditorTools::GetInstance()->WizardExportMaterials(sceneDirectory, sceneMeshes, FCognitiveEditorTools::GetInstance()->GetCurrentSceneName());
-
 
 
 	//Convert scene to GLTF
@@ -1383,12 +1374,6 @@ FReply SSceneSetupWidget::SelectAll()
 	UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();
 	GEditor->Exec(World, TEXT("actor select all"));
 	return FReply::Handled();
-}
-
-ECheckBoxState SSceneSetupWidget::GetNoExportGameplayMeshCheckbox() const
-{
-	if (NoExportGameplayMeshes)return ECheckBoxState::Checked;
-	return ECheckBoxState::Unchecked;
 }
 
 ECheckBoxState SSceneSetupWidget::GetOnlyExportSelectedCheckbox() const

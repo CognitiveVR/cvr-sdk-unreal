@@ -33,6 +33,7 @@
 #include "IImageWrapperModule.h"
 #include "RenderingThread.h"
 #include "Classes/Engine/Level.h"
+#include "CoreMisc.h"
 
 //all sorts of functionality for Cognitive SDK
 
@@ -91,7 +92,6 @@ public:
 
 	bool HasSearchedForBlender = false; //to limit the searching directories. possibly not required
 
-	void SearchForBlender();
 	bool HasFoundBlender() const;
 	bool HasFoundBlenderAndHasSelection() const;
 	bool CurrentSceneHasSceneId() const;
@@ -172,6 +172,7 @@ public:
 
 	//Runs the built-in obj exporter with selected meshes
 		FReply ExportSelectedDynamics();
+		FReply ExportDynamicData(TArray< TSharedPtr<FDynamicData>> dynamicData);
 	
 	void ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
 
@@ -187,6 +188,9 @@ public:
 	//this is for aggregating dynamic objects
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
 		FReply UploadDynamicsManifest();
+
+	UFUNCTION(Exec, Category = "Dynamics Manifest")
+		FReply UploadDynamicsManifestIds(TArray<FString> ids, FString meshName, FString prefabName);
 
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
 		FReply SetUniqueDynamicIds();
@@ -243,6 +247,19 @@ public:
 		return myworld->GetMapName();
 	}
 
+	bool DynamicMeshDirectoryExists(FString meshname)
+	{
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		FString path = FPaths::Combine(GetDynamicsExportDirectory(), meshname);
+		return PlatformFile.DirectoryExists(*path);
+	}
+
+	bool CurrentSceneDirectoryExists()
+	{
+		FString scenePath = GetSceneExportDirectory(GetCurrentSceneName());
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		return PlatformFile.DirectoryExists(*scenePath);
+	}
 
 	void CurrentSceneVersionRequest();
 
@@ -372,6 +389,12 @@ public:
 	//set to 500, 404, 401 or some other junk if uploading from the wizard encountered and error
 	FString WizardUploadError;
 	void CreateExportFolderStructure();
+
+	bool HasExportedAnyDynamicMeshes() const;
+
+	FString BuildDebugFileContents() const;
+
+	void AppendDirectoryContents(FString FullPath, int32 depth, FString& outputString);
 };
 
 

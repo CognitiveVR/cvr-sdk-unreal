@@ -5,7 +5,7 @@ import time
 
 cwd = os.getcwd()
 version = "0"
-enginesubversion = "22"
+enginesubversion = "25"
 
 def replaceline(file, linesrc, linedst):
 
@@ -15,13 +15,13 @@ def replaceline(file, linesrc, linedst):
 
 	#replace mtl with references to pngs
 	finalstrings=[]
-	print("=============================================file loop start")
+	#print("=============================================file loop start")
 	for line in readString.splitlines():
 		if line == linesrc:
 			finalstrings.append(linedst+"\n")
-			print("replaced line " + line)
+			print("replaced line " + linedst)
 		else:
-			print("-------- line " + line)
+			#print("-------- line " + line)
 			finalstrings.append(line+"\n")
 			
 
@@ -34,7 +34,7 @@ def replaceline(file, linesrc, linedst):
 	nmo = open(file, 'w+')
 	nmo.writelines(finalstrings)
 	nmo.close()
-	print("=============================================file loop end")
+	#print("=============================================file loop end")
 	return;
 
 def insertline(file, targetline, insertline):
@@ -45,14 +45,14 @@ def insertline(file, targetline, insertline):
 
 	#replace mtl with references to pngs
 	finalstrings=[]
-	print("=============================================file loop start")
+	#print("=============================================file loop start")
 	for line in readString.splitlines():
 		if line == targetline:
 			finalstrings.append(line+"\n")
 			finalstrings.append(insertline+"\n")
 			print("insert line " + insertline)
 		else:
-			print("-------- line " + line)
+			#print("-------- line " + line)
 			finalstrings.append(line+"\n")
 			
 
@@ -65,7 +65,7 @@ def insertline(file, targetline, insertline):
 	nmo = open(file, 'w+')
 	nmo.writelines(finalstrings)
 	nmo.close()
-	print("=============================================file loop end")
+	#print("=============================================file loop end")
 	return;
 
 def getpluginversion():
@@ -117,6 +117,10 @@ replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\IActiveSessionV
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\SSceneSetupWidget.cpp","	UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();","	UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();")
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\SSceneSetupWidget.cpp","		UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();","		UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();")
 
+#12 add legacy header to build.cs
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","			PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;","			bLegacyPublicIncludePaths = true;")
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\CognitiveVREditor.Build.cs","		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;","		bLegacyPublicIncludePaths = true;")
+
 #get level viewport
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.cpp","		for (int32 j = 0; j < GEditor->LevelViewportClients.Num(); j++)","		for (int32 j = 0; j < GEditor->GetLevelViewportClients().Num(); j++)")
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.cpp","			if (GEditor->LevelViewportClients[j]->ViewportType == LVT_Perspective)","			if (GEditor->GetLevelViewportClients()[j]->ViewportType == LVT_Perspective)")
@@ -124,6 +128,9 @@ replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\Cognitive
 
 #15 replace editor selection code in dynamic object manager widget
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DynamicObjectManagerWidget.cpp","	UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();","	UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();")
+
+#16 remove materialbakingmodule.h from editor tools
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.h","#include \"MaterialBakingModule.h\"","//#include \"MaterialBakingModule.h\"")
 
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue4"+enginesubversion

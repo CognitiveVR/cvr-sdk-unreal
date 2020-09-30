@@ -9,7 +9,7 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 			+SVerticalBox::Slot()
 			//.FillHeight(1)
 			[
-				SAssignNew(ListViewWidget, SListView<TSharedPtr<FDynamicData>>)
+				SAssignNew(ListViewWidget, SActorListView)
 				.ItemHeight(24)
 				.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneDynamics) //The Items array is the source of this listview
 				.OnGenerateRow(this, &SDynamicObjectListWidget::OnGenerateRowForList)
@@ -43,7 +43,7 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 					[
 						SNew(SRichTextBlock)
 						.DecoratorStyleSet(&FEditorStyle::Get())
-						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Exported File Type</>"))
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Exported</>"))
 					]
 				)
 			]
@@ -55,13 +55,18 @@ void SDynamicObjectListWidget::RefreshList()
 	ListViewWidget->RequestListRefresh();
 }
 
+FReply SDynamicObjectListWidget::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	return ListViewWidget->OnMouseButtonDown(MyGeometry, MouseEvent);
+}
+
 TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	return
 		SNew(SComboRow< TSharedPtr<FDynamicData> >, OwnerTable)
 		[
 			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
+			/*+ SHorizontalBox::Slot()
 			.MaxWidth(64)
 			.AutoWidth()
 			.Padding(2.0f)
@@ -72,9 +77,9 @@ TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<
 				[
 					SNew(SButton)
 					.OnClicked(FOnClicked::CreateSP(this, &SDynamicObjectListWidget::SelectDynamic, InItem))
-					.Text(FText::FromString("Select"))
+					.Text(FText::FromString("Select Actor"))
 				]
-			]
+			]*/
 			+ SHorizontalBox::Slot()
 			.FillWidth(1)
 			.Padding(2.0f)
@@ -106,10 +111,20 @@ TSharedRef<ITableRow> SDynamicObjectListWidget::OnGenerateRowForList(TSharedPtr<
 		];
 }
 
+//bool SDynamicObjectListWidget::IsShiftPressed() const
+//{
+//	//never returns true. slate doesn't have a viewport. how can it recieve inputs??
+//	for (auto& elem : GEditor->AllViewportClients)
+//	{
+//		if (elem->IsShiftPressed()) { return true; }
+//		//if (elem->KeyState(EKeys::LeftShift)) { return true; }
+//		//if (elem->KeyState(EKeys::RightShift)) { return true; }
+//	}
+//	return GEditor->GetActiveViewport()->KeyState(EKeys::LeftShift) || GEditor->GetActiveViewport()->KeyState(EKeys::RightShift);
+//}
+
 FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
 {
-	GEditor->SelectNone(false, true, false);
-
 	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
@@ -130,6 +145,7 @@ FReply SDynamicObjectListWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
 		if (dynamic->MeshName != data->MeshName) { continue; }
 
 		GEditor->SelectActor((*ActorItr), true, true, true, true);
+		ListViewWidget->SetSelection(data);
 
 		break;
 	}

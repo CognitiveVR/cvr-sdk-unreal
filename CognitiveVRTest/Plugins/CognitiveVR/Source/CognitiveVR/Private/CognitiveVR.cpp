@@ -116,6 +116,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	AttributionKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "AttributionKey", false);
 
 	network = MakeShareable(new Network());
+	exitpoll = MakeShareable(new ExitPoll());
 	customEventRecorder = MakeShareable(new CustomEventRecorder());
 	sensors = MakeShareable(new Sensors());
 
@@ -216,12 +217,17 @@ void FAnalyticsProviderCognitiveVR::SetLobbyId(FString lobbyId)
 
 void FAnalyticsProviderCognitiveVR::SetSessionName(FString sessionName)
 {
+	bHasCustomSessionName = true;
 	SetSessionProperty("c3d.sessionname", sessionName);
 }
 
 void FAnalyticsProviderCognitiveVR::EndSession()
 {
 	if (!customEventRecorder.IsValid())
+	{
+		return;
+	}
+	if (bHasSessionStarted == false)
 	{
 		return;
 	}
@@ -251,7 +257,6 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 	UCustomEvent::cog.Reset();
 
-
 	for (TObjectIterator<UFixationRecorder> Itr; Itr; ++Itr)
 	{
 		Itr->EndSession();
@@ -260,6 +265,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	SessionTimestamp = -1;
 	SessionId = "";
 
+	bHasCustomSessionName = false;
 	bHasSessionStarted = false;
 
 	UDynamicObject::OnSessionEnd();
@@ -270,6 +276,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 void FAnalyticsProviderCognitiveVR::FlushEvents()
 {
+	if (!bHasSessionStarted) { CognitiveLog::Warning("CognitiveVR Flush Events, but Session has not started!"); return; }
 	//send to dashboard
 	this->customEventRecorder->SendData();
 
@@ -305,6 +312,8 @@ void FAnalyticsProviderCognitiveVR::SetParticipantFullName(FString participantNa
 	ParticipantName = participantName;
 	SetParticipantProperty("name", participantName);
 	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetParticipantData set user id");
+	if (!bHasCustomSessionName)
+		SetSessionProperty("c3d.sessionname", participantName);
 }
 
 FString FAnalyticsProviderCognitiveVR::GetUserID() const

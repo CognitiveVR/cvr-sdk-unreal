@@ -49,7 +49,7 @@ void UDynamicObject::TryGenerateMeshName()
 
 void UDynamicObject::GenerateCustomId()
 {
-	UseCustomId = true;
+	IdSourceType = EIdSourceType::CustomId;
 	CustomId = FGuid::NewGuid().ToString();
 }
 
@@ -73,7 +73,7 @@ void UDynamicObject::TryGenerateCustomIdAndMesh()
 			return;
 		}
 		UseCustomMeshName = true;
-		UseCustomId = true;
+		//UseCustomId = true;
 		MeshName = staticmeshComponent->GetStaticMesh()->GetName();
 		CustomId = FGuid::NewGuid().ToString();
 		GWorld->MarkPackageDirty();
@@ -285,7 +285,35 @@ TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
 
 void UDynamicObject::GenerateObjectId()
 {
-	if (!UseCustomId || CustomId.IsEmpty())
+	if (IdSourceType == EIdSourceType::PoolId)
+	{
+		FString poolId;
+		if (IDPool == NULL)
+		{
+			ObjectID = GetUniqueId(MeshName);
+			allObjectIds.Add(ObjectID);
+			FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
+			if (IsController)
+			{
+				entry.ControllerType = ControllerType;
+				entry.IsRight = IsRightController;
+			}
+			manifest.Add(entry);
+			newManifest.Add(entry);
+			return;
+		}
+		else
+		{
+			HasValidPoolId = IDPool->GetId(poolId);
+			ObjectID = MakeShareable(new FDynamicObjectId(poolId, MeshName));
+			FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
+			manifest.Add(entry);
+			newManifest.Add(entry);
+			return;
+		}
+	}
+
+	if (IdSourceType != EIdSourceType::CustomId || CustomId.IsEmpty())
 	{
 		TSharedPtr<FDynamicObjectId> recycledId;
 		bool foundRecycleId = false;
@@ -811,6 +839,15 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 //instance
 void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (IdSourceType == EIdSourceType::PoolId && HasValidPoolId && IDPool != NULL)
+	{
+		if (ObjectID.IsValid() && !ObjectID->Id.IsEmpty())
+		{
+			IDPool->ReturnId(ObjectID->Id);
+			HasValidPoolId = false;
+		}
+	}
+
 	if (!cogProvider.IsValid())
 	{
 		//will get an 'EndPlay' when PIE closes
@@ -939,7 +976,7 @@ UDynamicObject* UDynamicObject::SetupController(AActor* target, bool IsRight, EC
 	dyn->UseCustomMeshName = false;
 	dyn->IsController = true;
 
-	dyn->UseCustomId = true;
+	dyn->IdSourceType = EIdSourceType::CustomId;
 	dyn->CustomId = FGuid::NewGuid().ToString();
 	dyn->Initialize();
 	return dyn;
@@ -1004,7 +1041,7 @@ UDynamicObject* UDynamicObject::SetupControllerComponent(UDynamicObject* dyn, bo
 	dyn->UseCustomMeshName = false;
 	dyn->IsController = true;
 
-	dyn->UseCustomId = true;
+	dyn->IdSourceType = EIdSourceType::CustomId;
 	dyn->CustomId = FGuid::NewGuid().ToString();
 	dyn->Initialize();
 	return dyn;
