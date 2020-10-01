@@ -620,3 +620,11 @@ int32 UCognitiveVRBlueprints::GetSensorDataPointCount()
 	if (!HasSessionStarted()) { return 0; }
 	return cog->sensors->GetDataPoints();
 }
+
+FString UCognitiveVRBlueprints::GetAttributionParameters()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid()) { return FString(""); }
+	return cog->GetAttributionParameters();
+}

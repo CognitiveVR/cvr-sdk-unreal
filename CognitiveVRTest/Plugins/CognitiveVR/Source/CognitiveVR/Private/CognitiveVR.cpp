@@ -113,6 +113,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	}
 
 	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
+	AttributionKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "AttributionKey", false);
 
 	network = MakeShareable(new Network());
 	exitpoll = MakeShareable(new ExitPoll());
@@ -735,4 +736,22 @@ FJsonObject FAnalyticsProviderCognitiveVR::GetAllSessionProperties()
 {
 	FJsonObject returnobject = FJsonObject(AllSessionProperties);
 	return returnobject;
+}
+
+FString FAnalyticsProviderCognitiveVR::GetAttributionParameters()
+{
+	TSharedPtr<FJsonObject> parameters = MakeShareable(new FJsonObject);
+	parameters->SetStringField("sceneVersionId", GetCurrentSceneId());
+	parameters->SetStringField("sessionId", SessionId);
+	parameters->SetStringField("attributionKey", AttributionKey);
+	
+	//json to string
+	FString OutputString;
+	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+	FJsonSerializer::Serialize(parameters.ToSharedRef(), Writer);
+
+	//string to base64
+	FString baseString = FBase64::Encode(OutputString);
+
+	return FString("?c3dAtkd=AK-"+ baseString);
 }
