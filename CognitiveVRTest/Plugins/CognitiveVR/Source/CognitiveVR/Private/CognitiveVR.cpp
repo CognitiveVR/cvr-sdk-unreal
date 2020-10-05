@@ -741,7 +741,13 @@ FJsonObject FAnalyticsProviderCognitiveVR::GetAllSessionProperties()
 FString FAnalyticsProviderCognitiveVR::GetAttributionParameters()
 {
 	TSharedPtr<FJsonObject> parameters = MakeShareable(new FJsonObject);
-	parameters->SetStringField("sceneVersionId", GetCurrentSceneId());
+
+	int32 versionId = 0;
+	auto scene = GetCurrentSceneData();
+	if (scene.IsValid())
+		versionId = scene->VersionId;
+
+	parameters->SetNumberField("sceneVersionId", versionId);
 	parameters->SetStringField("sessionId", SessionId);
 	parameters->SetStringField("attributionKey", AttributionKey);
 	

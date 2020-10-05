@@ -74,6 +74,28 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 		]
 	];
 
+	LoginCategory.AddCustomRow(FText::FromString("Attribution Key"))
+	.ValueContent()
+	.HAlign(HAlign_Fill)
+	[
+		SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot()
+		.MaxWidth(96)
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString("Attribution Key"))
+		]
+
+		+ SHorizontalBox::Slot()
+		.MaxWidth(128)
+		[
+			SNew(SEditableTextBox)
+			.MinDesiredWidth(128)
+			.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetAttributionKey)
+			.OnTextChanged_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OnAttributionKeyChanged)
+		]
+	];
+
 	LoginCategory.AddCustomRow(FText::FromString("Save"))
 	.ValueContent()
 	.MinDesiredWidth(256)
@@ -163,6 +185,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 
+	GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, EngineIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, EngineIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
 }

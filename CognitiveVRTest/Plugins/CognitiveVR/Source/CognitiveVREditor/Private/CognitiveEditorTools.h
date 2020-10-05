@@ -58,11 +58,14 @@ public:
 
 	void OnApplicationKeyChanged(const FText& Text);
 	void OnDeveloperKeyChanged(const FText& Text);
+	void OnAttributionKeyChanged(const FText& Text);
 
 	FText GetApplicationKey() const;
 	FText GetDeveloperKey() const;
+	FText GetAttributionKey() const;
 
 	FString ApplicationKey;
+	FString AttributionKey;
 	//FString DeveloperKey;
 
 	FString GetDynamicObjectManifest(FString versionid);
