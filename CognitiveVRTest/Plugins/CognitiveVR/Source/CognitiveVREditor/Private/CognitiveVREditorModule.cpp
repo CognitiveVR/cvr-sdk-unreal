@@ -113,6 +113,7 @@ public:
 		
 		FCognitiveEditorTools::Initialize();
 		GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, EngineIni);
+		GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, EngineIni);
 		GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
 		GConfig->GetString(TEXT("Analytics"), TEXT("BlenderPath"), FCognitiveEditorTools::GetInstance()->BlenderPath, EditorIni);
 		//ConfigFileHasChanged = true;
