@@ -33,6 +33,7 @@
 #include "IImageWrapperModule.h"
 #include "RenderingThread.h"
 #include "Classes/Engine/Level.h"
+#include "CoreMisc.h"
 
 //all sorts of functionality for Cognitive SDK
 
@@ -57,11 +58,14 @@ public:
 
 	void OnApplicationKeyChanged(const FText& Text);
 	void OnDeveloperKeyChanged(const FText& Text);
+	void OnAttributionKeyChanged(const FText& Text);
 
 	FText GetApplicationKey() const;
 	FText GetDeveloperKey() const;
+	FText GetAttributionKey() const;
 
 	FString ApplicationKey;
+	FString AttributionKey;
 	//FString DeveloperKey;
 
 	FString GetDynamicObjectManifest(FString versionid);
@@ -189,6 +193,9 @@ public:
 		FReply UploadDynamicsManifest();
 
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
+		FReply UploadDynamicsManifestIds(TArray<FString> ids, FString meshName, FString prefabName);
+
+	UFUNCTION(Exec, Category = "Dynamics Manifest")
 		FReply SetUniqueDynamicIds();
 
 	FReply GetDynamicsManifest();
@@ -243,6 +250,19 @@ public:
 		return myworld->GetMapName();
 	}
 
+	bool DynamicMeshDirectoryExists(FString meshname)
+	{
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		FString path = FPaths::Combine(GetDynamicsExportDirectory(), meshname);
+		return PlatformFile.DirectoryExists(*path);
+	}
+
+	bool CurrentSceneDirectoryExists()
+	{
+		FString scenePath = GetSceneExportDirectory(GetCurrentSceneName());
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		return PlatformFile.DirectoryExists(*scenePath);
+	}
 
 	void CurrentSceneVersionRequest();
 
@@ -374,6 +394,10 @@ public:
 	void CreateExportFolderStructure();
 
 	bool HasExportedAnyDynamicMeshes() const;
+
+	FString BuildDebugFileContents() const;
+
+	void AppendDirectoryContents(FString FullPath, int32 depth, FString& outputString);
 };
 
 

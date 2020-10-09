@@ -10,10 +10,19 @@
 #include "TimerManager.h"
 #include "CoreMinimal.h"
 #include "CustomEvent.h"
+#include "DynamicIdPoolAsset.h"
 #include "MotionControllerComponent.h"
 #include "DynamicObject.generated.h"
 
 class UCustomEvent;
+
+UENUM(BlueprintType)
+enum class EIdSourceType : uint8
+{
+	CustomId,
+	GeneratedId,
+	PoolId
+};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class COGNITIVEVR_API UDynamicObject : public USceneComponent //UActorComponent
@@ -90,12 +99,22 @@ public:
 	//group and id
 
 	//set a custom id for this dynamic object. recommended for non-spawned actors
+	//UPROPERTY(EditAnywhere, AdvancedDisplay)
+	//bool UseCustomId;
+
 	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	bool UseCustomId;
+	EIdSourceType IdSourceType;
 
 	//the custom id for registering this dynamic object. recommended for non-spawned actors
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
 	FString CustomId = "";
+
+	//UPROPERTY(EditAnywhere, AdvancedDisplay)
+	//bool UseIdPool;
+
+	bool HasValidPoolId = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
+	UDynamicIdPoolAsset* IDPool;
 
 	//snapshots
 

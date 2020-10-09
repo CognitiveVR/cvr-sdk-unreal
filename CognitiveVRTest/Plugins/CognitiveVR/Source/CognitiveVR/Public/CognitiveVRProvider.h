@@ -22,6 +22,7 @@
 #include "Private/api/customeventrecorder.h"
 #include "Private/api/sensor.h"
 #include "Engine/Engine.h"
+#include "Base64.h"
 
 
 
@@ -116,6 +117,7 @@
 		bool HasStartedSession();
 
 		FString ApplicationKey;
+		FString AttributionKey;
 
 		FString GetCurrentSceneId();
 		FString GetCurrentSceneVersionNumber();
@@ -146,4 +148,6 @@
 		void SetSessionProperty(FString name, int32 value);
 		void SetSessionProperty(FString name, float value);
 		void SetSessionProperty(FString name, FString value);
+
+		FString GetAttributionParameters();
 	};

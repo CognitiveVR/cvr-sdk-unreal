@@ -146,19 +146,6 @@ public:
 	FReply ValidateAndRefresh();
 
 	FReply EvaluateSceneExport();
-	bool NoExportGameplayMeshes = true;
-	ECheckBoxState GetNoExportGameplayMeshCheckbox() const;
-	void OnChangeNoExportGameplayMesh(ECheckBoxState newstate)
-	{
-		if (newstate == ECheckBoxState::Checked)
-		{
-			NoExportGameplayMeshes = true;
-		}
-		else
-		{
-			NoExportGameplayMeshes = false;
-		}
-	}
 	bool OnlyExportSelected;
 	ECheckBoxState GetOnlyExportSelectedCheckbox() const;
 	void OnChangeOnlyExportSelected(ECheckBoxState newstate)
