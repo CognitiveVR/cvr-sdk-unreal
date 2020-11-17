@@ -55,12 +55,25 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	auto eyetracker = ITobiiCore::GetEyeTracker();
 	FVector End = start + eyetracker->GetCombinedGazeData().WorldGazeDirection * 100000.0f;
 	return End;
-#elif defined SRANIPAL_API
+#elif defined SRANIPAL_1_2_API
 	FVector End = FVector::ZeroVector;
 	FVector TempStart = FVector::ZeroVector;
 	FVector LocalDirection = FVector::ZeroVector;
 
 	if (USRanipal_FunctionLibrary_Eye::GetGazeRay(GazeIndex::COMBINE, TempStart, LocalDirection))
+	{
+		FVector WorldDir = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(LocalDirection);
+		End = start + WorldDir * 100000.0f;
+		LastDirection = WorldDir;
+		return End;
+	}
+	End = start + LastDirection * 100000.0f;
+	return End;
+#elif defined SRANIPAL_1_3_API
+	FVector End = FVector::ZeroVector;
+	FVector TempStart = FVector::ZeroVector;
+	FVector LocalDirection = FVector::ZeroVector;
+	if (SRanipalEye_Core::Instance()->GetGazeRay(GazeIndex::COMBINE, TempStart, LocalDirection))
 	{
 		FVector WorldDir = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(LocalDirection);
 		End = start + WorldDir * 100000.0f;
@@ -199,8 +212,10 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		{
 			//hit some csg or something that is not an actor
 		}
-		//DrawDebugSphere(GetWorld(), gaze, 3, 3, FColor::Cyan, false, 0.2);
 		BuildSnapshot(captureLocation, gaze, captureRotation, time, DidHitFloor, FloorHitPosition, objectid);
+
+		if (DebugDisplayGaze)
+			DrawDebugSphere(GetWorld(), gaze, 3, 3, FColor::White, false, 0.2);
 	}
 	else
 	{

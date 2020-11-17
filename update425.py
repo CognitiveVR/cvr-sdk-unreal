@@ -149,4 +149,4 @@ print("delete " + cwd+"/Plugins/")
 
 print("complete!")
 
-time.sleep(5)
+time.sleep(1)
