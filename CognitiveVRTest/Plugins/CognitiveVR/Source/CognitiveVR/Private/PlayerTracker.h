@@ -20,11 +20,15 @@
 #include "ITobiiCore.h"
 #include "ITobiiEyetracker.h"
 #endif
-#if defined SRANIPAL_API
+#if defined SRANIPAL_1_2_API
 #include "SRanipal_Eye.h"
 #include "ViveSR_Enums.h"
 #include "SRanipal_Eyes_Enums.h"
 #include "SRanipal_FunctionLibrary_Eye.h"
+#endif
+#if defined SRANIPAL_1_3_API
+#include "SRanipalEye.h"
+#include "SRanipalEye_Core.h"
 #endif
 #if defined VARJOEYETRACKER_API
 #include "VarjoEyeTrackerFunctionLibrary.h"
@@ -35,6 +39,7 @@
 #if defined HPGLIA_API
 #include "HPGliaClient.h"
 #endif
+#include "DrawDebugHelpers.h"
 #include "PlayerTracker.generated.h"
 
 class FAnalyticsProviderCognitiveVR;
@@ -83,6 +88,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
 		FOnCognitiveSessionBegin OnSessionBegin;
+	
+	UPROPERTY(EditAnywhere)
+		bool DebugDisplayGaze = false;
 
 	float GetLastSendTime() { return LastSendTime; }
 	int32 GetPartNumber() { return jsonGazePart; }

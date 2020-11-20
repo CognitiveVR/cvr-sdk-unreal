@@ -31,6 +31,7 @@
 #include "HPGliaClient.h"
 #endif
 #include "Runtime/Engine/Classes/Engine/UserInterfaceSettings.h" //for getting ui dpi for active session view
+#include "DrawDebugHelpers.h"
 #include "FixationRecorder.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -66,7 +67,11 @@ private:
 #if defined TOBII_EYETRACKING_ACTIVE
 	bool AreEyesClosed(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker);
 	int64 GetEyeCaptureTimestamp(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker);
-#elif defined SRANIPAL_API
+#elif defined SRANIPAL_1_2_API
+	bool AreEyesClosed();
+	int64 GetEyeCaptureTimestamp();
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+#elif defined SRANIPAL_1_3_API
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
 	TArray<APlayerController*, FDefaultAllocator> controllers;
@@ -141,6 +146,9 @@ public:
 	/*increases the size of the fixation angle as gaze gets toward the edge of the viewport. this is used to reduce the number of incorrectly ended fixations because of hardware limits at the edge of the eye tracking field of view*/
 	UPROPERTY(EditAnywhere)
 		UCurveFloat* FocusSizeFromCenter;
+
+	UPROPERTY(EditAnywhere)
+		bool DebugDisplayFixations = false;
 
 	virtual void BeginPlay() override;
 

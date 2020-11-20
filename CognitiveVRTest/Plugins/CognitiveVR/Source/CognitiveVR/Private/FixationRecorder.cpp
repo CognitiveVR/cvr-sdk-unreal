@@ -74,7 +74,9 @@ void UFixationRecorder::BeginPlay()
 		{
 			EyeCaptures.Add(FEyeCapture());
 		}
-#if defined SRANIPAL_API
+#if defined SRANIPAL_1_2_API
+		GEngine->GetAllLocalPlayerControllers(controllers);
+#elif defined SRANIPAL_1_3_API
 		GEngine->GetAllLocalPlayerControllers(controllers);
 #endif
 #if defined HPGLIA_API
@@ -322,14 +324,28 @@ bool UFixationRecorder::AreEyesClosed(TSharedPtr<ITobiiEyeTracker, ESPMode::Thre
 	return false;
 }
 
-#elif defined SRANIPAL_API
+#elif defined SRANIPAL_1_2_API
 bool UFixationRecorder::AreEyesClosed()
 {
 	float leftOpenness = 0;
 	bool leftValid = USRanipal_FunctionLibrary_Eye::GetEyeOpenness(EyeIndex::LEFT, leftOpenness);
-	
+
 	float rightOpenness;
 	bool rightValid = USRanipal_FunctionLibrary_Eye::GetEyeOpenness(EyeIndex::RIGHT, rightOpenness);
+
+	if (leftValid && leftOpenness < 0.5f) { return true; }
+	if (rightValid && rightOpenness < 0.5f) { return true; }
+
+	return false;
+}
+#elif defined SRANIPAL_1_3_API
+bool UFixationRecorder::AreEyesClosed()
+{
+	float leftOpenness = 0;
+	bool leftValid = SRanipalEye_Core::Instance()->GetEyeOpenness(EyeIndex::LEFT, leftOpenness);
+
+	float rightOpenness;
+	bool rightValid = SRanipalEye_Core::Instance()->GetEyeOpenness(EyeIndex::RIGHT, rightOpenness);
 
 	if (leftValid && leftOpenness < 0.5f) { return true; }
 	if (rightValid && rightOpenness < 0.5f) { return true; }
@@ -436,6 +452,18 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		EyeCaptures[index].OutOfRange = IsGazeOutOfRange(EyeCaptures[index]);
 		ActiveFixation.AddEyeCapture(EyeCaptures[index]);
 
+		if (DebugDisplayFixations)
+		{
+			if (ActiveFixation.IsLocal)
+			{
+				//transform local to world
+			}
+			else
+			{
+				DrawDebugSphere(world, ActiveFixation.WorldPosition, 10, 8, FColor::Cyan, false, 0.1);
+			}
+		}
+
 		ActiveFixation.DurationMs = EyeCaptures[index].Time - ActiveFixation.StartMs;
 
 		if (CheckEndFixation(ActiveFixation))
@@ -464,7 +492,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp(eyetracker);
 	FVector Start = eyetracker->GetCombinedGazeData().WorldGazeOrigin;
 	FVector End = eyetracker->GetCombinedGazeData().WorldGazeOrigin + eyetracker->GetCombinedGazeData().WorldGazeDirection * 100000.0f;
-#elif defined SRANIPAL_API
+#elif defined SRANIPAL_1_2_API
 	EyeCaptures[index].EyesClosed = AreEyesClosed();
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
 
@@ -490,7 +518,32 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	{
 		EyeCaptures[index].Discard = true;
 	}
+#elif defined SRANIPAL_1_3_API
+	EyeCaptures[index].EyesClosed = AreEyesClosed();
+	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
 
+	FVector Start = FVector::ZeroVector;
+	FVector LocalDirection = FVector::ZeroVector;
+	FVector End = FVector::ZeroVector;
+
+	if (SRanipalEye_Core::Instance()->GetGazeRay(GazeIndex::COMBINE, Start, LocalDirection))
+	{
+		if (controllers.Num() == 0)
+		{
+			CognitiveLog::Info("FixationRecorder::TickComponent - no controllers");
+			return;
+		}
+
+		FVector captureLocation = controllers[0]->PlayerCameraManager->GetCameraLocation();
+		Start = captureLocation;
+
+		FVector WorldDir = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(LocalDirection);
+		End = captureLocation + WorldDir * 100000.0f;
+	}
+	else
+	{
+		EyeCaptures[index].Discard = true;
+}
 #elif defined VARJOEYETRACKER_API
 	EyeCaptures[index].EyesClosed = AreEyesClosed();
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
@@ -890,7 +943,8 @@ void UFixationRecorder::RecordFixationEnd(FFixation fixation)
 		SendData();
 	}
 
-	//DrawDebugSphere(world, fixation.WorldPosition, 10, 8, FColor::Cyan, false, 100);
+	if (DebugDisplayFixations)
+		DrawDebugSphere(world, fixation.WorldPosition, 10, 8, FColor::Red, false, 5);
 }
 
 void UFixationRecorder::SendData()

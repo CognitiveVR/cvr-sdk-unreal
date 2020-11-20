@@ -15,13 +15,13 @@ def replaceline(file, linesrc, linedst):
 
 	#replace mtl with references to pngs
 	finalstrings=[]
-	print("=============================================file loop start")
+	#print("=============================================file loop start")
 	for line in readString.splitlines():
 		if line == linesrc:
 			finalstrings.append(linedst+"\n")
 			print("replaced line " + line)
 		else:
-			print("-------- line " + line)
+			#print("-------- line " + line)
 			finalstrings.append(line+"\n")
 			
 
@@ -34,7 +34,7 @@ def replaceline(file, linesrc, linedst):
 	nmo = open(file, 'w+')
 	nmo.writelines(finalstrings)
 	nmo.close()
-	print("=============================================file loop end")
+	#print("=============================================file loop end")
 	return;
 
 def insertline(file, targetline, insertline):
@@ -45,14 +45,14 @@ def insertline(file, targetline, insertline):
 
 	#replace mtl with references to pngs
 	finalstrings=[]
-	print("=============================================file loop start")
+	#print("=============================================file loop start")
 	for line in readString.splitlines():
 		if line == targetline:
 			finalstrings.append(line+"\n")
 			finalstrings.append(insertline+"\n")
 			print("insert line " + insertline)
 		else:
-			print("-------- line " + line)
+			#print("-------- line " + line)
 			finalstrings.append(line+"\n")
 			
 
@@ -65,7 +65,7 @@ def insertline(file, targetline, insertline):
 	nmo = open(file, 'w+')
 	nmo.writelines(finalstrings)
 	nmo.close()
-	print("=============================================file loop end")
+	#print("=============================================file loop end")
 	return;
 
 def getpluginversion():
@@ -122,4 +122,4 @@ print("delete " + cwd+"/Plugins/")
 
 print("complete!")
 
-time.sleep(5)
+time.sleep(1)

@@ -132,6 +132,13 @@ replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DynamicOb
 #16 remove materialbakingmodule.h from editor tools
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.h","#include \"MaterialBakingModule.h\"","//#include \"MaterialBakingModule.h\"")
 
+#17 add dynamic action
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.h","#include \"DynamicIdPoolAssetDetails.h\"","#include \"DynamicIdPoolAssetActions.h\"")
+
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.cpp","		FCognitiveEditorTools::Initialize();","		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>(\"AssetTools\").Get();")
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.cpp","		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>(\"AssetTools\").Get();","		TSharedPtr< FDynamicIdPoolAssetActions> action = MakeShared<FDynamicIdPoolAssetActions>();")
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.cpp","		TSharedPtr< FDynamicIdPoolAssetActions> action = MakeShared<FDynamicIdPoolAssetActions>();","		AssetTools.RegisterAssetTypeActions(action.ToSharedRef());")
+
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue4"+enginesubversion
 shutil.make_archive(output_filename, 'zip', cwd+"/Plugins/")
@@ -142,4 +149,4 @@ print("delete " + cwd+"/Plugins/")
 
 print("complete!")
 
-time.sleep(5)
+time.sleep(1)

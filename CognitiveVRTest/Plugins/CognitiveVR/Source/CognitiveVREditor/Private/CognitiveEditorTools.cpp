@@ -1927,9 +1927,19 @@ FText FCognitiveEditorTools::GetDeveloperKey() const
 	return FText::FromString(FAnalyticsCognitiveVR::Get().DeveloperKey);
 }
 
+FText FCognitiveEditorTools::GetAttributionKey() const
+{
+	return FText::FromString(AttributionKey);
+}
+
 void FCognitiveEditorTools::OnDeveloperKeyChanged(const FText& Text)
 {
 	FAnalyticsCognitiveVR::Get().DeveloperKey = Text.ToString();
+}
+
+void FCognitiveEditorTools::OnAttributionKeyChanged(const FText& Text)
+{
+	AttributionKey = Text.ToString();
 }
 
 FText FCognitiveEditorTools::UploadSceneNameFiles() const
@@ -2261,6 +2271,7 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 
 	//GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, EngineIni);
+	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, EngineIni);
 
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
 

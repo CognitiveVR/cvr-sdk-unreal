@@ -113,6 +113,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	}
 
 	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
+	AttributionKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "AttributionKey", false);
 
 	network = MakeShareable(new Network());
 	exitpoll = MakeShareable(new ExitPoll());
@@ -294,16 +295,31 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 
 void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
 {
-	ParticipantId = InUserID;
-	SetParticipantProperty("id", InUserID);
-	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetUserID set user id");
+	FString userId = InUserID;
+	if (userId.Len() > 64)
+	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::SetUserID exceeds maximum character limit. clipping to 64");
+		int32 chopcount = userId.Len() - 64;
+		userId = userId.LeftChop(chopcount);
+	}
+
+	ParticipantId = userId;
+	SetParticipantProperty("id", userId);
+	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetUserID set user id: " + userId);
 }
 
 void FAnalyticsProviderCognitiveVR::SetParticipantId(FString participantId)
 {
+	if (participantId.Len() > 64)
+	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::SetParticipantId exceeds maximum character limit. clipping to 64");
+		int32 chopcount = participantId.Len() - 64;
+		participantId = participantId.LeftChop(chopcount);
+	}
+
 	ParticipantId = participantId;
 	SetParticipantProperty("id", participantId);
-	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetParticipantData set user id");
+	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetParticipantId set user id: " + participantId);
 }
 
 void FAnalyticsProviderCognitiveVR::SetParticipantFullName(FString participantName)
@@ -735,4 +751,28 @@ FJsonObject FAnalyticsProviderCognitiveVR::GetAllSessionProperties()
 {
 	FJsonObject returnobject = FJsonObject(AllSessionProperties);
 	return returnobject;
+}
+
+FString FAnalyticsProviderCognitiveVR::GetAttributionParameters()
+{
+	TSharedPtr<FJsonObject> parameters = MakeShareable(new FJsonObject);
+
+	int32 versionId = 0;
+	auto scene = GetCurrentSceneData();
+	if (scene.IsValid())
+		versionId = scene->VersionId;
+
+	parameters->SetNumberField("sceneVersionId", versionId);
+	parameters->SetStringField("sessionId", SessionId);
+	parameters->SetStringField("attributionKey", AttributionKey);
+	
+	//json to string
+	FString OutputString;
+	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+	FJsonSerializer::Serialize(parameters.ToSharedRef(), Writer);
+
+	//string to base64
+	FString baseString = FBase64::Encode(OutputString);
+
+	return FString("?c3dAtkd=AK-"+ baseString);
 }
