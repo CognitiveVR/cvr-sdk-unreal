@@ -135,12 +135,15 @@ void Sensors::SendData()
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 
 	FString allData;
+	int32 dataEntries = 0;
 
 	for (const auto& Entry : SensorDataPoints)
 	{
-		allData = allData.Append("{\"name\":\"" + Entry.Key + "\",\"data\":[" + Entry.Value + "]},");
+		dataEntries++;
+		allData = allData.Append("{\"name\":\"" + Entry.Key + "\",\"data\":[" + Entry.Value + "]}");
+		if (dataEntries < SensorDataPoints.Num())
+			allData.Append(",");
 	}
-	allData.RemoveAt(allData.Len()); //remove trailing comma
 
 	FString complete = "[" + allData + "]";
 	const TCHAR* charcomplete = *complete;

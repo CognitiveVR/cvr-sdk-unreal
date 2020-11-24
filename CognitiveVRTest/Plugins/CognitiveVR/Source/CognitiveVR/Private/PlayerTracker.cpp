@@ -42,6 +42,10 @@ void UPlayerTracker::BeginPlay()
 		cog->SetWorld(world);
 		Super::BeginPlay();
 		GEngine->GetAllLocalPlayerControllers(controllers);
+#if defined HPGLIA_API
+		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors1000MS, 1, true);
+		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors100MS, 0.1, true);
+#endif
 	}
 	else
 	{
@@ -55,12 +59,25 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	auto eyetracker = ITobiiCore::GetEyeTracker();
 	FVector End = start + eyetracker->GetCombinedGazeData().WorldGazeDirection * 100000.0f;
 	return End;
-#elif defined SRANIPAL_API
+#elif defined SRANIPAL_1_2_API
 	FVector End = FVector::ZeroVector;
 	FVector TempStart = FVector::ZeroVector;
 	FVector LocalDirection = FVector::ZeroVector;
 
 	if (USRanipal_FunctionLibrary_Eye::GetGazeRay(GazeIndex::COMBINE, TempStart, LocalDirection))
+	{
+		FVector WorldDir = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(LocalDirection);
+		End = start + WorldDir * 100000.0f;
+		LastDirection = WorldDir;
+		return End;
+	}
+	End = start + LastDirection * 100000.0f;
+	return End;
+#elif defined SRANIPAL_1_3_API
+	FVector End = FVector::ZeroVector;
+	FVector TempStart = FVector::ZeroVector;
+	FVector LocalDirection = FVector::ZeroVector;
+	if (SRanipalEye_Core::Instance()->GetGazeRay(GazeIndex::COMBINE, TempStart, LocalDirection))
 	{
 		FVector WorldDir = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(LocalDirection);
 		End = start + WorldDir * 100000.0f;
@@ -97,6 +114,24 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	{
 		End = Start + WorldDirection * 10000.0f;
 	}
+	return End;
+#elif defined HPGLIA_API
+	FVector End = FVector::ZeroVector;
+	FVector TempStart = controllers[0]->PlayerCameraManager->GetCameraLocation();
+	FVector LocalDirection = FVector::ZeroVector;
+
+	FEyeTracking eyeTrackingData;
+	if (UHPGliaClient::GetEyeTracking(eyeTrackingData))
+	{
+		if (eyeTrackingData.CombinedGazeConfidence > 0.4f)
+		{
+			FVector dir = FVector(eyeTrackingData.CombinedGaze.Z, eyeTrackingData.CombinedGaze.X, -eyeTrackingData.CombinedGaze.Y);
+			LastDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(dir);
+			End = TempStart + LastDirection * 100000.0f;
+			return End;
+		}
+	}
+	End = TempStart + LastDirection * 100000.0f;
 	return End;
 #else
 	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
@@ -199,8 +234,10 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		{
 			//hit some csg or something that is not an actor
 		}
-		//DrawDebugSphere(GetWorld(), gaze, 3, 3, FColor::Cyan, false, 0.2);
 		BuildSnapshot(captureLocation, gaze, captureRotation, time, DidHitFloor, FloorHitPosition, objectid);
+
+		if (DebugDisplayGaze)
+			DrawDebugSphere(GetWorld(), gaze, 3, 3, FColor::White, false, 0.2);
 	}
 	else
 	{
@@ -421,6 +458,48 @@ void UPlayerTracker::SendData()
 	LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
 }
 
+#if defined HPGLIA_API
+void UPlayerTracker::TickSensors1000MS()
+{
+	if (cog->HasStartedSession() == false) { return; }
+	int32 OutHeartRate = 0;
+	if (UHPGliaClient::GetHeartRate(OutHeartRate) && OutHeartRate != LastHeartRate)
+	{
+		cog->sensors->RecordSensor("HP.HeartRate", OutHeartRate);
+		LastHeartRate = OutHeartRate;
+	}
+
+	FCognitiveLoad CognitiveLoad;
+	if (UHPGliaClient::GetCognitiveLoad(CognitiveLoad))
+	{
+		if (!FMath::IsNearlyEqual(CognitiveLoad.CognitiveLoad, LastCognitiveLoad))
+		{
+			cog->sensors->RecordSensor("HP.CognitiveLoad", CognitiveLoad.CognitiveLoad);
+			cog->sensors->RecordSensor("HP.CognitiveLoad.Confidence", CognitiveLoad.StandardDeviation);
+			LastCognitiveLoad = CognitiveLoad.CognitiveLoad;
+		}
+	}
+}
+
+void UPlayerTracker::TickSensors100MS()
+{
+	if (cog->HasStartedSession() == false) { return; }
+	FEyePupillometry pupilometry;
+	if (UHPGliaClient::GetEyePupillometry(pupilometry))
+	{
+		if (pupilometry.LeftConfidence > 0.5 && pupilometry.LeftSize > 1.5 && !FMath::IsNearlyEqual(pupilometry.LeftSize, LastLeftPupilDiamter))
+		{
+			cog->sensors->RecordSensor("HP.Left Pupil Diameter", pupilometry.LeftSize);
+			LastLeftPupilDiamter = pupilometry.LeftSize;
+		}
+		if (pupilometry.RightConfidence > 0.5 && pupilometry.RightSize > 1.5 && !FMath::IsNearlyEqual(pupilometry.RightSize, LastRightPupilDiamter))
+		{
+			cog->sensors->RecordSensor("HP.Right Pupil Diameter", pupilometry.RightSize);
+			LastRightPupilDiamter = pupilometry.RightSize;
+		}
+	}
+}
+#endif
 
 void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {

@@ -74,22 +74,56 @@ namespace UnrealBuildTool.Rules
 			PublicDependencyModuleNames.Add("TobiiCore");
 		}
 		
+		
+		
 		//Vive Pro Eye (SRanipal)
-		if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory,"SRanipal")))
+		if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory,"SRanipal"))) 
 		{
-			System.Console.WriteLine("CognitiveVR.Build.cs found SRanipal Plugin folder");
-			PrivateIncludePaths.AddRange(
-				new string[] {
-					"../../SRanipal/Source/SRanipal/Private",
-					"../../SRanipal/Source/SRanipal/Public"
-				});
+			//ideally read the uplugin file as json and get the VersionName
+			//for now, just read the source directory layout
+			var sranipalPlugin = System.IO.Path.Combine(pluginsDirectory,"SRanipal");
+			var sranipalSource = System.IO.Path.Combine(sranipalPlugin,"Source");
+			string[] sourceModules = System.IO.Directory.GetDirectories(sranipalSource);
+			if (sourceModules.Length == 2)//1.1.0.1 and 1.2.0.1 only have eye and lip modules
+			{
+				Definitions.Add("SRANIPAL_1_2_API");
+				System.Console.WriteLine("CognitiveVR.Build.cs found SRanipal Plugin folder");
+				PrivateIncludePaths.AddRange(
+					new string[] {
+						"../../SRanipal/Source/SRanipal/Private",
+						"../../SRanipal/Source/SRanipal/Public"
+					});
 
-			PublicDependencyModuleNames.Add("SRanipal");
+				PublicDependencyModuleNames.Add("SRanipal");
 
-			string BaseDirectory = System.IO.Path.GetFullPath(System.IO.Path.Combine(ModuleDirectory, "..", "..", ".."));
-			string SRanipalDir = System.IO.Path.Combine(BaseDirectory,"SRanipal","Binaries",Target.Platform.ToString());
-			PublicAdditionalLibraries.Add(System.IO.Path.Combine(SRanipalDir,"SRanipal.lib"));
-			PublicDelayLoadDLLs.Add(System.IO.Path.Combine(SRanipalDir,"SRanipal.dll"));
+				string BaseDirectory = System.IO.Path.GetFullPath(System.IO.Path.Combine(ModuleDirectory, "..", "..", ".."));
+				string SRanipalDir = System.IO.Path.Combine(BaseDirectory,"SRanipal","Binaries",Target.Platform.ToString());
+				PublicAdditionalLibraries.Add(System.IO.Path.Combine(SRanipalDir,"SRanipal.lib"));
+				PublicDelayLoadDLLs.Add(System.IO.Path.Combine(SRanipalDir,"SRanipal.dll"));	
+			}
+			else if (sourceModules.Length == 5)
+			{
+				Definitions.Add("SRANIPAL_1_3_API");
+				System.Console.WriteLine("CognitiveVR.Build.cs found SRanipal Plugin folder 1.3.0.9 or newer");
+				PrivateIncludePaths.AddRange(
+					new string[] {
+						"../../SRanipal/Source/SRanipal/Private",
+						"../../SRanipal/Source/SRanipal/Public",
+						"../../SRanipal/Source/SRanipalEye/Private",
+						"../../SRanipal/Source/SRanipalEye/Public",
+						"../../SRanipal/Source/SRanipalEyeTracker/Private",
+						"../../SRanipal/Source/SRanipalEyeTracker/Public"
+					});
+
+				PublicDependencyModuleNames.Add("SRanipal");
+				PublicDependencyModuleNames.Add("SRanipalEye");
+				PublicDependencyModuleNames.Add("SRanipalEyeTracker");
+
+				string BaseDirectory = System.IO.Path.GetFullPath(System.IO.Path.Combine(ModuleDirectory, "..", "..", ".."));
+				string SRanipalDir = System.IO.Path.Combine(BaseDirectory,"SRanipal","Binaries",Target.Platform.ToString());
+				PublicAdditionalLibraries.Add(System.IO.Path.Combine(SRanipalDir,"SRanipal.lib"));
+				PublicDelayLoadDLLs.Add(System.IO.Path.Combine(SRanipalDir,"SRanipal.dll"));	
+			}
 		}
 
 		//Pico Neo 2 Eye
@@ -97,6 +131,13 @@ namespace UnrealBuildTool.Rules
 		{
 			System.Console.WriteLine("CognitiveVR.Build.cs found Pico Plugin folder");
 			PublicDependencyModuleNames.Add("PicoMobile");
+		}
+
+        //HP Omnicept
+		if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory, "HPGlia")))
+		{
+			System.Console.WriteLine("CognitiveVR.Build.cs found HP Glia Omnicept folder");
+			PublicDependencyModuleNames.Add("HPGlia");
 		}
 
 		if (Target.Platform == UnrealTargetPlatform.Win32 ||

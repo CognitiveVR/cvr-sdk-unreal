@@ -47,10 +47,24 @@ void Network::NetworkCall(FString suburl, FString contents)
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->SetHeader("Authorization", AuthValue);
+	if (CognitiveLog::DevLogEnabled())
+		HttpRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnCallReceivedAsync);
 	HttpRequest->ProcessRequest();
 
 	if (CognitiveLog::DevLogEnabled())
 		CognitiveLog::DevLog(url + "\n" + contents);
+}
+
+void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (Response.IsValid())
+	{
+		CognitiveLog::DevLog("Network::OnCallReceivedAsync " + FString::FromInt(Response.Get()->GetResponseCode()));
+	}
+	else
+	{
+		CognitiveLog::DevLog("Network::OnCallReceivedAsync Response Invalid!");
+	}
 }
 
 void Network::NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response)
