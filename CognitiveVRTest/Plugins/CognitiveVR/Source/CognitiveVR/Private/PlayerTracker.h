@@ -66,6 +66,16 @@ private:
 	static UPlayerTracker* instance;
 	float LastSendTime = -60;
 
+#if defined HPGLIA_API
+	int32 LastHeartRate = -1;
+	float LastCognitiveLoad = -1;
+	float LastLeftPupilDiamter = -1;
+	float LastRightPupilDiamter = -1;
+	FTimerHandle AutoSendHandle;
+	void TickSensors1000MS();
+	void TickSensors100MS();
+#endif
+
 public:
 
 	UPROPERTY(EditAnywhere)
