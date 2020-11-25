@@ -16,11 +16,16 @@
 #include "ITobiiCore.h"
 #include "ITobiiEyetracker.h"
 #endif
-#if defined SRANIPAL_API
+#if defined SRANIPAL_1_2_API
 #include "SRanipal_Eye.h"
 #include "ViveSR_Enums.h"
 #include "SRanipal_Eyes_Enums.h"
 #include "SRanipal_FunctionLibrary_Eye.h"
+#endif
+#if defined SRANIPAL_1_3_API
+#include "SRanipalEye.h"
+#include "ViveSR_Enums.h"
+#include "SRanipalEye_FunctionLibrary.h"
 #endif
 #if defined VARJOEYETRACKER_API
 #include "VarjoEyeTrackerFunctionLibrary.h"

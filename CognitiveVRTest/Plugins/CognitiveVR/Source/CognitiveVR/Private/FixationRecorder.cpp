@@ -96,6 +96,7 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 	{
 		return true;
 	}
+	//CONSIDER skipping these checks if this eye capture time - active fixation start < minfixation time
 
 	if (ActiveFixation.IsLocal)
 	{
@@ -110,10 +111,10 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 
 		if (eyeCapture.SkipPositionForFixationAverage || eyeCapture.OffTransform) //use local fixation without new fixation point
 		{
-			FVector fixationWorldPosition = ActiveFixation.WorldPosition;
+			FVector fixationWorldPosition = ActiveFixation.Transformation.TransformPosition(ActiveFixation.LocalPosition);
 			FVector fixationDirection = (fixationWorldPosition - eyeCapture.HMDPosition);
 			fixationDirection.Normalize();
-			FVector eyeCaptureWorldPosition = eyeCapture.WorldPosition;
+			FVector eyeCaptureWorldPosition = ActiveFixation.Transformation.TransformPosition(eyeCapture.LocalPosition);
 			FVector eyeCaptureDirection = (eyeCaptureWorldPosition - eyeCapture.HMDPosition);
 			eyeCaptureDirection.Normalize();
 
@@ -145,7 +146,8 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 
 			averageLocalPosition += eyeCapture.LocalPosition;
 			averageLocalPosition /= (CachedEyeCapturePositions.Num() + 1);
-			DrawDebugSphere(world, activeFixationWorldPos, 16,8, FColor::Magenta);
+			if (DebugDisplayFixations)
+				DrawDebugSphere(world, activeFixationWorldPos, 16,8, FColor::Magenta);
 
 			FVector fixationDirection = (activeFixationWorldPos - eyeCapture.HMDPosition);
 			
@@ -782,6 +784,16 @@ bool UFixationRecorder::TryBeginLocalFixation()
 		return false;
 	}
 
+	if (usedCaptures.Num() >= 2)
+	{
+		if ((usedCaptures[usedCaptures.Num() - 1].Time - usedCaptures[0].Time) < MinFixationMs) { return false; }
+	}
+	else
+	{
+		//don't have enough eye tracking samples
+		return false;
+	}
+
 	if (EyeCaptures[index].Time - firstOnTransformTime > MaxConsecutiveOffDynamicMs)
 	{
 		return false;
@@ -869,6 +881,8 @@ bool UFixationRecorder::TryBeginLocalFixation()
 	//check that all samples are nearby
 	for (auto& c : usedCaptures)
 	{
+		if (c.HitDynamicId != mostUsedId) { continue; }
+		if (!c.UseCaptureMatrix) { continue; }
 		FVector lookDir = c.CaptureMatrix.TransformPosition(c.LocalPosition) - c.HMDPosition;
 		lookDir.Normalize();
 		FVector fixationDir = averageWorldPosition - c.HMDPosition;
@@ -898,22 +912,25 @@ bool UFixationRecorder::TryBeginLocalFixation()
 		ActiveFixation.StartDistance = distance;
 		ActiveFixation.MaxRadius = opposite;
 		ActiveFixation.IsLocal = true;
+		ActiveFixation.Transformation = usedCaptures[0].CaptureMatrix;
 
 		for (auto& c : usedCaptures)
 		{
-			if (c.SkipPositionForFixationAverage || c.HitDynamicId != ActiveFixation.DynamicObjectId)
-			{
-				continue;
-			}
-			CachedEyeCapturePositions.Add(c.LocalPosition);
+			if (c.UseCaptureMatrix && c.HitDynamicId == ActiveFixation.DynamicObjectId)
+				CachedEyeCapturePositions.Add(c.LocalPosition);
 		}
 
-		recentFixationPoints.Add(ActiveFixation);
-		if (recentFixationPoints.Num() > 10)
+		for (auto& c : usedCaptures)
 		{
-			recentFixationPoints.RemoveAt(0);
+			if (c.UseCaptureMatrix && c.HitDynamicId == ActiveFixation.DynamicObjectId)
+			{
+				ActiveFixation.AddEyeCapture(c);
+				break;
+			}
 		}
-		ActiveFixation.AddEyeCapture(usedCaptures[0]);
+		recentFixationPoints.Empty(10);
+		recentFixationPoints.Add(ActiveFixation);
+		WasOutOfDispersionLastFrame = false;
 		return true;
 	}
 	return false;
@@ -989,9 +1006,7 @@ bool UFixationRecorder::TryBeginFixation()
 			CachedEyeCapturePositions.Add(EyeCaptures[GetIndex(i)].WorldPosition);
 		}
 
-		//DrawDebugSphere(world, averageWorldPos, 10, 3, FColor::Red, false, 10);
 		recentFixationPoints.Add(ActiveFixation);
-		//recentFixationPoints.Add(FVector4(averageWorldPos.X, averageWorldPos.Y, averageWorldPos.Z, opposite));
 		if (recentFixationPoints.Num() > 10)
 		{
 			recentFixationPoints.RemoveAt(0);
@@ -1048,7 +1063,16 @@ void UFixationRecorder::RecordFixationEnd(FFixation fixation)
 	}
 
 	if (DebugDisplayFixations)
-		DrawDebugSphere(world, fixation.WorldPosition, 10, 8, FColor::Red, false, 5);
+	{
+		if (fixation.IsLocal && EyeCaptures[index].HitDynamicId == ActiveFixation.DynamicObjectId)
+		{
+			FVector fixationWorldPos;
+			fixationWorldPos = fixation.Transformation.TransformPosition(fixation.LocalPosition);
+			DrawDebugSphere(world, fixationWorldPos, 10, 8, FColor::Cyan, false, 5);
+		}
+		else
+			DrawDebugBox(world, fixation.WorldPosition, FVector::OneVector * 15, FColor::Cyan, false, 5);
+	}
 }
 
 void UFixationRecorder::SendData()
@@ -1092,6 +1116,7 @@ void UFixationRecorder::SendData()
 
 void UFixationRecorder::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
+	SendData();
 	instance = NULL;
 }
 
