@@ -96,7 +96,6 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 	{
 		return true;
 	}
-	//CONSIDER skipping these checks if this eye capture time - active fixation start < minfixation time
 
 	if (ActiveFixation.IsLocal)
 	{
@@ -848,6 +847,17 @@ bool UFixationRecorder::TryBeginLocalFixation()
 		return false;
 	}
 
+	//the first eye capture that hits the dynamic object
+	FEyeCapture referenceCapture;
+
+	for (auto& c : usedCaptures)
+	{
+		if (c.HitDynamicId != mostUsedId) { continue; }
+		if (!c.UseCaptureMatrix) { continue; }
+		referenceCapture = c;
+		break;
+	}
+
 	//======== average positions and check if fixations are within radius
 	
 	int32 usedAveragePositionCount = 0;
@@ -857,11 +867,9 @@ bool UFixationRecorder::TryBeginLocalFixation()
 		if (!c.UseCaptureMatrix) { continue; }
 		usedAveragePositionCount++;
 		averageLocalPosition += c.LocalPosition;
-		averageWorldPosition += usedCaptures[0].CaptureMatrix.TransformPosition(c.LocalPosition);
 	}
-
 	averageLocalPosition /= usedAveragePositionCount;
-	averageWorldPosition /= usedAveragePositionCount;
+	averageWorldPosition = referenceCapture.CaptureMatrix.TransformPosition(averageLocalPosition);
 
 	float rescale = 1;
 	if (FocusSizeFromCenter != NULL)
@@ -912,7 +920,7 @@ bool UFixationRecorder::TryBeginLocalFixation()
 		ActiveFixation.StartDistance = distance;
 		ActiveFixation.MaxRadius = opposite;
 		ActiveFixation.IsLocal = true;
-		ActiveFixation.Transformation = usedCaptures[0].CaptureMatrix;
+		ActiveFixation.Transformation = referenceCapture.CaptureMatrix;
 
 		for (auto& c : usedCaptures)
 		{
