@@ -25,6 +25,7 @@ struct FExitPollResponse;
 		Network();
 
 		void NetworkCall(FString suburl, FString contents);
+		void OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 		void OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 		void NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response);

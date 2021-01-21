@@ -10,16 +10,22 @@
 #include "EyeCapture.h"
 #include "SceneView.h"
 #include "Engine/LocalPlayer.h"
+#include "DrawDebugHelpers.h"
 #if defined TOBII_EYETRACKING_ACTIVE
 #include "TobiiTypes.h"
 #include "ITobiiCore.h"
 #include "ITobiiEyetracker.h"
 #endif
-#if defined SRANIPAL_API
+#if defined SRANIPAL_1_2_API
 #include "SRanipal_Eye.h"
 #include "ViveSR_Enums.h"
 #include "SRanipal_Eyes_Enums.h"
 #include "SRanipal_FunctionLibrary_Eye.h"
+#endif
+#if defined SRANIPAL_1_3_API
+#include "SRanipalEye.h"
+#include "ViveSR_Enums.h"
+#include "SRanipalEye_FunctionLibrary.h"
 #endif
 #if defined VARJOEYETRACKER_API
 #include "VarjoEyeTrackerFunctionLibrary.h"
@@ -27,7 +33,11 @@
 #if defined PICOMOBILE_API
 #include "PicoBlueprintFunctionLibrary.h"
 #endif
+#if defined HPGLIA_API
+#include "HPGliaClient.h"
+#endif
 #include "Runtime/Engine/Classes/Engine/UserInterfaceSettings.h" //for getting ui dpi for active session view
+#include "DrawDebugHelpers.h"
 #include "FixationRecorder.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -56,14 +66,18 @@ private:
 
 	FFixation ActiveFixation;
 	bool IsGazeOutOfRange(FEyeCapture eyeCapture);
-	bool IsGazeOffTransform(FEyeCapture eyeCapture);
-	bool CheckEndFixation(FFixation testFixation);
-	void RecordFixationEnd(FFixation fixation);
+	bool IsGazeOffTransform(const FEyeCapture& eyeCapture);
+	bool CheckEndFixation(const FFixation& testFixation);
+	void RecordFixationEnd(const FFixation& fixation);
 
 #if defined TOBII_EYETRACKING_ACTIVE
 	bool AreEyesClosed(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker);
 	int64 GetEyeCaptureTimestamp(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker);
-#elif defined SRANIPAL_API
+#elif defined SRANIPAL_1_2_API
+	bool AreEyesClosed();
+	int64 GetEyeCaptureTimestamp();
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+#elif defined SRANIPAL_1_3_API
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
 	TArray<APlayerController*, FDefaultAllocator> controllers;
@@ -73,6 +87,10 @@ private:
 #elif defined PICOMOBILE_API
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
+#elif defined HPGLIA_API
+	bool AreEyesClosed();
+	int64 GetEyeCaptureTimestamp();
+	TArray<APlayerController*, FDefaultAllocator> controllers;
 #else
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
@@ -80,7 +98,6 @@ private:
 
 	bool isFixating;
 	TArray<FVector> CachedEyeCapturePositions;
-	UDynamicObject* FixationTransform;
 
 	bool TryBeginLocalFixation();
 	bool TryBeginFixation();
@@ -102,6 +119,9 @@ private:
 	TArray<TSharedPtr<FC3DGazePoint>> recentEyePositions;
 
 public:
+
+	UPROPERTY(EditAnywhere)
+		float MaxFixationDistance = 10000;
 
 	//configurable fixation variables
 	/* the time that gaze must be within the max fixation angle before a fixation occurs */
@@ -134,6 +154,9 @@ public:
 	/*increases the size of the fixation angle as gaze gets toward the edge of the viewport. this is used to reduce the number of incorrectly ended fixations because of hardware limits at the edge of the eye tracking field of view*/
 	UPROPERTY(EditAnywhere)
 		UCurveFloat* FocusSizeFromCenter;
+
+	UPROPERTY(EditAnywhere)
+		bool DebugDisplayFixations = false;
 
 	virtual void BeginPlay() override;
 

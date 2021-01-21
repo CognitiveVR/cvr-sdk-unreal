@@ -190,10 +190,6 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	if (!GetUserID().IsEmpty())
 		SetParticipantId(GetUserID());
 	SetSessionProperty("c3d.deviceid", GetDeviceID());
-	if (!AllSessionProperties.HasField("c3d.sessionname"))
-	{
-		SetSessionProperty("c3d.sessionname", SessionId);
-	}
 
 	customEventRecorder->Send(FString("c3d.sessionStart"));
 	
@@ -295,16 +291,31 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 
 void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
 {
-	ParticipantId = InUserID;
-	SetParticipantProperty("id", InUserID);
-	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetUserID set user id");
+	FString userId = InUserID;
+	if (userId.Len() > 64)
+	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::SetUserID exceeds maximum character limit. clipping to 64");
+		int32 chopcount = userId.Len() - 64;
+		userId = userId.LeftChop(chopcount);
+	}
+
+	ParticipantId = userId;
+	SetParticipantProperty("id", userId);
+	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetUserID set user id: " + userId);
 }
 
 void FAnalyticsProviderCognitiveVR::SetParticipantId(FString participantId)
 {
+	if (participantId.Len() > 64)
+	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::SetParticipantId exceeds maximum character limit. clipping to 64");
+		int32 chopcount = participantId.Len() - 64;
+		participantId = participantId.LeftChop(chopcount);
+	}
+
 	ParticipantId = participantId;
 	SetParticipantProperty("id", participantId);
-	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetParticipantData set user id");
+	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetParticipantId set user id: " + participantId);
 }
 
 void FAnalyticsProviderCognitiveVR::SetParticipantFullName(FString participantName)

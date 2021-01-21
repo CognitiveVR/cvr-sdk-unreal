@@ -20,11 +20,15 @@
 #include "ITobiiCore.h"
 #include "ITobiiEyetracker.h"
 #endif
-#if defined SRANIPAL_API
+#if defined SRANIPAL_1_2_API
 #include "SRanipal_Eye.h"
 #include "ViveSR_Enums.h"
 #include "SRanipal_Eyes_Enums.h"
 #include "SRanipal_FunctionLibrary_Eye.h"
+#endif
+#if defined SRANIPAL_1_3_API
+#include "SRanipalEye.h"
+#include "SRanipalEye_Core.h"
 #endif
 #if defined VARJOEYETRACKER_API
 #include "VarjoEyeTrackerFunctionLibrary.h"
@@ -32,6 +36,10 @@
 #if defined PICOMOBILE_API
 #include "PicoBlueprintFunctionLibrary.h"
 #endif
+#if defined HPGLIA_API
+#include "HPGliaClient.h"
+#endif
+#include "DrawDebugHelpers.h"
 #include "PlayerTracker.generated.h"
 
 class FAnalyticsProviderCognitiveVR;
@@ -58,6 +66,16 @@ private:
 	static UPlayerTracker* instance;
 	float LastSendTime = -60;
 
+#if defined HPGLIA_API
+	int32 LastHeartRate = -1;
+	float LastCognitiveLoad = -1;
+	float LastLeftPupilDiamter = -1;
+	float LastRightPupilDiamter = -1;
+	FTimerHandle AutoSendHandle;
+	void TickSensors1000MS();
+	void TickSensors100MS();
+#endif
+
 public:
 
 	UPROPERTY(EditAnywhere)
@@ -80,6 +98,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
 		FOnCognitiveSessionBegin OnSessionBegin;
+	
+	UPROPERTY(EditAnywhere)
+		bool DebugDisplayGaze = false;
 
 	float GetLastSendTime() { return LastSendTime; }
 	int32 GetPartNumber() { return jsonGazePart; }

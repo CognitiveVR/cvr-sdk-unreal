@@ -5,7 +5,16 @@ public class CognitiveVREditor : ModuleRules
 	public CognitiveVREditor(ReadOnlyTargetRules Target):base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-		
+
+        PrivateIncludePaths.AddRange(
+            new string[] {
+                "CognitiveVR/Private",
+                "CognitiveVR/Private/api",
+                "CognitiveVR/Private/network",
+                "CognitiveVR/Private/util"
+            });
+
+
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
