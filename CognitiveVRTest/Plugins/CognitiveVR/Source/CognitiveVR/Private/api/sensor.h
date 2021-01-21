@@ -38,6 +38,7 @@ class FAnalyticsProviderCognitiveVR;
 		Sensors();
 		void StartSession();
 		void RecordSensor(FString Name, float value);
+		void RecordSensor(FString Name, double value);
 		void SendData();
 		
 		TMap<FString, float> GetLastSensorValues();

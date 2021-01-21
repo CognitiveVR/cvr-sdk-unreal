@@ -83,6 +83,26 @@ void Sensors::RecordSensor(FString Name, float value)
 	}
 }
 
+void Sensors::RecordSensor(FString Name, double value)
+{
+	LastSensorValues.Add(Name, (float)value);
+
+	if (SensorDataPoints.Contains(Name))
+	{
+		SensorDataPoints[Name].Append(",[" + FString::SanitizeFloat(Util::GetTimestamp()) + "," + FString::SanitizeFloat(value) + "]");
+	}
+	else
+	{
+		SensorDataPoints.Emplace(Name, "[" + FString::SanitizeFloat(Util::GetTimestamp()) + "," + FString::SanitizeFloat(value) + "]");
+	}
+
+	sensorDataCount++;
+	if (sensorDataCount >= SensorThreshold)
+	{
+		Sensors::TrySendData();
+	}
+}
+
 void Sensors::TrySendData()
 {
 	if (cog->GetWorld() != NULL)

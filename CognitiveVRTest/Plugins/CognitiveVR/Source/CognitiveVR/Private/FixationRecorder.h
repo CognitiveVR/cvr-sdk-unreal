@@ -66,9 +66,9 @@ private:
 
 	FFixation ActiveFixation;
 	bool IsGazeOutOfRange(FEyeCapture eyeCapture);
-	bool IsGazeOffTransform(FEyeCapture eyeCapture);
-	bool CheckEndFixation(FFixation testFixation);
-	void RecordFixationEnd(FFixation fixation);
+	bool IsGazeOffTransform(const FEyeCapture& eyeCapture);
+	bool CheckEndFixation(const FFixation& testFixation);
+	void RecordFixationEnd(const FFixation& fixation);
 
 #if defined TOBII_EYETRACKING_ACTIVE
 	bool AreEyesClosed(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker);
