@@ -125,7 +125,7 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	{
 		if (eyeTrackingData.CombinedGazeConfidence > 0.4f)
 		{
-			FVector dir = FVector(eyeTrackingData.CombinedGaze.Z, eyeTrackingData.CombinedGaze.X, -eyeTrackingData.CombinedGaze.Y);
+			FVector dir = FVector(eyeTrackingData.CombinedGaze.Z, -eyeTrackingData.CombinedGaze.X, eyeTrackingData.CombinedGaze.Y);
 			LastDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(dir);
 			End = TempStart + LastDirection * 100000.0f;
 			return End;
@@ -465,7 +465,7 @@ void UPlayerTracker::TickSensors1000MS()
 	int32 OutHeartRate = 0;
 	if (UHPGliaClient::GetHeartRate(OutHeartRate) && OutHeartRate != LastHeartRate)
 	{
-		cog->sensors->RecordSensor("HP.HeartRate", OutHeartRate);
+		cog->sensors->RecordSensor("HP.HeartRate", (float)OutHeartRate);
 		LastHeartRate = OutHeartRate;
 	}
 
