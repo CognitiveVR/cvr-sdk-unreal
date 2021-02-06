@@ -661,6 +661,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 	if (!wroteAnyObjects)
 	{
 		GLog->Log("Couldn't find any dynamic objects to put into the aggregation manifest!");
+		FCognitiveEditorTools::OnUploadManifestCompleted(NULL, NULL, true);
 		return FReply::Handled();
 	}
 	//remove last comma
@@ -780,29 +781,22 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FSt
 
 void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	if (bWasSuccessful)
-		GLog->Log("FCognitiveEditorTools::OnUploadManifestCompleted response code " + FString::FromInt(Response->GetResponseCode()));
-	else
+	WizardUploading = false;
+	if (Response.Get() == NULL) //likely no aggregation manifest to upload. no request, no response
 	{
-		GLog->Log("FCognitiveEditorTools::OnUploadManifestCompleted failed to connect");
-		WizardUploading = false;
-		WizardUploadError = "FCognitiveEditorTools::OnUploadManifestCompleted failed to connect";
+		GetDynamicsManifest();
 		return;
 	}
 
-	if (bWasSuccessful && Response->GetResponseCode() < 300)
+	if (bWasSuccessful && Response->GetResponseCode() < 300) //successfully uploaded
 	{
 		GetDynamicsManifest();
-	}
-	else
-	{
-		WizardUploading = false;
 		WizardUploadError = FString::FromInt(Response->GetResponseCode());
 	}
-
-	if (WizardUploading)
+	else //upload failed
 	{
-		WizardUploading = false;
+		WizardUploadError = FString("FCognitiveEditorTools::OnUploadManifestCompleted response code ") + FString::FromInt(Response->GetResponseCode());
+		GLog->Log("FCognitiveEditorTools::OnUploadManifestCompleted response code " + FString::FromInt(Response->GetResponseCode()));
 	}
 }
 
