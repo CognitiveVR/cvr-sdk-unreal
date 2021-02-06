@@ -627,6 +627,7 @@ void FAnalyticsProviderCognitiveVR::CacheSceneData()
 	TArray<FString>scenstrings;
 	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
+	SceneData.Empty();
 
 	for (int i = 0; i < scenstrings.Num(); i++)
 	{
