@@ -46,6 +46,58 @@ void UPlayerTracker::BeginPlay()
 		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors1000MS, 1, true);
 		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors100MS, 0.1, true);
 #endif
+#if defined TESLASUIT_API
+		TArray<FTSSuitId> suits = ITeslasuit::Get().GetConnectedSuits();
+		if (suits.Num() > 0)
+		{
+			FTSSuitId suit = suits[0];
+
+			cog->SetParticipantProperty("Teslasuit Serial Number", ITeslasuit::Get().GetSuitSerial(suit));
+
+			ETSSuitSex sex = ITeslasuit::Get().GetSuitSex(suit);
+			FString sSex = "Unknown";
+			switch (sex)
+			{
+				case ETSSuitSex::SUIT_SEX_M:sSex = "Men"; break;
+				case ETSSuitSex::SUIT_SEX_W:sSex = "Women"; break;
+				case ETSSuitSex::SUIT_SEX_UNISEX:sSex = "Unisex"; break;
+			}
+			cog->SetParticipantProperty("Teslasuit Sex", sSex);
+
+			ETSSuitSize size = ITeslasuit::Get().GetSuitSize(suit);
+			FString sSize = "Unknown";
+			switch (size)
+			{
+				case ETSSuitSize::SUIT_SIZE_XS:sSize = "XS"; break;
+				case ETSSuitSize::SUIT_SIZE_S:sSize = "S"; break;
+				case ETSSuitSize::SUIT_SIZE_M:sSize = "M"; break;
+				case ETSSuitSize::SUIT_SIZE_L:sSize = "L"; break;
+				case ETSSuitSize::SUIT_SIZE_XL:sSize = "XL"; break;
+				case ETSSuitSize::SUIT_SIZE_2XL:sSize = "2XL"; break;
+			}
+			cog->SetParticipantProperty("Teslasuit Size", sSize);
+
+			ETSSuitKit kit = ITeslasuit::Get().GetSuitKit(suit);
+			FString sKit = "";
+			if (((uint8)kit) & 1 << 0) //jacket
+				sKit += "Jacket ";
+			if (((uint8)kit) & 1 << 1) //trousers
+				sKit += "Trousers ";
+			if (((uint8)kit) & 1 << 2) //gloves
+				sKit += "Gloves ";
+			cog->SetParticipantProperty("Teslasuit Kit", sKit);
+
+			auto callback = [](const TSECGBuffer* ecg_buffer, void* opaque, const TSResultCode result_code)
+			{
+				if (result_code == TSResultCode::TS_SUCCESS)
+				{
+					UPlayerTracker::GetPlayerTracker()->ECGUpdated((USuit*)opaque, ecg_buffer, result_code);
+				}
+			};
+			ITeslasuit::Get().BiometryStartEcg(suit, callback, this);
+			//ITeslasuit::Get().BiometryStopEcg(suit);
+		}
+#endif
 	}
 	else
 	{
@@ -498,6 +550,23 @@ void UPlayerTracker::TickSensors100MS()
 			LastRightPupilDiamter = pupilometry.RightSize;
 		}
 	}
+}
+#endif
+
+#if defined TESLASUIT_API
+void UPlayerTracker::ECGUpdated(USuit* Suit, const TSECGBuffer* ECGBuffer, const TSResultCode resultCode)
+{
+	for (int i = 0; i < ECGData.Num(); i++)
+	{
+		FTSECG ecg;
+		ecg.DeltaTimeMillis = ECGBuffer->items[i].delta_time;
+		ecg.Amplitude = ECGBuffer->items[i].amplitude;
+		ECGData[i] = ecg;
+	}
+	AsyncTask(ENamedThreads::GameThread, [Suit]()
+	{
+		//TODO convert to heartrate and write to sensor
+	});
 }
 #endif
 
