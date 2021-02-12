@@ -125,7 +125,7 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	{
 		if (eyeTrackingData.CombinedGazeConfidence > 0.4f)
 		{
-			FVector dir = FVector(eyeTrackingData.CombinedGaze.Z, -eyeTrackingData.CombinedGaze.X, eyeTrackingData.CombinedGaze.Y);
+			FVector dir = FVector(eyeTrackingData.CombinedGaze.X, eyeTrackingData.CombinedGaze.Y, eyeTrackingData.CombinedGaze.Z);
 			LastDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(dir);
 			End = TempStart + LastDirection * 100000.0f;
 			return End;
