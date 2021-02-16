@@ -2124,15 +2124,9 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		WizardUploading = false;
 		if (responseCode == 401)
 		{
-			//not authorized
-			GLog->Log("FCognitiveTools::SceneVersionResponse not authorized!");
-			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode());
-			//DEBUG_RequestAuthToken();
-			//auto httprequest = RequestAuthTokenCallback();
-			//if (httprequest)
-			//{
-			
-			//}
+			//not authorized or scene id does not exist
+			GLog->Log("FCognitiveTools::SceneVersionResponse not authorized or scene doesn't exist!");
+			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode())+"\nThe Developer Key: "+ FAnalyticsCognitiveVR::Get().DeveloperKey + " does not have access to the scene";
 			return;
 		}
 		else
@@ -2143,6 +2137,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 			return;
 		}
 	}
+	WizardUploadError = "";
 
 	//parse response content to json
 

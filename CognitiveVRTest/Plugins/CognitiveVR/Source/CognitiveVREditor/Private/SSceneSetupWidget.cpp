@@ -37,7 +37,6 @@ void SSceneSetupWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, 
 	if (Response.IsValid() == false)
 	{
 		SGenericDialogWidget::OpenDialog(FText::FromString("Your developer key has expired"), SNew(STextBlock).Text(FText::FromString("Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.")));
-
 		GLog->Log("Developer Key Response is invalid. Developer key may be invalid or expired. Check your internet connection");
 		return;
 	}
@@ -240,7 +239,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					[
 						SNew(STextBlock)
 						.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
-						.Text(FText::FromString("API Key"))
+						.Text(FText::FromString("Application Key"))
 					]
 				]
 
@@ -1597,7 +1596,11 @@ FReply SSceneSetupWidget::NextPage()
 	{
 		FCognitiveEditorTools::GetInstance()->SaveApplicationKeyToFile(DisplayAPIKey);
 		FCognitiveEditorTools::GetInstance()->SaveDeveloperKeyToFile(DisplayDeveloperKey);
+
+
 		FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
+
+		//save keys to ini
 	}
 	if (CurrentPage == 2)
 	{
@@ -1745,7 +1748,7 @@ FText SSceneSetupWidget::NextButtonText() const
 {
 	if (CurrentPage == 1)
 	{
-		return FText::FromString("Save");
+		return FText::FromString("Save"); //save dev/api keys
 	}
 	else if (CurrentPage == 5)
 	{
@@ -1826,6 +1829,17 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 		//refresh the upload filename lists
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
 		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
+
+		FString sceneExportDir = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory();
+		if (!FCognitiveEditorTools::VerifyDirectoryExists(sceneExportDir))
+		{
+			return false;
+		}
+
+		if (FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() > 0)
+		{
+			return false;
+		}
 	}
 
 	return true;
