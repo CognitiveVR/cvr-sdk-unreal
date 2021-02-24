@@ -25,6 +25,7 @@ AActiveSessionView::AActiveSessionView()
 		WidgetComponent->SetBlendMode(EWidgetBlendMode::Transparent);
 		WidgetComponent->TranslucencySortPriority = 100;
 		WidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		WidgetComponent->bRenderInMainPass = false; //hides the widget from the HMD
 	}
 }
 

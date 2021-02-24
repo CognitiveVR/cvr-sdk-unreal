@@ -9,6 +9,7 @@ Network::Network()
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	Http = &FHttpModule::Get();
+	hasErrorResponse = false;
 }
 
 void Network::NetworkCall(FString suburl, FString contents)
@@ -59,12 +60,23 @@ void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Resp
 {
 	if (Response.IsValid())
 	{
-		CognitiveLog::DevLog("Network::OnCallReceivedAsync " + FString::FromInt(Response.Get()->GetResponseCode()));
+		int32 responseCode = Response.Get()->GetResponseCode();
+		CognitiveLog::DevLog("Network::OnCallReceivedAsync " + FString::FromInt(responseCode));
+
+		if (responseCode != 200)
+		{
+			hasErrorResponse = true;
+		}
 	}
 	else
 	{
 		CognitiveLog::DevLog("Network::OnCallReceivedAsync Response Invalid!");
 	}
+}
+
+bool Network::HasErrorResponse()
+{
+	return hasErrorResponse;
 }
 
 void Network::NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response)

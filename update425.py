@@ -139,6 +139,9 @@ insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveV
 insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.cpp","		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>(\"AssetTools\").Get();","		TSharedPtr< FDynamicIdPoolAssetActions> action = MakeShared<FDynamicIdPoolAssetActions>();")
 insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.cpp","		TSharedPtr< FDynamicIdPoolAssetActions> action = MakeShared<FDynamicIdPoolAssetActions>();","		AssetTools.RegisterAssetTypeActions(action.ToSharedRef());")
 
+#set ASV to tick when offscreen
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\ActiveSessionView.cpp","		WidgetComponent->TranslucencySortPriority = 100;","		WidgetComponent->SetTickWhenOffscreen(true);")
+
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue4"+enginesubversion
 shutil.make_archive(output_filename, 'zip', cwd+"/Plugins/")

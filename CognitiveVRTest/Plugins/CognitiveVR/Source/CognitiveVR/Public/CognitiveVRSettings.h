@@ -48,7 +48,7 @@ class UCognitiveVRSettings
 		int32 CustomEventMinTimer = 2;
 	//The time (in seconds) to automatically send any outstanding Event data
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Events")
-		int32 CustomEventAutoTimer = 30;
+		int32 CustomEventAutoTimer = 10;
 
 	/** The number of dynamic object snapshots that will be collected together before being sent to scene explorer */
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Dynamic Objects")
@@ -61,7 +61,7 @@ class UCognitiveVRSettings
 		int32 DynamicMinTimer = 2;
 	//The time (in seconds) to automatically send any outstanding Dynamic snapshots or Manifest entries
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Dynamic Objects")
-		int32 DynamicAutoTimer = 30;
+		int32 DynamicAutoTimer = 10;
 
 	/** The number of sensor data points that will be collected together before being sent to scene explorer */
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Sensors")
@@ -74,7 +74,7 @@ class UCognitiveVRSettings
 		int32 SensorMinTimer = 2;
 	//The time (in seconds) to automatically send any outstanding Sensor data
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Sensors")
-		int32 SensorAutoTimer = 30;
+		int32 SensorAutoTimer = 10;
 
 	/** The number of fixations that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Fixations")
@@ -87,7 +87,7 @@ class UCognitiveVRSettings
 		int32 FixationMinTimer = 2;
 	//The time (in seconds) to automatically send any outstanding Fixations
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Fixations")
-		int32 FixationAutoTimer = 30;
+		int32 FixationAutoTimer = 10;
 
 protected:
 	/**
