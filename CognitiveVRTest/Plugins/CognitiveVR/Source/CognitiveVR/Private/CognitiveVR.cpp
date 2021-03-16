@@ -206,6 +206,12 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		it->FindControllers(false);
 	}
 
+	auto fixationRecorder = UFixationRecorder::GetFixationRecorder();
+	if (fixationRecorder != NULL)
+	{
+		fixationRecorder->BeginSession();
+	}
+
 	return bHasSessionStarted;
 }
 

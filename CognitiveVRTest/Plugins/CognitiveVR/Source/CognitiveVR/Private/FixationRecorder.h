@@ -40,6 +40,8 @@
 #include "DrawDebugHelpers.h"
 #include "FixationRecorder.generated.h"
 
+class UCognitiveVRBlueprints;
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class COGNITIVEVR_API UFixationRecorder : public UActorComponent
 {
@@ -159,6 +161,7 @@ public:
 		bool DebugDisplayFixations = false;
 
 	virtual void BeginPlay() override;
+	void BeginSession();
 
 	UFixationRecorder();
 

@@ -57,15 +57,15 @@ void CustomEventRecorder::StartSession()
 	if (!cog.IsValid()) {
 		return;
 	}
-	if (cog->GetWorld() == NULL)
+	if (cog->EnsureGetWorld() == NULL)
 	{
 		CognitiveLog::Warning("CustomEvent::StartSession - GetWorld is Null! Likely missing PlayerTrackerComponent on Player actor");
 		return;
 	}
-	if (cog->GetWorld()->GetGameInstance() == NULL) {
+	if (cog->EnsureGetWorld()->GetGameInstance() == NULL) {
 		return;
 	}
-	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEventRecorder::SendData), AutoTimer, true);
+	cog->EnsureGetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEventRecorder::SendData), AutoTimer, true);
 }
 
 void CustomEventRecorder::Send(FString category)
@@ -194,9 +194,9 @@ void CustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJ
 
 void CustomEventRecorder::TrySendData()
 {
-	if (cog->GetWorld() != NULL)
+	if (cog->EnsureGetWorld() != NULL)
 	{
-		bool withinMinTimer = LastSendTime + MinTimer > cog->GetWorld()->GetRealTimeSeconds();
+		bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
 		bool withinExtremeBatchSize = events.Num() < ExtremeBatchSize;
 
 		if (withinMinTimer && withinExtremeBatchSize)
@@ -220,10 +220,7 @@ void CustomEventRecorder::SendData()
 		return;
 	}
 
-	if (cog->GetWorld() != NULL)
-	{
-		LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
-	}
+	LastSendTime = UCognitiveVRBlueprints::GetSessionDuration();
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;

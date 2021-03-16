@@ -10,6 +10,7 @@
 #include "CoreMinimal.h"
 
 class FAnalyticsProviderCognitiveVR;
+class UCognitiveVRBlueprints;
 
 	class COGNITIVEVR_API Sensors
 	{

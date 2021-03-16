@@ -43,6 +43,7 @@
 #include "PlayerTracker.generated.h"
 
 class FAnalyticsProviderCognitiveVR;
+class UCognitiveVRBlueprints;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class COGNITIVEVR_API UPlayerTracker : public UActorComponent
