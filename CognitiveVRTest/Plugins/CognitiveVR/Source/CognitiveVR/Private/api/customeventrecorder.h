@@ -12,6 +12,7 @@
 
 class FAnalyticsProviderCognitiveVR;
 class UCustomEvent;
+class UCognitiveVRBlueprints;
 
 
 	class COGNITIVEVR_API CustomEventRecorder

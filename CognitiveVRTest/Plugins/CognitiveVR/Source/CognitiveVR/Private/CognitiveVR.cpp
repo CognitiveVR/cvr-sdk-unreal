@@ -83,14 +83,17 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	if (bHasSessionStarted)
 	{
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::StartSession already started");
 		return false;
-		//EndSession();
-		//return false;
 	}
 
 	UPlayerTracker* pt = UPlayerTracker::GetPlayerTracker();
 
-	if (pt == NULL) { return false; }
+	if (pt == NULL)
+	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::StartSession could not find PlayerTracker component in level");
+		return false;
+	}
 
 	if (currentWorld == NULL)
 	{
@@ -135,7 +138,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	if (!network.IsValid())
 	{
-		CognitiveLog::Warning("CognitiveVRProvider InitCallback network is null");
+		CognitiveLog::Warning("CognitiveVRProvider Network is null");
 		pt->OnSessionBegin.Broadcast(false);
 		return false;
 	}
@@ -201,6 +204,12 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	if (it != NULL)
 	{
 		it->FindControllers(false);
+	}
+
+	auto fixationRecorder = UFixationRecorder::GetFixationRecorder();
+	if (fixationRecorder != NULL)
+	{
+		fixationRecorder->BeginSession();
 	}
 
 	return bHasSessionStarted;
@@ -567,27 +576,19 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 
 TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetCurrentSceneData()
 {
-	UWorld* myworld = currentWorld;
-	//UWorld* myworld = AActor::GetWorld();
-	if (myworld == NULL)
+	if (currentWorld == NULL)
 	{
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson no world - use GWorld->GetWorld");
 		currentWorld = GWorld->GetWorld();
-		myworld = currentWorld;
 	}
 
-	FString currentSceneName = myworld->GetMapName();
-	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
+	FString currentSceneName = currentWorld->GetMapName();
+	currentSceneName.RemoveFromStart(currentWorld->StreamingLevelsPrefix);
 	TSharedPtr<FSceneData> currentScenePtr = GetSceneData(currentSceneName);
 
-	if (currentScenePtr.IsValid() && CurrentTrackingScene.Id != currentScenePtr->Id)
+	if (currentScenePtr.IsValid() && CurrentTrackingSceneId != currentScenePtr->Id)
 	{
 		ForceWriteSessionMetadata = true;
-		CurrentTrackingScene = *currentScenePtr;
-	}
-	else
-	{
-		CurrentTrackingScene.Id.Empty();
+		CurrentTrackingSceneId = currentScenePtr->Id;
 	}
 	return currentScenePtr;
 }
@@ -627,6 +628,7 @@ void FAnalyticsProviderCognitiveVR::CacheSceneData()
 	TArray<FString>scenstrings;
 	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	GConfig->GetArray(TEXT("/Script/CognitiveVR.CognitiveVRSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
+	SceneData.Empty();
 
 	for (int i = 0; i < scenstrings.Num(); i++)
 	{

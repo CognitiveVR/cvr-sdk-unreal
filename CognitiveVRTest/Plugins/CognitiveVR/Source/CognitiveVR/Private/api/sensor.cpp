@@ -54,13 +54,12 @@ Sensors::Sensors()
 
 void Sensors::StartSession()
 {
-	if (cog->GetWorld() == NULL)
+	if (cog->EnsureGetWorld() == NULL)
 	{
 		CognitiveLog::Warning("Sensors::StartSession - GetWorld is Null! Likely missing PlayerTrackerComponent on Player actor");
 		return;
 	}
-
-	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, true);
+	cog->EnsureGetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, true);
 }
 
 void Sensors::RecordSensor(FString Name, float value)
@@ -105,9 +104,9 @@ void Sensors::RecordSensor(FString Name, double value)
 
 void Sensors::TrySendData()
 {
-	if (cog->GetWorld() != NULL)
+	if (cog->EnsureGetWorld() != NULL)
 	{
-		bool withinMinTimer = LastSendTime + MinTimer > cog->GetWorld()->GetRealTimeSeconds();
+		bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
 		bool withinExtremeBatchSize = sensorDataCount < ExtremeBatchSize;
 		
 		if (withinMinTimer && withinExtremeBatchSize)
@@ -130,10 +129,7 @@ void Sensors::SendData()
 		return;
 	}
 
-	if (cog->GetWorld() != NULL)
-	{
-		LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
-	}
+	LastSendTime = UCognitiveVRBlueprints::GetSessionDuration();
 
 	TSharedPtr<FJsonObject> wholeObj = MakeShareable(new FJsonObject);
 

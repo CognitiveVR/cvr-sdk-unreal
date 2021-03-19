@@ -92,10 +92,10 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 	[
 		SNew(SButton)
 		.ContentPadding(1)
-		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasOwnerAndExportDirAndName)
+		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasExportAndValidSceneData)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
-		.ToolTipText(FText::FromString("Export Directory must be set. See CognitiveVR Settings"))
+		.ToolTipText(FText::FromString("Export Directory must be set and scene uploaded. See CognitiveVR Settings"))
 		.OnClicked(this, &UDynamicObjectComponentDetails::Upload)
 		[
 			SNew( STextBlock )
@@ -120,6 +120,14 @@ bool UDynamicObjectComponentDetails::HasOwnerAndExportDirAndName() const
 	if (!HasOwner()) { return false; }
 	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return false; }
 	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return false; }
+	return true;
+}
+bool UDynamicObjectComponentDetails::HasExportAndValidSceneData() const
+{
+	if (!HasOwner()) { return false; }
+	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return false; }
+	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return false; }
+	if (!FCognitiveEditorTools::GetInstance()->GetCurrentSceneData().IsValid()) { return false; }
 	return true;
 }
 

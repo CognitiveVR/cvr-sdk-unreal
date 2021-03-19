@@ -4,6 +4,7 @@
 //#include "CognitiveVRSettings.h"
 //#include "Util.h"
 
+bool UDynamicObject::callbackInitialized = false;
 int32 UDynamicObject::jsonPart = 1;
 int32 UDynamicObject::MaxSnapshots = -1;
 int32 UDynamicObject::MinTimer = 5;
@@ -170,9 +171,14 @@ void UDynamicObject::Initialize()
 			if (parsedValue > 0)
 			{
 				AutoTimer = parsedValue;
-				GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, true);
 			}
 		}
+	}
+
+	if (!callbackInitialized)
+	{
+		callbackInitialized = true;
+		GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, true);
 	}
 
 	//even if session has not started, still collect data
@@ -615,7 +621,7 @@ void UDynamicObject::TrySendData()
 
 	if (cogProvider->GetWorld() != NULL)
 	{
-		bool withinMinTimer = LastSendTime + MinTimer > cogProvider->GetWorld()->GetRealTimeSeconds();
+		bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
 		bool withinExtremeBatchSize = newManifest.Num() + snapshots.Num() < ExtremeBatchSize;
 
 		if (withinMinTimer && withinExtremeBatchSize)
@@ -629,8 +635,6 @@ void UDynamicObject::TrySendData()
 //static
 void UDynamicObject::SendData()
 {
-	if (!cogProvider.IsValid()) { return; }
-
 	if (!cogProvider.IsValid() || !cogProvider->HasStartedSession())
 	{
 		return;
@@ -649,10 +653,7 @@ void UDynamicObject::SendData()
 		return;
 	}
 
-	if (cogProvider->GetWorld() != NULL)
-	{
-		LastSendTime = cogProvider->GetWorld()->GetRealTimeSeconds();
-	}
+	LastSendTime = UCognitiveVRBlueprints::GetSessionDuration();
 
 	TArray<TSharedPtr<FJsonValueObject>> EventArray = UDynamicObject::DynamicSnapshotsToString();
 
@@ -667,9 +668,7 @@ void UDynamicObject::SendData()
 	wholeObj->SetStringField("sessionid", cogProvider->GetSessionID());
 	wholeObj->SetStringField("formatversion", "1.0");
 	wholeObj->SetNumberField("part", jsonPart);
-	jsonPart++;
-
-	
+	jsonPart++;	
 
 	if (newManifest.Num() > 0)
 	{
@@ -901,6 +900,7 @@ void UDynamicObject::OnSessionEnd()
 	manifest.Empty();
 	newManifest.Empty();
 	jsonPart = 1;
+	callbackInitialized = false;
 
 	for (TObjectIterator<UDynamicObject> Itr; Itr; ++Itr)
 	{

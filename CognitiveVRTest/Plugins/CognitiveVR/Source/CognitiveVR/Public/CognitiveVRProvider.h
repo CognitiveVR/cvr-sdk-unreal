@@ -124,7 +124,8 @@
 		//if a session name has been explicitly set. otherwise will use participant name when that is set
 		bool bHasCustomSessionName;
 		void SetSessionName(FString sessionName);
-		FSceneData CurrentTrackingScene;
+		//used to identify when a scene changes and session properties need to be resent
+		FString CurrentTrackingSceneId;
 
 		void SetWorld(UWorld* world);
 		UWorld* GetWorld();

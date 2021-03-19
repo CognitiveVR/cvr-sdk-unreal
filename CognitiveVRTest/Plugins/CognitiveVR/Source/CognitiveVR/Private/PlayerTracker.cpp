@@ -125,7 +125,7 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	{
 		if (eyeTrackingData.CombinedGazeConfidence > 0.4f)
 		{
-			FVector dir = FVector(eyeTrackingData.CombinedGaze.Z, eyeTrackingData.CombinedGaze.X, -eyeTrackingData.CombinedGaze.Y);
+			FVector dir = FVector(eyeTrackingData.CombinedGaze.X, eyeTrackingData.CombinedGaze.Y, eyeTrackingData.CombinedGaze.Z);
 			LastDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(dir);
 			End = TempStart + LastDirection * 100000.0f;
 			return End;
@@ -455,7 +455,7 @@ void UPlayerTracker::SendData()
 	}
 	snapshots.Empty();
 
-	LastSendTime = cog->GetWorld()->GetRealTimeSeconds();
+	LastSendTime = UCognitiveVRBlueprints::GetSessionDuration();
 }
 
 #if defined HPGLIA_API
@@ -465,7 +465,7 @@ void UPlayerTracker::TickSensors1000MS()
 	int32 OutHeartRate = 0;
 	if (UHPGliaClient::GetHeartRate(OutHeartRate) && OutHeartRate != LastHeartRate)
 	{
-		cog->sensors->RecordSensor("HP.HeartRate", OutHeartRate);
+		cog->sensors->RecordSensor("HP.HeartRate", (float)OutHeartRate);
 		LastHeartRate = OutHeartRate;
 	}
 
@@ -503,6 +503,14 @@ void UPlayerTracker::TickSensors100MS()
 
 void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (!cog.IsValid())
+	{
+		GLog->Log("Cognitive3D UPlayerTracker::EndPlay exiting editor");
+		return;
+	}
+
+	Super::EndPlay(EndPlayReason);
+
 	FString reason;
 	bool shouldEndSession = true;
 	switch (EndPlayReason)
@@ -527,7 +535,7 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		reason = "default";
 		break;
 	}
-
+	
 	if (cog.IsValid())
 	{
 		if (shouldEndSession)
@@ -538,7 +546,6 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		cog.Reset();
 	}
 	instance = NULL;
-	Super::EndPlay(EndPlayReason);
 }
 
 UPlayerTracker* UPlayerTracker::GetPlayerTracker()
@@ -547,6 +554,9 @@ UPlayerTracker* UPlayerTracker::GetPlayerTracker()
 	{
 		for (TObjectIterator<UPlayerTracker> Itr; Itr; ++Itr)
 		{
+			UWorld* tempWorld = Itr->GetWorld();
+			if (tempWorld == NULL) { continue; }
+			if (tempWorld->WorldType != EWorldType::PIE && tempWorld->WorldType != EWorldType::Game) { continue; } //editor world. skip
 			instance = *Itr;
 			break;
 		}

@@ -50,7 +50,6 @@ UFixationRecorder::UFixationRecorder()
 		if (parsedValue > 0)
 		{
 			AutoTimer = parsedValue;
-			cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UFixationRecorder::SendData, AutoTimer, true);
 		}
 	}
 }
@@ -65,11 +64,17 @@ int32 UFixationRecorder::GetIndex(int32 offset)
 void UFixationRecorder::BeginPlay()
 {
 	if (HasBegunPlay()) { return; }
-	instance = this;
 
+	Super::BeginPlay();
+	instance = this;
 	world = GetWorld();
+}
+
+void UFixationRecorder::BeginSession()
+{
 	if (cog.IsValid())
 	{
+		cog->EnsureGetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UFixationRecorder::SendData, AutoTimer, true);
 		for (int32 i = 0; i < CachedEyeCaptureCount; i++)
 		{
 			EyeCaptures.Add(FEyeCapture());
@@ -82,11 +87,10 @@ void UFixationRecorder::BeginPlay()
 #if defined HPGLIA_API
 		GEngine->GetAllLocalPlayerControllers(controllers);
 #endif
-		Super::BeginPlay();
 	}
 	else
 	{
-		GLog->Log("UFixationRecorder::BeginPlay cannot find CognitiveVRProvider!");
+		GLog->Log("UFixationRecorder::BeginSession cannot find CognitiveVRProvider!");
 	}
 }
 
@@ -664,7 +668,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		if (eyeTrackingData.CombinedGazeConfidence < 0.4f) { EyeCaptures[index].Discard = true; }
 		else
 		{
-			FVector dir = FVector(eyeTrackingData.CombinedGaze.Z, eyeTrackingData.CombinedGaze.X, eyeTrackingData.CombinedGaze.Y);
+			FVector dir = FVector(eyeTrackingData.CombinedGaze.X, eyeTrackingData.CombinedGaze.Y, eyeTrackingData.CombinedGaze.Z);
 			WorldDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(dir);
 
 			FVector captureLocation = controllers[0]->PlayerCameraManager->GetCameraLocation();
@@ -1154,6 +1158,7 @@ void UFixationRecorder::SendData()
 		cog->network->NetworkCall("fixations", OutputString);
 	}
 	Fixations.Empty();
+	LastSendTime = UCognitiveVRBlueprints::GetSessionDuration();
 }
 
 void UFixationRecorder::EndPlay(EEndPlayReason::Type EndPlayReason)

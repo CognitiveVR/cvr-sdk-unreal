@@ -15,6 +15,7 @@
 #include "DynamicObject.generated.h"
 
 class UCustomEvent;
+class UCognitiveVRBlueprints;
 
 UENUM(BlueprintType)
 enum class EIdSourceType : uint8
@@ -38,6 +39,7 @@ private:
 	static TArray<TSharedPtr<FDynamicObjectId>> allObjectIds;
 	static int32 jsonPart;// = 1;
 	static int32 MaxSnapshots;// = -1;
+	static bool callbackInitialized;
 
 	static int32 MinTimer;// = 5;
 	static int32 AutoTimer;// = 10;

@@ -12,6 +12,7 @@
 #include "CustomEvent.generated.h"
 
 class UDynamicObject;
+class UCognitiveVRBlueprints;
 
 UCLASS(BlueprintType)
 class COGNITIVEVR_API UCustomEvent : public UObject

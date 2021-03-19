@@ -34,9 +34,9 @@ private:
 	FReply Upload();
 	private:
 	TWeakObjectPtr<UDynamicObject> SelectedDynamicObject;
-	void DelayScreenshot(FLevelEditorViewportClient* perspectiveView, FVector startPos, FRotator startRot);
 
 	bool HasOwner() const;
 	bool HasOwnerAndExportDir() const;
 	bool HasOwnerAndExportDirAndName() const;
+	bool HasExportAndValidSceneData() const;
 };

@@ -125,6 +125,9 @@ replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\Cognitive
 #15 replace editor selection code in dynamic object manager widget
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DynamicObjectManagerWidget.cpp","	UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();","	UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();")
 
+#set ASV to tick when offscreen
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\ActiveSessionView.cpp","		WidgetComponent->TranslucencySortPriority = 100;","		WidgetComponent->SetTickWhenOffscreen(true);")
+
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue4"+enginesubversion
 shutil.make_archive(output_filename, 'zip', cwd+"/Plugins/")

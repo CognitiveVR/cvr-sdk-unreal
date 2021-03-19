@@ -20,12 +20,14 @@ struct FExitPollResponse;
 		FHttpModule* Http;
 		FString Gateway;
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
+		bool hasErrorResponse;
 
 	public:
 		Network();
 
 		void NetworkCall(FString suburl, FString contents);
 		void OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+		bool HasErrorResponse();
 
 		void OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 		void NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response);
