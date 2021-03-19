@@ -1,13 +1,13 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "0.16.0",
+	"VersionName": "0.17.0",
 	"FriendlyName": "cognitive3D Analytics",
 	"Description": "cognitive3D Analytics for Unreal",
 	"Category": "Analytics",
 	"CreatedBy": "cognitive3D",
 	"CreatedByURL": "cognitive3d.com",
-	"DocsURL": "docs.cognitivevr.com",
+	"DocsURL": "docs.cognitive3d.com",
 	"EnabledByDefault": true,
 	"CanContainContent":true,
 	"Modules": [
