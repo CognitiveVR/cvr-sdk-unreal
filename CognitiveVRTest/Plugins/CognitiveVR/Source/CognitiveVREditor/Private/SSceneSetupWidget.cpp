@@ -21,7 +21,7 @@ void SSceneSetupWidget::CheckForExpiredDeveloperKey()
 {
 	if (FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
 	{
-		TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
+		auto Request = FHttpModule::Get().CreateRequest();
 		Request->OnProcessRequestComplete().BindRaw(this, &SSceneSetupWidget::OnDeveloperKeyResponseReceived);
 		FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
 		FString url = "https://" + gateway + "/v0/apiKeys/verify";

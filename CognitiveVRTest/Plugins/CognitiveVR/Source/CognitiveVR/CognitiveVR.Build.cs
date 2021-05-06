@@ -51,6 +51,11 @@ namespace UnrealBuildTool.Rules
 					"UMG"
                 }
 				);
+
+#if UE_4_26_OR_LATER
+	PublicDependencyModuleNames.Add("DeveloperSettings");
+#endif
+
 		var pluginsDirectory = System.IO.Path.Combine(Target.ProjectFile.Directory.ToString(),"Plugins");
 		
 		//Varjo

@@ -42,7 +42,7 @@ void Network::NetworkCall(FString suburl, FString contents)
 
 	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
 
-	TSharedRef<IHttpRequest> HttpRequest = Http->CreateRequest();
+	auto HttpRequest = Http->CreateRequest();
 	HttpRequest->SetContentAsString(contents);
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("POST");
@@ -81,7 +81,7 @@ bool Network::HasErrorResponse()
 
 void Network::NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response)
 {
-	TSharedRef<IHttpRequest> HttpRequest = Http->CreateRequest();
+	auto HttpRequest = Http->CreateRequest();
 	
 	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
 	
@@ -167,7 +167,7 @@ void Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSe
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(ResponseObject.ToSharedRef(), Writer);
 
-	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
+	auto HttpRequest = FHttpModule::Get().CreateRequest();
 	
 	FString url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/questionSets/" + currentQuestionSet.name + "/" + FString::FromInt(currentQuestionSet.version) + "/responses";
 	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
