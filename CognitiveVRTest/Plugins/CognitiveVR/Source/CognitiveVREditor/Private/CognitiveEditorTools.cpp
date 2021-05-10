@@ -695,7 +695,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 
 	GLog->Log("CognitiveTools::UploadDynamicsManifest send dynamic object aggregation manifest");
 	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
-	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
+	auto HttpRequest = FHttpModule::Get().CreateRequest();
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
@@ -765,7 +765,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FSt
 
 	GLog->Log("CognitiveTools::UploadDynamicsManifest send dynamic object aggregation manifest");
 	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
-	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
+	auto HttpRequest = FHttpModule::Get().CreateRequest();
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
@@ -819,7 +819,7 @@ FReply FCognitiveEditorTools::GetDynamicsManifest()
 		return FReply::Handled();
 	}
 
-	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
+	auto HttpRequest = FHttpModule::Get().CreateRequest();
 
 	HttpRequest->SetURL(GetDynamicObjectManifest(FString::FromInt(currentSceneData->VersionId)));
 
@@ -1359,7 +1359,7 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 	}
 
 	TArray<uint8> AllBytes;
-	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
+	auto HttpRequest = FHttpModule::Get().CreateRequest();
 
 	for (int32 i = 0; i < contentArray.Num(); i++)
 	{
@@ -2084,7 +2084,7 @@ void FCognitiveEditorTools::SceneVersionRequest(FEditorSceneData data)
 		return;
 	}
 
-	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
+	auto HttpRequest = FHttpModule::Get().CreateRequest();
 
 	HttpRequest->SetURL(GetSceneVersion(data.Id));
 
