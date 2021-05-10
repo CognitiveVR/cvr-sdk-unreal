@@ -5,7 +5,7 @@ import time
 
 cwd = os.getcwd()
 version = "0"
-enginesubversion = "25"
+enginesubversion = "26"
 
 def replaceline(file, linesrc, linedst):
 
