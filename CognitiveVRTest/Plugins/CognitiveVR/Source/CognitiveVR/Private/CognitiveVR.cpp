@@ -96,6 +96,9 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	}
 
 	if (currentWorld == NULL)
+		currentWorld = pt->GetWorld();
+
+	if (currentWorld == NULL)
 	{
 		GLog->Log("FAnalyticsProviderCognitiveVR::StartSession World not set. Are you missing a Cognitive3D::Player Tracker component on your camera?");
 		pt->OnSessionBegin.Broadcast(false);

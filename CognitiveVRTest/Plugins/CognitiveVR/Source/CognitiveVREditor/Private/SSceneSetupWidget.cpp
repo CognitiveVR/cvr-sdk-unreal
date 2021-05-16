@@ -1550,6 +1550,8 @@ EVisibility SSceneSetupWidget::IsUploadComplete() const
 	{
 		return EVisibility::Collapsed;
 	}
+	if (FCognitiveEditorTools::GetInstance()->WizardUploadError == "200") { return IsCompleteVisible(); }
+	if (FCognitiveEditorTools::GetInstance()->WizardUploadError == "201") { return IsCompleteVisible(); }
 	if (FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() > 0)
 	{
 		return EVisibility::Collapsed;
@@ -1836,6 +1838,9 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 			return false;
 		}
 
+		if (FCognitiveEditorTools::GetInstance()->WizardUploadError == "200") { return true; }
+		if (FCognitiveEditorTools::GetInstance()->WizardUploadError == "201") { return true; }
+
 		if (FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() > 0)
 		{
 			return false;
@@ -1909,6 +1914,8 @@ EVisibility SSceneSetupWidget::GetDuplicateDyanmicObjectVisibility() const
 
 EVisibility SSceneSetupWidget::UploadErrorVisibility() const
 {
+	if (FCognitiveEditorTools::GetInstance()->WizardUploadError == "200") { return EVisibility::Collapsed; }
+	if (FCognitiveEditorTools::GetInstance()->WizardUploadError == "201") { return EVisibility::Collapsed; }
 	return FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() == 0 ? EVisibility::Collapsed : EVisibility::Visible;
 }
 

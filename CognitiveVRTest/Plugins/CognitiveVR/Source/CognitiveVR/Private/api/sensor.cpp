@@ -54,9 +54,15 @@ Sensors::Sensors()
 
 void Sensors::StartSession()
 {
+	if (!cog.IsValid()) {
+		return;
+	}
 	if (cog->EnsureGetWorld() == NULL)
 	{
 		CognitiveLog::Warning("Sensors::StartSession - GetWorld is Null! Likely missing PlayerTrackerComponent on Player actor");
+		return;
+	}
+	if (cog->EnsureGetWorld()->GetGameInstance() == NULL) {
 		return;
 	}
 	cog->EnsureGetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, true);
