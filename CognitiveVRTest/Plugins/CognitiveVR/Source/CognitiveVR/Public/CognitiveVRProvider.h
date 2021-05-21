@@ -23,6 +23,7 @@
 #include "Private/api/sensor.h"
 #include "Engine/Engine.h"
 #include "Base64.h"
+#include "Misc/PackageName.h"//to get friendly name of streaming levels
 
 
 
@@ -124,8 +125,12 @@
 		//if a session name has been explicitly set. otherwise will use participant name when that is set
 		bool bHasCustomSessionName;
 		void SetSessionName(FString sessionName);
+		
 		//used to identify when a scene changes and session properties need to be resent
 		FString CurrentTrackingSceneId;
+		//used to see id the current scene has changed and needs to search for new sceneId
+		TSharedPtr<FSceneData> LastSceneData;
+
 
 		void SetWorld(UWorld* world);
 		UWorld* GetWorld();
