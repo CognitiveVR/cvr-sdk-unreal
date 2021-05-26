@@ -91,6 +91,8 @@ public:
 	static void SetParticipantFullName(const FString Name);
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
 	static void SetParticipantId(const FString Id);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
+	static void SetSessionTag(const FString Tag);
 
 	//add an integer value to the session properties
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Properties")

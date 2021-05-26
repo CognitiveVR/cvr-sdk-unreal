@@ -148,6 +148,9 @@ replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\Cognitive
 #add scoped task header
 insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.h","#include \"FileHelpers.h\"","#include \"Misc/ScopedSlowTask.h\"")
 
+#streaming levels access
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVR.cpp","	const TArray<ULevelStreaming*> streamedLevels = GetWorld()->StreamingLevels;"," const TArray<ULevelStreaming*> streamedLevels = GetWorld()->GetStreamingLevels();")
+
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue4"+enginesubversion
 shutil.make_archive(output_filename, 'zip', cwd+"/Plugins/")

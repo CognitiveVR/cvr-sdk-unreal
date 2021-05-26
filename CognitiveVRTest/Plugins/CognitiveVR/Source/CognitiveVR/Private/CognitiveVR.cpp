@@ -339,6 +339,22 @@ void FAnalyticsProviderCognitiveVR::SetParticipantFullName(FString participantNa
 		SetSessionProperty("c3d.sessionname", participantName);
 }
 
+void FAnalyticsProviderCognitiveVR::SetSessionTag(FString Tag)
+{
+	if (Tag.Len() == 0)
+	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::SetSessionTag must contain > 0 characters");
+		return;
+	}
+	if (Tag.Len() > 12)
+	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::SetSessionTag must contain <= 12 characters");
+		return;
+	}
+
+	SetSessionProperty("c3d.session_tag."+Tag, true);
+}
+
 FString FAnalyticsProviderCognitiveVR::GetUserID() const
 {
 	return ParticipantId;

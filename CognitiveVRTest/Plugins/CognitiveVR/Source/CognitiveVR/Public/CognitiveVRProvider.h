@@ -150,6 +150,7 @@
 		void SetParticipantProperty(FString name, int32 value);
 		void SetParticipantProperty(FString name, float value);
 		void SetParticipantProperty(FString name, FString value);
+		void SetSessionTag(FString tag);
 
 		void SetSessionProperty(FString name, int32 value);
 		void SetSessionProperty(FString name, float value);
