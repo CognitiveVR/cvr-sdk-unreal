@@ -188,6 +188,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	}
 
 	SetSessionProperty("c3d.app.sdktype", "Default");
+	SetSessionProperty("c3d.version", COGNITIVEVR_SDK_VERSION);
 
 	SetSessionProperty("c3d.app.engine", "Unreal");
 

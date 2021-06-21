@@ -604,7 +604,9 @@ EVisibility SDynamicObjectManagerWidget::GetDuplicateDyanmicObjectVisibility() c
 
 EVisibility SDynamicObjectManagerWidget::UploadErrorVisibility() const
 {
-	return FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() == 0 ? EVisibility::Collapsed : EVisibility::Visible;
+	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 200) { return EVisibility::Collapsed; }
+	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 201) { return EVisibility::Collapsed; }
+	return EVisibility::Visible;
 }
 
 FText SDynamicObjectManagerWidget::UploadErrorText() const
