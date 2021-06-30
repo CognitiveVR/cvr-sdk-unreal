@@ -135,6 +135,9 @@ insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\ActiveSessionVie
 #streaming levels access
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVR.cpp","	const TArray<ULevelStreaming*> streamedLevels = GetWorld()->StreamingLevels;"," const TArray<ULevelStreaming*> streamedLevels = GetWorld()->GetStreamingLevels();")
 
+#replace hide windows platform types
+replaceline(cwd+"/Plugins/CognitiveVR/Source/CognitiveVR/Private/rtaudio/CRtAudio.cpp","#include \"HideWindowsPlatformTypes.h\"","#include \"Core/Public/HoloLens/HideWindowsPlatformTypes.h\"")
+
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue4"+enginesubversion
 shutil.make_archive(output_filename, 'zip', cwd+"/Plugins/")
