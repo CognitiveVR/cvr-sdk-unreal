@@ -112,6 +112,9 @@ replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\ActiveSessionVi
 #remove implementation of initialize interface
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\IActiveSessionViewRequired.cpp","void IActiveSessionViewRequired::Initialize_Implementation(AActiveSessionView* asv){}","//void IActiveSessionViewRequired::Initialize_Implementation(AActiveSessionView* asv){}")
 
+#streaming levels access
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVR.cpp","	const TArray<ULevelStreaming*> streamedLevels = GetWorld()->StreamingLevels;"," const TArray<ULevelStreaming*> streamedLevels = GetWorld()->GetStreamingLevels();")
+
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue4"+enginesubversion
 shutil.make_archive(output_filename, 'zip', cwd+"/Plugins/")

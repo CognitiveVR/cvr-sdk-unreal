@@ -2,7 +2,7 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "Public/DynamicObject.h"
+#include "CognitiveVR/Public/DynamicObject.h"
 
 class UDynamicObject;
 

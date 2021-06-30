@@ -1,9 +1,9 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 
-#include "Public/CognitiveVR.h"
-#include "Public/CognitiveVRProvider.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
+#include "CognitiveVR/Public/CognitiveVRProvider.h"
 //IMPROVEMENT this should be in the header, but can't find ControllerType enum
-#include "Public/InputTracker.h"
+#include "CognitiveVR/Public/InputTracker.h"
 
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
@@ -96,6 +96,9 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	}
 
 	if (currentWorld == NULL)
+		currentWorld = pt->GetWorld();
+
+	if (currentWorld == NULL)
 	{
 		GLog->Log("FAnalyticsProviderCognitiveVR::StartSession World not set. Are you missing a Cognitive3D::Player Tracker component on your camera?");
 		pt->OnSessionBegin.Broadcast(false);
@@ -185,6 +188,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	}
 
 	SetSessionProperty("c3d.app.sdktype", "Default");
+	SetSessionProperty("c3d.version", COGNITIVEVR_SDK_VERSION);
 
 	SetSessionProperty("c3d.app.engine", "Unreal");
 
@@ -334,6 +338,22 @@ void FAnalyticsProviderCognitiveVR::SetParticipantFullName(FString participantNa
 	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::SetParticipantData set user id");
 	if (!bHasCustomSessionName)
 		SetSessionProperty("c3d.sessionname", participantName);
+}
+
+void FAnalyticsProviderCognitiveVR::SetSessionTag(FString Tag)
+{
+	if (Tag.Len() == 0)
+	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::SetSessionTag must contain > 0 characters");
+		return;
+	}
+	if (Tag.Len() > 12)
+	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::SetSessionTag must contain <= 12 characters");
+		return;
+	}
+
+	SetSessionProperty("c3d.session_tag."+Tag, true);
 }
 
 FString FAnalyticsProviderCognitiveVR::GetUserID() const
@@ -581,16 +601,60 @@ TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetCurrentSceneData()
 		currentWorld = GWorld->GetWorld();
 	}
 
-	FString currentSceneName = currentWorld->GetMapName();
-	currentSceneName.RemoveFromStart(currentWorld->StreamingLevelsPrefix);
-	TSharedPtr<FSceneData> currentScenePtr = GetSceneData(currentSceneName);
+	//what is the current scenename
+	FString sceneName = currentWorld->GetMapName();
+	sceneName.RemoveFromStart(currentWorld->StreamingLevelsPrefix);
 
-	if (currentScenePtr.IsValid() && CurrentTrackingSceneId != currentScenePtr->Id)
+	//if names match, return cached scene data
+	if (LastSceneData.IsValid() && LastSceneData->Name == sceneName)
+	{
+		return LastSceneData;
+	}
+
+	//check the sublevel scene names
+	const TArray<ULevelStreaming*> streamedLevels = GetWorld()->StreamingLevels;
+	for (ULevelStreaming* streamingLevel : streamedLevels)
+	{
+		FString sublevelName = FPackageName::GetShortFName(streamingLevel->GetWorldAssetPackageFName()).ToString();
+		sublevelName.RemoveFromStart(currentWorld->StreamingLevelsPrefix);
+		//if names match, return cached scene data
+		if (LastSceneData.IsValid() && LastSceneData->Name == sublevelName)
+		{
+			return LastSceneData;
+		}
+	}
+
+	//last scene data is invalid OR last scene is not loaded
+	//need to change LastSceneData
+	
+	//find a scene data (prefering main level)
+	TSharedPtr<FSceneData> mainScenePtr = GetSceneData(sceneName);
+	if (mainScenePtr.IsValid())
 	{
 		ForceWriteSessionMetadata = true;
-		CurrentTrackingSceneId = currentScenePtr->Id;
+		CurrentTrackingSceneId = mainScenePtr->Id;
+		LastSceneData = mainScenePtr;
+		return LastSceneData;
 	}
-	return currentScenePtr;
+
+	//loop through all subscenes to find one
+	for (ULevelStreaming* streamingLevel : streamedLevels)
+	{
+		FString sublevelName = FPackageName::GetShortFName(streamingLevel->GetWorldAssetPackageFName()).ToString();
+		sublevelName.RemoveFromStart(currentWorld->StreamingLevelsPrefix);
+		TSharedPtr<FSceneData> subScenePtr = GetSceneData(sublevelName);
+
+		if (subScenePtr.IsValid())
+		{
+			ForceWriteSessionMetadata = true;
+			CurrentTrackingSceneId = subScenePtr->Id;
+			LastSceneData = subScenePtr;
+			return LastSceneData;
+		}
+	}
+
+	//GLog->Log("COGNITIVE could not find scene " + sceneName);
+	return NULL;
 }
 
 TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetSceneData(FString scenename)
@@ -603,7 +667,7 @@ TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetSceneData(FString scene
 			return SceneData[i];
 		}
 	}
-	CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::GetSceneData couldn't find SceneData for scene " + scenename);
+	//CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::GetSceneData couldn't find SceneData for scene " + scenename);
 	return NULL;
 }
 

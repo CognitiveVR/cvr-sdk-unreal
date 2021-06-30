@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include "CognitiveVR.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
 #include "Kismet/GameplayStatics.h"
-#include "DynamicObject.h"
-#include "Fixations.h"
-#include "EyeCapture.h"
+#include "CognitiveVR/Public/DynamicObject.h"
+#include "CognitiveVR/Private/Fixations.h"
+#include "CognitiveVR/Private/EyeCapture.h"
 #include "SceneView.h"
 #include "Engine/LocalPlayer.h"
 #include "DrawDebugHelpers.h"

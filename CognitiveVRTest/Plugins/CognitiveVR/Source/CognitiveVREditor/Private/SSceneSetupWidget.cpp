@@ -1208,6 +1208,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 		FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
 		FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 		FCognitiveEditorTools::GetInstance()->WizardUploadError = "";
+		FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode = 0;
 
 		FString texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("objects_grey.png");
 		FName BrushName = FName(*texturepath);
@@ -1550,10 +1551,12 @@ EVisibility SSceneSetupWidget::IsUploadComplete() const
 	{
 		return EVisibility::Collapsed;
 	}
-	if (FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() > 0)
-	{
-		return EVisibility::Collapsed;
-	}
+	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 200) { return IsCompleteVisible(); }
+	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 201) { return IsCompleteVisible(); }
+	//if (FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() > 0)
+	//{
+		//return EVisibility::Collapsed;
+	//}
 	return IsCompleteVisible();
 }
 
@@ -1836,6 +1839,9 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 			return false;
 		}
 
+		if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 200) { return true; }
+		if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 201) { return true; }
+
 		if (FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() > 0)
 		{
 			return false;
@@ -1909,6 +1915,8 @@ EVisibility SSceneSetupWidget::GetDuplicateDyanmicObjectVisibility() const
 
 EVisibility SSceneSetupWidget::UploadErrorVisibility() const
 {
+	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 200) { return EVisibility::Collapsed; }
+	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 201) { return EVisibility::Collapsed; }
 	return FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() == 0 ? EVisibility::Collapsed : EVisibility::Visible;
 }
 

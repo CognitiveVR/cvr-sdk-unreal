@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "CognitiveVR.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
 #include "TimerManager.h"
-#include "Private/util/util.h"
+#include "CognitiveVR/Private/util/util.h"
 #include "CoreMinimal.h"
 
 class FAnalyticsProviderCognitiveVR;

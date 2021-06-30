@@ -389,8 +389,9 @@ public:
 	void WizardUpload();
 	bool IsWizardUploading();
 
-	//set to 500, 404, 401 or some other junk if uploading from the wizard encountered and error
+	//set to 500, 404, 401 if uploading from the wizard encountered and error
 	FString WizardUploadError;
+	int32 WizardUploadResponseCode;
 	void CreateExportFolderStructure();
 
 	bool HasExportedAnyDynamicMeshes() const;

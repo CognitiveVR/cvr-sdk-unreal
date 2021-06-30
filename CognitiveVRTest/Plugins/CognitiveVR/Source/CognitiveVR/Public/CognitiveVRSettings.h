@@ -2,13 +2,12 @@
 
 #pragma once
 
-#include "CognitiveVR.h"
-#include "Classes/AnalyticsSettings.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
+#include "AnalyticsSettings.h"
 #include "CognitiveVRSettings.generated.h"
 
 UCLASS(config = Engine, defaultconfig)
-class UCognitiveVRSettings
-	: public UAnalyticsSettingsBase
+class UCognitiveVRSettings : public UAnalyticsSettingsBase
 {
 	GENERATED_UCLASS_BODY()
 

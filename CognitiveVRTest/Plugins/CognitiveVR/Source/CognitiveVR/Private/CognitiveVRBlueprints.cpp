@@ -266,6 +266,17 @@ void UCognitiveVRBlueprints::SetParticipantId(const FString Id)
 	}
 	cog->SetParticipantId(Id);
 }
+void UCognitiveVRBlueprints::SetSessionTag(const FString Tag)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::SetParticipantId could not get provider!");
+		return;
+	}
+	cog->SetSessionTag(Tag);
+}
 
 UCustomEvent* UCognitiveVRBlueprints::MakeCustomEvent(FString eventName)
 {

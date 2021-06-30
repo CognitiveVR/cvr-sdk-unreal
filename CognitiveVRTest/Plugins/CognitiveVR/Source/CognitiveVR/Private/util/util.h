@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include "CognitiveVR.h"
-#include "GenericPlatformDriver.h"
+#include "CoreMinimal.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
+#include "GenericPlatform/GenericPlatformDriver.h"
 #include <ctime>
 #include "Json.h"
 #if !PLATFORM_ANDROID

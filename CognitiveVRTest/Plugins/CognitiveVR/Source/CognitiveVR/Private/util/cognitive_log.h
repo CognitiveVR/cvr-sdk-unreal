@@ -3,7 +3,7 @@
 */
 #pragma once
 
-#include "CognitiveVR.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
 #include "CoreMinimal.h"
 
     class CognitiveLog

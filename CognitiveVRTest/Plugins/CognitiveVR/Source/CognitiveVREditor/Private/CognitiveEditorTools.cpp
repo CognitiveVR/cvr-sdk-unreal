@@ -792,10 +792,12 @@ void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, F
 	{
 		GetDynamicsManifest();
 		WizardUploadError = FString::FromInt(Response->GetResponseCode());
+		WizardUploadResponseCode = Response->GetResponseCode();
 	}
 	else //upload failed
 	{
 		WizardUploadError = FString("FCognitiveEditorTools::OnUploadManifestCompleted response code ") + FString::FromInt(Response->GetResponseCode());
+		WizardUploadResponseCode = Response->GetResponseCode();
 		GLog->Log("FCognitiveEditorTools::OnUploadManifestCompleted response code " + FString::FromInt(Response->GetResponseCode()));
 	}
 }
@@ -841,8 +843,11 @@ void FCognitiveEditorTools::OnDynamicManifestResponse(FHttpRequestPtr Request, F
 		GLog->Log("FCognitiveEditorTools::OnDynamicManifestResponse failed to connect");
 		WizardUploading = false;
 		WizardUploadError = "FCognitiveEditorTools::OnDynamicManifestResponse failed to connect";
+		WizardUploadResponseCode = 0;
 		return;
 	}
+
+	WizardUploadResponseCode = Response->GetResponseCode();
 
 	if (bWasSuccessful && Response->GetResponseCode()<300)
 	{
@@ -1440,8 +1445,10 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted failed to connect");
 		WizardUploadError = "FCognitiveEditorTools::OnUploadSceneCompleted failed to connect";
 		WizardUploading = false;
+		WizardUploadResponseCode = 0;
 		return;
 	}
+	WizardUploadResponseCode = Response->GetResponseCode();
 
 	if (bWasSuccessful && Response->GetResponseCode() < 300)
 	{
@@ -1498,8 +1505,11 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 		GLog->Log("FCognitiveEditorTools::OnUploadObjectCompleted failed to connect");
 		WizardUploading = false;
 		WizardUploadError = "FCognitiveEditorTools::OnUploadObjectCompleted failed to connect";
+		WizardUploadResponseCode = 0;
 		return;
 	}
+
+	WizardUploadResponseCode = Response->GetResponseCode();
 
 	if (bWasSuccessful && Response->GetResponseCode() < 300)
 	{
@@ -2107,22 +2117,23 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		GLog->Log("FCognitiveEditorTools::SceneVersionResponse failed to connect");
 		WizardUploading = false;
 		WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse failed to connect";
+		WizardUploadResponseCode = 0;
 		return;
 	}
 
-	int32 responseCode = Response->GetResponseCode();
+	WizardUploadResponseCode = Response->GetResponseCode();
 
-	if (responseCode >= 500)
+	if (WizardUploadResponseCode >= 500)
 	{
 		//internal server error
 		GLog->Log("FCognitiveTools::SceneVersionResponse 500-ish internal server error");
 		WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode());
 		return;
 	}
-	if (responseCode >= 400)
+	if (WizardUploadResponseCode >= 400)
 	{
 		WizardUploading = false;
-		if (responseCode == 401)
+		if (WizardUploadResponseCode == 401)
 		{
 			//not authorized or scene id does not exist
 			GLog->Log("FCognitiveTools::SceneVersionResponse not authorized or scene doesn't exist!");
@@ -2235,6 +2246,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		if (WizardUploading)
 		{
 			WizardUploadError = "FCognitiveToolsCustomization::SceneVersionResponse failed to parse json response";
+			WizardUploadResponseCode = 0;
 			WizardUploading = false;
 		}
 	}
@@ -2546,6 +2558,7 @@ void FCognitiveEditorTools::WizardUpload()
 {
 	WizardUploading = true;
 	WizardUploadError = "";
+	WizardUploadResponseCode = 0;
 	UploadScene();
 
 	//scene
@@ -2683,7 +2696,7 @@ FString FCognitiveEditorTools::BuildDebugFileContents() const
 	outputString += "*****************************\n";
 
 	//unreal version
-	outputString += "Unreal Engine Version: " + FEngineVersion::Current().ToString();
+	outputString += FString("Unreal Engine Version: ") + FEngineVersion::Current().ToString();
 	outputString += "\n";
 
 	//os name

@@ -2,15 +2,16 @@
 
 #pragma once
 
-#include "C3DCommonTypes.h"
-#include "CognitiveVR.h"
+#include "CognitiveVR/Public/C3DCommonTypes.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "TimerManager.h"
 #include "CoreMinimal.h"
-#include "CustomEvent.h"
-#include "DynamicIdPoolAsset.h"
+#include "CognitiveVR/Public/CustomEvent.h"
+#include "CognitiveVR/Public/DynamicIdPoolAsset.h"
 #include "MotionControllerComponent.h"
 #include "DynamicObject.generated.h"
 
