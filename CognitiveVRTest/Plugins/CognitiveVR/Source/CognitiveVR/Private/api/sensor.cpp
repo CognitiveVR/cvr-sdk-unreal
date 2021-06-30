@@ -2,7 +2,7 @@
 ** Copyright (c) 2016 CognitiveVR, Inc. All rights reserved.
 */
 
-#include "Private/api/sensor.h"
+#include "CognitiveVR/Private/api/sensor.h"
 
 Sensors::Sensors()
 {

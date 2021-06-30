@@ -4,12 +4,12 @@
 
 #pragma once
 
-#include "C3DCommonTypes.h"
-#include "CognitiveVR.h"
-#include "CognitiveVRProvider.h"
-#include "CognitiveVRSettings.h"
-#include "Private/util/util.h"
-#include "PlayerTracker.h"
+#include "CognitiveVR/Public/C3DCommonTypes.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
+#include "CognitiveVR/Public/CognitiveVRProvider.h"
+#include "CognitiveVR/Public/CognitiveVRSettings.h"
+#include "CognitiveVR/Private/util/util.h"
+#include "CognitiveVR/Private/PlayerTracker.h"
 //#include "ExitPoll.generated.h"
 
 

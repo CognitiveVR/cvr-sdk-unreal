@@ -3,17 +3,17 @@
 */
 #pragma once
 
-#include "C3DCommonTypes.h"
+#include "CognitiveVR/Public/C3DCommonTypes.h"
 #include "CoreMinimal.h"
-#include "CognitiveVR.h"
-#include "Public/CognitiveVRProvider.h"
-#include "Classes/AnalyticsBlueprintLibrary.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
+#include "CognitiveVR/Public/CognitiveVRProvider.h"
+#include "AnalyticsBlueprintLibrary.h"
 #include "Runtime/Analytics/Analytics/Public/AnalyticsEventAttribute.h"
-#include "Public/DynamicObject.h"
-#include "Private/PlayerTracker.h"
-#include "Private/ExitPoll.h"
-#include "Private/FixationRecorder.h"
-#include "Public/CustomEvent.h"
+#include "CognitiveVR/Public/DynamicObject.h"
+#include "CognitiveVR/Private/PlayerTracker.h"
+#include "CognitiveVR/Private/ExitPoll.h"
+#include "CognitiveVR/Private/FixationRecorder.h"
+#include "CognitiveVR/Public/CustomEvent.h"
 #include "CognitiveVRBlueprints.generated.h"
 
 class CognitiveVRResponse;

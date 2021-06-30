@@ -34,17 +34,27 @@ void UDynamicObject::TryGenerateMeshName()
 	if (MeshName.IsEmpty())
 	{
 		UActorComponent* actorComponent = GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
-		if (actorComponent == NULL)
+		if (actorComponent != NULL)
 		{
-			return;
+			UStaticMeshComponent* staticmeshComponent = Cast<UStaticMeshComponent>(actorComponent);
+			if (staticmeshComponent != NULL && staticmeshComponent->GetStaticMesh() != NULL)
+			{
+				UseCustomMeshName = true;
+				MeshName = staticmeshComponent->GetStaticMesh()->GetName();
+			}
 		}
-		UStaticMeshComponent* staticmeshComponent = Cast<UStaticMeshComponent>(actorComponent);
-		if (staticmeshComponent == NULL || staticmeshComponent->GetStaticMesh() == NULL)
+
+		UActorComponent* actorSkeletalComponent = GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass());
+		if (actorSkeletalComponent != NULL)
 		{
-			return;
+			USkeletalMeshComponent* staticmeshComponent = Cast<USkeletalMeshComponent>(actorSkeletalComponent);
+			if (staticmeshComponent != NULL && staticmeshComponent->SkeletalMesh != NULL)
+			{
+				UseCustomMeshName = true;
+				MeshName = staticmeshComponent->GetName();
+			}
 		}
-		UseCustomMeshName = true;
-		MeshName = staticmeshComponent->GetStaticMesh()->GetName();
+		
 	}
 }
 
@@ -63,19 +73,38 @@ void UDynamicObject::TryGenerateCustomIdAndMesh()
 			return;
 		}
 
+		bool foundAnyMesh = false;
+
 		UActorComponent* actorComponent = GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
-		if (actorComponent == NULL)
+		if (actorComponent != NULL)
+		{
+			UStaticMeshComponent* staticmeshComponent = Cast<UStaticMeshComponent>(actorComponent);
+			if (staticmeshComponent != NULL && staticmeshComponent->GetStaticMesh() != NULL)
+			{
+				MeshName = staticmeshComponent->GetStaticMesh()->GetName();
+				foundAnyMesh = true;
+			}
+		}
+
+		UActorComponent* actorSkeletalComponent = GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass());
+		if (actorSkeletalComponent != NULL)
+		{
+			USkeletalMeshComponent* staticmeshComponent = Cast<USkeletalMeshComponent>(actorSkeletalComponent);
+			if (staticmeshComponent != NULL && staticmeshComponent->SkeletalMesh != NULL)
+			{
+				MeshName = staticmeshComponent->SkeletalMesh->GetName();
+				foundAnyMesh = true;
+			}
+		}
+
+
+		if (foundAnyMesh == false)
 		{
 			return;
 		}
-		UStaticMeshComponent* staticmeshComponent = Cast<UStaticMeshComponent>(actorComponent);
-		if (staticmeshComponent == NULL || staticmeshComponent->GetStaticMesh() == NULL)
-		{
-			return;
-		}
+
 		UseCustomMeshName = true;
 		//UseCustomId = true;
-		MeshName = staticmeshComponent->GetStaticMesh()->GetName();
 		CustomId = FGuid::NewGuid().ToString();
 		GWorld->MarkPackageDirty();
 	}

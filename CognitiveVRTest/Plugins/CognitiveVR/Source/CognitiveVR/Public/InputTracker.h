@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "CognitiveVR.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
 #include "CoreMinimal.h"
-#include "DynamicObject.h"
+#include "CognitiveVR/Public/DynamicObject.h"
 #include "MotionControllerComponent.h"
 #include "InputTracker.generated.h"
 

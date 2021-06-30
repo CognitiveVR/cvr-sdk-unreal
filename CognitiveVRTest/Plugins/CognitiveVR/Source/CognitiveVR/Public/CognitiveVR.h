@@ -2,12 +2,12 @@
 
 #pragma once
 
-#include "C3DCommonTypes.h"
+#include "CognitiveVR/Public/C3DCommonTypes.h"
 #include "UObject/UObjectIterator.h"
 #include "CoreMinimal.h"
 #include "Interfaces/IAnalyticsProviderModule.h"
 #include "Modules/ModuleManager.h"
-#include "Public/CognitiveVRProvider.h"
+#include "CognitiveVR/Public/CognitiveVRProvider.h"
 #include "Runtime/Engine/Classes/Engine/LevelStreaming.h"
 
 DEFINE_LOG_CATEGORY_STATIC(CognitiveVR_Log, Log, All);

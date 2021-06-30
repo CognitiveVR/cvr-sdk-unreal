@@ -2,6 +2,7 @@ import os
 import shutil
 import sys
 import time
+import glob
 
 cwd = os.getcwd()
 version = "0"
@@ -9,7 +10,6 @@ enginesubversion = "26"
 
 def replaceline(file, linesrc, linedst):
 
-	#mo = open(file, encoding='utf-8-sig')
 	mo = open(file, "r")
 	readString = mo.read()
 
@@ -142,14 +142,21 @@ insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveV
 #set ASV to tick when offscreen
 insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\ActiveSessionView.cpp","		WidgetComponent->TranslucencySortPriority = 100;","		WidgetComponent->SetTickWhenOffscreen(true);")
 
-#replace file helper.h from editor tools
-replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.h","#include \"FileHelpers.h\"","#include \"Misc/FileHelper.h\"")
-
 #add scoped task header
 insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.h","#include \"FileHelpers.h\"","#include \"Misc/ScopedSlowTask.h\"")
 
+#replace file helper.h from editor tools
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.h","#include \"FileHelpers.h\"","#include \"Misc/FileHelper.h\"")
+
 #streaming levels access
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVR.cpp","	const TArray<ULevelStreaming*> streamedLevels = GetWorld()->StreamingLevels;"," const TArray<ULevelStreaming*> streamedLevels = GetWorld()->GetStreamingLevels();")
+
+#device id removed
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVR.cpp","	DeviceId = FPlatformMisc::GetDeviceId();","	DeviceId = FPlatformMisc::GetHashedMacAddressString();")
+
+#replace hide windows platform types
+replaceline(cwd+"/Plugins/CognitiveVR/Source/CognitiveVR/Private/rtaudio/CRtAudio.cpp","#include \"HideWindowsPlatformTypes.h\"","#include \"Core/Public/HoloLens/HideWindowsPlatformTypes.h\"")
+
 
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue4"+enginesubversion

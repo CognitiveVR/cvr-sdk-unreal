@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CognitiveVR.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
 #include "IActiveSessionViewRequired.generated.h"
 
 class AActiveSessionView;

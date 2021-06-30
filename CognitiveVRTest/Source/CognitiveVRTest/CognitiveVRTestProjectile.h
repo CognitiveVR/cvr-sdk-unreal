@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Public/CognitiveVR.h"
 #include "CognitiveVRTestProjectile.generated.h"
 
 UCLASS(config=Game)

@@ -61,8 +61,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #undef __WINDOWS_WASAPI__
 #endif
 
-#include "CognitiveVR.h"
-#include "MinWindows.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
+#include "Windows/MinWindows.h"
 
 #define RTAUDIO_VERSION "4.1.2"
 

@@ -8,7 +8,7 @@
 #if !PLATFORM_ANDROID
 #include "rtaudio/CRtAudio.h"
 #endif
-#include "Base64.h"
+#include "Misc/Base64.h"
 #include "MicrophoneCaptureActor.generated.h"
 
 UCLASS()

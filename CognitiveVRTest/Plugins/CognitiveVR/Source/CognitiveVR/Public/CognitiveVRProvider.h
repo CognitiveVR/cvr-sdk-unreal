@@ -2,27 +2,27 @@
 
 #pragma once
 
-#include "C3DCommonTypes.h"
+#include "CognitiveVR/Public/C3DCommonTypes.h"
 #include "CoreMinimal.h"
 #include "AnalyticsEventAttribute.h"
 #include "Interfaces/IAnalyticsProvider.h"
-#include "Public/CognitiveVR.h"
-#include "Public/CognitiveVRBlueprints.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
+#include "CognitiveVR/Public/CognitiveVRBlueprints.h"
 
 #include "HeadMountedDisplay.h"
-#include "Public/CognitiveVRSettings.h"
-#include "Private/ExitPoll.h"
-#include "Private/PlayerTracker.h"
-#include "Public/DynamicObject.h"
-#include "Private/FixationRecorder.h"
+#include "CognitiveVR/Public/CognitiveVRSettings.h"
+#include "CognitiveVR/Private/ExitPoll.h"
+#include "CognitiveVR/Private/PlayerTracker.h"
+#include "CognitiveVR/Public/DynamicObject.h"
+#include "CognitiveVR/Private/FixationRecorder.h"
 
-#include "Private/util/util.h"
-#include "Private/util/cognitive_log.h"
-#include "Private/network/network.h"
-#include "Private/api/customeventrecorder.h"
-#include "Private/api/sensor.h"
+#include "CognitiveVR/Private/util/util.h"
+#include "CognitiveVR/Private/util/cognitive_log.h"
+#include "CognitiveVR/Private/network/network.h"
+#include "CognitiveVR/Private/api/customeventrecorder.h"
+#include "CognitiveVR/Private/api/sensor.h"
 #include "Engine/Engine.h"
-#include "Base64.h"
+#include "Misc/Base64.h"
 #include "Misc/PackageName.h"//to get friendly name of streaming levels
 
 

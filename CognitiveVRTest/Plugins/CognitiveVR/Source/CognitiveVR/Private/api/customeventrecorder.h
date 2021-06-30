@@ -5,9 +5,9 @@
 
 #include "TimerManager.h"
 #include "Analytics.h"
-#include "Public/CognitiveVRProvider.h"
-#include "Private/util/util.h"
-#include "Private/PlayerTracker.h"
+#include "CognitiveVR/Public/CognitiveVRProvider.h"
+#include "CognitiveVR/Private/util/util.h"
+#include "CognitiveVR/Private/PlayerTracker.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 
 class FAnalyticsProviderCognitiveVR;

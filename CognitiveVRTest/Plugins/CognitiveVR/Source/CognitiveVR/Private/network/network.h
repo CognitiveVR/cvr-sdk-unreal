@@ -3,8 +3,8 @@
 */
 #pragma once
 
-#include "CognitiveVR.h"
-#include "Private/ExitPoll.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
+#include "CognitiveVR/Private/ExitPoll.h"
 #include "Http.h"
 
 class FAnalyticsProviderCognitiveVR;

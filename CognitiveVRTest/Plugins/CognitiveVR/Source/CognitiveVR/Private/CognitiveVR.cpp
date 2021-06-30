@@ -1,9 +1,9 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 
-#include "Public/CognitiveVR.h"
-#include "Public/CognitiveVRProvider.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
+#include "CognitiveVR/Public/CognitiveVRProvider.h"
 //IMPROVEMENT this should be in the header, but can't find ControllerType enum
-#include "Public/InputTracker.h"
+#include "CognitiveVR/Public/InputTracker.h"
 
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 

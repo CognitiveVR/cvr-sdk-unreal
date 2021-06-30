@@ -518,7 +518,7 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	case EEndPlayReason::Destroyed: reason = "destroyed";
 		//this should normally never be destroyed. 4.19 bug - this is called instead of level transition
 		cog->FlushEvents();
-		shouldEndSession = false;
+		//shouldEndSession = false;
 		break;
 	case EEndPlayReason::EndPlayInEditor: reason = "end PIE";
 		break;
@@ -536,6 +536,8 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		break;
 	}
 	
+	//GLog->Log("PlayerTracker::EndPlay reason " + reason);
+
 	if (cog.IsValid())
 	{
 		if (shouldEndSession)

@@ -3,12 +3,12 @@
 */
 #pragma once
 
-#include "C3DCommonTypes.h"
-#include "CognitiveVR.h"
-#include "Private/util/util.h"
+#include "CognitiveVR/Public/C3DCommonTypes.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
+#include "CognitiveVR/Private/util/util.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
-#include "Private/api/customeventrecorder.h"
-#include "Private/api/sensor.h"
+#include "CognitiveVR/Private/api/customeventrecorder.h"
+#include "CognitiveVR/Private/api/sensor.h"
 #include "CustomEvent.generated.h"
 
 class UDynamicObject;
