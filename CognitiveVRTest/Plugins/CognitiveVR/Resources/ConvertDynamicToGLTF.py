@@ -18,7 +18,6 @@ dynamicNames = args[4].split(",")
 
 sizeFactor = 1;
 
-
 #foreach dynamic object
 #just export into existing folder
 #delete bmps and folders
@@ -71,9 +70,10 @@ for dir in subdirectories:
     
     
     #import workingdir +"/"+ dir+".obj"
-    objname = workingdir + "/" + dir + ".obj"
+    objname = workingdir + "/" + dir + ".fbx"
     if os.path.exists(objname):
-        ops.import_scene.obj(filepath=objname, use_edges=True, use_smooth_groups=True, use_split_objects=True, use_split_groups=True, use_groups_as_vgroups=False, use_image_search=True, split_mode='ON', axis_forward='-Z', axis_up='Y')
+        #ops.import_scene.obj(filepath=objname, use_edges=True, use_smooth_groups=True, use_split_objects=True, use_split_groups=True, use_groups_as_vgroups=False, use_image_search=True, split_mode='ON', axis_forward='-Z', axis_up='Y')
+        ops.import_scene.fbx(filepath=objname)
         print("=============================================import complete")
         bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP',iterations=1)
         
@@ -88,6 +88,8 @@ for dir in subdirectories:
             if name.endswith('.mtl'):
                 os.remove(os.path.join(tempPath, name))
             if name.endswith('.obj'):
+                os.remove(os.path.join(tempPath, name))
+            if name.endswith('.fbx'):
                 os.remove(os.path.join(tempPath, name))
             if name.endswith('.bmp'):
                 os.remove(os.path.join(tempPath, name))

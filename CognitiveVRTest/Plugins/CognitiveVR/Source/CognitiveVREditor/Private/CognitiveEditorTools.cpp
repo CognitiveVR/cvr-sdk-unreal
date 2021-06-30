@@ -310,6 +310,7 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 
 	TArray<FString> DynamicMeshNames;
 	TMap<FString, TArray< UStaticMeshComponent*>> BakeExportMaterials;
+	TMap<FString, TArray< USkeletalMeshComponent*>> BakeExportSkeletonMaterials;
 
 	for (int32 i = 0; i < exportObjects.Num(); i++)
 	{
@@ -330,7 +331,6 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 
 		TArray<UActorComponent*> actorComponents = exportObjects[i]->GetOwner()->GetComponentsByClass(UStaticMeshComponent::StaticClass());
 		TArray< UStaticMeshComponent*> meshes;
-
 		for (int32 j = 0; j < actorComponents.Num(); j++)
 		{
 			UStaticMeshComponent* mesh = Cast<UStaticMeshComponent>(actorComponents[j]);
@@ -347,7 +347,32 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 			}
 
 			meshes.Add(mesh);
+			GLog->Log("export static mesh named " + mesh->GetName());
 		}
+
+		TArray<UActorComponent*> actorSkeletalComponents = exportObjects[i]->GetOwner()->GetComponentsByClass(USkeletalMeshComponent::StaticClass());
+		TArray< USkeletalMeshComponent*> skeletalMeshes;
+		for (int32 j = 0; j < actorSkeletalComponents.Num(); j++)
+		{
+			USkeletalMeshComponent* mesh = Cast<USkeletalMeshComponent>(actorSkeletalComponents[j]);
+			if (mesh == NULL)
+			{
+				continue;
+			}
+
+			ULevel* componentLevel = actorSkeletalComponents[j]->GetComponentLevel();
+			if (componentLevel->bIsVisible == 0)
+			{
+				continue;
+				//not visible! possibly on a disabled sublevel
+			}
+
+			skeletalMeshes.Add(mesh);
+			GLog->Log("export skeletal mesh named " + mesh->GetName());
+		}
+
+		
+
 		DynamicMeshNames.Add(exportObjects[i]->MeshName);
 
 		originalLocation = exportObjects[i]->GetOwner()->GetActorLocation();
@@ -358,16 +383,17 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		exportObjects[i]->GetOwner()->SetActorRotation(FQuat::Identity);
 		exportObjects[i]->GetOwner()->SetActorScale3D(FVector::OneVector);
 
-		FString ExportFilename = exportObjects[i]->MeshName + ".obj";
+		FString ExportFilename = exportObjects[i]->MeshName + ".fbx";
 
 		GEditor->SelectActor(exportObjects[i]->GetOwner(), true, false, true);
 		ActorsExported++;
 
-		FString tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
-
+		FString tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".fbx";
+		//export to obj skips skeletal fbx?
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
 
 		GUnrealEd->ExportMap(GWorld, *tempObject, true);
+		//FEditorFileUtils::Export(true);
 
 		exportObjects[i]->GetOwner()->SetActorLocation(originalLocation);
 		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
@@ -376,6 +402,7 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		//bake + export materials			
 
 		BakeExportMaterials.Add(exportObjects[i]->MeshName, meshes);
+		BakeExportSkeletonMaterials.Add(exportObjects[i]->MeshName, skeletalMeshes);
 
 
 		//automatic screenshot
@@ -427,6 +454,13 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		work += 1;
 		SlowTask.EnterProgressFrame(work);
 		WizardExportMaterials(GetDynamicsExportDirectory() + "/" + elem.Key + "/", elem.Value, elem.Key);
+	}
+
+	for (auto& elem : BakeExportSkeletonMaterials)
+	{
+		work += 1;
+		SlowTask.EnterProgressFrame(work);
+		WizardExportSkeletalMaterials(GetDynamicsExportDirectory() + "/" + elem.Key + "/", elem.Value, elem.Key);
 	}
 
 	GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
@@ -2379,6 +2413,154 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 }
 
 TArray<FString> MaterialLine;
+
+void FCognitiveEditorTools::WizardExportSkeletalMaterials(FString directory, TArray<USkeletalMeshComponent*> meshes, FString mtlFileName)
+{
+	IMaterialBakingModule& MaterialBakingModule = FModuleManager::Get().LoadModuleChecked<IMaterialBakingModule>("MaterialBaking");
+
+	FIntPoint resolution = FIntPoint(256, 256);
+	TArray<FString>ExportedMaterialNames;
+
+	MaterialLine.Empty();
+	MaterialLine.Add("");
+
+	float work = 0;
+	FScopedSlowTask* SlowTaskPtr = NULL;
+
+	if (mtlFileName == FCognitiveEditorTools::GetInstance()->GetCurrentSceneName())
+	{
+		SlowTaskPtr = new FScopedSlowTask(meshes.Num(), FText::FromString("Baking Scene Materials"));
+		SlowTaskPtr->MakeDialog(false);
+	}
+
+	for (int32 i = 0; i < meshes.Num(); i++)
+	{
+		if (SlowTaskPtr != NULL)
+		{
+			//work += 1;
+			SlowTaskPtr->EnterProgressFrame(1);
+		}
+		if (meshes[i] == NULL) { continue; }
+		USkeletalMeshComponent* TempObject = meshes[i];
+		//if (TempObject == NULL) { continue; }
+
+		TArray<UMaterialInterface*> mats = TempObject->GetMaterials();
+		for (int32 j = 0; j < mats.Num(); j++)
+		{
+			if (mats[j] != NULL)
+			{
+				if (ExportedMaterialNames.Contains(mats[j]->GetName())) { continue; }
+
+				if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Opaque)
+				{
+					FString n = mats[j]->GetPathName().Replace(TEXT("."), TEXT("_"));
+					MaterialLine.Add("newmtl " + n);
+
+					ExportedMaterialNames.Add(mats[j]->GetName());
+
+					SCOPED_SUSPEND_RENDERING_THREAD(true);
+					PRAGMA_DISABLE_DEPRECATION_WARNINGS
+						TArray<FColor> OutputBMP;
+					FIntPoint OutSize;
+					FString BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+					FMaterialUtilities::ExportMaterialProperty(mats[j], EMaterialProperty::MP_BaseColor, OutputBMP, OutSize);
+					FFileHelper::CreateBitmap(*BMPFilename, OutSize.X, OutSize.Y, OutputBMP.GetData());
+					MaterialLine.Add("map_Kd " + BMPFilename);
+
+					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
+					FMaterialUtilities::ExportMaterialProperty(mats[j], EMaterialProperty::MP_Normal, OutputBMP, OutSize);
+					FFileHelper::CreateBitmap(*BMPFilename, OutSize.X, OutSize.Y, OutputBMP.GetData());
+					MaterialLine.Add("bump " + BMPFilename);
+					PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+						MaterialLine.Add("");
+					MaterialLine.Add("");
+					continue;
+				}
+
+				TArray<FMeshData*> MeshSettingPtrs;
+				TArray<FMaterialData*> MaterialSettingPtrs;
+				GLog->Log(mats[j]->GetFullName());
+				FString n = mats[j]->GetPathName().Replace(TEXT("."), TEXT("_"));
+				MaterialLine.Add("newmtl " + n);
+
+				ExportedMaterialNames.Add(mats[j]->GetName());
+
+				FMaterialData MaterialSettings;
+				MaterialSettings.Material = mats[j];
+				//MaterialSettings.bPerformBorderSmear = false;
+				MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_BaseColor, resolution);
+				MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Normal, resolution);
+
+				if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
+					MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_OpacityMask, resolution);
+				else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent)
+					MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Opacity, resolution);
+				//MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_EmissiveColor, resolution);
+				MaterialSettingPtrs.Add(&MaterialSettings);
+
+
+
+				FMeshData meshdata;
+				//meshdata.RawMeshDescription = nullptr;
+				meshdata.TextureCoordinateBox = FBox2D(FVector2D(0.0f, 0.0f), FVector2D(1.0f, 1.0f));
+				meshdata.TextureCoordinateIndex = 0;
+				MeshSettingPtrs.Add(&meshdata);
+
+				TArray<FBakeOutput> BakeOutputs;
+				MaterialBakingModule.BakeMaterials(MaterialSettingPtrs, MeshSettingPtrs, BakeOutputs);
+
+				for (FBakeOutput& output : BakeOutputs)
+				{
+					//GLog->Log(FString::FromInt(output.PropertySizes[EMaterialProperty::MP_BaseColor].X) + "   " + FString::FromInt(output.PropertySizes[EMaterialProperty::MP_BaseColor].Y));
+
+					//writing materials with wrong uvs
+
+					FString BMPFilename;
+					//diffuse
+					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+					FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_BaseColor].GetData());
+					MaterialLine.Add("map_Kd " + BMPFilename);
+
+					//normal
+					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
+					FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Normal].GetData());
+					MaterialLine.Add("bump " + BMPFilename);
+
+					if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
+					{
+						//	//mask
+						BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_OM.bmp");
+						FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_OpacityMask].GetData());
+						MaterialLine.Add("illum 4");
+						MaterialLine.Add("map_D " + BMPFilename);
+					}
+					else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent)
+					{
+						//opacity
+						BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_O.bmp");
+						FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Opacity].GetData());
+						MaterialLine.Add("illum 4");
+						MaterialLine.Add("map_D " + BMPFilename);
+					}
+
+					//save to disk
+				}
+				MaterialLine.Add("");
+				MaterialLine.Add("");
+			}
+		}
+	}
+
+	if (SlowTaskPtr != NULL)
+	{
+		delete SlowTaskPtr;
+	}
+
+	//write MaterialLine to mtl file
+	FString mtlPath = directory + mtlFileName + ".mtl";
+	FFileHelper::SaveStringArrayToFile(MaterialLine, *mtlPath);
+}
 
 void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<UStaticMeshComponent*> meshes, FString mtlFileName)
 {
