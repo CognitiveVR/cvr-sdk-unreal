@@ -2,11 +2,11 @@
 
 #pragma once
 
-#include "CognitiveVR.h"
-#include "CognitiveVRProvider.h"
+#include "CognitiveVR/Public/CognitiveVR.h"
+#include "CognitiveVR/Public/CognitiveVRProvider.h"
 #include "CoreMinimal.h"
-#if !PLATFORM_ANDROID
-#include "rtaudio/CRtAudio.h"
+#if PLATFORM_ANDROID == 0
+#include "CognitiveVR/Private/rtaudio/CRtAudio.h"
 #endif
 #include "Misc/Base64.h"
 #include "MicrophoneCaptureActor.generated.h"
@@ -19,7 +19,7 @@ class AMicrophoneCaptureActor : public AActor
 private:
 	//uint8* RecordedData;
 	
-#if !PLATFORM_ANDROID
+#if PLATFORM_ANDROID == 0
 
 	//TArray<uint8> QueuedAudio;
 	//FThreadSafeCounter AvailableByteCount;
