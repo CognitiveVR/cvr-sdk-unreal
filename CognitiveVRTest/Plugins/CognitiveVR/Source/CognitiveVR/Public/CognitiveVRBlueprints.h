@@ -124,6 +124,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
 		static void Send(UCustomEvent* target);
 
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events", DisplayName = "Send At HMD Position")
+		static void SendAtHMDPosition(UCustomEvent* target);
+
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")
 		static UCustomEvent* AppendSensor(UCustomEvent* target, FString sensorName);
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Custom Events")

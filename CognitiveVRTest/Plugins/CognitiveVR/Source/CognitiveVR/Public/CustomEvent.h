@@ -40,6 +40,7 @@ public:
 	void SetCategory(FString category);
 
 	void Send();
+	void SendAtHMDPosition();
 	//appends the most recent value of all sensors as properties
 	void AppendAllSensors();
 	//appends the most recent value of a sensor by name as a property
