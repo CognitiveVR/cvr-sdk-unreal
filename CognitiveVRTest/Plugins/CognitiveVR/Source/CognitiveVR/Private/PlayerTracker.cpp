@@ -536,8 +536,6 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		reason = "default";
 		break;
 	}
-	
-	//GLog->Log("PlayerTracker::EndPlay reason " + reason);
 
 	if (cog.IsValid())
 	{

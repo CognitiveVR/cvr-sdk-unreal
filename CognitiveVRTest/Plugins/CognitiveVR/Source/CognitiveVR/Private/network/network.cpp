@@ -48,6 +48,7 @@ void Network::NetworkCall(FString suburl, FString contents)
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->SetHeader("Authorization", AuthValue);
+	//IMPROVEMENT response codes should be visible without needing dev log enabled. should be shown with regular c3d logs (enabled by default)
 	if (CognitiveLog::DevLogEnabled())
 		HttpRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnCallReceivedAsync);
 	HttpRequest->ProcessRequest();

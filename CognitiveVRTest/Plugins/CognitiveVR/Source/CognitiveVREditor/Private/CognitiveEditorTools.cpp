@@ -425,7 +425,7 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 	for (auto& elem : BakeExportMaterials)
 	{
 		work += 1;
-		SlowTask.EnterProgressFrame(work);
+		SlowTask.EnterProgressFrame(work); //error in 4.27 'ExpectedWorkThisFrame <= 1.01f * TotalAmountOfWork - CompletedWork' work overflow
 		WizardExportMaterials(GetDynamicsExportDirectory() + "/" + elem.Key + "/", elem.Value, elem.Key);
 	}
 
@@ -698,6 +698,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetContentAsString(objectManifest);
+	GLog->Log(objectManifest);
 
 	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestCompleted);
 
