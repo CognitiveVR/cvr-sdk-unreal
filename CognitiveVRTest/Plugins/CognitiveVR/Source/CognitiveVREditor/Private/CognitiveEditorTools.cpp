@@ -425,7 +425,7 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 	for (auto& elem : BakeExportMaterials)
 	{
 		work += 1;
-		SlowTask.EnterProgressFrame(work);
+		SlowTask.EnterProgressFrame(work); //error in 4.27 'ExpectedWorkThisFrame <= 1.01f * TotalAmountOfWork - CompletedWork' work overflow
 		WizardExportMaterials(GetDynamicsExportDirectory() + "/" + elem.Key + "/", elem.Value, elem.Key);
 	}
 
@@ -458,7 +458,7 @@ void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
 	const TCHAR* charPath = *pythonscriptpath;
 
 	//found something
-	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ConvertToGLTF Python script path: %s"), charPath);
+	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::ConvertToGLTF Python script path: %s"), charPath);
 
 
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
@@ -468,7 +468,7 @@ void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
 	TArray<FAssetData> ScriptList;
 	if (!AssetRegistry.GetAssetsByPath(FName(*pythonscriptpath), ScriptList))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ConvertToGLTF Could not find python script at path. Canceling"));
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ConvertToGLTF Could not find python script at path. Canceling"));
 		return;
 	}
 
@@ -476,14 +476,14 @@ void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
 
 	if (BlenderPath.Len() == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ConvertToGLTF No path set for Blender.exe. Canceling"));
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ConvertToGLTF No path set for Blender.exe. Canceling"));
 		return;
 	}
 
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 	if (!tempworld)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ConvertToGLTF World is null. canceling"));
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ConvertToGLTF World is null. canceling"));
 		return;
 	}
 
@@ -491,7 +491,7 @@ void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
 
 	if (ObjPath.Len() == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ConvertToGLTF No know export directory. Canceling"));
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ConvertToGLTF No know export directory. Canceling"));
 		return;
 	}
 
@@ -513,9 +513,6 @@ void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
 	FString stringparams = " -P " + escapedPythonPath + " " + escapedTargetPath + " " + escapedMeshNameList;// +" " + MaxPolyCount + " " + SceneName;
 
 	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
-
-	//UE_LOG(LogTemp, Warning, TEXT("Params: %s"), *stringParamSlashed);
-
 
 	const TCHAR* params = *stringParamSlashed;
 	int32 priorityMod = 0;
@@ -701,6 +698,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetContentAsString(objectManifest);
+	GLog->Log(objectManifest);
 
 	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestCompleted);
 
@@ -924,9 +922,6 @@ FReply FCognitiveEditorTools::UploadDynamics()
 		return FReply::Handled();
 	}
 
-	//no matches anywhere
-	//CognitiveLog::Warning("UPlayerTracker::GetSceneKey ------- no matches in ini");
-
 	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
 	{
 		const FString filePath = TimestampIt.Key();
@@ -1001,9 +996,6 @@ FReply FCognitiveEditorTools::UploadDynamic(FString directory)
 		GLog->Log("FCognitiveEditorToolsCustomization::UploadDynamics can't find current scene!");
 		return FReply::Handled();
 	}
-
-	//no matches anywhere
-	//CognitiveLog::Warning("UPlayerTracker::GetSceneKey ------- no matches in ini");
 
 	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
 	{
@@ -1103,12 +1095,10 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 	FString outFilename = FString();
 	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Select_Export_Directory - picked a directory"));
 		BaseExportDirectory = outFilename;
 	}
 	else
 	{
-		GLog->Log("FCognitiveEditorTools::Select_Export_Directory cancelled?");
 		BaseExportDirectory = "";
 	}
 	return FReply::Handled();
@@ -1457,7 +1447,7 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 		UWorld* myworld = GWorld->GetWorld();
 		if (myworld == NULL)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Upload Scene - No world!"));
+			UE_LOG(LogTemp, Error, TEXT("Upload Scene - No world!"));
 			WizardUploadError = "FCognitiveEditorTools::OnUploadSceneCompleted no world";
 			return;
 		}
@@ -2581,7 +2571,7 @@ FProcHandle FCognitiveEditorTools::ConvertSceneToGLTF()
 	TArray<FAssetData> ScriptList;
 	if (!AssetRegistry.GetAssetsByPath(FName(*pythonscriptpath), ScriptList))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures - Could not find script at path. Canceling"));
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures - Could not find script at path. Canceling"));
 		return BlenderReduceAllWizardProc;
 	}
 
@@ -2589,14 +2579,14 @@ FProcHandle FCognitiveEditorTools::ConvertSceneToGLTF()
 
 	if (BlenderPath.Len() == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures - No path set for Blender.exe. Canceling"));
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures - No path set for Blender.exe. Canceling"));
 		return BlenderReduceAllWizardProc;
 	}
 
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 	if (!tempworld)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures - World is null. canceling"));
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures - World is null. canceling"));
 		return BlenderReduceAllWizardProc;
 	}
 
@@ -2605,7 +2595,7 @@ FProcHandle FCognitiveEditorTools::ConvertSceneToGLTF()
 
 	if (ObjPath.Len() == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures No know export directory. Canceling"));
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures No know export directory. Canceling"));
 		return BlenderReduceAllWizardProc;
 	}
 
@@ -2639,7 +2629,7 @@ FProcHandle FCognitiveEditorTools::ConvertSceneToGLTF()
 
 	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
 
-	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures Params: %s"), *stringParamSlashed);
+	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures Params: %s"), *stringParamSlashed);
 
 
 	const TCHAR* params = *stringParamSlashed;

@@ -26,7 +26,33 @@ void UCustomEvent::Send()
 		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
+	if (!cog->HasStartedSession())
+	{
+		CognitiveLog::Error("UCustomEvent::Send Session not started");
+		return;
+	}
 
+	float duration = Util::GetTimestamp() - StartTime;
+	FloatProperties.Add("duration", duration);
+	cog->customEventRecorder->Send(this);
+}
+
+void UCustomEvent::SendAtHMDPosition()
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+
+	if (!cog.IsValid())
+	{
+		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		return;
+	}
+	if (!cog->HasStartedSession())
+	{
+		CognitiveLog::Error("UCustomEvent::Send Session not started");
+		return;
+	}
+	Position = cog->GetPlayerHMDPosition();
 	float duration = Util::GetTimestamp() - StartTime;
 	FloatProperties.Add("duration", duration);
 	cog->customEventRecorder->Send(this);
@@ -40,6 +66,11 @@ void UCustomEvent::AppendAllSensors()
 	if (!cog.IsValid())
 	{
 		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		return;
+	}
+	if (!cog->HasStartedSession())
+	{
+		CognitiveLog::Error("UCustomEvent::AppendAllSensors Session not started");
 		return;
 	}
 	auto sensorValues = cog->sensors->GetLastSensorValues();
@@ -56,6 +87,11 @@ void UCustomEvent::AppendSensors(TArray<FString> sensorNames)
 	if (!cog.IsValid())
 	{
 		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		return;
+	}
+	if (!cog->HasStartedSession())
+	{
+		CognitiveLog::Error("UCustomEvent::AppendSensors Session not started");
 		return;
 	}
 	auto sensorValues = cog->sensors->GetLastSensorValues();
@@ -76,6 +112,11 @@ void UCustomEvent::AppendSensor(FString sensorName)
 	if (!cog.IsValid())
 	{
 		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		return;
+	}
+	if (!cog->HasStartedSession())
+	{
+		CognitiveLog::Error("UCustomEvent::AppendSensor Session not started");
 		return;
 	}
 	auto sensorValues = cog->sensors->GetLastSensorValues();

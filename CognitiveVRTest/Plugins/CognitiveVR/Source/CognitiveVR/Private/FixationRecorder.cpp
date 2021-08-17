@@ -469,6 +469,7 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 
 void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+	if (!cog.IsValid()){return;}
 	//don't record player position data before a session has begun
 	if (!cog->HasStartedSession())
 	{

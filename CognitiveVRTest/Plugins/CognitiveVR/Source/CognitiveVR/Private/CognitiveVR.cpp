@@ -204,10 +204,12 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	pt->OnSessionBegin.Broadcast(true);
 
-	AInputTracker* it = AInputTracker::GetInputTracker();
-	if (it != NULL)
+	for (TObjectIterator<AInputTracker> Itr; Itr; ++Itr)
 	{
-		it->FindControllers(false);
+		if ((*Itr)->GetWorld() == NULL) { continue; }
+		if (!(*Itr)->GetWorld()->IsGameWorld()) { continue; }
+		(*Itr)->FindControllers(false);
+		break;
 	}
 
 	auto fixationRecorder = UFixationRecorder::GetFixationRecorder();
