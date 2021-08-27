@@ -943,7 +943,7 @@ void UDynamicObject::OnSessionEnd()
 }
 
 //static
-UDynamicObject* UDynamicObject::SetupController(AActor* target, bool IsRight, EC3DControllerType controllerType)
+UDynamicObject* UDynamicObject::SetupControllerActor(AActor* target, bool IsRight, EC3DControllerType controllerType)
 {
 	UDynamicObject* dyn = target->FindComponentByClass<UDynamicObject>();
 	if (dyn == NULL)
@@ -1012,11 +1012,91 @@ UDynamicObject* UDynamicObject::SetupController(AActor* target, bool IsRight, EC
 }
 
 //static
-UDynamicObject* UDynamicObject::SetupControllerComponent(UDynamicObject* dyn, bool IsRight, EC3DControllerType controllerType)
+UDynamicObject* UDynamicObject::SetupControllerDynamic(UDynamicObject* dyn, bool IsRight, EC3DControllerType controllerType)
 {
 	if (dyn == NULL)
 	{
 		return NULL;
+	}
+
+	dyn->IsRightController = IsRight;
+
+	switch (controllerType)
+	{
+	case EC3DControllerType::Vive:
+		dyn->ControllerType = "vivecontroller";
+		dyn->CommonMeshName = ECommonMeshName::ViveController;
+		break;
+	case EC3DControllerType::Oculus:
+		if (IsRight)
+		{
+			dyn->ControllerType = "oculustouchright";
+			dyn->CommonMeshName = ECommonMeshName::OculusRiftTouchRight;
+		}
+		else
+		{
+			dyn->ControllerType = "oculustouchleft";
+			dyn->CommonMeshName = ECommonMeshName::OculusRiftTouchLeft;
+		}
+		break;
+	case EC3DControllerType::PicoNeo2Eye:
+		if (IsRight)
+		{
+			dyn->ControllerType = "pico_neo_2_eye_controller_right";
+			dyn->CommonMeshName = ECommonMeshName::PicoNeo2EyeControllerRight;
+		}
+		else
+		{
+			dyn->ControllerType = "pico_neo_2_eye_controller_left";
+			dyn->CommonMeshName = ECommonMeshName::PicoNeo2EyeControllerLeft;
+		}
+		break;
+	case EC3DControllerType::WindowsMixedReality:
+		if (IsRight)
+		{
+			dyn->ControllerType = "windows_mixed_reality_controller_right";
+			dyn->CommonMeshName = ECommonMeshName::WindowsMixedRealityRight;
+		}
+		else
+		{
+			dyn->ControllerType = "windows_mixed_reality_controller_left";
+			dyn->CommonMeshName = ECommonMeshName::WindowsMixedRealityLeft;
+		}
+		break;
+	default:
+		break;
+	}
+
+	dyn->UseCustomMeshName = false;
+	dyn->IsController = true;
+
+	dyn->IdSourceType = EIdSourceType::CustomId;
+	dyn->CustomId = FGuid::NewGuid().ToString();
+	dyn->Initialize();
+	return dyn;
+}
+
+UDynamicObject* UDynamicObject::SetupControllerMotionController(UMotionControllerComponent* mc, bool IsRight, EC3DControllerType controllerType)
+{
+	TArray<USceneComponent*> childComponents;
+	mc->GetChildrenComponents(true, childComponents);
+
+	UDynamicObject* dyn = NULL;
+
+	for (auto& Elem : childComponents)
+	{
+		dyn = Cast<UDynamicObject>(Elem);
+		if (dyn != NULL)
+		{
+			break;
+		}
+	}
+
+	if (dyn == NULL)
+	{
+		dyn = NewObject<UDynamicObject>(mc->GetOwner(), UDynamicObject::StaticClass());
+		dyn->SetupAttachment(mc);
+		dyn->RegisterComponent();
 	}
 
 	dyn->IsRightController = IsRight;

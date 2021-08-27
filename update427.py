@@ -2,14 +2,14 @@ import os
 import shutil
 import sys
 import time
+import glob
 
 cwd = os.getcwd()
 version = "0"
-enginesubversion = "24"
+enginesubversion = "26"
 
 def replaceline(file, linesrc, linedst):
 
-	#mo = open(file, encoding='utf-8-sig')
 	mo = open(file, "r")
 	readString = mo.read()
 
@@ -19,7 +19,7 @@ def replaceline(file, linesrc, linedst):
 	for line in readString.splitlines():
 		if line == linesrc:
 			finalstrings.append(linedst+"\n")
-			print("replaced line " + line)
+			print("replaced line " + linedst)
 		else:
 			#print("-------- line " + line)
 			finalstrings.append(line+"\n")
@@ -129,14 +129,34 @@ replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\Cognitive
 #15 replace editor selection code in dynamic object manager widget
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DynamicObjectManagerWidget.cpp","	UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();","	UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();")
 
+#16 remove materialbakingmodule.h from editor tools
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.h","#include \"MaterialBakingModule.h\"","//#include \"MaterialBakingModule.h\"")
+
+#17 add dynamic action
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.h","#include \"DynamicIdPoolAssetDetails.h\"","#include \"DynamicIdPoolAssetActions.h\"")
+
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.cpp","		FCognitiveEditorTools::Initialize();","		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>(\"AssetTools\").Get();")
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.cpp","		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>(\"AssetTools\").Get();","		TSharedPtr< FDynamicIdPoolAssetActions> action = MakeShared<FDynamicIdPoolAssetActions>();")
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.cpp","		TSharedPtr< FDynamicIdPoolAssetActions> action = MakeShared<FDynamicIdPoolAssetActions>();","		AssetTools.RegisterAssetTypeActions(action.ToSharedRef());")
+
 #set ASV to tick when offscreen
 insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\ActiveSessionView.cpp","		WidgetComponent->TranslucencySortPriority = 100;","		WidgetComponent->SetTickWhenOffscreen(true);")
+
+#add scoped task header
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.h","#include \"FileHelpers.h\"","#include \"Misc/ScopedSlowTask.h\"")
+
+#replace file helper.h from editor tools
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.h","#include \"FileHelpers.h\"","#include \"Misc/FileHelper.h\"")
 
 #streaming levels access
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVR.cpp","	const TArray<ULevelStreaming*> streamedLevels = GetWorld()->StreamingLevels;"," const TArray<ULevelStreaming*> streamedLevels = GetWorld()->GetStreamingLevels();")
 
+#device id removed
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVR.cpp","	DeviceId = FPlatformMisc::GetDeviceId();","	DeviceId = FPlatformMisc::GetHashedMacAddressString();")
+
 #replace hide windows platform types
 replaceline(cwd+"/Plugins/CognitiveVR/Source/CognitiveVR/Private/rtaudio/CRtAudio.cpp","#include \"HideWindowsPlatformTypes.h\"","#include \"Core/Public/HoloLens/HideWindowsPlatformTypes.h\"")
+
 
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue4"+enginesubversion

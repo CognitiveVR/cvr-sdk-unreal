@@ -142,6 +142,7 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 
 void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+	if (!cog.IsValid()) { return; }
 	if (!cog->HasStartedSession())
 	{
 		//don't record player position data before a session has begun
@@ -535,8 +536,6 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		reason = "default";
 		break;
 	}
-	
-	//GLog->Log("PlayerTracker::EndPlay reason " + reason);
 
 	if (cog.IsValid())
 	{

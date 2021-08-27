@@ -201,12 +201,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object", DisplayName = "Record Dynamic Object")
 		void SendDynamicObjectSnapshot(UPARAM(ref) FDynamicObjectSnapshot& target);
 
-	//adds a dynamic object component and applies all relevant settings
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
-		static UDynamicObject* SetupController(AActor* target, bool IsRight, EC3DControllerType controllerType);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object", DisplayName = "Setup Controller (Actor)")
+		static UDynamicObject* SetupControllerActor(AActor* target, bool IsRight, EC3DControllerType controllerType);
 
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
-		static UDynamicObject* SetupControllerComponent(UDynamicObject* target, bool IsRight, EC3DControllerType controllerType);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object", DisplayName = "Setup Controller (Motion Controller)")
+		static UDynamicObject* SetupControllerMotionController(UMotionControllerComponent* target, bool IsRight, EC3DControllerType controllerType);
+
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object", DisplayName = "Setup Controller (Dynamic)")
+		static UDynamicObject* SetupControllerDynamic(UDynamicObject* target, bool IsRight, EC3DControllerType controllerType);
 
 	//write all controller input states to snapshot to be written to json next frame
 	void FlushButtons(FControllerInputStateCollection& target);

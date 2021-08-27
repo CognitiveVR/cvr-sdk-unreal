@@ -37,10 +37,7 @@ void UCognitiveVRBlueprints::SendCustomEventToCore(FString Category, const TArra
 		CognitiveLog::Error("UCognitiveVRBlueprints::SendCustomEventToCore could not get provider!");
 		return;
 	}
-	if (!cog->customEventRecorder.IsValid())
-	{
-		return;
-	}
+	if (!HasSessionStarted()) { return; }
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 	for (int32 i = 0; i < Attributes.Num(); i++)
@@ -170,10 +167,7 @@ void UCognitiveVRBlueprints::RecordSensor(const FString Name, const float Value)
 		CognitiveLog::Error("UCognitiveVRBlueprints::RecordSensor could not get provider!");
 		return;
 	}
-	if (!cog->sensors.IsValid())
-	{
-		return;
-	}
+	if (!HasSessionStarted()) { return; }
 	cog->sensors->RecordSensor(Name, Value);
 }
 
@@ -181,6 +175,7 @@ void UCognitiveVRBlueprints::GetQuestionSet(const FString Hook, FCognitiveExitPo
 {
 	if (!cog.IsValid()) { return; }
 	if (!cog->exitpoll.IsValid()) { return; }
+	if (!HasSessionStarted()) {return;}
 	cog->exitpoll->MakeQuestionSetRequest(Hook, response);
 }
 
@@ -329,6 +324,10 @@ UCustomEvent* UCognitiveVRBlueprints::SetPosition(UCustomEvent* target, FVector 
 void UCognitiveVRBlueprints::Send(UCustomEvent* target)
 {
 	target->Send();
+}
+void UCognitiveVRBlueprints::SendAtHMDPosition(UCustomEvent* target)
+{
+	target->SendAtHMDPosition();
 }
 
 UCustomEvent* UCognitiveVRBlueprints::AppendAllSensors(UCustomEvent* target)
