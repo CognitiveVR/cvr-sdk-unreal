@@ -347,7 +347,6 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 			}
 
 			meshes.Add(mesh);
-			GLog->Log("export static mesh named " + mesh->GetName());
 		}
 
 		TArray<UActorComponent*> actorSkeletalComponents = exportObjects[i]->GetOwner()->GetComponentsByClass(USkeletalMeshComponent::StaticClass());
@@ -368,10 +367,7 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 			}
 
 			skeletalMeshes.Add(mesh);
-			GLog->Log("export skeletal mesh named " + mesh->GetName());
 		}
-
-		
 
 		DynamicMeshNames.Add(exportObjects[i]->MeshName);
 
@@ -383,12 +379,24 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		exportObjects[i]->GetOwner()->SetActorRotation(FQuat::Identity);
 		exportObjects[i]->GetOwner()->SetActorScale3D(FVector::OneVector);
 
-		FString ExportFilename = exportObjects[i]->MeshName + ".fbx";
+		//export skeletal meshes as fbx (missing material pre 4.26) and static meshes as obj
+
+		FString tempObject;
+		FString ExportFilename;
+		if (skeletalMeshes.Num() > meshes.Num())
+		{
+			ExportFilename = exportObjects[i]->MeshName + ".fbx";
+			tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".fbx";
+	}
+		else
+		{
+			ExportFilename = exportObjects[i]->MeshName + ".obj";
+			tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
+		}
 
 		GEditor->SelectActor(exportObjects[i]->GetOwner(), true, false, true);
 		ActorsExported++;
 
-		FString tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".fbx";
 		//export to obj skips skeletal fbx?
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
 
@@ -399,11 +407,15 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
 		exportObjects[i]->GetOwner()->SetActorScale3D(originalScale);
 
-		//bake + export materials			
-
-		BakeExportMaterials.Add(exportObjects[i]->MeshName, meshes);
-		BakeExportSkeletonMaterials.Add(exportObjects[i]->MeshName, skeletalMeshes);
-
+		//bake + export materials
+		if (skeletalMeshes.Num() > meshes.Num())
+		{
+			BakeExportSkeletonMaterials.Add(exportObjects[i]->MeshName, skeletalMeshes);
+		}
+		else
+		{
+			BakeExportMaterials.Add(exportObjects[i]->MeshName, meshes);
+		}
 
 		//automatic screenshot
 		FLevelEditorViewportClient* perspectiveView = NULL;
@@ -423,9 +435,7 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 			FString dir = BaseExportDirectory + "/dynamics/" + exportObjects[i]->MeshName + "/";
 			FTimerHandle DelayScreenshotHandle;
 			
-			
 			//calc position
-
 			FVector origin;
 			FVector extents;
 			exportObjects[i]->GetOwner()->GetActorBounds(false, origin, extents);
@@ -447,19 +457,19 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 	}
 
 	float work = 0;
-	FScopedSlowTask SlowTask(BakeExportMaterials.Num(), FText::FromString("Baking Dynamic Object Materials"));
-	SlowTask.MakeDialog(false);
+	//FScopedSlowTask SlowTask(BakeExportMaterials.Num(), FText::FromString("Baking Dynamic Object Materials"));
+	//SlowTask.MakeDialog(false);
 	for (auto& elem : BakeExportMaterials)
 	{
 		work += 1;
-		SlowTask.EnterProgressFrame(work); //error in 4.27 'ExpectedWorkThisFrame <= 1.01f * TotalAmountOfWork - CompletedWork' work overflow
+		//SlowTask.EnterProgressFrame(work); //error in 4.27 'ExpectedWorkThisFrame <= 1.01f * TotalAmountOfWork - CompletedWork' work overflow
 		WizardExportMaterials(GetDynamicsExportDirectory() + "/" + elem.Key + "/", elem.Value, elem.Key);
 	}
 
 	for (auto& elem : BakeExportSkeletonMaterials)
 	{
 		work += 1;
-		SlowTask.EnterProgressFrame(work);
+		//SlowTask.EnterProgressFrame(work);
 		WizardExportSkeletalMaterials(GetDynamicsExportDirectory() + "/" + elem.Key + "/", elem.Value, elem.Key);
 	}
 
@@ -2463,7 +2473,7 @@ void FCognitiveEditorTools::WizardExportSkeletalMaterials(FString directory, TAr
 					MaterialLine.Add("bump " + BMPFilename);
 					PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
-						MaterialLine.Add("");
+					MaterialLine.Add("");
 					MaterialLine.Add("");
 					continue;
 				}
@@ -2580,14 +2590,13 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 		}
 		if (meshes[i] == NULL) { continue; }
 		UStaticMeshComponent* TempObject = meshes[i];
-		//if (TempObject == NULL) { continue; }
 
 		TArray<UMaterialInterface*> mats = TempObject->GetMaterials();
 		for (int32 j = 0; j < mats.Num(); j++)
 		{
 			if (mats[j] != NULL)
 			{
-				if (ExportedMaterialNames.Contains(mats[j]->GetName())) { continue; }
+				if (ExportedMaterialNames.Contains(mats[j]->GetName())) { GLog->Log("skip"); continue; }
 
 				if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Opaque)
 				{
@@ -2636,8 +2645,6 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 					MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Opacity, resolution);
 				//MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_EmissiveColor, resolution);
 				MaterialSettingPtrs.Add(&MaterialSettings);
-
-
 
 				FMeshData meshdata;
 				//meshdata.RawMeshDescription = nullptr;
