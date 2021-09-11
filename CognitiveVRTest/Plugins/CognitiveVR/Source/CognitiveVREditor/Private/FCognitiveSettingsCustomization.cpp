@@ -106,6 +106,50 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 		.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SaveAPIDeveloperKeysToFile)
 	];
 
+	LoginCategory.AddCustomRow(FText::FromString("Blender Path"))
+		.ValueContent()
+		.HAlign(HAlign_Fill)
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.MaxWidth(96)
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString("Blender Path"))
+		]
+
+	+ SHorizontalBox::Slot()
+		//.MaxWidth(128)
+		[
+			SNew(SEditableTextBox)
+			.MinDesiredWidth(128)
+		.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBlenderPath)
+		.OnTextChanged_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OnBlenderPathChanged)
+		]
+	];
+
+	LoginCategory.AddCustomRow(FText::FromString("Export Path"))
+		.ValueContent()
+		.HAlign(HAlign_Fill)
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.MaxWidth(96)
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString("Export Path"))
+		]
+
+	+ SHorizontalBox::Slot()
+		//.MaxWidth(128)
+		[
+			SNew(SEditableTextBox)
+			.MinDesiredWidth(128)
+		.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBaseExportDirectoryDisplay)
+		.OnTextChanged_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OnExportPathChanged)
+		]
+	];
+
 	IDetailCategoryBuilder& ExportedSceneData = DetailBuilder.EditCategory(TEXT("Exported Scene Data"));
 
 	ExportedSceneData.AddCustomRow(FText::FromString("Scene Management Buttons"))

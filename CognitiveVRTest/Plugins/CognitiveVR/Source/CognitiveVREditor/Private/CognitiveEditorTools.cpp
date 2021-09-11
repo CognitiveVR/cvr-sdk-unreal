@@ -149,6 +149,62 @@ bool FCognitiveEditorTools::HasApplicationKey() const
 	return ApplicationKey.Len() > 0;
 }
 
+FProcHandle FCognitiveEditorTools::ExportNewDynamics()
+{
+	FProcHandle fph;
+	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
+
+	if (!tempworld)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorToolsCustomization::ExportDynamics world is null"));
+		return fph;
+	}
+
+	if (BaseExportDirectory.Len() == 0)
+	{
+		GLog->Log("base directory not selected");
+		return fph;
+	}
+
+	TArray<FString> meshNames;
+	TArray<UDynamicObject*> exportObjects;
+
+	//get all dynamic object components in scene. add names/pointers to array
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
+		if (actorComponent == NULL)
+		{
+			continue;
+		}
+		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
+		if (dynamic == NULL)
+		{
+			continue;
+		}
+
+		FString path = GetDynamicsExportDirectory() + "/" + dynamic->MeshName + "/" + dynamic->MeshName;
+		FString gltfpath = path + ".gltf";
+		if (FPaths::FileExists(*gltfpath))
+		{
+			//already exported
+			continue;
+		}
+		if (!meshNames.Contains(dynamic->MeshName))
+		{
+			exportObjects.Add(dynamic);
+			meshNames.Add(dynamic->MeshName);
+		}
+	}
+
+	if (meshNames.Num() == 0)
+	{
+		return fph;
+	}
+
+	return ExportDynamicObjectArray(exportObjects);
+}
+
 FReply FCognitiveEditorTools::ExportAllDynamics()
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
@@ -206,10 +262,7 @@ FReply FCognitiveEditorTools::ExportAllDynamics()
 		}
 	}
 
-	
-
 	ExportDynamicObjectArray(exportObjects);
-
 	return FReply::Handled();
 }
 
@@ -245,7 +298,7 @@ FReply FCognitiveEditorTools::ExportSelectedDynamics()
 	return FReply::Handled();
 }
 
-FReply FCognitiveEditorTools::ExportDynamicData(TArray< TSharedPtr<FDynamicData>> dynamicData)
+FProcHandle FCognitiveEditorTools::ExportDynamicData(TArray< TSharedPtr<FDynamicData>> dynamicData)
 {
 	//find all meshes in scene that are contained in the dynamicData list
 
@@ -290,17 +343,18 @@ FReply FCognitiveEditorTools::ExportDynamicData(TArray< TSharedPtr<FDynamicData>
 		}
 	}
 
-	ExportDynamicObjectArray(SelectionSetCache);
+	return ExportDynamicObjectArray(SelectionSetCache);
 
-	return FReply::Handled();
+	//return FReply::Handled();
 }
 
-void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects)
+FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects)
 {
+	FProcHandle fph;
 	if (!HasFoundBlender())
 	{
 		UE_LOG(CognitiveVR_Log, Error, TEXT("Could not complete Export - Must have Blender installed to convert images"));
-		return;
+		return fph;
 	}
 
 	FVector originalLocation;
@@ -477,9 +531,10 @@ void FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exp
 
 	if (ActorsExported > 0)
 	{
-		ConvertDynamicsToGLTF(DynamicMeshNames);
+		fph = ConvertDynamicsToGLTF(DynamicMeshNames);
 		FindAllSubDirectoryNames();
 	}
+	return fph;
 }
 
 
@@ -493,8 +548,9 @@ void FCognitiveEditorTools::DelayScreenshot(FString filePath, FLevelEditorViewpo
 	perspectiveView->RedrawRequested(perspectiveView->Viewport);
 }
 
-void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
+FProcHandle FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
 {
+	FProcHandle fph;
 	//open blender
 	//pass in array of meshnames comma separated
 
@@ -513,7 +569,7 @@ void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
 	if (!AssetRegistry.GetAssetsByPath(FName(*pythonscriptpath), ScriptList))
 	{
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ConvertToGLTF Could not find python script at path. Canceling"));
-		return;
+		return fph;
 	}
 
 	FString stringurl = BlenderPath;
@@ -521,14 +577,14 @@ void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
 	if (BlenderPath.Len() == 0)
 	{
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ConvertToGLTF No path set for Blender.exe. Canceling"));
-		return;
+		return fph;
 	}
 
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 	if (!tempworld)
 	{
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ConvertToGLTF World is null. canceling"));
-		return;
+		return fph;
 	}
 
 	FString ObjPath = GetDynamicsExportDirectory();
@@ -536,7 +592,7 @@ void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
 	if (ObjPath.Len() == 0)
 	{
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ConvertToGLTF No know export directory. Canceling"));
-		return;
+		return fph;
 	}
 
 	FString escapedMeshNameList = "'";
@@ -560,7 +616,8 @@ void FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
 
 	const TCHAR* params = *stringParamSlashed;
 	int32 priorityMod = 0;
-	FProcHandle process = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
+	fph = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
+	return fph;
 }
 
 FReply FCognitiveEditorTools::SetUniqueDynamicIds()
@@ -1140,10 +1197,14 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
 	{
 		BaseExportDirectory = outFilename;
+		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
 	}
 	else
 	{
 		BaseExportDirectory = "";
+		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
 	}
 	return FReply::Handled();
 }
@@ -1980,6 +2041,16 @@ void FCognitiveEditorTools::OnAttributionKeyChanged(const FText& Text)
 	AttributionKey = Text.ToString();
 }
 
+void FCognitiveEditorTools::OnBlenderPathChanged(const FText& Text)
+{
+	BlenderPath = Text.ToString();
+}
+void FCognitiveEditorTools::OnExportPathChanged(const FText& Text)
+{
+	
+	BaseExportDirectory = Text.ToString();
+}
+
 FText FCognitiveEditorTools::UploadSceneNameFiles() const
 {
 	auto currentscenedata = GetCurrentSceneData();
@@ -2021,6 +2092,9 @@ FText FCognitiveEditorTools::GetDynamicObjectUploadText() const
 	{
 		return FText::FromString("No Scene Data found - Have you used Cognitive Scene Setup to export this scene?");
 	}
+
+	//get selected dynamic data
+	//for each unique mesh name
 
 	return FText::FromString("Upload " + FString::FromInt(SubDirectoryNames.Num()) + " Dynamic Object Meshes to " + data->Name + " Version " + FString::FromInt(data->VersionNumber));
 }
