@@ -590,7 +590,7 @@ FText SDynamicObjectManagerWidget::UploadSelectedText() const
 	//get selected dynamic data
 	//for each unique mesh name
 
-	return FText::FromString("Upload " + FString::FromInt(dynamicMeshNames.Num()) + " Dynamic Object Meshes");
+	return FText::FromString("Upload " + FString::FromInt(dynamicMeshNames.Num()) + " Meshes");
 }
 
 FText SDynamicObjectManagerWidget::ExportSelectedText() const
