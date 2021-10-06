@@ -126,6 +126,28 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 		.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBlenderPath)
 		.OnTextChanged_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OnBlenderPathChanged)
 		]
+	+SHorizontalBox::Slot()
+		.MaxWidth(17)
+		[
+			SNew(SBox)
+			.HeightOverride(17)
+			.WidthOverride(17)
+			[
+				SNew(SButton)
+				//PickerWidget = SAssignNew(BrowseButton, SButton)
+				.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
+				.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
+				.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Blender)
+				.ContentPadding(2.0f)
+				.ForegroundColor(FSlateColor::UseForeground())
+				.IsFocusable(false)
+				[
+					SNew(SImage)
+					.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
+					.ColorAndOpacity(FSlateColor::UseForeground())
+				]
+			]
+		]
 	];
 
 	LoginCategory.AddCustomRow(FText::FromString("Export Path"))
@@ -147,6 +169,28 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 			.MinDesiredWidth(128)
 		.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBaseExportDirectoryDisplay)
 		.OnTextChanged_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OnExportPathChanged)
+		]
+	+SHorizontalBox::Slot()
+		.MaxWidth(17)
+		[
+			SNew(SBox)
+			.HeightOverride(17)
+			.WidthOverride(17)
+			[
+				SNew(SButton)
+				//PickerWidget = SAssignNew(BrowseButton, SButton)
+				.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
+				.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
+				.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectBaseExportDirectory)
+				.ContentPadding(2.0f)
+				.ForegroundColor(FSlateColor::UseForeground())
+				.IsFocusable(false)
+				[
+					SNew(SImage)
+					.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
+					.ColorAndOpacity(FSlateColor::UseForeground())
+				]
+			]
 		]
 	];
 
