@@ -18,7 +18,6 @@ dynamicNames = args[4].split(",")
 
 sizeFactor = 1;
 
-
 #foreach dynamic object
 #just export into existing folder
 #delete bmps and folders
@@ -70,16 +69,22 @@ for dir in subdirectories:
         nmo.close()
     
     
-    #import workingdir +"/"+ dir+".obj"
+    #import fbx or obj. whatever is there
     objname = workingdir + "/" + dir + ".obj"
+    fbxname = workingdir + "/" + dir + ".fbx"
     if os.path.exists(objname):
         ops.import_scene.obj(filepath=objname, use_edges=True, use_smooth_groups=True, use_split_objects=True, use_split_groups=True, use_groups_as_vgroups=False, use_image_search=True, split_mode='ON', axis_forward='-Z', axis_up='Y')
-        print("=============================================import complete")
-        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP',iterations=1)
-        
-        #export as gltf to workingdir+"/"+dir
-        gltfname = workingdir + "/" + dir + ".gltf"
-        ops.export_scene.gltf(export_format='GLTF_SEPARATE',export_animations=False,filepath=gltfname)
+        print("=============================================import obj")
+    if os.path.exists(fbxname):
+        ops.import_scene.fbx(filepath=fbxname)
+        print("=============================================import fbx")
+    
+    #redaw preview, just to show that something is happening
+    bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP',iterations=1)
+    
+    #export as gltf to workingdir+"/"+dir
+    gltfname = workingdir + "/" + dir + ".gltf"
+    ops.export_scene.gltf(export_format='GLTF_SEPARATE',export_animations=False,filepath=gltfname)
     
     #remove all bmps, mtl and obj
     for tempPath, dirs, files in os.walk(workingdir):
@@ -88,6 +93,8 @@ for dir in subdirectories:
             if name.endswith('.mtl'):
                 os.remove(os.path.join(tempPath, name))
             if name.endswith('.obj'):
+                os.remove(os.path.join(tempPath, name))
+            if name.endswith('.fbx'):
                 os.remove(os.path.join(tempPath, name))
             if name.endswith('.bmp'):
                 os.remove(os.path.join(tempPath, name))

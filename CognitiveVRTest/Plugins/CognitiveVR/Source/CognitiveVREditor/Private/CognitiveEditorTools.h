@@ -59,6 +59,8 @@ public:
 	void OnApplicationKeyChanged(const FText& Text);
 	void OnDeveloperKeyChanged(const FText& Text);
 	void OnAttributionKeyChanged(const FText& Text);
+	void OnBlenderPathChanged(const FText& Text);
+	void OnExportPathChanged(const FText& Text);
 
 	FText GetApplicationKey() const;
 	FText GetDeveloperKey() const;
@@ -164,23 +166,26 @@ public:
 
 	//bakes textures from translucent and masked materials
 	void WizardExportMaterials(FString directory, TArray<UStaticMeshComponent*> meshes, FString mtlFileName);
+	void WizardExportSkeletalMaterials(FString directory, TArray<USkeletalMeshComponent*> meshes, FString mtlFileName);
 	void WizardConvertScene();
 	//also writes settings json file and removes bmp/obj/fbx source files
 	FProcHandle ConvertSceneToGLTF();
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
 
 	//dynamic objects
-	//Runs the built-in obj exporter with all meshses
+	//Runs the built-in obj exporter with all meshes
 		FReply ExportAllDynamics();
+	//Runs the built-in obj exporter with all meshes that don't have an exported .gltf
+		FProcHandle ExportNewDynamics();
 
 	//Runs the built-in obj exporter with selected meshes
 		FReply ExportSelectedDynamics();
-		FReply ExportDynamicData(TArray< TSharedPtr<FDynamicData>> dynamicData);
+		FProcHandle ExportDynamicData(TArray< TSharedPtr<FDynamicData>> dynamicData);
 	
-	void ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
+		FProcHandle ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
 
 	//used after dynamic object exporting
-	void ConvertDynamicsToGLTF(TArray<FString> meshNames);
+	FProcHandle ConvertDynamicsToGLTF(TArray<FString> meshNames);
 
 	//uploads each dynamic object using its directory to the current scene
 	UFUNCTION(Exec, Category = "Dynamics")

@@ -115,14 +115,17 @@ public:
 	FReply ExportSelectedDynamicData();
 	FReply UploadSelectedDynamicData();
 
+	FReply ExportAndUploadDynamics();
+
 	bool IsExportAllEnabled() const;
 	bool IsExportSelectedEnabled() const;
 
 	bool IsUploadAllEnabled() const;
 	bool IsUploadSelectedEnabled() const;
 	bool IsUploadIdsEnabled() const;
+	bool IsUploadInvalid() const;
+	FText GetUploadInvalidCause() const;
 
-	FText UploadAllText() const;
 	FText UploadSelectedText() const;
 	FText ExportSelectedText() const;
 	FText GetSettingsButtonText() const;

@@ -60,237 +60,29 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 			+ SOverlay::Slot()
 			[
 				SNew(SVerticalBox)
-
-#pragma region "settings"
-
-			//developer key
+//warning if the scene has not been exported! + no scene id!
 			+ SVerticalBox::Slot()
-			.MaxHeight(20)
-			.AutoHeight()
 			.Padding(0, 0, 0, padding)
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-				+SHorizontalBox::Slot()
-				//.MaxWidth(200)
-				[
-					SNew(SBox)
-					.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-					.HeightOverride(20)
-					[
-						SNew(STextBlock)
-						//.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-						.Text(FText::FromString("DeveloperKey"))
-					]
-				]
-				+ SHorizontalBox::Slot()
-				.Padding(1)
-				[
-					SNew(SBox)
-					.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-					.HeightOverride(20)
-					.MaxDesiredHeight(17)
-					[
-						//SNew(SEditableTextBox)
-						//.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBlenderPath)
-						//.OnTextChanged(this, &SDynamicObjectManagerWidget::OnBlenderPathChanged)
-						SNew(SEditableTextBox)
-						.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-						.Text(this, &SDynamicObjectManagerWidget::GetDisplayDeveloperKey)
-						.OnTextChanged(this, &SDynamicObjectManagerWidget::OnDeveloperKeyChanged)
-					]
-				]
-			]
-
-
-			//path to blender
-			+ SVerticalBox::Slot()
-			.MaxHeight(20)
-				.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-				+SHorizontalBox::Slot()
-				//.MaxWidth(200)
-				[
-					SNew(SBox)
-					.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-					.HeightOverride(20)
-					[
-						SNew(STextBlock)
-						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-						.Text(FText::FromString("Path to Blender.exe"))
-					]
-				]
-				+ SHorizontalBox::Slot()
-				.Padding(1)
-				[
-					SNew(SBox)
-					.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-					.HeightOverride(20)
-					.MaxDesiredHeight(17)
-					[
-						SNew(SEditableTextBox)
-						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBlenderPath)
-						.OnTextChanged(this, &SDynamicObjectManagerWidget::OnBlenderPathChanged)
-					]
-				]
-				+SHorizontalBox::Slot()
-				.MaxWidth(17)
-				[
-					SNew(SBox)
-					.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-					.HeightOverride(17)
-					.WidthOverride(17)
-					[
-						SNew(SButton)
-						.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-						//PickerWidget = SAssignNew(BrowseButton, SButton)
-						.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
-						.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Blender)
-						.ContentPadding(2.0f)
-						.ForegroundColor(FSlateColor::UseForeground())
-						.IsFocusable(false)
-						[
-							SNew(SImage)
-							.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-							.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
-							.ColorAndOpacity(FSlateColor::UseForeground())
-						]
-					]
-				]
-			]
-
-			//path to export directory
-			+ SVerticalBox::Slot()
-			.MaxHeight(20)
-				.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-				+SHorizontalBox::Slot()
-				//.MaxWidth(200)
-				[
-					SNew(SBox)
-					.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-					.HeightOverride(20)
-					[
-						SNew(STextBlock)
-						.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-						.Text(FText::FromString("Path to Export Directory"))
-					]
-				]
-				+ SHorizontalBox::Slot()
-				.Padding(1)
-				[
-					SNew(SBox)
-					//.Visibility(this, &SDynamicObjectManagerWidget::IsBlenderVisible)
-					.HeightOverride(20)
-					.MaxDesiredHeight(17)
-					[
-						SNew(SEditableTextBox)
-						.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBaseExportDirectoryDisplay)
-						.OnTextChanged(this, &SDynamicObjectManagerWidget::OnExportPathChanged)
-						//SNew(STextBlock)
-						//
-					]
-				]
-				+SHorizontalBox::Slot()
-				.MaxWidth(17)
-				[
-					SNew(SBox)
-					.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-					.HeightOverride(17)
-					.WidthOverride(17)
-					[
-						SNew(SButton)
-						.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-						//PickerWidget = SAssignNew(BrowseButton, SButton)
-						.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
-						.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectBaseExportDirectory)
-						.ContentPadding(2.0f)
-						.ForegroundColor(FSlateColor::UseForeground())
-						.IsFocusable(false)
-						[
-							SNew(SImage)
-							.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
-							.ColorAndOpacity(FSlateColor::UseForeground())
-						]
-					]
-				]
-			]
-
-
-			//scene name and id
-			+ SVerticalBox::Slot()
-			.MaxHeight(20)
-			.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-				+SHorizontalBox::Slot()
-				//.MaxWidth(500)
-				[
-					SNew(SBox)
-					.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-					.HeightOverride(20)
-					[
-						SNew(STextBlock)
-						.IsEnabled(false)
-						//.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-						.Text(this, &SDynamicObjectManagerWidget::GetSceneText)
-					]
-				]
-				//+ SHorizontalBox::Slot()
-				//.Padding(1)
-				//[
-				//	SNew(SButton)
-				//	.HAlign(HAlign_Center)
-				//	.Text(this, &SDynamicObjectManagerWidget::GetSettingsButtonText)
-				//	//.IsEnabled(this,&SSceneSetupWidget::NextButtonEnabled)
-				//	//.Visibility(this, &SSceneSetupWidget::NextButtonVisibility)
-				//	.OnClicked(this, &SDynamicObjectManagerWidget::ToggleSettingsVisible)
-				//]
-			]
-
-#pragma endregion
-
-#pragma region "settings button and separator"
-
-			+ SVerticalBox::Slot()
-			.MaxHeight(20)
-			.AutoHeight()
+			.HAlign(EHorizontalAlignment::HAlign_Center)
 			.VAlign(VAlign_Center)
-			.Padding(0, 0, 0, padding)
+			.AutoHeight()
 			[
 				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-				.HAlign(HAlign_Center)
+				+SHorizontalBox::Slot()
 				[
-					SNew(SButton)
-					.HAlign(HAlign_Center)
-					.Text(this, &SDynamicObjectManagerWidget::GetSettingsButtonText)
-					//.IsEnabled(this,&SSceneSetupWidget::NextButtonEnabled)
-					//.Visibility(this, &SSceneSetupWidget::NextButtonVisibility)
-					.OnClicked(this, &SDynamicObjectManagerWidget::ToggleSettingsVisible)
+					SNew(SBox)
+					//.Visibility(this, &SDynamicObjectManagerWidget::IsUploadInvalid)
+					//.HeightOverride(64)
+					//.WidthOverride(128)
+					[
+						SNew(STextBlock)
+						//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
+						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadInvalid)
+						.Text(this, &SDynamicObjectManagerWidget::GetUploadInvalidCause)
+					]
 				]
 			]
 
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			[
-				SNew(SSeparator)
-				//.Visibility(this, &SDynamicObjectManagerWidget::AreSettingsVisible)
-			]
-#pragma endregion
 
 #pragma region "dynamics screen"
 
@@ -335,47 +127,6 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				]
 			]
 
-			//export buttons
-			+ SVerticalBox::Slot()
-			.Padding(0, 0, 0, padding)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.VAlign(VAlign_Center)
-			.AutoHeight()
-			[
-				SNew(SHorizontalBox)
-				//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
-						.IsEnabled(this, &SDynamicObjectManagerWidget::IsExportAllEnabled)
-						.Text(FText::FromString("Export Static Meshes for all Dynamic Object Components"))\
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportAllDynamics)
-					]
-				]
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
-						.IsEnabled(this, &SDynamicObjectManagerWidget::IsExportSelectedEnabled)
-						//.Text(FText::FromString("Export Static Meshes from Selected Actors"))
-						.Text_Raw(this, &SDynamicObjectManagerWidget::ExportSelectedText)
-						//.OnClicked_Raw(this, &FCognitiveEditorTools::ExportSelectedDynamics)
-						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::ExportSelectedDynamicData)
-					]
-				]
-			]
-
 			//upload buttons
 			+ SVerticalBox::Slot()
 			.Padding(0, 0, 0, padding)
@@ -394,9 +145,11 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					[
 						SNew(SButton)
 						//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
-						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadAllEnabled)
-						.Text(FText::FromString("Upload All Meshes"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::UploadDynamics)
+						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadSelectedEnabled)
+						//.Text(FText::FromString("Upload Selected Meshes")) //data selected in the list
+						.Text_Raw(this, &SDynamicObjectManagerWidget::UploadSelectedText)
+						//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportSelectedDynamics)
+						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::UploadSelectedDynamicData)
 					]
 				]
 				+SHorizontalBox::Slot()
@@ -408,11 +161,10 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					[
 						SNew(SButton)
 						//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
-						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadSelectedEnabled)
-						//.Text(FText::FromString("Upload Selected Meshes")) //data selected in the list
-						.Text_Raw(this, &SDynamicObjectManagerWidget::UploadSelectedText)
-						//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportSelectedDynamics)
-						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::UploadSelectedDynamicData)
+						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadAllEnabled)
+						.Text(FText::FromString("Upload All Meshes"))
+						//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::UploadDynamics)
+						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::ExportAndUploadDynamics)
 					]
 				]
 			]
@@ -614,6 +366,21 @@ FText SDynamicObjectManagerWidget::UploadErrorText() const
 	return FText::FromString(FCognitiveEditorTools::GetInstance()->WizardUploadError);
 }
 
+FReply SDynamicObjectManagerWidget::ExportAndUploadDynamics()
+{
+	//try to export all dynamics that don't have directories
+	FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportNewDynamics();
+	if (fph.IsValid())
+	{
+		FPlatformProcess::WaitForProc(fph);
+	}
+
+	//then upload all
+	FCognitiveEditorTools::GetInstance()->UploadDynamics();
+
+	return FReply::Handled();
+}
+
 FReply SDynamicObjectManagerWidget::ValidateAndRefresh()
 {
 	FCognitiveEditorTools::GetInstance()->SetUniqueDynamicIds();
@@ -663,9 +430,31 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicData()
 {
 	auto selected = SceneDynamicObjectList->ListViewWidget->GetSelectedItems();
 
+	//should export all dynamic objects that need it, then wait for blender to fix them all
+
+	TArray<TSharedPtr<FDynamicData>> dynamicData;
+	
 	for (auto &elem : selected)
 	{
-		GLog->Log("upload mesh" + elem->MeshName);
+		//if files dont exist, export first
+		FString path = FCognitiveEditorTools::GetInstance()->GetDynamicsExportDirectory() + "/" + elem->MeshName + "/" + elem->MeshName;
+		FString gltfpath = path + ".gltf";
+		if (!FPaths::FileExists(*gltfpath))
+		{
+			//not exported
+			dynamicData.Add(elem);
+		}
+	}
+
+	FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportDynamicData(dynamicData);
+	if (fph.IsValid())
+	{
+		FPlatformProcess::WaitForProc(fph);
+	}
+
+	//then upload them all
+	for (auto& elem : selected)
+	{
 		FCognitiveEditorTools::GetInstance()->UploadDynamic(elem->MeshName);
 	}
 	return FReply::Handled();
@@ -722,8 +511,27 @@ bool SDynamicObjectManagerWidget::IsUploadAllEnabled() const
 	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
-	if (!FCognitiveEditorTools::GetInstance()->HasExportedAnyDynamicMeshes()) { return false; }
+	//if (!FCognitiveEditorTools::GetInstance()->HasExportedAnyDynamicMeshes()) { return false; }
 	return true;
+}
+
+bool SDynamicObjectManagerWidget::IsUploadInvalid() const
+{
+	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return true; }
+	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return true; }
+	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return true; }
+	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return true; }
+	//if (!FCognitiveEditorTools::GetInstance()->HasExportedAnyDynamicMeshes()) { return true; }
+	return false;
+}
+
+FText SDynamicObjectManagerWidget::GetUploadInvalidCause() const
+{
+	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return FText::FromString("Upload Invalid. Developer Key is not set"); }
+	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return FText::FromString("Upload Invalid. Blender path is invalid"); }
+	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return FText::FromString("Upload Invalid. Export Path is invalid"); }
+	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return FText::FromString("Upload Invalid. Scene does not have a Scene ID"); }
+	return FText::GetEmpty();
 }
 
 bool SDynamicObjectManagerWidget::IsUploadIdsEnabled() const
@@ -755,18 +563,7 @@ bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
 			{
 				continue;
 			}
-
-			//check directory for obj/gltf files
-
-			//
-			FString path = tools->GetDynamicsExportDirectory() + "/" + dynamicComponent->MeshName + "/" + dynamicComponent->MeshName;
-			FString objpath = path + ".obj";
-			FString gltfpath = path + ".gltf";
-
-			if (FPaths::FileExists(*gltfpath) || FPaths::FileExists(*objpath))
-			{
-				return true;
-			}
+			return true;
 		}
 	}
 
@@ -775,74 +572,25 @@ bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
 
 FText SDynamicObjectManagerWidget::UploadSelectedText() const
 {
-	int32 validExportCount = 0;
-	auto tools = FCognitiveEditorTools::GetInstance();
-	for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
+	auto selected = SceneDynamicObjectList->ListViewWidget->GetSelectedItems();
+
+	//should export all dynamic objects that need it, then wait for blender to fix them all
+
+	TArray<FString> dynamicMeshNames;
+
+	for (auto& elem : selected)
 	{
-		if (AActor* Actor = Cast<AActor>(*It))
+		if (dynamicMeshNames.Contains(elem->MeshName))
 		{
-			//SelectionSetCache.Add(Actor);
-			UActorComponent* actorComponent = Actor->GetComponentByClass(UDynamicObject::StaticClass());
-			if (actorComponent == NULL)
-			{
-				continue;
-			}
-			UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
-			if (dynamicComponent == NULL)
-			{
-				continue;
-			}
-
-			FString path = tools->GetDynamicsExportDirectory() + "/" + dynamicComponent->MeshName + "/" + dynamicComponent->MeshName;
-			FString objpath = path + ".obj";
-			FString gltfpath = path + ".gltf";
-
-			if (FPaths::FileExists(*gltfpath) || FPaths::FileExists(*objpath))
-			{
-				validExportCount++;
-			}
+			continue;
 		}
+		dynamicMeshNames.Add(elem->MeshName);
 	}
 
-	return FText::FromString("Upload " + FString::FromInt(validExportCount) + " Selected");
-}
+	//get selected dynamic data
+	//for each unique mesh name
 
-FText SDynamicObjectManagerWidget::UploadAllText() const
-{
-	int32 validExportCount = 0;
-	for (TActorIterator<AActor> It(GWorld); It; ++It)
-	{
-		if (AActor* Actor = Cast<AActor>(*It))
-		{
-			//SelectionSetCache.Add(Actor);
-			UActorComponent* actorComponent = Actor->GetComponentByClass(UDynamicObject::StaticClass());
-			if (actorComponent == NULL)
-			{
-				continue;
-			}
-			UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
-			if (dynamicComponent == NULL)
-			{
-				continue;
-			}
-
-			//check directory for obj/gltf files
-
-			auto tools = FCognitiveEditorTools::GetInstance();
-			//
-			FString path = tools->GetDynamicsExportDirectory() + "/" + dynamicComponent->MeshName + "/" + dynamicComponent->MeshName;
-			FString objpath = path + ".obj";
-			FString gltfpath = path + ".gltf";
-
-			if (FPaths::FileExists(*gltfpath) || FPaths::FileExists(*objpath))
-			{
-				continue;
-			}
-			validExportCount++;
-		}
-	}
-
-	return FText::FromString("Upload All " + FString::FromInt(validExportCount));
+	return FText::FromString("Upload " + FString::FromInt(dynamicMeshNames.Num()) + " Meshes");
 }
 
 FText SDynamicObjectManagerWidget::ExportSelectedText() const

@@ -20,8 +20,8 @@ class UCognitiveVRSettings : public UAnalyticsSettingsBase
 		bool EnableDevLogging = false;
 
 	/** Show debug canvas overlay */
-	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-		bool EnableDebugCanvas = true;
+	//UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+		//bool EnableDebugCanvas = true;
 
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 		FString Gateway = "data.cognitive3d.com";
