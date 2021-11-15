@@ -757,9 +757,9 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 			objectManifest += "\"id\":\"" + dynamics[i]->CustomId + "\",";
 			objectManifest += "\"mesh\":\"" + dynamics[i]->MeshName + "\",";
 			objectManifest += "\"name\":\"" + dynamics[i]->GetOwner()->GetName() + "\",";
-			objectManifest += "\"customScale\":[" + FString::SanitizeFloat(scale.X) + "," + FString::SanitizeFloat(scale.Y) + "," + FString::SanitizeFloat(scale.Z) + "],";
-			objectManifest += "\"initialPosition\":[" + FString::SanitizeFloat(location.X) + "," + FString::SanitizeFloat(location.Y) + "," + FString::SanitizeFloat(location.Z) + "],";
-			objectManifest += "\"initialRotation\":[" + FString::SanitizeFloat(rotation.X) + "," + FString::SanitizeFloat(rotation.Y) + "," + FString::SanitizeFloat(rotation.Z) + "," + FString::SanitizeFloat(rotation.W) + "]";
+			objectManifest += "\"scaleCustom\":[" + FString::SanitizeFloat(scale.X) + "," + FString::SanitizeFloat(scale.Z) + "," + FString::SanitizeFloat(scale.Y) + "],";
+			objectManifest += "\"initialPosition\":[" + FString::SanitizeFloat(-location.X) + "," + FString::SanitizeFloat(location.Z) + "," + FString::SanitizeFloat(location.Y) + "],";
+			objectManifest += "\"initialRotation\":[" + FString::SanitizeFloat(-rotation.X) + "," + FString::SanitizeFloat(rotation.Z) + "," + FString::SanitizeFloat(-rotation.Y) + "," + FString::SanitizeFloat(rotation.W) + "]";
 			objectManifest += "},";
 		}
 	}
@@ -834,7 +834,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FSt
 			objectManifest += "\"mesh\":\"" + meshName + "\",";
 			objectManifest += "\"name\":\"" + prefabName + "\"";
 
-			objectManifest += "\"customScale\":[1,1,1],";
+			objectManifest += "\"scaleCustom\":[1,1,1],";
 			objectManifest += "\"initialPosition\":[0,0,0],";
 			objectManifest += "\"initialRotation\":[0,0,0,1]";
 			objectManifest += "},";
