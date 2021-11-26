@@ -485,18 +485,18 @@ void UPlayerTracker::TickSensors1000MS()
 void UPlayerTracker::TickSensors100MS()
 {
 	if (cog->HasStartedSession() == false) { return; }
-	FEyePupillometry pupilometry;
-	if (UHPGliaClient::GetEyePupillometry(pupilometry))
+	FEyeTracking data;
+	if (UHPGliaClient::GetEyeTracking(data))
 	{
-		if (pupilometry.LeftConfidence > 0.5 && pupilometry.LeftSize > 1.5 && !FMath::IsNearlyEqual(pupilometry.LeftSize, LastLeftPupilDiamter))
+		if (data.LeftPupilDilationConfidence > 0.5 && data.LeftPupilDilation > 1.5f && !FMath::IsNearlyEqual(data.LeftPupilDilation, LastLeftPupilDiamter))
 		{
-			cog->sensors->RecordSensor("HP.Left Pupil Diameter", pupilometry.LeftSize);
-			LastLeftPupilDiamter = pupilometry.LeftSize;
+			cog->sensors->RecordSensor("HP.Left Pupil Diameter", data.LeftPupilDilation);
+			LastLeftPupilDiamter = data.LeftPupilDilation;
 		}
-		if (pupilometry.RightConfidence > 0.5 && pupilometry.RightSize > 1.5 && !FMath::IsNearlyEqual(pupilometry.RightSize, LastRightPupilDiamter))
+		if (data.RightPupilDilationConfidence > 0.5 && data.RightPupilDilation > 1.5f && !FMath::IsNearlyEqual(data.RightPupilDilation, LastRightPupilDiamter))
 		{
-			cog->sensors->RecordSensor("HP.Right Pupil Diameter", pupilometry.RightSize);
-			LastRightPupilDiamter = pupilometry.RightSize;
+			cog->sensors->RecordSensor("HP.Right Pupil Diameter", data.RightPupilDilation);
+			LastRightPupilDiamter = data.RightPupilDilation;
 		}
 	}
 }

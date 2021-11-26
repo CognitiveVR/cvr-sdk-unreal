@@ -55,5 +55,13 @@ public class CognitiveVREditor : ModuleRules
 				"AssetTools",
 				"UnrealEd"
 			});
-	}
+
+        var pluginsDirectory = System.IO.Path.Combine(Target.ProjectFile.Directory.ToString(), "Plugins");
+        //HP Omnicept
+        if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory, "HPGlia")))
+        {
+            System.Console.WriteLine("CognitiveVR.Build.cs found HP Glia Omnicept folder");
+            PublicDependencyModuleNames.Add("HPGlia");
+        }
+    }
 }
