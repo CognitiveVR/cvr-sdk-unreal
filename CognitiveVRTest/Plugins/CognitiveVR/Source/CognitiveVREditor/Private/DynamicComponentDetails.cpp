@@ -95,7 +95,7 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasExportAndValidSceneData)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
-		.ToolTipText(FText::FromString("Export Directory must be set and scene uploaded. See CognitiveVR Settings"))
+		.ToolTipText(this,&UDynamicObjectComponentDetails::InvalidUploadText)
 		.OnClicked(this, &UDynamicObjectComponentDetails::Upload)
 		[
 			SNew( STextBlock )
@@ -129,6 +129,14 @@ bool UDynamicObjectComponentDetails::HasExportAndValidSceneData() const
 	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->GetCurrentSceneData().IsValid()) { return false; }
 	return true;
+}
+FText UDynamicObjectComponentDetails::InvalidUploadText() const
+{
+	if (!HasOwner()) { return FText::FromString("No owner actor"); }
+	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return FText::FromString("No Export Directory set"); }
+	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return FText::FromString("Mesh Name is empty"); }
+	if (!FCognitiveEditorTools::GetInstance()->GetCurrentSceneData().IsValid()) { return FText::FromString("Scene Data is invalid"); }
+	return FText::FromString("Valid");
 }
 
 FReply UDynamicObjectComponentDetails::OnUpdateMeshAndId()
