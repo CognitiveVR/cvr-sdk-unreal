@@ -39,4 +39,5 @@ private:
 	bool HasOwnerAndExportDir() const;
 	bool HasOwnerAndExportDirAndName() const;
 	bool HasExportAndValidSceneData() const;
+	FText InvalidUploadText() const;
 };

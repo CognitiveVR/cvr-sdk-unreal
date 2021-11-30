@@ -748,11 +748,18 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 		//if they have a customid -> add them to the objectmanifest string
 		if (dynamics[i]->IdSourceType == EIdSourceType::CustomId && dynamics[i]->CustomId != "")
 		{
+			FVector location = dynamics[i]->GetComponentLocation();
+			FQuat rotation = dynamics[i]->GetComponentQuat();
+			FVector scale = dynamics[i]->GetComponentScale();
+
 			wroteAnyObjects = true;
 			objectManifest += "{";
 			objectManifest += "\"id\":\"" + dynamics[i]->CustomId + "\",";
 			objectManifest += "\"mesh\":\"" + dynamics[i]->MeshName + "\",";
-			objectManifest += "\"name\":\"" + dynamics[i]->GetOwner()->GetName() + "\"";
+			objectManifest += "\"name\":\"" + dynamics[i]->GetOwner()->GetName() + "\",";
+			objectManifest += "\"scaleCustom\":[" + FString::SanitizeFloat(scale.X) + "," + FString::SanitizeFloat(scale.Z) + "," + FString::SanitizeFloat(scale.Y) + "],";
+			objectManifest += "\"initialPosition\":[" + FString::SanitizeFloat(-location.X) + "," + FString::SanitizeFloat(location.Z) + "," + FString::SanitizeFloat(location.Y) + "],";
+			objectManifest += "\"initialRotation\":[" + FString::SanitizeFloat(-rotation.X) + "," + FString::SanitizeFloat(rotation.Z) + "," + FString::SanitizeFloat(-rotation.Y) + "," + FString::SanitizeFloat(rotation.W) + "]";
 			objectManifest += "},";
 		}
 	}
@@ -810,6 +817,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 
 FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FString meshName, FString prefabName)
 {
+	//this is used by dynamic object id pool. doesn't have initial positions, rotations, scale
 	GLog->Log("CognitiveVR Tools uploading manifest for " + FString::FromInt(ids.Num()) + " objects");
 
 	bool wroteAnyObjects = false;
@@ -825,6 +833,10 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FSt
 			objectManifest += "\"id\":\"" + ids[i] + "\",";
 			objectManifest += "\"mesh\":\"" + meshName + "\",";
 			objectManifest += "\"name\":\"" + prefabName + "\"";
+
+			objectManifest += "\"scaleCustom\":[1,1,1],";
+			objectManifest += "\"initialPosition\":[0,0,0],";
+			objectManifest += "\"initialRotation\":[0,0,0,1]";
 			objectManifest += "},";
 		}
 	}
