@@ -40,18 +40,58 @@ FString Util::GetDeviceName(FString DeviceName)
 	return FString("unknown");
 }
 
-void Util::SetHardwareSessionProperties()
+void Util::SetSessionProperties()
 {
 	auto cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 
-	FString appName;
-	GConfig->GetString(TEXT("/Script/EngineSettings.GeneralProjectSettings"), TEXT("ProjectName"), appName, GGameIni);
+	FString HMDDeviceName = UHeadMountedDisplayFunctionLibrary::GetHMDDeviceName().ToString();
+	cog->SetSessionProperty("c3d.device.hmd.type", HMDDeviceName);
 
-	cog->SetSessionProperty("c3d.app.name", appName);
+#if defined TOBII_EYETRACKING_ACTIVE
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
+	cog->SetSessionProperty("c3d.device.eyetracking.type", "Tobii");
+	cog->SetSessionProperty("c3d.app.sdktype", "Tobii");
+#elif defined SRANIPAL_1_2_API
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
+	cog->SetSessionProperty("c3d.device.eyetracking.type", "Tobii");
+	cog->SetSessionProperty("c3d.app.sdktype", "SRAnipal");
+#elif defined SRANIPAL_1_3_API
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
+	cog->SetSessionProperty("c3d.device.eyetracking.type", "Tobii");
+	cog->SetSessionProperty("c3d.app.sdktype", "SRAnipal");
+#elif defined VARJOEYETRACKER_API
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
+	cog->SetSessionProperty("c3d.device.eyetracking.type", "Varjo");
+	cog->SetSessionProperty("c3d.app.sdktype", "Varjo");
+#elif defined PICOMOBILE_API
+	//TODO check that pico eye tracking is enabled
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
+	cog->SetSessionProperty("c3d.device.eyetracking.type", "Tobii");
+	cog->SetSessionProperty("c3d.app.sdktype", "Pico");
+	cog->SetSessionProperty("c3d.device.hmd.type", FPlatformMisc::GetCPUBrand()); //returns pretty device name
+	//TODO check that omnicept eye tracking is enabled
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
+	cog->SetSessionProperty("c3d.device.eyetracking.type", "Tobii");
+	cog->SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
+#else
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "false");
+	cog->SetSessionProperty("c3d.device.eyetracking.type", "None");
+	cog->SetSessionProperty("c3d.app.sdktype", "Default");
+#endif
 
-	FString appVersion = "1.0";
-	GConfig->GetString(TEXT("/Script/EngineSettings.GeneralProjectSettings"), TEXT("ProjectVersion"), appVersion, GGameIni);
-	cog->SetSessionProperty("c3d.app.version", appVersion);
+
+	cog->SetSessionProperty("c3d.version", COGNITIVEVR_SDK_VERSION);
+	cog->SetSessionProperty("c3d.app.engine", "Unreal");
+
+	if (!cog->GetUserName().IsEmpty())
+		cog->SetParticipantFullName(cog->GetUserName());
+	if (!cog->GetUserID().IsEmpty())
+		cog->SetParticipantId(cog->GetUserID());
+	cog->SetSessionProperty("c3d.deviceid", cog->GetDeviceID());
+
+	const UGeneralProjectSettings& projectSettings = *GetDefault< UGeneralProjectSettings>();
+	cog->SetSessionProperty("c3d.app.version", projectSettings.ProjectVersion);
+	cog->SetSessionProperty("c3d.app.name", FApp::GetProjectName());
 
 	FString engineVersion = FEngineVersion::Current().ToString().Replace(TEXT("+"), TEXT(" "));;
 	cog->SetSessionProperty("c3d.app.engine.version", engineVersion);
@@ -63,9 +103,9 @@ void Util::SetHardwareSessionProperties()
 	}
 	else if (platformName.Compare("IOS", ESearchCase::IgnoreCase) == 0 || platformName.Compare("Android", ESearchCase::IgnoreCase) == 0)
 	{
-		cog->SetSessionProperty("c3d.device.type", "Handheld");
+		cog->SetSessionProperty("c3d.device.type", "Mobile");
 	}
-	else if (platformName.Compare("PS4", ESearchCase::IgnoreCase) == 0 || platformName.Contains("xbox", ESearchCase::IgnoreCase) || platformName.Contains("Switch", ESearchCase::IgnoreCase))
+	else if (platformName.Compare("PS", ESearchCase::IgnoreCase) == 0 || platformName.Contains("xbox", ESearchCase::IgnoreCase) || platformName.Contains("Switch", ESearchCase::IgnoreCase))
 	{
 		cog->SetSessionProperty("c3d.device.type", "Console");
 	}
@@ -74,18 +114,16 @@ void Util::SetHardwareSessionProperties()
 		cog->SetSessionProperty("c3d.device.type", "Unknown");
 	}
 
-#if !PLATFORM_ANDROID
+#if PLATFORM_ANDROID
+	cog->SetSessionProperty("c3d.device.cpu", FPlatformMisc::GetCPUChipset());
+	cog->SetSessionProperty("c3d.device.gpu", FPlatformMisc::GetPrimaryGPUBrand());
+	cog->SetSessionProperty("c3d.device.os", FPlatformMisc::GetOSVersion());
 
-	cog->SetSessionProperty("c3d.device.cpu", FWindowsPlatformMisc::GetCPUBrand());
 
-	//IMPROVEMENT include device model, especially for phones
-
-	cog->SetSessionProperty("c3d.device.gpu", FWindowsPlatformMisc::GetPrimaryGPUBrand());
-
-	FString osVersionOut;
-	FString osSubVersionOut;
-	FWindowsPlatformMisc::GetOSVersions(osVersionOut, osSubVersionOut);
-	cog->SetSessionProperty("c3d.device.os", osVersionOut + " " + osSubVersionOut);
+#elif PLATFORM_WINDOWS
+	cog->SetSessionProperty("c3d.device.cpu", FPlatformMisc::GetCPUBrand());
+	cog->SetSessionProperty("c3d.device.gpu", FPlatformMisc::GetPrimaryGPUBrand());
+	cog->SetSessionProperty("c3d.device.os", FPlatformMisc::GetOSVersion());
 #endif
 
 	const FPlatformMemoryConstants& MemoryConstants = FPlatformMemory::GetConstants();

@@ -146,38 +146,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		return false;
 	}
 
-	Util::SetHardwareSessionProperties();
-
-	FString HMDDeviceName = UHeadMountedDisplayFunctionLibrary::GetHMDDeviceName().ToString();
-	SetSessionProperty("c3d.device.hmd.type", HMDDeviceName);
-
-	if (HMDDeviceName.Contains("vive"))
-	{
-		SetSessionProperty("c3d.device.manufacturer", "HTC");
-	}
-	else if (HMDDeviceName.Contains("oculus"))
-	{
-		SetSessionProperty("c3d.device.manufacturer", "Oculus");
-	}
-	else if (HMDDeviceName.Contains("microsoft"))
-	{
-		SetSessionProperty("c3d.device.manufacturer", "Microsoft");
-	}
-	else
-	{
-		SetSessionProperty("c3d.device.manufacturer", "Unknown");
-	}
-
-#if defined TOBII_EYETRACKING_ACTIVE
-	SetSessionProperty("c3d.device.eyetracking.enabled", true);
-	SetSessionProperty("c3d.device.eyetracking.type", "Tobii");
-#else
-	SetSessionProperty("c3d.device.eyetracking.enabled", false);
-	SetSessionProperty("c3d.device.eyetracking.type", "None");
-#endif
-
-
-
+	Util::SetSessionProperties();
 	if (currentWorld->WorldType == EWorldType::Game)
 	{
 		SetSessionProperty("c3d.app.inEditor", "false");
@@ -186,17 +155,6 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	{
 		SetSessionProperty("c3d.app.inEditor", "true");
 	}
-
-	SetSessionProperty("c3d.app.sdktype", "Default");
-	SetSessionProperty("c3d.version", COGNITIVEVR_SDK_VERSION);
-
-	SetSessionProperty("c3d.app.engine", "Unreal");
-
-	if (!GetUserName().IsEmpty())
-		SetParticipantFullName(GetUserName());
-	if (!GetUserID().IsEmpty())
-		SetParticipantId(GetUserID());
-	SetSessionProperty("c3d.deviceid", GetDeviceID());
 
 	customEventRecorder->Send(FString("c3d.sessionStart"));
 	
@@ -355,7 +313,7 @@ void FAnalyticsProviderCognitiveVR::SetSessionTag(FString Tag)
 		return;
 	}
 
-	SetSessionProperty("c3d.session_tag."+Tag, true);
+	SetSessionProperty("c3d.session_tag."+Tag, "true");
 }
 
 FString FAnalyticsProviderCognitiveVR::GetUserID() const
