@@ -147,6 +147,8 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	}
 
 	Util::SetSessionProperties();
+	if (!GetUserName().IsEmpty())
+		SetParticipantFullName(GetUserName());
 	if (currentWorld->WorldType == EWorldType::Game)
 	{
 		SetSessionProperty("c3d.app.inEditor", "false");

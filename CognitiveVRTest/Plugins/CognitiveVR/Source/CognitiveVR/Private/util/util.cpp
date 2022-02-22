@@ -69,6 +69,7 @@ void Util::SetSessionProperties()
 	cog->SetSessionProperty("c3d.device.eyetracking.type", "Tobii");
 	cog->SetSessionProperty("c3d.app.sdktype", "Pico");
 	cog->SetSessionProperty("c3d.device.hmd.type", FPlatformMisc::GetCPUBrand()); //returns pretty device name
+#elif defined HPGLIA_API
 	//TODO check that omnicept eye tracking is enabled
 	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
 	cog->SetSessionProperty("c3d.device.eyetracking.type", "Tobii");
@@ -83,8 +84,6 @@ void Util::SetSessionProperties()
 	cog->SetSessionProperty("c3d.version", COGNITIVEVR_SDK_VERSION);
 	cog->SetSessionProperty("c3d.app.engine", "Unreal");
 
-	if (!cog->GetUserName().IsEmpty())
-		cog->SetParticipantFullName(cog->GetUserName());
 	if (!cog->GetUserID().IsEmpty())
 		cog->SetParticipantId(cog->GetUserID());
 	cog->SetSessionProperty("c3d.deviceid", cog->GetDeviceID());
