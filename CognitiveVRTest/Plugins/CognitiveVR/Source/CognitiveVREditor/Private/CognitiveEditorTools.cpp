@@ -452,7 +452,13 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		//create directory before export
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 
-		// Directory Exists?
+		// Dynamic Directory Exists?
+		if (!PlatformFile.DirectoryExists(*GetDynamicsExportDirectory()))
+		{
+			PlatformFile.CreateDirectory(*GetDynamicsExportDirectory());
+		}
+
+		// Object Directory Exists?
 		if (!PlatformFile.DirectoryExists(*justDirectory))
 		{
 			PlatformFile.CreateDirectory(*justDirectory);
