@@ -145,6 +145,13 @@ namespace UnrealBuildTool.Rules
 			System.Console.WriteLine("CognitiveVR.Build.cs found HP Glia Omnicept folder");
 			PublicDependencyModuleNames.Add("HPGlia");
 		}
+		
+		//Teslasuit
+		if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory,"Teslasuit")))
+		{
+			System.Console.WriteLine("CognitiveVR.Build.cs found Teslasuit Plugin folder");
+			PublicDependencyModuleNames.Add("Teslasuit");
+		}
 
 		if (Target.Platform == UnrealTargetPlatform.Win32 ||
             Target.Platform == UnrealTargetPlatform.Win64)

@@ -39,6 +39,9 @@
 #if defined HPGLIA_API
 #include "HPGliaClient.h"
 #endif
+#if defined TESLASUIT_API
+#include "ITeslasuit.h"
+#endif
 #include "DrawDebugHelpers.h"
 #include "PlayerTracker.generated.h"
 
@@ -75,6 +78,10 @@ private:
 	FTimerHandle AutoSendHandle;
 	void TickSensors1000MS();
 	void TickSensors100MS();
+#endif
+#if defined TESLASUIT_API
+	TArray<FTSECG> ECGData;
+	void ECGUpdated(USuit* Suit, const TSECGBuffer* ECGBuffer, const TSResultCode resultCode);
 #endif
 
 public:
