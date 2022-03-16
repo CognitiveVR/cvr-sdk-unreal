@@ -435,17 +435,33 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 		//export skeletal meshes as fbx (missing material pre 4.26) and static meshes as obj
 
+		FString justDirectory = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName;
 		FString tempObject;
 		FString ExportFilename;
 		if (skeletalMeshes.Num() > meshes.Num())
 		{
 			ExportFilename = exportObjects[i]->MeshName + ".fbx";
 			tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".fbx";
-	}
+		}
 		else
 		{
 			ExportFilename = exportObjects[i]->MeshName + ".obj";
 			tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
+		}
+
+		//create directory before export
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+		// Dynamic Directory Exists?
+		if (!PlatformFile.DirectoryExists(*GetDynamicsExportDirectory()))
+		{
+			PlatformFile.CreateDirectory(*GetDynamicsExportDirectory());
+		}
+
+		// Object Directory Exists?
+		if (!PlatformFile.DirectoryExists(*justDirectory))
+		{
+			PlatformFile.CreateDirectory(*justDirectory);
 		}
 
 		GEditor->SelectActor(exportObjects[i]->GetOwner(), true, false, true);

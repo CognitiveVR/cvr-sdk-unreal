@@ -7,9 +7,13 @@
 #include "CoreMinimal.h"
 #include "CognitiveVR/Public/CognitiveVR.h"
 #include "GenericPlatform/GenericPlatformDriver.h"
+#include "GeneralProjectSettings.h" //used to get project version
+#include "Misc/App.h" //used to get project name
 #include <ctime>
 #include "Json.h"
-#if !PLATFORM_ANDROID
+#if PLATFORM_ANDROID
+#include "Android/AndroidPlatformMisc.h"
+#else
 #include "Windows/WindowsPlatformMisc.h"
 #endif
 
@@ -22,5 +26,5 @@
 			static FString GetDeviceName(FString DeviceName);
 
 			//record several default hardware values to session properties
-			static void SetHardwareSessionProperties();
+			static void SetSessionProperties();
     };

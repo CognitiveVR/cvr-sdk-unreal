@@ -48,7 +48,8 @@ namespace UnrealBuildTool.Rules
 					"HTTP",
 					"Json",
                     "JsonUtilities",
-					"UMG"
+					"UMG",
+					"EngineSettings"
                 }
 				);
 
