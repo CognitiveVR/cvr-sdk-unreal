@@ -14,7 +14,7 @@ args = sys.argv
 
 exportPath = args[3]
 
-dynamicNames = args[4].split(",")
+dynamicNames = args[4].replace('\'','').split(",")
 
 sizeFactor = 1;
 
@@ -32,9 +32,8 @@ print("==================================ROOT " + exportPath)
 
 for dir in subdirectories:
     #if dynamicNames does not contain dir, that's not a dynamic we want to modify and should be skipped
-    tempdirname = "\'"+dir+"\'"
-    if tempdirname not in dynamicNames:
-        print("skip dir " + tempdirname)
+    if dir not in dynamicNames:
+        print("skip dir " + dir)
         continue
 
     workingdir = exportPath+"/"+dir
