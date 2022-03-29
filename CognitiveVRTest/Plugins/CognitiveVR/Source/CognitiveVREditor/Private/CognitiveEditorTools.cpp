@@ -438,16 +438,16 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		FString justDirectory = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName;
 		FString tempObject;
 		FString ExportFilename;
-		if (skeletalMeshes.Num() > meshes.Num())
+		//if (skeletalMeshes.Num() > meshes.Num())
 		{
 			ExportFilename = exportObjects[i]->MeshName + ".fbx";
 			tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".fbx";
 		}
-		else
-		{
-			ExportFilename = exportObjects[i]->MeshName + ".obj";
-			tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
-		}
+		//else
+		//{
+		//	ExportFilename = exportObjects[i]->MeshName + ".obj";
+		//	tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
+		//}
 
 		//create directory before export
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
@@ -478,14 +478,14 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		exportObjects[i]->GetOwner()->SetActorScale3D(originalScale);
 
 		//bake + export materials
-		if (skeletalMeshes.Num() > meshes.Num())
+		//if (skeletalMeshes.Num() > meshes.Num())
 		{
 			BakeExportSkeletonMaterials.Add(exportObjects[i]->MeshName, skeletalMeshes);
 		}
-		else
-		{
-			BakeExportMaterials.Add(exportObjects[i]->MeshName, meshes);
-		}
+		//else
+		//{
+			//BakeExportMaterials.Add(exportObjects[i]->MeshName, meshes);
+		//}
 
 		//automatic screenshot
 		FLevelEditorViewportClient* perspectiveView = NULL;
@@ -529,12 +529,12 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 	float work = 0;
 	//FScopedSlowTask SlowTask(BakeExportMaterials.Num(), FText::FromString("Baking Dynamic Object Materials"));
 	//SlowTask.MakeDialog(false);
-	for (auto& elem : BakeExportMaterials)
-	{
-		work += 1;
-		//SlowTask.EnterProgressFrame(work); //error in 4.27 'ExpectedWorkThisFrame <= 1.01f * TotalAmountOfWork - CompletedWork' work overflow
-		WizardExportMaterials(GetDynamicsExportDirectory() + "/" + elem.Key + "/", elem.Value, elem.Key);
-	}
+	//for (auto& elem : BakeExportMaterials)
+	//{
+	//	work += 1;
+	//	//SlowTask.EnterProgressFrame(work); //error in 4.27 'ExpectedWorkThisFrame <= 1.01f * TotalAmountOfWork - CompletedWork' work overflow
+	//	WizardExportMaterials(GetDynamicsExportDirectory() + "/" + elem.Key + "/", elem.Value, elem.Key);
+	//}
 
 	for (auto& elem : BakeExportSkeletonMaterials)
 	{
@@ -2524,7 +2524,7 @@ void FCognitiveEditorTools::WizardExportSkeletalMaterials(FString directory, TAr
 	TArray<FString>ExportedMaterialNames;
 
 	MaterialLine.Empty();
-	MaterialLine.Add("");
+	//MaterialLine.Add("");
 
 	float work = 0;
 	FScopedSlowTask* SlowTaskPtr = NULL;
@@ -2547,44 +2547,60 @@ void FCognitiveEditorTools::WizardExportSkeletalMaterials(FString directory, TAr
 		//if (TempObject == NULL) { continue; }
 
 		TArray<UMaterialInterface*> mats = TempObject->GetMaterials();
+		//MaterialLine.Add("MESH " + TempObject->GetFName().ToString());
 		for (int32 j = 0; j < mats.Num(); j++)
 		{
-			if (mats[j] != NULL)
+			FString line;
+
+			if (mats[j] == NULL) { continue; }
+			if (ExportedMaterialNames.Contains(mats[j]->GetName())) { continue; }
+
+			if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Opaque)
 			{
-				if (ExportedMaterialNames.Contains(mats[j]->GetName())) { continue; }
+				FString n = mats[j]->GetName().Replace(TEXT("."), TEXT("_"));
+				//MaterialLine.Add("newmtl " + n);
+				//MaterialLine.Add("	OPAQUE MAT " + n);
+				line.Append("OPAQUE|");
 
-				if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Opaque)
-				{
-					FString n = mats[j]->GetPathName().Replace(TEXT("."), TEXT("_"));
-					MaterialLine.Add("newmtl " + n);
+				ExportedMaterialNames.Add(mats[j]->GetName());
 
-					ExportedMaterialNames.Add(mats[j]->GetName());
+				line.Append(mats[j]->GetName() + "|");
 
-					SCOPED_SUSPEND_RENDERING_THREAD(true);
-					PRAGMA_DISABLE_DEPRECATION_WARNINGS
-						TArray<FColor> OutputBMP;
-					FIntPoint OutSize;
-					FString BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
-					FMaterialUtilities::ExportMaterialProperty(mats[j], EMaterialProperty::MP_BaseColor, OutputBMP, OutSize);
-					FFileHelper::CreateBitmap(*BMPFilename, OutSize.X, OutSize.Y, OutputBMP.GetData());
-					MaterialLine.Add("map_Kd " + BMPFilename);
+				SCOPED_SUSPEND_RENDERING_THREAD(true);
+				PRAGMA_DISABLE_DEPRECATION_WARNINGS
+					TArray<FColor> OutputBMP;
+				FIntPoint OutSize;
+				FString BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+				FMaterialUtilities::ExportMaterialProperty(mats[j], EMaterialProperty::MP_BaseColor, OutputBMP, OutSize);
+				FFileHelper::CreateBitmap(*BMPFilename, OutSize.X, OutSize.Y, OutputBMP.GetData());
+				//MaterialLine.Add("map_Kd " + BMPFilename);
+				//MaterialLine.Add("		DIFFUSE TEXTURE " + BMPFilename);
+				line.Append(BMPFilename + "|");
 
-					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
-					FMaterialUtilities::ExportMaterialProperty(mats[j], EMaterialProperty::MP_Normal, OutputBMP, OutSize);
-					FFileHelper::CreateBitmap(*BMPFilename, OutSize.X, OutSize.Y, OutputBMP.GetData());
-					MaterialLine.Add("bump " + BMPFilename);
-					PRAGMA_ENABLE_DEPRECATION_WARNINGS
+				BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
+				FMaterialUtilities::ExportMaterialProperty(mats[j], EMaterialProperty::MP_Normal, OutputBMP, OutSize);
+				FFileHelper::CreateBitmap(*BMPFilename, OutSize.X, OutSize.Y, OutputBMP.GetData());
+				//MaterialLine.Add("		NORMAL TEXTURE " + BMPFilename);
+				//MaterialLine.Add("bump " + BMPFilename);
+				line.Append(BMPFilename);
 
-					MaterialLine.Add("");
-					MaterialLine.Add("");
+				line.ReplaceCharWithEscapedChar();
+
+				MaterialLine.Add(line);
+				PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+
+					//MaterialLine.Add("");
+					//MaterialLine.Add("");
 					continue;
-				}
+			}
+			else
+			{
 
 				TArray<FMeshData*> MeshSettingPtrs;
 				TArray<FMaterialData*> MaterialSettingPtrs;
-				GLog->Log(mats[j]->GetFullName());
-				FString n = mats[j]->GetPathName().Replace(TEXT("."), TEXT("_"));
-				MaterialLine.Add("newmtl " + n);
+				FString n = mats[j]->GetName().Replace(TEXT("."), TEXT("_"));
+				//GLog->Log("		OTHER MAT " + mats[j]->GetFullName());
 
 				ExportedMaterialNames.Add(mats[j]->GetName());
 
@@ -2594,13 +2610,30 @@ void FCognitiveEditorTools::WizardExportSkeletalMaterials(FString directory, TAr
 				MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_BaseColor, resolution);
 				MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Normal, resolution);
 
+
+
 				if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
+				{
 					MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_OpacityMask, resolution);
+					//MaterialLine.Add("	MASKED MAT " + BMPFilename);
+					//MaterialLine.Add("	MASKED MAT " + n);
+					line.Append("MASK|");
+				}
 				else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent)
+				{
 					MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Opacity, resolution);
+					//MaterialLine.Add("	TRANSLUCENT MAT " + BMPFilename);
+					//MaterialLine.Add("	TRANSLUCENT MAT " + n);
+					line.Append("TRANSLUCENT|");
+				}
+				else
+				{
+					//MaterialLine.Add("	OTHER MAT " + n);
+				}
 				//MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_EmissiveColor, resolution);
 				MaterialSettingPtrs.Add(&MaterialSettings);
 
+				line.Append(mats[j]->GetName() + "|");
 
 
 				FMeshData meshdata;
@@ -2622,34 +2655,43 @@ void FCognitiveEditorTools::WizardExportSkeletalMaterials(FString directory, TAr
 					//diffuse
 					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
 					FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_BaseColor].GetData());
-					MaterialLine.Add("map_Kd " + BMPFilename);
+					//MaterialLine.Add("		DIFFUSE TEXTURE " + BMPFilename);
+					line.Append(BMPFilename + "|");
+					//MaterialLine.Add("map_Kd " + BMPFilename);
 
 					//normal
 					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
 					FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Normal].GetData());
-					MaterialLine.Add("bump " + BMPFilename);
+					//MaterialLine.Add("		NORMAL TEXTURE " + BMPFilename);
+					line.Append(BMPFilename + "|");
+					//MaterialLine.Add("bump " + BMPFilename);
 
 					if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
 					{
 						//	//mask
 						BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_OM.bmp");
 						FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_OpacityMask].GetData());
-						MaterialLine.Add("illum 4");
-						MaterialLine.Add("map_D " + BMPFilename);
+						//MaterialLine.Add("illum 4");
+						//MaterialLine.Add("map_D " + BMPFilename);
+						//MaterialLine.Add("		OPACITY TEXTURE " + BMPFilename);
+						line.Append(BMPFilename);
 					}
 					else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent)
 					{
 						//opacity
 						BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_O.bmp");
 						FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Opacity].GetData());
-						MaterialLine.Add("illum 4");
-						MaterialLine.Add("map_D " + BMPFilename);
+						//MaterialLine.Add("illum 4");
+						//MaterialLine.Add("map_D " + BMPFilename);
+						//MaterialLine.Add("		OPACITY TEXTURE " + BMPFilename);
+						line.Append(BMPFilename);
 					}
-
-					//save to disk
+					line.ReplaceCharWithEscapedChar();
+					MaterialLine.Add(line);
 				}
-				MaterialLine.Add("");
-				MaterialLine.Add("");
+				//MaterialLine.Add("");
+				//MaterialLine.Add("");
+				//MaterialLine.Add("");
 			}
 		}
 	}
@@ -2660,7 +2702,7 @@ void FCognitiveEditorTools::WizardExportSkeletalMaterials(FString directory, TAr
 	}
 
 	//write MaterialLine to mtl file
-	FString mtlPath = directory + mtlFileName + ".mtl";
+	FString mtlPath = directory + "materiallist.txt";
 	FFileHelper::SaveStringArrayToFile(MaterialLine, *mtlPath);
 }
 
