@@ -10,4 +10,4 @@ UActiveSessionViewRequired::UActiveSessionViewRequired(const FObjectInitializer&
 }
 
 //implement empty function for interface
-void IActiveSessionViewRequired::Initialize_Implementation(AActiveSessionView* asv){}
+//void IActiveSessionViewRequired::Initialize_Implementation(AActiveSessionView* asv){}

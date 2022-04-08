@@ -21,6 +21,7 @@
 #include "CognitiveVR/Private/network/network.h"
 #include "CognitiveVR/Private/api/customeventrecorder.h"
 #include "CognitiveVR/Private/api/sensor.h"
+#include "CognitiveVR/Private/LocalCache.h"
 #include "Engine/Engine.h"
 #include "Misc/Base64.h"
 #include "Misc/PackageName.h"//to get friendly name of streaming levels
@@ -35,6 +36,7 @@
 	//class CognitiveVRResponse;
 	class Sensors;
 	class ExitPoll;
+	class LocalCache;
 	//class UDynamicObject;
 
 	class COGNITIVEVR_API FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
@@ -71,7 +73,6 @@
 		virtual void EndSession() override;
 		virtual void FlushEvents() override;
 
-		DEPRECATED(4.19, "Use SetParticipant instead")
 		virtual void SetUserID(const FString& InUserID) override;
 		//returns unique participant id
 		virtual FString GetUserID() const override;
@@ -105,6 +106,7 @@
 		TSharedPtr<Network> network;
 		TSharedPtr<Sensors> sensors;
 		TSharedPtr<ExitPoll> exitpoll;
+		TSharedPtr<LocalCache> localCache;
 
 		FString GetDeviceID() const;
 

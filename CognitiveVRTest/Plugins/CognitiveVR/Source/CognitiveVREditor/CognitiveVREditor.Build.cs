@@ -5,6 +5,7 @@ public class CognitiveVREditor : ModuleRules
 	public CognitiveVREditor(ReadOnlyTargetRules Target):base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		bLegacyPublicIncludePaths = true;
 
         PrivateIncludePaths.AddRange(
             new string[] {

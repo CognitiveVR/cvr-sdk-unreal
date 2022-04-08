@@ -383,7 +383,8 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			continue;
 		}
 
-		TArray<UActorComponent*> actorComponents = exportObjects[i]->GetOwner()->GetComponentsByClass(UStaticMeshComponent::StaticClass());
+		TArray<UActorComponent*> actorComponents;
+		exportObjects[i]->GetOwner()->GetComponents(UStaticMeshComponent::StaticClass(), actorComponents);
 		TArray< UStaticMeshComponent*> meshes;
 		for (int32 j = 0; j < actorComponents.Num(); j++)
 		{
@@ -403,7 +404,8 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			meshes.Add(mesh);
 		}
 
-		TArray<UActorComponent*> actorSkeletalComponents = exportObjects[i]->GetOwner()->GetComponentsByClass(USkeletalMeshComponent::StaticClass());
+		TArray<UActorComponent*> actorSkeletalComponents;
+		exportObjects[i]->GetOwner()->GetComponents(USkeletalMeshComponent::StaticClass(), actorSkeletalComponents);
 		TArray< USkeletalMeshComponent*> skeletalMeshes;
 		for (int32 j = 0; j < actorSkeletalComponents.Num(); j++)
 		{
@@ -490,11 +492,11 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		//automatic screenshot
 		FLevelEditorViewportClient* perspectiveView = NULL;
 
-		for (int32 j = 0; j < GEditor->LevelViewportClients.Num(); j++)
+		for (int32 j = 0; j < GEditor->GetLevelViewportClients().Num(); j++)
 		{
-			if (GEditor->LevelViewportClients[j]->ViewportType == LVT_Perspective)
+			if (GEditor->GetLevelViewportClients()[j]->ViewportType == LVT_Perspective)
 			{
-				perspectiveView = GEditor->LevelViewportClients[j];
+				perspectiveView = GEditor->GetLevelViewportClients()[j];
 				break;
 			}
 		}
@@ -2740,7 +2742,7 @@ void FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<USta
 		{
 			if (mats[j] != NULL)
 			{
-				if (ExportedMaterialNames.Contains(mats[j]->GetName())) { GLog->Log("skip"); continue; }
+				if (ExportedMaterialNames.Contains(mats[j]->GetName())) { continue; }
 
 				if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Opaque)
 				{

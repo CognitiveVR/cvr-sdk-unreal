@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
+#define NTDDI_THRESHOLD 0
 
 #include "CognitiveVR/Public/CognitiveVR.h"
 #include "CognitiveVR/Public/CognitiveVRProvider.h"

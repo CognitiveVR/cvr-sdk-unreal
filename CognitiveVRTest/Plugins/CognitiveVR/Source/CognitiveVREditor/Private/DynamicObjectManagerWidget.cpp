@@ -246,7 +246,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 
 FReply SDynamicObjectManagerWidget::SelectAll()
 {
-	UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();
+	UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();
 	GEditor->Exec(World, TEXT("actor select all"));
 	return FReply::Handled();
 }

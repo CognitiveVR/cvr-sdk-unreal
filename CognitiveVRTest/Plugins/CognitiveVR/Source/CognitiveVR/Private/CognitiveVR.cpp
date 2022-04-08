@@ -40,7 +40,7 @@ TWeakPtr<FAnalyticsProviderCognitiveVR> FAnalyticsCognitiveVR::GetCognitiveVRPro
 
 FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR()
 {
-	DeviceId = FPlatformMisc::GetDeviceId();
+	DeviceId = FPlatformMisc::GetHashedMacAddressString();
 }
 
 FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
@@ -115,16 +115,17 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	for (auto Attr : Attributes)
 	{
-		properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
+		properties->SetStringField(Attr.GetName(), Attr.GetValue());
 	}
 
 	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
 	AttributionKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "AttributionKey", false);
 
-	network = MakeShareable(new Network());
 	exitpoll = MakeShareable(new ExitPoll());
 	customEventRecorder = MakeShareable(new CustomEventRecorder());
 	sensors = MakeShareable(new Sensors());
+	localCache = MakeShareable(new LocalCache(FPaths::GeneratedConfigDir()));
+	network = MakeShareable(new Network(localCache));
 
 	customEventRecorder->StartSession();
 	sensors->StartSession();
@@ -366,7 +367,7 @@ void FAnalyticsProviderCognitiveVR::RecordEvent(const FString& EventName, const 
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
+			properties->SetStringField(Attr.GetName(), Attr.GetValue());
 		}
 
 		customEventRecorder->Send(EventName, properties);
@@ -459,7 +460,7 @@ void FAnalyticsProviderCognitiveVR::RecordError(const FString& Error, const TArr
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
+			properties->SetStringField(Attr.GetName(), Attr.GetValue());
 		}
 
 		customEventRecorder->Send(FString("c3d.recorderror"), properties);
@@ -482,7 +483,7 @@ void FAnalyticsProviderCognitiveVR::RecordProgress(const FString& ProgressType, 
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
+			properties->SetStringField(Attr.GetName(), Attr.GetValue());
 		}
 
 		customEventRecorder->Send(FString("c3d.recordprogress"), properties);
@@ -503,7 +504,7 @@ void FAnalyticsProviderCognitiveVR::RecordItemPurchase(const FString& ItemId, in
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
+			properties->SetStringField(Attr.GetName(), Attr.GetValue());
 		}
 
 		customEventRecorder->Send(FString("c3d.recorditempurchase"), properties);
@@ -524,7 +525,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyPurchase(const FString& GameCu
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
+			properties->SetStringField(Attr.GetName(), Attr.GetValue());
 		}
 
 		customEventRecorder->Send(FString("RecordCurrencyPurchase"), properties);
@@ -545,7 +546,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 
 		for (auto Attr : Attributes)
 		{
-			properties->SetStringField(Attr.AttrName, Attr.AttrValueString);
+			properties->SetStringField(Attr.GetName(), Attr.GetValue());
 		}
 
 		customEventRecorder->Send(FString("c3d.recordcurrencygiven"), properties);
@@ -574,7 +575,7 @@ TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetCurrentSceneData()
 	}
 
 	//check the sublevel scene names
-	const TArray<ULevelStreaming*> streamedLevels = GetWorld()->StreamingLevels;
+ const TArray<ULevelStreaming*> streamedLevels = GetWorld()->GetStreamingLevels();
 	for (ULevelStreaming* streamingLevel : streamedLevels)
 	{
 		FString sublevelName = FPackageName::GetShortFName(streamingLevel->GetWorldAssetPackageFName()).ToString();

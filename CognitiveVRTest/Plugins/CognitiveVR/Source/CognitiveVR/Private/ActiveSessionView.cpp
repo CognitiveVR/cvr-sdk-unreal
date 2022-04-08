@@ -24,6 +24,7 @@ AActiveSessionView::AActiveSessionView()
 		WidgetComponent->SetDrawSize(FVector2D(SpectatorWidth, SpectatorHeight));
 		WidgetComponent->SetBlendMode(EWidgetBlendMode::Transparent);
 		WidgetComponent->TranslucencySortPriority = 100;
+		WidgetComponent->SetTickWhenOffscreen(true);
 		WidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		WidgetComponent->bRenderInMainPass = false; //hides the widget from the HMD
 	}
@@ -60,7 +61,7 @@ void AActiveSessionView::DelaySetupWidget()
 	if (WidgetComponent != NULL)
 	{
 		auto widgetInstance = WidgetComponent->GetUserWidgetObject();
-		UHeadMountedDisplayFunctionLibrary::SetSpectatorScreenModeTexturePlusEyeLayout(FVector2D(0, 0), FVector2D(1, 1), FVector2D(0, 0), FVector2D(1, 1));
+		UHeadMountedDisplayFunctionLibrary::SetSpectatorScreenModeTexturePlusEyeLayout(FVector2D(0, 0), FVector2D(1, 1), FVector2D(0, 0), FVector2D(1, 1),true,false,true);
 		UTextureRenderTarget2D* widgetTextureRT2D = WidgetComponent->GetRenderTarget();
 		UHeadMountedDisplayFunctionLibrary::SetSpectatorScreenTexture((UTexture*)widgetTextureRT2D);
 		UHeadMountedDisplayFunctionLibrary::SetSpectatorScreenMode(ESpectatorScreenMode::TexturePlusEye);

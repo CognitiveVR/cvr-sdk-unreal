@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "4.19",
+	"EngineAssociation": "4.26",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -10,10 +10,10 @@
 			"LoadingPhase": "Default"
 		}
 	],
-	"Plugins": [
-		{
-			"Name": "AnalyticsBlueprintLibrary",
-			"Enabled": true
-		}
-	]
+    "Plugins": [
+        {
+            "Name": "AnalyticsBlueprintLibrary",
+            "Enabled": true
+        }
+    ]
 }

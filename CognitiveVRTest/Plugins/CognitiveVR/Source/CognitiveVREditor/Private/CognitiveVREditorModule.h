@@ -15,3 +15,4 @@
 #include "Containers/Ticker.h"
 #include "DynamicComponentDetails.h"
 #include "DynamicIdPoolAssetDetails.h"
+#include "DynamicIdPoolAssetActions.h"

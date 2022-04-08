@@ -4,12 +4,13 @@
 
 #include "network.h"
 
-Network::Network()
+Network::Network(TSharedPtr<LocalCache> cache)
 {
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	Http = &FHttpModule::Get();
 	hasErrorResponse = false;
+	localCache = cache;
 }
 
 void Network::NetworkCall(FString suburl, FString contents)
@@ -49,8 +50,8 @@ void Network::NetworkCall(FString suburl, FString contents)
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	//IMPROVEMENT response codes should be visible without needing dev log enabled. should be shown with regular c3d logs (enabled by default)
-	if (CognitiveLog::DevLogEnabled())
-		HttpRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnCallReceivedAsync);
+	//if (CognitiveLog::DevLogEnabled())
+	HttpRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnCallReceivedAsync);
 	HttpRequest->ProcessRequest();
 
 	if (CognitiveLog::DevLogEnabled())
@@ -62,16 +63,36 @@ void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Resp
 	if (Response.IsValid())
 	{
 		int32 responseCode = Response.Get()->GetResponseCode();
-		CognitiveLog::DevLog("Network::OnCallReceivedAsync " + FString::FromInt(responseCode));
+		//CognitiveLog::DevLog("Network::OnCallReceivedAsync " + FString::FromInt(responseCode));
 
-		if (responseCode != 200)
+		if (responseCode == 200)
 		{
+			if (isUploadingFromCache) { return; }
+			if (!localCache->HasContent()) { return; }
+			//TODO start uploading data
+		}
+		else
+		{
+			if (responseCode == 401) { return; }
+			if (responseCode == 404) { return; }
+			if (responseCode == -1) { return; }
+
+			//hold a pointer to a request specifically for uploading cached data
+			//if request exist, cancel it
+
+			isUploadingFromCache = false;
+			if (localCache->CanWrite())
+			{
+				//TODO bytes to string
+				//localCache->WriteData(Request->GetURL(), BytesToString(Request->GetContent(), Request->GetContent().Num()));
+			}
+
 			hasErrorResponse = true;
 		}
 	}
 	else
 	{
-		CognitiveLog::DevLog("Network::OnCallReceivedAsync Response Invalid!");
+		//CognitiveLog::DevLog("Network::OnCallReceivedAsync Response Invalid!");
 	}
 }
 

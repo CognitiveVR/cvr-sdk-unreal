@@ -5,11 +5,13 @@
 
 #include "CognitiveVR/Public/CognitiveVR.h"
 #include "CognitiveVR/Private/ExitPoll.h"
+#include "CognitiveVR/Private/LocalCache.h"
 #include "Http.h"
 
 class FAnalyticsProviderCognitiveVR;
 class HttpInterface;
 class FCognitiveExitPollResponse;
+class LocalCache;
 struct FExitPollQuestionSet;
 struct FExitPollResponse;
 
@@ -21,9 +23,11 @@ struct FExitPollResponse;
 		FString Gateway;
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 		bool hasErrorResponse;
+		TSharedPtr<LocalCache> localCache;
+		bool isUploadingFromCache = false;
 
 	public:
-		Network();
+		Network(TSharedPtr<LocalCache> cache);
 
 		void NetworkCall(FString suburl, FString contents);
 		void OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);

@@ -1258,7 +1258,7 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 	}
 	else //select all
 	{
-		UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();
+		UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();
 		GEditor->Exec(World, TEXT("actor select all"));
 		for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
 		{
@@ -1371,7 +1371,7 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 
 FReply SSceneSetupWidget::SelectAll()
 {
-	UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();
+	UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();
 	GEditor->Exec(World, TEXT("actor select all"));
 	return FReply::Handled();
 }
@@ -1385,11 +1385,7 @@ ECheckBoxState SSceneSetupWidget::GetOnlyExportSelectedCheckbox() const
 void SSceneSetupWidget::GetScreenshotBrush()
 {
 	FString ScreenshotPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/screenshot/screenshot.png";
-
-	//FString ScreenshotPath = FPaths::Combine(FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory(), "screenshot", "screenshot.png");
 	FName BrushName = FName(*ScreenshotPath);
-
-	FCognitiveVREditorModule& c3dmod = FModuleManager::GetModuleChecked< FCognitiveVREditorModule >("CognitiveVREditor");
 
 	TArray<uint8> RawFileData;
 	if (!FFileHelper::LoadFileToArray(RawFileData, *ScreenshotPath)) return;

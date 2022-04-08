@@ -8,7 +8,8 @@
 #include "Json.h"
 
 #include "UnrealEd.h"
-#include "FileHelpers.h"
+#include "Misc/FileHelper.h"
+#include "Misc/ScopedSlowTask.h"
 #include "BusyCursor.h"
 #include "Classes/Components/SceneComponent.h"
 #include "EngineUtils.h"
@@ -23,7 +24,7 @@
 #include "MaterialUtilities.h"
 #include "MaterialBakingStructures.h"
 #include "IMaterialBakingModule.h"
-#include "MaterialBakingModule.h"
+//#include "MaterialBakingModule.h"
 #include "MaterialOptions.h"
 #include "DynamicObject.h"
 #include "GenericPlatformFile.h"

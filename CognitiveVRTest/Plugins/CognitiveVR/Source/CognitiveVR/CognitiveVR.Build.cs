@@ -6,6 +6,7 @@ namespace UnrealBuildTool.Rules
 		public CognitiveVR(ReadOnlyTargetRules Target): base(Target)
 		{
 			PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+			bLegacyPublicIncludePaths = true;
 			
             PublicIncludePathModuleNames.AddRange(
                 new string[] {
