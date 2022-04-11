@@ -87,10 +87,12 @@ void UFixationRecorder::BeginSession()
 #if defined HPGLIA_API
 		GEngine->GetAllLocalPlayerControllers(controllers);
 #endif
+#if defined OPENXR_EYETRACKING
 		if (eyeTrackingModule.IsEyeTrackerConnected())
 		{
 			eyeTracker = eyeTrackingModule.CreateEyeTracker();
 		}
+#endif
 	}
 	else
 	{

@@ -46,6 +46,12 @@ void UPlayerTracker::BeginPlay()
 		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors1000MS, 1, true);
 		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors100MS, 0.1, true);
 #endif
+#if defined OPENXR_EYETRACKING
+		if (eyeTrackingModule.IsEyeTrackerConnected())
+		{
+			eyeTracker = eyeTrackingModule.CreateEyeTracker();
+		}
+#endif
 	}
 	else
 	{
