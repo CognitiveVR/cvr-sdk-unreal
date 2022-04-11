@@ -49,7 +49,8 @@ namespace UnrealBuildTool.Rules
 					"Json",
                     "JsonUtilities",
 					"UMG",
-					"EngineSettings"
+					"EngineSettings",
+					"EyeTracker" //openxr
                 }
 				);
 
@@ -57,9 +58,16 @@ namespace UnrealBuildTool.Rules
 	PublicDependencyModuleNames.Add("DeveloperSettings");
 #endif
 
+		//TODO CONSIDER requiring developers to modify this file to enable specific SDK support?
+		//pro - could support engine-level plugins and skip stringly checked paths
+		//con - developers need to fiddle with UBT
+
+		//uncomment this to enable VarjoOpenXR eye tracking support
+		//Definitions.Add("OPENXR_EYETRACKING");
+
 		var pluginsDirectory = System.IO.Path.Combine(Target.ProjectFile.Directory.ToString(),"Plugins");
 		
-		//Varjo
+		//Varjo (up to and including version 3.0.0)
 		if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory,"Varjo")))
 		{
 			System.Console.WriteLine("CognitiveVR.Build.cs found Varjo Plugin folder");

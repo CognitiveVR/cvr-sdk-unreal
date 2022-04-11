@@ -87,6 +87,10 @@ void UFixationRecorder::BeginSession()
 #if defined HPGLIA_API
 		GEngine->GetAllLocalPlayerControllers(controllers);
 #endif
+		if (eyeTrackingModule.IsEyeTrackerConnected())
+		{
+			eyeTracker = eyeTrackingModule.CreateEyeTracker();
+		}
 	}
 	else
 	{
@@ -447,6 +451,37 @@ bool UFixationRecorder::AreEyesClosed()
 	return true;
 }
 
+int64 UFixationRecorder::GetEyeCaptureTimestamp()
+{
+	int64 ts = (int64)(Util::GetTimestamp() * 1000);
+	return ts;
+}
+#elif defined OPENXR_EYETRACKING
+bool UFixationRecorder::AreEyesClosed()
+{
+	if (!eyeTracker.IsValid()) { return true; }
+	EEyeTrackerStatus status = eyeTracker->GetEyeTrackerStatus();
+	if (status != EEyeTrackerStatus::Tracking) { return true; }
+
+	if (eyeTracker->IsStereoGazeDataAvailable())
+	{
+		FEyeTrackerStereoGazeData stereoGazeData;
+		eyeTracker->GetEyeTrackerStereoGazeData(stereoGazeData);
+	}
+	else
+	{
+		FEyeTrackerGazeData gazeData;
+		eyeTracker->GetEyeTrackerGazeData(gazeData);
+	}
+
+	FEyeTrackerGazeData gazeData;
+	eyeTracker->GetEyeTrackerGazeData(gazeData);
+	if (gazeData.ConfidenceValue < 0.5f)
+	{
+		return true;
+	}
+	return false;
+}
 int64 UFixationRecorder::GetEyeCaptureTimestamp()
 {
 	int64 ts = (int64)(Util::GetTimestamp() * 1000);

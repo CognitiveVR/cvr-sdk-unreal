@@ -39,6 +39,10 @@
 #if defined HPGLIA_API
 #include "HPGliaClient.h"
 #endif
+#if defined OPENXR_EYETRACKING
+#include "Runtime/EyeTracker/Public/IEyeTracker.h"
+#include "Runtime/EyeTracker/Public/IEyeTrackerModule.h"
+#endif
 #include "DrawDebugHelpers.h"
 #include "PlayerTracker.generated.h"
 
@@ -75,6 +79,10 @@ private:
 	FTimerHandle AutoSendHandle;
 	void TickSensors1000MS();
 	void TickSensors100MS();
+#endif
+#if defined OPENXR_EYETRACKING
+	IEyeTrackerModule& eyeTrackingModule = IEyeTrackerModule::Get();
+	TSharedPtr< class IEyeTracker, ESPMode::ThreadSafe > eyeTracker;
 #endif
 
 public:

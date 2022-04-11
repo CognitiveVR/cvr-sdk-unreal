@@ -133,6 +133,22 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	}
 	End = TempStart + LastDirection * 100000.0f;
 	return End;
+#elif defined OPENXR_EYETRACKING
+	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
+	FVector End = start + captureRotation.Vector() * 10000.0f;
+
+	if (!eyeTracker.IsValid()) { return End; }
+	EEyeTrackerStatus status = eyeTracker->GetEyeTrackerStatus();
+	if (status != EEyeTrackerStatus::Tracking) { return End; }
+
+	FEyeTrackerGazeData gazeData;
+	eyeTracker->GetEyeTrackerGazeData(gazeData);
+
+	//unclear if the OpenXR gaze direction is world or local
+	//LastDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(gazeData.GazeDirection);
+	LastDirection = gazeData.GazeDirection;
+	FVector End = start + LastDirection;
+	return End;
 #else
 	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
 	FVector End = start + captureRotation.Vector() * 10000.0f;

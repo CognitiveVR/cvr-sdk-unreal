@@ -36,6 +36,10 @@
 #if defined HPGLIA_API
 #include "HPGliaClient.h"
 #endif
+#if defined OPENXR_EYETRACKING
+#include "Runtime/EyeTracker/Public/IEyeTracker.h"
+#include "Runtime/EyeTracker/Public/IEyeTrackerModule.h"
+#endif
 #include "Runtime/Engine/Classes/Engine/UserInterfaceSettings.h" //for getting ui dpi for active session view
 #include "DrawDebugHelpers.h"
 #include "FixationRecorder.generated.h"
@@ -93,6 +97,11 @@ private:
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
 	TArray<APlayerController*, FDefaultAllocator> controllers;
+#elif defined OPENXR_EYETRACKING
+	IEyeTrackerModule& eyeTrackingModule = IEyeTrackerModule::Get();
+	TSharedPtr< class IEyeTracker, ESPMode::ThreadSafe > eyeTracker;
+	bool AreEyesClosed();
+	int64 GetEyeCaptureTimestamp();
 #else
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
