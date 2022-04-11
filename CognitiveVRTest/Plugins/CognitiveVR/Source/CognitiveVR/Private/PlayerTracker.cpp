@@ -153,7 +153,7 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	//unclear if the OpenXR gaze direction is world or local
 	//LastDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(gazeData.GazeDirection);
 	LastDirection = gazeData.GazeDirection;
-	FVector End = start + LastDirection;
+	End = start + LastDirection;
 	return End;
 #else
 	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();

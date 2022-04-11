@@ -79,6 +79,11 @@ private:
 #if defined TOBII_EYETRACKING_ACTIVE
 	bool AreEyesClosed(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker);
 	int64 GetEyeCaptureTimestamp(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker);
+#elif defined OPENXR_EYETRACKING
+	IEyeTrackerModule& eyeTrackingModule = IEyeTrackerModule::Get();
+	TSharedPtr< class IEyeTracker, ESPMode::ThreadSafe > eyeTracker;
+	bool AreEyesClosed();
+	int64 GetEyeCaptureTimestamp();
 #elif defined SRANIPAL_1_2_API
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
@@ -97,11 +102,6 @@ private:
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
 	TArray<APlayerController*, FDefaultAllocator> controllers;
-#elif defined OPENXR_EYETRACKING
-	IEyeTrackerModule& eyeTrackingModule = IEyeTrackerModule::Get();
-	TSharedPtr< class IEyeTracker, ESPMode::ThreadSafe > eyeTracker;
-	bool AreEyesClosed();
-	int64 GetEyeCaptureTimestamp();
 #else
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
