@@ -150,8 +150,9 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	FEyeTrackerGazeData gazeData;
 	eyeTracker->GetEyeTrackerGazeData(gazeData);
 
-	//unclear if the OpenXR gaze direction is world or local
-	//LastDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(gazeData.GazeDirection);
+#if defined OPENXR_LOCALSPACE
+	LastDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(gazeData.GazeDirection);
+#endif
 	LastDirection = gazeData.GazeDirection;
 	End = start + LastDirection;
 	return End;

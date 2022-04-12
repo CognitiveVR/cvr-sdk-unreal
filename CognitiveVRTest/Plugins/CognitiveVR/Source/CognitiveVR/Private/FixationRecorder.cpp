@@ -79,14 +79,7 @@ void UFixationRecorder::BeginSession()
 		{
 			EyeCaptures.Add(FEyeCapture());
 		}
-#if defined SRANIPAL_1_2_API
 		GEngine->GetAllLocalPlayerControllers(controllers);
-#elif defined SRANIPAL_1_3_API
-		GEngine->GetAllLocalPlayerControllers(controllers);
-#endif
-#if defined HPGLIA_API
-		GEngine->GetAllLocalPlayerControllers(controllers);
-#endif
 #if defined OPENXR_EYETRACKING
 		if (eyeTrackingModule.IsEyeTrackerConnected())
 		{
@@ -718,7 +711,36 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	{
 		EyeCaptures[index].Discard = true;
 	}
+#elif defined OPENXR_EYETRACKING
+	EyeCaptures[index].EyesClosed = AreEyesClosed();
+	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
 
+	FVector Start = FVector::ZeroVector;
+	FVector WorldDirection = FVector::ZeroVector;
+	FVector End = FVector::ZeroVector;
+
+	if (!eyeTracker.IsValid()) { EyeCaptures[index].Discard = true; }
+	else
+	{
+		EEyeTrackerStatus status = eyeTracker->GetEyeTrackerStatus();
+		if (status != EEyeTrackerStatus::Tracking) { EyeCaptures[index].Discard = true; }
+		else
+		{
+			FEyeTrackerGazeData gazeData;
+			eyeTracker->GetEyeTrackerGazeData(gazeData);
+			if (gazeData.ConfidenceValue < 0.4f) { EyeCaptures[index].Discard = true; }
+			else
+			{
+				WorldDirection = gazeData.GazeDirection;
+				//unclear if the OpenXR gaze direction is world or local
+				#if defined OPENXR_LOCALSPACE
+				WorldDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(gazeData.GazeDirection);
+				#endif
+				Start = gazeData.GazeOrigin;
+				End = Start + WorldDirection * MaxFixationDistance;
+			}
+		}
+	}
 #else
 	EyeCaptures[index].EyesClosed = AreEyesClosed();
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
@@ -726,8 +748,6 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	EyeCaptures[index].Discard = false;
 	CognitiveLog::Error("FixationRecorder::TickComponent - no eye tracking SDKs found!");
 
-	TArray<APlayerController*, FDefaultAllocator> controllers;
-	GEngine->GetAllLocalPlayerControllers(controllers);
 	FVector Start = controllers[0]->PlayerCameraManager->GetCameraLocation();
 	FVector End = Start + controllers[0]->PlayerCameraManager->GetActorForwardVector() * MaxFixationDistance;
 #endif

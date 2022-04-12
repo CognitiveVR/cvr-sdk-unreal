@@ -76,6 +76,8 @@ private:
 	bool CheckEndFixation(const FFixation& testFixation);
 	void RecordFixationEnd(const FFixation& fixation);
 
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+
 #if defined TOBII_EYETRACKING_ACTIVE
 	bool AreEyesClosed(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker);
 	int64 GetEyeCaptureTimestamp(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker);
@@ -87,11 +89,9 @@ private:
 #elif defined SRANIPAL_1_2_API
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
-	TArray<APlayerController*, FDefaultAllocator> controllers;
 #elif defined SRANIPAL_1_3_API
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
-	TArray<APlayerController*, FDefaultAllocator> controllers;
 #elif defined VARJOEYETRACKER_API
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
@@ -101,7 +101,6 @@ private:
 #elif defined HPGLIA_API
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
-	TArray<APlayerController*, FDefaultAllocator> controllers;
 #else
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();

@@ -58,12 +58,9 @@ namespace UnrealBuildTool.Rules
 	PublicDependencyModuleNames.Add("DeveloperSettings");
 #endif
 
-		//TODO CONSIDER requiring developers to modify this file to enable specific SDK support?
-		//pro - could support engine-level plugins and skip stringly checked paths
-		//con - developers need to fiddle with UBT
-
-		//uncomment this to enable VarjoOpenXR eye tracking support
+		//uncomment this to enable OpenXR eye tracking support (varjo openxr support, etc)
 		//Definitions.Add("OPENXR_EYETRACKING");
+		//Definitions.Add("OPENXR_LOCALSPACE"); //uncomment this if OPENXR implemented in local space instead of worldspace
 
 		var pluginsDirectory = System.IO.Path.Combine(Target.ProjectFile.Directory.ToString(),"Plugins");
 		
@@ -87,8 +84,6 @@ namespace UnrealBuildTool.Rules
 
 			PublicDependencyModuleNames.Add("TobiiCore");
 		}
-		
-		
 		
 		//Vive Pro Eye (SRanipal)
 		if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory,"SRanipal"))) 
