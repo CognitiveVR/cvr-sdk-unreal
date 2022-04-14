@@ -45,40 +45,18 @@ for dir in subdirectories:
     ops.object.delete()
     print("=============================================deleted stuff")
     
-    mtlpath = ''
-    for tempPath, dirs, files in os.walk(workingdir):
-        for name in files:
-            print (tempPath + "  " + name)
-            if name.endswith('.mtl'):
-                mtlpath = os.path.join(tempPath, name)
-    #foreach file in working directory
-    #move image to root? do i need to?
-    #add space at beginningl of mtl
-    if (mtlpath != ''):
-        mo = open(mtlpath, encoding='utf-8-sig')
-        readString = mo.read()
-        outstrings=[]
-        outstrings.append('\n\n')
-        #==========================replace mtl with png references to textures
-        for line in readString.splitlines():
-            outstrings.append(line+'\n')
-        mo.close()
-        
-        #remove the mtl
-        os.remove(mtlpath)
-        
-        #write to new file (pngs)
-        nmo = open(mtlpath, 'w+', encoding='utf-8-sig')
-        nmo.writelines(outstrings)
-        nmo.close()
+    #remove unused meshes
+    for mesh in bpy.data.meshes:
+        if mesh.users == 0:
+            bpy.data.meshes.remove(mesh)
     
+    #remove unused materials. importing the next model might have conflicting material name, causing issue with assigning/exporting texture
+    for material in bpy.data.materials:
+        if material.users == 0:
+            bpy.data.materials.remove(material)
     
-    #import fbx or obj. whatever is there
-    objname = workingdir + "/" + dir + ".obj"
+    #import fbx
     fbxname = workingdir + "/" + dir + ".fbx"
-    if os.path.exists(objname):
-        ops.import_scene.obj(filepath=objname, use_edges=True, use_smooth_groups=True, use_split_objects=True, use_split_groups=True, use_groups_as_vgroups=False, use_image_search=True, split_mode='ON', axis_forward='-Z', axis_up='Y')
-        print("=============================================import obj")
     if os.path.exists(fbxname):
         ops.import_scene.fbx(filepath=fbxname)
         print("=============================================import fbx")
@@ -94,8 +72,8 @@ for dir in subdirectories:
         mo2 = open(jsonMatName)
         readString2 = mo2.read()
         for line2 in readString2.splitlines():
-            split = line2.split('|')
             print (line2)
+            split = line2.split('|')
             if len(split) < 3:
                 print("too short!")
                 continue
@@ -107,6 +85,7 @@ for dir in subdirectories:
                     tex = bpy.data.images.load(split[2])
                     imgnode.image = tex
                     #TODO normal map, opacity/mask map
+                    print(mat.name + " append image to shader tree")
                 elif mat.node_tree is None:
                     print(mat.name + "  has null node tree")
         mo2.close()
