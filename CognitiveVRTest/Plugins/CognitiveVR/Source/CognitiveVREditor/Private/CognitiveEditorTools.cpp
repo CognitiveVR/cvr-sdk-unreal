@@ -251,17 +251,6 @@ FReply FCognitiveEditorTools::ExportAllDynamics()
 		return FReply::Handled();
 	}
 
-	for (TObjectIterator<UDynamicObject> It; It; ++It)
-	{
-		UDynamicObject* TempObject = *It;
-		if (TempObject != NULL)
-		{
-			if (meshNames.Contains(TempObject->MeshName)) { continue; }
-			exportObjects.Add(TempObject);
-			meshNames.Add(TempObject->MeshName);
-		}
-	}
-
 	ExportDynamicObjectArray(exportObjects);
 	return FReply::Handled();
 }
@@ -2659,8 +2648,8 @@ TArray<FString> FCognitiveEditorTools::WizardExportMaterials(FString directory, 
 
 			line.Append(mats[j]->GetName() + "|");
 
-			//SCOPED_SUSPEND_RENDERING_THREAD(true);
-			//PRAGMA_DISABLE_DEPRECATION_WARNINGS
+			SCOPED_SUSPEND_RENDERING_THREAD(true);
+			PRAGMA_DISABLE_DEPRECATION_WARNINGS
 			TArray<FColor> OutputBMP;
 			FIntPoint OutSize;
 			FString BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
@@ -2680,7 +2669,7 @@ TArray<FString> FCognitiveEditorTools::WizardExportMaterials(FString directory, 
 			line = line.ReplaceCharWithEscapedChar();
 
 			MaterialLine.Add(line);
-			//PRAGMA_ENABLE_DEPRECATION_WARNINGS
+			PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
 
 				//MaterialLine.Add("");

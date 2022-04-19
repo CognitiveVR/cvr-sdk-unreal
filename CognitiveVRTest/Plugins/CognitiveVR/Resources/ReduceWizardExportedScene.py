@@ -177,4 +177,9 @@ if os.path.isfile(exportPath+"/"+fileName+".fbx"):
 	os.remove(exportPath+"/"+fileName+".fbx")
 	print("removed fbx")
 
+if os.path.isfile(exportPath+"/materiallist.txt"):
+	os.remove(exportPath+"/materiallist.txt")
+	print("removed fbx material list")
+
+
 print("ALL DONE. exit")

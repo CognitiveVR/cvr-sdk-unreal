@@ -1359,7 +1359,7 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 	}
 	
 	FString sceneDirectory = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory()+"/";
-	FCognitiveEditorTools::GetInstance()->WizardExportMaterials(sceneDirectory, sceneMeshes, FCognitiveEditorTools::GetInstance()->GetCurrentSceneName());
+	FCognitiveEditorTools::GetInstance()->WizardExportStaticMaterials(sceneDirectory, sceneMeshes, FCognitiveEditorTools::GetInstance()->GetCurrentSceneName());
 
 
 	//Convert scene to GLTF
