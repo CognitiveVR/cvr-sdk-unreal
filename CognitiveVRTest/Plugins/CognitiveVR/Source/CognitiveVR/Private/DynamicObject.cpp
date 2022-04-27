@@ -719,10 +719,8 @@ void UDynamicObject::SendData()
 
 
 	FString OutputString;
-	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+	auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-	//cog->SendJson("dynamics", OutputString);
-	//FString sceneid = cog->GetCurrentSceneId();
 	cogProvider->network->NetworkCall("dynamics", OutputString);
 
 	snapshots.Empty();

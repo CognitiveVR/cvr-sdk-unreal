@@ -153,7 +153,7 @@ void Sensors::SendData()
 	wholeObj->SetStringField("data", "SENSORDATAHERE");
 
 	FString OutputString;
-	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+	auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 
 	FString allData;

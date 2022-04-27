@@ -27,7 +27,7 @@ class LocalCache
 		bool HasContent();
 		
 		//gets content without removing it
-		bool PeekContent(FString* url, FString* content);
+		bool PeekContent(FString& url, FString& content);
 		//remove content
 		void PopContent();
 
@@ -38,7 +38,7 @@ class LocalCache
 		bool CanWrite();
 	private:
 		IFileManager& FileManager = FFileManagerGeneric::Get();
-		FArchive* WriterArchive;
+		FArchive* WriterArchive = nullptr;
 		TArray<FString> readContent;
 
 		void MergeDataFiles();

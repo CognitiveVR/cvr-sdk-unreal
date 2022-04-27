@@ -23,14 +23,17 @@ struct FExitPollResponse;
 		FString Gateway;
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 		bool hasErrorResponse;
-		TSharedPtr<LocalCache> localCache;
+		//TSharedPtr<LocalCache> localCache;
 		bool isUploadingFromCache = false;
+		FHttpRequestPtr localCacheRequest;
+		FString TArrayToString(const TArray<uint8> data, int32 count);
 
 	public:
-		Network(TSharedPtr<LocalCache> cache);
+		Network();
 
 		void NetworkCall(FString suburl, FString contents);
 		void OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+		void OnLocalCacheCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 		bool HasErrorResponse();
 
 		void OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);

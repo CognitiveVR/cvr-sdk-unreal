@@ -4,13 +4,12 @@
 
 #include "network.h"
 
-Network::Network(TSharedPtr<LocalCache> cache)
+Network::Network()
 {
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	Http = &FHttpModule::Get();
 	hasErrorResponse = false;
-	localCache = cache;
 }
 
 void Network::NetworkCall(FString suburl, FString contents)
@@ -49,8 +48,7 @@ void Network::NetworkCall(FString suburl, FString contents)
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->SetHeader("Authorization", AuthValue);
-	//IMPROVEMENT response codes should be visible without needing dev log enabled. should be shown with regular c3d logs (enabled by default)
-	//if (CognitiveLog::DevLogEnabled())
+	
 	HttpRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnCallReceivedAsync);
 	HttpRequest->ProcessRequest();
 
@@ -58,8 +56,23 @@ void Network::NetworkCall(FString suburl, FString contents)
 		CognitiveLog::DevLog(url + "\n" + contents);
 }
 
+inline FString Network::TArrayToString(const TArray<uint8> In, int32 Count)
+{
+	FString Result;
+	Result.Empty(Count);
+
+	for (int32 i = 0; i < Count; i++)
+	{
+		int16 Value = In[i];
+		Result += TCHAR(Value);
+	}
+	return Result;
+}
+
 void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
+	if (!cog.IsValid()) { return; }
+	if (!cog->HasStartedSession()) { GLog->Log("Network::OnCallReceivedAsync response while session not started"); return; }
 	if (Response.IsValid())
 	{
 		int32 responseCode = Response.Get()->GetResponseCode();
@@ -67,9 +80,28 @@ void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Resp
 
 		if (responseCode == 200)
 		{
-			if (isUploadingFromCache) { return; }
-			if (!localCache->HasContent()) { return; }
-			//TODO start uploading data
+			if (!cog->localCache.IsValid()) { return; }
+			if (!cog->localCache->HasContent()) { return; }
+			if (localCacheRequest == NULL)
+			{
+				//start uploading data
+				FString contents;
+				FString url;
+				if (cog->localCache->PeekContent(url, contents))
+				{
+					GLog->Log("Network::OnCallReceivedAsync ---------------- START LOCAL CACHE UPLOAD " + url);
+					localCacheRequest = Http->CreateRequest();
+					localCacheRequest->SetContentAsString(*contents);
+					localCacheRequest->SetURL(*url);
+					localCacheRequest->SetVerb("POST");
+					FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
+					localCacheRequest->SetHeader("Content-Type", TEXT("application/json"));
+					localCacheRequest->SetHeader("Authorization", AuthValue);
+
+					localCacheRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnLocalCacheCallReceivedAsync);
+					localCacheRequest->ProcessRequest();
+				}
+			}
 		}
 		else
 		{
@@ -77,14 +109,18 @@ void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Resp
 			if (responseCode == 404) { return; }
 			if (responseCode == -1) { return; }
 
+			if (Request == nullptr) { return; }
+
 			//hold a pointer to a request specifically for uploading cached data
 			//if request exist, cancel it
-
-			isUploadingFromCache = false;
-			if (localCache->CanWrite())
+			
+			if (cog->localCache == nullptr) { return; } //not set to null on session end
+			//isUploadingFromCache = false;
+			if (cog->localCache->CanWrite())
 			{
-				//TODO bytes to string
-				//localCache->WriteData(Request->GetURL(), BytesToString(Request->GetContent(), Request->GetContent().Num()));
+				TArray<uint8> contentArray = Request->GetContent();
+				FString contentString = TArrayToString(contentArray, Request->GetContent().Num());
+				cog->localCache->WriteData(Request->GetURL(), contentString);
 			}
 
 			hasErrorResponse = true;
@@ -93,6 +129,63 @@ void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Resp
 	else
 	{
 		//CognitiveLog::DevLog("Network::OnCallReceivedAsync Response Invalid!");
+	}
+}
+
+void Network::OnLocalCacheCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (!cog.IsValid()) { return; }
+	if (!cog->HasStartedSession()) { GLog->Log("Network::OnLocalCacheCallReceivedAsync get response while session not started"); return; }
+	if (Response.IsValid())
+	{
+		int32 responseCode = Response.Get()->GetResponseCode();
+
+		GLog->Log("Network::OnLocalCacheCallReceivedAsync RESPONSECODE: " + FString::FromInt(responseCode));
+
+		if (responseCode == 200)
+		{
+			if (!cog->localCache.IsValid()) { return; }
+			cog->localCache->PopContent();
+			localCacheRequest = NULL;
+			if (!cog->localCache->HasContent()) { return; }
+			FString contents;
+			FString url;
+			if (cog->localCache->PeekContent(url, contents))
+			{
+				//GLog->Log("Network::OnLocalCacheCallReceivedAsync ----cache send to " + url);
+				localCacheRequest = Http->CreateRequest();
+				localCacheRequest->SetContentAsString(*contents);
+				localCacheRequest->SetURL(*url);
+				localCacheRequest->SetVerb("POST");
+				FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
+				localCacheRequest->SetHeader("Content-Type", TEXT("application/json"));
+				localCacheRequest->SetHeader("Authorization", AuthValue);
+
+				localCacheRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnLocalCacheCallReceivedAsync);
+				localCacheRequest->ProcessRequest();
+			}
+			else
+			{
+				localCacheRequest = NULL;
+			}
+		}
+		else
+		{
+			//TEST should pop content from the read file anyway and write it to the write file
+			if (cog->localCache->CanWrite())
+			{
+				TArray<uint8> contentArray = Request->GetContent();
+				FString contentString = TArrayToString(contentArray, Request->GetContent().Num());
+				cog->localCache->WriteData(Request->GetURL(), contentString);
+				cog->localCache->PopContent();
+			}
+			localCacheRequest = NULL;
+		}
+	}
+	else
+	{
+		GLog->Log("Network::OnLocalCacheCallReceivedAsync Response Invalid");
+		localCacheRequest = NULL;
 	}
 }
 

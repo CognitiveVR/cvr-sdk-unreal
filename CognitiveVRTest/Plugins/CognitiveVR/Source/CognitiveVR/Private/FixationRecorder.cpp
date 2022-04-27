@@ -1151,7 +1151,7 @@ void UFixationRecorder::SendData()
 
 
 	FString OutputString;
-	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+	auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 
 	if (OutputString.Len() > 0)

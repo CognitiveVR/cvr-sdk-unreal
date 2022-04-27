@@ -125,7 +125,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	customEventRecorder = MakeShareable(new CustomEventRecorder());
 	sensors = MakeShareable(new Sensors());
 	localCache = MakeShareable(new LocalCache(FPaths::GeneratedConfigDir()));
-	network = MakeShareable(new Network(localCache));
+	network = MakeShareable(new Network());
 
 	customEventRecorder->StartSession();
 	sensors->StartSession();
@@ -244,6 +244,11 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 	CognitiveLog::Info("CognitiveVR EndSession");
 	currentWorld = NULL;
+	if (localCache != nullptr)
+	{
+		localCache->Close();
+		localCache = nullptr;
+	}
 }
 
 void FAnalyticsProviderCognitiveVR::FlushEvents()

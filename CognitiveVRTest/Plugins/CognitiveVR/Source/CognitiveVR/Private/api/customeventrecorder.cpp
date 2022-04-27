@@ -244,7 +244,7 @@ void CustomEventRecorder::SendData()
 	wholeObj->SetArrayField("data", dataArray);
 
 	FString OutputString;
-	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+	auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 	cog->network->NetworkCall("events", OutputString);
 
