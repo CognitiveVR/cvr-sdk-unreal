@@ -65,7 +65,7 @@ void Sensors::StartSession()
 	if (cog->EnsureGetWorld()->GetGameInstance() == NULL) {
 		return;
 	}
-	cog->EnsureGetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData), AutoTimer, true);
+	cog->EnsureGetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData, false), AutoTimer, true);
 }
 
 void Sensors::RecordSensor(FString Name, float value)
@@ -123,7 +123,7 @@ void Sensors::TrySendData()
 	SendData();
 }
 
-void Sensors::SendData()
+void Sensors::SendData(bool copyDataToCache)
 {
 	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
@@ -171,7 +171,7 @@ void Sensors::SendData()
 	const TCHAR* charcomplete = *complete;
 	OutputString = OutputString.Replace(TEXT("\"SENSORDATAHERE\""), charcomplete);
 
-	cog->network->NetworkCall("sensors", OutputString);
+	cog->network->NetworkCall("sensors", OutputString, copyDataToCache);
 
 	SensorDataPoints.Empty();
 	sensorDataCount = 0;

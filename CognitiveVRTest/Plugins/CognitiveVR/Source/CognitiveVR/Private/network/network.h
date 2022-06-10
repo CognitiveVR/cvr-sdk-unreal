@@ -31,7 +31,7 @@ struct FExitPollResponse;
 	public:
 		Network();
 
-		void NetworkCall(FString suburl, FString contents);
+		void NetworkCall(FString suburl, FString contents, bool copyDataToCache);
 		void OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 		void OnLocalCacheCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 		bool HasErrorResponse();

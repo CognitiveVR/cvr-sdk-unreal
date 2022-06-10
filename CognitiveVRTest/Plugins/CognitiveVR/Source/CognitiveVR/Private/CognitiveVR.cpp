@@ -204,7 +204,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 		return;
 	}
 
-	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::EndSession");
+	//CognitiveLog::Info("FAnalyticsProviderCognitiveVR::EndSession");
 
 	//bPendingInitRequest = false;
 
@@ -213,8 +213,22 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 	customEventRecorder->Send(FString("c3d.sessionEnd"), properties);
 
+	customEventRecorder->SendData(true);
+	sensors->SendData(true);
+	UDynamicObject::SendData(true);
+	auto fixationRecorder = UFixationRecorder::GetFixationRecorder();
+	if (fixationRecorder != nullptr)
+	{
+		fixationRecorder->SendData(true);
+	}
+	auto playerTracker = UPlayerTracker::GetPlayerTracker();
+	if (playerTracker != nullptr)
+	{
+		playerTracker->SendData(true);
+	}
+
 	FlushEvents();
-	CognitiveLog::Info("Freeing CognitiveVR memory.");
+	//CognitiveLog::Info("Freeing CognitiveVR memory.");
 
 	//delete network;
 	network.Reset();

@@ -64,7 +64,7 @@ class UCognitiveVRBlueprints;
 		void Send(UCustomEvent* customEvent);
 
 		//send all outstanding custom events to Cognitive dashboard
-		void SendData();
+		void SendData(bool copyDataToCache = false);
 
 		float GetLastSendTime() { return LastSendTime; }
 		int32 GetPartNumber() { return jsonEventPart; }

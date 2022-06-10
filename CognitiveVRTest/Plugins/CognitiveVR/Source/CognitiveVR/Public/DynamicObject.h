@@ -167,7 +167,7 @@ public:
 
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
-	static void SendData();
+	static void SendData(bool copyDataToCache = false);
 	static TArray<TSharedPtr<FJsonValueObject>> DynamicSnapshotsToString();
 	static TSharedPtr<FJsonObject> DynamicObjectManifestToString();
 

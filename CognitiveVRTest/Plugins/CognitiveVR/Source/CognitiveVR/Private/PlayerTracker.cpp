@@ -378,7 +378,7 @@ void UPlayerTracker::BuildSnapshot(FVector position, FRotator rotation, double t
 	}
 }
 
-void UPlayerTracker::SendData()
+void UPlayerTracker::SendData(bool copyDataToCache)
 {
 	if (!cog.IsValid() || !cog->HasStartedSession()) { return; }
 	if (cog->GetCurrentSceneVersionNumber().Len() == 0) { return; }
@@ -452,7 +452,7 @@ void UPlayerTracker::SendData()
 
 	if (OutputString.Len() > 0)
 	{
-		cog->network->NetworkCall("gaze", OutputString);
+		cog->network->NetworkCall("gaze", OutputString, copyDataToCache);
 	}
 	snapshots.Empty();
 

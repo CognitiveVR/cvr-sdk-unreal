@@ -12,7 +12,7 @@ Network::Network()
 	hasErrorResponse = false;
 }
 
-void Network::NetworkCall(FString suburl, FString contents)
+void Network::NetworkCall(FString suburl, FString contents, bool copyDataToCache)
 {
 	if (!cog.IsValid())
 	{
@@ -54,6 +54,18 @@ void Network::NetworkCall(FString suburl, FString contents)
 
 	if (CognitiveLog::DevLogEnabled())
 		CognitiveLog::DevLog(url + "\n" + contents);
+
+	if (!copyDataToCache) { return; }
+	if (!cog.IsValid()) { return; }
+	if (!cog->HasStartedSession()) { return; }
+
+	if (cog->localCache->CanWrite())
+	{
+		TArray<uint8> contentArray = HttpRequest->GetContent();
+		FString contentString = TArrayToString(contentArray, HttpRequest->GetContent().Num());
+		cog->localCache->WriteData(HttpRequest->GetURL(), contentString);
+	}
+	
 }
 
 inline FString Network::TArrayToString(const TArray<uint8> In, int32 Count)

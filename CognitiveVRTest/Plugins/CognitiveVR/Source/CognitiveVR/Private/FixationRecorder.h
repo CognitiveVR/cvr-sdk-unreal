@@ -167,7 +167,7 @@ public:
 
 	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 
-	void SendData();
+	void SendData(bool copyDataToCache = false);
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	void EndSession();

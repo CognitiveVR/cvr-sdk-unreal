@@ -74,7 +74,7 @@ void UFixationRecorder::BeginSession()
 {
 	if (cog.IsValid())
 	{
-		cog->EnsureGetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UFixationRecorder::SendData, AutoTimer, true);
+		//cog->EnsureGetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UFixationRecorder::SendData, AutoTimer, true);
 		for (int32 i = 0; i < CachedEyeCaptureCount; i++)
 		{
 			EyeCaptures.Add(FEyeCapture());
@@ -1122,7 +1122,7 @@ void UFixationRecorder::RecordFixationEnd(const FFixation& fixation)
 	}
 }
 
-void UFixationRecorder::SendData()
+void UFixationRecorder::SendData(bool copyDataToCache)
 {
 	if (!cog.IsValid() || !cog->HasStartedSession()) { return; }
 	if (cog->GetCurrentSceneVersionNumber().Len() == 0) { return; }
@@ -1156,7 +1156,7 @@ void UFixationRecorder::SendData()
 
 	if (OutputString.Len() > 0)
 	{
-		cog->network->NetworkCall("fixations", OutputString);
+		cog->network->NetworkCall("fixations", OutputString, copyDataToCache);
 	}
 	Fixations.Empty();
 	LastSendTime = UCognitiveVRBlueprints::GetSessionDuration();

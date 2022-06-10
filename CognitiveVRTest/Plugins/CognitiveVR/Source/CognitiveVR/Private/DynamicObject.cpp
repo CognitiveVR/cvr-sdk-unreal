@@ -207,7 +207,7 @@ void UDynamicObject::Initialize()
 	if (!callbackInitialized)
 	{
 		callbackInitialized = true;
-		GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData), AutoTimer, true);
+		GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData, false), AutoTimer, true);
 	}
 
 	//even if session has not started, still collect data
@@ -662,7 +662,7 @@ void UDynamicObject::TrySendData()
 }
 
 //static
-void UDynamicObject::SendData()
+void UDynamicObject::SendData(bool copyDataToCache)
 {
 	if (!cogProvider.IsValid() || !cogProvider->HasStartedSession())
 	{
@@ -721,7 +721,7 @@ void UDynamicObject::SendData()
 	FString OutputString;
 	auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-	cogProvider->network->NetworkCall("dynamics", OutputString);
+	cogProvider->network->NetworkCall("dynamics", OutputString, copyDataToCache);
 
 	snapshots.Empty();
 }

@@ -1798,7 +1798,7 @@ bool FCognitiveEditorTools::CurrentSceneHasSceneId() const
 bool FCognitiveEditorTools::HasSetExportDirectory() const
 {
 	if (!HasDeveloperKey()) { return false; }
-	return !FCognitiveEditorTools::GetBaseExportDirectory().Len() == 0;
+	return FCognitiveEditorTools::GetBaseExportDirectory().Len() != 0;
 }
 
 

@@ -90,7 +90,7 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void SendData();
+	void SendData(bool copyDataToCache = false);
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 

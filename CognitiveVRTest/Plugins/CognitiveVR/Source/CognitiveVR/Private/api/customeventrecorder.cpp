@@ -65,7 +65,7 @@ void CustomEventRecorder::StartSession()
 	if (cog->EnsureGetWorld()->GetGameInstance() == NULL) {
 		return;
 	}
-	cog->EnsureGetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEventRecorder::SendData), AutoTimer, true);
+	cog->EnsureGetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEventRecorder::SendData, false), AutoTimer, true);
 }
 
 void CustomEventRecorder::Send(FString category)
@@ -158,16 +158,6 @@ void CustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJ
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
 	double ts = Util::GetTimestamp();
-
-	TArray<APlayerController*, FDefaultAllocator> controllers;
-	GEngine->GetAllLocalPlayerControllers(controllers);
-
-	if (controllers.Num() == 0 || controllers[0]->GetPawn() == NULL)
-	{
-		CognitiveLog::Warning("Transaction. local player controller does not have pawn. skip transaction on scene explorer");
-		return;
-	}
-
 	TArray< TSharedPtr<FJsonValue> > pos;
 	pos.Add(MakeShareable(new FJsonValueNumber(-Position.X)));
 	pos.Add(MakeShareable(new FJsonValueNumber(Position.Z)));
@@ -207,7 +197,7 @@ void CustomEventRecorder::TrySendData()
 	}
 }
 
-void CustomEventRecorder::SendData()
+void CustomEventRecorder::SendData(bool copyDataToCache)
 {
 	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
@@ -246,7 +236,7 @@ void CustomEventRecorder::SendData()
 	FString OutputString;
 	auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-	cog->network->NetworkCall("events", OutputString);
+	cog->network->NetworkCall("events", OutputString, copyDataToCache);
 
 	events.Empty();
 }
