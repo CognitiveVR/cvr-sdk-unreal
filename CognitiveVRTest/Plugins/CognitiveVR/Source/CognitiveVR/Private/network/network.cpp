@@ -93,7 +93,6 @@ void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Resp
 		if (responseCode == 200)
 		{
 			if (!cog->localCache.IsValid()) { return; }
-			if (!cog->localCache->HasContent()) { return; }
 			if (localCacheRequest == NULL)
 			{
 				//start uploading data
@@ -159,7 +158,6 @@ void Network::OnLocalCacheCallReceivedAsync(FHttpRequestPtr Request, FHttpRespon
 			if (!cog->localCache.IsValid()) { return; }
 			cog->localCache->PopContent();
 			localCacheRequest = NULL;
-			if (!cog->localCache->HasContent()) { return; }
 			FString contents;
 			FString url;
 			if (cog->localCache->PeekContent(url, contents))

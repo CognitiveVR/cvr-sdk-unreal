@@ -66,24 +66,41 @@ void LocalCache::WriteData(FString destination, FString body)
 	WriterArchive->Serialize(TCHAR_TO_ANSI(*body), body.Len());
 	WriterArchive->Serialize("\n", 1);
 
+	numberWriteBatches++;
 	GLog->Log("LOCALCACHE Write data");
 }
 
 bool LocalCache::PeekContent(FString& url, FString& content)
 {
-	if (NumberOfBatches() < 1)
+	if (NumberOfBatches() < 1) //nothing in 'read' file
 	{
-		MergeDataFiles();
-		if (NumberOfBatches() < 1)
+		if (numberWriteBatches > 0) //there is content in the write file
+		{
+			MergeDataFiles();
+			if (NumberOfBatches() > 1)
+			{
+				url = readContent[readContent.Num() - 2];
+				content = readContent[readContent.Num() - 1];
+
+				return true;
+			}
+			else //merge resulted in no new data in read file
+			{
+				CognitiveLog::Error("Merging Local Cache files failed?");
+				return false;
+			}
+		}
+		else //nothing in write file either
 		{
 			return false;
 		}
 	}
-
-	url = readContent[readContent.Num() - 2];
-	content = readContent[readContent.Num() - 1];
-
-	return true;
+	else
+	{
+		url = readContent[readContent.Num() - 2];
+		content = readContent[readContent.Num() - 1];
+		return true;
+	}
 }
 
 void LocalCache::PopContent()
@@ -98,6 +115,16 @@ void LocalCache::MergeDataFiles()
 	if (readContent.Num() > 0)
 	{
 		GLog->Log("LocalCache::MergeDataFiles ERROR readContent not empty");
+	}
+
+	//close writer stream
+	if (WriterArchive != nullptr)
+	{
+		GLog->Log("LocalCache::MergeDataFiles WriterArchive flush and close");
+		WriterArchive->Flush();
+		WriterArchive->Close();
+		delete WriterArchive;
+		WriterArchive = nullptr;
 	}
 
 	//read data from 'write' file to memory
@@ -137,4 +164,5 @@ void LocalCache::MergeDataFiles()
 	//clear write file
 	WriterArchive = FileManager.CreateFileWriter(*writeFilePath);
 	GLog->Log("MERGE " + FString::FromInt(readContent.Num()));
+	numberWriteBatches = 0;
 }
