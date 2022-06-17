@@ -60,6 +60,7 @@ void UPlayerTracker::BeginPlay()
 
 void UPlayerTracker::HandleApplicationWillEnterBackground()
 {
+	cog->FlushAndCacheEvents();
 	cog->localCache->SerializeToFile();
 }
 

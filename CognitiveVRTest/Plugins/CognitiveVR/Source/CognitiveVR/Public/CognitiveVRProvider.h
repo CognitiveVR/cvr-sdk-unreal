@@ -72,6 +72,7 @@
 		virtual bool StartSession(const TArray<FAnalyticsEventAttribute>& Attributes) override;
 		virtual void EndSession() override;
 		virtual void FlushEvents() override;
+		void FlushAndCacheEvents();
 
 		virtual void SetUserID(const FString& InUserID) override;
 		//returns unique participant id

@@ -204,43 +204,16 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 		return;
 	}
 
-	//CognitiveLog::Info("FAnalyticsProviderCognitiveVR::EndSession");
-
-	//bPendingInitRequest = false;
-
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
 	properties->SetNumberField("sessionlength", Util::GetTimestamp() - GetSessionTimestamp());
-
 	customEventRecorder->Send(FString("c3d.sessionEnd"), properties);
 
-	customEventRecorder->SendData(true);
-	sensors->SendData(true);
-	UDynamicObject::SendData(true);
-	auto fixationRecorder = UFixationRecorder::GetFixationRecorder();
-	if (fixationRecorder != nullptr)
-	{
-		fixationRecorder->SendData(true);
-	}
-	auto playerTracker = UPlayerTracker::GetPlayerTracker();
-	if (playerTracker != nullptr)
-	{
-		playerTracker->SendData(true);
-	}
+	FlushAndCacheEvents();
 
-	FlushEvents();
-	//CognitiveLog::Info("Freeing CognitiveVR memory.");
-
-	//delete network;
 	network.Reset();
-
-	//delete transaction;
 	customEventRecorder.Reset();
-
-	//delete sensors;
 	sensors.Reset();
-
 	UCognitiveVRBlueprints::cog.Reset();
-
 	UCustomEvent::cog.Reset();
 
 	for (TObjectIterator<UFixationRecorder> Itr; Itr; ++Itr)
@@ -265,13 +238,28 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	}
 }
 
+void FAnalyticsProviderCognitiveVR::FlushAndCacheEvents()
+{
+	if (!bHasSessionStarted) { CognitiveLog::Warning("CognitiveVR Flush Events, but Session has not started!"); return; }
+
+	this->customEventRecorder->SendData(true);
+	sensors->SendData(true);
+	UDynamicObject::SendData(true);
+
+	auto pt = UPlayerTracker::GetPlayerTracker();
+	if (pt != NULL)
+		pt->SendData(true);
+
+	auto fix = UFixationRecorder::GetFixationRecorder();
+	if (fix != NULL)
+		fix->SendData(true);
+}
+
 void FAnalyticsProviderCognitiveVR::FlushEvents()
 {
 	if (!bHasSessionStarted) { CognitiveLog::Warning("CognitiveVR Flush Events, but Session has not started!"); return; }
-	//send to dashboard
-	this->customEventRecorder->SendData();
 
-	//send to scene explorer
+	this->customEventRecorder->SendData();
 	sensors->SendData();
 	UDynamicObject::SendData();
 
