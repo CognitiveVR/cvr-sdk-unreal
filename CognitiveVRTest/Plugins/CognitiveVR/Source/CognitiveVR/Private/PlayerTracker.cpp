@@ -51,6 +51,16 @@ void UPlayerTracker::BeginPlay()
 	{
 		GLog->Log("UPlayerTracker::BeginPlay cannot find CognitiveVRProvider!");
 	}
+
+	if (!PauseHandle.IsValid())
+	{
+		PauseHandle = FCoreDelegates::ApplicationWillEnterBackgroundDelegate.AddUObject(this, &UPlayerTracker::HandleApplicationWillEnterBackground);
+	}
+}
+
+void UPlayerTracker::HandleApplicationWillEnterBackground()
+{
+	cog->localCache->SerializeToFile();
 }
 
 FVector UPlayerTracker::GetWorldGazeEnd(FVector start)

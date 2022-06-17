@@ -106,4 +106,7 @@ public:
 	float GetLastSendTime() { return LastSendTime; }
 	int32 GetPartNumber() { return jsonGazePart; }
 	int32 GetDataPoints() { return snapshots.Num(); }
+
+	FDelegateHandle PauseHandle;
+	void HandleApplicationWillEnterBackground();
 };

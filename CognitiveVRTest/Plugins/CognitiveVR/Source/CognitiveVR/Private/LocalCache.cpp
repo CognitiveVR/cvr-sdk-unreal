@@ -33,22 +33,14 @@ bool LocalCache::HasContent()
 void LocalCache::Close()
 {
 	GLog->Log("LocalCache::Close");
+
+	SerializeToFile();
 	if (WriterArchive != nullptr)
 	{
 		GLog->Log("LocalCache::Close WriterArchive");
-		WriterArchive->Flush();
 		WriterArchive->Close();
 		delete WriterArchive;
 		WriterArchive = nullptr;
-	}
-	bool result = FFileHelper::SaveStringArrayToFile(readContent, *readFilePath, FFileHelper::EEncodingOptions::ForceUTF8);
-	if (result)
-	{
-		
-	}
-	else
-	{
-		GLog->Log("LocalCache::Close readContent to file");
 	}
 }
 
@@ -62,9 +54,9 @@ void LocalCache::WriteData(FString destination, FString body)
 {
 	if (WriterArchive == nullptr) { return; }
 	WriterArchive->Serialize(TCHAR_TO_ANSI(*destination), destination.Len());
-	WriterArchive->Serialize("\n", 1);
+	WriterArchive->Serialize(TCHAR_TO_ANSI(*FString("\n")), 1);
 	WriterArchive->Serialize(TCHAR_TO_ANSI(*body), body.Len());
-	WriterArchive->Serialize("\n", 1);
+	WriterArchive->Serialize(TCHAR_TO_ANSI(*FString("\n")), 1);
 
 	numberWriteBatches++;
 	GLog->Log("LOCALCACHE Write data");
@@ -165,4 +157,22 @@ void LocalCache::MergeDataFiles()
 	WriterArchive = FileManager.CreateFileWriter(*writeFilePath);
 	GLog->Log("MERGE " + FString::FromInt(readContent.Num()));
 	numberWriteBatches = 0;
+}
+
+void LocalCache::SerializeToFile()
+{
+	if (WriterArchive != nullptr)
+	{
+		GLog->Log("LocalCache::SerializeToFile WriterArchive");
+		WriterArchive->Flush();
+	}
+	bool result = FFileHelper::SaveStringArrayToFile(readContent, *readFilePath, FFileHelper::EEncodingOptions::ForceUTF8);
+	if (result)
+	{
+		GLog->Log("LocalCache::SerializeToFile ReadArchive");
+	}
+	else
+	{
+		GLog->Log("LocalCache::SerializeToFile ERROR ReadArchive failed");
+	}
 }

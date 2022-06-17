@@ -36,6 +36,8 @@ class LocalCache
 		
 		//checks for max file size
 		bool CanWrite();
+		//
+		void SerializeToFile();
 	private:
 		IFileManager& FileManager = FFileManagerGeneric::Get();
 		FArchive* WriterArchive = nullptr;
