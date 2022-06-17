@@ -50,7 +50,8 @@ namespace UnrealBuildTool.Rules
 					"Json",
                     "JsonUtilities",
 					"UMG",
-					"EngineSettings"
+					"EngineSettings",
+					"EyeTracker" //openxr
                 }
 				);
 
@@ -58,9 +59,13 @@ namespace UnrealBuildTool.Rules
 	PublicDependencyModuleNames.Add("DeveloperSettings");
 #endif
 
+		//uncomment this to enable OpenXR eye tracking support (varjo openxr support, etc)
+		//Definitions.Add("OPENXR_EYETRACKING");
+		//Definitions.Add("OPENXR_LOCALSPACE"); //uncomment this if OPENXR implemented in local space instead of worldspace
+
 		var pluginsDirectory = System.IO.Path.Combine(Target.ProjectFile.Directory.ToString(),"Plugins");
 		
-		//Varjo
+		//Varjo (up to and including version 3.0.0)
 		if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory,"Varjo")))
 		{
 			System.Console.WriteLine("CognitiveVR.Build.cs found Varjo Plugin folder");
@@ -80,8 +85,6 @@ namespace UnrealBuildTool.Rules
 
 			PublicDependencyModuleNames.Add("TobiiCore");
 		}
-		
-		
 		
 		//Vive Pro Eye (SRanipal)
 		if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory,"SRanipal"))) 
