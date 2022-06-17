@@ -40,7 +40,11 @@ TWeakPtr<FAnalyticsProviderCognitiveVR> FAnalyticsCognitiveVR::GetCognitiveVRPro
 
 FAnalyticsProviderCognitiveVR::FAnalyticsProviderCognitiveVR()
 {
+#if PLATFORM_ANDROID
+	DeviceId = FPlatformMisc::GetDeviceId();
+#else
 	DeviceId = FPlatformMisc::GetHashedMacAddressString();
+#endif
 }
 
 FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()

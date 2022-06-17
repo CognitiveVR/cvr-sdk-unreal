@@ -104,60 +104,6 @@ print (version)
 
 #do all the update stuff
 
-#12 add audio define to microphone header
-insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Public\MicrophoneCaptureActor.h","#pragma once","#define NTDDI_THRESHOLD 0")
-
-#13 replace set widget mode to include useAlpha
-replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\ActiveSessionView.cpp","		UHeadMountedDisplayFunctionLibrary::SetSpectatorScreenModeTexturePlusEyeLayout(FVector2D(0, 0), FVector2D(1, 1), FVector2D(0, 0), FVector2D(1, 1));","		UHeadMountedDisplayFunctionLibrary::SetSpectatorScreenModeTexturePlusEyeLayout(FVector2D(0, 0), FVector2D(1, 1), FVector2D(0, 0), FVector2D(1, 1),true,false,true);")
-
-#remove implementation of initialize interface
-replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\IActiveSessionViewRequired.cpp","void IActiveSessionViewRequired::Initialize_Implementation(AActiveSessionView* asv){}","//void IActiveSessionViewRequired::Initialize_Implementation(AActiveSessionView* asv){}")
-
-#14 replace editor selection code in dynamiccomponentdetails
-replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\SSceneSetupWidget.cpp","	UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();","	UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();")
-replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\SSceneSetupWidget.cpp","		UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();","		UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();")
-
-#12 add legacy header to build.cs
-insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","			PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;","			bLegacyPublicIncludePaths = true;")
-insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\CognitiveVREditor.Build.cs","		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;","		bLegacyPublicIncludePaths = true;")
-
-#get level viewport
-replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.cpp","		for (int32 j = 0; j < GEditor->LevelViewportClients.Num(); j++)","		for (int32 j = 0; j < GEditor->GetLevelViewportClients().Num(); j++)")
-replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.cpp","			if (GEditor->LevelViewportClients[j]->ViewportType == LVT_Perspective)","			if (GEditor->GetLevelViewportClients()[j]->ViewportType == LVT_Perspective)")
-replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.cpp","				perspectiveView = GEditor->LevelViewportClients[j];","				perspectiveView = GEditor->GetLevelViewportClients()[j];")
-
-#15 replace editor selection code in dynamic object manager widget
-replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\DynamicObjectManagerWidget.cpp","	UWorld* World = GEditor->LevelViewportClients[0]->GetWorld();","	UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();")
-
-#16 remove materialbakingmodule.h from editor tools
-replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.h","#include \"MaterialBakingModule.h\"","//#include \"MaterialBakingModule.h\"")
-
-#17 add dynamic action
-insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.h","#include \"DynamicIdPoolAssetDetails.h\"","#include \"DynamicIdPoolAssetActions.h\"")
-
-insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.cpp","		FCognitiveEditorTools::Initialize();","		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>(\"AssetTools\").Get();")
-insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.cpp","		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>(\"AssetTools\").Get();","		TSharedPtr< FDynamicIdPoolAssetActions> action = MakeShared<FDynamicIdPoolAssetActions>();")
-insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveVREditorModule.cpp","		TSharedPtr< FDynamicIdPoolAssetActions> action = MakeShared<FDynamicIdPoolAssetActions>();","		AssetTools.RegisterAssetTypeActions(action.ToSharedRef());")
-
-#set ASV to tick when offscreen
-insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\ActiveSessionView.cpp","		WidgetComponent->TranslucencySortPriority = 100;","		WidgetComponent->SetTickWhenOffscreen(true);")
-
-#add scoped task header
-insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.h","#include \"FileHelpers.h\"","#include \"Misc/ScopedSlowTask.h\"")
-
-#replace file helper.h from editor tools
-replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVREditor\Private\CognitiveEditorTools.h","#include \"FileHelpers.h\"","#include \"Misc/FileHelper.h\"")
-
-#streaming levels access
-replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVR.cpp","	const TArray<ULevelStreaming*> streamedLevels = GetWorld()->StreamingLevels;"," const TArray<ULevelStreaming*> streamedLevels = GetWorld()->GetStreamingLevels();")
-
-#device id removed
-replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\Private\CognitiveVR.cpp","	DeviceId = FPlatformMisc::GetDeviceId();","	DeviceId = FPlatformMisc::GetHashedMacAddressString();")
-
-#replace hide windows platform types
-replaceline(cwd+"/Plugins/CognitiveVR/Source/CognitiveVR/Private/rtaudio/CRtAudio.cpp","#include \"HideWindowsPlatformTypes.h\"","#include \"Core/Public/HoloLens/HideWindowsPlatformTypes.h\"")
-
-
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue4"+enginesubversion
 shutil.make_archive(output_filename, 'zip', cwd+"/Plugins/")
