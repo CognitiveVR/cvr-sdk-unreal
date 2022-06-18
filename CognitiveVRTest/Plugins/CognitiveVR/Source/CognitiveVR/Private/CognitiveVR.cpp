@@ -104,7 +104,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	if (currentWorld == NULL)
 	{
-		GLog->Log("FAnalyticsProviderCognitiveVR::StartSession World not set. Are you missing a Cognitive3D::Player Tracker component on your camera?");
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::StartSession World not set. Are you missing a Cognitive3D::Player Tracker component on your camera?");
 		pt->OnSessionBegin.Broadcast(false);
 		return false;
 	}
@@ -627,7 +627,6 @@ TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetCurrentSceneData()
 		}
 	}
 
-	//GLog->Log("COGNITIVE could not find scene " + sceneName);
 	return NULL;
 }
 
@@ -682,7 +681,7 @@ void FAnalyticsProviderCognitiveVR::CacheSceneData()
 
 		if (Array.Num() != 4)
 		{
-			GLog->Log("failed to parse " + scenstrings[i]);
+			CognitiveLog::Error("FAnalyticsProviderCognitiveVR::CacheSceneData failed to parse " + scenstrings[i]);
 			continue;
 		}
 

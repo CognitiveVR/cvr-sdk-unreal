@@ -128,7 +128,7 @@ void UDynamicObject::OnSessionBegin()
 
 	if (sessionWorld == NULL)
 	{
-		GLog->Log("UDynamicObject::OnSessionBegin SessionWorld is null! Need to make playertracker initialize first");
+		CognitiveLog::Error("UDynamicObject::OnSessionBegin SessionWorld is null! Need to make playertracker initialize first");
 		return;
 	}
 
@@ -267,7 +267,7 @@ void UDynamicObject::Initialize()
 
 	if (!cogProvider.IsValid())
 	{
-		GLog->Log("UDynamicObject::BeginPlay cannot find CognitiveVRProvider!");
+		CognitiveLog::Warning("UDynamicObject::BeginPlay cannot find CognitiveVRProvider!");
 		return;
 	}
 
@@ -672,7 +672,6 @@ void UDynamicObject::SendData(bool copyDataToCache)
 	TSharedPtr<FSceneData> currentscenedata = cogProvider->GetCurrentSceneData();
 	if (!currentscenedata.IsValid())
 	{
-		GLog->Log("DynamicObject::SendData current scene data is invalid");
 		return;
 	}
 

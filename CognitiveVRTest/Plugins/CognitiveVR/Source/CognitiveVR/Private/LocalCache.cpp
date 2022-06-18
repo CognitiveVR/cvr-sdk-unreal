@@ -32,12 +32,9 @@ bool LocalCache::HasContent()
 //called on session end. close filestream, serialize any outstanding data batches to disk
 void LocalCache::Close()
 {
-	GLog->Log("LocalCache::Close");
-
 	SerializeToFile();
 	if (WriterArchive != nullptr)
 	{
-		GLog->Log("LocalCache::Close WriterArchive");
 		WriterArchive->Close();
 		delete WriterArchive;
 		WriterArchive = nullptr;
@@ -59,7 +56,6 @@ void LocalCache::WriteData(FString destination, FString body)
 	WriterArchive->Serialize(TCHAR_TO_ANSI(*FString("\n")), 1);
 
 	numberWriteBatches++;
-	GLog->Log("LOCALCACHE Write data");
 }
 
 bool LocalCache::PeekContent(FString& url, FString& content)
@@ -106,13 +102,13 @@ void LocalCache::MergeDataFiles()
 {
 	if (readContent.Num() > 0)
 	{
-		GLog->Log("LocalCache::MergeDataFiles ERROR readContent not empty");
+		CognitiveLog::Error("LocalCache::MergeDataFiles ERROR readContent not empty");
+		return;
 	}
 
 	//close writer stream
 	if (WriterArchive != nullptr)
 	{
-		GLog->Log("LocalCache::MergeDataFiles WriterArchive flush and close");
 		WriterArchive->Flush();
 		WriterArchive->Close();
 		delete WriterArchive;
@@ -127,7 +123,7 @@ void LocalCache::MergeDataFiles()
 	}
 	else
 	{
-		GLog->Log("LocalCache::MergeDataFiles write file error");
+		CognitiveLog::Error("LocalCache::MergeDataFiles write file error");
 	}
 
 	//read data from 'read' file
@@ -137,7 +133,7 @@ void LocalCache::MergeDataFiles()
 	}
 	else
 	{
-		GLog->Log("LocalCache::MergeDataFiles read file error");
+		CognitiveLog::Error("LocalCache::MergeDataFiles read file error");
 	}
 
 	//combine
@@ -150,12 +146,11 @@ void LocalCache::MergeDataFiles()
 	}
 	else
 	{
-		GLog->Log("LocalCache::MergeDataFiles Error serialize readContents to file");
+		CognitiveLog::Error("LocalCache::MergeDataFiles Error serialize readContents to file");
 	}
 
 	//clear write file
 	WriterArchive = FileManager.CreateFileWriter(*writeFilePath);
-	GLog->Log("MERGE " + FString::FromInt(readContent.Num()));
 	numberWriteBatches = 0;
 }
 
@@ -163,16 +158,15 @@ void LocalCache::SerializeToFile()
 {
 	if (WriterArchive != nullptr)
 	{
-		GLog->Log("LocalCache::SerializeToFile WriterArchive");
 		WriterArchive->Flush();
 	}
 	bool result = FFileHelper::SaveStringArrayToFile(readContent, *readFilePath, FFileHelper::EEncodingOptions::ForceUTF8);
 	if (result)
 	{
-		GLog->Log("LocalCache::SerializeToFile ReadArchive");
+
 	}
 	else
 	{
-		GLog->Log("LocalCache::SerializeToFile ERROR ReadArchive failed");
+		CognitiveLog::Error("LocalCache::SerializeToFile ERROR ReadArchive failed");
 	}
 }

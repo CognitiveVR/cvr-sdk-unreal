@@ -89,7 +89,7 @@ void UFixationRecorder::BeginSession()
 	}
 	else
 	{
-		GLog->Log("UFixationRecorder::BeginSession cannot find CognitiveVRProvider!");
+		CognitiveLog::Error("UFixationRecorder::BeginSession cannot find CognitiveVRProvider!");
 	}
 }
 
@@ -918,7 +918,7 @@ bool UFixationRecorder::TryBeginLocalFixation()
 	if (mostUsedId.IsEmpty())
 	{
 		//most used dynamic object id is none! something is wrong somehow
-		GLog->Log("fixation recorder:: most used dynamic object is null! should be impossible");
+		CognitiveLog::Error("UFixationRecorder::TryBeginLocalFixation most used dynamic object is null! should be impossible");
 		return false;
 	}
 

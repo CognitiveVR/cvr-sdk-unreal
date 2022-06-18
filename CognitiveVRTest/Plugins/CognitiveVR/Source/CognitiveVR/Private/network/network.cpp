@@ -88,8 +88,6 @@ void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Resp
 	if (Response.IsValid())
 	{
 		int32 responseCode = Response.Get()->GetResponseCode();
-		//CognitiveLog::DevLog("Network::OnCallReceivedAsync " + FString::FromInt(responseCode));
-
 		if (responseCode == 200)
 		{
 			if (!cog->localCache.IsValid()) { return; }
@@ -100,7 +98,6 @@ void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Resp
 				FString url;
 				if (cog->localCache->PeekContent(url, contents))
 				{
-					GLog->Log("Network::OnCallReceivedAsync ---------------- START LOCAL CACHE UPLOAD " + url);
 					localCacheRequest = Http->CreateRequest();
 					localCacheRequest->SetContentAsString(*contents);
 					localCacheRequest->SetURL(*url);
@@ -146,13 +143,10 @@ void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Resp
 void Network::OnLocalCacheCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (!cog.IsValid()) { return; }
-	if (!cog->HasStartedSession()) { GLog->Log("Network::OnLocalCacheCallReceivedAsync get response while session not started"); return; }
+	if (!cog->HasStartedSession()) { CognitiveLog::Info("Network::OnLocalCacheCallReceivedAsync get response while session not started"); return; }
 	if (Response.IsValid())
 	{
 		int32 responseCode = Response.Get()->GetResponseCode();
-
-		GLog->Log("Network::OnLocalCacheCallReceivedAsync RESPONSECODE: " + FString::FromInt(responseCode));
-
 		if (responseCode == 200)
 		{
 			if (!cog->localCache.IsValid()) { return; }
@@ -162,7 +156,6 @@ void Network::OnLocalCacheCallReceivedAsync(FHttpRequestPtr Request, FHttpRespon
 			FString url;
 			if (cog->localCache->PeekContent(url, contents))
 			{
-				//GLog->Log("Network::OnLocalCacheCallReceivedAsync ----cache send to " + url);
 				localCacheRequest = Http->CreateRequest();
 				localCacheRequest->SetContentAsString(*contents);
 				localCacheRequest->SetURL(*url);
@@ -194,7 +187,7 @@ void Network::OnLocalCacheCallReceivedAsync(FHttpRequestPtr Request, FHttpRespon
 	}
 	else
 	{
-		GLog->Log("Network::OnLocalCacheCallReceivedAsync Response Invalid");
+		CognitiveLog::Error("Network::OnLocalCacheCallReceivedAsync Response Invalid");
 		localCacheRequest = NULL;
 	}
 }

@@ -32,8 +32,7 @@ void UPlayerTracker::BeginPlay()
 	instance = this;
 
 	UWorld* world = GetWorld();
-	if (world == NULL) { GLog->Log("get world from player tracker is null!"); return; }
-
+	if (world == NULL) { CognitiveLog::Error("UPlayerTracker::BeginPlay world is null!"); return; }
 	if (world->WorldType != EWorldType::PIE && world->WorldType != EWorldType::Game) { return; } //editor world. skip
 
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
@@ -55,7 +54,7 @@ void UPlayerTracker::BeginPlay()
 	}
 	else
 	{
-		GLog->Log("UPlayerTracker::BeginPlay cannot find CognitiveVRProvider!");
+		CognitiveLog::Error("UPlayerTracker::BeginPlay cannot find CognitiveVRProvider!");
 	}
 
 	if (!PauseHandle.IsValid())
@@ -540,7 +539,6 @@ void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (!cog.IsValid())
 	{
-		GLog->Log("Cognitive3D UPlayerTracker::EndPlay exiting editor");
 		return;
 	}
 
