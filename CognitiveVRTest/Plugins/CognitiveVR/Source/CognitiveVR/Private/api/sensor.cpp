@@ -68,19 +68,36 @@ void Sensors::StartSession()
 	cog->EnsureGetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData, false), AutoTimer, true);
 }
 
+void Sensors::InitializeSensor(FString sensorName, float hzRate, float initialValue)
+{
+	if (sensorData.Contains(sensorName))
+	{
+		return;
+	}
+	sensorData.Add(sensorName, new SensorData(sensorName, hzRate));
+	SensorDataPoints.Add(sensorName, TArray<FString>());
+	LastSensorValues.Add(sensorName, initialValue);
+}
+
 void Sensors::RecordSensor(FString Name, float value)
 {
-	LastSensorValues.Add(Name, value);
-
+	float time = UGameplayStatics::GetRealTimeSeconds(cog->GetWorld());
 	if (SensorDataPoints.Contains(Name))
 	{
-		SensorDataPoints[Name].Append(",[" + FString::SanitizeFloat(Util::GetTimestamp()) + "," + FString::SanitizeFloat(value) + "]");
+		//check time since world startup
+		if (time < sensorData[Name]->NextRecordTime)
+		{
+			return; //recording above rate!
+		}
+		SensorDataPoints[Name].Add("[" + FString::SanitizeFloat(Util::GetTimestamp()) + "," + FString::SanitizeFloat(value) + "]");
 	}
 	else
 	{
-		SensorDataPoints.Emplace(Name, "[" + FString::SanitizeFloat(Util::GetTimestamp()) + "," + FString::SanitizeFloat(value) + "]");
+		InitializeSensor(Name, 10, value);
 	}
 
+	sensorData[Name]->NextRecordTime = (time + sensorData[Name]->UpdateInterval);
+	LastSensorValues.Add(Name, (float)value);
 	sensorDataCount ++;
 	if (sensorDataCount >= SensorThreshold)
 	{
@@ -90,17 +107,23 @@ void Sensors::RecordSensor(FString Name, float value)
 
 void Sensors::RecordSensor(FString Name, double value)
 {
-	LastSensorValues.Add(Name, (float)value);
-
+	float time = UGameplayStatics::GetRealTimeSeconds(cog->GetWorld());
 	if (SensorDataPoints.Contains(Name))
 	{
-		SensorDataPoints[Name].Append(",[" + FString::SanitizeFloat(Util::GetTimestamp()) + "," + FString::SanitizeFloat(value) + "]");
+		//check time since world startup
+		if (time < sensorData[Name]->NextRecordTime)
+		{
+			return; //recording above rate!
+		}
+		SensorDataPoints[Name].Add("[" + FString::SanitizeFloat(Util::GetTimestamp()) + "," + FString::SanitizeFloat(value) + "]");
 	}
 	else
 	{
-		SensorDataPoints.Emplace(Name, "[" + FString::SanitizeFloat(Util::GetTimestamp()) + "," + FString::SanitizeFloat(value) + "]");
+		InitializeSensor(Name, 10, value);
 	}
 
+	sensorData[Name]->NextRecordTime = (time + sensorData[Name]->UpdateInterval);
+	LastSensorValues.Add(Name, (float)value);
 	sensorDataCount++;
 	if (sensorDataCount >= SensorThreshold)
 	{
@@ -147,7 +170,7 @@ void Sensors::SendData(bool copyDataToCache)
 	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
 	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("part", jsonPart);
-	wholeObj->SetStringField("formatversion", "1.0");
+	wholeObj->SetStringField("formatversion", "2.0");
 	jsonPart++;
 
 	wholeObj->SetStringField("data", "SENSORDATAHERE");
@@ -161,11 +184,33 @@ void Sensors::SendData(bool copyDataToCache)
 
 	for (const auto& Entry : SensorDataPoints)
 	{
+		if (Entry.Value.Num() == 0) { continue; } //skip sensors that don't have any new data points
+
 		dataEntries++;
-		allData = allData.Append("{\"name\":\"" + Entry.Key + "\",\"data\":[" + Entry.Value + "]}");
-		if (dataEntries < SensorDataPoints.Num())
-			allData.Append(",");
+		allData = allData.Append("{\"name\":\"" + Entry.Key + "\",");
+
+		if (sensorData.Contains(Entry.Key))
+		{
+			allData = allData.Append("\"sensorHzLimitType\":\"" + FString(sensorData[Entry.Key]->Rate) + "\",");
+			if (sensorData[Entry.Key]->UpdateInterval >= 0.1f)
+			{
+				allData = allData.Append("\"sensorHzLimited\":\"true\",");
+			}
+		}
+
+		allData.Append("\"data\":[");
+
+		for (int32 i = 0; i < Entry.Value.Num(); i++)
+		{
+			if (i != 0)
+				allData.Append(",");
+			allData.Append(Entry.Value[i]);
+		}
+
+		allData.Append("]},");
 	}
+	//remove final comma
+	allData.RemoveAt(allData.Len()-1);
 
 	FString complete = "[" + allData + "]";
 	const TCHAR* charcomplete = *complete;
@@ -173,7 +218,10 @@ void Sensors::SendData(bool copyDataToCache)
 
 	cog->network->NetworkCall("sensors", OutputString, copyDataToCache);
 
-	SensorDataPoints.Empty();
+	for (auto& entry : SensorDataPoints)
+	{
+		entry.Value.Empty();
+	}
 	sensorDataCount = 0;
 }
 

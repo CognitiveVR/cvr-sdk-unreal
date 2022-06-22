@@ -62,6 +62,8 @@ public:
 
 	//record a point of sensor data
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
+	static void InitializeSensor(const FString Name, const float HzRate = 10, const float InitialValue = 0);
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
 	static void RecordSensor(const FString Name, const float Value);
 
 	//request a question set by a hook name from the Cognitive dashboard

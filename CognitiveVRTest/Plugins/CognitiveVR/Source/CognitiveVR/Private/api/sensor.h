@@ -12,13 +12,40 @@
 class FAnalyticsProviderCognitiveVR;
 class UCognitiveVRBlueprints;
 
+struct COGNITIVEVR_API SensorData
+{
+public:
+	FString Name;
+	FString Rate;
+	float NextRecordTime;
+	float UpdateInterval;
+	SensorData(FString name, float rate)
+	{
+		Name = name;
+		Rate = FString::SanitizeFloat(rate);
+		if (rate == 0)
+		{
+			UpdateInterval = 1 / 10;
+			CognitiveLog::Warning("Initializing sensor " + name + " at 0 hz! Defaulting to 10hz");
+		}
+		else
+		{
+			UpdateInterval = 1 / rate;
+		}
+	}
+};
+
 	class COGNITIVEVR_API Sensors
 	{
 	private:
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 
-		//Q: why is a map of string values instead of floats? A: because formatting it in json
-		TMap<FString, FString> SensorDataPoints;
+		//TODO merge these maps
+		//Q: why is a map of string values instead of floats? A: format immediately to "[time,value]" instead of holding the 2 values
+		//CONSIDER saving float and serializing on another thread just before sending
+		TMap<FString, TArray<FString>> SensorDataPoints;
+		TMap<FString, float> LastSensorValues;
+		TMap<FString, SensorData*> sensorData;
 
 		int32 jsonPart = 1;
 		int32 sensorDataCount = 0;
@@ -33,8 +60,6 @@ class UCognitiveVRBlueprints;
 		//checks minimum send timer before sending recorded data to dashboard
 		void TrySendData();
 
-		TMap<FString, float> LastSensorValues;
-
 	public:
 		Sensors();
 		void StartSession();
@@ -47,4 +72,6 @@ class UCognitiveVRBlueprints;
 		float GetLastSendTime() { return LastSendTime; }
 		int32 GetPartNumber() { return jsonPart; }
 		int32 GetDataPoints() { return sensorDataCount; }
+
+		void InitializeSensor(FString sensorName, float hzRate = 10, float initialValue = 0);
 	};

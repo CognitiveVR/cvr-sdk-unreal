@@ -158,6 +158,19 @@ void UCognitiveVRBlueprints::SetLobbyId(const FString lobbyId)
 	cog->SetLobbyId(lobbyId);
 }
 
+void UCognitiveVRBlueprints::InitializeSensor(const FString Name, const float HzRate, const float InitialValue)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cog.IsValid())
+	{
+		CognitiveLog::Error("UCognitiveVRBlueprints::RecordSensor could not get provider!");
+		return;
+	}
+	if (!HasSessionStarted()) { return; }
+	cog->sensors->InitializeSensor(Name, HzRate, InitialValue);
+}
+
 void UCognitiveVRBlueprints::RecordSensor(const FString Name, const float Value)
 {
 	if (!cog.IsValid())
