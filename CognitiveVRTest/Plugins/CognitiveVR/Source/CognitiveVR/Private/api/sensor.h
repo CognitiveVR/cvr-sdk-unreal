@@ -26,7 +26,6 @@ public:
 		if (rate == 0)
 		{
 			UpdateInterval = 1 / 10;
-			CognitiveLog::Warning("Initializing sensor " + name + " at 0 hz! Defaulting to 10hz");
 		}
 		else
 		{

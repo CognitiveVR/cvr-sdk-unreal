@@ -6,6 +6,23 @@
 
 LocalCache::LocalCache(FString path)
 {
+	FString ValueReceived;
+	localCacheEnabled = false;
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "EnableLocalCache", false);
+	if (ValueReceived.Len() > 0)
+	{
+		if (ValueReceived.Len() > 0 && ValueReceived == "true")
+		{
+			localCacheEnabled = true;
+		}
+	}
+
+	if (localCacheEnabled == false)
+	{
+		return;
+	}
+
+
 	//path to project config dir
 	writeFilePath = path + "write.txt";
 	readFilePath = path + "read.txt";
@@ -32,6 +49,7 @@ bool LocalCache::HasContent()
 //called on session end. close filestream, serialize any outstanding data batches to disk
 void LocalCache::Close()
 {
+	if (!localCacheEnabled) { return; }
 	SerializeToFile();
 	if (WriterArchive != nullptr)
 	{
@@ -44,12 +62,13 @@ void LocalCache::Close()
 //TODO check for max file size
 bool LocalCache::CanWrite()
 {
-	return true;
+	return localCacheEnabled;
 }
 
 void LocalCache::WriteData(FString destination, FString body)
 {
 	if (WriterArchive == nullptr) { return; }
+	if (!localCacheEnabled) { return; }
 	WriterArchive->Serialize(TCHAR_TO_ANSI(*destination), destination.Len());
 	WriterArchive->Serialize(TCHAR_TO_ANSI(*FString("\n")), 1);
 	WriterArchive->Serialize(TCHAR_TO_ANSI(*body), body.Len());
