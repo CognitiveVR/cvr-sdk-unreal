@@ -19,6 +19,10 @@ class UCognitiveVRSettings : public UAnalyticsSettingsBase
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 		bool EnableDevLogging = false;
 
+	/** Save recorded data to a file if no internet connection exists */
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+		bool EnableLocalCache = true;
+
 	/** Show debug canvas overlay */
 	//UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 		//bool EnableDebugCanvas = true;

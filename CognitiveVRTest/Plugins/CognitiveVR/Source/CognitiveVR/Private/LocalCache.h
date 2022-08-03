@@ -48,4 +48,5 @@ class LocalCache
 		FString readFilePath;
 		//simple tracker for how many entires (url + content) are in the write file without doing IO stuff
 		int32 numberWriteBatches = 0;
+		bool localCacheEnabled = true;
 };
