@@ -77,12 +77,6 @@ void UFixationRecorder::BeginSession()
 			EyeCaptures.Add(FEyeCapture());
 		}
 		GEngine->GetAllLocalPlayerControllers(controllers);
-#if defined OPENXR_EYETRACKING
-		if (eyeTrackingModule.IsEyeTrackerConnected())
-		{
-			eyeTracker = eyeTrackingModule.CreateEyeTracker();
-		}
-#endif
 	}
 	else
 	{
@@ -702,16 +696,16 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	FVector Start = FVector::ZeroVector;
 	FVector WorldDirection = FVector::ZeroVector;
 	FVector End = FVector::ZeroVector;
-
-	if (!eyeTracker.IsValid()) { EyeCaptures[index].Discard = true; }
+	IEyeTracker const* const ET = GEngine ? GEngine->EyeTrackingDevice.Get() : nullptr;
+	if (ET == NULL) { EyeCaptures[index].Discard = true; }
 	else
 	{
-		EEyeTrackerStatus status = eyeTracker->GetEyeTrackerStatus();
+		EEyeTrackerStatus status = ET->GetEyeTrackerStatus();
 		if (status != EEyeTrackerStatus::Tracking) { EyeCaptures[index].Discard = true; }
 		else
 		{
 			FEyeTrackerGazeData gazeData;
-			eyeTracker->GetEyeTrackerGazeData(gazeData);
+			ET->GetEyeTrackerGazeData(gazeData);
 			if (gazeData.ConfidenceValue < 0.4f) { EyeCaptures[index].Discard = true; }
 			else
 			{
