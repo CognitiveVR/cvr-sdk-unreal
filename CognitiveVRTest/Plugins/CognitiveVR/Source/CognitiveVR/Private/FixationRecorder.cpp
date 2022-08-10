@@ -64,10 +64,7 @@ int32 UFixationRecorder::GetIndex(int32 offset)
 void UFixationRecorder::BeginPlay()
 {
 	if (HasBegunPlay()) { return; }
-
 	Super::BeginPlay();
-	instance = this;
-	world = GetWorld();
 }
 
 void UFixationRecorder::BeginSession()
@@ -1243,6 +1240,18 @@ float UFixationRecorder::GetDPIScale()
 
 UFixationRecorder* UFixationRecorder::GetFixationRecorder()
 {
+	if (instance == NULL)
+	{
+		for (TObjectIterator<UFixationRecorder> Itr; Itr; ++Itr)
+		{
+			UWorld* tempWorld = Itr->GetWorld();
+			if (tempWorld == NULL) { continue; }
+			if (tempWorld->WorldType != EWorldType::PIE && tempWorld->WorldType != EWorldType::Game) { continue; } //editor world. skip
+			instance = *Itr;
+			instance->world = tempWorld;
+			break;
+		}
+	}
 	return instance;
 }
 
