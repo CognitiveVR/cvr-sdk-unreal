@@ -64,10 +64,7 @@ int32 UFixationRecorder::GetIndex(int32 offset)
 void UFixationRecorder::BeginPlay()
 {
 	if (HasBegunPlay()) { return; }
-
 	Super::BeginPlay();
-	instance = this;
-	world = GetWorld();
 }
 
 void UFixationRecorder::BeginSession()
@@ -454,23 +451,10 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 #elif defined OPENXR_EYETRACKING
 bool UFixationRecorder::AreEyesClosed()
 {
-	if (!eyeTracker.IsValid()) { return true; }
-	EEyeTrackerStatus status = eyeTracker->GetEyeTrackerStatus();
-	if (status != EEyeTrackerStatus::Tracking) { return true; }
-
-	if (eyeTracker->IsStereoGazeDataAvailable())
-	{
-		FEyeTrackerStereoGazeData stereoGazeData;
-		eyeTracker->GetEyeTrackerStereoGazeData(stereoGazeData);
-	}
-	else
-	{
-		FEyeTrackerGazeData gazeData;
-		eyeTracker->GetEyeTrackerGazeData(gazeData);
-	}
-
+	IEyeTracker const* const ET = GEngine ? GEngine->EyeTrackingDevice.Get() : nullptr;
+	if (ET == NULL) { return false; }
 	FEyeTrackerGazeData gazeData;
-	eyeTracker->GetEyeTrackerGazeData(gazeData);
+	ET->GetEyeTrackerGazeData(gazeData);
 	if (gazeData.ConfidenceValue < 0.5f)
 	{
 		return true;
@@ -1243,6 +1227,18 @@ float UFixationRecorder::GetDPIScale()
 
 UFixationRecorder* UFixationRecorder::GetFixationRecorder()
 {
+	if (instance == NULL)
+	{
+		for (TObjectIterator<UFixationRecorder> Itr; Itr; ++Itr)
+		{
+			UWorld* tempWorld = Itr->GetWorld();
+			if (tempWorld == NULL) { continue; }
+			if (tempWorld->WorldType != EWorldType::PIE && tempWorld->WorldType != EWorldType::Game) { continue; } //editor world. skip
+			instance = *Itr;
+			instance->world = tempWorld;
+			break;
+		}
+	}
 	return instance;
 }
 

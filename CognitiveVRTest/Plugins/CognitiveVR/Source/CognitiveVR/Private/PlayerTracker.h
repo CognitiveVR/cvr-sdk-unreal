@@ -80,10 +80,6 @@ private:
 	void TickSensors1000MS();
 	void TickSensors100MS();
 #endif
-#if defined OPENXR_EYETRACKING
-	IEyeTrackerModule& eyeTrackingModule = IEyeTrackerModule::Get();
-	TSharedPtr< class IEyeTracker, ESPMode::ThreadSafe > eyeTracker;
-#endif
 
 public:
 
