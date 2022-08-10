@@ -45,12 +45,6 @@ void UPlayerTracker::BeginPlay()
 		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors1000MS, 1, true);
 		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors100MS, 0.1, true);
 #endif
-#if defined OPENXR_EYETRACKING
-		if (eyeTrackingModule.IsEyeTrackerConnected())
-		{
-			eyeTracker = eyeTrackingModule.CreateEyeTracker();
-		}
-#endif
 	}
 	else
 	{
@@ -150,21 +144,20 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	End = TempStart + LastDirection * 100000.0f;
 	return End;
 #elif defined OPENXR_EYETRACKING
+
 	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
 	FVector End = start + captureRotation.Vector() * 10000.0f;
-
-	if (!eyeTracker.IsValid()) { return End; }
-	EEyeTrackerStatus status = eyeTracker->GetEyeTrackerStatus();
-	if (status != EEyeTrackerStatus::Tracking) { return End; }
-
-	FEyeTrackerGazeData gazeData;
-	eyeTracker->GetEyeTrackerGazeData(gazeData);
-
+	IEyeTracker const* const ET = GEngine ? GEngine->EyeTrackingDevice.Get() : nullptr;
+	if (ET)
+	{
+		FEyeTrackerGazeData gazeData;
+		ET->GetEyeTrackerGazeData(gazeData);
 #if defined OPENXR_LOCALSPACE
-	LastDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(gazeData.GazeDirection);
+		LastDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(gazeData.GazeDirection);
 #endif
-	LastDirection = gazeData.GazeDirection;
-	End = start + LastDirection;
+		LastDirection = gazeData.GazeDirection;
+		End = start + LastDirection * 10000.0f;
+	}
 	return End;
 #else
 	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
