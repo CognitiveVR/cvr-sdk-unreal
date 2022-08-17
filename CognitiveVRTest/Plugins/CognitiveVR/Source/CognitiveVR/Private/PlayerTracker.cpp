@@ -42,8 +42,8 @@ void UPlayerTracker::BeginPlay()
 		Super::BeginPlay();
 		GEngine->GetAllLocalPlayerControllers(controllers);
 #if defined HPGLIA_API
-		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors1000MS, 1, true);
-		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors100MS, 0.1, true);
+		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSend1000MSHandle, this, &UPlayerTracker::TickSensors1000MS, 1, true);
+		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSend100MSHandle, this, &UPlayerTracker::TickSensors100MS, 0.1, true);
 #endif
 	}
 	else

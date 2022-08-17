@@ -76,7 +76,8 @@ private:
 	float LastCognitiveLoad = -1;
 	float LastLeftPupilDiamter = -1;
 	float LastRightPupilDiamter = -1;
-	FTimerHandle AutoSendHandle;
+	FTimerHandle AutoSend1000MSHandle;
+	FTimerHandle AutoSend100MSHandle;
 	void TickSensors1000MS();
 	void TickSensors100MS();
 #endif
