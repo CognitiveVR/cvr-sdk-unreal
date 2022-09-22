@@ -59,9 +59,13 @@ namespace UnrealBuildTool.Rules
 	PublicDependencyModuleNames.Add("DeveloperSettings");
 #endif
 
-		//uncomment this to enable OpenXR eye tracking support (varjo openxr support, etc)
+		//uncomment this to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
 		//Definitions.Add("OPENXR_EYETRACKING");
 		//Definitions.Add("OPENXR_LOCALSPACE"); //uncomment this if OPENXR implemented in local space instead of worldspace
+
+		//uncomment these lines to enable Vive WaveVR eye tracking support
+		//Definitions.Add("WAVEVR_EYETRACKING");
+		//PublicDependencyModuleNames.Add("WaveVR");
 
 		var pluginsDirectory = System.IO.Path.Combine(Target.ProjectFile.Directory.ToString(),"Plugins");
 		
