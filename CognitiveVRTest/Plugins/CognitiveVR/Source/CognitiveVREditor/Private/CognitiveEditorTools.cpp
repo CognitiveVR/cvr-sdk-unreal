@@ -2639,146 +2639,84 @@ TArray<FString> FCognitiveEditorTools::WizardExportMaterials(FString directory, 
 
 		if (mats[j] == NULL) { continue; }
 		if (ExportedMaterialNames.Contains(mats[j]->GetName())) { GLog->Log("skip exporting duplicate material " + mats[j]->GetName()); continue; }
-		if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Opaque)
+
+
+		TArray<FMeshData*> MeshSettingPtrs;
+		TArray<FMaterialData*> MaterialSettingPtrs;
+		FString n = mats[j]->GetName().Replace(TEXT("."), TEXT("_"));
+		//GLog->Log("		OTHER MAT " + mats[j]->GetFullName());
+
+		ExportedMaterialNames.Add(mats[j]->GetName());
+
+		FMaterialData MaterialSettings;
+		MaterialSettings.Material = mats[j];
+		MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_BaseColor, resolution);
+		MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Normal, resolution);
+
+		//add some extra maps if necessary
+		if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
 		{
-			FString n = mats[j]->GetName().Replace(TEXT("."), TEXT("_"));
-			//MaterialLine.Add("newmtl " + n);
-			//MaterialLine.Add("	OPAQUE MAT " + n);
+			//base colour already included above
 			line.Append("OPAQUE|");
-
-			ExportedMaterialNames.Add(mats[j]->GetName());
-
-			line.Append(mats[j]->GetName() + "|");
-
-			SCOPED_SUSPEND_RENDERING_THREAD(true);
-			PRAGMA_DISABLE_DEPRECATION_WARNINGS
-			TArray<FColor> OutputBMP;
-			FIntPoint OutSize;
-			FString BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
-			FMaterialUtilities::ExportMaterialProperty(mats[j], EMaterialProperty::MP_BaseColor, OutputBMP, OutSize);
-			FFileHelper::CreateBitmap(*BMPFilename, OutSize.X, OutSize.Y, OutputBMP.GetData());
-			//MaterialLine.Add("map_Kd " + BMPFilename);
-			//MaterialLine.Add("		DIFFUSE TEXTURE " + BMPFilename);
-			line.Append(BMPFilename + "|");
-
-			BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
-			FMaterialUtilities::ExportMaterialProperty(mats[j], EMaterialProperty::MP_Normal, OutputBMP, OutSize);
-			FFileHelper::CreateBitmap(*BMPFilename, OutSize.X, OutSize.Y, OutputBMP.GetData());
-			//MaterialLine.Add("		NORMAL TEXTURE " + BMPFilename);
-			//MaterialLine.Add("bump " + BMPFilename);
-			line.Append(BMPFilename);
-
-			line = line.ReplaceCharWithEscapedChar();
-
-			MaterialLine.Add(line);
-			PRAGMA_ENABLE_DEPRECATION_WARNINGS
-
-
-				//MaterialLine.Add("");
-				//MaterialLine.Add("");
-			continue;
+		}
+		else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
+		{
+			MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_OpacityMask, resolution);
+			line.Append("MASK|");
+		}
+		else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent || mats[j]->GetBlendMode() == EBlendMode::BLEND_Additive)
+		{
+			MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Opacity, resolution);
+			line.Append("TRANSLUCENT|");
 		}
 		else
 		{
+			line.Append("OTHER|");
+		}
 
-			TArray<FMeshData*> MeshSettingPtrs;
-			TArray<FMaterialData*> MaterialSettingPtrs;
-			FString n = mats[j]->GetName().Replace(TEXT("."), TEXT("_"));
-			//GLog->Log("		OTHER MAT " + mats[j]->GetFullName());
+		MaterialSettingPtrs.Add(&MaterialSettings);
 
-			ExportedMaterialNames.Add(mats[j]->GetName());
+		line.Append(mats[j]->GetName() + "|");
 
-			FMaterialData MaterialSettings;
-			MaterialSettings.Material = mats[j];
-			//MaterialSettings.bPerformBorderSmear = false;
-			MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_BaseColor, resolution);
-			MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Normal, resolution);
+		FMeshData meshdata;
+		meshdata.TextureCoordinateBox = FBox2D(FVector2D(0.0f, 0.0f), FVector2D(1.0f, 1.0f));
+		meshdata.TextureCoordinateIndex = 0;
+		MeshSettingPtrs.Add(&meshdata);
 
+		TArray<FBakeOutput> BakeOutputs;
+		MaterialBakingModule.BakeMaterials(MaterialSettingPtrs, MeshSettingPtrs, BakeOutputs);
 
+		for (FBakeOutput& output : BakeOutputs)
+		{
+			FString BMPFilename;
+			//diffuse
+			BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
+			FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_BaseColor].GetData());
+			line.Append(BMPFilename + "|");
+
+			//normal
+			BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
+			FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Normal].GetData());
+			line.Append(BMPFilename + "|");
 
 			if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
 			{
-				MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_OpacityMask, resolution);
-				//MaterialLine.Add("	MASKED MAT " + BMPFilename);
-				//MaterialLine.Add("	MASKED MAT " + n);
-				line.Append("MASK|");
+				//mask
+				BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_OM.bmp");
+				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_OpacityMask].GetData());
+				line.Append(BMPFilename);
 			}
-			else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent)
+			else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent || mats[j]->GetBlendMode() == EBlendMode::BLEND_Additive)
 			{
-				MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Opacity, resolution);
-				//MaterialLine.Add("	TRANSLUCENT MAT " + BMPFilename);
-				//MaterialLine.Add("	TRANSLUCENT MAT " + n);
-				line.Append("TRANSLUCENT|");
+				//opacity
+				BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_O.bmp");
+				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Opacity].GetData());
+				line.Append(BMPFilename);
 			}
-			else
-			{
-				//MaterialLine.Add("	OTHER MAT " + n);
-			}
-			//MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_EmissiveColor, resolution);
-			MaterialSettingPtrs.Add(&MaterialSettings);
-
-			line.Append(mats[j]->GetName() + "|");
-
-
-			FMeshData meshdata;
-			//meshdata.RawMeshDescription = nullptr;
-			meshdata.TextureCoordinateBox = FBox2D(FVector2D(0.0f, 0.0f), FVector2D(1.0f, 1.0f));
-			meshdata.TextureCoordinateIndex = 0;
-			MeshSettingPtrs.Add(&meshdata);
-
-			TArray<FBakeOutput> BakeOutputs;
-			MaterialBakingModule.BakeMaterials(MaterialSettingPtrs, MeshSettingPtrs, BakeOutputs);
-
-			for (FBakeOutput& output : BakeOutputs)
-			{
-				//GLog->Log(FString::FromInt(output.PropertySizes[EMaterialProperty::MP_BaseColor].X) + "   " + FString::FromInt(output.PropertySizes[EMaterialProperty::MP_BaseColor].Y));
-
-				//writing materials with wrong uvs
-
-				FString BMPFilename;
-				//diffuse
-				BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
-				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_BaseColor].GetData());
-				//MaterialLine.Add("		DIFFUSE TEXTURE " + BMPFilename);
-				line.Append(BMPFilename + "|");
-				//MaterialLine.Add("map_Kd " + BMPFilename);
-
-				//normal
-				BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
-				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Normal].GetData());
-				//MaterialLine.Add("		NORMAL TEXTURE " + BMPFilename);
-				line.Append(BMPFilename + "|");
-				//MaterialLine.Add("bump " + BMPFilename);
-
-				if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
-				{
-					//	//mask
-					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_OM.bmp");
-					FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_OpacityMask].GetData());
-					//MaterialLine.Add("illum 4");
-					//MaterialLine.Add("map_D " + BMPFilename);
-					//MaterialLine.Add("		OPACITY TEXTURE " + BMPFilename);
-					line.Append(BMPFilename);
-				}
-				else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent)
-				{
-					//opacity
-					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_O.bmp");
-					FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Opacity].GetData());
-					//MaterialLine.Add("illum 4");
-					//MaterialLine.Add("map_D " + BMPFilename);
-					//MaterialLine.Add("		OPACITY TEXTURE " + BMPFilename);
-					line.Append(BMPFilename);
-				}
-				line = line.ReplaceCharWithEscapedChar();
-				MaterialLine.Add(line);
-			}
-			//MaterialLine.Add("");
-			//MaterialLine.Add("");
-			//MaterialLine.Add("");
+			line = line.ReplaceCharWithEscapedChar();
+			MaterialLine.Add(line);
 		}
 	}
-
 	return MaterialLine;
 }
 
