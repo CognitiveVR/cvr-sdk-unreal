@@ -1245,6 +1245,9 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 		return FReply::Handled();
 	}
 
+
+	//should put this all in a CognitiveEditorTools export function
+	//take array of actors to be exported
 	TArray<AActor*> ToBeExported;
 	if (OnlyExportSelected) //only export selected
 	{
@@ -1291,79 +1294,8 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 		}
 		ToBeExportedFinal.Add(ToBeExported[i]);
 	}
+	FCognitiveEditorTools::GetInstance()->ExportScene(ToBeExportedFinal);
 
-	
-	//--------------------export actor meshes
-	GEditor->SelectNone(false, true, false);
-	for (int32 i = 0; i < ToBeExportedFinal.Num(); i++)
-	{
-		GEditor->SelectActor((ToBeExportedFinal[i]), true, false, true);
-	}
-	FString ExportedSceneFile = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
-	GEditor->ExportMap(tempworld, *ExportedSceneFile, true);
-
-	//--------------------export geometry as fbx
-	//always export all bsp geometry brushes
-	GEditor->SelectNone(false, true, false);
-
-	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
-	{
-		ABrush* obj = Cast<ABrush>((*ActorItr));
-		AVolume* vol = Cast<AVolume>((*ActorItr));
-
-		if (obj == nullptr) { continue; } //skip non-brushes
-		if (vol != nullptr) { continue; } //skip volumes
-
-		GEditor->SelectActor((*ActorItr), true, true, true, true);
-	}
-
-	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".fbx";
-	GEditor->ExportMap(tempworld, *ExportedSceneFile2, true);
-
-	//--------------------export materials
-	FCognitiveEditorTools::GetInstance()->WizardPostSceneExport();
-	SceneWasExported = true;
-	TArray< UStaticMeshComponent*> sceneMeshes;
-
-	if (OnlyExportSelected)
-	{
-		for (auto &elem : ToBeExportedFinal)
-		{
-			auto TempObject = elem->GetComponentByClass(UStaticMeshComponent::StaticClass());
-			if (TempObject == NULL) { continue; }
-			auto staticTempObject = (UStaticMeshComponent*)TempObject;
-
-			if (staticTempObject->GetOwner() == NULL) { continue; }
-
-			UActorComponent* dynamic = staticTempObject->GetOwner()->GetComponentByClass(UDynamicObject::StaticClass());
-			if (dynamic != NULL) { continue; }
-
-			sceneMeshes.Add(staticTempObject);
-		}
-	}
-	else
-	{
-		for (TObjectIterator<UStaticMeshComponent> It; It; ++It)
-		{
-			//
-			UStaticMeshComponent* TempObject = *It;
-			if (TempObject == NULL) { continue; }
-		
-			if (TempObject->GetOwner() == NULL) { continue; }
-		
-			UActorComponent* dynamic = TempObject->GetOwner()->GetComponentByClass(UDynamicObject::StaticClass());
-			if (dynamic != NULL) { continue; }
-		
-			sceneMeshes.Add(TempObject);
-		}
-	}
-	
-	FString sceneDirectory = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory()+"/";
-	FCognitiveEditorTools::GetInstance()->WizardExportStaticMaterials(sceneDirectory, sceneMeshes, FCognitiveEditorTools::GetInstance()->GetCurrentSceneName());
-
-
-	//Convert scene to GLTF
-	FCognitiveEditorTools::GetInstance()->WizardConvertScene();
 	SceneWasExported = true;
 
 	return FReply::Handled();
