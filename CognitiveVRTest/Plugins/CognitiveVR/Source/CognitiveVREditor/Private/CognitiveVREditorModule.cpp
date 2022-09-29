@@ -36,10 +36,9 @@ public:
 	FDelegateHandle TickDelegateHandle;
 
 	
-
+	//TODO CONSIDER do we need this for anything?
 	bool Tick(float deltatime)
 	{
-		FCognitiveEditorTools::GetInstance()->Tick(deltatime);
 		return true;
 	}
 	
