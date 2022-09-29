@@ -2172,8 +2172,6 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 
 	GLog->Log("FCognitiveTools::RefreshSceneData found this many scenes: " + FString::FromInt(SceneData.Num()));
 	//ConfigFileHasChanged = true;
-
-	//return FReply::Handled();
 }
 
 void FCognitiveEditorTools::SceneVersionRequest(FEditorSceneData data)
@@ -2470,57 +2468,6 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 	GConfig->Flush(false, GEngineIni);
 }
 
-void FCognitiveEditorTools::WizardExportSkeletalMaterials(FString directory, TArray<USkeletalMeshComponent*> meshes, FString mtlFileName)
-{
-	TArray<FString> ExportedMaterialNames;
-
-	float work = 0;
-	FScopedSlowTask* SlowTaskPtr = NULL;
-	TArray<UMaterialInterface*> allMaterials;
-
-	if (mtlFileName == FCognitiveEditorTools::GetInstance()->GetCurrentSceneName())
-	{
-		SlowTaskPtr = new FScopedSlowTask(meshes.Num(), FText::FromString("Baking Scene Materials"));
-		SlowTaskPtr->MakeDialog(false);
-	}
-
-	for (int32 i = 0; i < meshes.Num(); i++)
-	{
-		if (SlowTaskPtr != NULL)
-		{
-			//work += 1;
-			SlowTaskPtr->EnterProgressFrame(1);
-		}
-		if (meshes[i] == NULL) { continue; }
-		USkeletalMeshComponent* TempObject = meshes[i];
-		//if (TempObject == NULL) { continue; }
-
-		//TArray<UMaterialInterface*> mats = TempObject->GetMaterials();
-		//MaterialLine.Add("MESH " + TempObject->GetFName().ToString());
-		allMaterials.Append(TempObject->GetMaterials());
-	}
-
-	TArray<FString> materialContents = WizardExportMaterials(directory, ExportedMaterialNames, allMaterials);
-
-	if (SlowTaskPtr != NULL)
-	{
-		delete SlowTaskPtr;
-	}
-
-	FString mtlPath = directory + "materiallist.txt";
-
-	//append if file exists
-	if (IFileManager::Get().FileExists(*mtlPath))
-	{
-		TArray<FString> readLines;
-		if (FFileHelper::LoadFileToStringArray(readLines, *mtlPath))
-			materialContents.Append(readLines);
-	}
-
-	//material list isn't that useful since blender can't necessarily load long names. better to modify the mtl file to append map_d for opacity maps
-	//FFileHelper::SaveStringArrayToFile(materialContents, *mtlPath);
-}
-
 void FCognitiveEditorTools::WizardExportStaticMaterials(FString directory, TArray<UStaticMeshComponent*> meshes, FString mtlFileName)
 {
 	TArray<FString> ExportedMaterialNames;
@@ -2555,11 +2502,6 @@ void FCognitiveEditorTools::WizardExportStaticMaterials(FString directory, TArra
 	{
 		delete SlowTaskPtr;
 	}
-
-	//material list isn't that useful since blender can't necessarily load long names. better to modify the mtl file to append map_d for opacity maps
-	//write list of materials to file
-	//FString mtlPath = directory + "materiallist.txt";
-	//FFileHelper::SaveStringArrayToFile(materialContents, *mtlPath);
 }
 
 TArray<FString> FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<FString> ExportedMaterialNames, TArray<UMaterialInterface*> mats)
