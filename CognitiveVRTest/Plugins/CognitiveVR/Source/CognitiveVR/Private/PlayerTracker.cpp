@@ -221,7 +221,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	
 	bool DidHitFloor = false;
 	FVector FloorHitPosition;
-	if (FloorHit.Actor.IsValid())
+	if (FloorHit.GetActor() != NULL)
 	{
 		DidHitFloor = true;
 		FloorHitPosition = FloorHit.ImpactPoint;
@@ -232,9 +232,9 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	{
 		FVector gaze = Hit.ImpactPoint;
 
-		if (Hit.Actor.IsValid())
+		if (Hit.GetActor() != NULL)
 		{
-			UActorComponent* hitActorComponent = Hit.Actor.Get()->GetComponentByClass(UDynamicObject::StaticClass());
+			UActorComponent* hitActorComponent = Hit.GetActor()->GetComponentByClass(UDynamicObject::StaticClass());
 			if (hitActorComponent != NULL)
 			{
 				UDynamicObject* hitDynamicObject = Cast<UDynamicObject>(hitActorComponent);
