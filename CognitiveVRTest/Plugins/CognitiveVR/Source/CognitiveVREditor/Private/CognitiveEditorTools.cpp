@@ -2568,6 +2568,9 @@ TArray<FString> FCognitiveEditorTools::WizardExportMaterials(FString directory, 
 	FIntPoint resolution = FIntPoint(256, 256);
 	TArray<FString> MaterialLine;
 
+	//build a custom mtl file that includes transparency maps
+	TArray<FString> CustomMTLFile;
+
 	for (int32 j = 0; j < mats.Num(); j++)
 	{
 		FString line;
@@ -2589,9 +2592,12 @@ TArray<FString> FCognitiveEditorTools::WizardExportMaterials(FString directory, 
 		MaterialSettings.Material = mats[j];
 		MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_BaseColor, resolution);
 		MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Normal, resolution);
+		MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Specular, resolution);
+
+		CustomMTLFile.Add("newmtl " + mats[j]->GetPathName().Replace(TEXT("."), TEXT("_")));
 
 		//add some extra maps if necessary
-		if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
+		if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Opaque)
 		{
 			//base colour already included above
 			line.Append("OPAQUE|");
@@ -2636,6 +2642,21 @@ TArray<FString> FCognitiveEditorTools::WizardExportMaterials(FString directory, 
 
 				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_BaseColor].GetData());
 				line.Append(BMPFilename + "|");
+				CustomMTLFile.Add("\tmap_Kd " + mats[j]->GetName().Replace(TEXT("."), TEXT("_"))+"_"+ mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_D.bmp");
+			}
+
+			if (output.PropertyData.Contains(EMaterialProperty::MP_Specular))
+			{
+				//specular
+				FString BMPFilename = directory;
+				BMPFilename.RemoveFromEnd("/");
+				BMPFilename += mats[j]->GetPathName();
+				BMPFilename = BMPFilename.Replace(TEXT("."), TEXT("_"));
+				BMPFilename += TEXT("_S.bmp");
+
+				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Specular].GetData());
+				line.Append(BMPFilename + "|");
+				CustomMTLFile.Add("\tmap_Ks " + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_" + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_S.bmp");
 			}
 
 			if (output.PropertyData.Contains(EMaterialProperty::MP_Normal))
@@ -2649,39 +2670,39 @@ TArray<FString> FCognitiveEditorTools::WizardExportMaterials(FString directory, 
 
 				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Normal].GetData());
 				line.Append(BMPFilename + "|");
+				CustomMTLFile.Add("\tbump " + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_" + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_N.bmp");
 			}
-			if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
+			if (output.PropertyData.Contains(EMaterialProperty::MP_OpacityMask))
 			{
-				if (output.PropertyData.Contains(EMaterialProperty::MP_OpacityMask))
-				{
-					//mask
-					FString BMPFilename = directory;
-					BMPFilename.RemoveFromEnd("/");
-					BMPFilename += mats[j]->GetPathName();
-					BMPFilename = BMPFilename.Replace(TEXT("."), TEXT("_"));
-					BMPFilename += TEXT("_OM.bmp");
-					FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_OpacityMask].GetData());
-					line.Append(BMPFilename);
-				}
+				//mask
+				FString BMPFilename = directory;
+				BMPFilename.RemoveFromEnd("/");
+				BMPFilename += mats[j]->GetPathName();
+				BMPFilename = BMPFilename.Replace(TEXT("."), TEXT("_"));
+				BMPFilename += TEXT("_OM.bmp");
+				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_OpacityMask].GetData());
+				line.Append(BMPFilename);
+				CustomMTLFile.Add("\tmap_d " + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_" + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_OM.bmp");
 			}
-			else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent || mats[j]->GetBlendMode() == EBlendMode::BLEND_Additive)
+			if (output.PropertyData.Contains(EMaterialProperty::MP_Opacity))
 			{
-				if (output.PropertyData.Contains(EMaterialProperty::MP_Opacity))
-				{
-					//opacity
-					FString BMPFilename = directory;
-					BMPFilename.RemoveFromEnd("/");
-					BMPFilename += mats[j]->GetPathName();
-					BMPFilename = BMPFilename.Replace(TEXT("."), TEXT("_"));
-					BMPFilename += TEXT("_O.bmp");
-					FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Opacity].GetData());
-					line.Append(BMPFilename);
-				}
+				//opacity
+				FString BMPFilename = directory;
+				BMPFilename.RemoveFromEnd("/");
+				BMPFilename += mats[j]->GetPathName();
+				BMPFilename = BMPFilename.Replace(TEXT("."), TEXT("_"));
+				BMPFilename += TEXT("_O.bmp");
+				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Opacity].GetData());
+				line.Append(BMPFilename);
+				CustomMTLFile.Add("\tmap_d " + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_" + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_O.bmp");
 			}
 			line = line.ReplaceCharWithEscapedChar();
 			MaterialLine.Add(line);
 		}
+		CustomMTLFile.Add("");
 	}
+	FString mtlPath = directory + GetCurrentSceneName()+".mtl";
+	FFileHelper::SaveStringArrayToFile(CustomMTLFile, *mtlPath);
 	return MaterialLine;
 }
 
