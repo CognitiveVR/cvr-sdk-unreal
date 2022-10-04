@@ -59,7 +59,15 @@ void UPlayerTracker::BeginPlay()
 
 void UPlayerTracker::HandleApplicationWillEnterBackground()
 {
+	if (!cog.IsValid())
+	{
+		return;
+	}
 	cog->FlushAndCacheEvents();
+	if (!cog->localCache.IsValid())
+	{
+		return;
+	}
 	cog->localCache->SerializeToFile();
 }
 

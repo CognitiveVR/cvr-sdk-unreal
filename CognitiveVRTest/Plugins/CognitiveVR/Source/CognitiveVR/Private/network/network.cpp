@@ -59,11 +59,15 @@ void Network::NetworkCall(FString suburl, FString contents, bool copyDataToCache
 	if (!cog.IsValid()) { return; }
 	if (!cog->HasStartedSession()) { return; }
 
-	if (cog->localCache->CanWrite())
+	if (!cog->localCache.IsValid()) { return; }
+	if (cog->localCache->IsEnabled())
 	{
 		TArray<uint8> contentArray = HttpRequest->GetContent();
-		FString contentString = TArrayToString(contentArray, HttpRequest->GetContent().Num());
-		cog->localCache->WriteData(HttpRequest->GetURL(), contentString);
+		if (cog->localCache->CanWrite(contentArray.Num()))
+		{
+			FString contentString = TArrayToString(contentArray, HttpRequest->GetContent().Num());
+			cog->localCache->WriteData(HttpRequest->GetURL(), contentString);
+		}
 	}
 	
 }
@@ -124,11 +128,14 @@ void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Resp
 			
 			if (cog->localCache == nullptr) { return; } //not set to null on session end
 			//isUploadingFromCache = false;
-			if (cog->localCache->CanWrite())
+			if (cog->localCache->IsEnabled())
 			{
 				TArray<uint8> contentArray = Request->GetContent();
-				FString contentString = TArrayToString(contentArray, Request->GetContent().Num());
-				cog->localCache->WriteData(Request->GetURL(), contentString);
+				if (cog->localCache->CanWrite(contentArray.Num()))
+				{
+					FString contentString = TArrayToString(contentArray, Request->GetContent().Num());
+					cog->localCache->WriteData(Request->GetURL(), contentString);
+				}
 			}
 
 			hasErrorResponse = true;
@@ -175,12 +182,15 @@ void Network::OnLocalCacheCallReceivedAsync(FHttpRequestPtr Request, FHttpRespon
 		else
 		{
 			//TEST should pop content from the read file anyway and write it to the write file
-			if (cog->localCache->CanWrite())
+			if (cog->localCache->IsEnabled())
 			{
 				TArray<uint8> contentArray = Request->GetContent();
-				FString contentString = TArrayToString(contentArray, Request->GetContent().Num());
-				cog->localCache->WriteData(Request->GetURL(), contentString);
-				cog->localCache->PopContent();
+				if (cog->localCache->CanWrite(contentArray.Num()))
+				{
+					FString contentString = TArrayToString(contentArray, Request->GetContent().Num());
+					cog->localCache->WriteData(Request->GetURL(), contentString);
+					cog->localCache->PopContent();
+				}
 			}
 			localCacheRequest = NULL;
 		}

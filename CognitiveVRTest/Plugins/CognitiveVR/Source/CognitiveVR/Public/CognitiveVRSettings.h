@@ -22,10 +22,9 @@ class UCognitiveVRSettings : public UAnalyticsSettingsBase
 	/** Save recorded data to a file if no internet connection exists */
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 		bool EnableLocalCache = true;
-
-	/** Show debug canvas overlay */
-	//UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-		//bool EnableDebugCanvas = true;
+	/** How much space (in MB) to allocate to the local cache */
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+		int32 LocalCacheSize = 100;
 
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 		FString Gateway = "data.cognitive3d.com";

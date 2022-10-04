@@ -49,8 +49,6 @@ public:
 	static FCognitiveEditorTools* CognitiveEditorToolsInstance;
 	static FCognitiveEditorTools* GetInstance();
 
-	void Tick(float deltatime);
-
 	void SaveSceneData(FString sceneName, FString sceneKey);
 
 	//gets all the dynamics in the scene and saves them to SceneDynamics
@@ -163,30 +161,31 @@ public:
 
 		FReply UploadScene();
 
-	void WizardPostSceneExport();
-
 	//bakes textures from translucent and masked materials
 	void WizardExportStaticMaterials(FString directory, TArray<UStaticMeshComponent*> meshes, FString mtlFileName);
 	void WizardExportSkeletalMaterials(FString directory, TArray<USkeletalMeshComponent*> meshes, FString mtlFileName);
+	//returns array of strings describing materials being exported - the material type (opaque, translucent, masked) and the paths for each texture
+	//does the actual file writing for saving textures from material to bmps
 	TArray<FString> WizardExportMaterials(FString directory, TArray<FString> ExportedMaterialNames, TArray<UMaterialInterface*> materials);
-	void WizardConvertScene();
-	//also writes settings json file and removes bmp/obj/fbx source files
-	FProcHandle ConvertSceneToGLTF();
+	
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
 
 	//dynamic objects
-	//Runs the built-in obj exporter with all meshes
+	//Runs the built-in fbx exporter with all meshes
 		FReply ExportAllDynamics();
-	//Runs the built-in obj exporter with all meshes that don't have an exported .gltf
+	//Runs the built-in fbx exporter with all meshes that don't have an exported .gltf
 		FProcHandle ExportNewDynamics();
 
-	//Runs the built-in obj exporter with selected meshes
+	//Runs the built-in fbx exporter with selected meshes
 		FReply ExportSelectedDynamics();
 		FProcHandle ExportDynamicData(TArray< TSharedPtr<FDynamicData>> dynamicData);
 	
-		FProcHandle ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
 
-	//used after dynamic object exporting
+	//this is the important function for exporting dynamics. all other other dynamic export functions lead to this
+		//sets position to origin, export as fbx, generate screenshot, bake materials to textures (not necessary), calls ConvertDynamicsToGLTF
+	FProcHandle ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
+
+	//used after dynamic object exporting. opens blender with a python script for specified dynamic objects. rebuilds materials (not necessary?), exports and cleans up files
 	FProcHandle ConvertDynamicsToGLTF(TArray<FString> meshNames);
 
 	//uploads each dynamic object using its directory to the current scene
@@ -406,6 +405,19 @@ public:
 	FString BuildDebugFileContents() const;
 
 	void AppendDirectoryContents(FString FullPath, int32 depth, FString& outputString);
+
+
+
+	//exporting scene.
+	//create directory
+	//export scene as obj
+	//export materials
+	//build materiallist.txt
+	//run python script
+	void ExportScene(TArray<AActor*> actorsToExport);
+
+	//opens blender and run python script. returns process to do stuff after blender has finished
+	FProcHandle ConvertSceneToGLTF();
 };
 
 

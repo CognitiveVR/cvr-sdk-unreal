@@ -11,7 +11,7 @@ LocalCache::LocalCache(FString path)
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "EnableLocalCache", false);
 	if (ValueReceived.Len() > 0)
 	{
-		if (ValueReceived.Len() > 0 && ValueReceived == "true")
+		if (ValueReceived == "True")
 		{
 			localCacheEnabled = true;
 		}
@@ -22,19 +22,23 @@ LocalCache::LocalCache(FString path)
 		return;
 	}
 
+	int32 targetCacheSize = 100 * 1024 * 1024; //convert to MB
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "LocalCacheSize", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 tempSize = FCString::Atoi(*ValueReceived);
+		if (tempSize > 0)
+		{
+			targetCacheSize = tempSize * 1024 * 1024; //convert to MB
+		}
+	}
+	MaxCacheSize = targetCacheSize;
 
 	//path to project config dir
 	writeFilePath = path + "write.txt";
 	readFilePath = path + "read.txt";
 
 	MergeDataFiles();
-
-
-#if PLATFORM_ANDROID
-
-#elif PLATFORM_WINDOWS
-
-#endif
 }
 
 int32 LocalCache::NumberOfBatches()
@@ -59,10 +63,21 @@ void LocalCache::Close()
 	}
 }
 
-//TODO check for max file size
-bool LocalCache::CanWrite()
+bool LocalCache::IsEnabled()
 {
 	return localCacheEnabled;
+}
+
+bool LocalCache::CanWrite(int32 byteCount)
+{
+	if (!localCacheEnabled) { return false; }
+
+	int32 currentCacheSize = 0;
+	if (byteCount + currentCacheSize < MaxCacheSize)
+	{
+		return true;
+	}
+	return false;
 }
 
 void LocalCache::WriteData(FString destination, FString body)
