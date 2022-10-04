@@ -59,6 +59,7 @@ void Network::NetworkCall(FString suburl, FString contents, bool copyDataToCache
 	if (!cog.IsValid()) { return; }
 	if (!cog->HasStartedSession()) { return; }
 
+	if (!cog->localCache.IsValid()) { return; }
 	if (cog->localCache->IsEnabled())
 	{
 		TArray<uint8> contentArray = HttpRequest->GetContent();
