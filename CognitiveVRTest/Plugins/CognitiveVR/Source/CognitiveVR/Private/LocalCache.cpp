@@ -11,19 +11,9 @@ LocalCache::LocalCache(FString path)
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "EnableLocalCache", false);
 	if (ValueReceived.Len() > 0)
 	{
-		if (ValueReceived.Len() > 0 && ValueReceived == "true")
+		if (ValueReceived == "True")
 		{
 			localCacheEnabled = true;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "LocalCacheSize", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 tempSize = FCString::Atoi(*ValueReceived);
-		if (tempSize > 0)
-		{
-			MaxCacheSize = tempSize * 1024 * 1024; //convert to MB
 		}
 	}
 
@@ -32,6 +22,17 @@ LocalCache::LocalCache(FString path)
 		return;
 	}
 
+	int32 targetCacheSize = 100 * 1024 * 1024; //convert to MB
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "LocalCacheSize", false);
+	if (ValueReceived.Len() > 0)
+	{
+		int32 tempSize = FCString::Atoi(*ValueReceived);
+		if (tempSize > 0)
+		{
+			targetCacheSize = tempSize * 1024 * 1024; //convert to MB
+		}
+	}
+	MaxCacheSize = targetCacheSize;
 
 	//path to project config dir
 	writeFilePath = path + "write.txt";
