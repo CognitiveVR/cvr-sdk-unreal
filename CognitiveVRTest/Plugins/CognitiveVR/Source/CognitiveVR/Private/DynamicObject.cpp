@@ -66,15 +66,14 @@ void UDynamicObject::GenerateCustomId()
 
 void UDynamicObject::TryGenerateCustomIdAndMesh()
 {
+	if (GetOwner() == NULL)
+	{
+		return;
+	}
+
 	if (MeshName.IsEmpty())
 	{
-		if (GetOwner() == NULL)
-		{
-			return;
-		}
-
 		bool foundAnyMesh = false;
-
 		UActorComponent* actorComponent = GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
 		if (actorComponent != NULL)
 		{
@@ -96,15 +95,14 @@ void UDynamicObject::TryGenerateCustomIdAndMesh()
 				foundAnyMesh = true;
 			}
 		}
-
-
-		if (foundAnyMesh == false)
+		if (foundAnyMesh)
 		{
-			return;
+			UseCustomMeshName = true;
+			GWorld->MarkPackageDirty();
 		}
-
-		UseCustomMeshName = true;
-		//UseCustomId = true;
+	}
+	if (CustomId.IsEmpty())
+	{
 		CustomId = FGuid::NewGuid().ToString();
 		GWorld->MarkPackageDirty();
 	}

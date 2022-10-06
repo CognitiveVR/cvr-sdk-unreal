@@ -496,25 +496,32 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				+SHorizontalBox::Slot()
 				.MaxWidth(17)
 				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-					.HeightOverride(17)
-					.WidthOverride(17)
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+					.VAlign(VAlign_Center)
 					[
-						SNew(SButton)
+						SNew(SBox)
 						.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-						//PickerWidget = SAssignNew(BrowseButton, SButton)
-						.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
-						.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Blender)
-						.ContentPadding(2.0f)
-						.ForegroundColor(FSlateColor::UseForeground())
-						.IsFocusable(false)
+						.HeightOverride(17)
+						.WidthOverride(17)
 						[
-							SNew(SImage)
+							SNew(SButton)
 							.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-							.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
-							.ColorAndOpacity(FSlateColor::UseForeground())
+							//PickerWidget = SAssignNew(BrowseButton, SButton)
+							.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
+							.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
+							.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Blender)
+							.ContentPadding(2.0f)
+							.ForegroundColor(FSlateColor::UseForeground())
+							.IsFocusable(false)
+							[
+								SNew(SImage)
+								.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
+								.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
+								.ColorAndOpacity(FSlateColor::UseForeground())
+							]
 						]
 					]
 				]
@@ -560,24 +567,31 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				+SHorizontalBox::Slot()
 				.MaxWidth(17)
 				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-					.HeightOverride(17)
-					.WidthOverride(17)
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+					.VAlign(VAlign_Center)
 					[
-						SNew(SButton)
+						SNew(SBox)
 						.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-						//PickerWidget = SAssignNew(BrowseButton, SButton)
-						.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
-						.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectBaseExportDirectory)
-						.ContentPadding(2.0f)
-						.ForegroundColor(FSlateColor::UseForeground())
-						.IsFocusable(false)
+						.HeightOverride(17)
+						.WidthOverride(17)
 						[
-							SNew(SImage)
-							.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
-							.ColorAndOpacity(FSlateColor::UseForeground())
+							SNew(SButton)
+							.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
+							//PickerWidget = SAssignNew(BrowseButton, SButton)
+							.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
+							.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
+							.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectBaseExportDirectory)
+							.ContentPadding(2.0f)
+							.ForegroundColor(FSlateColor::UseForeground())
+							.IsFocusable(false)
+							[
+								SNew(SImage)
+								.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
+								.ColorAndOpacity(FSlateColor::UseForeground())
+							]
 						]
 					]
 				]
@@ -674,7 +688,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					[
 						SNew(SButton)
 						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-						.Text(FText::FromString("Export All Meshes"))
+						.Text(FText::FromString("Export\nAll Meshes"))
 						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportAllDynamics)
 					]
 				]
@@ -687,7 +701,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					[
 						SNew(SButton)
 						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-						.Text(FText::FromString("Export Selected Meshes"))
+						.Text(FText::FromString("Export\nSelected Meshes"))
 						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportSelectedDynamics)
 					]
 				]
