@@ -460,6 +460,30 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 	int64 ts = (int64)(Util::GetTimestamp() * 1000);
 	return ts;
 }
+#elif defined WAVEVR_EYETRACKING
+bool UFixationRecorder::AreEyesClosed()
+{
+	WaveVREyeManager* pEyeManager = WaveVREyeManager::GetInstance();
+	float openness;
+	if (pEyeManager != nullptr)
+	{
+		if (pEyeManager->GetLeftEyeOpenness(openness) && openness > 0.5f)
+		{
+			return false;
+		}
+
+		if (pEyeManager->GetRightEyeOpenness(openness) && openness > 0.5f)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+int64 UFixationRecorder::GetEyeCaptureTimestamp()
+{
+	int64 ts = (int64)(Util::GetTimestamp() * 1000);
+	return ts;
+}
 #else
 
 bool UFixationRecorder::AreEyesClosed()
@@ -718,6 +742,35 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 				End = Start + WorldDirection * MaxFixationDistance;
 			}
 		}
+	}
+#elif defined WAVEVR_EYETRACKING
+	EyeCaptures[index].EyesClosed = AreEyesClosed();
+	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
+
+	FVector Start = controllers[0]->PlayerCameraManager->GetCameraLocation();
+	FVector End = FVector::ZeroVector;
+	WaveVREyeManager* pEyeManager = WaveVREyeManager::GetInstance();
+	FVector direction;
+	if (pEyeManager != nullptr)
+	{
+		//is this world direction or local direction?
+		if (pEyeManager->GetCombindedEyeDirectionNormalized(direction))
+		{
+			direction = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(direction);
+			End = Start + direction * 100000.0f;
+		}
+		else
+		{
+			FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
+			End = Start + captureRotation.Vector() * 10000.0f;
+			EyeCaptures[index].Discard = true;
+		}
+	}
+	else
+	{
+		FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
+		End = Start + captureRotation.Vector() * 10000.0f;
+		EyeCaptures[index].Discard = true;
 	}
 #else
 	EyeCaptures[index].EyesClosed = AreEyesClosed();

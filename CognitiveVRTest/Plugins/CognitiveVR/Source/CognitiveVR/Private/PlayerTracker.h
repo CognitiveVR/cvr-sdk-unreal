@@ -43,6 +43,9 @@
 #include "Runtime/EyeTracker/Public/IEyeTracker.h"
 #include "Runtime/EyeTracker/Public/IEyeTrackerModule.h"
 #endif
+#if defined WAVEVR_EYETRACKING
+#include "Public/Eye/WaveVREyeManager.h"
+#endif
 #include "DrawDebugHelpers.h"
 #include "PlayerTracker.generated.h"
 

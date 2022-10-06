@@ -99,6 +99,9 @@ private:
 #elif defined HPGLIA_API
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
+#elif defined WAVEVR_EYETRACKING
+	bool AreEyesClosed();
+	int64 GetEyeCaptureTimestamp();
 #else
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();

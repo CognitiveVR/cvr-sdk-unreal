@@ -167,6 +167,19 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 		End = start + LastDirection * 10000.0f;
 	}
 	return End;
+#elif defined WAVEVR_EYETRACKING
+	WaveVREyeManager* pEyeManager = WaveVREyeManager::GetInstance();
+	FVector End;
+	if (pEyeManager != nullptr)
+	{
+		//is this world direction or local direction?
+		if (pEyeManager->GetCombindedEyeDirectionNormalized(LastDirection))
+		{
+			LastDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(LastDirection);
+		}
+	}
+	End = start + LastDirection * 100000.0f;
+	return End;
 #else
 	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
 	FVector End = start + captureRotation.Vector() * 10000.0f;
