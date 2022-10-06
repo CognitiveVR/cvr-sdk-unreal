@@ -89,6 +89,9 @@ for dir in subdirectories:
                 elif mat.node_tree is None:
                     print(mat.name + "  has null node tree")
         mo2.close()
+    for mat in bpy.data.materials:
+        mat.show_transparent_back = False
+        mat.blend_method = 'OPAQUE'
     
     #redaw preview, just to show that something is happening
     bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP',iterations=1)

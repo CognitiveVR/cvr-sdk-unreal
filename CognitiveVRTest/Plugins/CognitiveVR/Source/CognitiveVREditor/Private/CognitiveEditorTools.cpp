@@ -119,15 +119,6 @@ bool FCognitiveEditorTools::IsWizardUploading()
 	return WizardUploading;
 }
 
-void FCognitiveEditorTools::Tick(float deltatime)
-{
-	if (WizardUploading)
-	{
-
-	}
-}
-
-
 
 TArray<TSharedPtr<FDynamicData>> SceneExplorerDynamics;
 TArray<TSharedPtr<FString>> SubDirectoryNames;
@@ -429,16 +420,8 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		FString justDirectory = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName;
 		FString tempObject;
 		FString ExportFilename;
-		//if (skeletalMeshes.Num() > meshes.Num())
-		{
-			ExportFilename = exportObjects[i]->MeshName + ".fbx";
-			tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".fbx";
-		}
-		//else
-		//{
-		//	ExportFilename = exportObjects[i]->MeshName + ".obj";
-		//	tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".obj";
-		//}
+		ExportFilename = exportObjects[i]->MeshName + ".fbx";
+		tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".fbx";
 
 		//create directory before export
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
@@ -515,48 +498,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			perspectiveView->Viewport->Draw(false);
 			FCognitiveEditorTools::DelayScreenshot(dir, perspectiveView, startPosition, startRotation);
 		}
-	}
-
-	//export geometry
-	//then export list of materials for each dynamic
-	//TODO clear existing mtl file if this is a new export. where? how? when?
-
-	for (auto& elem : BakeExportMaterials)
-	{
-		FString mtlPath = GetDynamicsExportDirectory() + "/" + elem.Key + "/" + "materiallist.txt";
-		//IFileManager::Get().Delete(*mtlPath);
-	}
-	for (auto& elem : BakeExportSkeletonMaterials)
-	{
-		FString mtlPath = GetDynamicsExportDirectory() + "/" + elem.Key + "/" + "materiallist.txt";
-		//IFileManager::Get().Delete(*mtlPath);
-	}
-
-	//create
-	//if (FFileHelper::LoadFileToStringArray(readLines, *mtlPath))
-		//materialContents.Append(readLines);
-	//if (IFileManager::Get().FileExists(*mtlPath))
-	//{
-	//	TArray<FString> readLines;
-	//	if (FFileHelper::LoadFileToStringArray(readLines, *mtlPath))
-	//		materialContents.Append(readLines);
-	//}
-
-	float work = 0;
-	//FScopedSlowTask SlowTask(BakeExportMaterials.Num(), FText::FromString("Baking Dynamic Object Materials"));
-	//SlowTask.MakeDialog(false);
-	for (auto& elem : BakeExportMaterials)
-	{
-		work += 1;
-		//SlowTask.EnterProgressFrame(work); //error in 4.27 'ExpectedWorkThisFrame <= 1.01f * TotalAmountOfWork - CompletedWork' work overflow
-		WizardExportStaticMaterials(GetDynamicsExportDirectory() + "/" + elem.Key + "/", elem.Value, elem.Key);
-	}
-
-	for (auto& elem : BakeExportSkeletonMaterials)
-	{
-		work += 1;
-		//SlowTask.EnterProgressFrame(work);
-		WizardExportSkeletalMaterials(GetDynamicsExportDirectory() + "/" + elem.Key + "/", elem.Value, elem.Key);
 	}
 
 	GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
@@ -1045,7 +986,7 @@ FReply FCognitiveEditorTools::UploadDynamics()
 	TArray<FString> dynamicNames;
 	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
 	{
-		if (TimestampIt.Key() == GetDynamicsExportDirectory() || (!TimestampIt.Key().EndsWith(".png") && !TimestampIt.Key().EndsWith(".obj") && !TimestampIt.Key().EndsWith(".mtl")))
+		if (TimestampIt.Key() == GetDynamicsExportDirectory() || (!TimestampIt.Key().EndsWith(".png")))
 		{
 			GLog->Log("skip file - not dynamic " + TimestampIt.Key());
 		}
@@ -1120,7 +1061,7 @@ FReply FCognitiveEditorTools::UploadDynamic(FString directory)
 	TArray<FString> dynamicNames;
 	for (TMap<FString, FDateTime>::TIterator TimestampIt(Visitor.FileTimes); TimestampIt; ++TimestampIt)
 	{
-		if (TimestampIt.Key().EndsWith(".png") || TimestampIt.Key().EndsWith(".obj") || TimestampIt.Key().EndsWith(".mtl"))
+		if (TimestampIt.Key().EndsWith(".png"))
 		{
 			GLog->Log("upload dynamic " + FPaths::GetCleanFilename(TimestampIt.Key()));
 			dynamicNames.Add(FPaths::GetCleanFilename(TimestampIt.Key()));
@@ -1209,7 +1150,6 @@ void FCognitiveEditorTools::FindAllSubDirectoryNames()
 
 void FCognitiveEditorTools::CreateExportFolderStructure()
 {
-
 	VerifyOrCreateDirectory(BaseExportDirectory);
 	FString temp = GetDynamicsExportDirectory();
 	VerifyOrCreateDirectory(temp);
@@ -2232,8 +2172,6 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 
 	GLog->Log("FCognitiveTools::RefreshSceneData found this many scenes: " + FString::FromInt(SceneData.Num()));
 	//ConfigFileHasChanged = true;
-
-	//return FReply::Handled();
 }
 
 void FCognitiveEditorTools::SceneVersionRequest(FEditorSceneData data)
@@ -2530,56 +2468,6 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 	GConfig->Flush(false, GEngineIni);
 }
 
-void FCognitiveEditorTools::WizardExportSkeletalMaterials(FString directory, TArray<USkeletalMeshComponent*> meshes, FString mtlFileName)
-{
-	TArray<FString> ExportedMaterialNames;
-
-	float work = 0;
-	FScopedSlowTask* SlowTaskPtr = NULL;
-	TArray<UMaterialInterface*> allMaterials;
-
-	if (mtlFileName == FCognitiveEditorTools::GetInstance()->GetCurrentSceneName())
-	{
-		SlowTaskPtr = new FScopedSlowTask(meshes.Num(), FText::FromString("Baking Scene Materials"));
-		SlowTaskPtr->MakeDialog(false);
-	}
-
-	for (int32 i = 0; i < meshes.Num(); i++)
-	{
-		if (SlowTaskPtr != NULL)
-		{
-			//work += 1;
-			SlowTaskPtr->EnterProgressFrame(1);
-		}
-		if (meshes[i] == NULL) { continue; }
-		USkeletalMeshComponent* TempObject = meshes[i];
-		//if (TempObject == NULL) { continue; }
-
-		//TArray<UMaterialInterface*> mats = TempObject->GetMaterials();
-		//MaterialLine.Add("MESH " + TempObject->GetFName().ToString());
-		allMaterials.Append(TempObject->GetMaterials());
-	}
-
-	TArray<FString> materialContents = WizardExportMaterials(directory, ExportedMaterialNames, allMaterials);
-
-	if (SlowTaskPtr != NULL)
-	{
-		delete SlowTaskPtr;
-	}
-
-	FString mtlPath = directory + "materiallist.txt";
-
-	//append if file exists
-	if (IFileManager::Get().FileExists(*mtlPath))
-	{
-		TArray<FString> readLines;
-		if (FFileHelper::LoadFileToStringArray(readLines, *mtlPath))
-			materialContents.Append(readLines);
-	}
-
-	FFileHelper::SaveStringArrayToFile(materialContents, *mtlPath);
-}
-
 void FCognitiveEditorTools::WizardExportStaticMaterials(FString directory, TArray<UStaticMeshComponent*> meshes, FString mtlFileName)
 {
 	TArray<FString> ExportedMaterialNames;
@@ -2614,17 +2502,6 @@ void FCognitiveEditorTools::WizardExportStaticMaterials(FString directory, TArra
 	{
 		delete SlowTaskPtr;
 	}
-
-	//write MaterialLine to mtl file
-	FString mtlPath = directory + "materiallist.txt";
-	//append if file exists
-	if (IFileManager::Get().FileExists(*mtlPath))
-	{
-		TArray<FString> readLines;
-		if (FFileHelper::LoadFileToStringArray(readLines, *mtlPath))
-			materialContents.Append(readLines);
-	}
-	FFileHelper::SaveStringArrayToFile(materialContents, *mtlPath);
 }
 
 TArray<FString> FCognitiveEditorTools::WizardExportMaterials(FString directory, TArray<FString> ExportedMaterialNames, TArray<UMaterialInterface*> mats)
@@ -2633,162 +2510,190 @@ TArray<FString> FCognitiveEditorTools::WizardExportMaterials(FString directory, 
 	FIntPoint resolution = FIntPoint(256, 256);
 	TArray<FString> MaterialLine;
 
+	//build a custom mtl file that includes transparency maps
+	TArray<FString> CustomMTLFile;
+
 	for (int32 j = 0; j < mats.Num(); j++)
 	{
 		FString line;
 
 		if (mats[j] == NULL) { continue; }
 		if (ExportedMaterialNames.Contains(mats[j]->GetName())) { GLog->Log("skip exporting duplicate material " + mats[j]->GetName()); continue; }
+
+		//try to get the pathname of the material
+		//possible that the duplicate name is caused by path/materialtexturename?
+		//GLog->Log("export material path " + mats[j]->GetPathName());
+		//     /Game/Geometry/Meshes/CubeMaterial.CubeMaterial
+
+		TArray<FMeshData*> MeshSettingPtrs;
+		TArray<FMaterialData*> MaterialSettingPtrs;
+
+		ExportedMaterialNames.Add(mats[j]->GetName());
+
+		FMaterialData MaterialSettings;
+		MaterialSettings.Material = mats[j];
+		MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_BaseColor, resolution);
+		MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Normal, resolution);
+		MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Specular, resolution);
+
+		CustomMTLFile.Add("newmtl " + mats[j]->GetPathName().Replace(TEXT("."), TEXT("_")));
+
+		//add some extra maps if necessary
 		if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Opaque)
 		{
-			FString n = mats[j]->GetName().Replace(TEXT("."), TEXT("_"));
-			//MaterialLine.Add("newmtl " + n);
-			//MaterialLine.Add("	OPAQUE MAT " + n);
+			//base colour already included above
 			line.Append("OPAQUE|");
-
-			ExportedMaterialNames.Add(mats[j]->GetName());
-
-			line.Append(mats[j]->GetName() + "|");
-
-			SCOPED_SUSPEND_RENDERING_THREAD(true);
-			PRAGMA_DISABLE_DEPRECATION_WARNINGS
-			TArray<FColor> OutputBMP;
-			FIntPoint OutSize;
-			FString BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
-			FMaterialUtilities::ExportMaterialProperty(mats[j], EMaterialProperty::MP_BaseColor, OutputBMP, OutSize);
-			FFileHelper::CreateBitmap(*BMPFilename, OutSize.X, OutSize.Y, OutputBMP.GetData());
-			//MaterialLine.Add("map_Kd " + BMPFilename);
-			//MaterialLine.Add("		DIFFUSE TEXTURE " + BMPFilename);
-			line.Append(BMPFilename + "|");
-
-			BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
-			FMaterialUtilities::ExportMaterialProperty(mats[j], EMaterialProperty::MP_Normal, OutputBMP, OutSize);
-			FFileHelper::CreateBitmap(*BMPFilename, OutSize.X, OutSize.Y, OutputBMP.GetData());
-			//MaterialLine.Add("		NORMAL TEXTURE " + BMPFilename);
-			//MaterialLine.Add("bump " + BMPFilename);
-			line.Append(BMPFilename);
-
-			line = line.ReplaceCharWithEscapedChar();
-
-			MaterialLine.Add(line);
-			PRAGMA_ENABLE_DEPRECATION_WARNINGS
-
-
-				//MaterialLine.Add("");
-				//MaterialLine.Add("");
-			continue;
+		}
+		else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
+		{
+			MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_OpacityMask, resolution);
+			line.Append("MASK|");
+		}
+		else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent || mats[j]->GetBlendMode() == EBlendMode::BLEND_Additive)
+		{
+			MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Opacity, resolution);
+			line.Append("TRANSLUCENT|");
 		}
 		else
 		{
-
-			TArray<FMeshData*> MeshSettingPtrs;
-			TArray<FMaterialData*> MaterialSettingPtrs;
-			FString n = mats[j]->GetName().Replace(TEXT("."), TEXT("_"));
-			//GLog->Log("		OTHER MAT " + mats[j]->GetFullName());
-
-			ExportedMaterialNames.Add(mats[j]->GetName());
-
-			FMaterialData MaterialSettings;
-			MaterialSettings.Material = mats[j];
-			//MaterialSettings.bPerformBorderSmear = false;
-			MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_BaseColor, resolution);
-			MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Normal, resolution);
-
-
-
-			if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
-			{
-				MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_OpacityMask, resolution);
-				//MaterialLine.Add("	MASKED MAT " + BMPFilename);
-				//MaterialLine.Add("	MASKED MAT " + n);
-				line.Append("MASK|");
-			}
-			else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent)
-			{
-				MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_Opacity, resolution);
-				//MaterialLine.Add("	TRANSLUCENT MAT " + BMPFilename);
-				//MaterialLine.Add("	TRANSLUCENT MAT " + n);
-				line.Append("TRANSLUCENT|");
-			}
-			else
-			{
-				//MaterialLine.Add("	OTHER MAT " + n);
-			}
-			//MaterialSettings.PropertySizes.Add(EMaterialProperty::MP_EmissiveColor, resolution);
-			MaterialSettingPtrs.Add(&MaterialSettings);
-
-			line.Append(mats[j]->GetName() + "|");
-
-
-			FMeshData meshdata;
-			//meshdata.RawMeshDescription = nullptr;
-			meshdata.TextureCoordinateBox = FBox2D(FVector2D(0.0f, 0.0f), FVector2D(1.0f, 1.0f));
-			meshdata.TextureCoordinateIndex = 0;
-			MeshSettingPtrs.Add(&meshdata);
-
-			TArray<FBakeOutput> BakeOutputs;
-			MaterialBakingModule.BakeMaterials(MaterialSettingPtrs, MeshSettingPtrs, BakeOutputs);
-
-			for (FBakeOutput& output : BakeOutputs)
-			{
-				//GLog->Log(FString::FromInt(output.PropertySizes[EMaterialProperty::MP_BaseColor].X) + "   " + FString::FromInt(output.PropertySizes[EMaterialProperty::MP_BaseColor].Y));
-
-				//writing materials with wrong uvs
-
-				FString BMPFilename;
-				//diffuse
-				BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_D.bmp");
-				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_BaseColor].GetData());
-				//MaterialLine.Add("		DIFFUSE TEXTURE " + BMPFilename);
-				line.Append(BMPFilename + "|");
-				//MaterialLine.Add("map_Kd " + BMPFilename);
-
-				//normal
-				BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_N.bmp");
-				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Normal].GetData());
-				//MaterialLine.Add("		NORMAL TEXTURE " + BMPFilename);
-				line.Append(BMPFilename + "|");
-				//MaterialLine.Add("bump " + BMPFilename);
-
-				if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Masked)
-				{
-					//	//mask
-					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_OM.bmp");
-					FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_OpacityMask].GetData());
-					//MaterialLine.Add("illum 4");
-					//MaterialLine.Add("map_D " + BMPFilename);
-					//MaterialLine.Add("		OPACITY TEXTURE " + BMPFilename);
-					line.Append(BMPFilename);
-				}
-				else if (mats[j]->GetBlendMode() == EBlendMode::BLEND_Translucent)
-				{
-					//opacity
-					BMPFilename = directory + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + TEXT("_O.bmp");
-					FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Opacity].GetData());
-					//MaterialLine.Add("illum 4");
-					//MaterialLine.Add("map_D " + BMPFilename);
-					//MaterialLine.Add("		OPACITY TEXTURE " + BMPFilename);
-					line.Append(BMPFilename);
-				}
-				line = line.ReplaceCharWithEscapedChar();
-				MaterialLine.Add(line);
-			}
-			//MaterialLine.Add("");
-			//MaterialLine.Add("");
-			//MaterialLine.Add("");
+			line.Append("OTHER|");
 		}
-	}
 
+		MaterialSettingPtrs.Add(&MaterialSettings);
+
+		line.Append(mats[j]->GetName() + "|");
+
+		FMeshData meshdata;
+		meshdata.TextureCoordinateBox = FBox2D(FVector2D(0.0f, 0.0f), FVector2D(1.0f, 1.0f));
+		meshdata.TextureCoordinateIndex = 0;
+		MeshSettingPtrs.Add(&meshdata);
+
+		TArray<FBakeOutput> BakeOutputs;
+		MaterialBakingModule.BakeMaterials(MaterialSettingPtrs, MeshSettingPtrs, BakeOutputs);
+
+		for (FBakeOutput& output : BakeOutputs)
+		{
+			if (output.PropertyData.Contains(EMaterialProperty::MP_BaseColor))
+			{
+				//diffuse
+				FString BMPFilename = directory;
+				BMPFilename.RemoveFromEnd("/");
+				BMPFilename += mats[j]->GetPathName();
+				BMPFilename = BMPFilename.Replace(TEXT("."), TEXT("_"));
+				BMPFilename += TEXT("_D.bmp");
+
+				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_BaseColor].GetData());
+				line.Append(BMPFilename + "|");
+				CustomMTLFile.Add("\tmap_Kd " + mats[j]->GetName().Replace(TEXT("."), TEXT("_"))+"_"+ mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_D.bmp");
+			}
+
+			if (output.PropertyData.Contains(EMaterialProperty::MP_Specular))
+			{
+				//specular
+				FString BMPFilename = directory;
+				BMPFilename.RemoveFromEnd("/");
+				BMPFilename += mats[j]->GetPathName();
+				BMPFilename = BMPFilename.Replace(TEXT("."), TEXT("_"));
+				BMPFilename += TEXT("_S.bmp");
+
+				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Specular].GetData());
+				line.Append(BMPFilename + "|");
+				CustomMTLFile.Add("\tmap_Ks " + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_" + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_S.bmp");
+			}
+
+			if (output.PropertyData.Contains(EMaterialProperty::MP_Normal))
+			{
+				//normal
+				FString BMPFilename = directory;
+				BMPFilename.RemoveFromEnd("/");
+				BMPFilename += mats[j]->GetPathName();
+				BMPFilename = BMPFilename.Replace(TEXT("."), TEXT("_"));
+				BMPFilename += TEXT("_N.bmp");
+
+				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Normal].GetData());
+				line.Append(BMPFilename + "|");
+				CustomMTLFile.Add("\tbump " + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_" + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_N.bmp");
+			}
+			if (output.PropertyData.Contains(EMaterialProperty::MP_OpacityMask))
+			{
+				//mask
+				FString BMPFilename = directory;
+				BMPFilename.RemoveFromEnd("/");
+				BMPFilename += mats[j]->GetPathName();
+				BMPFilename = BMPFilename.Replace(TEXT("."), TEXT("_"));
+				BMPFilename += TEXT("_OM.bmp");
+				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_OpacityMask].GetData());
+				line.Append(BMPFilename);
+				CustomMTLFile.Add("\tmap_d " + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_" + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_OM.bmp");
+			}
+			if (output.PropertyData.Contains(EMaterialProperty::MP_Opacity))
+			{
+				//opacity
+				FString BMPFilename = directory;
+				BMPFilename.RemoveFromEnd("/");
+				BMPFilename += mats[j]->GetPathName();
+				BMPFilename = BMPFilename.Replace(TEXT("."), TEXT("_"));
+				BMPFilename += TEXT("_O.bmp");
+				FFileHelper::CreateBitmap(*BMPFilename, resolution.X, resolution.Y, output.PropertyData[EMaterialProperty::MP_Opacity].GetData());
+				line.Append(BMPFilename);
+				CustomMTLFile.Add("\tmap_d " + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_" + mats[j]->GetName().Replace(TEXT("."), TEXT("_")) + "_O.bmp");
+			}
+			line = line.ReplaceCharWithEscapedChar();
+			MaterialLine.Add(line);
+		}
+		CustomMTLFile.Add("");
+	}
+	FString mtlPath = directory + GetCurrentSceneName()+".mtl";
+	FFileHelper::SaveStringArrayToFile(CustomMTLFile, *mtlPath);
 	return MaterialLine;
 }
 
-void FCognitiveEditorTools::WizardPostSceneExport()
+void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 {
-	GLog->Log("FCognitiveEditorTools::WizardPostSceneExport");
-}
+	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
-void FCognitiveEditorTools::WizardConvertScene()
-{
+	if (!tempworld)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportScene world is null"));
+		return;
+	}
+
+	GEditor->SelectNone(false, true, false);
+
+	for (int32 i = 0; i < actorsToExport.Num(); i++)
+	{
+		GEditor->SelectActor((actorsToExport[i]), true, false, true);
+	}
+
+	//create directory at scene name path
+	FString sceneDirectory = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/";
+	FCognitiveEditorTools::VerifyOrCreateDirectory(sceneDirectory);
+
+	//export scene
+	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
+	GEditor->ExportMap(tempworld, *ExportedSceneFile2, true);
+
+	//export materials
+	TArray< UStaticMeshComponent*> sceneMeshes;
+
+	for (auto& elem : actorsToExport)
+	{
+		auto TempObject = elem->GetComponentByClass(UStaticMeshComponent::StaticClass());
+		if (TempObject == NULL) { continue; }
+		auto staticTempObject = (UStaticMeshComponent*)TempObject;
+
+		if (staticTempObject->GetOwner() == NULL) { continue; }
+
+		UActorComponent* dynamic = staticTempObject->GetOwner()->GetComponentByClass(UDynamicObject::StaticClass());
+		if (dynamic != NULL) { continue; }
+
+		sceneMeshes.Add(staticTempObject);
+	}
+
+	//build materiallist.txt and export textures for transparent materials
+	WizardExportStaticMaterials(sceneDirectory, sceneMeshes, FCognitiveEditorTools::GetInstance()->GetCurrentSceneName());
+
+	//Convert scene to GLTF. run python script
 	FProcHandle fph = ConvertSceneToGLTF();
 
 	if (fph.IsValid())
@@ -2799,35 +2704,28 @@ void FCognitiveEditorTools::WizardConvertScene()
 		//write debug.log including unreal data, scene contents, folder contents
 		//should happen after blender finishes/next button is pressed
 
-
 		FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
 		FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
 		FString fullPath = escapedOutPath + "/debug.log";
 		FString fileContents = BuildDebugFileContents();
 		bool success = FFileHelper::SaveStringToFile(fileContents, *fullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+
+
+		FString settingsContents = "{\"scale\":100,\"sdkVersion\":\""+ FString(COGNITIVEVR_SDK_VERSION)+"\",\"sceneName\":\""+ GetCurrentSceneName()+"\"}";
+		FString settingsFullPath = escapedOutPath + "/settings.json";
+		bool success2 = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	}
 }
 
-void FCognitiveEditorTools::WizardUpload()
-{
-	WizardUploading = true;
-	WizardUploadError = "";
-	WizardUploadResponseCode = 0;
-	UploadScene();
-
-	//scene
-	//scene version
-	//dynamics meshes
-	//dynamic manifest
-}
-
-//run this as the next step after exporting the scene
 FProcHandle FCognitiveEditorTools::ConvertSceneToGLTF()
 {
 	FProcHandle BlenderReduceAllWizardProc;
 
-	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("ReduceWizardExportedScene.py");
+	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("ConvertSceneToGLTF.py");
 	const TCHAR* charPath = *pythonscriptpath;
+	FString fullScriptPath = FPaths::ConvertRelativePathToFull(pythonscriptpath);
+	GLog->Log("full " + fullScriptPath);
+
 
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
 	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
@@ -2863,44 +2761,32 @@ FProcHandle FCognitiveEditorTools::ConvertSceneToGLTF()
 		return BlenderReduceAllWizardProc;
 	}
 
-	FString MinPolyCount = FString::FromInt(MinPolygon);
-	FString MaxPolyCount = FString::FromInt(MaxPolygon);
-
-	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
+	FString escapedPythonPath = fullScriptPath.Replace(TEXT(" "), TEXT("\" \""));
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
 
-	FString escapedExcludeMeshes = "IGNOREEXCLUDEMESHES";
+	//export path
+	//scene/dynamic type
+	//targetNames comma separated
 
-	FConfigSection* ExportSettings = GConfig->GetSectionPrivate(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), false, true, GEngineIni);
-	if (ExportSettings != NULL)
-	{
-		for (FConfigSection::TIterator It(*ExportSettings); It; ++It)
-		{
-			if (It.Key() == TEXT("ExcludeMeshes"))
-			{
-				FName nameEscapedExcludeMeshes;
-				escapedExcludeMeshes = It.Value().GetValue();
-				break;
-			}
-		}
-	}
-
-	escapedExcludeMeshes = escapedExcludeMeshes.Replace(TEXT(" "), TEXT("\" \""));
-
-	FString productID = "UNUSED";
-
-	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " " + MinPolyCount + " " + MaxPolyCount + " " + SceneName + " " + productID + " " + COGNITIVEVR_SDK_VERSION + " " + escapedExcludeMeshes;
+	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " scene " + SceneName;
 
 	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
 
-	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures Params: %s"), *stringParamSlashed);
-
+	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::ConvertSceneToGLTF Params: %s"), *stringParamSlashed);
 
 	const TCHAR* params = *stringParamSlashed;
 	int32 priorityMod = 0;
 	BlenderReduceAllWizardProc = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
 
 	return BlenderReduceAllWizardProc;
+}
+
+void FCognitiveEditorTools::WizardUpload()
+{
+	WizardUploading = true;
+	WizardUploadError = "";
+	WizardUploadResponseCode = 0;
+	UploadScene();
 }
 
 

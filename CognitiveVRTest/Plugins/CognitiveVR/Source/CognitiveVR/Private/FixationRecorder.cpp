@@ -813,14 +813,14 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 		if (Hit.GetActor() != NULL)
 		{
-			UDynamicObject* dyn = Hit.Actor->FindComponentByClass<UDynamicObject>();
+			UDynamicObject* dyn = Hit.GetActor()->FindComponentByClass<UDynamicObject>();
 			if (dyn != NULL)
 			{
 				EyeCaptures[index].UseCaptureMatrix = true;
-				EyeCaptures[index].CaptureMatrix = Hit.Actor->GetActorTransform();
+				EyeCaptures[index].CaptureMatrix = Hit.GetActor()->GetActorTransform();
 				EyeCaptures[index].HitDynamicId = dyn->GetObjectId()->Id;
 				EyeCaptures[index].OffTransform = false;
-				EyeCaptures[index].LocalPosition = Hit.Actor->GetActorTransform().InverseTransformPosition(Hit.ImpactPoint);
+				EyeCaptures[index].LocalPosition = Hit.GetActor()->GetActorTransform().InverseTransformPosition(Hit.ImpactPoint);
 				//IMPROVEMENT possible issue with non-uniform scale. should use FMatrix instead?
 				//https://stackoverflow.com/questions/53887451/incorrect-results-of-simple-coordinate-transformation-in-ue4
 				//display stuff
