@@ -235,10 +235,10 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 	CognitiveLog::Info("CognitiveVR EndSession");
 	currentWorld = NULL;
-	if (localCache != nullptr)
+	if (localCache.IsValid())
 	{
 		localCache->Close();
-		localCache = nullptr;
+		localCache.Reset();
 	}
 }
 

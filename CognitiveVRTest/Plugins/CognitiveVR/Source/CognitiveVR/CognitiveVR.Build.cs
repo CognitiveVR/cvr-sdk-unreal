@@ -59,9 +59,13 @@ namespace UnrealBuildTool.Rules
 	PublicDependencyModuleNames.Add("DeveloperSettings");
 #endif
 
-		//uncomment this to enable OpenXR eye tracking support (varjo openxr support, etc)
-		//Definitions.Add("OPENXR_EYETRACKING");
-		//Definitions.Add("OPENXR_LOCALSPACE"); //uncomment this if OPENXR implemented in local space instead of worldspace
+		//uncomment this to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
+		//PublicDefinitions.Add("OPENXR_EYETRACKING");
+		//PublicDefinitions.Add("OPENXR_LOCALSPACE"); //uncomment this if OPENXR implemented in local space instead of worldspace
+
+		//uncomment these lines to enable Vive WaveVR eye tracking support
+		//PublicDefinitions.Add("WAVEVR_EYETRACKING");
+		//PublicDependencyModuleNames.Add("WaveVR");
 
 		var pluginsDirectory = System.IO.Path.Combine(Target.ProjectFile.Directory.ToString(),"Plugins");
 		
@@ -96,7 +100,7 @@ namespace UnrealBuildTool.Rules
 			string[] sourceModules = System.IO.Directory.GetDirectories(sranipalSource);
 			if (sourceModules.Length == 2)//1.1.0.1 and 1.2.0.1 only have eye and lip modules
 			{
-				Definitions.Add("SRANIPAL_1_2_API");
+				PublicDefinitions.Add("SRANIPAL_1_2_API");
 				System.Console.WriteLine("CognitiveVR.Build.cs found SRanipal Plugin folder");
 				PrivateIncludePaths.AddRange(
 					new string[] {
@@ -113,7 +117,7 @@ namespace UnrealBuildTool.Rules
 			}
 			else if (sourceModules.Length == 5)
 			{
-				Definitions.Add("SRANIPAL_1_3_API");
+				PublicDefinitions.Add("SRANIPAL_1_3_API");
 				System.Console.WriteLine("CognitiveVR.Build.cs found SRanipal Plugin folder 1.3.0.9 or newer");
 				PrivateIncludePaths.AddRange(
 					new string[] {
@@ -150,8 +154,10 @@ namespace UnrealBuildTool.Rules
 			PublicDependencyModuleNames.Add("HPGlia");
 		}
 
-		if (Target.Platform == UnrealTargetPlatform.Win32 ||
-            Target.Platform == UnrealTargetPlatform.Win64)
+		//this is all for runtime audio capture support
+		if (Target.Platform == UnrealTargetPlatform.Win64
+			|| Target.Platform == UnrealTargetPlatform.Win32
+            )
         {
             // Add __WINDOWS_WASAPI__ so that RtAudio compiles with WASAPI
             PublicDefinitions.Add("__WINDOWS_DS__");
@@ -161,15 +167,6 @@ namespace UnrealBuildTool.Rules
 			
 			string DirectXSDKDir = Target.UEThirdPartySourceDirectory + "Windows/DirectX";
 			PublicSystemIncludePaths.Add( DirectXSDKDir + "/include");
-
-			if (Target.Platform == UnrealTargetPlatform.Win64)
-			{
-				PublicLibraryPaths.Add( DirectXSDKDir + "/Lib/x64");
-			}
-			else if (Target.Platform == UnrealTargetPlatform.Win32)
-			{
-				PublicLibraryPaths.Add( DirectXSDKDir + "/Lib/x86");
-			}
 
 			PublicAdditionalLibraries.AddRange(
 					new string[] {

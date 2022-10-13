@@ -35,7 +35,8 @@ class LocalCache
 		void Close();
 		
 		//checks for max file size
-		bool CanWrite();
+		bool IsEnabled();
+		bool CanWrite(int32 byteCount);
 		//
 		void SerializeToFile();
 	private:
@@ -49,4 +50,5 @@ class LocalCache
 		//simple tracker for how many entires (url + content) are in the write file without doing IO stuff
 		int32 numberWriteBatches = 0;
 		bool localCacheEnabled = true;
+		int32 MaxCacheSize = 0;
 };

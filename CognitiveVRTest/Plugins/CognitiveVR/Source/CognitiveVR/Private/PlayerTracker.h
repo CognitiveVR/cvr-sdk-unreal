@@ -43,6 +43,9 @@
 #include "Runtime/EyeTracker/Public/IEyeTracker.h"
 #include "Runtime/EyeTracker/Public/IEyeTrackerModule.h"
 #endif
+#if defined WAVEVR_EYETRACKING
+#include "Public/Eye/WaveVREyeManager.h"
+#endif
 #include "DrawDebugHelpers.h"
 #include "PlayerTracker.generated.h"
 
@@ -79,10 +82,6 @@ private:
 	FTimerHandle AutoSendHandle;
 	void TickSensors1000MS();
 	void TickSensors100MS();
-#endif
-#if defined OPENXR_EYETRACKING
-	IEyeTrackerModule& eyeTrackingModule = IEyeTrackerModule::Get();
-	TSharedPtr< class IEyeTracker, ESPMode::ThreadSafe > eyeTracker;
 #endif
 
 public:

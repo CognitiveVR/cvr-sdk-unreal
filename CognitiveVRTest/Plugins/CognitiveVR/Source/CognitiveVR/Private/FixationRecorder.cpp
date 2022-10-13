@@ -64,10 +64,7 @@ int32 UFixationRecorder::GetIndex(int32 offset)
 void UFixationRecorder::BeginPlay()
 {
 	if (HasBegunPlay()) { return; }
-
 	Super::BeginPlay();
-	instance = this;
-	world = GetWorld();
 }
 
 void UFixationRecorder::BeginSession()
@@ -80,12 +77,6 @@ void UFixationRecorder::BeginSession()
 			EyeCaptures.Add(FEyeCapture());
 		}
 		GEngine->GetAllLocalPlayerControllers(controllers);
-#if defined OPENXR_EYETRACKING
-		if (eyeTrackingModule.IsEyeTrackerConnected())
-		{
-			eyeTracker = eyeTrackingModule.CreateEyeTracker();
-		}
-#endif
 	}
 	else
 	{
@@ -454,28 +445,39 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 #elif defined OPENXR_EYETRACKING
 bool UFixationRecorder::AreEyesClosed()
 {
-	if (!eyeTracker.IsValid()) { return true; }
-	EEyeTrackerStatus status = eyeTracker->GetEyeTrackerStatus();
-	if (status != EEyeTrackerStatus::Tracking) { return true; }
-
-	if (eyeTracker->IsStereoGazeDataAvailable())
-	{
-		FEyeTrackerStereoGazeData stereoGazeData;
-		eyeTracker->GetEyeTrackerStereoGazeData(stereoGazeData);
-	}
-	else
-	{
-		FEyeTrackerGazeData gazeData;
-		eyeTracker->GetEyeTrackerGazeData(gazeData);
-	}
-
+	IEyeTracker const* const ET = GEngine ? GEngine->EyeTrackingDevice.Get() : nullptr;
+	if (ET == NULL) { return false; }
 	FEyeTrackerGazeData gazeData;
-	eyeTracker->GetEyeTrackerGazeData(gazeData);
+	ET->GetEyeTrackerGazeData(gazeData);
 	if (gazeData.ConfidenceValue < 0.5f)
 	{
 		return true;
 	}
 	return false;
+}
+int64 UFixationRecorder::GetEyeCaptureTimestamp()
+{
+	int64 ts = (int64)(Util::GetTimestamp() * 1000);
+	return ts;
+}
+#elif defined WAVEVR_EYETRACKING
+bool UFixationRecorder::AreEyesClosed()
+{
+	WaveVREyeManager* pEyeManager = WaveVREyeManager::GetInstance();
+	float openness;
+	if (pEyeManager != nullptr)
+	{
+		if (pEyeManager->GetLeftEyeOpenness(openness) && openness > 0.5f)
+		{
+			return false;
+		}
+
+		if (pEyeManager->GetRightEyeOpenness(openness) && openness > 0.5f)
+		{
+			return false;
+		}
+	}
+	return true;
 }
 int64 UFixationRecorder::GetEyeCaptureTimestamp()
 {
@@ -718,16 +720,16 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	FVector Start = FVector::ZeroVector;
 	FVector WorldDirection = FVector::ZeroVector;
 	FVector End = FVector::ZeroVector;
-
-	if (!eyeTracker.IsValid()) { EyeCaptures[index].Discard = true; }
+	IEyeTracker const* const ET = GEngine ? GEngine->EyeTrackingDevice.Get() : nullptr;
+	if (ET == NULL) { EyeCaptures[index].Discard = true; }
 	else
 	{
-		EEyeTrackerStatus status = eyeTracker->GetEyeTrackerStatus();
+		EEyeTrackerStatus status = ET->GetEyeTrackerStatus();
 		if (status != EEyeTrackerStatus::Tracking) { EyeCaptures[index].Discard = true; }
 		else
 		{
 			FEyeTrackerGazeData gazeData;
-			eyeTracker->GetEyeTrackerGazeData(gazeData);
+			ET->GetEyeTrackerGazeData(gazeData);
 			if (gazeData.ConfidenceValue < 0.4f) { EyeCaptures[index].Discard = true; }
 			else
 			{
@@ -740,6 +742,35 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 				End = Start + WorldDirection * MaxFixationDistance;
 			}
 		}
+	}
+#elif defined WAVEVR_EYETRACKING
+	EyeCaptures[index].EyesClosed = AreEyesClosed();
+	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
+
+	FVector Start = controllers[0]->PlayerCameraManager->GetCameraLocation();
+	FVector End = FVector::ZeroVector;
+	WaveVREyeManager* pEyeManager = WaveVREyeManager::GetInstance();
+	FVector direction;
+	if (pEyeManager != nullptr)
+	{
+		//is this world direction or local direction?
+		if (pEyeManager->GetCombindedEyeDirectionNormalized(direction))
+		{
+			direction = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(direction);
+			End = Start + direction * 100000.0f;
+		}
+		else
+		{
+			FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
+			End = Start + captureRotation.Vector() * 10000.0f;
+			EyeCaptures[index].Discard = true;
+		}
+	}
+	else
+	{
+		FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
+		End = Start + captureRotation.Vector() * 10000.0f;
+		EyeCaptures[index].Discard = true;
 	}
 #else
 	EyeCaptures[index].EyesClosed = AreEyesClosed();
@@ -782,14 +813,14 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 		if (Hit.GetActor() != NULL)
 		{
-			UDynamicObject* dyn = Hit.Actor->FindComponentByClass<UDynamicObject>();
+			UDynamicObject* dyn = Hit.GetActor()->FindComponentByClass<UDynamicObject>();
 			if (dyn != NULL)
 			{
 				EyeCaptures[index].UseCaptureMatrix = true;
-				EyeCaptures[index].CaptureMatrix = Hit.Actor->GetActorTransform();
+				EyeCaptures[index].CaptureMatrix = Hit.GetActor()->GetActorTransform();
 				EyeCaptures[index].HitDynamicId = dyn->GetObjectId()->Id;
 				EyeCaptures[index].OffTransform = false;
-				EyeCaptures[index].LocalPosition = Hit.Actor->GetActorTransform().InverseTransformPosition(Hit.ImpactPoint);
+				EyeCaptures[index].LocalPosition = Hit.GetActor()->GetActorTransform().InverseTransformPosition(Hit.ImpactPoint);
 				//IMPROVEMENT possible issue with non-uniform scale. should use FMatrix instead?
 				//https://stackoverflow.com/questions/53887451/incorrect-results-of-simple-coordinate-transformation-in-ue4
 				//display stuff
@@ -1243,6 +1274,18 @@ float UFixationRecorder::GetDPIScale()
 
 UFixationRecorder* UFixationRecorder::GetFixationRecorder()
 {
+	if (instance == NULL)
+	{
+		for (TObjectIterator<UFixationRecorder> Itr; Itr; ++Itr)
+		{
+			UWorld* tempWorld = Itr->GetWorld();
+			if (tempWorld == NULL) { continue; }
+			if (tempWorld->WorldType != EWorldType::PIE && tempWorld->WorldType != EWorldType::Game) { continue; } //editor world. skip
+			instance = *Itr;
+			instance->world = tempWorld;
+			break;
+		}
+	}
 	return instance;
 }
 

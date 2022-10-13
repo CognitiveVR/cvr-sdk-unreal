@@ -82,8 +82,6 @@ private:
 	bool AreEyesClosed(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker);
 	int64 GetEyeCaptureTimestamp(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker);
 #elif defined OPENXR_EYETRACKING
-	IEyeTrackerModule& eyeTrackingModule = IEyeTrackerModule::Get();
-	TSharedPtr< class IEyeTracker, ESPMode::ThreadSafe > eyeTracker;
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
 #elif defined SRANIPAL_1_2_API
@@ -99,6 +97,9 @@ private:
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
 #elif defined HPGLIA_API
+	bool AreEyesClosed();
+	int64 GetEyeCaptureTimestamp();
+#elif defined WAVEVR_EYETRACKING
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
 #else
