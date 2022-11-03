@@ -6,7 +6,8 @@ import glob
 
 cwd = os.getcwd()
 version = "0"
-enginesubversion = "27"
+engineversion = "5"
+enginesubversion = "1"
 
 def replaceline(file, linesrc, linedst):
 
@@ -104,8 +105,12 @@ print (version)
 
 #do all the update stuff
 
+#1 comment out unsupport platform in build.cs
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","			|| Target.Platform == UnrealTargetPlatform.Win32","//			|| Target.Platform == UnrealTargetPlatform.Win32")
+
+
 # save to zip archive
-output_filename = cwd+"/C3D_Plugin"+version+"_ue4"+enginesubversion
+output_filename = cwd+"/C3D_Plugin"+version+"_ue"+engineversion+"_"enginesubversion
 shutil.make_archive(output_filename, 'zip', cwd+"/Plugins/")
 
 #delete the temp plugin directory

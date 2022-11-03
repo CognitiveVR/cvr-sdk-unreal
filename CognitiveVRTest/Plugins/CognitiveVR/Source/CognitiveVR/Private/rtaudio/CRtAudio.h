@@ -1063,7 +1063,7 @@ private:
 	void wasapiThread();
 };
 
-#include "HideWindowsPlatformTypes.h"
+#include "Core/Public/Windows/HideWindowsPlatformTypes.h"
 
 #endif
 
