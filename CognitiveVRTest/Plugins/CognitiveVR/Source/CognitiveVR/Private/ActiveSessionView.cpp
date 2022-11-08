@@ -17,6 +17,7 @@ AActiveSessionView::AActiveSessionView()
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> LoadedSearchResultWidgetClass(TEXT("/CognitiveVR/ActiveSessionViewWidget"));
 	static ConstructorHelpers::FClassFinder<UUserWidget> LoadedSearchResultWidgetClass(TEXT("/CognitiveVR/ActiveSessionViewWidget.ActiveSessionViewWidget_C"));
+	static ConstructorHelpers::FClassFinder<UUserWidget> LoadedSearchResultWidgetClass(TEXT("/CognitiveVR/Widgets/ActiveSessionViewWidget.ActiveSessionViewWidget_C"));
 	if (LoadedSearchResultWidgetClass.Succeeded())
 	{
 		WidgetClass = LoadedSearchResultWidgetClass.Class;

@@ -110,7 +110,7 @@ replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","
 
 
 # save to zip archive
-output_filename = cwd+"/C3D_Plugin"+version+"_ue"+engineversion+"_"enginesubversion
+output_filename = cwd+"/C3D_Plugin"+version+"_ue"+engineversion+"_"+enginesubversion
 shutil.make_archive(output_filename, 'zip', cwd+"/Plugins/")
 
 #delete the temp plugin directory
