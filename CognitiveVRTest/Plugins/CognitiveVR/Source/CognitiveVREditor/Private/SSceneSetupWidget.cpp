@@ -462,7 +462,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 			//path to blender
 			+ SVerticalBox::Slot()
-			.MaxHeight(17)
+			.MaxHeight(32)
 				.AutoHeight()
 				.Padding(0, 0, 0, padding)
 			[
@@ -473,7 +473,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				[
 					SNew(SBox)
 					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-					.HeightOverride(17)
+					.HeightOverride(32)
 					[
 						SNew(STextBlock)
 						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
@@ -485,8 +485,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				[
 					SNew(SBox)
 					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-					.HeightOverride(17)
-					.MaxDesiredHeight(17)
+					.HeightOverride(32)
+					.MaxDesiredHeight(32)
 					[
 						SNew(SEditableTextBox)
 						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBlenderPath)
@@ -529,7 +529,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 			//path to export directory
 			+ SVerticalBox::Slot()
-			.MaxHeight(17)
+			.MaxHeight(32)
 				.AutoHeight()
 				.Padding(0, 0, 0, padding)
 			[
@@ -540,7 +540,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				[
 					SNew(SBox)
 					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-					.HeightOverride(17)
+					.HeightOverride(32)
 					[
 						SNew(STextBlock)
 						.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
@@ -553,8 +553,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				[
 					SNew(SBox)
 					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-					.HeightOverride(17)
-					.MaxDesiredHeight(17)
+					.HeightOverride(32)
+					.MaxDesiredHeight(32)
 					[
 						SNew(SEditableTextBox)
 						.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
