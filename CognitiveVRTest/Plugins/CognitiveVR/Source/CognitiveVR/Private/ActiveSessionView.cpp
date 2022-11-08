@@ -13,10 +13,6 @@ AActiveSessionView::AActiveSessionView()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	RootComponent = WidgetComponent;
-
-	static ConstructorHelpers::FClassFinder<UUserWidget> LoadedSearchResultWidgetClass(TEXT("/CognitiveVR/ActiveSessionViewWidget"));
-	static ConstructorHelpers::FClassFinder<UUserWidget> LoadedSearchResultWidgetClass(TEXT("/CognitiveVR/ActiveSessionViewWidget.ActiveSessionViewWidget_C"));
 	static ConstructorHelpers::FClassFinder<UUserWidget> LoadedSearchResultWidgetClass(TEXT("/CognitiveVR/Widgets/ActiveSessionViewWidget.ActiveSessionViewWidget_C"));
 	if (LoadedSearchResultWidgetClass.Succeeded())
 	{
@@ -29,6 +25,7 @@ AActiveSessionView::AActiveSessionView()
 		WidgetComponent->SetTickWhenOffscreen(true);
 		WidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		WidgetComponent->bRenderInMainPass = false; //hides the widget from the HMD
+		RootComponent = WidgetComponent;
 	}
 }
 
