@@ -1,8 +1,6 @@
 import os
 import shutil
-import sys
 import time
-import glob
 
 cwd = os.getcwd()
 version = "0"
@@ -23,7 +21,6 @@ def replaceline(file, linesrc, linedst):
 		else:
 			#print("-------- line " + line)
 			finalstrings.append(line+"\n")
-			
 
 	mo.close()
 
@@ -54,7 +51,6 @@ def insertline(file, targetline, insertline):
 		else:
 			#print("-------- line " + line)
 			finalstrings.append(line+"\n")
-			
 
 	mo.close()
 

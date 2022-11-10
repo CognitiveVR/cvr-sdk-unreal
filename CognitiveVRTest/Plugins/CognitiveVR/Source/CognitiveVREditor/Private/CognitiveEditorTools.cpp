@@ -2693,28 +2693,28 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	//build materiallist.txt and export textures for transparent materials
 	WizardExportStaticMaterials(sceneDirectory, sceneMeshes, FCognitiveEditorTools::GetInstance()->GetCurrentSceneName());
 
-	//Convert scene to GLTF. run python script
-	FProcHandle fph = ConvertSceneToGLTF();
+	TakeScreenshot();
 
+	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
+	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
+
+	//create settings.json
+	FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(COGNITIVEVR_SDK_VERSION) + "\",\"sceneName\":\"" + GetCurrentSceneName() + "\"}";
+	FString settingsFullPath = escapedOutPath + "/settings.json";
+	bool success2 = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+
+	//Convert scene to GLTF. run python script. wait if blender process is running
+	FProcHandle fph = ConvertSceneToGLTF();
 	if (fph.IsValid())
 	{
 		FPlatformProcess::WaitForProc(fph);
-
-		TakeScreenshot();
-		//write debug.log including unreal data, scene contents, folder contents
-		//should happen after blender finishes/next button is pressed
-
-		FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
-		FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
-		FString fullPath = escapedOutPath + "/debug.log";
-		FString fileContents = BuildDebugFileContents();
-		bool success = FFileHelper::SaveStringToFile(fileContents, *fullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
-
-
-		FString settingsContents = "{\"scale\":100,\"sdkVersion\":\""+ FString(COGNITIVEVR_SDK_VERSION)+"\",\"sceneName\":\""+ GetCurrentSceneName()+"\"}";
-		FString settingsFullPath = escapedOutPath + "/settings.json";
-		bool success2 = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	}
+
+	//write debug.log including unreal data, scene contents, folder contents
+	//should happen after blender finishes/next button is pressed
+	FString fullPath = escapedOutPath + "/debug.log";
+	FString fileContents = BuildDebugFileContents();
+	bool success = FFileHelper::SaveStringToFile(fileContents, *fullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 }
 
 FProcHandle FCognitiveEditorTools::ConvertSceneToGLTF()
