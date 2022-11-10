@@ -10259,7 +10259,7 @@ void CRtApi::byteSwapBuffer(char *buffer, unsigned int samples, CRtAudioFormat f
 	}
 }
 
-#include "Core/Public/HoloLens/HideWindowsPlatformTypes.h"
+#include "Core/Public/Windows/HideWindowsPlatformTypes.h"
 
 // Indentation settings for Vim and Emacs
 //
