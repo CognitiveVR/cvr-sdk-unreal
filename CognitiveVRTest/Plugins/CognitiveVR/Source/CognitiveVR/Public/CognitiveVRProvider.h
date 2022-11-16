@@ -78,7 +78,7 @@
 		//returns unique participant id
 		virtual FString GetUserID() const override;
 		//returns participant name
-		FString GetUserName() const;
+		FString GetCognitiveUserName() const;
 
 		virtual FString GetSessionID() const override;
 		//allows developers to manually set a sesison id instead of generating one
