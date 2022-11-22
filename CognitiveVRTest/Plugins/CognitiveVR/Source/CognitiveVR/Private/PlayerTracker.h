@@ -105,8 +105,8 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
 		FOnCognitiveSessionBegin OnSessionBegin;
-	
-	UPROPERTY(EditAnywhere)
+
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		bool DebugDisplayGaze = false;
 
 	float GetLastSendTime() { return LastSendTime; }

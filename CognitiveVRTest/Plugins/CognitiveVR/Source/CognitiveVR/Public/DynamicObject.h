@@ -26,7 +26,7 @@ enum class EIdSourceType : uint8
 	PoolId
 };
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class COGNITIVEVR_API UDynamicObject : public USceneComponent //UActorComponent
 {
 	friend class FAnalyticsProviderCognitiveVR;
@@ -66,15 +66,15 @@ private:
 	static void TrySendData();
 	static void ClearSnapshots();
 
-public:	
+public:
 	// Sets default values for this component's properties
 
 	static void OnSessionBegin();
 	static void OnSessionEnd();
 
 	//should this object be represented by a custom mesh. requires uploading this mesh to the dashboard
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool UseCustomMeshName = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
+		bool UseCustomMeshName = true;
 
 	bool IsController = false;
 
@@ -83,21 +83,21 @@ public:
 	FString ControllerType;
 
 	//the name of the mesh to render on the dashboard
-	UPROPERTY(EditAnywhere)
-	FString MeshName;
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
+		FString MeshName;
 
 	//if not using a custom mesh, which common mesh to render on the dashboard to represent this object
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
-	ECommonMeshName CommonMeshName;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		ECommonMeshName CommonMeshName;
 
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	bool SnapshotOnBeginPlay = true;
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		bool SnapshotOnBeginPlay = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
-	bool SnapshotOnInterval = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		bool SnapshotOnInterval = true;
 
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	bool ReleaseIdOnDestroy = true;
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		bool ReleaseIdOnDestroy = true;
 
 	//group and id
 
@@ -105,51 +105,51 @@ public:
 	//UPROPERTY(EditAnywhere, AdvancedDisplay)
 	//bool UseCustomId;
 
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	EIdSourceType IdSourceType;
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		EIdSourceType IdSourceType;
 
 	//the custom id for registering this dynamic object. recommended for non-spawned actors
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
-	FString CustomId = "";
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		FString CustomId = "";
 
 	//UPROPERTY(EditAnywhere, AdvancedDisplay)
 	//bool UseIdPool;
 
 	bool HasValidPoolId = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
-	UDynamicIdPoolAsset* IDPool;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		UDynamicIdPoolAsset* IDPool;
 
 	//snapshots
 
 	//time in seconds between checking if position and rotation updates need to be recorded
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	float SnapshotInterval = 0.1;
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		float SnapshotInterval = 0.1;
 
 	//distance in cm the object needs to move before sending an update
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	float PositionThreshold = 2;
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		float PositionThreshold = 2;
 
 	//rotation in degrees the object needs to rotate before sending an update
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	float RotationThreshold = 10;
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		float RotationThreshold = 10;
 
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	float ScaleThreshold = 0.1;
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		float ScaleThreshold = 0.1;
 
 	UDynamicObject();
 	void TryGenerateMeshName();
 	void GenerateCustomId();
 	void TryGenerateCustomIdAndMesh();
-	
+
 	//engagements
 	UPROPERTY()//need uproperty to keep from custom events from being garbage collected
-	TMap<FString, UCustomEvent*> Engagements;
+		TMap<FString, UCustomEvent*> Engagements;
 
 	// Alternate method for beginning a Custom Event and setting a Dynamic Object as the target using the DynamicObjectID
 	// engagement name will be displayed as the event name
 	// engagement id should be used when multiple events of the same type are active on a dynamic object
 	void BeginEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
-	
+
 	// Alternate method for ending a Custom Event by DynamicObjectID
 	// the name of the event to end. if there isn't an active event, will immediately create and end the event
 	// engagement id should be used to cancel a specific event on a dynamic object if multiple with the same name are present
@@ -161,11 +161,11 @@ public:
 	TSharedPtr<FDynamicObjectId> GetObjectId();
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
-	FDynamicObjectSnapshot MakeSnapshot(bool hasChangedScale);
+		FDynamicObjectSnapshot MakeSnapshot(bool hasChangedScale);
 
 	static TSharedPtr<FJsonValueObject> WriteSnapshotToJson(FDynamicObjectSnapshot snapshot);
 
-	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	static void SendData(bool copyDataToCache = false);
 	static TArray<TSharedPtr<FJsonValueObject>> DynamicSnapshotsToString();

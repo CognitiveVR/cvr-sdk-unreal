@@ -24,13 +24,13 @@ public:
 	// Sets default values for this actor's properties
 	AActiveSessionView();
 
-	UPROPERTY(editanywhere)
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		int32 HMDWidth = 2880;
-	UPROPERTY(editanywhere)
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		int32 HMDHeight = 1600;
-	UPROPERTY(editanywhere)
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		int32 SpectatorWidth = 1280;
-	UPROPERTY(editanywhere)
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		int32 SpectatorHeight = 720;
 
 	//returns fixations as vector2d screen position. z value is radius

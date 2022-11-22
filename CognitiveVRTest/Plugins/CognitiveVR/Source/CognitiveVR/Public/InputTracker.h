@@ -18,7 +18,7 @@ private:
 	UDynamicObject* RightHand;
 
 public:	
-	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.1))
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.1), Category = "CognitiveVR Analytics")
 		float Interval = 0.1;
 	// Sets default values for this actor's properties
 	AInputTracker();

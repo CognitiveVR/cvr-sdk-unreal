@@ -13,13 +13,13 @@ struct FC3DGazePoint
 	GENERATED_BODY()
 
 		//public:
-		UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "CognitiveVR Analytics")
 		USceneComponent* Parent = NULL;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "CognitiveVR Analytics")
 		bool IsLocal = false;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "CognitiveVR Analytics")
 		FVector WorldPosition = FVector(0, 0, 0);
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "CognitiveVR Analytics")
 		FVector LocalPosition = FVector(0, 0, 0);
 };
 

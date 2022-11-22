@@ -131,42 +131,42 @@ private:
 
 public:
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		float MaxFixationDistance = 10000;
 
 	//configurable fixation variables
 	/* the time that gaze must be within the max fixation angle before a fixation occurs */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		int32 MinFixationMs = 60;
 	/* the angle that a number of gaze samples must fall within to start a fixation event */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		float MaxFixationAngle = 1;
 
 	/* the maximum amount of time that can be assigned as a single 'blink'. if eyes are closed for longer than this, assume that the user is conciously closing their eyes */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		int32 MaxBlinkMs = 400;
 	/* when a blink occurs, ignore gaze preceding the blink up to this far back in time */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		int32 PreBlinkDiscardMs = 20;
 	/* after a blink has ended, ignore gaze up to this long afterwards */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		int32 BlinkEndWarmupMs = 100;
 
 	/* amount of saccades that must be consecutive before a fixation ends */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		int32 SaccadeFixationEndMs = 10;
 	/* the amount of time gaze can be discarded before a fixation is ended. gaze can be discarded if eye tracking values are outside of expected ranges */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		int32 MaxConsecutiveDiscardMs = 10;
 	/* amount of time gaze can be off the transform before fixation ends. mostly useful when fixation is right on the edge of a dynamic object */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		int32 MaxConsecutiveOffDynamicMs = 500;
 
 	/*increases the size of the fixation angle as gaze gets toward the edge of the viewport. this is used to reduce the number of incorrectly ended fixations because of hardware limits at the edge of the eye tracking field of view*/
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		UCurveFloat* FocusSizeFromCenter;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		bool DebugDisplayFixations = false;
 
 	virtual void BeginPlay() override;
