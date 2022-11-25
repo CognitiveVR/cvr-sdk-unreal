@@ -7,25 +7,24 @@ UFramerateSensor::UFramerateSensor()
 
 void UFramerateSensor::BeginPlay()
 {
-	lastTime = time(NULL);
+	lastTime = Util::GetTimestamp();
 }
 
 void UFramerateSensor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	aggregateFramerate += 1 / FApp::GetDeltaTime();
 	numSamples++;
-	if (time(NULL) >= lastTime + framerateRecordIntervalInSeconds)
+	if (Util::GetTimestamp() >= lastTime + framerateRecordIntervalInSeconds)
 	{
 		UFramerateSensor::SendFramerateAsSensor();
 		numSamples = 0;
 		aggregateFramerate = 0;
-		lastTime = time(NULL);
+		lastTime = Util::GetTimestamp();
 	}
 }
 
 void UFramerateSensor::SendFramerateAsSensor()
 {
-	provider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	float averageFramerate = aggregateFramerate / numSamples;
-	provider->sensors->RecordSensor("FPS", averageFramerate);
+	FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin()->sensors->RecordSensor("FPS", averageFramerate);
 }
