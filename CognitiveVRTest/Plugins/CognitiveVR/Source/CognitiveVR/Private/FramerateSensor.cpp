@@ -7,6 +7,8 @@ UFramerateSensor::UFramerateSensor()
 
 void UFramerateSensor::BeginPlay()
 {
+	if (HasBegunPlay()) { return; }
+	Super::BeginPlay();
 	lastTime = Util::GetTimestamp();
 }
 
@@ -26,5 +28,9 @@ void UFramerateSensor::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 void UFramerateSensor::SendFramerateAsSensor()
 {
 	float averageFramerate = aggregateFramerate / numSamples;
-	FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin()->sensors->RecordSensor("FPS", averageFramerate);
+	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (cognitive.IsValid() && cognitive->HasStartedSession())
+	{
+		cognitive->sensors->RecordSensor("FPS", averageFramerate);
+	}
 }

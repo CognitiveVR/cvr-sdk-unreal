@@ -152,8 +152,8 @@ void Sensors::SendData(bool copyDataToCache)
 	{
 		return;
 	}
-
-	if (SensorDataPoints.Num() == 0)
+	//SensorDataPoints indicates the different sensors as key/values. can have empty lists of data, so check sensorDataCount too
+	if (SensorDataPoints.Num() == 0 || sensorDataCount == 0)
 	{
 		return;
 	}
@@ -209,8 +209,20 @@ void Sensors::SendData(bool copyDataToCache)
 
 		allData.Append("]},");
 	}
+
+	//if no data was serialized, skip sending an empty request
+	if (allData.Len() == 0)
+	{
+		for (auto& entry : SensorDataPoints)
+		{
+			entry.Value.Empty();
+		}
+		sensorDataCount = 0;
+		return;
+	}
+
 	//remove final comma
-	allData.RemoveAt(allData.Len()-1);
+	allData.RemoveAt(allData.Len() - 1);
 
 	FString complete = "[" + allData + "]";
 	const TCHAR* charcomplete = *complete;
