@@ -120,7 +120,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		return false;
 	}
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr)
 	{
 		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::StartSession could not find Cognitive Actor in your level");
@@ -213,7 +213,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	}
 
 	//broadcast pre session end for pre-cleanup
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr)
 	{
 		return;
@@ -264,7 +264,7 @@ void FAnalyticsProviderCognitiveVR::FlushAndCacheEvents()
 {
 	if (!bHasSessionStarted) { CognitiveLog::Warning("CognitiveVR Flush Events, but Session has not started!"); return; }
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr)
 	{
 		return;
@@ -278,7 +278,7 @@ void FAnalyticsProviderCognitiveVR::FlushEvents()
 {
 	if (!bHasSessionStarted) { CognitiveLog::Warning("CognitiveVR Flush Events, but Session has not started!"); return; }
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr)
 	{
 		return;

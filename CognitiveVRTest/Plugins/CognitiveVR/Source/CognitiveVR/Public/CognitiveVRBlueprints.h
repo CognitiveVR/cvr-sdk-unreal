@@ -13,6 +13,7 @@
 #include "CognitiveVR/Private/PlayerTracker.h"
 #include "CognitiveVR/Private/ExitPoll.h"
 #include "CognitiveVR/Private/FixationRecorder.h"
+#include "CognitiveVR/Public/DynamicObjectManager.h"
 #include "CognitiveVR/Public/CustomEvent.h"
 #include "CognitiveVRBlueprints.generated.h"
 

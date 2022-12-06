@@ -56,7 +56,7 @@ UDynamicObjectManager::UDynamicObjectManager()
 		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	}
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr) { return; }
 
 	cognitiveActor->OnSessionBegin.AddDynamic(this, &UDynamicObjectManager::OnSessionBegin);
@@ -406,7 +406,7 @@ void UDynamicObjectManager::OnPostSessionEnd()
 	cogProvider = NULL;
 	//after this broadcast, this uobject is destroyed
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr) { return; }
 
 	cognitiveActor->OnSessionBegin.RemoveDynamic(this, &UDynamicObjectManager::OnSessionBegin);

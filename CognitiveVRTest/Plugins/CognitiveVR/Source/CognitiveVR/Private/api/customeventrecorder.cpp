@@ -48,7 +48,7 @@ UCustomEventRecorder::UCustomEventRecorder()
 		}
 	}
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr) { return; }
 	cognitiveActor->OnSessionBegin.AddDynamic(this, &UCustomEventRecorder::StartSession);
 	cognitiveActor->OnRequestSend.AddDynamic(this, &UCustomEventRecorder::SendData);
@@ -258,7 +258,7 @@ void UCustomEventRecorder::PreSessionEnd()
 
 void UCustomEventRecorder::PostSessionEnd()
 {
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr) { return; }
 	cognitiveActor->OnRequestSend.RemoveDynamic(this, &UCustomEventRecorder::SendData);
 	cognitiveActor->OnPreSessionEnd.RemoveDynamic(this, &UCustomEventRecorder::PreSessionEnd);

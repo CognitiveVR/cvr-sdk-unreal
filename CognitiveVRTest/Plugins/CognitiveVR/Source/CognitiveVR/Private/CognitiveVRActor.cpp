@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "CognitiveActor.h"
+#include "CognitiveVRActor.h"
 
-ACognitiveActor* ACognitiveActor::instance;
+ACognitiveVRActor* ACognitiveVRActor::instance;
 
 // Sets default values
-ACognitiveActor::ACognitiveActor()
+ACognitiveVRActor::ACognitiveVRActor()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
@@ -13,7 +13,7 @@ ACognitiveActor::ACognitiveActor()
 }
 
 // Called when the game starts or when spawned
-void ACognitiveActor::BeginPlay()
+void ACognitiveVRActor::BeginPlay()
 {
 	UWorld* world = GetWorld();
 	if (world == NULL) { CognitiveLog::Error("ACognitiveActor::BeginPlay world is null!"); return; }
@@ -24,7 +24,7 @@ void ACognitiveActor::BeginPlay()
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 }
 
-void ACognitiveActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void ACognitiveVRActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (!cog.IsValid())
 	{
@@ -68,11 +68,11 @@ void ACognitiveActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
-ACognitiveActor* ACognitiveActor::GetCognitiveActor()
+ACognitiveVRActor* ACognitiveVRActor::GetCognitiveVRActor()
 {
 	if (instance == NULL)
 	{
-		for (TObjectIterator<ACognitiveActor> Itr; Itr; ++Itr)
+		for (TObjectIterator<ACognitiveVRActor> Itr; Itr; ++Itr)
 		{
 			UWorld* tempWorld = Itr->GetWorld();
 			if (tempWorld == NULL) { continue; }

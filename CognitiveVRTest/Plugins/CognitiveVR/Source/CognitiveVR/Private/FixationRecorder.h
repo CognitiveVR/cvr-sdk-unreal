@@ -5,7 +5,7 @@
 
 #include "CognitiveVR/Public/CognitiveVR.h"
 #include "Kismet/GameplayStatics.h"
-#include "CognitiveVR/Public/CognitiveActor.h"
+#include "CognitiveVR/Public/CognitiveVRActor.h"
 #include "CognitiveVR/Public/DynamicObject.h"
 #include "CognitiveVR/Private/Fixations.h"
 #include "CognitiveVR/Private/EyeCapture.h"

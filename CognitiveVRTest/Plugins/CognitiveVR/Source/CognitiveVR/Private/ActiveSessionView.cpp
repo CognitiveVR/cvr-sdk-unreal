@@ -51,7 +51,7 @@ void AActiveSessionView::BeginPlay()
 
 void AActiveSessionView::DelaySetupWidget()
 {
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr)
 	{
 		return;

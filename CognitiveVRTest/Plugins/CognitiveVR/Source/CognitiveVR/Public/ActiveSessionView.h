@@ -10,7 +10,7 @@
 #include "Components/Widget.h"
 #include "Components/WidgetComponent.h"
 #include "IActiveSessionViewRequired.h"
-#include "CognitiveVR/Public/CognitiveActor.h"
+#include "CognitiveVR/Public/CognitiveVRActor.h"
 #include "ActiveSessionView.generated.h"
 
 //provides the interface to get data about fixations and eye tracking from fixation recorder to the ASV widget

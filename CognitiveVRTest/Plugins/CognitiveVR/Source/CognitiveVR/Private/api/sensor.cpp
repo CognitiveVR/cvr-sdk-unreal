@@ -51,7 +51,7 @@ USensors::USensors()
 		}
 	}
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr) { return; }
 	cognitiveActor->OnRequestSend.AddDynamic(this, &USensors::SendData);
 	cognitiveActor->OnSessionBegin.AddDynamic(this, &USensors::StartSession);
@@ -246,7 +246,7 @@ void USensors::PreSessionEnd()
 
 void USensors::PostSessionEnd()
 {
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr) { return; }
 	cognitiveActor->OnRequestSend.RemoveDynamic(this, &USensors::SendData);
 	cognitiveActor->OnPreSessionEnd.RemoveDynamic(this, &USensors::PreSessionEnd);

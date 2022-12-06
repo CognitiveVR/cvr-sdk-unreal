@@ -17,7 +17,7 @@
 #include "CognitiveVR/Private/PlayerTracker.h"
 #include "CognitiveVR/Public/DynamicObject.h"
 #include "CognitiveVR/Private/FixationRecorder.h"
-#include "CognitiveVR/Public/CognitiveActor.h"
+#include "CognitiveVR/Public/CognitiveVRActor.h"
 
 #include "CognitiveVR/Private/util/util.h"
 #include "CognitiveVR/Private/util/cognitive_log.h"

@@ -101,7 +101,7 @@ void UDynamicObject::BeginPlay()
 
 	//listen for session begin delegate. cognitive actor should persist, so add/remove delegate on normal unreal begin/end play lifecycle
 	//each time OnSessionBegin is broadcast, run through the startup process
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr) { return; }
 	cognitiveActor->OnSessionBegin.AddDynamic(this, &UDynamicObject::Initialize);
 	cognitiveActor->OnPostSessionEnd.AddDynamic(this, &UDynamicObject::OnPostSessionEnd);
@@ -119,7 +119,9 @@ void UDynamicObject::Initialize()
 	{
 		return;
 	}
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+
+	//TODO IMPROVEMENT write a cached getter function to get the dynamic manager in the CognitiveActor class, instead of casting here
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr) { return; }
 	dynamicObjectManager = Cast<UDynamicObjectManager>(cognitiveActor->GetComponentByClass(UDynamicObjectManager::StaticClass()));
 
@@ -434,7 +436,7 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		}
 	}
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor != nullptr)
 	{
 		cognitiveActor->OnSessionBegin.RemoveDynamic(this, &UDynamicObject::Initialize);

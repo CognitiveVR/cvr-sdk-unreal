@@ -41,7 +41,7 @@ void UPlayerTracker::BeginPlay()
 	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors100MS, 0.1, true);
 #endif
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr) { return; }
 	cognitiveActor->OnRequestSend.AddDynamic(this, &UPlayerTracker::SendData);
 	//cognitiveActor->OnSessionBegin.AddDynamic(this, &UPlayerTracker::BeginSession); //not needed currently
@@ -486,7 +486,7 @@ void UPlayerTracker::SendData(bool copyDataToCache)
 void UPlayerTracker::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr) { return; }
 	cognitiveActor->OnRequestSend.RemoveDynamic(this, &UPlayerTracker::SendData);
 	//cognitiveActor->OnSessionBegin.RemoveDynamic(this, &UPlayerTracker::BeginSession);

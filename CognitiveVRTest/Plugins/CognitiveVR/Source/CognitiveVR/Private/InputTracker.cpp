@@ -82,7 +82,7 @@ void AInputTracker::BeginPlay()
 	else
 	{
 		//listen for session begin delegate
-		auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+		auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 		if (cognitiveActor == nullptr) { return; }
 		cognitiveActor->OnSessionBegin.AddDynamic(this, &AInputTracker::FindControllers);
 	}
@@ -1387,7 +1387,7 @@ void AInputTracker::RightTriggerReleased()
 void AInputTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	//listen for session begin delegate
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr) { return; }
 	cognitiveActor->OnSessionBegin.RemoveDynamic(this, &AInputTracker::FindControllers);
 }

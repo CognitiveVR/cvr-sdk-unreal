@@ -64,7 +64,7 @@ void UFixationRecorder::BeginPlay()
 	if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr) { return; }
 	cognitiveActor->OnRequestSend.AddDynamic(this, &UFixationRecorder::SendData);
 	cognitiveActor->OnSessionBegin.AddDynamic(this, &UFixationRecorder::BeginSession);
@@ -1255,7 +1255,7 @@ void UFixationRecorder::SendData(bool copyDataToCache)
 void UFixationRecorder::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == nullptr) { return; }
 	cognitiveActor->OnRequestSend.RemoveDynamic(this, &UFixationRecorder::SendData);
 	cognitiveActor->OnSessionBegin.RemoveDynamic(this, &UFixationRecorder::BeginSession);

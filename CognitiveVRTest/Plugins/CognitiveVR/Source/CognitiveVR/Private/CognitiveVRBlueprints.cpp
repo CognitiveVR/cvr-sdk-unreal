@@ -288,7 +288,7 @@ void UCognitiveVRBlueprints::SetSessionTag(const FString Tag)
 
 UCustomEvent* UCognitiveVRBlueprints::MakeCustomEvent(FString eventName)
 {
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor != NULL)
 	{
 		UCustomEvent* ce = NewObject<UCustomEvent>(cognitiveActor);
