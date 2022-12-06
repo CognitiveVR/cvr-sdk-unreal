@@ -5,14 +5,15 @@
 //#include "CognitiveVRSettings.h"
 //#include "Util.h"
 
-UPlayerTracker* UPlayerTracker::instance;
-
 // Sets default values for this component's properties
+//TODO CONSIDER moving config values to beginplay or BeginSession
 UPlayerTracker::UPlayerTracker()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
 	FString ValueReceived;
+
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 
 	//gaze batch size
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "GazeBatchSize", false);
@@ -29,46 +30,22 @@ UPlayerTracker::UPlayerTracker()
 void UPlayerTracker::BeginPlay()
 {
 	if (HasBegunPlay()) { return; }
-	instance = this;
+	Super::BeginPlay();
 
-	UWorld* world = GetWorld();
-	if (world == NULL) { CognitiveLog::Error("UPlayerTracker::BeginPlay world is null!"); return; }
-	if (world->WorldType != EWorldType::PIE && world->WorldType != EWorldType::Game) { return; } //editor world. skip
+	if (!cog.IsValid()) {return;}
 
-	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	if (cog.IsValid())
-	{
-		cog->SetWorld(world);
-		Super::BeginPlay();
-		GEngine->GetAllLocalPlayerControllers(controllers);
+	//cog->SetWorld(world);
+	GEngine->GetAllLocalPlayerControllers(controllers);
 #if defined HPGLIA_API
-		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors1000MS, 1, true);
-		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors100MS, 0.1, true);
+	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors1000MS, 1, true);
+	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors100MS, 0.1, true);
 #endif
-	}
-	else
-	{
-		CognitiveLog::Error("UPlayerTracker::BeginPlay cannot find CognitiveVRProvider!");
-	}
 
-	if (!PauseHandle.IsValid())
-	{
-		PauseHandle = FCoreDelegates::ApplicationWillEnterBackgroundDelegate.AddUObject(this, &UPlayerTracker::HandleApplicationWillEnterBackground);
-	}
-}
-
-void UPlayerTracker::HandleApplicationWillEnterBackground()
-{
-	if (!cog.IsValid())
-	{
-		return;
-	}
-	cog->FlushAndCacheEvents();
-	if (!cog->localCache.IsValid())
-	{
-		return;
-	}
-	cog->localCache->SerializeToFile();
+	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	if (cognitiveActor == nullptr) { return; }
+	cognitiveActor->OnRequestSend.AddDynamic(this, &UPlayerTracker::SendData);
+	//cognitiveActor->OnSessionBegin.AddDynamic(this, &UPlayerTracker::BeginSession); //not needed currently
+	//cognitiveActor->OnPreSessionEnd.AddDynamic(this, &UPlayerTracker::OnPreSessionEnd); //not needed currently
 }
 
 FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
@@ -363,7 +340,7 @@ void UPlayerTracker::BuildSnapshot(FVector position, FVector gaze, FRotator rota
 	snapshots.Add(snapObj);
 	if (snapshots.Num() > GazeBatchSize)
 	{
-		SendData();
+		SendData(false);
 	}
 }
 
@@ -421,7 +398,7 @@ void UPlayerTracker::BuildSnapshot(FVector position, FRotator rotation, double t
 	snapshots.Add(snapObj);
 	if (snapshots.Num() > GazeBatchSize)
 	{
-		SendData();
+		SendData(false);
 	}
 }
 
@@ -506,6 +483,16 @@ void UPlayerTracker::SendData(bool copyDataToCache)
 	LastSendTime = UCognitiveVRBlueprints::GetSessionDuration();
 }
 
+void UPlayerTracker::EndPlay(EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	if (cognitiveActor == nullptr) { return; }
+	cognitiveActor->OnRequestSend.RemoveDynamic(this, &UPlayerTracker::SendData);
+	//cognitiveActor->OnSessionBegin.RemoveDynamic(this, &UPlayerTracker::BeginSession);
+	//cognitiveActor->OnPreSessionEnd.RemoveDynamic(this, &UPlayerTracker::OnPreSessionEnd);
+}
+
 #if defined HPGLIA_API
 void UPlayerTracker::TickSensors1000MS()
 {
@@ -548,66 +535,3 @@ void UPlayerTracker::TickSensors100MS()
 	}
 }
 #endif
-
-void UPlayerTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	if (!cog.IsValid())
-	{
-		return;
-	}
-
-	Super::EndPlay(EndPlayReason);
-
-	FString reason;
-	bool shouldEndSession = true;
-	switch (EndPlayReason)
-	{
-	case EEndPlayReason::Destroyed: reason = "destroyed";
-		//this should normally never be destroyed. 4.19 bug - this is called instead of level transition
-		cog->FlushEvents();
-		//shouldEndSession = false;
-		break;
-	case EEndPlayReason::EndPlayInEditor: reason = "end PIE";
-		break;
-	case EEndPlayReason::LevelTransition: reason = "level transition";
-		//this is called correctly in 4.24. possibly earlier versions
-		cog->FlushEvents();
-		shouldEndSession = false;
-		break;
-	case EEndPlayReason::Quit: reason = "quit";
-		break;
-	case EEndPlayReason::RemovedFromWorld: reason = "removed from world";
-		break;
-	default:
-		reason = "default";
-		break;
-	}
-
-	if (cog.IsValid())
-	{
-		if (shouldEndSession)
-		{
-			//Q: this why is endplay on gaze recorder not on core? A: core isn't an actor and doesn't have EndPlay to call
-			cog->EndSession();
-		}
-		cog.Reset();
-	}
-	instance = NULL;
-}
-
-UPlayerTracker* UPlayerTracker::GetPlayerTracker()
-{
-	if (instance == NULL)
-	{
-		for (TObjectIterator<UPlayerTracker> Itr; Itr; ++Itr)
-		{
-			UWorld* tempWorld = Itr->GetWorld();
-			if (tempWorld == NULL) { continue; }
-			if (tempWorld->WorldType != EWorldType::PIE && tempWorld->WorldType != EWorldType::Game) { continue; } //editor world. skip
-			instance = *Itr;
-			break;
-		}
-	}
-
-	return instance;
-}

@@ -1,24 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "DynamicObject.h"
+#include "DynamicIdPoolAsset.h"
+#include "DynamicObjectManager.h"
+#include "CustomEvent.h"
 //#include "CognitiveVRSettings.h"
 //#include "Util.h"
-
-bool UDynamicObject::callbackInitialized = false;
-int32 UDynamicObject::jsonPart = 1;
-int32 UDynamicObject::MaxSnapshots = -1;
-int32 UDynamicObject::MinTimer = 5;
-int32 UDynamicObject::AutoTimer = 10;
-int32 UDynamicObject::ExtremeBatchSize = 128;
-float UDynamicObject::NextSendTime = 0;
-float UDynamicObject::LastSendTime = -60;
-FString UDynamicObject::DynamicObjectFileType = "gltf";
-TArray<FDynamicObjectSnapshot> UDynamicObject::snapshots;
-TArray<FDynamicObjectManifestEntry> UDynamicObject::manifest;
-TArray<FDynamicObjectManifestEntry> UDynamicObject::newManifest;
-TArray<TSharedPtr<FDynamicObjectId>> UDynamicObject::allObjectIds;
-FTimerHandle UDynamicObject::CognitiveDynamicAutoSendHandle;
-TSharedPtr<FAnalyticsProviderCognitiveVR> UDynamicObject::cogProvider;
 
 // Sets default values for this component's properties
 UDynamicObject::UDynamicObject()
@@ -56,12 +43,6 @@ void UDynamicObject::TryGenerateMeshName()
 		}
 		
 	}
-}
-
-void UDynamicObject::GenerateCustomId()
-{
-	IdSourceType = EIdSourceType::CustomId;
-	CustomId = FGuid::NewGuid().ToString();
 }
 
 void UDynamicObject::TryGenerateCustomIdAndMesh()
@@ -108,45 +89,28 @@ void UDynamicObject::TryGenerateCustomIdAndMesh()
 	}
 }
 
-//static
-void UDynamicObject::ClearSnapshots()
-{
-	//when playing in editor, sometimes snapshots will persist in this list
-	snapshots.Empty();
-}
-
-//static
-void UDynamicObject::OnSessionBegin()
-{
-	if (!cogProvider.IsValid())
-	{
-		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	}
-	UWorld* sessionWorld = cogProvider->EnsureGetWorld();
-
-	if (sessionWorld == NULL)
-	{
-		CognitiveLog::Error("UDynamicObject::OnSessionBegin SessionWorld is null! Need to make playertracker initialize first");
-		return;
-	}
-
-	for (TObjectIterator<UDynamicObject> Itr; Itr; ++Itr)
-	{
-		//itr will also return editor world objects
-		//sessionWorld is either game or PIE type
-		if (Itr->GetWorld() != sessionWorld) { continue; }
-
-		if (Itr->SnapshotOnBeginPlay)
-		{
-			Itr->Initialize();
-		}
-	}
-}
-
 void UDynamicObject::BeginPlay()
 {
 	Super::BeginPlay();
-	Initialize();
+
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (cogProvider->HasStartedSession())
+	{
+		Initialize();
+	}
+
+	//listen for session begin delegate. cognitive actor should persist, so add/remove delegate on normal unreal begin/end play lifecycle
+	//each time OnSessionBegin is broadcast, run through the startup process
+	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	if (cognitiveActor == nullptr) { return; }
+	cognitiveActor->OnSessionBegin.AddDynamic(this, &UDynamicObject::Initialize);
+	cognitiveActor->OnPostSessionEnd.AddDynamic(this, &UDynamicObject::OnPostSessionEnd);
+}
+
+//reset so this dynamic can be re-registered in the next session (which might happen in the same game instance)
+void UDynamicObject::OnPostSessionEnd()
+{
+	HasInitialized = false;
 }
 
 void UDynamicObject::Initialize()
@@ -155,58 +119,11 @@ void UDynamicObject::Initialize()
 	{
 		return;
 	}
+	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	if (cognitiveActor == nullptr) { return; }
+	dynamicObjectManager = Cast<UDynamicObjectManager>(cognitiveActor->GetComponentByClass(UDynamicObjectManager::StaticClass()));
 
-	if (MaxSnapshots < 0)
-	{
-		MaxSnapshots = 16;
-		FString ValueReceived;
-
-		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicDataLimit", false);
-		if (ValueReceived.Len() > 0)
-		{
-			int32 dynamicLimit = FCString::Atoi(*ValueReceived);
-			if (dynamicLimit > 0)
-			{
-				MaxSnapshots = dynamicLimit;
-			}
-		}
-
-		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicExtremeLimit", false);
-		if (ValueReceived.Len() > 0)
-		{
-			int32 parsedValue = FCString::Atoi(*ValueReceived);
-			if (parsedValue > 0)
-			{
-				ExtremeBatchSize = parsedValue;
-			}
-		}
-
-		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicMinTimer", false);
-		if (ValueReceived.Len() > 0)
-		{
-			int32 parsedValue = FCString::Atoi(*ValueReceived);
-			if (parsedValue > 0)
-			{
-				MinTimer = parsedValue;
-			}
-		}
-
-		ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicAutoTimer", false);
-		if (ValueReceived.Len() > 0)
-		{
-			int32 parsedValue = FCString::Atoi(*ValueReceived);
-			if (parsedValue > 0)
-			{
-				AutoTimer = parsedValue;
-			}
-		}
-	}
-
-	if (!callbackInitialized)
-	{
-		callbackInitialized = true;
-		GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(CognitiveDynamicAutoSendHandle, FTimerDelegate::CreateStatic(&UDynamicObject::SendData, false), AutoTimer, true);
-	}
+	if (dynamicObjectManager == nullptr) { return; }
 
 	//even if session has not started, still collect data
 	//session must be started to send
@@ -260,22 +177,26 @@ void UDynamicObject::Initialize()
 		return;
 	}
 
-	if (!cogProvider.IsValid())
-		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-
-	if (!cogProvider.IsValid())
+	if (IdSourceType == EIdSourceType::PoolId)
 	{
-		CognitiveLog::Warning("UDynamicObject::BeginPlay cannot find CognitiveVRProvider!");
-		return;
+		FString id;
+		IDPool->GetId(id);
+		ObjectID = MakeShareable(new FDynamicObjectId(id, MeshName));
 	}
+	else if (IdSourceType == EIdSourceType::CustomId)
+	{
+		ObjectID = MakeShareable(new FDynamicObjectId(CustomId, MeshName));
+	}
+	else if (IdSourceType == EIdSourceType::GeneratedId)
+	{
+		FString generatedId = FGuid::NewGuid().ToString();
+		ObjectID = MakeShareable(new FDynamicObjectId(generatedId, MeshName));
+	}
+
+	dynamicObjectManager->RegisterObjectId(MeshName, ObjectID->Id, GetOwner()->GetName(),IsController,IsRightController,ControllerType);
 
 	if (SnapshotOnBeginPlay)
 	{
-		if (!cogProvider->HasStartedSession())
-		{
-			return;
-		}
-
 		bool hasScaleChanged = true;
 		if (FMath::Abs(LastScale.Size() - GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
 		{
@@ -284,15 +205,7 @@ void UDynamicObject::Initialize()
 
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot(hasScaleChanged);
 		SnapshotBoolProperty(initSnapshot, "enable", true);
-		if (initSnapshot.time > 1)
-		{
-			snapshots.Add(initSnapshot);
-		}
-
-		if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
-		{
-			TrySendData();
-		}
+		dynamicObjectManager->AddSnapshot(initSnapshot);
 	}
 	HasInitialized = true;
 }
@@ -309,100 +222,14 @@ TSharedPtr<FDynamicObjectId> UDynamicObject::GetUniqueId(FString meshName)
 
 TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
 {
-	if (!ObjectID.IsValid() || ObjectID->Id == "")
-	{
-		GenerateObjectId();
-	}
 	return ObjectID;
-}
-
-void UDynamicObject::GenerateObjectId()
-{
-	if (IdSourceType == EIdSourceType::PoolId)
-	{
-		FString poolId;
-		if (IDPool == NULL)
-		{
-			ObjectID = GetUniqueId(MeshName);
-			allObjectIds.Add(ObjectID);
-			FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
-			if (IsController)
-			{
-				entry.ControllerType = ControllerType;
-				entry.IsRight = IsRightController;
-			}
-			manifest.Add(entry);
-			newManifest.Add(entry);
-			return;
-		}
-		else
-		{
-			HasValidPoolId = IDPool->GetId(poolId);
-			ObjectID = MakeShareable(new FDynamicObjectId(poolId, MeshName));
-			FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
-			manifest.Add(entry);
-			newManifest.Add(entry);
-			return;
-		}
-	}
-
-	if (IdSourceType != EIdSourceType::CustomId || CustomId.IsEmpty())
-	{
-		TSharedPtr<FDynamicObjectId> recycledId;
-		bool foundRecycleId = false;
-
-		for (int32 i = 0; i < allObjectIds.Num(); i++)
-		{
-			if (!allObjectIds[i]->Used && allObjectIds[i]->MeshName == MeshName)
-			{
-				foundRecycleId = true;
-				recycledId = allObjectIds[i];
-				break;
-			}
-		}
-		if (foundRecycleId)
-		{
-			ObjectID = recycledId;
-			ObjectID->Used = true;
-			CognitiveLog::Info("UDynamicObject::Recycle ObjectID! " + MeshName);
-		}
-		else
-		{
-			CognitiveLog::Info("UDynamicObject::Get new ObjectID! " + MeshName);
-			ObjectID = GetUniqueId(MeshName);
-
-			allObjectIds.Add(ObjectID);
-		}
-
-		FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
-		if (IsController)
-		{
-			entry.ControllerType = ControllerType;
-			entry.IsRight = IsRightController;
-		}
-		manifest.Add(entry);
-		newManifest.Add(entry);
-	}
-	else
-	{
-		ObjectID = MakeShareable(new FDynamicObjectId(CustomId, MeshName));
-		FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(ObjectID->Id, GetOwner()->GetName(), MeshName);
-		if (IsController)
-		{
-			entry.ControllerType = ControllerType;
-			entry.IsRight = IsRightController;
-		}
-		manifest.Add(entry);
-		newManifest.Add(entry);
-	}
 }
 
 void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction )
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 
-	if (!cogProvider.IsValid()) { return; }
-	if (!cogProvider->HasStartedSession()) { return; }
+	if (dynamicObjectManager == nullptr) { return; }
 	if (!SnapshotOnInterval) { return; }
 
 	currentTime += DeltaTime;
@@ -449,15 +276,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		}
 
 		FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
-
-		if (snapObj.time > 1)
-		{
-			snapshots.Add(snapObj);
-			if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
-			{
-				TrySendData();
-			}
-		}
+		dynamicObjectManager->AddSnapshot(snapObj);
 	}
 }
 
@@ -471,17 +290,8 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 	}
 	else
 	{
-		FDynamicObjectManifestEntry entry;
-		bool foundEntry = false;
-		for (int32 i = 0; i < manifest.Num(); i++)
-		{
-			if (manifest[i].Id == ObjectID->Id)
-			{
-				foundEntry = true;
-				break;
-			}
-		}
-		if (!foundEntry)
+		//check that this objectid is in the manifest
+		if (dynamicObjectManager->HasRegisteredObjectId(ObjectID->Id) == false)
 		{
 			needObjectId = true;
 		}
@@ -489,7 +299,8 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 
 	if (needObjectId)
 	{
-		GenerateObjectId();
+		//GenerateObjectId();
+		dynamicObjectManager->RegisterObjectId(MeshName, GetObjectId()->Id, GetOwner()->GetName(), IsController, IsRightController, ControllerType);
 	}
 
 	FDynamicObjectSnapshot snapshot = FDynamicObjectSnapshot();
@@ -513,249 +324,6 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 	snapshot.rotation = FQuat(quat.X, quat.Z, quat.Y, quat.W);
 
 	return snapshot;
-}
-
-TSharedPtr<FJsonValueObject> UDynamicObject::WriteSnapshotToJson(FDynamicObjectSnapshot snapshot)
-{
-	TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
-
-	//id
-	snapObj->SetStringField("id", snapshot.id);
-
-	//time
-	snapObj->SetNumberField("time", snapshot.time);
-
-	//return MakeShareable(new FJsonValueObject(snapObj));
-
-	//positions
-	TArray<TSharedPtr<FJsonValue>> posArray;
-	TArray<TSharedPtr<FJsonValue>> scaleArray;
-	TSharedPtr<FJsonValueNumber> JsonValue;
-
-	JsonValue = MakeShareable(new FJsonValueNumber(snapshot.position.X)); //right
-	posArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(snapshot.position.Y)); //up
-	posArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(snapshot.position.Z));  //forward
-	posArray.Add(JsonValue);
-
-	snapObj->SetArrayField("p", posArray);
-
-	//rotation
-	TArray<TSharedPtr<FJsonValue>> rotArray;
-
-	JsonValue = MakeShareable(new FJsonValueNumber(-snapshot.rotation.X));
-	rotArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(snapshot.rotation.Y));
-	rotArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(snapshot.rotation.Z));
-	rotArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(snapshot.rotation.W));
-	rotArray.Add(JsonValue);
-
-	snapObj->SetArrayField("r", rotArray);
-
-	if (snapshot.hasScaleChanged)
-	{
-		//scale
-		JsonValue = MakeShareable(new FJsonValueNumber(snapshot.scale.X));
-		scaleArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(snapshot.scale.Z));
-		scaleArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(snapshot.scale.Y));
-		scaleArray.Add(JsonValue);
-
-		snapObj->SetArrayField("s", scaleArray);
-	}
-
-	TArray<TSharedPtr<FJsonValueObject>> properties;
-
-	TSharedPtr<FJsonObject> tempProperty = MakeShareable(new FJsonObject);
-	for (auto& Elem : snapshot.BoolProperties)
-	{
-		tempProperty.Get()->Values.Empty();
-		tempProperty->SetBoolField(Elem.Key, Elem.Value);
-		TSharedPtr< FJsonValueObject > propertiesValue = MakeShareable(new FJsonValueObject(tempProperty));
-		properties.Add(propertiesValue);
-	}
-	for (auto& Elem : snapshot.IntegerProperties)
-	{
-		tempProperty.Get()->Values.Empty();
-		tempProperty->SetNumberField(Elem.Key, Elem.Value);
-		TSharedPtr< FJsonValueObject > propertiesValue = MakeShareable(new FJsonValueObject(tempProperty));
-		properties.Add(propertiesValue);
-	}
-	for (auto& Elem : snapshot.FloatProperties)
-	{
-		tempProperty.Get()->Values.Empty();
-		tempProperty->SetNumberField(Elem.Key, Elem.Value);
-		TSharedPtr< FJsonValueObject > propertiesValue = MakeShareable(new FJsonValueObject(tempProperty));
-		properties.Add(propertiesValue);
-	}
-	for (auto& Elem : snapshot.StringProperties)
-	{
-		tempProperty.Get()->Values.Empty();
-		tempProperty->SetStringField(Elem.Key, Elem.Value);
-		TSharedPtr< FJsonValueObject > propertiesValue = MakeShareable(new FJsonValueObject(tempProperty));
-		properties.Add(propertiesValue);
-	}
-
-	TArray< TSharedPtr<FJsonValue> > ObjArray;
-	for (int32 i = 0; i < properties.Num(); i++)
-	{
-		ObjArray.Add(properties[i]);
-	}
-
-	if (ObjArray.Num() > 0)
-	{
-		snapObj->SetArrayField("properties", ObjArray);
-	}
-
-	if (snapshot.Buttons.Num() > 0)
-	{
-		//write button properties
-
-		TSharedPtr<FJsonObject> buttons = MakeShareable(new FJsonObject);
-		
-		for (auto& Elem : snapshot.Buttons)
-		{
-			TSharedPtr<FJsonObject> button = MakeShareable(new FJsonObject);
-
-			if (Elem.Value.IsVector)
-			{
-				button->SetNumberField("buttonPercent", Elem.Value.AxisValue);
-				button->SetNumberField("x", Elem.Value.X);
-				button->SetNumberField("y", Elem.Value.Y);
-			}
-			else
-			{
-				button->SetNumberField("buttonPercent", Elem.Value.AxisValue);
-			}
-			buttons->SetObjectField(Elem.Key, button);
-		}
-
-		snapObj->SetObjectField("buttons", buttons);
-	}
-
-	//TSharedPtr< FJsonValueObject > outValue = MakeShareable(new FJsonValueObject(snapObj));
-
-	return MakeShareable(new FJsonValueObject(snapObj));
-}
-
-void UDynamicObject::TrySendData()
-{
-	if (!cogProvider.IsValid()) { return; }
-
-	if (cogProvider->GetWorld() != NULL)
-	{
-		bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
-		bool withinExtremeBatchSize = newManifest.Num() + snapshots.Num() < ExtremeBatchSize;
-
-		if (withinMinTimer && withinExtremeBatchSize)
-		{
-			return;
-		}
-		SendData();
-	}
-}
-
-//static
-void UDynamicObject::SendData(bool copyDataToCache)
-{
-	if (!cogProvider.IsValid() || !cogProvider->HasStartedSession())
-	{
-		return;
-	}
-
-	TSharedPtr<FSceneData> currentscenedata = cogProvider->GetCurrentSceneData();
-	if (!currentscenedata.IsValid())
-	{
-		return;
-	}
-
-	if (newManifest.Num() + snapshots.Num() == 0)
-	{
-		CognitiveLog::Info("UDynamicObject::SendData no objects or data to send!");
-		return;
-	}
-
-	LastSendTime = UCognitiveVRBlueprints::GetSessionDuration();
-
-	TArray<TSharedPtr<FJsonValueObject>> EventArray = UDynamicObject::DynamicSnapshotsToString();
-
-	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
-
-	wholeObj->SetStringField("userid", cogProvider->GetUserID());
-	if (!cogProvider->LobbyId.IsEmpty())
-	{
-		wholeObj->SetStringField("lobbyId", cogProvider->LobbyId);
-	}
-	wholeObj->SetNumberField("timestamp", cogProvider->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", cogProvider->GetSessionID());
-	wholeObj->SetStringField("formatversion", "1.0");
-	wholeObj->SetNumberField("part", jsonPart);
-	jsonPart++;	
-
-	if (newManifest.Num() > 0)
-	{
-		TSharedPtr<FJsonObject> ManifestObject = UDynamicObject::DynamicObjectManifestToString();
-		wholeObj->SetObjectField("manifest", ManifestObject);
-		newManifest.Empty();
-	}
-
-	TArray< TSharedPtr<FJsonValue> > ObjArray;
-	for (int32 i = 0; i < EventArray.Num(); i++)
-	{
-		ObjArray.Add(EventArray[i]);
-	}
-
-	if (ObjArray.Num() > 0)
-	{
-		wholeObj->SetArrayField("data", ObjArray);
-	}
-
-
-	FString OutputString;
-	auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
-	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-	cogProvider->network->NetworkCall("dynamics", OutputString, copyDataToCache);
-
-	snapshots.Empty();
-}
-
-TSharedPtr<FJsonObject> UDynamicObject::DynamicObjectManifestToString()
-{
-	TSharedPtr<FJsonObject> manifestObject = MakeShareable(new FJsonObject);
-
-	for (int32 i = 0; i != newManifest.Num(); ++i)
-	{
-		TSharedPtr<FJsonObject>entry = MakeShareable(new FJsonObject);
-		entry->SetStringField("name", newManifest[i].Name);
-		entry->SetStringField("mesh", newManifest[i].MeshName);
-		entry->SetStringField("fileType", DynamicObjectFileType);
-		if (!newManifest[i].ControllerType.IsEmpty())
-		{
-			entry->SetStringField("controllerType", newManifest[i].ControllerType);
-			TSharedPtr<FJsonObject>controllerProps = MakeShareable(new FJsonObject);
-			controllerProps->SetStringField("controller", newManifest[i].IsRight ? "right" : "left");
-			entry->SetObjectField("properties", controllerProps);
-		}
-
-		manifestObject->SetObjectField(newManifest[i].Id, entry);
-	}
-
-	return manifestObject;
-}
-
-TArray<TSharedPtr<FJsonValueObject>> UDynamicObject::DynamicSnapshotsToString()
-{
-	TArray<TSharedPtr<FJsonValueObject>> dataArray;
-
-	for (int32 i = 0; i != snapshots.Num(); ++i)
-	{
-		dataArray.Add(UDynamicObject::WriteSnapshotToJson(snapshots[i]));
-	}
-	return dataArray;
 }
 
 FDynamicObjectSnapshot UDynamicObject::SnapshotStringProperty(UPARAM(ref)FDynamicObjectSnapshot& snapshot, FString key, FString stringValue)
@@ -784,11 +352,7 @@ FDynamicObjectSnapshot UDynamicObject::SnapshotIntegerProperty(UPARAM(ref)FDynam
 
 void UDynamicObject::SendDynamicObjectSnapshot(UPARAM(ref)FDynamicObjectSnapshot& snapshot)
 {
-	snapshots.Add(snapshot);
-	if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
-	{
-		TrySendData();
-	}
+	dynamicObjectManager->AddSnapshot(snapshot);
 }
 
 void UDynamicObject::BeginEngagement(UDynamicObject* target, FString engagementName, FString UniqueEngagementId)
@@ -859,7 +423,6 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 	}
 }
 
-//instance
 void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (IdSourceType == EIdSourceType::PoolId && HasValidPoolId && IDPool != NULL)
@@ -871,38 +434,26 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		}
 	}
 
-	if (!cogProvider.IsValid())
+	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	if (cognitiveActor != nullptr)
 	{
-		//will get an 'EndPlay' when PIE closes
-		return;
+		cognitiveActor->OnSessionBegin.RemoveDynamic(this, &UDynamicObject::Initialize);
+		cognitiveActor->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPostSessionEnd);
 	}
-	if (ReleaseIdOnDestroy && cogProvider->HasStartedSession())
+
+	HasInitialized = false;
+
+	if (dynamicObjectManager == nullptr) { return; }
+
+	if (ReleaseIdOnDestroy)
 	{
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot(false);
 		SnapshotBoolProperty(initSnapshot, "enable", false);
-		
-		if (initSnapshot.time > 1)
-		{
-			snapshots.Add(initSnapshot);
-		}
-
+		dynamicObjectManager->AddSnapshot(initSnapshot);
 		ObjectID->Used = false;
 	}
-	HasInitialized = false;
 
-	if (EndPlayReason == EEndPlayReason::EndPlayInEditor)
-	{
-		//go through all engagements and send any that match this objectid
-		for (auto &Elem : Engagements)
-		{
-			if (Elem.Value->GetDynamicId() == ObjectID->Id)
-			{
-				Elem.Value->SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
-				Elem.Value->Send();
-			}
-		}
-	}
-	else if (EndPlayReason == EEndPlayReason::Destroyed || EndPlayReason == EEndPlayReason::LevelTransition || EndPlayReason == EEndPlayReason::RemovedFromWorld)
+	if (EndPlayReason == EEndPlayReason::EndPlayInEditor || EndPlayReason == EEndPlayReason::Destroyed || EndPlayReason == EEndPlayReason::LevelTransition || EndPlayReason == EEndPlayReason::RemovedFromWorld)
 	{
 		//go through all engagements and send any that match this objectid
 		for (auto &Elem : Engagements)
@@ -916,28 +467,7 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
-//static
-void UDynamicObject::OnSessionEnd()
-{
-	snapshots.Empty();
-	allObjectIds.Empty();
-	manifest.Empty();
-	newManifest.Empty();
-	jsonPart = 1;
-	callbackInitialized = false;
-
-	for (TObjectIterator<UDynamicObject> Itr; Itr; ++Itr)
-	{
-		if (Itr->SnapshotOnBeginPlay)
-		{
-			Itr->HasInitialized = false;
-		}
-	}
-
-	cogProvider = NULL;
-}
-
-//static
+//static uility
 UDynamicObject* UDynamicObject::SetupControllerActor(AActor* target, bool IsRight, EC3DControllerType controllerType)
 {
 	UDynamicObject* dyn = target->FindComponentByClass<UDynamicObject>();
@@ -1006,7 +536,7 @@ UDynamicObject* UDynamicObject::SetupControllerActor(AActor* target, bool IsRigh
 	return dyn;
 }
 
-//static
+//static utility
 UDynamicObject* UDynamicObject::SetupControllerDynamic(UDynamicObject* dyn, bool IsRight, EC3DControllerType controllerType)
 {
 	if (dyn == NULL)
@@ -1071,6 +601,7 @@ UDynamicObject* UDynamicObject::SetupControllerDynamic(UDynamicObject* dyn, bool
 	return dyn;
 }
 
+//static utility
 UDynamicObject* UDynamicObject::SetupControllerMotionController(UMotionControllerComponent* mc, bool IsRight, EC3DControllerType controllerType)
 {
 	TArray<USceneComponent*> childComponents;
@@ -1151,6 +682,7 @@ UDynamicObject* UDynamicObject::SetupControllerMotionController(UMotionControlle
 	return dyn;
 }
 
+//called from optional input tracker to serialize button states
 void UDynamicObject::FlushButtons(FControllerInputStateCollection& target)
 {
 	//write an new snapshot and append input state
@@ -1163,11 +695,7 @@ void UDynamicObject::FlushButtons(FControllerInputStateCollection& target)
 	snap.Buttons = target.States;
 	target.States.Empty();
 
-	snapshots.Add(snap);
-	if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
-	{
-		TrySendData();
-	}
+	dynamicObjectManager->AddSnapshot(snap);
 }
 
 

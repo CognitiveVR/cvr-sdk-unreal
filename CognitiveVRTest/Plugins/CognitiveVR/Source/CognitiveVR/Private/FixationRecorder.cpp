@@ -2,8 +2,6 @@
 
 #include "FixationRecorder.h"
 
-UFixationRecorder* UFixationRecorder::instance;
-
 // Sets default values for this component's properties
 UFixationRecorder::UFixationRecorder()
 {
@@ -65,13 +63,19 @@ void UFixationRecorder::BeginPlay()
 {
 	if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
+
+	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	if (cognitiveActor == nullptr) { return; }
+	cognitiveActor->OnRequestSend.AddDynamic(this, &UFixationRecorder::SendData);
+	cognitiveActor->OnSessionBegin.AddDynamic(this, &UFixationRecorder::BeginSession);
+	cognitiveActor->OnPreSessionEnd.AddDynamic(this, &UFixationRecorder::OnPreSessionEnd);
 }
 
 void UFixationRecorder::BeginSession()
 {
 	if (cog.IsValid())
 	{
-		//cog->EnsureGetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UFixationRecorder::SendData, AutoTimer, true);
+		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &UFixationRecorder::SendData, false), AutoTimer, true);
 		for (int32 i = 0; i < CachedEyeCaptureCount; i++)
 		{
 			EyeCaptures.Add(FEyeCapture());
@@ -141,7 +145,7 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 			averageLocalPosition += eyeCapture.LocalPosition;
 			averageLocalPosition /= (CachedEyeCapturePositions.Num() + 1);
 			if (DebugDisplayFixations)
-				DrawDebugSphere(world, activeFixationWorldPos, 16,8, FColor::Magenta);
+				DrawDebugSphere(GetWorld(), activeFixationWorldPos, 16,8, FColor::Magenta);
 
 			FVector fixationDirection = (activeFixationWorldPos - eyeCapture.HMDPosition);
 			
@@ -554,18 +558,16 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 				FVector fixationWorldPos;
 				fixationWorldPos = ActiveFixation.Transformation.TransformPosition(ActiveFixation.LocalPosition);
 				if (IsOutOfRange)
-					//DrawDebugBox(world, fixationWorldPos, FVector::OneVector * 15, FColor::Red, false);
-					DrawDebugSphere(world, fixationWorldPos, 20, 8, FColor::Red);
+					DrawDebugSphere(GetWorld(), fixationWorldPos, 20, 8, FColor::Red);
 				else
-					//DrawDebugBox(world, fixationWorldPos, FVector::OneVector * 15, FColor::Green, false);
-					DrawDebugSphere(world, fixationWorldPos, 20, 8, FColor::Green);
+					DrawDebugSphere(GetWorld(), fixationWorldPos, 20, 8, FColor::Green);
 			}
 			else
 			{
 				if (IsOutOfRange)
-					DrawDebugBox(world, ActiveFixation.WorldPosition, FVector::OneVector * 15, FColor::Red, false);
+					DrawDebugBox(GetWorld(), ActiveFixation.WorldPosition, FVector::OneVector * 15, FColor::Red, false);
 				else
-					DrawDebugBox(world, ActiveFixation.WorldPosition, FVector::OneVector * 15, FColor::Green, false);
+					DrawDebugBox(GetWorld(), ActiveFixation.WorldPosition, FVector::OneVector * 15, FColor::Green, false);
 			}
 		}
 
@@ -798,7 +800,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 	bool bHit = false;
 	FCollisionQueryParams gazeparams = FCollisionQueryParams(FName(), true);
-	bHit = world->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, gazeparams);
+	bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, gazeparams);
 	if (bHit)
 	{
 		//hit BSP or actor
@@ -1194,7 +1196,7 @@ void UFixationRecorder::RecordFixationEnd(const FFixation& fixation)
 	Fixations.Add(fixObj);
 	if (Fixations.Num() > FixationBatchSize)
 	{
-		SendData();
+		SendData(false);
 	}
 
 	if (DebugDisplayFixations)
@@ -1203,10 +1205,10 @@ void UFixationRecorder::RecordFixationEnd(const FFixation& fixation)
 		{
 			FVector fixationWorldPos;
 			fixationWorldPos = fixation.Transformation.TransformPosition(fixation.LocalPosition);
-			DrawDebugSphere(world, fixationWorldPos, 10, 8, FColor::Cyan, false, 5);
+			DrawDebugSphere(GetWorld(), fixationWorldPos, 10, 8, FColor::Cyan, false, 5);
 		}
 		else
-			DrawDebugBox(world, fixation.WorldPosition, FVector::OneVector * 15, FColor::Cyan, false, 5);
+			DrawDebugBox(GetWorld(), fixation.WorldPosition, FVector::OneVector * 15, FColor::Cyan, false, 5);
 	}
 }
 
@@ -1252,13 +1254,29 @@ void UFixationRecorder::SendData(bool copyDataToCache)
 
 void UFixationRecorder::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
-	SendData();
-	instance = NULL;
+	Super::EndPlay(EndPlayReason);
+	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	if (cognitiveActor == nullptr) { return; }
+	cognitiveActor->OnRequestSend.RemoveDynamic(this, &UFixationRecorder::SendData);
+	cognitiveActor->OnSessionBegin.RemoveDynamic(this, &UFixationRecorder::BeginSession);
+	cognitiveActor->OnPreSessionEnd.RemoveDynamic(this, &UFixationRecorder::OnPreSessionEnd);
 }
 
-void UFixationRecorder::EndSession()
+void UFixationRecorder::OnPreSessionEnd()
 {
-	cog.Reset();
+	//if there's currently a fixation, end that
+	if (isFixating)
+	{
+		RecordFixationEnd(ActiveFixation);
+		isFixating = false;
+		CachedEyeCapturePositions.Empty();
+	}
+	
+	//clean up any internal stuff
+	EyeCaptures.Empty();
+
+	//send data is done from cognitive provider afterwards
+	cog->GetWorld()->GetGameInstance()->GetTimerManager().ClearTimer(AutoSendHandle);
 }
 
 float UFixationRecorder::GetDPIScale()
@@ -1270,23 +1288,6 @@ float UFixationRecorder::GetDPIScale()
 	int32 Y = FGenericPlatformMath::FloorToInt(viewportSize.Y);
 
 	return GetDefault<UUserInterfaceSettings>(UUserInterfaceSettings::StaticClass())->GetDPIScaleBasedOnSize(FIntPoint(X, Y));
-}
-
-UFixationRecorder* UFixationRecorder::GetFixationRecorder()
-{
-	if (instance == NULL)
-	{
-		for (TObjectIterator<UFixationRecorder> Itr; Itr; ++Itr)
-		{
-			UWorld* tempWorld = Itr->GetWorld();
-			if (tempWorld == NULL) { continue; }
-			if (tempWorld->WorldType != EWorldType::PIE && tempWorld->WorldType != EWorldType::Game) { continue; } //editor world. skip
-			instance = *Itr;
-			instance->world = tempWorld;
-			break;
-		}
-	}
-	return instance;
 }
 
 FVector2D UFixationRecorder::GetEyePositionScreen()

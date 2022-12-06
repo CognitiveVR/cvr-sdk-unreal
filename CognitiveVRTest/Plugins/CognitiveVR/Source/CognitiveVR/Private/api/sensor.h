@@ -8,34 +8,16 @@
 #include "TimerManager.h"
 #include "CognitiveVR/Private/util/util.h"
 #include "CoreMinimal.h"
+#include "Sensor.generated.h"
 
 class FAnalyticsProviderCognitiveVR;
 class UCognitiveVRBlueprints;
 
-struct COGNITIVEVR_API SensorData
-{
-public:
-	FString Name;
-	FString Rate;
-	float NextRecordTime;
-	float UpdateInterval;
-	SensorData(FString name, float rate)
+UCLASS(BlueprintType)
+	class COGNITIVEVR_API USensors : public UObject
 	{
-		Name = name;
-		Rate = FString::SanitizeFloat(rate);
-		if (rate == 0)
-		{
-			UpdateInterval = 1 / 10;
-		}
-		else
-		{
-			UpdateInterval = 1 / rate;
-		}
-	}
-};
+		GENERATED_BODY()
 
-	class COGNITIVEVR_API Sensors
-	{
 	private:
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 
@@ -58,13 +40,15 @@ public:
 
 		//checks minimum send timer before sending recorded data to dashboard
 		void TrySendData();
+		void PreSessionEnd();
+		void PostSessionEnd();
 
 	public:
-		Sensors();
+		USensors();
 		void StartSession();
 		void RecordSensor(FString Name, float value);
 		void RecordSensor(FString Name, double value);
-		void SendData(bool copyDataToCache = false);
+		void SendData(bool copyDataToCache);
 		
 		TMap<FString, float> GetLastSensorValues();
 

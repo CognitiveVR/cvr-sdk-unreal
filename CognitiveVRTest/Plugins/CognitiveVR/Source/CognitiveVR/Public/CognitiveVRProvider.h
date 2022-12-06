@@ -4,6 +4,8 @@
 
 #include "CognitiveVR/Public/C3DCommonTypes.h"
 #include "CoreMinimal.h"
+#include "Analytics.h"
+#include "TimerManager.h"
 #include "AnalyticsEventAttribute.h"
 #include "Interfaces/IAnalyticsProvider.h"
 #include "CognitiveVR/Public/CognitiveVR.h"
@@ -15,11 +17,13 @@
 #include "CognitiveVR/Private/PlayerTracker.h"
 #include "CognitiveVR/Public/DynamicObject.h"
 #include "CognitiveVR/Private/FixationRecorder.h"
+#include "CognitiveVR/Public/CognitiveActor.h"
 
 #include "CognitiveVR/Private/util/util.h"
 #include "CognitiveVR/Private/util/cognitive_log.h"
 #include "CognitiveVR/Private/network/network.h"
 #include "CognitiveVR/Private/api/customeventrecorder.h"
+#include "CognitiveVR/Public/CustomEvent.h"
 #include "CognitiveVR/Private/api/sensor.h"
 #include "CognitiveVR/Private/LocalCache.h"
 #include "Engine/Engine.h"
@@ -31,12 +35,12 @@
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
-	class Network;
-	class CustomEventRecorder;
+	//class Network;
+	class UCustomEventRecorder;
 	//class CognitiveVRResponse;
-	class Sensors;
-	class ExitPoll;
-	class LocalCache;
+	class USensors;
+	//class ExitPoll;
+	//class LocalCache;
 	//class UDynamicObject;
 
 	class COGNITIVEVR_API FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
@@ -54,15 +58,13 @@
 		FJsonObject NewSessionProperties;
 		FJsonObject AllSessionProperties;
 
-		
-
 	private:
-		static UWorld* currentWorld;
+		UWorld* currentWorld;
 		
 		//reads all scene data from engine ini
 		void CacheSceneData();
 
-		static bool bHasSessionStarted;
+		bool bHasSessionStarted;
 
 	public:
 		FAnalyticsProviderCognitiveVR();
@@ -103,9 +105,10 @@
 		virtual void RecordError(const FString& Error, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		virtual void RecordProgress(const FString& ProgressType, const FString& ProgressHierarchy, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		
-		TSharedPtr<CustomEventRecorder> customEventRecorder;
+		UCustomEventRecorder* customEventRecorder;
+		USensors* sensors;
+		UDynamicObjectManager* dynamicObjectManager;
 		TSharedPtr<Network> network;
-		TSharedPtr<Sensors> sensors;
 		TSharedPtr<ExitPoll> exitpoll;
 		TSharedPtr<LocalCache> localCache;
 
@@ -133,12 +136,7 @@
 		FString CurrentTrackingSceneId;
 		//used to see id the current scene has changed and needs to search for new sceneId
 		TSharedPtr<FSceneData> LastSceneData;
-
-
-		void SetWorld(UWorld* world);
 		UWorld* GetWorld();
-		//calls player tracker session begin (which sets the world). if not found, will return null
-		UWorld* EnsureGetWorld();
 
 		TArray<TSharedPtr<FSceneData>> SceneData;
 		TSharedPtr<FSceneData> GetSceneData(FString scenename);
@@ -160,4 +158,15 @@
 		void SetSessionProperty(FString name, FString value);
 
 		FString GetAttributionParameters();
+
+		private:
+		FDelegateHandle PauseHandle;
+		FDelegateHandle LevelLoadHandle;
+		FDelegateHandle SublevelLoadedHandle;
+		FDelegateHandle SublevelUnloadedHandle;
+
+		void HandlePostLevelLoad(UWorld* world);
+		void HandleSublevelLoaded(ULevel* level, UWorld* world);
+		void HandleSublevelUnloaded(ULevel* level, UWorld* world);
+		void HandleApplicationWillEnterBackground();
 	};

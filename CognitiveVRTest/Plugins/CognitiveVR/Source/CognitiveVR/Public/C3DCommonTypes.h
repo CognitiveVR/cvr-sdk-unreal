@@ -4,9 +4,12 @@
 
 #include "C3DCommonTypes.generated.h"
 
-//multicast delegates cannot be static. use static pointer to playertracker instance in BP
+//multicast delegates cannot be static. CognitiveActor holds the actual values
 //multicast also can't be used as argument in BP function (to implement custom bind function)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCognitiveSessionBegin, bool, Successful);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCognitiveSessionBegin);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCognitivePreSessionEnd);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCognitivePostSessionEnd);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRequestSend, const bool, copyDataToCache);
 
 UENUM(BlueprintType)
 enum class EAnswerValueTypeReturn : uint8
@@ -278,4 +281,26 @@ public:
 	TMap<FString, bool> BoolProperties;
 
 	TMap<FString, FControllerInputState> Buttons;
+};
+
+struct COGNITIVEVR_API SensorData
+{
+public:
+	FString Name;
+	FString Rate;
+	float NextRecordTime;
+	float UpdateInterval;
+	SensorData(FString name, float rate)
+	{
+		Name = name;
+		Rate = FString::SanitizeFloat(rate);
+		if (rate == 0)
+		{
+			UpdateInterval = 1 / 10;
+		}
+		else
+		{
+			UpdateInterval = 1 / rate;
+		}
+	}
 };

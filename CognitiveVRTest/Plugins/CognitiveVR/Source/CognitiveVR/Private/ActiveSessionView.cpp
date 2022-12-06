@@ -51,7 +51,13 @@ void AActiveSessionView::BeginPlay()
 
 void AActiveSessionView::DelaySetupWidget()
 {
-	FixationRecorder = UFixationRecorder::GetFixationRecorder();
+	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	if (cognitiveActor == nullptr)
+	{
+		return;
+	}
+	FixationRecorder = Cast<UFixationRecorder>(cognitiveActor->GetComponentByClass(UFixationRecorder::StaticClass()));
+
 	if (FixationRecorder == NULL)
 	{
 		GLog->Log("CognitiveVR::ActiveSessionView::BeginPlay cannot find FixationRecorder in scene!");

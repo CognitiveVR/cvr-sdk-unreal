@@ -3,10 +3,7 @@
 */
 #include "CognitiveVR/Private/api/customeventrecorder.h"
 
-uint64 CustomEventRecorder::lastFrameCount = 0;
-int32 CustomEventRecorder::consecutiveFrame = 0;
-
-CustomEventRecorder::CustomEventRecorder()
+UCustomEventRecorder::UCustomEventRecorder()
 {
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	FString ValueReceived;
@@ -50,60 +47,69 @@ CustomEventRecorder::CustomEventRecorder()
 			AutoTimer = parsedValue;
 		}
 	}
+
+	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	if (cognitiveActor == nullptr) { return; }
+	cognitiveActor->OnSessionBegin.AddDynamic(this, &UCustomEventRecorder::StartSession);
+	cognitiveActor->OnRequestSend.AddDynamic(this, &UCustomEventRecorder::SendData);
+	cognitiveActor->OnPreSessionEnd.AddDynamic(this, &UCustomEventRecorder::PreSessionEnd);
+	cognitiveActor->OnPostSessionEnd.AddDynamic(this, &UCustomEventRecorder::PostSessionEnd);
 }
 
-void CustomEventRecorder::StartSession()
+void UCustomEventRecorder::StartSession()
 {
 	if (!cog.IsValid()) {
 		return;
 	}
-	if (cog->EnsureGetWorld() == NULL)
+	if (cog->GetWorld() == NULL)
 	{
 		CognitiveLog::Warning("CustomEvent::StartSession - GetWorld is Null! Likely missing PlayerTrackerComponent on Player actor");
 		return;
 	}
-	if (cog->EnsureGetWorld()->GetGameInstance() == NULL) {
+	if (cog->GetWorld()->GetGameInstance() == NULL) {
 		return;
 	}
-	cog->EnsureGetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &CustomEventRecorder::SendData, false), AutoTimer, true);
+
+	Send(FString("c3d.sessionStart"));
+	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &UCustomEventRecorder::SendData, false), AutoTimer, true);
 }
 
-void CustomEventRecorder::Send(FString category)
+void UCustomEventRecorder::Send(FString category)
 {
-	CustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), NULL, "");
+	UCustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), NULL, "");
 }
 
-void CustomEventRecorder::Send(FString category, TSharedPtr<FJsonObject> properties)
+void UCustomEventRecorder::Send(FString category, TSharedPtr<FJsonObject> properties)
 {
-	CustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), properties, "");
+	UCustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), properties, "");
 }
 
-void CustomEventRecorder::Send(FString category, FVector Position)
+void UCustomEventRecorder::Send(FString category, FVector Position)
 {
-	CustomEventRecorder::Send(category, Position, NULL, "");
+	UCustomEventRecorder::Send(category, Position, NULL, "");
 }
 
-void CustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties)
+void UCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties)
 {
-	CustomEventRecorder::Send(category, Position, properties, "");
+	UCustomEventRecorder::Send(category, Position, properties, "");
 }
 
-void CustomEventRecorder::Send(FString category, FString dynamicObjectId)
+void UCustomEventRecorder::Send(FString category, FString dynamicObjectId)
 {
-	CustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), NULL, dynamicObjectId);
+	UCustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), NULL, dynamicObjectId);
 }
 
-void CustomEventRecorder::Send(FString category, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
+void UCustomEventRecorder::Send(FString category, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
 {
-	CustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), properties, dynamicObjectId);
+	UCustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), properties, dynamicObjectId);
 }
 
-void CustomEventRecorder::Send(FString category, FVector Position, FString dynamicObjectId)
+void UCustomEventRecorder::Send(FString category, FVector Position, FString dynamicObjectId)
 {
-	CustomEventRecorder::Send(category, Position, NULL, dynamicObjectId);
+	UCustomEventRecorder::Send(category, Position, NULL, dynamicObjectId);
 }
 
-void CustomEventRecorder::Send(UCustomEvent* customEvent)
+void UCustomEventRecorder::Send(UCustomEvent* customEvent)
 {
 	if (customEvent == NULL) { return; }
 	TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject);
@@ -120,10 +126,10 @@ void CustomEventRecorder::Send(UCustomEvent* customEvent)
 			jsonObject->SetStringField(Elem.Key, Elem.Value);
 	}
 
-	CustomEventRecorder::Send(customEvent->Category, customEvent->Position, jsonObject, customEvent->DynamicId);
+	UCustomEventRecorder::Send(customEvent->Category, customEvent->Position, jsonObject, customEvent->DynamicId);
 }
 
-void CustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
+void UCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
 {
 	if (lastFrameCount >= GFrameCounter - 1)
 	{
@@ -182,9 +188,9 @@ void CustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJ
 	}
 }
 
-void CustomEventRecorder::TrySendData()
+void UCustomEventRecorder::TrySendData()
 {
-	if (cog->EnsureGetWorld() != NULL)
+	if (cog->GetWorld() != NULL)
 	{
 		bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
 		bool withinExtremeBatchSize = events.Num() < ExtremeBatchSize;
@@ -193,11 +199,11 @@ void CustomEventRecorder::TrySendData()
 		{
 			return;
 		}
-		SendData();
+		SendData(false);
 	}
 }
 
-void CustomEventRecorder::SendData(bool copyDataToCache)
+void UCustomEventRecorder::SendData(bool copyDataToCache)
 {
 	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
@@ -239,4 +245,22 @@ void CustomEventRecorder::SendData(bool copyDataToCache)
 	cog->network->NetworkCall("events", OutputString, copyDataToCache);
 
 	events.Empty();
+}
+
+void UCustomEventRecorder::PreSessionEnd()
+{
+	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
+	properties->SetNumberField("sessionlength", Util::GetTimestamp() - cog->GetSessionTimestamp());
+	Send(FString("c3d.sessionEnd"), properties);
+
+	cog->GetWorld()->GetGameInstance()->GetTimerManager().ClearTimer(AutoSendHandle);
+}
+
+void UCustomEventRecorder::PostSessionEnd()
+{
+	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	if (cognitiveActor == nullptr) { return; }
+	cognitiveActor->OnRequestSend.RemoveDynamic(this, &UCustomEventRecorder::SendData);
+	cognitiveActor->OnPreSessionEnd.RemoveDynamic(this, &UCustomEventRecorder::PreSessionEnd);
+	cognitiveActor->OnPostSessionEnd.RemoveDynamic(this, &UCustomEventRecorder::PostSessionEnd);
 }

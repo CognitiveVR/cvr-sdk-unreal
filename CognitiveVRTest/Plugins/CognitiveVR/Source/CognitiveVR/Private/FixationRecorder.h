@@ -5,6 +5,7 @@
 
 #include "CognitiveVR/Public/CognitiveVR.h"
 #include "Kismet/GameplayStatics.h"
+#include "CognitiveVR/Public/CognitiveActor.h"
 #include "CognitiveVR/Public/DynamicObject.h"
 #include "CognitiveVR/Private/Fixations.h"
 #include "CognitiveVR/Private/EyeCapture.h"
@@ -63,9 +64,6 @@ private:
 	int32 GetIndex(int32 offset);
 
 	TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
-
-	UWorld* world;
-	static UFixationRecorder* instance;
 
 	bool WasCaptureDiscardedLastFrame = false;
 	bool WasOutOfDispersionLastFrame = false;
@@ -176,13 +174,10 @@ public:
 
 	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 
-	void SendData(bool copyDataToCache = false);
+	void SendData(bool copyDataToCache);
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	void EndSession();
-
-	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
-		static UFixationRecorder* GetFixationRecorder();
+	void OnPreSessionEnd();
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
 		FVector2D GetEyePositionScreen();

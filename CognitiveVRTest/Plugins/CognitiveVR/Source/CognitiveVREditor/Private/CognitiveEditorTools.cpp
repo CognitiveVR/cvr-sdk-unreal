@@ -673,7 +673,8 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 
 	for (auto& dynamic : UnassignedDynamics)
 	{
-		dynamic->GenerateCustomId();
+		dynamic->CustomId = FGuid::NewGuid().ToString();
+		dynamic->IdSourceType = EIdSourceType::CustomId;
 		usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
 		changedDynamics++;
 	}
