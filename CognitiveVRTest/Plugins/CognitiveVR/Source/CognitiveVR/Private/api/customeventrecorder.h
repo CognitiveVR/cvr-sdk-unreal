@@ -16,7 +16,7 @@ class FAnalyticsProviderCognitiveVR;
 class UCustomEvent;
 class UCognitiveVRBlueprints;
 
-UCLASS(BlueprintType)
+UCLASS()
 	class COGNITIVEVR_API UCustomEventRecorder : public UObject
 	{
 		GENERATED_BODY()

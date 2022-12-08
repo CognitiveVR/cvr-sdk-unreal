@@ -129,6 +129,14 @@ private:
 	TArray<FFixation> recentFixationPoints;
 	TArray<TSharedPtr<FC3DGazePoint>> recentEyePositions;
 
+
+	UFUNCTION()
+		void BeginSession();
+	UFUNCTION()
+		void SendData(bool copyDataToCache);
+	UFUNCTION()
+		void OnPreSessionEnd();
+
 public:
 
 	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
@@ -169,21 +177,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		bool DebugDisplayFixations = false;
 
-	virtual void BeginPlay() override;
-
-	UFUNCTION()
-	void BeginSession();
-
 	UFixationRecorder();
-
+	virtual void BeginPlay() override;
 	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
-
-	UFUNCTION()
-	void SendData(bool copyDataToCache);
-
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	UFUNCTION()
-	void OnPreSessionEnd();
+	
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
 		FVector2D GetEyePositionScreen();

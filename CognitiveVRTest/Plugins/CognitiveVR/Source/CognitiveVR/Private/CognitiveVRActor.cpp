@@ -20,9 +20,13 @@ void ACognitiveVRActor::BeginPlay()
 	if (world == NULL) { CognitiveLog::Error("ACognitiveActor::BeginPlay world is null!"); return; }
 	if (world->WorldType != EWorldType::PIE && world->WorldType != EWorldType::Game) { return; } //editor world. skip
 
-	Super::BeginPlay();
-
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	cog->OnSessionBegin.AddDynamic(this, &ACognitiveVRActor::ReceiveBeginSession);
+	cog->OnPreSessionEnd.AddDynamic(this, &ACognitiveVRActor::ReceivePreEndSession);
+	cog->OnPostSessionEnd.AddDynamic(this, &ACognitiveVRActor::ReceivePostEndSession);
+
+	//this calls the default BeginPlay blueprint in the BP, which starts the session by default
+	Super::BeginPlay();
 }
 
 void ACognitiveVRActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -65,6 +69,9 @@ void ACognitiveVRActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		{
 			cog->EndSession();
 		}
+		cog->OnSessionBegin.RemoveDynamic(this, &ACognitiveVRActor::ReceiveBeginSession);
+		cog->OnPreSessionEnd.RemoveDynamic(this, &ACognitiveVRActor::ReceivePreEndSession);
+		cog->OnPostSessionEnd.RemoveDynamic(this, &ACognitiveVRActor::ReceivePostEndSession);
 		cog.Reset();
 	}
 }

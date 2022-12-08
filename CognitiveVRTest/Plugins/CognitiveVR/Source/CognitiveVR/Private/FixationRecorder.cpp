@@ -77,8 +77,6 @@ void UFixationRecorder::BeginPlay()
 	cog->OnSessionBegin.AddDynamic(this, &UFixationRecorder::BeginSession);
 	cog->OnPreSessionEnd.AddDynamic(this, &UFixationRecorder::OnPreSessionEnd);
 
-	GLog->Log("UFixationRecorder::BeginPlay");
-
 	EyeCaptures.Empty();
 	for (int32 i = 0; i < CachedEyeCaptureCount; i++)
 	{

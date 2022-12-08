@@ -19,7 +19,7 @@
 class UCustomEvent;
 class UCognitiveVRBlueprints;
 
-UCLASS(BlueprintType)
+UCLASS()
 class COGNITIVEVR_API UDynamicObjectManager : public UObject
 {
 	friend class FAnalyticsProviderCognitiveVR;
@@ -48,15 +48,6 @@ private:
 	UDynamicObjectManager();
 	void TrySendData();
 	void ClearSnapshots();
-	
-
-public:
-	void RegisterObjectId(FString MeshName, FString Id, FString ActorName, bool IsController, bool IsRightController, FString ControllerName);
-
-	// Sets default values for this component's properties
-
-	void Initialize();
-
 	UFUNCTION()
 	void OnSessionBegin();
 	UFUNCTION()
@@ -64,17 +55,18 @@ public:
 	UFUNCTION()
 	void OnPostSessionEnd();
 
+public:
+	void Initialize();
 	void AddSnapshot(FDynamicObjectSnapshot snapshot);
 	bool HasRegisteredObjectId(const FString id);
-	TSharedPtr<FDynamicObjectId> GetUniqueId(FString meshName);
-
-	TSharedPtr<FJsonValueObject> WriteSnapshotToJson(FDynamicObjectSnapshot snapshot);
+	void RegisterObjectId(FString MeshName, FString Id, FString ActorName, bool IsController, bool IsRightController, FString ControllerName);
 	UFUNCTION()
 	void SendData(bool copyDataToCache);
+	
 	TArray<TSharedPtr<FJsonValueObject>> DynamicSnapshotsToString();
 	TSharedPtr<FJsonObject> DynamicObjectManifestToString();
-
-	void EndPlay(const EEndPlayReason::Type EndPlayReason);
+	TSharedPtr<FDynamicObjectId> GetUniqueId(FString meshName);
+	TSharedPtr<FJsonValueObject> WriteSnapshotToJson(FDynamicObjectSnapshot snapshot);
 
 	float GetLastSendTime() { return LastSendTime; }
 	int32 GetPartNumber() { return jsonPart; }

@@ -22,6 +22,14 @@ public:
 	static ACognitiveVRActor* GetCognitiveVRActor();
 	static UWorld* GetCognitiveSessionWorld();
 
+	//used only for blueprint events
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Begin Session"))
+		void ReceiveBeginSession();
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Pre End Session"))
+		void ReceivePreEndSession();
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Post End Session"))
+		void ReceivePostEndSession();
+
 private:
 
 	static ACognitiveVRActor* instance;

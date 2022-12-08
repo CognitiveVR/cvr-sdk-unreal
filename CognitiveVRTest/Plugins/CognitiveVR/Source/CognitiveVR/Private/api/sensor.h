@@ -13,7 +13,7 @@
 class FAnalyticsProviderCognitiveVR;
 class UCognitiveVRBlueprints;
 
-UCLASS(BlueprintType)
+UCLASS()
 	class COGNITIVEVR_API USensors : public UObject
 	{
 		GENERATED_BODY()
@@ -41,27 +41,22 @@ UCLASS(BlueprintType)
 		//checks minimum send timer before sending recorded data to dashboard
 		void TrySendData();
 		UFUNCTION()
+		void StartSession();
+		UFUNCTION()
 		void PreSessionEnd();
 		UFUNCTION()
 		void PostSessionEnd();
 
 	public:
 		USensors();
-
 		void Initialize();
-
-		UFUNCTION()
-		void StartSession();
+		void InitializeSensor(FString sensorName, float hzRate = 10, float initialValue = 0);
 		void RecordSensor(FString Name, float value);
 		void RecordSensor(FString Name, double value);
 		UFUNCTION()
 		void SendData(bool copyDataToCache);
-		
 		TMap<FString, float> GetLastSensorValues();
-
 		float GetLastSendTime() { return LastSendTime; }
 		int32 GetPartNumber() { return jsonPart; }
 		int32 GetDataPoints() { return sensorDataCount; }
-
-		void InitializeSensor(FString sensorName, float hzRate = 10, float initialValue = 0);
 	};
