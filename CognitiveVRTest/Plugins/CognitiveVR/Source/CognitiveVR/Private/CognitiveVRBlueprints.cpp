@@ -451,10 +451,10 @@ float UCognitiveVRBlueprints::GetLastDynamicSendTime()
 	if (!cog.IsValid()) { return -1; }
 	if (!HasSessionStarted()) { return -1; }
 
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == NULL) { return 0; }
-	auto dynamicManager = Cast<UDynamicObjectManager>(cognitiveActor->GetComponentByClass(UDynamicObjectManager::StaticClass()));
-	return dynamicManager->GetLastSendTime();
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	auto dynamicObjectManager = cogProvider->dynamicObjectManager;
+	if (dynamicObjectManager == nullptr) { return -1; }
+	return dynamicObjectManager->GetLastSendTime();
 }
 
 float UCognitiveVRBlueprints::GetLastSensorSendTime()
@@ -572,10 +572,10 @@ int32 UCognitiveVRBlueprints::GetDynamicPartNumber()
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == NULL) { return 0; }
-	auto dynamicManager = Cast<UDynamicObjectManager>(cognitiveActor->GetComponentByClass(UDynamicObjectManager::StaticClass()));
-	return dynamicManager->GetPartNumber();
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	auto dynamicObjectManager = cogProvider->dynamicObjectManager;
+	if (dynamicObjectManager == nullptr) { return 0; }
+	return dynamicObjectManager->GetPartNumber();
 }
 
 int32 UCognitiveVRBlueprints::GetSensorPartNumber()
@@ -632,10 +632,10 @@ int32 UCognitiveVRBlueprints::GetDynamicDataCount()
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == NULL) { return 0; }
-	auto dynamicManager = Cast<UDynamicObjectManager>(cognitiveActor->GetComponentByClass(UDynamicObjectManager::StaticClass()));
-	return dynamicManager->GetDataPoints();
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	auto dynamicObjectManager = cogProvider->dynamicObjectManager;
+	if (dynamicObjectManager == nullptr) { return 0; }
+	return dynamicObjectManager->GetDataPoints();
 }
 
 int32 UCognitiveVRBlueprints::GetDynamicObjectCount()
@@ -645,10 +645,10 @@ int32 UCognitiveVRBlueprints::GetDynamicObjectCount()
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == NULL) { return 0; }
-	auto dynamicManager = Cast<UDynamicObjectManager>(cognitiveActor->GetComponentByClass(UDynamicObjectManager::StaticClass()));
-	return dynamicManager->GetDynamicObjectCount();
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	auto dynamicObjectManager = cogProvider->dynamicObjectManager;
+	if (dynamicObjectManager == nullptr) { return 0; }
+	return dynamicObjectManager->GetDynamicObjectCount();
 }
 
 int32 UCognitiveVRBlueprints::GetFixationPointCount()
