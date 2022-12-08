@@ -79,11 +79,7 @@ void AInputTracker::BeginPlay()
 	{
 		FindControllers();
 	}
-	else
-	{
-		//listen for session begin delegate
-		cogProvider->OnSessionBegin.AddDynamic(this, &AInputTracker::FindControllers);
-	}
+	cogProvider->OnSessionBegin.AddDynamic(this, &AInputTracker::FindControllers);
 }
 
 void AInputTracker::FindControllers()
