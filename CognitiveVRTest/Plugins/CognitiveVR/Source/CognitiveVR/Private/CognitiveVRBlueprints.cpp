@@ -694,3 +694,23 @@ FString UCognitiveVRBlueprints::GetAttributionParameters()
 	if (!cog.IsValid()) { return FString(""); }
 	return cog->GetAttributionParameters();
 }
+
+UFixationRecorder* UCognitiveVRBlueprints::GetFixationRecorder()
+{
+	ACognitiveVRActor* cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
+	if (cognitiveActor == nullptr) { return nullptr; }
+
+	auto actorComponent = cognitiveActor->GetComponentByClass(UFixationRecorder::StaticClass());
+	if (actorComponent == nullptr) { return nullptr; }
+	return Cast<UFixationRecorder>(actorComponent);
+}
+
+UPlayerTracker* UCognitiveVRBlueprints::GetPlayerTracker()
+{
+	ACognitiveVRActor* cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
+	if (cognitiveActor == nullptr) { return nullptr; }
+
+	auto actorComponent = cognitiveActor->GetComponentByClass(UPlayerTracker::StaticClass());
+	if (actorComponent == nullptr) { return nullptr; }
+	return Cast<UPlayerTracker>(actorComponent);
+}

@@ -117,10 +117,8 @@ void UDynamicObject::Initialize()
 		return;
 	}
 
-	//TODO IMPROVEMENT write a cached getter function to get the dynamic manager in the CognitiveActor class, instead of casting here
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr) { return; }
-	dynamicObjectManager = Cast<UDynamicObjectManager>(cognitiveActor->GetComponentByClass(UDynamicObjectManager::StaticClass()));
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	dynamicObjectManager = cogProvider->dynamicObjectManager;
 
 	if (dynamicObjectManager == nullptr) { return; }
 

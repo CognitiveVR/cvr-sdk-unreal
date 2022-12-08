@@ -7,6 +7,9 @@
 #include "CoreMinimal.h"
 #include "CognitiveVRActor.generated.h"
 
+//this class basically only exists to send EndPlay to the CognitiveProvider
+//and as a simple way of getting the right UWorld
+
 UCLASS()
 class COGNITIVEVR_API ACognitiveVRActor : public AActor
 {

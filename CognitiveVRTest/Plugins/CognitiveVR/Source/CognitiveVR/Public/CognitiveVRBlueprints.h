@@ -202,4 +202,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
 		static FString GetAttributionParameters();
 
+	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
+		static UFixationRecorder* GetFixationRecorder();
+
+	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
+		static UPlayerTracker* GetPlayerTracker();
+
 };
