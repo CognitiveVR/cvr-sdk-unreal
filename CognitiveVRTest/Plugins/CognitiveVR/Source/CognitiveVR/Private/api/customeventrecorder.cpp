@@ -3,9 +3,13 @@
 */
 #include "CognitiveVR/Private/api/customeventrecorder.h"
 
+//called at module startup to create a default uobject of this type
 UCustomEventRecorder::UCustomEventRecorder()
 {
-	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+}
+
+void UCustomEventRecorder::Initialize()
+{
 	FString ValueReceived;
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventBatchSize", false);
@@ -48,30 +52,24 @@ UCustomEventRecorder::UCustomEventRecorder()
 		}
 	}
 
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr) { return; }
-	cognitiveActor->OnSessionBegin.AddDynamic(this, &UCustomEventRecorder::StartSession);
-	cognitiveActor->OnRequestSend.AddDynamic(this, &UCustomEventRecorder::SendData);
-	cognitiveActor->OnPreSessionEnd.AddDynamic(this, &UCustomEventRecorder::PreSessionEnd);
-	cognitiveActor->OnPostSessionEnd.AddDynamic(this, &UCustomEventRecorder::PostSessionEnd);
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	cog->OnSessionBegin.AddDynamic(this, &UCustomEventRecorder::StartSession);
+	cog->OnRequestSend.AddDynamic(this, &UCustomEventRecorder::SendData);
+	cog->OnPreSessionEnd.AddDynamic(this, &UCustomEventRecorder::PreSessionEnd);
+	cog->OnPostSessionEnd.AddDynamic(this, &UCustomEventRecorder::PostSessionEnd);
 }
 
 void UCustomEventRecorder::StartSession()
 {
-	if (!cog.IsValid()) {
-		return;
-	}
-	if (cog->GetWorld() == NULL)
+	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	if (world == nullptr)
 	{
-		CognitiveLog::Warning("CustomEvent::StartSession - GetWorld is Null! Likely missing PlayerTrackerComponent on Player actor");
-		return;
-	}
-	if (cog->GetWorld()->GetGameInstance() == NULL) {
+		GLog->Log("UCustomEventRecorder::StartSession world from ACognitiveVRActor is null!");
 		return;
 	}
 
 	Send(FString("c3d.sessionStart"));
-	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &UCustomEventRecorder::SendData, false), AutoTimer, true);
+	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &UCustomEventRecorder::SendData, false), AutoTimer, true);
 }
 
 void UCustomEventRecorder::Send(FString category)
@@ -190,17 +188,14 @@ void UCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<F
 
 void UCustomEventRecorder::TrySendData()
 {
-	if (cog->GetWorld() != NULL)
-	{
-		bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
-		bool withinExtremeBatchSize = events.Num() < ExtremeBatchSize;
+	bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
+	bool withinExtremeBatchSize = events.Num() < ExtremeBatchSize;
 
-		if (withinMinTimer && withinExtremeBatchSize)
-		{
-			return;
-		}
-		SendData(false);
+	if (withinMinTimer && withinExtremeBatchSize)
+	{
+		return;
 	}
+	SendData(false);
 }
 
 void UCustomEventRecorder::SendData(bool copyDataToCache)
@@ -253,14 +248,15 @@ void UCustomEventRecorder::PreSessionEnd()
 	properties->SetNumberField("sessionlength", Util::GetTimestamp() - cog->GetSessionTimestamp());
 	Send(FString("c3d.sessionEnd"), properties);
 
-	cog->GetWorld()->GetGameInstance()->GetTimerManager().ClearTimer(AutoSendHandle);
+	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	if (world == nullptr) { return; }
+	world->GetTimerManager().ClearTimer(AutoSendHandle);
 }
 
 void UCustomEventRecorder::PostSessionEnd()
 {
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr) { return; }
-	cognitiveActor->OnRequestSend.RemoveDynamic(this, &UCustomEventRecorder::SendData);
-	cognitiveActor->OnPreSessionEnd.RemoveDynamic(this, &UCustomEventRecorder::PreSessionEnd);
-	cognitiveActor->OnPostSessionEnd.RemoveDynamic(this, &UCustomEventRecorder::PostSessionEnd);
+	cog->OnRequestSend.RemoveDynamic(this, &UCustomEventRecorder::SendData);
+	cog->OnPreSessionEnd.RemoveDynamic(this, &UCustomEventRecorder::PreSessionEnd);
+	cog->OnPostSessionEnd.RemoveDynamic(this, &UCustomEventRecorder::PostSessionEnd);
+	cog.Reset();
 }

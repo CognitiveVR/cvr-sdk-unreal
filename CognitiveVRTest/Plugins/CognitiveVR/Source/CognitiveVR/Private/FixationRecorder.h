@@ -105,6 +105,8 @@ private:
 	int64 GetEyeCaptureTimestamp();
 #endif
 
+	bool hasEyeTrackingSDK = true;
+
 	bool isFixating;
 	TArray<FVector> CachedEyeCapturePositions;
 
@@ -168,15 +170,19 @@ public:
 		bool DebugDisplayFixations = false;
 
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
 	void BeginSession();
 
 	UFixationRecorder();
 
 	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 
+	UFUNCTION()
 	void SendData(bool copyDataToCache);
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	UFUNCTION()
 	void OnPreSessionEnd();
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")

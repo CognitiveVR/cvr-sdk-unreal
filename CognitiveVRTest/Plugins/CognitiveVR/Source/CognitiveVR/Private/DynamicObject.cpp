@@ -7,15 +7,12 @@
 //#include "CognitiveVRSettings.h"
 //#include "Util.h"
 
-// Sets default values for this component's properties
 UDynamicObject::UDynamicObject()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	//bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
+//utility used in editor
 void UDynamicObject::TryGenerateMeshName()
 {
 	if (MeshName.IsEmpty())
@@ -45,6 +42,7 @@ void UDynamicObject::TryGenerateMeshName()
 	}
 }
 
+//utility used in editor
 void UDynamicObject::TryGenerateCustomIdAndMesh()
 {
 	if (GetOwner() == NULL)
@@ -99,12 +97,11 @@ void UDynamicObject::BeginPlay()
 		Initialize();
 	}
 
-	//listen for session begin delegate. cognitive actor should persist, so add/remove delegate on normal unreal begin/end play lifecycle
+	//listen for session begin delegate. cognitive provider persists, so add/remove delegate on normal unreal begin/end play lifecycle
 	//each time OnSessionBegin is broadcast, run through the startup process
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr) { return; }
-	cognitiveActor->OnSessionBegin.AddDynamic(this, &UDynamicObject::Initialize);
-	cognitiveActor->OnPostSessionEnd.AddDynamic(this, &UDynamicObject::OnPostSessionEnd);
+
+	cogProvider->OnSessionBegin.AddDynamic(this, &UDynamicObject::Initialize);
+	cogProvider->OnPostSessionEnd.AddDynamic(this, &UDynamicObject::OnPostSessionEnd);
 }
 
 //reset so this dynamic can be re-registered in the next session (which might happen in the same game instance)
@@ -436,12 +433,9 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		}
 	}
 
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor != nullptr)
-	{
-		cognitiveActor->OnSessionBegin.RemoveDynamic(this, &UDynamicObject::Initialize);
-		cognitiveActor->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPostSessionEnd);
-	}
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	cogProvider->OnSessionBegin.RemoveDynamic(this, &UDynamicObject::Initialize);
+	cogProvider->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPostSessionEnd);
 
 	HasInitialized = false;
 

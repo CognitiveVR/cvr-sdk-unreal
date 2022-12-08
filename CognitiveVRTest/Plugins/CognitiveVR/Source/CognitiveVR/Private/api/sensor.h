@@ -40,14 +40,21 @@ UCLASS(BlueprintType)
 
 		//checks minimum send timer before sending recorded data to dashboard
 		void TrySendData();
+		UFUNCTION()
 		void PreSessionEnd();
+		UFUNCTION()
 		void PostSessionEnd();
 
 	public:
 		USensors();
+
+		void Initialize();
+
+		UFUNCTION()
 		void StartSession();
 		void RecordSensor(FString Name, float value);
 		void RecordSensor(FString Name, double value);
+		UFUNCTION()
 		void SendData(bool copyDataToCache);
 		
 		TMap<FString, float> GetLastSensorValues();

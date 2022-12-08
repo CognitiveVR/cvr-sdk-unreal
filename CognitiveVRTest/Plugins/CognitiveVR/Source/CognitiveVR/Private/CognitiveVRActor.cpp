@@ -2,13 +2,14 @@
 
 #include "CognitiveVRActor.h"
 
-ACognitiveVRActor* ACognitiveVRActor::instance;
+ACognitiveVRActor* ACognitiveVRActor::instance = nullptr;
 
 // Sets default values
 ACognitiveVRActor::ACognitiveVRActor()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
+	instance = nullptr;
 
 }
 
@@ -68,6 +69,13 @@ void ACognitiveVRActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
+UWorld* ACognitiveVRActor::GetCognitiveSessionWorld()
+{
+	auto cognitiveActor = GetCognitiveVRActor();
+	if (cognitiveActor == nullptr) { return nullptr; }
+	return cognitiveActor->GetWorld();
+}
+
 ACognitiveVRActor* ACognitiveVRActor::GetCognitiveVRActor()
 {
 	if (instance == NULL)
@@ -76,7 +84,7 @@ ACognitiveVRActor* ACognitiveVRActor::GetCognitiveVRActor()
 		{
 			UWorld* tempWorld = Itr->GetWorld();
 			if (tempWorld == NULL) { continue; }
-			if (tempWorld->WorldType != EWorldType::PIE && tempWorld->WorldType != EWorldType::Game) { continue; } //editor world. skip
+			if (tempWorld->WorldType != EWorldType::PIE && tempWorld->WorldType != EWorldType::Game) { continue; }
 			instance = *Itr;
 			break;
 		}

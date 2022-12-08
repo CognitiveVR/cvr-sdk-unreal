@@ -96,6 +96,7 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UFUNCTION()
 	void SendData(bool copyDataToCache);
 
 	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")

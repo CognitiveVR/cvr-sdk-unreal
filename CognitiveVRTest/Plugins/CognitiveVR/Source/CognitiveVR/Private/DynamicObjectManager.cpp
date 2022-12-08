@@ -8,6 +8,11 @@
 // Sets default values for this component's properties
 UDynamicObjectManager::UDynamicObjectManager()
 {
+
+}
+
+void UDynamicObjectManager::Initialize()
+{
 	MaxSnapshots = 16;
 	FString ValueReceived;
 
@@ -51,18 +56,11 @@ UDynamicObjectManager::UDynamicObjectManager()
 		}
 	}
 
-	if (!cogProvider.IsValid())
-	{
-		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	}
-
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr) { return; }
-
-	cognitiveActor->OnSessionBegin.AddDynamic(this, &UDynamicObjectManager::OnSessionBegin);
-	cognitiveActor->OnPreSessionEnd.AddDynamic(this, &UDynamicObjectManager::OnPreSessionEnd);
-	cognitiveActor->OnPostSessionEnd.AddDynamic(this, &UDynamicObjectManager::OnPostSessionEnd);
-	cognitiveActor->OnRequestSend.AddDynamic(this, &UDynamicObjectManager::SendData);
+	cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	cogProvider->OnSessionBegin.AddDynamic(this, &UDynamicObjectManager::OnSessionBegin);
+	cogProvider->OnPreSessionEnd.AddDynamic(this, &UDynamicObjectManager::OnPreSessionEnd);
+	cogProvider->OnPostSessionEnd.AddDynamic(this, &UDynamicObjectManager::OnPostSessionEnd);
+	cogProvider->OnRequestSend.AddDynamic(this, &UDynamicObjectManager::SendData);
 }
 
 void UDynamicObjectManager::ClearSnapshots()
@@ -73,24 +71,13 @@ void UDynamicObjectManager::ClearSnapshots()
 
 void UDynamicObjectManager::OnSessionBegin()
 {
-	UWorld* sessionWorld = cogProvider->GetWorld();
-
-	if (sessionWorld == NULL)
+	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	if (world == nullptr)
 	{
-		CognitiveLog::Error("UDynamicObject::OnSessionBegin SessionWorld is null! Need to make playertracker initialize first");
+		GLog->Log("UDynamicObjectManager::StartSession world from ACognitiveVRActor is null!");
 		return;
 	}
-
-	cogProvider->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &UDynamicObjectManager::SendData, false), AutoTimer, true);
-
-	if (!cogProvider.IsValid())
-		cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-
-	if (!cogProvider.IsValid())
-	{
-		CognitiveLog::Warning("UDynamicObject::BeginPlay cannot find CognitiveVRProvider!");
-		return;
-	}
+	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &UDynamicObjectManager::SendData, false), AutoTimer, true);
 }
 
 TSharedPtr<FDynamicObjectId> UDynamicObjectManager::GetUniqueId(FString meshName)
@@ -255,27 +242,19 @@ TSharedPtr<FJsonValueObject> UDynamicObjectManager::WriteSnapshotToJson(FDynamic
 
 		snapObj->SetObjectField("buttons", buttons);
 	}
-
-	//TSharedPtr< FJsonValueObject > outValue = MakeShareable(new FJsonValueObject(snapObj));
-
 	return MakeShareable(new FJsonValueObject(snapObj));
 }
 
 void UDynamicObjectManager::TrySendData()
 {
-	if (!cogProvider.IsValid()) { return; }
+	bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
+	bool withinExtremeBatchSize = newManifest.Num() + snapshots.Num() < ExtremeBatchSize;
 
-	if (cogProvider->GetWorld() != NULL)
+	if (withinMinTimer && withinExtremeBatchSize)
 	{
-		bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
-		bool withinExtremeBatchSize = newManifest.Num() + snapshots.Num() < ExtremeBatchSize;
-
-		if (withinMinTimer && withinExtremeBatchSize)
-		{
-			return;
-		}
-		SendData(false);
+		return;
 	}
+	SendData(false);
 }
 
 void UDynamicObjectManager::SendData(bool copyDataToCache)
@@ -382,16 +361,15 @@ void UDynamicObjectManager::OnPreSessionEnd()
 	//A: clean up everything. this uobject will be destroyed as part of the cognitivevrprovider sessionEnd process
 
 	//record snapshots for all dynamic object components
-	UWorld* sessionWorld = cogProvider->GetWorld();
+	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	if (world == nullptr) { return; }
+
 	for (TObjectIterator<UDynamicObject> Itr; Itr; ++Itr)
 	{
-		if (Itr->GetWorld() != sessionWorld) { continue; }
+		if (Itr->GetWorld() != world) { continue; }
 		Itr->MakeSnapshot(false);
 	}
-
-	cogProvider->GetWorld()->GetGameInstance()->GetTimerManager().ClearTimer(AutoSendHandle);
-
-	//cognitive provider shutdown calls flush after this broadcast message
+	world->GetTimerManager().ClearTimer(AutoSendHandle);
 }
 
 //this uobject is getting deleted - should only happen after OnPreSessionEnd
@@ -403,16 +381,13 @@ void UDynamicObjectManager::OnPostSessionEnd()
 	newManifest.Empty();
 	jsonPart = 1;
 	callbackInitialized = false;
-	cogProvider = NULL;
 	//after this broadcast, this uobject is destroyed
 
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr) { return; }
-
-	cognitiveActor->OnSessionBegin.RemoveDynamic(this, &UDynamicObjectManager::OnSessionBegin);
-	cognitiveActor->OnPreSessionEnd.RemoveDynamic(this, &UDynamicObjectManager::OnPreSessionEnd);
-	cognitiveActor->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObjectManager::OnPostSessionEnd);
-	cognitiveActor->OnRequestSend.RemoveDynamic(this, &UDynamicObjectManager::SendData);
+	cogProvider->OnSessionBegin.RemoveDynamic(this, &UDynamicObjectManager::OnSessionBegin);
+	cogProvider->OnPreSessionEnd.RemoveDynamic(this, &UDynamicObjectManager::OnPreSessionEnd);
+	cogProvider->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObjectManager::OnPostSessionEnd);
+	cogProvider->OnRequestSend.RemoveDynamic(this, &UDynamicObjectManager::SendData);
+	cogProvider.Reset();
 }
 
 void UDynamicObjectManager::AddSnapshot(FDynamicObjectSnapshot snapshot)

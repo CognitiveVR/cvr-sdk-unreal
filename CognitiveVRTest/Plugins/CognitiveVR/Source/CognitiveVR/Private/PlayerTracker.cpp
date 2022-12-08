@@ -6,10 +6,15 @@
 //#include "Util.h"
 
 // Sets default values for this component's properties
-//TODO CONSIDER moving config values to beginplay or BeginSession
 UPlayerTracker::UPlayerTracker()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+}
+
+void UPlayerTracker::BeginPlay()
+{
+	if (HasBegunPlay()) { return; }
+	Super::BeginPlay();
 
 	FString ValueReceived;
 
@@ -25,27 +30,20 @@ UPlayerTracker::UPlayerTracker()
 			GazeBatchSize = sensorLimit;
 		}
 	}
-}
 
-void UPlayerTracker::BeginPlay()
-{
-	if (HasBegunPlay()) { return; }
-	Super::BeginPlay();
+	if (!cog.IsValid())
+	{
+		CognitiveLog::Error("UPlayerTracker::BeginPlay has invalid cognitive provider. should be impossible??");
+		return;
+	}
 
-	if (!cog.IsValid()) {return;}
-
-	//cog->SetWorld(world);
 	GEngine->GetAllLocalPlayerControllers(controllers);
 #if defined HPGLIA_API
 	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors1000MS, 1, true);
 	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UPlayerTracker::TickSensors100MS, 0.1, true);
 #endif
 
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr) { return; }
-	cognitiveActor->OnRequestSend.AddDynamic(this, &UPlayerTracker::SendData);
-	//cognitiveActor->OnSessionBegin.AddDynamic(this, &UPlayerTracker::BeginSession); //not needed currently
-	//cognitiveActor->OnPreSessionEnd.AddDynamic(this, &UPlayerTracker::OnPreSessionEnd); //not needed currently
+	cog->OnRequestSend.AddDynamic(this, &UPlayerTracker::SendData);
 }
 
 FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
@@ -486,11 +484,7 @@ void UPlayerTracker::SendData(bool copyDataToCache)
 void UPlayerTracker::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr) { return; }
-	cognitiveActor->OnRequestSend.RemoveDynamic(this, &UPlayerTracker::SendData);
-	//cognitiveActor->OnSessionBegin.RemoveDynamic(this, &UPlayerTracker::BeginSession);
-	//cognitiveActor->OnPreSessionEnd.RemoveDynamic(this, &UPlayerTracker::OnPreSessionEnd);
+	cog->OnRequestSend.RemoveDynamic(this, &UPlayerTracker::SendData);
 }
 
 #if defined HPGLIA_API

@@ -42,13 +42,17 @@ UCLASS(BlueprintType)
 		//checks minimum send timer before sending recorded data to dashboard
 		void TrySendData();
 
-
+		UFUNCTION()
 		void StartSession();
+		UFUNCTION()
 		void PreSessionEnd();
+		UFUNCTION()
 		void PostSessionEnd();
 
 	public:
 		UCustomEventRecorder();
+		//call this immediately after creation - sets callbacks and reference to CognitiveVRProvider
+		void Initialize();
 
 		//record event with name linked to a dynamic object
 		void Send(FString category, FString dynamicObjectId);
@@ -71,6 +75,7 @@ UCLASS(BlueprintType)
 		void Send(UCustomEvent* customEvent);
 
 		//send all outstanding custom events to Cognitive dashboard
+		UFUNCTION()
 		void SendData(bool copyDataToCache);
 
 		float GetLastSendTime() { return LastSendTime; }

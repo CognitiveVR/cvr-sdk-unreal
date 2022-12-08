@@ -55,15 +55,21 @@ public:
 
 	// Sets default values for this component's properties
 
+	void Initialize();
+
+	UFUNCTION()
 	void OnSessionBegin();
+	UFUNCTION()
 	void OnPreSessionEnd();
+	UFUNCTION()
 	void OnPostSessionEnd();
+
 	void AddSnapshot(FDynamicObjectSnapshot snapshot);
 	bool HasRegisteredObjectId(const FString id);
 	TSharedPtr<FDynamicObjectId> GetUniqueId(FString meshName);
 
 	TSharedPtr<FJsonValueObject> WriteSnapshotToJson(FDynamicObjectSnapshot snapshot);
-
+	UFUNCTION()
 	void SendData(bool copyDataToCache);
 	TArray<TSharedPtr<FJsonValueObject>> DynamicSnapshotsToString();
 	TSharedPtr<FJsonObject> DynamicObjectManifestToString();

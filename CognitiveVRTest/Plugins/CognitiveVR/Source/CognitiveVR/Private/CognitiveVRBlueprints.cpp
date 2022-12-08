@@ -432,7 +432,7 @@ float UCognitiveVRBlueprints::GetLastGazeSendTime()
 	if (!cog.IsValid()) { return -1; }
 	if (!HasSessionStarted()) { return -1; }
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == NULL) { return 0; }
 	auto gazeptr = Cast<UPlayerTracker>(cognitiveActor->GetComponentByClass(UPlayerTracker::StaticClass()));
 
@@ -451,7 +451,7 @@ float UCognitiveVRBlueprints::GetLastDynamicSendTime()
 	if (!cog.IsValid()) { return -1; }
 	if (!HasSessionStarted()) { return -1; }
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == NULL) { return 0; }
 	auto dynamicManager = Cast<UDynamicObjectManager>(cognitiveActor->GetComponentByClass(UDynamicObjectManager::StaticClass()));
 	return dynamicManager->GetLastSendTime();
@@ -473,7 +473,7 @@ float UCognitiveVRBlueprints::GetLastFixationSendTime()
 	if (!cog.IsValid()) { return -1; }
 	if (!HasSessionStarted()) { return -1; }
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == NULL) { return 0; }
 	auto fixptr = Cast<UFixationRecorder>(cognitiveActor->GetComponentByClass(UFixationRecorder::StaticClass()));
 
@@ -536,7 +536,7 @@ TArray<FString> UCognitiveVRBlueprints::GetSensorValues()
 
 bool UCognitiveVRBlueprints::IsFixating()
 {
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == NULL) { return false; }
 	auto fixptr = Cast<UFixationRecorder>(cognitiveActor->GetComponentByClass(UFixationRecorder::StaticClass()));
 	if (fixptr == NULL) { return false; }
@@ -559,7 +559,7 @@ int32 UCognitiveVRBlueprints::GetGazePartNumber()
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == NULL) { return 0; }
 	auto gazeptr = Cast<UPlayerTracker>(cognitiveActor->GetComponentByClass(UPlayerTracker::StaticClass()));
 	if (gazeptr == NULL) { return 0; }
@@ -572,7 +572,7 @@ int32 UCognitiveVRBlueprints::GetDynamicPartNumber()
 		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == NULL) { return 0; }
 	auto dynamicManager = Cast<UDynamicObjectManager>(cognitiveActor->GetComponentByClass(UDynamicObjectManager::StaticClass()));
 	return dynamicManager->GetPartNumber();
@@ -594,7 +594,7 @@ int32 UCognitiveVRBlueprints::GetFixationPartNumber()
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == NULL) { return 0; }
 	auto fixptr = Cast<UFixationRecorder>(cognitiveActor->GetComponentByClass(UFixationRecorder::StaticClass()));
 	if (fixptr == NULL) { return 0; }
@@ -618,7 +618,7 @@ int32 UCognitiveVRBlueprints::GetGazePointCount()
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == NULL) { return 0; }
 	auto gazeptr = Cast<UPlayerTracker>(cognitiveActor->GetComponentByClass(UPlayerTracker::StaticClass()));
 	if (gazeptr == NULL) { return 0; }
@@ -632,7 +632,7 @@ int32 UCognitiveVRBlueprints::GetDynamicDataCount()
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == NULL) { return 0; }
 	auto dynamicManager = Cast<UDynamicObjectManager>(cognitiveActor->GetComponentByClass(UDynamicObjectManager::StaticClass()));
 	return dynamicManager->GetDataPoints();
@@ -645,7 +645,7 @@ int32 UCognitiveVRBlueprints::GetDynamicObjectCount()
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == NULL) { return 0; }
 	auto dynamicManager = Cast<UDynamicObjectManager>(cognitiveActor->GetComponentByClass(UDynamicObjectManager::StaticClass()));
 	return dynamicManager->GetDynamicObjectCount();
@@ -658,7 +658,7 @@ int32 UCognitiveVRBlueprints::GetFixationPointCount()
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	
-	auto cognitiveActor = ACognitiveActor::GetCognitiveActor();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
 	if (cognitiveActor == NULL) { return 0; }
 	auto fixptr = Cast<UFixationRecorder>(cognitiveActor->GetComponentByClass(UFixationRecorder::StaticClass()));
 

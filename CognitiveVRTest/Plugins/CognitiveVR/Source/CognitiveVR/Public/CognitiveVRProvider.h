@@ -59,16 +59,23 @@
 		FJsonObject AllSessionProperties;
 
 	private:
-		UWorld* currentWorld;
-		
 		//reads all scene data from engine ini
 		void CacheSceneData();
 
-		bool bHasSessionStarted;
+		bool bHasSessionStarted = false;
 
 	public:
 		FAnalyticsProviderCognitiveVR();
 		virtual ~FAnalyticsProviderCognitiveVR();
+
+		UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
+			FOnCognitiveSessionBegin OnSessionBegin;
+		UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
+			FOnCognitivePreSessionEnd OnPreSessionEnd;
+		UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
+			FOnCognitivePostSessionEnd OnPostSessionEnd;
+		UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
+			FOnRequestSend OnRequestSend;
 
 		bool StartSession();
 		virtual bool StartSession(const TArray<FAnalyticsEventAttribute>& Attributes) override;
@@ -136,7 +143,8 @@
 		FString CurrentTrackingSceneId;
 		//used to see id the current scene has changed and needs to search for new sceneId
 		TSharedPtr<FSceneData> LastSceneData;
-		UWorld* GetWorld();
+		//holds scenedata for all open scenes (including sublevels). used to get the latest data after a sublevel is loaded
+		TArray<TSharedPtr<FSceneData>> LoadedSceneDataStack;
 
 		TArray<TSharedPtr<FSceneData>> SceneData;
 		TSharedPtr<FSceneData> GetSceneData(FString scenename);

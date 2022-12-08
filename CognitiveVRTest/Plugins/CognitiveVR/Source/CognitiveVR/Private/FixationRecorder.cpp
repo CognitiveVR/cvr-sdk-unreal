@@ -6,10 +6,31 @@
 UFixationRecorder::UFixationRecorder()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+}
+
+int32 UFixationRecorder::GetIndex(int32 offset)
+{
+	if (index + offset < 0)
+		return (CachedEyeCaptureCount + index + offset) % CachedEyeCaptureCount;
+	return (index + offset) % CachedEyeCaptureCount;
+}
+
+void UFixationRecorder::BeginPlay()
+{
+	//beginsession 
+
+	if (HasBegunPlay()) { return; }
+	Super::BeginPlay();
+
+	if (GetWorld() == nullptr || GetWorld()->WorldType != EWorldType::PIE && GetWorld()->WorldType != EWorldType::Game)
+	{
+		//WHY IS THIS CALLED TWICE??
+		GLog->Log("UFixationRecorder::BeginPlay in editor. skip!");
+		FDebug::DumpStackTraceToLog(ELogVerbosity::Error);
+		return;
+	}
 
 	FString ValueReceived;
-
-	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationBatchSize", false);
 	if (ValueReceived.Len() > 0)
@@ -50,42 +71,26 @@ UFixationRecorder::UFixationRecorder()
 			AutoTimer = parsedValue;
 		}
 	}
-}
 
-int32 UFixationRecorder::GetIndex(int32 offset)
-{
-	if (index + offset < 0)
-		return (CachedEyeCaptureCount + index + offset) % CachedEyeCaptureCount;
-	return (index + offset) % CachedEyeCaptureCount;
-}
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	cog->OnRequestSend.AddDynamic(this, &UFixationRecorder::SendData);
+	cog->OnSessionBegin.AddDynamic(this, &UFixationRecorder::BeginSession);
+	cog->OnPreSessionEnd.AddDynamic(this, &UFixationRecorder::OnPreSessionEnd);
 
-void UFixationRecorder::BeginPlay()
-{
-	if (HasBegunPlay()) { return; }
-	Super::BeginPlay();
+	GLog->Log("UFixationRecorder::BeginPlay");
 
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr) { return; }
-	cognitiveActor->OnRequestSend.AddDynamic(this, &UFixationRecorder::SendData);
-	cognitiveActor->OnSessionBegin.AddDynamic(this, &UFixationRecorder::BeginSession);
-	cognitiveActor->OnPreSessionEnd.AddDynamic(this, &UFixationRecorder::OnPreSessionEnd);
+	EyeCaptures.Empty();
+	for (int32 i = 0; i < CachedEyeCaptureCount; i++)
+	{
+		EyeCaptures.Add(FEyeCapture());
+	}
+	GEngine->GetAllLocalPlayerControllers(controllers);
 }
 
 void UFixationRecorder::BeginSession()
 {
-	if (cog.IsValid())
-	{
-		cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &UFixationRecorder::SendData, false), AutoTimer, true);
-		for (int32 i = 0; i < CachedEyeCaptureCount; i++)
-		{
-			EyeCaptures.Add(FEyeCapture());
-		}
-		GEngine->GetAllLocalPlayerControllers(controllers);
-	}
-	else
-	{
-		CognitiveLog::Error("UFixationRecorder::BeginSession cannot find CognitiveVRProvider!");
-	}
+	//possibly the default object running?
+	GetWorld()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &UFixationRecorder::SendData, false), AutoTimer, true);
 }
 
 bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
@@ -505,6 +510,18 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 
 void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+	//TODO should be fixed now - double check and remove if all cases are covered
+	if (EyeCaptures.Num() == 0)
+	{
+		CognitiveLog::Error("UFixationRecorder::TickComponent ticking with 0 eye captures!");
+		return;
+	}
+
+	if (hasEyeTrackingSDK == false)
+	{
+		return;
+	}
+
 	if (!cog.IsValid()){return;}
 	//don't record player position data before a session has begun
 	if (!cog->HasStartedSession())
@@ -780,6 +797,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 	EyeCaptures[index].Discard = false;
 	CognitiveLog::Error("FixationRecorder::TickComponent - no eye tracking SDKs found!");
+	hasEyeTrackingSDK = false;
 
 	FVector Start = controllers[0]->PlayerCameraManager->GetCameraLocation();
 	FVector End = Start + controllers[0]->PlayerCameraManager->GetActorForwardVector() * MaxFixationDistance;
@@ -859,6 +877,12 @@ bool UFixationRecorder::TryBeginLocalFixation()
 	int64 firstOnTransformTime = 0;
 	int64 firstSampleTime = LONG_MAX;
 	int64 lastSampleTime = 0;
+
+	if (EyeCaptures.Num() == 0)
+	{
+		GLog->Log("UFixationRecorder::TryBeginLocalFixation EyeCaptures is 0!!!!");
+		return false;
+	}
 
 	//add relevant eye capture samples to array
 	for (int32 i = 0; i < CachedEyeCaptureCount; i++)
@@ -1068,6 +1092,12 @@ bool UFixationRecorder::TryBeginFixation()
 	int64 firstSampleTime = LONG_MAX;
 	int64 lastSampleTime = 0;
 
+	if (EyeCaptures.Num() == 0)
+	{
+		GLog->Log("UFixationRecorder::TryBeginFixation EyeCaptures is 0!!!!");
+		return false;
+	}
+
 	for (int32 i = 0; i < CachedEyeCaptureCount; i++)
 	{
 		if (EyeCaptures[GetIndex(i)].Discard || EyeCaptures[GetIndex(i)].EyesClosed) { return false; }
@@ -1255,11 +1285,18 @@ void UFixationRecorder::SendData(bool copyDataToCache)
 void UFixationRecorder::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr) { return; }
-	cognitiveActor->OnRequestSend.RemoveDynamic(this, &UFixationRecorder::SendData);
-	cognitiveActor->OnSessionBegin.RemoveDynamic(this, &UFixationRecorder::BeginSession);
-	cognitiveActor->OnPreSessionEnd.RemoveDynamic(this, &UFixationRecorder::OnPreSessionEnd);
+
+	//TODO cog should never be invalid - double check that this is never called
+	//could be invalid during a weird PIE -> close engine process? check editor logs
+	if (!cog.IsValid())
+	{
+		GLog->Log("UFixationRecorder::EndPlay cognitive provider is invalid");
+		FDebug::DumpStackTraceToLog(ELogVerbosity::Error);
+		return;
+	}
+	cog->OnRequestSend.RemoveDynamic(this, &UFixationRecorder::SendData);
+	cog->OnSessionBegin.RemoveDynamic(this, &UFixationRecorder::BeginSession);
+	cog->OnPreSessionEnd.RemoveDynamic(this, &UFixationRecorder::OnPreSessionEnd);
 }
 
 void UFixationRecorder::OnPreSessionEnd()
@@ -1271,12 +1308,14 @@ void UFixationRecorder::OnPreSessionEnd()
 		isFixating = false;
 		CachedEyeCapturePositions.Empty();
 	}
-	
+
 	//clean up any internal stuff
 	EyeCaptures.Empty();
 
-	//send data is done from cognitive provider afterwards
-	cog->GetWorld()->GetGameInstance()->GetTimerManager().ClearTimer(AutoSendHandle);
+	//TODO should be fine to use this component's GetWorld. double check
+	//auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	//if (world == nullptr) { return; }
+	GetWorld()->GetTimerManager().ClearTimer(AutoSendHandle);
 }
 
 float UFixationRecorder::GetDPIScale()

@@ -6,10 +6,13 @@
 
 USensors::USensors()
 {
-	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 
-	FString ValueReceived;
+}
+
+void USensors::Initialize()
+{
 	LastSensorValues.Empty();
+	FString ValueReceived;
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorDataLimit", false);
 	if (ValueReceived.Len() > 0)
@@ -51,29 +54,23 @@ USensors::USensors()
 		}
 	}
 
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr) { return; }
-	cognitiveActor->OnRequestSend.AddDynamic(this, &USensors::SendData);
-	cognitiveActor->OnSessionBegin.AddDynamic(this, &USensors::StartSession);
-	cognitiveActor->OnPreSessionEnd.AddDynamic(this, &USensors::PreSessionEnd);
-	cognitiveActor->OnPostSessionEnd.AddDynamic(this, &USensors::PostSessionEnd);
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	cog->OnRequestSend.AddDynamic(this, &USensors::SendData);
+	cog->OnSessionBegin.AddDynamic(this, &USensors::StartSession);
+	cog->OnPreSessionEnd.AddDynamic(this, &USensors::PreSessionEnd);
+	cog->OnPostSessionEnd.AddDynamic(this, &USensors::PostSessionEnd);
 }
 
 void USensors::StartSession()
 {
-	if (!cog.IsValid()) {
-		return;
-	}
-	if (cog->GetWorld() == NULL)
+	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	if (world == nullptr)
 	{
-		CognitiveLog::Warning("Sensors::StartSession - GetWorld is Null! Likely missing PlayerTrackerComponent on Player actor");
-		return;
-	}
-	if (cog->GetWorld()->GetGameInstance() == NULL) {
+		GLog->Log("USensors::StartSession world from ACognitiveVRActor is null!");
 		return;
 	}
 
-	cog->GetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &USensors::SendData, false), AutoTimer, true);
+	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &USensors::SendData, false), AutoTimer, true);
 }
 
 void USensors::InitializeSensor(FString sensorName, float hzRate, float initialValue)
@@ -89,7 +86,8 @@ void USensors::InitializeSensor(FString sensorName, float hzRate, float initialV
 
 void USensors::RecordSensor(FString Name, float value)
 {
-	float time = UGameplayStatics::GetRealTimeSeconds(cog->GetWorld());
+	//TODO check that GetWorld returns expected value on this UObject
+	float time = UGameplayStatics::GetRealTimeSeconds(GetWorld());
 	if (SensorDataPoints.Contains(Name))
 	{
 		//check time since world startup
@@ -115,7 +113,8 @@ void USensors::RecordSensor(FString Name, float value)
 
 void USensors::RecordSensor(FString Name, double value)
 {
-	float time = UGameplayStatics::GetRealTimeSeconds(cog->GetWorld());
+	//TODO check that GetWorld returns expected value on this UObject
+	float time = UGameplayStatics::GetRealTimeSeconds(GetWorld());
 	if (SensorDataPoints.Contains(Name))
 	{
 		//check time since world startup
@@ -141,15 +140,12 @@ void USensors::RecordSensor(FString Name, double value)
 
 void USensors::TrySendData()
 {
-	if (cog->GetWorld() != NULL)
+	bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
+	bool withinExtremeBatchSize = sensorDataCount < ExtremeBatchSize;
+
+	if (withinMinTimer && withinExtremeBatchSize)
 	{
-		bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
-		bool withinExtremeBatchSize = sensorDataCount < ExtremeBatchSize;
-		
-		if (withinMinTimer && withinExtremeBatchSize)
-		{
-			return;
-		}
+		return;
 	}
 	SendData(false);
 }
@@ -241,14 +237,16 @@ TMap<FString, float> USensors::GetLastSensorValues()
 void USensors::PreSessionEnd()
 {
 	//clean up auto send timer
-	cog->GetWorld()->GetGameInstance()->GetTimerManager().ClearTimer(AutoSendHandle);
+	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	if (world == nullptr) { return; }
+	world->GetTimerManager().ClearTimer(AutoSendHandle);
 }
 
 void USensors::PostSessionEnd()
 {
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr) { return; }
-	cognitiveActor->OnRequestSend.RemoveDynamic(this, &USensors::SendData);
-	cognitiveActor->OnPreSessionEnd.RemoveDynamic(this, &USensors::PreSessionEnd);
-	cognitiveActor->OnPostSessionEnd.RemoveDynamic(this, &USensors::PostSessionEnd);
+	cog->OnSessionBegin.RemoveDynamic(this, &USensors::StartSession);
+	cog->OnRequestSend.RemoveDynamic(this, &USensors::SendData);
+	cog->OnPreSessionEnd.RemoveDynamic(this, &USensors::PreSessionEnd);
+	cog->OnPostSessionEnd.RemoveDynamic(this, &USensors::PostSessionEnd);
+	cog.Reset();
 }
