@@ -1061,35 +1061,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.VAlign(VAlign_Center)
 			.AutoHeight()
 			[
-				SNew(SRichTextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
-				.AutoWrapText(true)
-				.Justification(ETextJustify::Center)
-				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Text(FText::FromString("Add a <RichTextBlock.BoldHighlight>PlayerTracker Component</> to your Player Actor and add the following to your Level Blueprint:"))
-			]
-
-			+ SVerticalBox::Slot()
-			.HAlign(HAlign_Center)
-			.VAlign(VAlign_Center)
-			.AutoHeight()
-			.Padding(0, 0, 0, 10)
-			[
-				SNew(SBox)
-				.WidthOverride(321)
-				.HeightOverride(128)
-				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
-				[
-					SNew(SImage)
-					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
-					.Image(this, &SSceneSetupWidget::GetBlueprintStartTexture)
-				]
-			]
-
-			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
-			.AutoHeight()
-			[
 				SNew(STextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 				.AutoWrapText(true)
@@ -1197,7 +1168,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			//		[
 			//			SNew(SButton)
 			//			.Text(FText::FromString("Debug Back"))
-			//			//.Visibility(this,&SSceneSetupWidget::BackButtonVisibility)
 			//			.OnClicked(this, &SSceneSetupWidget::DebugPreviousPage)
 			//		]
 			//	]
@@ -1209,8 +1179,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			//		[
 			//			SNew(SButton)
 			//			.Text(FText::FromString("Debug Next"))
-			//			//.IsEnabled(this,&SSceneSetupWidget::NextButtonEnabled)
-			//			//.Visibility(this, &SSceneSetupWidget::NextButtonVisibility)
 			//			.OnClicked(this, &SSceneSetupWidget::DebugNextPage)
 			//		]
 			//	]
