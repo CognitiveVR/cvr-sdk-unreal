@@ -1541,11 +1541,9 @@ FReply SSceneSetupWidget::NextPage()
 	{
 		FCognitiveEditorTools::GetInstance()->SaveApplicationKeyToFile(DisplayAPIKey);
 		FCognitiveEditorTools::GetInstance()->SaveDeveloperKeyToFile(DisplayDeveloperKey);
-
-
 		FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
-
 		//save keys to ini
+		SpawnCognitiveVRActor();
 	}
 	if (CurrentPage == 2)
 	{
@@ -1920,4 +1918,48 @@ void SSceneSetupWidget::OnBlenderPathChanged(const FText& Text)
 void SSceneSetupWidget::OnExportPathChanged(const FText& Text)
 {
 	FCognitiveEditorTools::GetInstance()->BaseExportDirectory = Text.ToString();
+}
+
+void SSceneSetupWidget::SpawnCognitiveVRActor()
+{
+	//get the level editor world
+	UWorld* levelEditorWorld = nullptr;
+	for (int32 j = 0; j < GEditor->GetLevelViewportClients().Num(); j++)
+	{
+		if (!GEditor->GetLevelViewportClients()[j]->IsLevelEditorClient()) { continue; }
+		levelEditorWorld = GEditor->GetLevelViewportClients()[j]->GetWorld();
+		break;
+	}
+	if (levelEditorWorld == nullptr)
+	{
+		return;
+	}
+
+	//check if there's a CognitiveVRActor already in the world
+	for (TObjectIterator<ACognitiveVRActor> Itr; Itr; ++Itr)
+	{
+		if (Itr->IsPendingKill())
+		{
+			//if a ACognitiveVRActor was deleted from the world, it sticks around but is pending a kill. possibly in some undo buffer?
+			continue;
+		}
+		UWorld* tempWorld = Itr->GetWorld();
+		if (tempWorld == NULL) { continue; }
+		if (tempWorld != levelEditorWorld) { continue; }
+		return;
+	}
+
+	//spawn a CognitiveVRActor blueprint
+	UClass* classPtr = LoadObject<UClass>(nullptr, TEXT("/CognitiveVR/BP_CognitiveVRActor.BP_CognitiveVRActor_C"));
+	if (classPtr)
+	{
+		AActor* obj = levelEditorWorld->SpawnActor<AActor>(classPtr);
+		obj->OnConstruction(obj->GetTransform());
+		obj->PostActorConstruction();
+		GLog->Log("SSceneSetupWidget::SpawnCognitiveVRActor spawned BP_CognitiveVRActor in world");
+	}
+	else
+	{
+		GLog->Log("SSceneSetupWidget::SpawnCognitiveVRActor couldn't find BP_CognitiveVRActor class");
+	}
 }
