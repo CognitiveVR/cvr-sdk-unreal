@@ -506,14 +506,13 @@ TArray<FString> UCognitiveVRBlueprints::GetSensorKeys()
 	if (!cog.IsValid()) { return TArray<FString>(); }
 	if (!HasSessionStarted()) { return TArray<FString>(); }
 
-	auto map = cog->sensors->GetLastSensorValues();
-	
+	//T-1686 accessing GetLastSensorValues crashes on level change
+	//auto map = cog->sensors->GetLastSensorValues();	
 	TArray<FString> keys;
-
-	for (auto& Elem : map)
-	{
-		keys.Add(Elem.Key);
-	}
+	//for (auto& Elem : map)
+	//{
+	//	keys.Add(Elem.Key);
+	//}
 	return keys;
 }
 
@@ -524,13 +523,13 @@ TArray<FString> UCognitiveVRBlueprints::GetSensorValues()
 	if (!cog.IsValid()) { return TArray<FString>(); }
 	if (!HasSessionStarted()) { return TArray<FString>(); }
 
-	auto map = cog->sensors->GetLastSensorValues();
-
+	//T-1686 accessing GetLastSensorValues crashes on level change
+	//auto map = cog->sensors->GetLastSensorValues();
 	TArray<FString> values;
-	for (auto& Elem : map)
-	{
-		values.Add(FString::SanitizeFloat(Elem.Value));
-	}
+	//for (auto& Elem : map)
+	//{
+	//	values.Add(FString::SanitizeFloat(Elem.Value));
+	//}
 	return values;
 }
 

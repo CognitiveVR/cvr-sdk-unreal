@@ -13,12 +13,19 @@ UPlayerTracker::UPlayerTracker()
 
 void UPlayerTracker::BeginPlay()
 {
-	if (HasBegunPlay()) { return; }
+	//if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
 
-	FString ValueReceived;
-
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
+	if (cognitiveActor != GetOwner())
+	{
+		UnregisterComponent();
+		return;
+	}
+
+	FString ValueReceived;
 
 	//gaze batch size
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "GazeBatchSize", false);

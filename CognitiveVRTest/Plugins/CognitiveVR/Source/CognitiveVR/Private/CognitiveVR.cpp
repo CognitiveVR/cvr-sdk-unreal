@@ -158,6 +158,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	//pre session startup
 	CacheSceneData();
+	HandlePostLevelLoad(currentWorld);
 	SessionTimestamp = Util::GetTimestamp();
 	if (SessionId.IsEmpty())
 	{
@@ -773,6 +774,29 @@ FString FAnalyticsProviderCognitiveVR::GetAttributionParameters()
 	FString baseString = FBase64::Encode(OutputString);
 
 	return FString("?c3dAtkd=AK-"+ baseString);
+}
+
+bool FAnalyticsProviderCognitiveVR::HasEyeTrackingSDK()
+{
+#if defined TOBII_EYETRACKING_ACTIVE
+	return true;
+#elif defined WAVEVR_EYETRACKING
+	return true;
+#elif defined OPENXR_EYETRACKING
+	return true;
+#elif defined HPGLIA_API
+	return true;
+#elif defined PICOMOBILE_API
+	return true;
+#elif defined VARJOEYETRACKER_API
+	return true;
+#elif defined SRANIPAL_1_3_API
+	return true;
+#elif defined SRANIPAL_1_2_API
+	return true;
+#else
+	return false;
+#endif
 }
 
 void FAnalyticsProviderCognitiveVR::HandleApplicationWillEnterBackground()

@@ -14,6 +14,15 @@ void AInputTracker::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//TODO when this is a component - check that this is on the CognitiveVRActor instance and not a copy elsewhere
+	//auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
+	//if (cognitiveActor != GetOwner())
+	//{
+	//	CognitiveLog::Warning("AInputTracker::BeginPlay found outside of cognitive actor instance - unregister the component");
+	//	UnregisterComponent();
+	//	return;
+	//}
+
 	//get player controller 0
 	APlayerController* p0 = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	EnableInput(p0);

@@ -5,6 +5,7 @@
 
 bool CognitiveLog::ShowDebugLogs; //basic info/warning/errors
 bool CognitiveLog::ShowDevLogs; //development specific logs
+bool CognitiveLog::HasInitialized = false;
 
 void CognitiveLog::Init()
 {
@@ -17,6 +18,8 @@ void CognitiveLog::Init()
 	}
 	else
 	{
+		if (HasInitialized) { return; }
+		HasInitialized = true;
 		Warning("==========================");
 		Warning("See 'Project Settings > Cognitive VR' for preferences and to toggle debug messages");
 		Warning("https://docs.cognitivevr.io/unreal/troubleshooting/ for help");

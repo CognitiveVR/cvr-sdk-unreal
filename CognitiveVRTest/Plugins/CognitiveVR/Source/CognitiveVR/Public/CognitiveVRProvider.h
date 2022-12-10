@@ -35,13 +35,13 @@
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
-	//class Network;
+	class Network;
 	class UCustomEventRecorder;
-	//class CognitiveVRResponse;
+	class CognitiveVRResponse;
 	class USensors;
-	//class ExitPoll;
-	//class LocalCache;
-	//class UDynamicObject;
+	class ExitPoll;
+	class LocalCache;
+	class UDynamicObject;
 
 	class COGNITIVEVR_API FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
 	{
@@ -166,6 +166,7 @@
 		void SetSessionProperty(FString name, FString value);
 
 		FString GetAttributionParameters();
+		bool HasEyeTrackingSDK();
 
 		private:
 		FDelegateHandle PauseHandle;

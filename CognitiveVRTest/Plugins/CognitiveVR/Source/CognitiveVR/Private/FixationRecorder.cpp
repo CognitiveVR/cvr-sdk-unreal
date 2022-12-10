@@ -17,16 +17,20 @@ int32 UFixationRecorder::GetIndex(int32 offset)
 
 void UFixationRecorder::BeginPlay()
 {
-	//beginsession 
-
-	if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
 
-	if (GetWorld() == nullptr || GetWorld()->WorldType != EWorldType::PIE && GetWorld()->WorldType != EWorldType::Game)
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
+	if (cognitiveActor != GetOwner())
 	{
-		//WHY IS THIS CALLED TWICE??
-		GLog->Log("UFixationRecorder::BeginPlay in editor. skip!");
-		FDebug::DumpStackTraceToLog(ELogVerbosity::Error);
+		UnregisterComponent();
+		return;
+	}
+
+	if (!cog->HasEyeTrackingSDK())
+	{
+		hasEyeTrackingSDK = false;
 		return;
 	}
 
@@ -72,7 +76,6 @@ void UFixationRecorder::BeginPlay()
 		}
 	}
 
-	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	cog->OnRequestSend.AddDynamic(this, &UFixationRecorder::SendData);
 	cog->OnSessionBegin.AddDynamic(this, &UFixationRecorder::BeginSession);
 	cog->OnPreSessionEnd.AddDynamic(this, &UFixationRecorder::OnPreSessionEnd);
@@ -508,13 +511,6 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 
 void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	//TODO should be fixed now - double check and remove if all cases are covered
-	if (EyeCaptures.Num() == 0)
-	{
-		CognitiveLog::Error("UFixationRecorder::TickComponent ticking with 0 eye captures!");
-		return;
-	}
-
 	if (hasEyeTrackingSDK == false)
 	{
 		return;
@@ -794,7 +790,6 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
 
 	EyeCaptures[index].Discard = false;
-	CognitiveLog::Error("FixationRecorder::TickComponent - no eye tracking SDKs found!");
 	hasEyeTrackingSDK = false;
 
 	FVector Start = controllers[0]->PlayerCameraManager->GetCameraLocation();
