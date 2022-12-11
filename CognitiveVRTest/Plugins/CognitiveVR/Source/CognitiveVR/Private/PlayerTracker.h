@@ -61,7 +61,7 @@ private:
 	float currentTime = 0;
 	TArray<TSharedPtr<FJsonObject>> snapshots;
 
-	int32 jsonGazePart = 1;
+	static int32 jsonGazePart;
 
 	TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 	void BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos, FString objectId = "");

@@ -118,7 +118,7 @@ private:
 
 
 	int32 FixationBatchSize = 64;
-	int32 jsonFixationPart = 0;
+	static int32 jsonFixationPart;
 	int32 AutoTimer = 2;
 	int32 MinTimer = 2;
 	int32 ExtremeBatchSize = 64;

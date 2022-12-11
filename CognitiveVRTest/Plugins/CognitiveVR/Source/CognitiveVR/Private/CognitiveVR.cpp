@@ -18,6 +18,8 @@ void FAnalyticsCognitiveVR::StartupModule()
 void FAnalyticsProviderCognitiveVR::HandleSublevelLoaded(ULevel* level, UWorld* world)
 {
 	if (level == nullptr) { return; }
+	FlushAndCacheEvents();
+
 	FString levelName = level->GetFullGroupName(true);
 	GLog->Log("FAnalyticsProviderCognitiveVR::HandleSublevelUnloaded Loaded sublevel: " + levelName);
 
@@ -36,6 +38,8 @@ void FAnalyticsProviderCognitiveVR::HandleSublevelLoaded(ULevel* level, UWorld* 
 void FAnalyticsProviderCognitiveVR::HandleSublevelUnloaded(ULevel* level, UWorld* world)
 {
 	if (level == nullptr) { return; }
+	FlushAndCacheEvents();
+
 	FString levelName = level->GetFullGroupName(true);
 	GLog->Log("FAnalyticsProviderCognitiveVR::HandleSublevelUnloaded Unloaded sublevel: " + levelName);
 
@@ -54,6 +58,7 @@ void FAnalyticsProviderCognitiveVR::HandleSublevelUnloaded(ULevel* level, UWorld
 
 void FAnalyticsProviderCognitiveVR::HandlePostLevelLoad(UWorld* world)
 {
+	FlushAndCacheEvents();
 	auto level = world->GetCurrentLevel();
 	if (level == nullptr) { return; }
 
@@ -274,12 +279,6 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 void FAnalyticsProviderCognitiveVR::FlushAndCacheEvents()
 {
 	if (!bHasSessionStarted) { CognitiveLog::Warning("CognitiveVR Flush Events, but Session has not started!"); return; }
-
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr)
-	{
-		return;
-	}
 	OnRequestSend.Broadcast(true);
 }
 
@@ -288,12 +287,6 @@ void FAnalyticsProviderCognitiveVR::FlushAndCacheEvents()
 void FAnalyticsProviderCognitiveVR::FlushEvents()
 {
 	if (!bHasSessionStarted) { CognitiveLog::Warning("CognitiveVR Flush Events, but Session has not started!"); return; }
-
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr)
-	{
-		return;
-	}
 	OnRequestSend.Broadcast(false);
 }
 

@@ -2,7 +2,8 @@
 
 #include "FixationRecorder.h"
 
-// Sets default values for this component's properties
+int32 UFixationRecorder::jsonFixationPart = 1;
+
 UFixationRecorder::UFixationRecorder()
 {
 	PrimaryComponentTick.bCanEverTick = true;

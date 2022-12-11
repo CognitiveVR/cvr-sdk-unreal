@@ -18,12 +18,14 @@ void CognitiveLog::Init()
 	}
 	else
 	{
-		if (HasInitialized) { return; }
-		HasInitialized = true;
-		Warning("==========================");
-		Warning("See 'Project Settings > Cognitive VR' for preferences and to toggle debug messages");
-		Warning("https://docs.cognitivevr.io/unreal/troubleshooting/ for help");
-		Warning("==========================");
+		if (!HasInitialized)
+		{
+			HasInitialized = true;
+			Warning("==========================");
+			Warning("See 'Project Settings > Cognitive VR' for preferences and to toggle debug messages");
+			Warning("https://docs.cognitivevr.io/unreal/troubleshooting/ for help");
+			Warning("==========================");
+		}
 	}
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "EnableDevLogging", false);

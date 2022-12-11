@@ -5,7 +5,9 @@
 //#include "CognitiveVRSettings.h"
 //#include "Util.h"
 
-// Sets default values for this component's properties
+
+int32 UPlayerTracker::jsonGazePart = 1;
+
 UPlayerTracker::UPlayerTracker()
 {
 	PrimaryComponentTick.bCanEverTick = true;
