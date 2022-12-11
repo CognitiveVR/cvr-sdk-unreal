@@ -55,10 +55,6 @@ void USensors::Initialize()
 	}
 
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	cog->OnRequestSend.AddDynamic(this, &USensors::SendData);
-	cog->OnSessionBegin.AddDynamic(this, &USensors::StartSession);
-	cog->OnPreSessionEnd.AddDynamic(this, &USensors::PreSessionEnd);
-	cog->OnPostSessionEnd.AddDynamic(this, &USensors::PostSessionEnd);
 }
 
 void USensors::StartSession()
@@ -69,8 +65,7 @@ void USensors::StartSession()
 		GLog->Log("USensors::StartSession world from ACognitiveVRActor is null!");
 		return;
 	}
-
-	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &USensors::SendData, false), AutoTimer, true);
+	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &USensors::SendData, false), AutoTimer, true);
 }
 
 void USensors::InitializeSensor(FString sensorName, float hzRate, float initialValue)
@@ -86,8 +81,9 @@ void USensors::InitializeSensor(FString sensorName, float hzRate, float initialV
 
 void USensors::RecordSensor(FString Name, float value)
 {
-	//TODO check that GetWorld returns expected value on this UObject
-	float time = UGameplayStatics::GetRealTimeSeconds(GetWorld());
+	UWorld* world = ACognitiveVRActor::GetCognitiveSessionWorld();
+
+	float time = UGameplayStatics::GetRealTimeSeconds(world);
 	if (SensorDataPoints.Contains(Name))
 	{
 		//check time since world startup
@@ -113,8 +109,8 @@ void USensors::RecordSensor(FString Name, float value)
 
 void USensors::RecordSensor(FString Name, double value)
 {
-	//TODO check that GetWorld returns expected value on this UObject
-	float time = UGameplayStatics::GetRealTimeSeconds(GetWorld());
+	UWorld* world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	float time = UGameplayStatics::GetRealTimeSeconds(world);
 	if (SensorDataPoints.Contains(Name))
 	{
 		//check time since world startup
@@ -244,9 +240,5 @@ void USensors::PreSessionEnd()
 
 void USensors::PostSessionEnd()
 {
-	cog->OnSessionBegin.RemoveDynamic(this, &USensors::StartSession);
-	cog->OnRequestSend.RemoveDynamic(this, &USensors::SendData);
-	cog->OnPreSessionEnd.RemoveDynamic(this, &USensors::PreSessionEnd);
-	cog->OnPostSessionEnd.RemoveDynamic(this, &USensors::PostSessionEnd);
 	cog.Reset();
 }

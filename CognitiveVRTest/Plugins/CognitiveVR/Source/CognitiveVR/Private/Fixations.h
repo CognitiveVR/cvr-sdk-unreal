@@ -39,7 +39,7 @@ public:
 		FVector FloorPosition = FVector(0, 0, 0);
 
 		bool UseDynamicId = false;
-		FString DynamicObjectId;
+		FString DynamicObjectId = "";
 };
 
 USTRUCT()

@@ -64,6 +64,7 @@
 		void CacheSceneData();
 
 		bool bHasSessionStarted = false;
+		double SceneStartTime = 0;
 
 	public:
 		FAnalyticsProviderCognitiveVR();
@@ -113,6 +114,7 @@
 		virtual void RecordError(const FString& Error, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		virtual void RecordProgress(const FString& ProgressType, const FString& ProgressHierarchy, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		
+		//consider making these TSharedPtr
 		UCustomEventRecorder* customEventRecorder;
 		USensors* sensors;
 		UDynamicObjectManager* dynamicObjectManager;

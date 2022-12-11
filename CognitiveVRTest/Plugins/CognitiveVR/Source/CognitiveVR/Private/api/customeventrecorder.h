@@ -9,17 +9,16 @@
 //#include "CognitiveVR/Private/util/util.h"
 //#include "CognitiveVR/Private/PlayerTracker.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
-#include "CustomEventRecorder.generated.h"
 
 class FAnalyticsCognitiveVR;
 class FAnalyticsProviderCognitiveVR;
 class UCustomEvent;
 class UCognitiveVRBlueprints;
 
-UCLASS()
-	class COGNITIVEVR_API UCustomEventRecorder : public UObject
+
+	class COGNITIVEVR_API UCustomEventRecorder
 	{
-		GENERATED_BODY()
+		friend class FAnalyticsProviderCognitiveVR;
 
 	private:
 

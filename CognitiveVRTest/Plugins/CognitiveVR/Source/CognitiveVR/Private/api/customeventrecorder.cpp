@@ -3,7 +3,6 @@
 */
 #include "CognitiveVR/Private/api/customeventrecorder.h"
 
-//called at module startup to create a default uobject of this type
 UCustomEventRecorder::UCustomEventRecorder()
 {
 }
@@ -53,10 +52,6 @@ void UCustomEventRecorder::Initialize()
 	}
 
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	cog->OnSessionBegin.AddDynamic(this, &UCustomEventRecorder::StartSession);
-	cog->OnRequestSend.AddDynamic(this, &UCustomEventRecorder::SendData);
-	cog->OnPreSessionEnd.AddDynamic(this, &UCustomEventRecorder::PreSessionEnd);
-	cog->OnPostSessionEnd.AddDynamic(this, &UCustomEventRecorder::PostSessionEnd);
 }
 
 void UCustomEventRecorder::StartSession()
@@ -68,8 +63,9 @@ void UCustomEventRecorder::StartSession()
 		return;
 	}
 
+	lastFrameCount = GFrameCounter;
 	Send(FString("c3d.sessionStart"));
-	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &UCustomEventRecorder::SendData, false), AutoTimer, true);
+	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &UCustomEventRecorder::SendData, false), AutoTimer, true);
 }
 
 void UCustomEventRecorder::Send(FString category)
@@ -255,8 +251,5 @@ void UCustomEventRecorder::PreSessionEnd()
 
 void UCustomEventRecorder::PostSessionEnd()
 {
-	cog->OnRequestSend.RemoveDynamic(this, &UCustomEventRecorder::SendData);
-	cog->OnPreSessionEnd.RemoveDynamic(this, &UCustomEventRecorder::PreSessionEnd);
-	cog->OnPostSessionEnd.RemoveDynamic(this, &UCustomEventRecorder::PostSessionEnd);
 	cog.Reset();
 }

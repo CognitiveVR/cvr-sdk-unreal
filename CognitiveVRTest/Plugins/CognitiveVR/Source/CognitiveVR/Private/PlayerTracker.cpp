@@ -1,9 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-//#include "CognitiveVR.h"
 #include "PlayerTracker.h"
-//#include "CognitiveVRSettings.h"
-//#include "Util.h"
 
 UPlayerTracker::UPlayerTracker()
 {
@@ -12,7 +9,6 @@ UPlayerTracker::UPlayerTracker()
 
 void UPlayerTracker::BeginPlay()
 {
-	//if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
 
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
@@ -26,7 +22,6 @@ void UPlayerTracker::BeginPlay()
 
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UPlayerTracker::BeginPlay has invalid cognitive provider. should be impossible??");
 		return;
 	}
 

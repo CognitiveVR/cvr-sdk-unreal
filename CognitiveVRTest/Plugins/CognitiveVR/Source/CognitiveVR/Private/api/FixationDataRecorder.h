@@ -7,18 +7,14 @@
 #include "CognitiveVR/Public/CognitiveVRProvider.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 #include "CognitiveVR/Private/Fixations.h"
-#include "FixationDataRecorder.generated.h"
 
 class FAnalyticsCognitiveVR;
 class FAnalyticsProviderCognitiveVR;
 class UCognitiveVRBlueprints;
 
-
-
-UCLASS()
-	class COGNITIVEVR_API UFixationDataRecorder : public UObject
+	class COGNITIVEVR_API UFixationDataRecorder
 	{
-		GENERATED_BODY()
+		friend class FAnalyticsProviderCognitiveVR;
 
 	private:
 
@@ -33,8 +29,6 @@ UCLASS()
 		int32 jsonPart = 1;
 		int32 CustomEventBatchSize = 16;
 
-		//TODO likely CRASH. getting garbage collected between scenes? can't use UPROPERTY because jsonobject isn't a UCLASS USTRUCT or UENUM
-		//TArray<TSharedPtr<FJsonObject>> Fixations;
 		UPROPERTY()
 			TArray<FFixation> Fixations;
 

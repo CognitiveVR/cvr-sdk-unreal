@@ -3,7 +3,6 @@
 */
 #include "CognitiveVR/Private/api/FixationDataRecorder.h"
 
-//called at module startup to create a default uobject of this type
 UFixationDataRecorder::UFixationDataRecorder()
 {
 }
@@ -53,10 +52,6 @@ void UFixationDataRecorder::Initialize()
 	}
 
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	cog->OnRequestSend.AddDynamic(this, &UFixationDataRecorder::SendData);
-	cog->OnSessionBegin.AddDynamic(this, &UFixationDataRecorder::StartSession);
-	cog->OnPreSessionEnd.AddDynamic(this, &UFixationDataRecorder::PreSessionEnd);
-	cog->OnPostSessionEnd.AddDynamic(this, &UFixationDataRecorder::PostSessionEnd);
 }
 
 void UFixationDataRecorder::StartSession()
@@ -67,7 +62,7 @@ void UFixationDataRecorder::StartSession()
 		GLog->Log("UFixationDataRecorder::StartSession world from ACognitiveVRActor is null!");
 		return;
 	}
-	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &UFixationDataRecorder::SendData, false), AutoTimer, true);
+	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &UFixationDataRecorder::SendData, false), AutoTimer, true);
 }
 
 void UFixationDataRecorder::RecordFixationEnd(const FFixation& fixation)
@@ -165,9 +160,5 @@ void UFixationDataRecorder::PreSessionEnd()
 
 void UFixationDataRecorder::PostSessionEnd()
 {
-	cog->OnRequestSend.RemoveDynamic(this, &UFixationDataRecorder::SendData);
-	cog->OnPreSessionEnd.RemoveDynamic(this, &UFixationDataRecorder::PreSessionEnd);
-	cog->OnSessionBegin.RemoveDynamic(this, &UFixationDataRecorder::StartSession);
-	cog->OnPostSessionEnd.RemoveDynamic(this, &UFixationDataRecorder::PostSessionEnd);
 	cog.Reset();
 }

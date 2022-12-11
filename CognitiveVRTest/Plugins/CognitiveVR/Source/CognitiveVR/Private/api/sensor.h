@@ -8,15 +8,14 @@
 #include "TimerManager.h"
 #include "CognitiveVR/Private/util/util.h"
 #include "CoreMinimal.h"
-#include "Sensor.generated.h"
 
 class FAnalyticsProviderCognitiveVR;
 class UCognitiveVRBlueprints;
 
-UCLASS()
-	class COGNITIVEVR_API USensors : public UObject
+
+	class COGNITIVEVR_API USensors
 	{
-		GENERATED_BODY()
+		friend class FAnalyticsProviderCognitiveVR;
 
 	private:
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;

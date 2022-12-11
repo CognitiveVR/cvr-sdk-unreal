@@ -24,10 +24,6 @@ void UGazeDataRecorder::Initialize()
 	}
 
 	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	cog->OnSessionBegin.AddDynamic(this, &UGazeDataRecorder::StartSession);
-	cog->OnRequestSend.AddDynamic(this, &UGazeDataRecorder::SendData);
-	cog->OnPreSessionEnd.AddDynamic(this, &UGazeDataRecorder::PreSessionEnd);
-	cog->OnPostSessionEnd.AddDynamic(this, &UGazeDataRecorder::PostSessionEnd);
 }
 
 void UGazeDataRecorder::StartSession()
@@ -38,7 +34,7 @@ void UGazeDataRecorder::StartSession()
 		GLog->Log("UGazeDataRecorder::StartSession world from ACognitiveVRActor is null!");
 		return;
 	}
-	//world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &UCustomEventRecorder::SendData, false), AutoTimer, true);
+	//world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &UGazeDataRecorder::SendData, false), AutoTimer, true);
 }
 
 void UGazeDataRecorder::BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos, FString objectId)
@@ -237,8 +233,5 @@ void UGazeDataRecorder::PreSessionEnd()
 
 void UGazeDataRecorder::PostSessionEnd()
 {
-	cog->OnRequestSend.RemoveDynamic(this, &UGazeDataRecorder::SendData);
-	cog->OnPreSessionEnd.RemoveDynamic(this, &UGazeDataRecorder::PreSessionEnd);
-	cog->OnPostSessionEnd.RemoveDynamic(this, &UGazeDataRecorder::PostSessionEnd);
 	cog.Reset();
 }

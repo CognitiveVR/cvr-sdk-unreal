@@ -8,16 +8,14 @@
 #include "CognitiveVR/Public/CognitiveVRProvider.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 #include "CognitiveVR/Private/Fixations.h"
-#include "GazeDataRecorder.generated.h"
 
 class FAnalyticsCognitiveVR;
 class FAnalyticsProviderCognitiveVR;
 class UCognitiveVRBlueprints;
 
-UCLASS()
-	class COGNITIVEVR_API UGazeDataRecorder : public UObject
+	class COGNITIVEVR_API UGazeDataRecorder
 	{
-		GENERATED_BODY()
+		friend class FAnalyticsProviderCognitiveVR;
 
 	private:
 
@@ -31,11 +29,7 @@ UCLASS()
 		UFUNCTION()
 		void PostSessionEnd();
 
-		//TODO CRASH possibly getting garbage collected between scenes? can't use UPROPERTY because jsonobject isn't a UCLASS USTRUCT or UENUM
-		//TArray<TSharedPtr<FJsonObject>> snapshots;
-
-		UPROPERTY()
-			TArray< FGazeData> snapshots;
+		TArray< FGazeData> snapshots;
 		float LastSendTime = -60;
 		int32 GazeBatchSize = 100;
 

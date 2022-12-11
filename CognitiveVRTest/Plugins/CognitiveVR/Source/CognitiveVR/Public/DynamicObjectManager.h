@@ -14,17 +14,13 @@
 #include "CognitiveVR/Public/DynamicIdPoolAsset.h"
 #include "MotionControllerComponent.h"
 #include "CognitiveVR/Public/DynamicObject.h"
-#include "DynamicObjectManager.generated.h"
 
 class UCustomEvent;
 class UCognitiveVRBlueprints;
 
-UCLASS()
-class COGNITIVEVR_API UDynamicObjectManager : public UObject
+class COGNITIVEVR_API UDynamicObjectManager
 {
 	friend class FAnalyticsProviderCognitiveVR;
-
-	GENERATED_BODY()
 
 private:
 	TArray<FDynamicObjectSnapshot> snapshots; //this should be cleared when session starts in PIE

@@ -1,11 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "DynamicObjectManager.h"
-//#include "CognitiveVRSettings.h"
-//#include "Util.h"
 
-
-// Sets default values for this component's properties
 UDynamicObjectManager::UDynamicObjectManager()
 {
 
@@ -57,10 +53,6 @@ void UDynamicObjectManager::Initialize()
 	}
 
 	cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	cogProvider->OnSessionBegin.AddDynamic(this, &UDynamicObjectManager::OnSessionBegin);
-	cogProvider->OnPreSessionEnd.AddDynamic(this, &UDynamicObjectManager::OnPreSessionEnd);
-	cogProvider->OnPostSessionEnd.AddDynamic(this, &UDynamicObjectManager::OnPostSessionEnd);
-	cogProvider->OnRequestSend.AddDynamic(this, &UDynamicObjectManager::SendData);
 }
 
 void UDynamicObjectManager::ClearSnapshots()
@@ -77,7 +69,7 @@ void UDynamicObjectManager::OnSessionBegin()
 		GLog->Log("UDynamicObjectManager::StartSession world from ACognitiveVRActor is null!");
 		return;
 	}
-	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &UDynamicObjectManager::SendData, false), AutoTimer, true);
+	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &UDynamicObjectManager::SendData, false), AutoTimer, true);
 }
 
 //TODO is this used?
@@ -382,12 +374,6 @@ void UDynamicObjectManager::OnPostSessionEnd()
 	newManifest.Empty();
 	jsonPart = 1;
 	callbackInitialized = false;
-	//after this broadcast, this uobject is destroyed
-
-	cogProvider->OnSessionBegin.RemoveDynamic(this, &UDynamicObjectManager::OnSessionBegin);
-	cogProvider->OnPreSessionEnd.RemoveDynamic(this, &UDynamicObjectManager::OnPreSessionEnd);
-	cogProvider->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObjectManager::OnPostSessionEnd);
-	cogProvider->OnRequestSend.RemoveDynamic(this, &UDynamicObjectManager::SendData);
 	cogProvider.Reset();
 }
 
