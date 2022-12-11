@@ -28,10 +28,9 @@
 #include "CognitiveVR/Private/LocalCache.h"
 #include "Engine/Engine.h"
 #include "Misc/Base64.h"
+#include "CognitiveVR/Private/api/FixationDataRecorder.h"
+#include "CognitiveVR/Private/api/GazeDataRecorder.h"
 #include "Misc/PackageName.h"//to get friendly name of streaming levels
-
-
-
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
@@ -42,6 +41,8 @@
 	class ExitPoll;
 	class LocalCache;
 	class UDynamicObject;
+	class UGazeDataRecorder;
+	class UFixationDataRecorder;
 
 	class COGNITIVEVR_API FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
 	{
@@ -115,6 +116,8 @@
 		UCustomEventRecorder* customEventRecorder;
 		USensors* sensors;
 		UDynamicObjectManager* dynamicObjectManager;
+		UGazeDataRecorder* gazeDataRecorder;
+		UFixationDataRecorder* fixationDataRecorder;
 		TSharedPtr<Network> network;
 		TSharedPtr<ExitPoll> exitpoll;
 		TSharedPtr<LocalCache> localCache;

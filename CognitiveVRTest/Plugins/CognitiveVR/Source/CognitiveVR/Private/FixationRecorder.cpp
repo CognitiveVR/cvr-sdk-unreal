@@ -2,8 +2,6 @@
 
 #include "FixationRecorder.h"
 
-int32 UFixationRecorder::jsonFixationPart = 1;
-
 UFixationRecorder::UFixationRecorder()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -35,49 +33,6 @@ void UFixationRecorder::BeginPlay()
 		return;
 	}
 
-	FString ValueReceived;
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationBatchSize", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 fixationLimit = FCString::Atoi(*ValueReceived);
-		if (fixationLimit > 0)
-		{
-			FixationBatchSize = fixationLimit;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationExtremeLimit", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			ExtremeBatchSize = parsedValue;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationMinTimer", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			MinTimer = parsedValue;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationAutoTimer", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			AutoTimer = parsedValue;
-		}
-	}
-
-	cog->OnRequestSend.AddDynamic(this, &UFixationRecorder::SendData);
 	cog->OnSessionBegin.AddDynamic(this, &UFixationRecorder::BeginSession);
 	cog->OnPreSessionEnd.AddDynamic(this, &UFixationRecorder::OnPreSessionEnd);
 
@@ -91,8 +46,6 @@ void UFixationRecorder::BeginPlay()
 
 void UFixationRecorder::BeginSession()
 {
-	//possibly the default object running?
-	GetWorld()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &UFixationRecorder::SendData, false), AutoTimer, true);
 }
 
 bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
@@ -585,9 +538,20 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 		if (CheckEndFixation(ActiveFixation))
 		{
-			RecordFixationEnd(ActiveFixation);
+			cog->fixationDataRecorder->RecordFixationEnd(ActiveFixation);
 			isFixating = false;
 			CachedEyeCapturePositions.Empty();
+			if (DebugDisplayFixations)
+			{
+				if (ActiveFixation.IsLocal)
+				{
+					FVector fixationWorldPos;
+					fixationWorldPos = ActiveFixation.Transformation.TransformPosition(ActiveFixation.LocalPosition);
+					DrawDebugSphere(GetWorld(), fixationWorldPos, 10, 8, FColor::Cyan, false, 5);
+				}
+				else
+					DrawDebugBox(GetWorld(), ActiveFixation.WorldPosition, FVector::OneVector * 15, FColor::Cyan, false, 5);
+			}
 		}
 		WasOutOfDispersionLastFrame = IsOutOfRange;
 	}
@@ -1177,105 +1141,6 @@ bool UFixationRecorder::TryBeginFixation()
 	return false;
 }
 
-void UFixationRecorder::RecordFixationEnd(const FFixation& fixation)
-{
-	//write fixation to json
-	TSharedPtr<FJsonObject>fixObj = MakeShareable(new FJsonObject);
-
-	double d = (double)fixation.StartMs / 1000.0;
-
-	fixObj->SetNumberField("time", d);
-	fixObj->SetNumberField("duration", fixation.DurationMs);
-	fixObj->SetNumberField("maxradius", fixation.MaxRadius);
-
-	if (fixation.IsLocal)
-	{
-		TArray<TSharedPtr<FJsonValue>> posArray;
-		TSharedPtr<FJsonValueNumber> JsonValue;
-		JsonValue = MakeShareable(new FJsonValueNumber(-fixation.LocalPosition.X)); //right
-		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(fixation.LocalPosition.Z)); //up
-		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(fixation.LocalPosition.Y));  //forward
-		posArray.Add(JsonValue);
-
-		fixObj->SetArrayField("p", posArray);
-
-		fixObj->SetStringField("objectid", fixation.DynamicObjectId);
-	}
-	else
-	{
-		TArray<TSharedPtr<FJsonValue>> posArray;
-		TSharedPtr<FJsonValueNumber> JsonValue;
-		JsonValue = MakeShareable(new FJsonValueNumber(-fixation.WorldPosition.X)); //right
-		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(fixation.WorldPosition.Z)); //up
-		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(fixation.WorldPosition.Y));  //forward
-		posArray.Add(JsonValue);
-
-		fixObj->SetArrayField("p", posArray);
-	}
-
-	Fixations.Add(fixObj);
-	if (Fixations.Num() > FixationBatchSize)
-	{
-		SendData(false);
-	}
-
-	if (DebugDisplayFixations)
-	{
-		if (fixation.IsLocal)
-		{
-			FVector fixationWorldPos;
-			fixationWorldPos = fixation.Transformation.TransformPosition(fixation.LocalPosition);
-			DrawDebugSphere(GetWorld(), fixationWorldPos, 10, 8, FColor::Cyan, false, 5);
-		}
-		else
-			DrawDebugBox(GetWorld(), fixation.WorldPosition, FVector::OneVector * 15, FColor::Cyan, false, 5);
-	}
-}
-
-void UFixationRecorder::SendData(bool copyDataToCache)
-{
-	if (!cog.IsValid() || !cog->HasStartedSession()) { return; }
-	if (cog->GetCurrentSceneVersionNumber().Len() == 0) { return; }
-	if (!cog->GetCurrentSceneData().IsValid()) { return; }
-
-	if (Fixations.Num() == 0) { return; }
-
-	TSharedPtr<FJsonObject> wholeObj = MakeShareable(new FJsonObject);
-
-	wholeObj->SetStringField("userid", cog->GetUserID());
-	wholeObj->SetStringField("sessionid", cog->GetSessionID());
-	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
-	wholeObj->SetNumberField("part", jsonFixationPart);
-	jsonFixationPart++;
-	wholeObj->SetStringField("formatversion", "1.0");
-
-	TArray<TSharedPtr<FJsonValue>> dataArray;
-	for (int32 i = 0; i != Fixations.Num(); ++i)
-	{
-		TSharedPtr<FJsonValueObject> snapshotValue;
-		snapshotValue = MakeShareable(new FJsonValueObject(Fixations[i]));
-		dataArray.Add(snapshotValue);
-	}
-
-	wholeObj->SetArrayField("data", dataArray);
-
-
-	FString OutputString;
-	auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
-	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-
-	if (OutputString.Len() > 0)
-	{
-		cog->network->NetworkCall("fixations", OutputString, copyDataToCache);
-	}
-	Fixations.Empty();
-	LastSendTime = UCognitiveVRBlueprints::GetSessionDuration();
-}
-
 void UFixationRecorder::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
@@ -1288,7 +1153,6 @@ void UFixationRecorder::EndPlay(EEndPlayReason::Type EndPlayReason)
 		FDebug::DumpStackTraceToLog(ELogVerbosity::Error);
 		return;
 	}
-	cog->OnRequestSend.RemoveDynamic(this, &UFixationRecorder::SendData);
 	cog->OnSessionBegin.RemoveDynamic(this, &UFixationRecorder::BeginSession);
 	cog->OnPreSessionEnd.RemoveDynamic(this, &UFixationRecorder::OnPreSessionEnd);
 }
@@ -1298,18 +1162,24 @@ void UFixationRecorder::OnPreSessionEnd()
 	//if there's currently a fixation, end that
 	if (isFixating)
 	{
-		RecordFixationEnd(ActiveFixation);
+		cog->fixationDataRecorder->RecordFixationEnd(ActiveFixation);
 		isFixating = false;
 		CachedEyeCapturePositions.Empty();
+		if (DebugDisplayFixations)
+		{
+			if (ActiveFixation.IsLocal)
+			{
+				FVector fixationWorldPos;
+				fixationWorldPos = ActiveFixation.Transformation.TransformPosition(ActiveFixation.LocalPosition);
+				DrawDebugSphere(GetWorld(), fixationWorldPos, 10, 8, FColor::Cyan, false, 5);
+			}
+			else
+				DrawDebugBox(GetWorld(), ActiveFixation.WorldPosition, FVector::OneVector * 15, FColor::Cyan, false, 5);
+		}
 	}
 
 	//clean up any internal stuff
 	EyeCaptures.Empty();
-
-	//TODO should be fine to use this component's GetWorld. double check
-	//auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
-	//if (world == nullptr) { return; }
-	GetWorld()->GetTimerManager().ClearTimer(AutoSendHandle);
 }
 
 float UFixationRecorder::GetDPIScale()
@@ -1336,4 +1206,23 @@ TArray<FFixation> UFixationRecorder::GetRecentFixationPoints()
 TArray<TSharedPtr<FC3DGazePoint>> UFixationRecorder::GetRecentEyePositions()
 {
 	return recentEyePositions;
+}
+
+float UFixationRecorder::GetLastSendTime()
+{
+	if (!cog.IsValid()) { return 0; }
+	if (cog->fixationDataRecorder == nullptr) { return 0; }
+	return cog->fixationDataRecorder->GetLastSendTime();
+}
+int32 UFixationRecorder::GetPartNumber()
+{
+	if (!cog.IsValid()) { return 0; }
+	if (cog->fixationDataRecorder == nullptr) { return 0; }
+	return cog->fixationDataRecorder->GetPartNumber();
+}
+int32 UFixationRecorder::GetDataPoints()
+{
+	if (!cog.IsValid()) { return 0; }
+	if (cog->fixationDataRecorder == nullptr) { return 0; }
+	return cog->fixationDataRecorder->GetDataPoints();
 }

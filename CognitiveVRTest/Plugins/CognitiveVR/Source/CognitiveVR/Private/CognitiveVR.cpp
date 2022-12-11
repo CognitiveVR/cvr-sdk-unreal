@@ -156,6 +156,10 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	customEventRecorder->Initialize();
 	sensors = NewObject<USensors>();
 	sensors->Initialize();
+	fixationDataRecorder = NewObject<UFixationDataRecorder>();
+	fixationDataRecorder->Initialize();
+	gazeDataRecorder = NewObject<UGazeDataRecorder>();
+	gazeDataRecorder->Initialize();
 	localCache = MakeShareable(new LocalCache(FPaths::GeneratedConfigDir()));
 	network = MakeShareable(new Network());
 	dynamicObjectManager = NewObject<UDynamicObjectManager>();
@@ -243,6 +247,8 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	//reset components and uobjects
 	network.Reset();
 	customEventRecorder = nullptr;
+	fixationDataRecorder = nullptr;
+	gazeDataRecorder = nullptr;
 	sensors = nullptr;
 	UCognitiveVRBlueprints::cog.Reset();
 	UCustomEvent::cog.Reset();

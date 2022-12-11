@@ -23,8 +23,29 @@ struct FC3DGazePoint
 		FVector LocalPosition = FVector(0, 0, 0);
 };
 
-class COGNITIVEVR_API FFixation
+USTRUCT()
+struct FGazeData
 {
+	GENERATED_BODY()
+public:
+		double Time = 0;
+		FVector HMDPosition = FVector(0, 0, 0);
+		FRotator HMDRotation = FRotator(0, 0, 0);
+		
+		bool UseGaze = false;
+		FVector GazePosition = FVector(0, 0, 0);
+
+		bool UseFloor = false;
+		FVector FloorPosition = FVector(0, 0, 0);
+
+		bool UseDynamicId = false;
+		FString DynamicObjectId;
+};
+
+USTRUCT()
+struct COGNITIVEVR_API FFixation
+{
+	GENERATED_BODY()
 public:
 	FVector WorldPosition;
 	FVector LocalPosition;

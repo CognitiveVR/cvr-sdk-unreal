@@ -80,6 +80,7 @@ void UDynamicObjectManager::OnSessionBegin()
 	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateUObject(this, &UDynamicObjectManager::SendData, false), AutoTimer, true);
 }
 
+//TODO is this used?
 TSharedPtr<FDynamicObjectId> UDynamicObjectManager::GetUniqueId(FString meshName)
 {
 	TSharedPtr<FDynamicObjectId> freeId;

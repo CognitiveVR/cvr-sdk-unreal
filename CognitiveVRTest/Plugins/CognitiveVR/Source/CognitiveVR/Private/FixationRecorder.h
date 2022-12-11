@@ -54,8 +54,6 @@ class COGNITIVEVR_API UFixationRecorder : public UActorComponent
 
 private:
 	float currentTime = 0;
-
-	TArray<TSharedPtr<FJsonObject>> Fixations;
 	TArray<FEyeCapture> EyeCaptures;
 
 	int32 index;
@@ -72,7 +70,6 @@ private:
 	bool IsGazeOutOfRange(FEyeCapture eyeCapture);
 	bool IsGazeOffTransform(const FEyeCapture& eyeCapture);
 	bool CheckEndFixation(const FFixation& testFixation);
-	void RecordFixationEnd(const FFixation& fixation);
 
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 
@@ -116,24 +113,13 @@ private:
 	bool eyesClosed;
 	int64 EyeUnblinkTime;
 
-
-	int32 FixationBatchSize = 64;
-	static int32 jsonFixationPart;
-	int32 AutoTimer = 2;
-	int32 MinTimer = 2;
-	int32 ExtremeBatchSize = 64;
-	float LastSendTime = -60;
-	FTimerHandle AutoSendHandle;
 	FVector2D CurrentEyePositionScreen;
 
 	TArray<FFixation> recentFixationPoints;
 	TArray<TSharedPtr<FC3DGazePoint>> recentEyePositions;
 
-
 	UFUNCTION()
 		void BeginSession();
-	UFUNCTION()
-		void SendData(bool copyDataToCache);
 	UFUNCTION()
 		void OnPreSessionEnd();
 
@@ -181,7 +167,7 @@ public:
 	virtual void BeginPlay() override;
 	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	
+
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
 		FVector2D GetEyePositionScreen();
@@ -195,8 +181,10 @@ public:
 	//returns the last 50 eye positions in x,y,z world space, to be used for drawing saccade lines on screen space
 	TArray<TSharedPtr<FC3DGazePoint>> GetRecentEyePositions();
 
-	float GetLastSendTime() { return LastSendTime; }
-	int32 GetPartNumber() { return jsonFixationPart; }
 	bool IsFixating() { return isFixating; }
-	int32 GetDataPoints() { return Fixations.Num(); }
+
+	float GetLastSendTime();
+	int32 GetPartNumber();
+	int32 GetDataPoints();
+
 };

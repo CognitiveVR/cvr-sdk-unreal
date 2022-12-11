@@ -207,6 +207,7 @@ void UDynamicObject::Initialize()
 	HasInitialized = true;
 }
 
+//TODO is this used?
 TSharedPtr<FDynamicObjectId> UDynamicObject::GetUniqueId(FString meshName)
 {
 	TSharedPtr<FDynamicObjectId> freeId;

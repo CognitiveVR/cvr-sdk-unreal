@@ -5,9 +5,6 @@
 //#include "CognitiveVRSettings.h"
 //#include "Util.h"
 
-
-int32 UPlayerTracker::jsonGazePart = 1;
-
 UPlayerTracker::UPlayerTracker()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -27,19 +24,6 @@ void UPlayerTracker::BeginPlay()
 		return;
 	}
 
-	FString ValueReceived;
-
-	//gaze batch size
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "GazeBatchSize", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 sensorLimit = FCString::Atoi(*ValueReceived);
-		if (sensorLimit > 0)
-		{
-			GazeBatchSize = sensorLimit;
-		}
-	}
-
 	if (!cog.IsValid())
 	{
 		CognitiveLog::Error("UPlayerTracker::BeginPlay has invalid cognitive provider. should be impossible??");
@@ -47,7 +31,6 @@ void UPlayerTracker::BeginPlay()
 	}
 
 	GEngine->GetAllLocalPlayerControllers(controllers);
-	cog->OnRequestSend.AddDynamic(this, &UPlayerTracker::SendData);
 }
 
 FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
@@ -261,7 +244,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		{
 			//hit some csg or something that is not an actor
 		}
-		BuildSnapshot(captureLocation, gaze, captureRotation, time, DidHitFloor, FloorHitPosition, objectid);
+		cog->gazeDataRecorder->BuildSnapshot(captureLocation, gaze, captureRotation, time, DidHitFloor, FloorHitPosition, objectid);
 
 		if (DebugDisplayGaze)
 			DrawDebugSphere(GetWorld(), gaze, 3, 3, FColor::White, false, 0.2);
@@ -269,224 +252,30 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	else
 	{
 		//hit nothing. use position and rotation only
-		BuildSnapshot(captureLocation, captureRotation, time, DidHitFloor, FloorHitPosition);
+		cog->gazeDataRecorder->BuildSnapshot(captureLocation, captureRotation, time, DidHitFloor, FloorHitPosition);
 	}
-}
-
-void UPlayerTracker::BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos, FString objectId)
-{
-	TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
-
-	snapObj->SetNumberField("time", time);
-
-	//positions
-	TArray<TSharedPtr<FJsonValue>> posArray;
-	TSharedPtr<FJsonValueNumber> JsonValue;
-	JsonValue = MakeShareable(new FJsonValueNumber(-position.X)); //right
-	posArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(position.Z)); //up
-	posArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(position.Y));  //forward
-	posArray.Add(JsonValue);
-
-	snapObj->SetArrayField("p", posArray);
-
-	if (objectId != "")
-	{
-		snapObj->SetStringField("o", objectId);
-	}
-
-	TArray<TSharedPtr<FJsonValue>> gazeArray;
-	JsonValue = MakeShareable(new FJsonValueNumber(-gaze.X));
-	gazeArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(gaze.Z));
-	gazeArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(gaze.Y));
-	gazeArray.Add(JsonValue);
-
-	snapObj->SetArrayField("g", gazeArray);
-
-	//rotation
-	TArray<TSharedPtr<FJsonValue>> rotArray;
-
-	FQuat quat;
-	FRotator adjustedRot = rotation;
-	adjustedRot.Yaw -= 90;
-	quat = adjustedRot.Quaternion();
-
-	JsonValue = MakeShareable(new FJsonValueNumber(quat.Y));
-	rotArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(quat.Z));
-	rotArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(quat.X));
-	rotArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(quat.W));
-	rotArray.Add(JsonValue);
-
-	snapObj->SetArrayField("r", rotArray);
-
-	if (didHitFloor)
-	{
-		//floor position
-		TArray<TSharedPtr<FJsonValue>> floorArray;
-		JsonValue = MakeShareable(new FJsonValueNumber(-floorHitPos.X)); //right
-		floorArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(floorHitPos.Z)); //up
-		floorArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(floorHitPos.Y));  //forward
-		floorArray.Add(JsonValue);
-
-		snapObj->SetArrayField("f", floorArray);
-	}
-
-	snapshots.Add(snapObj);
-	if (snapshots.Num() > GazeBatchSize)
-	{
-		SendData(false);
-	}
-}
-
-void UPlayerTracker::BuildSnapshot(FVector position, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos)
-{
-	TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
-
-	snapObj->SetNumberField("time", time);
-
-	//positions
-	TArray<TSharedPtr<FJsonValue>> posArray;
-	TSharedPtr<FJsonValueNumber> JsonValue;
-	JsonValue = MakeShareable(new FJsonValueNumber(-position.X)); //right
-	posArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(position.Z)); //up
-	posArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(position.Y));  //forward
-	posArray.Add(JsonValue);
-
-	snapObj->SetArrayField("p", posArray);
-
-	//rotation
-	TArray<TSharedPtr<FJsonValue>> rotArray;
-
-	FQuat quat;
-	FRotator adjustedRot = rotation;
-	adjustedRot.Yaw -= 90;
-	quat = adjustedRot.Quaternion();
-
-	JsonValue = MakeShareable(new FJsonValueNumber(quat.Y));
-	rotArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(quat.Z));
-	rotArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(quat.X));
-	rotArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(quat.W));
-	rotArray.Add(JsonValue);
-
-	snapObj->SetArrayField("r", rotArray);
-
-	if (didHitFloor)
-	{
-		//floor position
-		TArray<TSharedPtr<FJsonValue>> floorArray;
-		JsonValue = MakeShareable(new FJsonValueNumber(-floorHitPos.X)); //right
-		floorArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(floorHitPos.Z)); //up
-		floorArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(floorHitPos.Y));  //forward
-		floorArray.Add(JsonValue);
-
-		snapObj->SetArrayField("f", floorArray);
-	}
-
-	snapshots.Add(snapObj);
-	if (snapshots.Num() > GazeBatchSize)
-	{
-		SendData(false);
-	}
-}
-
-void UPlayerTracker::SendData(bool copyDataToCache)
-{
-	if (!cog.IsValid() || !cog->HasStartedSession()) { return; }
-	if (cog->GetCurrentSceneVersionNumber().Len() == 0) { return; }
-	if (!cog->GetCurrentSceneData().IsValid()){return;}
-
-	//GAZE
-	FJsonObject newProps = cog->GetNewSessionProperties();
-
-	if (snapshots.Num() == 0 && newProps.Values.Num() == 0 && cog->ForceWriteSessionMetadata == false) { return; }
-
-	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
-	TArray<TSharedPtr<FJsonValue>> dataArray;
-
-	wholeObj->SetStringField("userid", cog->GetUserID());
-	if (!cog->LobbyId.IsEmpty())
-	{
-		wholeObj->SetStringField("lobbyId", cog->LobbyId);
-	}
-	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
-	wholeObj->SetStringField("sessionid", cog->GetSessionID());
-	wholeObj->SetNumberField("part", jsonGazePart);
-	wholeObj->SetStringField("formatversion", "1.0");
-	jsonGazePart++;
-
-	FName DeviceName(NAME_None);
-	FString DeviceNameString = "unknown";
-
-	//get HMDdevice name on beginplay and cache
-	if (GEngine->XRSystem.IsValid())
-	{
-		DeviceName = GEngine->XRSystem->GetSystemName();
-		DeviceNameString = Util::GetDeviceName(DeviceName.ToString());
-	}
-
-	wholeObj->SetStringField("formatversion", "1.0");
-	wholeObj->SetStringField("hmdtype", DeviceNameString);
-
-	for (int32 i = 0; i != snapshots.Num(); ++i)
-	{
-		TSharedPtr<FJsonValueObject> snapshotValue;
-		snapshotValue = MakeShareable(new FJsonValueObject(snapshots[i]));
-		dataArray.Add(snapshotValue);
-	}
-
-	wholeObj->SetNumberField("interval", PlayerSnapshotInterval);
-
-	wholeObj->SetArrayField("data", dataArray);
-
-	if (cog->ForceWriteSessionMetadata)
-	{
-		cog->ForceWriteSessionMetadata = false;
-		FJsonObject allProps = cog->GetAllSessionProperties();
-		if (allProps.Values.Num() > 0)
-		{
-			TSharedPtr<FJsonObject> sessionValue;
-			sessionValue = MakeShareable(new FJsonObject(allProps));
-			wholeObj->SetObjectField("properties", sessionValue);
-		}
-	}
-	else if (newProps.Values.Num() > 0)
-	{
-		TSharedPtr<FJsonObject> sessionValue;
-		sessionValue = MakeShareable(new FJsonObject(newProps));
-
-		wholeObj->SetObjectField("properties", sessionValue);
-	}
-
-	FString OutputString;
-	auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
-	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-
-	if (OutputString.Len() > 0)
-	{
-		cog->network->NetworkCall("gaze", OutputString, copyDataToCache);
-	}
-	snapshots.Empty();
-
-	LastSendTime = UCognitiveVRBlueprints::GetSessionDuration();
 }
 
 void UPlayerTracker::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	cog->OnRequestSend.RemoveDynamic(this, &UPlayerTracker::SendData);
+}
+
+float UPlayerTracker::GetLastSendTime()
+{
+	if (!cog.IsValid()) { return 0; }
+	if (cog->gazeDataRecorder == nullptr) { return 0; }
+	return cog->gazeDataRecorder->GetLastSendTime();
+}
+int32 UPlayerTracker::GetPartNumber()
+{
+	if (!cog.IsValid()) { return 0; }
+	if (cog->gazeDataRecorder == nullptr) { return 0; }
+	return cog->gazeDataRecorder->GetPartNumber();
+}
+int32 UPlayerTracker::GetDataPoints()
+{
+	if (!cog.IsValid()) { return 0; }
+	if (cog->gazeDataRecorder == nullptr) { return 0; }
+	return cog->gazeDataRecorder->GetDataPoints();
 }

@@ -47,6 +47,7 @@
 #include "Public/Eye/WaveVREyeManager.h"
 #endif
 #include "DrawDebugHelpers.h"
+#include "CognitiveVR/Private/api/GazeDataRecorder.h"
 #include "PlayerTracker.generated.h"
 
 class FAnalyticsProviderCognitiveVR;
@@ -59,25 +60,15 @@ class COGNITIVEVR_API UPlayerTracker : public UActorComponent
 
 private:
 	float currentTime = 0;
-	TArray<TSharedPtr<FJsonObject>> snapshots;
-
-	static int32 jsonGazePart;
-
 	TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
-	void BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos, FString objectId = "");
-	void BuildSnapshot(FVector position, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos);
 
 	FVector GetWorldGazeEnd(FVector start);
 	FVector LastDirection;
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 
-	float LastSendTime = -60;
-
 public:
 
 	const float PlayerSnapshotInterval = 0.1;
-
-	int32 GazeBatchSize = 100;
 
 	UPlayerTracker();
 
@@ -86,13 +77,11 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UFUNCTION()
-	void SendData(bool copyDataToCache);
-
 	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		bool DebugDisplayGaze = false;
 
-	float GetLastSendTime() { return LastSendTime; }
-	int32 GetPartNumber() { return jsonGazePart; }
-	int32 GetDataPoints() { return snapshots.Num(); }
+
+	float GetLastSendTime();
+	int32 GetPartNumber();
+	int32 GetDataPoints();
 };
