@@ -47,14 +47,14 @@
 	class COGNITIVEVR_API FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
 	{
 		/** Unique Id representing the session the analytics are recording for */
-		FString SessionId;
+		FString SessionId = "";
 		/** Holds the Age if set */
 		/** Holds the build info if set */
-		FString BuildInfo;
-		FString ParticipantName;
+		FString BuildInfo = "";
+		FString ParticipantName = "";
 		/** Id representing the user the analytics are recording for */
-		FString ParticipantId;
-		FString DeviceId;
+		FString ParticipantId = "";
+		FString DeviceId = "";
 		double SessionTimestamp = -1;
 		FJsonObject NewSessionProperties;
 		FJsonObject AllSessionProperties;
@@ -62,8 +62,7 @@
 	private:
 		//reads all scene data from engine ini
 		void CacheSceneData();
-
-		bool bHasSessionStarted = false;
+		static bool bHasSessionStarted;
 		double SceneStartTime = 0;
 
 	public:
@@ -115,11 +114,11 @@
 		virtual void RecordProgress(const FString& ProgressType, const FString& ProgressHierarchy, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		
 		//consider making these TSharedPtr
-		UCustomEventRecorder* customEventRecorder;
-		USensors* sensors;
-		UDynamicObjectManager* dynamicObjectManager;
-		UGazeDataRecorder* gazeDataRecorder;
-		UFixationDataRecorder* fixationDataRecorder;
+		UCustomEventRecorder* customEventRecorder = nullptr;
+		USensors* sensors = nullptr;
+		UDynamicObjectManager* dynamicObjectManager = nullptr;
+		UGazeDataRecorder* gazeDataRecorder = nullptr;
+		UFixationDataRecorder* fixationDataRecorder = nullptr;
 		TSharedPtr<Network> network;
 		TSharedPtr<ExitPoll> exitpoll;
 		TSharedPtr<LocalCache> localCache;
@@ -135,13 +134,13 @@
 
 		bool HasStartedSession();
 
-		FString ApplicationKey;
-		FString AttributionKey;
+		FString ApplicationKey = "";
+		FString AttributionKey = "";
 
 		FString GetCurrentSceneId();
 		FString GetCurrentSceneVersionNumber();
 		//if a session name has been explicitly set. otherwise will use participant name when that is set
-		bool bHasCustomSessionName;
+		bool bHasCustomSessionName = false;
 		void SetSessionName(FString sessionName);
 		
 		//used to identify when a scene changes and session properties need to be resent

@@ -7,6 +7,8 @@
 
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
+bool FAnalyticsProviderCognitiveVR::bHasSessionStarted = false;
+
 void FAnalyticsCognitiveVR::StartupModule()
 {
 	TSharedPtr<FAnalyticsProviderCognitiveVR> cog = MakeShareable(new FAnalyticsProviderCognitiveVR());
@@ -66,11 +68,16 @@ void FAnalyticsProviderCognitiveVR::HandleSublevelUnloaded(ULevel* level, UWorld
 	FString levelName = level->GetFullGroupName(true);
 	//GLog->Log("FAnalyticsProviderCognitiveVR::HandleSublevelUnloaded Unloaded sublevel: " + levelName);
 	auto currentSceneData = GetCurrentSceneData();
+	if (LoadedSceneDataStack.Num() == 0)
+	{
+		//no scene data to unload
+		return;
+	}
 	auto stackTop = LoadedSceneDataStack.Top();
 	TSharedPtr<FSceneData> data = GetSceneData(levelName);
 
 
-	if (stackTop == currentSceneData) //changing current scene to something further down the stack (or no scene)
+	if (stackTop == currentSceneData && data == currentSceneData) //changing current scene to something further down the stack (or no scene)
 	{		
 		//remove the scene data
 		LoadedSceneDataStack.Remove(data);
@@ -256,7 +263,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	
 	//set initial scene data
 	auto level = currentWorld->GetCurrentLevel();
-	if (level == nullptr)
+	if (level != nullptr)
 	{
 		FString levelName = level->GetFullGroupName(true);
 		TSharedPtr<FSceneData> data = GetSceneData(levelName);
@@ -346,7 +353,6 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 
 	OnPreSessionEnd.Broadcast();
 	FlushAndCacheEvents();
-	GLog->Log("FAnalyticsProviderCognitiveVR::EndSession PRE END SESSION DONE. FLUSHED OUTSTANDING DATA");
 
 	//OnPostSessionEnd broadcast. used by components to clean up anything, including delegates
 	gazeDataRecorder->PostSessionEnd();
@@ -359,17 +365,12 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	//reset components and uobjects
 	network.Reset();
 	delete(customEventRecorder);
-	//customEventRecorder = nullptr;
 	delete(fixationDataRecorder);
-	//fixationDataRecorder = nullptr;
 	delete(gazeDataRecorder);
-	//gazeDataRecorder = nullptr;
-	//sensors = nullptr;
 	delete(sensors);
+	delete(dynamicObjectManager);
 	UCognitiveVRBlueprints::cog.Reset();
 	UCustomEvent::cog.Reset();
-	//dynamicObjectManager = nullptr;
-	delete(dynamicObjectManager);
 	if (localCache.IsValid())
 	{
 		localCache->Close();
