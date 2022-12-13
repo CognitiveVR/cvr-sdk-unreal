@@ -37,10 +37,15 @@ void FAnalyticsProviderCognitiveVR::HandleSublevelLoaded(ULevel* level, UWorld* 
 		{
 			properties->SetStringField("Scene Name", FString(data->Name));
 			properties->SetStringField("Scene Id", FString(data->Id));
+			float duration = Util::GetTimestamp() - SceneStartTime;
+			properties->SetNumberField("Duration", duration);
+			customEventRecorder->Send("c3d.SceneChange", properties);
 		}
-		float duration = Util::GetTimestamp() - SceneStartTime;
-		properties->SetNumberField("Duration", duration);
-		customEventRecorder->Send("c3d.SceneChange", properties);
+		else
+		{
+			properties->SetStringField("Sublevel Name", FString(levelName));
+			customEventRecorder->Send("c3d.Level Streaming Load", properties);
+		}
 		FlushAndCacheEvents();
 	}
 
@@ -89,10 +94,10 @@ void FAnalyticsProviderCognitiveVR::HandleSublevelUnloaded(ULevel* level, UWorld
 		{
 			properties->SetStringField("Scene Name", FString(stackNewTop->Name));
 			properties->SetStringField("Scene Id", FString(stackNewTop->Id));
+			float duration = Util::GetTimestamp() - SceneStartTime;
+			properties->SetNumberField("Duration", duration);
+			customEventRecorder->Send("c3d.SceneChange", properties);
 		}
-		float duration = Util::GetTimestamp() - SceneStartTime;
-		properties->SetNumberField("Duration", duration);
-		customEventRecorder->Send("c3d.SceneChange", properties);
 		FlushAndCacheEvents();
 
 		//set new current scene
@@ -113,6 +118,9 @@ void FAnalyticsProviderCognitiveVR::HandleSublevelUnloaded(ULevel* level, UWorld
 	{
 		//remove scene data from stack and do nothing else
 		LoadedSceneDataStack.Remove(data);
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
+		properties->SetStringField("Sublevel Name", FString(levelName));
+		customEventRecorder->Send("c3d.Level Streaming Unload", properties);
 	}
 }
 
