@@ -117,9 +117,7 @@ void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Resp
 		}
 		else
 		{
-			if (responseCode == 401) { return; }
-			if (responseCode == 404) { return; }
-			if (responseCode == -1) { return; }
+			if (responseCode < 500) {return;}
 
 			if (Request == nullptr) { return; }
 
