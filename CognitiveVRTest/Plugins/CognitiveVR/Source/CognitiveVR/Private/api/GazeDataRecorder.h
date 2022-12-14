@@ -38,8 +38,8 @@ class UCognitiveVRBlueprints;
 		//call this immediately after creation - sets callbacks and reference to CognitiveVRProvider
 		void Initialize();
 
-		void BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos, FString objectId = "");
-		void BuildSnapshot(FVector position, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos);
+		void BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos, FString objectId = "");
+		void BuildSnapshot(FVector position, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos);
 
 		//send all outstanding gaze data to Cognitive dashboard
 		UFUNCTION()

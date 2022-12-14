@@ -305,7 +305,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 
 	double ts = Util::GetTimestamp();
 
-	snapshot.time = ts;
+	snapshot.timestamp = ts;
 	snapshot.id = ObjectID->Id;
 	snapshot.position = FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y);
 

@@ -273,7 +273,7 @@ public:
 	FVector scale = FVector(1, 1, 1);
 	bool hasScaleChanged = false;
 	FQuat rotation = FQuat(0, 0, 0, 1);
-	double time = 0;
+	double timestamp = 0;
 	FString id = "";
 	TMap<FString, FString> StringProperties;
 	TMap<FString, int32> IntegerProperties;

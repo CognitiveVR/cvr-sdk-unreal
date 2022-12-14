@@ -83,11 +83,11 @@ void USensors::RecordSensor(FString Name, float value)
 {
 	UWorld* world = ACognitiveVRActor::GetCognitiveSessionWorld();
 
-	float time = UGameplayStatics::GetRealTimeSeconds(world);
+	float timestamp = UGameplayStatics::GetRealTimeSeconds(world);
 	if (SensorDataPoints.Contains(Name))
 	{
 		//check time since world startup
-		if (time < sensorData[Name]->NextRecordTime)
+		if (timestamp < sensorData[Name]->NextRecordTime)
 		{
 			return; //recording above rate!
 		}
@@ -98,7 +98,7 @@ void USensors::RecordSensor(FString Name, float value)
 		InitializeSensor(Name, 10, value);
 	}
 
-	sensorData[Name]->NextRecordTime = (time + sensorData[Name]->UpdateInterval);
+	sensorData[Name]->NextRecordTime = (timestamp + sensorData[Name]->UpdateInterval);
 	LastSensorValues.Add(Name, (float)value);
 	sensorDataCount ++;
 	if (sensorDataCount >= SensorThreshold)

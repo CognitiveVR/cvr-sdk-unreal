@@ -38,34 +38,27 @@ void ACognitiveVRActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	Super::EndPlay(EndPlayReason);
 
-	FString reason;
 	bool shouldEndSession = true;
 	switch (EndPlayReason)
 	{
 	case EEndPlayReason::Destroyed:
 		//this should normally never be destroyed. 4.19 bug - this is called instead of level transition
-		reason = "destroyed";
 		cog->FlushEvents();
 		break;
 	case EEndPlayReason::EndPlayInEditor:
-		reason = "end PIE";
 		break;
 	case EEndPlayReason::LevelTransition:
-		reason = "level transition";
 		cog->FlushEvents();
 		shouldEndSession = false;
 		break;
 	case EEndPlayReason::Quit:
-		reason = "quit";
 		break;
 	case EEndPlayReason::RemovedFromWorld:
 		//removed from a sublevel unloading
-		reason = "removed from world";
 		cog->FlushEvents();
 		shouldEndSession = false;
 		break;
 	default:
-		reason = "default";
 		break;
 	}
 

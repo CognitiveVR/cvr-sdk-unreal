@@ -93,7 +93,6 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 #elif defined HPGLIA_API
 	FVector End = FVector::ZeroVector;
 	FVector TempStart = controllers[0]->PlayerCameraManager->GetCameraLocation();
-	FVector LocalDirection = FVector::ZeroVector;
 
 	FEyeTracking eyeTrackingData;
 	if (UHPGliaClient::GetEyeTracking(eyeTrackingData))
@@ -164,7 +163,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	currentTime -= PlayerSnapshotInterval;
 
 	
-	double time = Util::GetTimestamp();
+	double timestamp = Util::GetTimestamp();
 	FString objectid = "";
 
 	if (controllers.Num() == 0)
@@ -205,7 +204,6 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		FloorHitPosition = FloorHit.ImpactPoint;
 	}
 
-	bool hitDynamic = false;
 	if (bHit)
 	{
 		FVector gaze = Hit.ImpactPoint;
@@ -218,11 +216,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 				UDynamicObject* hitDynamicObject = Cast<UDynamicObject>(hitActorComponent);
 				if (hitDynamicObject != NULL && hitDynamicObject->GetObjectId().IsValid())
 				{
-					hitDynamic = true;
-
 					FVector localHitPosition = hitDynamicObject->GetOwner()->GetActorTransform().InverseTransformPosition(Hit.ImpactPoint);
-
-					//localHitPosition *= hitDynamicObject->GetOwner()->GetActorTransform().GetScale3D();
 
 					objectid = hitDynamicObject->GetObjectId()->Id;
 					gaze.X = localHitPosition.X;
@@ -239,7 +233,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		{
 			//hit some csg or something that is not an actor
 		}
-		cog->gazeDataRecorder->BuildSnapshot(captureLocation, gaze, captureRotation, time, DidHitFloor, FloorHitPosition, objectid);
+		cog->gazeDataRecorder->BuildSnapshot(captureLocation, gaze, captureRotation, timestamp, DidHitFloor, FloorHitPosition, objectid);
 
 		if (DebugDisplayGaze)
 			DrawDebugSphere(GetWorld(), gaze, 3, 3, FColor::White, false, 0.2);
@@ -247,7 +241,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	else
 	{
 		//hit nothing. use position and rotation only
-		cog->gazeDataRecorder->BuildSnapshot(captureLocation, captureRotation, time, DidHitFloor, FloorHitPosition);
+		cog->gazeDataRecorder->BuildSnapshot(captureLocation, captureRotation, timestamp, DidHitFloor, FloorHitPosition);
 	}
 }
 

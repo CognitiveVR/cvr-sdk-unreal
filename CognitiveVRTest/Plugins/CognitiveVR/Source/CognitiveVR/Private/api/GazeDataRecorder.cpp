@@ -37,10 +37,10 @@ void UGazeDataRecorder::StartSession()
 	//world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &UGazeDataRecorder::SendData, false), AutoTimer, true);
 }
 
-void UGazeDataRecorder::BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos, FString objectId)
+void UGazeDataRecorder::BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos, FString objectId)
 {
 	FGazeData data;
-	data.Time = time;
+	data.Time = timestamp;
 	data.UseFloor = didHitFloor;
 	data.FloorPosition = floorHitPos;
 	if (!objectId.IsEmpty())
@@ -60,10 +60,10 @@ void UGazeDataRecorder::BuildSnapshot(FVector position, FVector gaze, FRotator r
 	}
 }
 
-void UGazeDataRecorder::BuildSnapshot(FVector position, FRotator rotation, double time, bool didHitFloor, FVector floorHitPos)
+void UGazeDataRecorder::BuildSnapshot(FVector position, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos)
 {
 	FGazeData data;
-	data.Time = time;
+	data.Time = timestamp;
 	data.UseFloor = didHitFloor;
 	data.FloorPosition = floorHitPos;
 	data.UseDynamicId = false;

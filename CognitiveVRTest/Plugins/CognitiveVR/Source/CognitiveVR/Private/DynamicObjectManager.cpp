@@ -122,7 +122,7 @@ TSharedPtr<FJsonValueObject> UDynamicObjectManager::WriteSnapshotToJson(FDynamic
 	snapObj->SetStringField("id", snapshot.id);
 
 	//time
-	snapObj->SetNumberField("time", snapshot.time);
+	snapObj->SetNumberField("time", snapshot.timestamp);
 
 	//return MakeShareable(new FJsonValueObject(snapObj));
 
