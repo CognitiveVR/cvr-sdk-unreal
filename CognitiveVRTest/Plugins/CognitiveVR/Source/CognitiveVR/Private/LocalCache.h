@@ -5,6 +5,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Interfaces/IAnalyticsProviderModule.h"
+#include "CognitiveVR/Private/util/cognitive_log.h"
 //#include "CognitiveVR/Public/CognitiveVR.h"
 #include "Json.h"
 #include "Misc/FileHelper.h"
