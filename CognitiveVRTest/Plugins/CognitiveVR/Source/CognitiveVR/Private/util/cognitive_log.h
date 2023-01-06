@@ -11,6 +11,7 @@
 	private:
 		static bool ShowDebugLogs; //basic info/warning/errors
 		static bool ShowDevLogs; //development specific logs
+		static bool HasInitialized;
 
         public:
 			static void Init();

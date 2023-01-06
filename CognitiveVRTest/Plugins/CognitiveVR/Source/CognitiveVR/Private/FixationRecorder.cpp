@@ -2,56 +2,9 @@
 
 #include "FixationRecorder.h"
 
-UFixationRecorder* UFixationRecorder::instance;
-
-// Sets default values for this component's properties
 UFixationRecorder::UFixationRecorder()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-
-	FString ValueReceived;
-
-	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationBatchSize", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 fixationLimit = FCString::Atoi(*ValueReceived);
-		if (fixationLimit > 0)
-		{
-			FixationBatchSize = fixationLimit;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationExtremeLimit", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			ExtremeBatchSize = parsedValue;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationMinTimer", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			MinTimer = parsedValue;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationAutoTimer", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			AutoTimer = parsedValue;
-		}
-	}
 }
 
 int32 UFixationRecorder::GetIndex(int32 offset)
@@ -63,25 +16,36 @@ int32 UFixationRecorder::GetIndex(int32 offset)
 
 void UFixationRecorder::BeginPlay()
 {
-	if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
+
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
+	if (cognitiveActor != GetOwner())
+	{
+		UnregisterComponent();
+		return;
+	}
+
+	if (!cog->HasEyeTrackingSDK())
+	{
+		hasEyeTrackingSDK = false;
+		return;
+	}
+
+	cog->OnSessionBegin.AddDynamic(this, &UFixationRecorder::BeginSession);
+	cog->OnPreSessionEnd.AddDynamic(this, &UFixationRecorder::OnPreSessionEnd);
+
+	EyeCaptures.Empty();
+	for (int32 i = 0; i < CachedEyeCaptureCount; i++)
+	{
+		EyeCaptures.Add(FEyeCapture());
+	}
+	GEngine->GetAllLocalPlayerControllers(controllers);
 }
 
 void UFixationRecorder::BeginSession()
 {
-	if (cog.IsValid())
-	{
-		//cog->EnsureGetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, this, &UFixationRecorder::SendData, AutoTimer, true);
-		for (int32 i = 0; i < CachedEyeCaptureCount; i++)
-		{
-			EyeCaptures.Add(FEyeCapture());
-		}
-		GEngine->GetAllLocalPlayerControllers(controllers);
-	}
-	else
-	{
-		CognitiveLog::Error("UFixationRecorder::BeginSession cannot find CognitiveVRProvider!");
-	}
 }
 
 bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
@@ -141,7 +105,7 @@ bool UFixationRecorder::IsGazeOutOfRange(FEyeCapture eyeCapture)
 			averageLocalPosition += eyeCapture.LocalPosition;
 			averageLocalPosition /= (CachedEyeCapturePositions.Num() + 1);
 			if (DebugDisplayFixations)
-				DrawDebugSphere(world, activeFixationWorldPos, 16,8, FColor::Magenta);
+				DrawDebugSphere(GetWorld(), activeFixationWorldPos, 16,8, FColor::Magenta);
 
 			FVector fixationDirection = (activeFixationWorldPos - eyeCapture.HMDPosition);
 			
@@ -501,6 +465,11 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 
 void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+	if (hasEyeTrackingSDK == false)
+	{
+		return;
+	}
+
 	if (!cog.IsValid()){return;}
 	//don't record player position data before a session has begun
 	if (!cog->HasStartedSession())
@@ -554,26 +523,35 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 				FVector fixationWorldPos;
 				fixationWorldPos = ActiveFixation.Transformation.TransformPosition(ActiveFixation.LocalPosition);
 				if (IsOutOfRange)
-					//DrawDebugBox(world, fixationWorldPos, FVector::OneVector * 15, FColor::Red, false);
-					DrawDebugSphere(world, fixationWorldPos, 20, 8, FColor::Red);
+					DrawDebugSphere(GetWorld(), fixationWorldPos, 20, 8, FColor::Red);
 				else
-					//DrawDebugBox(world, fixationWorldPos, FVector::OneVector * 15, FColor::Green, false);
-					DrawDebugSphere(world, fixationWorldPos, 20, 8, FColor::Green);
+					DrawDebugSphere(GetWorld(), fixationWorldPos, 20, 8, FColor::Green);
 			}
 			else
 			{
 				if (IsOutOfRange)
-					DrawDebugBox(world, ActiveFixation.WorldPosition, FVector::OneVector * 15, FColor::Red, false);
+					DrawDebugBox(GetWorld(), ActiveFixation.WorldPosition, FVector::OneVector * 15, FColor::Red, false);
 				else
-					DrawDebugBox(world, ActiveFixation.WorldPosition, FVector::OneVector * 15, FColor::Green, false);
+					DrawDebugBox(GetWorld(), ActiveFixation.WorldPosition, FVector::OneVector * 15, FColor::Green, false);
 			}
 		}
 
 		if (CheckEndFixation(ActiveFixation))
 		{
-			RecordFixationEnd(ActiveFixation);
+			cog->fixationDataRecorder->RecordFixationEnd(ActiveFixation);
 			isFixating = false;
 			CachedEyeCapturePositions.Empty();
+			if (DebugDisplayFixations)
+			{
+				if (ActiveFixation.IsLocal)
+				{
+					FVector fixationWorldPos;
+					fixationWorldPos = ActiveFixation.Transformation.TransformPosition(ActiveFixation.LocalPosition);
+					DrawDebugSphere(GetWorld(), fixationWorldPos, 10, 8, FColor::Cyan, false, 5);
+				}
+				else
+					DrawDebugBox(GetWorld(), ActiveFixation.WorldPosition, FVector::OneVector * 15, FColor::Cyan, false, 5);
+			}
 		}
 		WasOutOfDispersionLastFrame = IsOutOfRange;
 	}
@@ -777,7 +755,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
 
 	EyeCaptures[index].Discard = false;
-	CognitiveLog::Error("FixationRecorder::TickComponent - no eye tracking SDKs found!");
+	hasEyeTrackingSDK = false;
 
 	FVector Start = controllers[0]->PlayerCameraManager->GetCameraLocation();
 	FVector End = Start + controllers[0]->PlayerCameraManager->GetActorForwardVector() * MaxFixationDistance;
@@ -798,7 +776,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 	bool bHit = false;
 	FCollisionQueryParams gazeparams = FCollisionQueryParams(FName(), true);
-	bHit = world->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, gazeparams);
+	bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, gazeparams);
 	if (bHit)
 	{
 		//hit BSP or actor
@@ -857,6 +835,12 @@ bool UFixationRecorder::TryBeginLocalFixation()
 	int64 firstOnTransformTime = 0;
 	int64 firstSampleTime = LONG_MAX;
 	int64 lastSampleTime = 0;
+
+	if (EyeCaptures.Num() == 0)
+	{
+		GLog->Log("UFixationRecorder::TryBeginLocalFixation EyeCaptures is 0!!!!");
+		return false;
+	}
 
 	//add relevant eye capture samples to array
 	for (int32 i = 0; i < CachedEyeCaptureCount; i++)
@@ -1066,6 +1050,12 @@ bool UFixationRecorder::TryBeginFixation()
 	int64 firstSampleTime = LONG_MAX;
 	int64 lastSampleTime = 0;
 
+	if (EyeCaptures.Num() == 0)
+	{
+		GLog->Log("UFixationRecorder::TryBeginFixation EyeCaptures is 0!!!!");
+		return false;
+	}
+
 	for (int32 i = 0; i < CachedEyeCaptureCount; i++)
 	{
 		if (EyeCaptures[GetIndex(i)].Discard || EyeCaptures[GetIndex(i)].EyesClosed) { return false; }
@@ -1151,114 +1141,45 @@ bool UFixationRecorder::TryBeginFixation()
 	return false;
 }
 
-void UFixationRecorder::RecordFixationEnd(const FFixation& fixation)
-{
-	//write fixation to json
-	TSharedPtr<FJsonObject>fixObj = MakeShareable(new FJsonObject);
-
-	double d = (double)fixation.StartMs / 1000.0;
-
-	fixObj->SetNumberField("time", d);
-	fixObj->SetNumberField("duration", fixation.DurationMs);
-	fixObj->SetNumberField("maxradius", fixation.MaxRadius);
-
-	if (fixation.IsLocal)
-	{
-		TArray<TSharedPtr<FJsonValue>> posArray;
-		TSharedPtr<FJsonValueNumber> JsonValue;
-		JsonValue = MakeShareable(new FJsonValueNumber(-fixation.LocalPosition.X)); //right
-		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(fixation.LocalPosition.Z)); //up
-		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(fixation.LocalPosition.Y));  //forward
-		posArray.Add(JsonValue);
-
-		fixObj->SetArrayField("p", posArray);
-
-		fixObj->SetStringField("objectid", fixation.DynamicObjectId);
-	}
-	else
-	{
-		TArray<TSharedPtr<FJsonValue>> posArray;
-		TSharedPtr<FJsonValueNumber> JsonValue;
-		JsonValue = MakeShareable(new FJsonValueNumber(-fixation.WorldPosition.X)); //right
-		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(fixation.WorldPosition.Z)); //up
-		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(fixation.WorldPosition.Y));  //forward
-		posArray.Add(JsonValue);
-
-		fixObj->SetArrayField("p", posArray);
-	}
-
-	Fixations.Add(fixObj);
-	if (Fixations.Num() > FixationBatchSize)
-	{
-		SendData();
-	}
-
-	if (DebugDisplayFixations)
-	{
-		if (fixation.IsLocal)
-		{
-			FVector fixationWorldPos;
-			fixationWorldPos = fixation.Transformation.TransformPosition(fixation.LocalPosition);
-			DrawDebugSphere(world, fixationWorldPos, 10, 8, FColor::Cyan, false, 5);
-		}
-		else
-			DrawDebugBox(world, fixation.WorldPosition, FVector::OneVector * 15, FColor::Cyan, false, 5);
-	}
-}
-
-void UFixationRecorder::SendData(bool copyDataToCache)
-{
-	if (!cog.IsValid() || !cog->HasStartedSession()) { return; }
-	if (cog->GetCurrentSceneVersionNumber().Len() == 0) { return; }
-	if (!cog->GetCurrentSceneData().IsValid()) { return; }
-
-	if (Fixations.Num() == 0) { return; }
-
-	TSharedPtr<FJsonObject> wholeObj = MakeShareable(new FJsonObject);
-
-	wholeObj->SetStringField("userid", cog->GetUserID());
-	wholeObj->SetStringField("sessionid", cog->GetSessionID());
-	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
-	wholeObj->SetNumberField("part", jsonFixationPart);
-	jsonFixationPart++;
-	wholeObj->SetStringField("formatversion", "1.0");
-
-	TArray<TSharedPtr<FJsonValue>> dataArray;
-	for (int32 i = 0; i != Fixations.Num(); ++i)
-	{
-		TSharedPtr<FJsonValueObject> snapshotValue;
-		snapshotValue = MakeShareable(new FJsonValueObject(Fixations[i]));
-		dataArray.Add(snapshotValue);
-	}
-
-	wholeObj->SetArrayField("data", dataArray);
-
-
-	FString OutputString;
-	auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
-	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-
-	if (OutputString.Len() > 0)
-	{
-		cog->network->NetworkCall("fixations", OutputString, copyDataToCache);
-	}
-	Fixations.Empty();
-	LastSendTime = UCognitiveVRBlueprints::GetSessionDuration();
-}
-
 void UFixationRecorder::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
-	SendData();
-	instance = NULL;
+	Super::EndPlay(EndPlayReason);
+
+	//TODO cog should never be invalid - double check that this is never called
+	//could be invalid during a weird PIE -> close engine process? check editor logs
+	if (!cog.IsValid())
+	{
+		GLog->Log("UFixationRecorder::EndPlay cognitive provider is invalid");
+		FDebug::DumpStackTraceToLog(ELogVerbosity::Error);
+		return;
+	}
+	cog->OnSessionBegin.RemoveDynamic(this, &UFixationRecorder::BeginSession);
+	cog->OnPreSessionEnd.RemoveDynamic(this, &UFixationRecorder::OnPreSessionEnd);
 }
 
-void UFixationRecorder::EndSession()
+void UFixationRecorder::OnPreSessionEnd()
 {
-	cog.Reset();
+	//if there's currently a fixation, end that
+	if (isFixating)
+	{
+		cog->fixationDataRecorder->RecordFixationEnd(ActiveFixation);
+		isFixating = false;
+		CachedEyeCapturePositions.Empty();
+		if (DebugDisplayFixations)
+		{
+			if (ActiveFixation.IsLocal)
+			{
+				FVector fixationWorldPos;
+				fixationWorldPos = ActiveFixation.Transformation.TransformPosition(ActiveFixation.LocalPosition);
+				DrawDebugSphere(GetWorld(), fixationWorldPos, 10, 8, FColor::Cyan, false, 5);
+			}
+			else
+				DrawDebugBox(GetWorld(), ActiveFixation.WorldPosition, FVector::OneVector * 15, FColor::Cyan, false, 5);
+		}
+	}
+
+	//clean up any internal stuff
+	EyeCaptures.Empty();
 }
 
 float UFixationRecorder::GetDPIScale()
@@ -1270,23 +1191,6 @@ float UFixationRecorder::GetDPIScale()
 	int32 Y = FGenericPlatformMath::FloorToInt(viewportSize.Y);
 
 	return GetDefault<UUserInterfaceSettings>(UUserInterfaceSettings::StaticClass())->GetDPIScaleBasedOnSize(FIntPoint(X, Y));
-}
-
-UFixationRecorder* UFixationRecorder::GetFixationRecorder()
-{
-	if (instance == NULL)
-	{
-		for (TObjectIterator<UFixationRecorder> Itr; Itr; ++Itr)
-		{
-			UWorld* tempWorld = Itr->GetWorld();
-			if (tempWorld == NULL) { continue; }
-			if (tempWorld->WorldType != EWorldType::PIE && tempWorld->WorldType != EWorldType::Game) { continue; } //editor world. skip
-			instance = *Itr;
-			instance->world = tempWorld;
-			break;
-		}
-	}
-	return instance;
 }
 
 FVector2D UFixationRecorder::GetEyePositionScreen()
@@ -1302,4 +1206,23 @@ TArray<FFixation> UFixationRecorder::GetRecentFixationPoints()
 TArray<TSharedPtr<FC3DGazePoint>> UFixationRecorder::GetRecentEyePositions()
 {
 	return recentEyePositions;
+}
+
+float UFixationRecorder::GetLastSendTime()
+{
+	if (!cog.IsValid()) { return 0; }
+	if (cog->fixationDataRecorder == nullptr) { return 0; }
+	return cog->fixationDataRecorder->GetLastSendTime();
+}
+int32 UFixationRecorder::GetPartNumber()
+{
+	if (!cog.IsValid()) { return 0; }
+	if (cog->fixationDataRecorder == nullptr) { return 0; }
+	return cog->fixationDataRecorder->GetPartNumber();
+}
+int32 UFixationRecorder::GetDataPoints()
+{
+	if (!cog.IsValid()) { return 0; }
+	if (cog->fixationDataRecorder == nullptr) { return 0; }
+	return cog->fixationDataRecorder->GetDataPoints();
 }

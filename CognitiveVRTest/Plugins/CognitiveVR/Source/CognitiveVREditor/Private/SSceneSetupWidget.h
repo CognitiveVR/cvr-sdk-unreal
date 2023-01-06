@@ -16,6 +16,7 @@
 #include "Runtime/SlateCore/Public/Layout/Visibility.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
+#include "CognitiveVRActor.h"
 #include "Runtime/Online/HTTP/Public/Http.h"
 
 class FCognitiveTools;
@@ -162,4 +163,9 @@ public:
 
 	void OnExportPathChanged(const FText& Text);
 	void OnBlenderPathChanged(const FText& Text);
+
+	/// <summary>
+	/// checks if there's a BP_CognitiveVRActor in the world. spawns one if not
+	/// </summary>
+	void SpawnCognitiveVRActor();
 };

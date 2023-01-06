@@ -1,5 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+//TODO input tracker should be a component, not an actor
+
 #pragma once
 
 #include "CognitiveVR/Public/CognitiveVR.h"
@@ -22,21 +24,20 @@ public:
 		float Interval = 0.1;
 	// Sets default values for this actor's properties
 	AInputTracker();
-
-	UFUNCTION() //must be a ufunction to listen for OnBeginSession event
-		void FindControllers(bool ignored);
+	void FindControllers();
 
 private:
 
 	EC3DControllerType ControllerType;
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	void IntervalUpdate();
 
 	float CurrentIntervalTime = 0;
 	float MinimumVectorChange = 0.05;
 
-	void AppendInputState(bool right, FControllerInputState state);
+	void AppendInputState(const bool isRight, FControllerInputState& state);
 
 	//button states
 	FControllerInputStateCollection LeftInputStates;

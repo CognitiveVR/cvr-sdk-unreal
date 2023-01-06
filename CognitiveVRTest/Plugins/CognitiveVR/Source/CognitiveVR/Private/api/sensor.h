@@ -12,30 +12,11 @@
 class FAnalyticsProviderCognitiveVR;
 class UCognitiveVRBlueprints;
 
-struct COGNITIVEVR_API SensorData
-{
-public:
-	FString Name;
-	FString Rate;
-	float NextRecordTime;
-	float UpdateInterval;
-	SensorData(FString name, float rate)
-	{
-		Name = name;
-		Rate = FString::SanitizeFloat(rate);
-		if (rate == 0)
-		{
-			UpdateInterval = 1 / 10;
-		}
-		else
-		{
-			UpdateInterval = 1 / rate;
-		}
-	}
-};
 
-	class COGNITIVEVR_API Sensors
+	class COGNITIVEVR_API USensors
 	{
+		friend class FAnalyticsProviderCognitiveVR;
+
 	private:
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 
@@ -58,19 +39,23 @@ public:
 
 		//checks minimum send timer before sending recorded data to dashboard
 		void TrySendData();
+		UFUNCTION()
+		void StartSession();
+		UFUNCTION()
+		void PreSessionEnd();
+		UFUNCTION()
+		void PostSessionEnd();
 
 	public:
-		Sensors();
-		void StartSession();
+		USensors();
+		void Initialize();
+		void InitializeSensor(FString sensorName, float hzRate = 10, float initialValue = 0);
 		void RecordSensor(FString Name, float value);
 		void RecordSensor(FString Name, double value);
-		void SendData(bool copyDataToCache = false);
-		
+		UFUNCTION()
+		void SendData(bool copyDataToCache);
 		TMap<FString, float> GetLastSensorValues();
-
 		float GetLastSendTime() { return LastSendTime; }
 		int32 GetPartNumber() { return jsonPart; }
 		int32 GetDataPoints() { return sensorDataCount; }
-
-		void InitializeSensor(FString sensorName, float hzRate = 10, float initialValue = 0);
 	};

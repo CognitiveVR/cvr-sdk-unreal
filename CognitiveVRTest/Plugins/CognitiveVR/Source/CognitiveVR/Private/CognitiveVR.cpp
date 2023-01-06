@@ -8,7 +8,6 @@
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
 bool FAnalyticsProviderCognitiveVR::bHasSessionStarted = false;
-UWorld* FAnalyticsProviderCognitiveVR::currentWorld;
 
 void FAnalyticsCognitiveVR::StartupModule()
 {
@@ -16,6 +15,159 @@ void FAnalyticsCognitiveVR::StartupModule()
 	AnalyticsProvider = cog;
 	CognitiveVRProvider = TWeakPtr<FAnalyticsProviderCognitiveVR>(cog);
 	GLog->Log("AnalyticsCognitiveVR::StartupModule");
+}
+
+void FAnalyticsProviderCognitiveVR::HandleSublevelLoaded(ULevel* level, UWorld* world)
+{
+	if (level == nullptr)
+	{
+		FlushAndCacheEvents();
+		return;
+	}
+	FString levelName = level->GetFullGroupName(true);
+	//GLog->Log("FAnalyticsProviderCognitiveVR::HandleSublevelUnloaded Loaded sublevel: " + levelName);
+	auto currentSceneData = GetCurrentSceneData();
+
+	//lookup scenedata and if valid, push to the stack
+	TSharedPtr<FSceneData> data = GetSceneData(levelName);
+	if (currentSceneData.IsValid()) //currently has valid scene data
+	{
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
+		if (data.IsValid())
+		{
+			properties->SetStringField("Scene Name", FString(data->Name));
+			properties->SetStringField("Scene Id", FString(data->Id));
+			float duration = Util::GetTimestamp() - SceneStartTime;
+			properties->SetNumberField("Duration", duration);
+			customEventRecorder->Send("c3d.SceneChange", properties);
+		}
+		else
+		{
+			properties->SetStringField("Sublevel Name", FString(levelName));
+			customEventRecorder->Send("c3d.Level Streaming Load", properties);
+		}
+		FlushAndCacheEvents();
+	}
+
+	if (data.IsValid())
+	{
+		LoadedSceneDataStack.Push(data);
+		ForceWriteSessionMetadata = true;
+		CurrentTrackingSceneId = data->Id;
+		LastSceneData = data;
+		SceneStartTime = Util::GetTimestamp();
+	}
+	else //additively loading to scene without data
+	{
+
+	}
+}
+
+void FAnalyticsProviderCognitiveVR::HandleSublevelUnloaded(ULevel* level, UWorld* world)
+{
+	if (level == nullptr)
+	{
+		FlushAndCacheEvents();
+		return;
+	}
+	FString levelName = level->GetFullGroupName(true);
+	//GLog->Log("FAnalyticsProviderCognitiveVR::HandleSublevelUnloaded Unloaded sublevel: " + levelName);
+	auto currentSceneData = GetCurrentSceneData();
+	if (LoadedSceneDataStack.Num() == 0)
+	{
+		//no scene data to unload
+		return;
+	}
+	auto stackTop = LoadedSceneDataStack.Top();
+	TSharedPtr<FSceneData> data = GetSceneData(levelName);
+
+
+	if (stackTop == currentSceneData && data == currentSceneData) //changing current scene to something further down the stack (or no scene)
+	{		
+		//remove the scene data
+		LoadedSceneDataStack.Remove(data);
+		auto stackNewTop = LoadedSceneDataStack.Top();
+
+		//send scene change event (with destination if valid)
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
+		if (stackNewTop.IsValid())
+		{
+			properties->SetStringField("Scene Name", FString(stackNewTop->Name));
+			properties->SetStringField("Scene Id", FString(stackNewTop->Id));
+			float duration = Util::GetTimestamp() - SceneStartTime;
+			properties->SetNumberField("Duration", duration);
+			customEventRecorder->Send("c3d.SceneChange", properties);
+		}
+		FlushAndCacheEvents();
+
+		//set new current scene
+		if (stackNewTop.IsValid())
+		{
+			ForceWriteSessionMetadata = true;
+			CurrentTrackingSceneId = stackNewTop->Id;
+			LastSceneData = stackNewTop;
+		}
+		else
+		{
+			CurrentTrackingSceneId = "";
+			LastSceneData = nullptr;
+		}
+		SceneStartTime = Util::GetTimestamp();
+	}
+	else
+	{
+		//remove scene data from stack and do nothing else
+		LoadedSceneDataStack.Remove(data);
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
+		properties->SetStringField("Sublevel Name", FString(levelName));
+		customEventRecorder->Send("c3d.Level Streaming Unload", properties);
+	}
+}
+
+void FAnalyticsProviderCognitiveVR::HandlePostLevelLoad(UWorld* world)
+{
+	auto level = world->GetCurrentLevel();
+	if (level == nullptr)
+	{
+		FlushAndCacheEvents();
+		return;
+	}
+
+	FString levelName = level->GetFullGroupName(true);
+	//GLog->Log("FAnalyticsProviderCognitiveVR::HandlePostLevelLoad level post load level: " + levelName);
+	auto currentSceneData = GetCurrentSceneData();
+
+	//lookup scenedata and if valid, add it to the stack
+	LoadedSceneDataStack.Empty();
+	TSharedPtr<FSceneData> data = GetSceneData(levelName);
+	if (currentSceneData.IsValid()) //currently has valid scene data
+	{
+		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
+		if (data.IsValid())
+		{
+			properties->SetStringField("Scene Name", FString(data->Name));
+			properties->SetStringField("Scene Id", FString(data->Id));
+		}
+		float duration = Util::GetTimestamp() - SceneStartTime;
+		properties->SetNumberField("Duration", duration);
+		customEventRecorder->Send("c3d.SceneChange", properties);
+		FlushAndCacheEvents();
+	}
+
+	if (data.IsValid())
+	{
+		LoadedSceneDataStack.Push(data);
+		ForceWriteSessionMetadata = true;
+		CurrentTrackingSceneId = data->Id;
+		LastSceneData = data;
+	}
+	else //loading to scene without data
+	{
+		ForceWriteSessionMetadata = true;
+		CurrentTrackingSceneId = "";
+		LastSceneData = data;
+	}
+	SceneStartTime = Util::GetTimestamp();
 }
 
 void FAnalyticsCognitiveVR::ShutdownModule()
@@ -52,30 +204,6 @@ FAnalyticsProviderCognitiveVR::~FAnalyticsProviderCognitiveVR()
 	UE_LOG(LogTemp, Warning, TEXT("FAnalyticsProviderCognitiveVR Shutdown Module"));
 }
 
-
-void FAnalyticsProviderCognitiveVR::SetWorld(UWorld* world)
-{
-	currentWorld = world;
-}
-
-UWorld* FAnalyticsProviderCognitiveVR::GetWorld()
-{
-	return currentWorld;
-}
-
-UWorld* FAnalyticsProviderCognitiveVR::EnsureGetWorld()
-{
-	if (currentWorld == NULL)
-	{
-		for (TObjectIterator<UPlayerTracker> Itr; Itr; ++Itr)
-		{
-			Itr->BeginPlay();
-		}
-	}
-
-	return currentWorld;
-}
-
 bool FAnalyticsProviderCognitiveVR::StartSession()
 {
 	return StartSession(TArray<FAnalyticsEventAttribute>());
@@ -83,6 +211,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession()
 
 bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAttribute>& Attributes)
 {
+	//initialize log
 	CognitiveLog::Init();
 
 	if (bHasSessionStarted)
@@ -91,69 +220,93 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		return false;
 	}
 
-	UPlayerTracker* pt = UPlayerTracker::GetPlayerTracker();
-
-	if (pt == NULL)
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
+	if (cognitiveActor == nullptr)
 	{
-		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::StartSession could not find PlayerTracker component in level");
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::StartSession could not find Cognitive Actor in your level");
 		return false;
 	}
 
-	if (currentWorld == NULL)
-		currentWorld = pt->GetWorld();
-
-	if (currentWorld == NULL)
+	auto currentWorld = cognitiveActor->GetWorld();
+	if (currentWorld == nullptr)
 	{
-		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::StartSession World not set. Are you missing a Cognitive3D::Player Tracker component on your camera?");
-		pt->OnSessionBegin.Broadcast(false);
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::StartSession World not set. Are you missing a Cognitive Actor in your level?");
 		return false;
-	}
-
-	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
-
-	SessionTimestamp = Util::GetTimestamp();
-	if (SessionId.IsEmpty())
-	{
-		SessionId = FString::FromInt(GetSessionTimestamp()) + TEXT("_") + DeviceId;
-	}
-
-	for (auto Attr : Attributes)
-	{
-		properties->SetStringField(Attr.GetName(), Attr.GetValue());
 	}
 
 	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
 	AttributionKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "AttributionKey", false);
 
-	exitpoll = MakeShareable(new ExitPoll());
-	customEventRecorder = MakeShareable(new CustomEventRecorder());
-	sensors = MakeShareable(new Sensors());
-	localCache = MakeShareable(new LocalCache(FPaths::GeneratedConfigDir()));
-	network = MakeShareable(new Network());
-
-	customEventRecorder->StartSession();
-	sensors->StartSession();
-
-	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::StartSession");
-	
-	CacheSceneData();
-
-	CognitiveLog::Info("CognitiveVR InitCallback Response");
-
-	//-----------------------'response'
-
-	bHasSessionStarted = true;
-
-	if (!network.IsValid())
+	if (ApplicationKey.Len() == 0)
 	{
-		CognitiveLog::Warning("CognitiveVRProvider Network is null");
-		pt->OnSessionBegin.Broadcast(false);
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::StartSession ApplicationKey is invalid");
 		return false;
 	}
 
+	//construct data recording streams
+	//Q: why don't these listen for relevant DECLARE_DYNAMIC_MULTICAST_DELEGATE?
+	//A: because they would have to be uobjects and uobjects are garbaged on scene change
+	exitpoll = MakeShareable(new ExitPoll());
+	customEventRecorder = new UCustomEventRecorder();
+	customEventRecorder->Initialize();
+	sensors = new USensors();
+	sensors->Initialize();
+	fixationDataRecorder = new UFixationDataRecorder();
+	fixationDataRecorder->Initialize();
+	gazeDataRecorder = new UGazeDataRecorder();
+	gazeDataRecorder->Initialize();
+	localCache = MakeShareable(new LocalCache(FPaths::GeneratedConfigDir()));
+	network = MakeShareable(new Network());
+	dynamicObjectManager = new UDynamicObjectManager();
+	dynamicObjectManager->Initialize();
+
+	//pre session startup
+	CacheSceneData();
+	SessionTimestamp = Util::GetTimestamp();
+	if (SessionId.IsEmpty())
+	{
+		SessionId = FString::FromInt(GetSessionTimestamp()) + TEXT("_") + DeviceId;
+	}
+	bHasSessionStarted = true;
+	
+	//set initial scene data
+	auto level = currentWorld->GetCurrentLevel();
+	if (level != nullptr)
+	{
+		FString levelName = level->GetFullGroupName(true);
+		TSharedPtr<FSceneData> data = GetSceneData(levelName);
+		if (data.IsValid())
+		{
+			LoadedSceneDataStack.Push(data);
+			ForceWriteSessionMetadata = true;
+			CurrentTrackingSceneId = data->Id;
+			LastSceneData = data;
+		}
+	}
+	SceneStartTime = Util::GetTimestamp();
+
+	//register delegates
+	if (!PauseHandle.IsValid())
+	{
+		PauseHandle = FCoreDelegates::ApplicationWillEnterBackgroundDelegate.AddRaw(this, &FAnalyticsProviderCognitiveVR::HandleApplicationWillEnterBackground);
+	}
+	if (!LevelLoadHandle.IsValid())
+		LevelLoadHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddRaw(this, &FAnalyticsProviderCognitiveVR::HandlePostLevelLoad);
+	if (!SublevelLoadedHandle.IsValid())
+		SublevelLoadedHandle = FWorldDelegates::LevelAddedToWorld.AddRaw(this, &FAnalyticsProviderCognitiveVR::HandleSublevelLoaded);
+	if (!SublevelUnloadedHandle.IsValid())
+		SublevelUnloadedHandle = FWorldDelegates::LevelRemovedFromWorld.AddRaw(this, &FAnalyticsProviderCognitiveVR::HandleSublevelUnloaded);
+
+	//set session properties
 	Util::SetSessionProperties();
+	for (auto Attr : Attributes)
+	{
+		SetSessionProperty(Attr.GetName(), Attr.GetValue());
+	}
 	if (!GetCognitiveUserName().IsEmpty())
+	{
 		SetParticipantFullName(GetCognitiveUserName());
+	}
 	if (currentWorld->WorldType == EWorldType::Game)
 	{
 		SetSessionProperty("c3d.app.inEditor", "false");
@@ -163,25 +316,14 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		SetSessionProperty("c3d.app.inEditor", "true");
 	}
 
-	customEventRecorder->Send(FString("c3d.sessionStart"));
-	
-	UDynamicObject::OnSessionBegin();
 
-	pt->OnSessionBegin.Broadcast(true);
+	customEventRecorder->StartSession();
+	fixationDataRecorder->StartSession();
+	dynamicObjectManager->OnSessionBegin();
+	sensors->StartSession();
+	OnSessionBegin.Broadcast();
 
-	for (TObjectIterator<AInputTracker> Itr; Itr; ++Itr)
-	{
-		if ((*Itr)->GetWorld() == NULL) { continue; }
-		if (!(*Itr)->GetWorld()->IsGameWorld()) { continue; }
-		(*Itr)->FindControllers(false);
-		break;
-	}
-
-	auto fixationRecorder = UFixationRecorder::GetFixationRecorder();
-	if (fixationRecorder != NULL)
-	{
-		fixationRecorder->BeginSession();
-	}
+	CognitiveLog::Info("FAnalyticsProviderCognitiveVR::StartSession");
 
 	return bHasSessionStarted;
 }
@@ -199,81 +341,96 @@ void FAnalyticsProviderCognitiveVR::SetSessionName(FString sessionName)
 
 void FAnalyticsProviderCognitiveVR::EndSession()
 {
-	if (!customEventRecorder.IsValid())
-	{
-		return;
-	}
 	if (bHasSessionStarted == false)
 	{
 		return;
 	}
 
-	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	properties->SetNumberField("sessionlength", Util::GetTimestamp() - GetSessionTimestamp());
-	customEventRecorder->Send(FString("c3d.sessionEnd"), properties);
+	//broadcast pre session end for pre-cleanup
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
+	if (cognitiveActor == nullptr)
+	{
+		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::EndSession cognitiveActor is null");
+		return;
+	}
+	gazeDataRecorder->PreSessionEnd();
+	customEventRecorder->PreSessionEnd();
+	fixationDataRecorder->PreSessionEnd();
+	dynamicObjectManager->OnPreSessionEnd();
+	sensors->PreSessionEnd();
 
+	OnPreSessionEnd.Broadcast();
 	FlushAndCacheEvents();
 
+	//OnPostSessionEnd broadcast. used by components to clean up anything, including delegates
+	gazeDataRecorder->PostSessionEnd();
+	customEventRecorder->PostSessionEnd();
+	fixationDataRecorder->PostSessionEnd();
+	dynamicObjectManager->OnPostSessionEnd();
+	sensors->PostSessionEnd();
+	OnPostSessionEnd.Broadcast();
+
+	//reset components and uobjects
 	network.Reset();
-	customEventRecorder.Reset();
-	sensors.Reset();
+	delete(customEventRecorder);
+	delete(fixationDataRecorder);
+	delete(gazeDataRecorder);
+	delete(sensors);
+	delete(dynamicObjectManager);
 	UCognitiveVRBlueprints::cog.Reset();
 	UCustomEvent::cog.Reset();
-
-	for (TObjectIterator<UFixationRecorder> Itr; Itr; ++Itr)
-	{
-		Itr->EndSession();
-	}
-
-	SessionTimestamp = -1;
-	SessionId = "";
-
-	bHasCustomSessionName = false;
-	bHasSessionStarted = false;
-
-	UDynamicObject::OnSessionEnd();
-
-	CognitiveLog::Info("CognitiveVR EndSession");
-	currentWorld = NULL;
 	if (localCache.IsValid())
 	{
 		localCache->Close();
 		localCache.Reset();
 	}
+
+	//cleanup pause and level load delegates
+	if (!PauseHandle.IsValid())
+		FCoreDelegates::ApplicationWillEnterBackgroundDelegate.Remove(PauseHandle);
+	if (!LevelLoadHandle.IsValid())
+		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(LevelLoadHandle);
+	if (!SublevelLoadedHandle.IsValid())
+		FWorldDelegates::LevelAddedToWorld.Remove(SublevelLoadedHandle);
+	if (!SublevelUnloadedHandle.IsValid())
+		FWorldDelegates::LevelRemovedFromWorld.Remove(SublevelUnloadedHandle);
+
+	//reset variables
+	SessionTimestamp = -1;
+	SessionId = "";
+	bHasCustomSessionName = false;
+	bHasSessionStarted = false;
+	//currentWorld.Reset();
+
+	//broadcast end session
+	CognitiveLog::Info("CognitiveVR EndSession");
 }
 
+//broadcast to all listeners that outstanding data should be sent + written to cache as a backup
+//should be used when it's unclear if the session will continue - a sudden pause event might indicate a loss of wifi connection
 void FAnalyticsProviderCognitiveVR::FlushAndCacheEvents()
 {
 	if (!bHasSessionStarted) { CognitiveLog::Warning("CognitiveVR Flush Events, but Session has not started!"); return; }
 
-	this->customEventRecorder->SendData(true);
+	gazeDataRecorder->SendData(true);
+	customEventRecorder->SendData(true);
+	fixationDataRecorder->SendData(true);
+	dynamicObjectManager->SendData(true);
 	sensors->SendData(true);
-	UDynamicObject::SendData(true);
-
-	auto pt = UPlayerTracker::GetPlayerTracker();
-	if (pt != NULL)
-		pt->SendData(true);
-
-	auto fix = UFixationRecorder::GetFixationRecorder();
-	if (fix != NULL)
-		fix->SendData(true);
+	OnRequestSend.Broadcast(true);
 }
 
+//broadcast to all listeners that outstanding data should be sent. this won't immediately write all data to the cache
+//should be prefered when the session will likely continue, but at a point when sending data won't be noticed (eg, win screen popup, etc)
 void FAnalyticsProviderCognitiveVR::FlushEvents()
 {
 	if (!bHasSessionStarted) { CognitiveLog::Warning("CognitiveVR Flush Events, but Session has not started!"); return; }
-
-	this->customEventRecorder->SendData();
-	sensors->SendData();
-	UDynamicObject::SendData();
-
-	auto pt = UPlayerTracker::GetPlayerTracker();
-	if (pt != NULL)
-		pt->SendData();
-
-	auto fix = UFixationRecorder::GetFixationRecorder();
-	if (fix != NULL)
-		fix->SendData();
+	gazeDataRecorder->SendData(false);
+	customEventRecorder->SendData(false);
+	fixationDataRecorder->SendData(false);
+	dynamicObjectManager->SendData(false);
+	sensors->SendData(false);
+	OnRequestSend.Broadcast(false);
 }
 
 void FAnalyticsProviderCognitiveVR::SetUserID(const FString& InUserID)
@@ -570,64 +727,7 @@ void FAnalyticsProviderCognitiveVR::RecordCurrencyGiven(const FString& GameCurre
 
 TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetCurrentSceneData()
 {
-	if (currentWorld == NULL)
-	{
-		currentWorld = GWorld->GetWorld();
-	}
-
-	//what is the current scenename
-	FString sceneName = currentWorld->GetMapName();
-	sceneName.RemoveFromStart(currentWorld->StreamingLevelsPrefix);
-
-	//if names match, return cached scene data
-	if (LastSceneData.IsValid() && LastSceneData->Name == sceneName)
-	{
-		return LastSceneData;
-	}
-
-	//check the sublevel scene names
- const TArray<ULevelStreaming*> streamedLevels = GetWorld()->GetStreamingLevels();
-	for (ULevelStreaming* streamingLevel : streamedLevels)
-	{
-		FString sublevelName = FPackageName::GetShortFName(streamingLevel->GetWorldAssetPackageFName()).ToString();
-		sublevelName.RemoveFromStart(currentWorld->StreamingLevelsPrefix);
-		//if names match, return cached scene data
-		if (LastSceneData.IsValid() && LastSceneData->Name == sublevelName)
-		{
-			return LastSceneData;
-		}
-	}
-
-	//last scene data is invalid OR last scene is not loaded
-	//need to change LastSceneData
-	
-	//find a scene data (prefering main level)
-	TSharedPtr<FSceneData> mainScenePtr = GetSceneData(sceneName);
-	if (mainScenePtr.IsValid())
-	{
-		ForceWriteSessionMetadata = true;
-		CurrentTrackingSceneId = mainScenePtr->Id;
-		LastSceneData = mainScenePtr;
-		return LastSceneData;
-	}
-
-	//loop through all subscenes to find one
-	for (ULevelStreaming* streamingLevel : streamedLevels)
-	{
-		FString sublevelName = FPackageName::GetShortFName(streamingLevel->GetWorldAssetPackageFName()).ToString();
-		sublevelName.RemoveFromStart(currentWorld->StreamingLevelsPrefix);
-		TSharedPtr<FSceneData> subScenePtr = GetSceneData(sublevelName);
-
-		if (subScenePtr.IsValid())
-		{
-			ForceWriteSessionMetadata = true;
-			CurrentTrackingSceneId = subScenePtr->Id;
-			LastSceneData = subScenePtr;
-			return LastSceneData;
-		}
-	}
-
-	return NULL;
+	return LastSceneData;
 }
 
 TSharedPtr<FSceneData> FAnalyticsProviderCognitiveVR::GetSceneData(FString scenename)
@@ -810,4 +910,37 @@ FString FAnalyticsProviderCognitiveVR::GetAttributionParameters()
 	FString baseString = FBase64::Encode(OutputString);
 
 	return FString("?c3dAtkd=AK-"+ baseString);
+}
+
+bool FAnalyticsProviderCognitiveVR::HasEyeTrackingSDK()
+{
+#if defined TOBII_EYETRACKING_ACTIVE
+	return true;
+#elif defined WAVEVR_EYETRACKING
+	return true;
+#elif defined OPENXR_EYETRACKING
+	return true;
+#elif defined HPGLIA_API
+	return true;
+#elif defined PICOMOBILE_API
+	return true;
+#elif defined VARJOEYETRACKER_API
+	return true;
+#elif defined SRANIPAL_1_3_API
+	return true;
+#elif defined SRANIPAL_1_2_API
+	return true;
+#else
+	return false;
+#endif
+}
+
+void FAnalyticsProviderCognitiveVR::HandleApplicationWillEnterBackground()
+{
+	FlushAndCacheEvents();
+	if (!localCache.IsValid())
+	{
+		return;
+	}
+	localCache->SerializeToFile();
 }

@@ -32,16 +32,15 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Id Pool")
 	FString PrefabName;
 
-	bool GetId(FString& outId)
+	void GetId(FString& outId)
 	{
 		if (Ids.Num() > 0)
 		{
 			outId = *Ids[0];
 			Ids.RemoveAt(0);
-			return true;
+			return;
 		}
 		outId = FGuid::NewGuid().ToString();
-		return false;
 	}
 
 	void ReturnId(FString id)

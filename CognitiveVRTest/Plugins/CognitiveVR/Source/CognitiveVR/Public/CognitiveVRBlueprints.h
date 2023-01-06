@@ -13,6 +13,7 @@
 #include "CognitiveVR/Private/PlayerTracker.h"
 #include "CognitiveVR/Private/ExitPoll.h"
 #include "CognitiveVR/Private/FixationRecorder.h"
+#include "CognitiveVR/Public/DynamicObjectManager.h"
 #include "CognitiveVR/Public/CustomEvent.h"
 #include "CognitiveVRBlueprints.generated.h"
 
@@ -200,5 +201,11 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
 		static FString GetAttributionParameters();
+
+	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
+		static UFixationRecorder* GetFixationRecorder();
+
+	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
+		static UPlayerTracker* GetPlayerTracker();
 
 };

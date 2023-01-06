@@ -10,6 +10,7 @@
 #include "Components/Widget.h"
 #include "Components/WidgetComponent.h"
 #include "IActiveSessionViewRequired.h"
+#include "CognitiveVR/Public/CognitiveVRActor.h"
 #include "ActiveSessionView.generated.h"
 
 //provides the interface to get data about fixations and eye tracking from fixation recorder to the ASV widget
@@ -42,13 +43,15 @@ public:
 		TArray<FVector2D> GetProjectedSaccades();
 
 protected:
-
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
 	APlayerController* PlayerController;
 	UFixationRecorder* FixationRecorder;
 	UClass* WidgetClass;
 	UWidgetComponent* WidgetComponent;
+
+	virtual void BeginPlay() override;
 	virtual void Tick(float delta) override;
 	void DelaySetupWidget();
+
+private:
+	float Remap(float num, float low1, float high1, float low2, float high2);
 };

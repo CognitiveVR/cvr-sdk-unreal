@@ -10,13 +10,14 @@
 #include "Engine/StaticMesh.h"
 #include "TimerManager.h"
 #include "CoreMinimal.h"
-#include "CognitiveVR/Public/CustomEvent.h"
-#include "CognitiveVR/Public/DynamicIdPoolAsset.h"
 #include "MotionControllerComponent.h"
 #include "DynamicObject.generated.h"
 
 class UCustomEvent;
 class UCognitiveVRBlueprints;
+class UDynamicObjectManager;
+class FDynamicObjectId;
+class UDynamicIdPoolAsset;
 
 UENUM(BlueprintType)
 enum class EIdSourceType : uint8
@@ -27,31 +28,15 @@ enum class EIdSourceType : uint8
 };
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class COGNITIVEVR_API UDynamicObject : public USceneComponent //UActorComponent
+class COGNITIVEVR_API UDynamicObject : public USceneComponent
 {
 	friend class FAnalyticsProviderCognitiveVR;
 
 	GENERATED_BODY()
 
 private:
-	static TArray<FDynamicObjectSnapshot> snapshots; //this should be cleared when session starts in PIE
-	static TArray<FDynamicObjectManifestEntry> manifest;
-	static TArray<FDynamicObjectManifestEntry> newManifest;
-	static TArray<TSharedPtr<FDynamicObjectId>> allObjectIds;
-	static int32 jsonPart;// = 1;
-	static int32 MaxSnapshots;// = -1;
-	static bool callbackInitialized;
 
-	static int32 MinTimer;// = 5;
-	static int32 AutoTimer;// = 10;
-	static int32 ExtremeBatchSize;// = 128;
-	static float NextSendTime;// = 0;
-	static float LastSendTime;// = -60;
-	static FTimerHandle CognitiveDynamicAutoSendHandle;
-	static FString DynamicObjectFileType;
-
-	static TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider;
-
+	UDynamicObjectManager* dynamicObjectManager;
 	float currentTime = 0;
 	TSharedPtr<FDynamicObjectId> ObjectID;
 	FVector LastPosition;
@@ -60,17 +45,13 @@ private:
 	bool HasInitialized = false;
 
 	//used to set unique object id from snapshot or when accessed from elsewhere
-	void GenerateObjectId();
+	//void GenerateObjectId();
 
+	//must be called after session begins - dynamicObjectManager doesn't exist until then - and holds all the dynamic object data
 	void Initialize();
-	static void TrySendData();
-	static void ClearSnapshots();
+	void OnPostSessionEnd();
 
 public:
-	// Sets default values for this component's properties
-
-	static void OnSessionBegin();
-	static void OnSessionEnd();
 
 	//should this object be represented by a custom mesh. requires uploading this mesh to the dashboard
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
@@ -138,7 +119,6 @@ public:
 
 	UDynamicObject();
 	void TryGenerateMeshName();
-	void GenerateCustomId();
 	void TryGenerateCustomIdAndMesh();
 
 	//engagements
@@ -163,14 +143,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		FDynamicObjectSnapshot MakeSnapshot(bool hasChangedScale);
 
-	static TSharedPtr<FJsonValueObject> WriteSnapshotToJson(FDynamicObjectSnapshot snapshot);
-
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	static void SendData(bool copyDataToCache = false);
-	static TArray<TSharedPtr<FJsonValueObject>> DynamicSnapshotsToString();
-	static TSharedPtr<FJsonObject> DynamicObjectManifestToString();
-
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		FDynamicObjectSnapshot SnapshotStringProperty(UPARAM(ref) FDynamicObjectSnapshot& target, FString key, FString stringValue);
@@ -214,9 +187,4 @@ public:
 	void FlushButtons(FControllerInputStateCollection& target);
 
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);
-
-	float static GetLastSendTime() { return LastSendTime; }
-	int32 static GetPartNumber() { return jsonPart; }
-	int32 static GetDataPoints() { return snapshots.Num(); }
-	int32 static GetDynamicObjectCount() { return manifest.Num(); }
 };

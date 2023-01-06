@@ -10,10 +10,18 @@ AInputTracker::AInputTracker()
 
 }
 
-// Called when the game starts or when spawned
 void AInputTracker::BeginPlay()
 {
 	Super::BeginPlay();
+
+	//TODO when this is a component - check that this is on the CognitiveVRActor instance and not a copy elsewhere
+	//auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
+	//if (cognitiveActor != GetOwner())
+	//{
+	//	CognitiveLog::Warning("AInputTracker::BeginPlay found outside of cognitive actor instance - unregister the component");
+	//	UnregisterComponent();
+	//	return;
+	//}
 
 	//get player controller 0
 	APlayerController* p0 = UGameplayStatics::GetPlayerController(GetWorld(), 0);
@@ -74,15 +82,16 @@ void AInputTracker::BeginPlay()
 	InputComponent->BindAxis(TEXT("C3D_LeftGripAxis")).bConsumeInput = 0;
 	InputComponent->BindAxis(TEXT("C3D_RightGripAxis")).bConsumeInput = 0;
 
-	//IMPROVMENT figure out why FindControllers isn't called from this
-	/*UPlayerTracker* playerTracker = UPlayerTracker::GetPlayerTracker();
-	if (playerTracker != NULL)
+	//listen for event or find controller immediately if session already started
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (cogProvider->HasStartedSession())
 	{
-		playerTracker->OnSessionBegin.AddDynamic(this, &AInputTracker::FindControllers);
-	}*/
+		FindControllers();
+	}
+	cogProvider->OnSessionBegin.AddDynamic(this, &AInputTracker::FindControllers);
 }
 
-void AInputTracker::FindControllers(bool ignored)
+void AInputTracker::FindControllers()
 {
 	for (TObjectIterator<UMotionControllerComponent> Itr; Itr; ++Itr)
 	{
@@ -168,6 +177,8 @@ void AInputTracker::FindControllers(bool ignored)
 
 void AInputTracker::Tick(float DeltaTime)
 {
+	//TODO IMPORTANT shouldn't record inputs if session is not started
+
 	if (LeftInputStates.States.Num() > 0)
 	{
 		if (LeftHand != NULL)
@@ -407,10 +418,11 @@ void AInputTracker::IntervalUpdate()
 	}
 	}
 }
-void AInputTracker::AppendInputState(bool right, FControllerInputState state)
+
+void AInputTracker::AppendInputState(const bool isRight, FControllerInputState& state)
 {
 	//append or change value
-	if (right)
+	if (isRight)
 	{
 		if (RightInputStates.States.Contains(state.AxisName))
 		{
@@ -1373,4 +1385,10 @@ void AInputTracker::RightTriggerReleased()
 		break;
 	}
 	}
+}
+
+void AInputTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	cogProvider->OnSessionBegin.RemoveDynamic(this, &AInputTracker::FindControllers);
 }

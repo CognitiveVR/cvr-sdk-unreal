@@ -4,12 +4,15 @@
 
 #include "CognitiveVR/Private/api/sensor.h"
 
-Sensors::Sensors()
+USensors::USensors()
 {
-	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 
-	FString ValueReceived;
+}
+
+void USensors::Initialize()
+{
 	LastSensorValues.Empty();
+	FString ValueReceived;
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorDataLimit", false);
 	if (ValueReceived.Len() > 0)
@@ -50,25 +53,22 @@ Sensors::Sensors()
 			AutoTimer = parsedValue;
 		}
 	}
+
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 }
 
-void Sensors::StartSession()
+void USensors::StartSession()
 {
-	if (!cog.IsValid()) {
-		return;
-	}
-	if (cog->EnsureGetWorld() == NULL)
+	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	if (world == nullptr)
 	{
-		CognitiveLog::Warning("Sensors::StartSession - GetWorld is Null! Likely missing PlayerTrackerComponent on Player actor");
+		GLog->Log("USensors::StartSession world from ACognitiveVRActor is null!");
 		return;
 	}
-	if (cog->EnsureGetWorld()->GetGameInstance() == NULL) {
-		return;
-	}
-	cog->EnsureGetWorld()->GetGameInstance()->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &Sensors::SendData, false), AutoTimer, true);
+	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &USensors::SendData, false), AutoTimer, true);
 }
 
-void Sensors::InitializeSensor(FString sensorName, float hzRate, float initialValue)
+void USensors::InitializeSensor(FString sensorName, float hzRate, float initialValue)
 {
 	if (sensorData.Contains(sensorName))
 	{
@@ -79,13 +79,15 @@ void Sensors::InitializeSensor(FString sensorName, float hzRate, float initialVa
 	LastSensorValues.Add(sensorName, initialValue);
 }
 
-void Sensors::RecordSensor(FString Name, float value)
+void USensors::RecordSensor(FString Name, float value)
 {
-	float time = UGameplayStatics::GetRealTimeSeconds(cog->GetWorld());
+	UWorld* world = ACognitiveVRActor::GetCognitiveSessionWorld();
+
+	float realtime = UGameplayStatics::GetRealTimeSeconds(world);
 	if (SensorDataPoints.Contains(Name))
 	{
 		//check time since world startup
-		if (time < sensorData[Name]->NextRecordTime)
+		if (realtime < sensorData[Name]->NextRecordTime)
 		{
 			return; //recording above rate!
 		}
@@ -96,22 +98,23 @@ void Sensors::RecordSensor(FString Name, float value)
 		InitializeSensor(Name, 10, value);
 	}
 
-	sensorData[Name]->NextRecordTime = (time + sensorData[Name]->UpdateInterval);
+	sensorData[Name]->NextRecordTime = (realtime + sensorData[Name]->UpdateInterval);
 	LastSensorValues.Add(Name, (float)value);
 	sensorDataCount ++;
 	if (sensorDataCount >= SensorThreshold)
 	{
-		Sensors::TrySendData();
+		USensors::TrySendData();
 	}
 }
 
-void Sensors::RecordSensor(FString Name, double value)
+void USensors::RecordSensor(FString Name, double value)
 {
-	float time = UGameplayStatics::GetRealTimeSeconds(cog->GetWorld());
+	UWorld* world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	float realtime = UGameplayStatics::GetRealTimeSeconds(world);
 	if (SensorDataPoints.Contains(Name))
 	{
 		//check time since world startup
-		if (time < sensorData[Name]->NextRecordTime)
+		if (realtime < sensorData[Name]->NextRecordTime)
 		{
 			return; //recording above rate!
 		}
@@ -122,31 +125,28 @@ void Sensors::RecordSensor(FString Name, double value)
 		InitializeSensor(Name, 10, value);
 	}
 
-	sensorData[Name]->NextRecordTime = (time + sensorData[Name]->UpdateInterval);
+	sensorData[Name]->NextRecordTime = (realtime + sensorData[Name]->UpdateInterval);
 	LastSensorValues.Add(Name, (float)value);
 	sensorDataCount++;
 	if (sensorDataCount >= SensorThreshold)
 	{
-		Sensors::TrySendData();
+		USensors::TrySendData();
 	}
 }
 
-void Sensors::TrySendData()
+void USensors::TrySendData()
 {
-	if (cog->EnsureGetWorld() != NULL)
+	bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
+	bool withinExtremeBatchSize = sensorDataCount < ExtremeBatchSize;
+
+	if (withinMinTimer && withinExtremeBatchSize)
 	{
-		bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
-		bool withinExtremeBatchSize = sensorDataCount < ExtremeBatchSize;
-		
-		if (withinMinTimer && withinExtremeBatchSize)
-		{
-			return;
-		}
+		return;
 	}
-	SendData();
+	SendData(false);
 }
 
-void Sensors::SendData(bool copyDataToCache)
+void USensors::SendData(bool copyDataToCache)
 {
 	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
@@ -237,7 +237,20 @@ void Sensors::SendData(bool copyDataToCache)
 	sensorDataCount = 0;
 }
 
-TMap<FString, float> Sensors::GetLastSensorValues()
+TMap<FString, float> USensors::GetLastSensorValues()
 {
 	return LastSensorValues;
+}
+
+void USensors::PreSessionEnd()
+{
+	//clean up auto send timer
+	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	if (world == nullptr) { return; }
+	world->GetTimerManager().ClearTimer(AutoSendHandle);
+}
+
+void USensors::PostSessionEnd()
+{
+	cog.Reset();
 }
