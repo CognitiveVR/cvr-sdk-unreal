@@ -39,7 +39,9 @@ private:
 #endif
 
 	TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
+	UFUNCTION()
 	void StartListenForTimers();
+	UFUNCTION()
 	void StopListenForTimers();
 
 public:
