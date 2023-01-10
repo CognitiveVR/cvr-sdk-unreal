@@ -3,24 +3,27 @@
 */
 #pragma once
 
-#include "TimerManager.h"
+//#include "TimerManager.h"
 #include "Analytics.h"
 #include "CognitiveVR/Public/CognitiveVRProvider.h"
-#include "CognitiveVR/Private/util/util.h"
-#include "CognitiveVR/Private/PlayerTracker.h"
+//#include "CognitiveVR/Private/util/util.h"
+//#include "CognitiveVR/Private/PlayerTracker.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 
+class FAnalyticsCognitiveVR;
 class FAnalyticsProviderCognitiveVR;
 class UCustomEvent;
 class UCognitiveVRBlueprints;
 
 
-	class COGNITIVEVR_API CustomEventRecorder
+	class COGNITIVEVR_API UCustomEventRecorder
 	{
+		friend class FAnalyticsProviderCognitiveVR;
+
 	private:
 
-		static uint64 lastFrameCount;
-		static int32 consecutiveFrame;
+		uint64 lastFrameCount;
+		int32 consecutiveFrame;
 
 		
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
@@ -38,10 +41,17 @@ class UCognitiveVRBlueprints;
 		//checks minimum send timer before sending recorded data to dashboard
 		void TrySendData();
 
-	public:
-		CustomEventRecorder();
+		UFUNCTION()
+		void StartSession();
+		UFUNCTION()
+		void PreSessionEnd();
+		UFUNCTION()
+		void PostSessionEnd();
 
-		void StartSession(); //IMPROVEMENT should be private and friend class cognitive core. namespace issues
+	public:
+		UCustomEventRecorder();
+		//call this immediately after creation - sets callbacks and reference to CognitiveVRProvider
+		void Initialize();
 
 		//record event with name linked to a dynamic object
 		void Send(FString category, FString dynamicObjectId);
@@ -64,7 +74,8 @@ class UCognitiveVRBlueprints;
 		void Send(UCustomEvent* customEvent);
 
 		//send all outstanding custom events to Cognitive dashboard
-		void SendData(bool copyDataToCache = false);
+		UFUNCTION()
+		void SendData(bool copyDataToCache);
 
 		float GetLastSendTime() { return LastSendTime; }
 		int32 GetPartNumber() { return jsonEventPart; }

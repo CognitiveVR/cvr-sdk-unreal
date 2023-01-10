@@ -219,7 +219,7 @@ public:
 		const TSharedRef<SDockTab> MajorTab =
 			SNew(SDockTab)
 			//.Icon(FEditorStyle::Get().GetBrush("SequenceRecorder.TabIcon"))
-			.TabRole(ETabRole::MajorTab);
+			.TabRole(ETabRole::NomadTab);
 
 		MajorTab->SetContent(SNew(SDynamicObjectManagerWidget));
 
@@ -231,7 +231,7 @@ public:
 		const TSharedRef<SDockTab> MajorTab =
 			SNew(SDockTab)
 			//.Icon(FEditorStyle::Get().GetBrush("SequenceRecorder.TabIcon"))
-			.TabRole(ETabRole::MajorTab);
+			.TabRole(ETabRole::NomadTab);
 
 		MajorTab->SetContent(SNew(SSceneSetupWidget));
 

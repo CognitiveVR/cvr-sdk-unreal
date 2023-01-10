@@ -2,7 +2,7 @@
 
 #include "ActiveSessionView.h"
 
-float Remap(float num, float low1, float high1, float low2, float high2)
+float AActiveSessionView::Remap(float num, float low1, float high1, float low2, float high2)
 {
 	return low2 + (num - low1) * (high2 - low2) / (high1 - low1);
 }
@@ -51,7 +51,13 @@ void AActiveSessionView::BeginPlay()
 
 void AActiveSessionView::DelaySetupWidget()
 {
-	FixationRecorder = UFixationRecorder::GetFixationRecorder();
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
+	if (cognitiveActor == nullptr)
+	{
+		return;
+	}
+	FixationRecorder = Cast<UFixationRecorder>(cognitiveActor->GetComponentByClass(UFixationRecorder::StaticClass()));
+
 	if (FixationRecorder == NULL)
 	{
 		GLog->Log("CognitiveVR::ActiveSessionView::BeginPlay cannot find FixationRecorder in scene!");

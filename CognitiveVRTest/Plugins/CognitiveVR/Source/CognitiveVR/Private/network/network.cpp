@@ -16,24 +16,24 @@ void Network::NetworkCall(FString suburl, FString contents, bool copyDataToCache
 {
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
+		CognitiveLog::Warning("Network::NetworkCall CognitiveVRProvider is invalid!");
 		return;
 	}
 
 	if (cog->GetCurrentSceneId().Len() == 0)
 	{
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
+		CognitiveLog::Warning("Network::NetworkCall CognitiveVRProvider scene id is invalid!");
 		return;
 	}
 	if (cog->GetCurrentSceneVersionNumber().Len() == 0)
 	{
-		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::SendJson CognitiveVRProvider has not started a session!");
+		CognitiveLog::Warning("Network::NetworkCall CognitiveVRProvider scene version is invalid!");
 		return;
 	}
 
 	if (Http == NULL)
 	{
-		CognitiveLog::Warning("Cognitive Provider::SendJson Http module not initialized! likely hasn't started session");
+		CognitiveLog::Warning("Network::NetworkCall Http module not initialized! possibly hasn't started session");
 		return;
 	}
 
@@ -117,9 +117,7 @@ void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Resp
 		}
 		else
 		{
-			if (responseCode == 401) { return; }
-			if (responseCode == 404) { return; }
-			if (responseCode == -1) { return; }
+			if (responseCode < 500) {return;}
 
 			if (Request == nullptr) { return; }
 

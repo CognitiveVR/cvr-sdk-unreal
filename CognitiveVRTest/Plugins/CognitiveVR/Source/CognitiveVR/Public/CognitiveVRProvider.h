@@ -4,6 +4,8 @@
 
 #include "CognitiveVR/Public/C3DCommonTypes.h"
 #include "CoreMinimal.h"
+#include "Analytics.h"
+#include "TimerManager.h"
 #include "AnalyticsEventAttribute.h"
 #include "Interfaces/IAnalyticsProvider.h"
 #include "CognitiveVR/Public/CognitiveVR.h"
@@ -15,58 +17,66 @@
 #include "CognitiveVR/Private/PlayerTracker.h"
 #include "CognitiveVR/Public/DynamicObject.h"
 #include "CognitiveVR/Private/FixationRecorder.h"
+#include "CognitiveVR/Public/CognitiveVRActor.h"
 
 #include "CognitiveVR/Private/util/util.h"
 #include "CognitiveVR/Private/util/cognitive_log.h"
 #include "CognitiveVR/Private/network/network.h"
 #include "CognitiveVR/Private/api/customeventrecorder.h"
+#include "CognitiveVR/Public/CustomEvent.h"
 #include "CognitiveVR/Private/api/sensor.h"
 #include "CognitiveVR/Private/LocalCache.h"
 #include "Engine/Engine.h"
 #include "Misc/Base64.h"
+#include "CognitiveVR/Private/api/FixationDataRecorder.h"
+#include "CognitiveVR/Private/api/GazeDataRecorder.h"
 #include "Misc/PackageName.h"//to get friendly name of streaming levels
-
-
-
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
 	class Network;
-	class CustomEventRecorder;
-	//class CognitiveVRResponse;
-	class Sensors;
+	class UCustomEventRecorder;
+	class CognitiveVRResponse;
+	class USensors;
 	class ExitPoll;
 	class LocalCache;
-	//class UDynamicObject;
+	class UDynamicObject;
+	class UGazeDataRecorder;
+	class UFixationDataRecorder;
 
 	class COGNITIVEVR_API FAnalyticsProviderCognitiveVR : public IAnalyticsProvider
 	{
 		/** Unique Id representing the session the analytics are recording for */
-		FString SessionId;
+		FString SessionId = "";
 		/** Holds the Age if set */
 		/** Holds the build info if set */
-		FString BuildInfo;
-		FString ParticipantName;
+		FString BuildInfo = "";
+		FString ParticipantName = "";
 		/** Id representing the user the analytics are recording for */
-		FString ParticipantId;
-		FString DeviceId;
+		FString ParticipantId = "";
+		FString DeviceId = "";
 		double SessionTimestamp = -1;
 		FJsonObject NewSessionProperties;
 		FJsonObject AllSessionProperties;
 
-		
-
 	private:
-		static UWorld* currentWorld;
-		
 		//reads all scene data from engine ini
 		void CacheSceneData();
-
 		static bool bHasSessionStarted;
+		double SceneStartTime = 0;
 
 	public:
 		FAnalyticsProviderCognitiveVR();
 		virtual ~FAnalyticsProviderCognitiveVR();
+
+		UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
+			FOnCognitiveSessionBegin OnSessionBegin;
+		UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
+			FOnCognitivePreSessionEnd OnPreSessionEnd;
+		UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
+			FOnCognitivePostSessionEnd OnPostSessionEnd;
+		UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
+			FOnRequestSend OnRequestSend;
 
 		bool StartSession();
 		virtual bool StartSession(const TArray<FAnalyticsEventAttribute>& Attributes) override;
@@ -103,9 +113,13 @@
 		virtual void RecordError(const FString& Error, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		virtual void RecordProgress(const FString& ProgressType, const FString& ProgressHierarchy, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		
-		TSharedPtr<CustomEventRecorder> customEventRecorder;
+		//consider making these TSharedPtr
+		UCustomEventRecorder* customEventRecorder = nullptr;
+		USensors* sensors = nullptr;
+		UDynamicObjectManager* dynamicObjectManager = nullptr;
+		UGazeDataRecorder* gazeDataRecorder = nullptr;
+		UFixationDataRecorder* fixationDataRecorder = nullptr;
 		TSharedPtr<Network> network;
-		TSharedPtr<Sensors> sensors;
 		TSharedPtr<ExitPoll> exitpoll;
 		TSharedPtr<LocalCache> localCache;
 
@@ -120,25 +134,21 @@
 
 		bool HasStartedSession();
 
-		FString ApplicationKey;
-		FString AttributionKey;
+		FString ApplicationKey = "";
+		FString AttributionKey = "";
 
 		FString GetCurrentSceneId();
 		FString GetCurrentSceneVersionNumber();
 		//if a session name has been explicitly set. otherwise will use participant name when that is set
-		bool bHasCustomSessionName;
+		bool bHasCustomSessionName = false;
 		void SetSessionName(FString sessionName);
 		
 		//used to identify when a scene changes and session properties need to be resent
 		FString CurrentTrackingSceneId;
 		//used to see id the current scene has changed and needs to search for new sceneId
 		TSharedPtr<FSceneData> LastSceneData;
-
-
-		void SetWorld(UWorld* world);
-		UWorld* GetWorld();
-		//calls player tracker session begin (which sets the world). if not found, will return null
-		UWorld* EnsureGetWorld();
+		//holds scenedata for all open scenes (including sublevels). used to get the latest data after a sublevel is loaded
+		TArray<TSharedPtr<FSceneData>> LoadedSceneDataStack;
 
 		TArray<TSharedPtr<FSceneData>> SceneData;
 		TSharedPtr<FSceneData> GetSceneData(FString scenename);
@@ -160,4 +170,16 @@
 		void SetSessionProperty(FString name, FString value);
 
 		FString GetAttributionParameters();
+		bool HasEyeTrackingSDK();
+
+		private:
+		FDelegateHandle PauseHandle;
+		FDelegateHandle LevelLoadHandle;
+		FDelegateHandle SublevelLoadedHandle;
+		FDelegateHandle SublevelUnloadedHandle;
+
+		void HandlePostLevelLoad(UWorld* world);
+		void HandleSublevelLoaded(ULevel* level, UWorld* world);
+		void HandleSublevelUnloaded(ULevel* level, UWorld* world);
+		void HandleApplicationWillEnterBackground();
 	};

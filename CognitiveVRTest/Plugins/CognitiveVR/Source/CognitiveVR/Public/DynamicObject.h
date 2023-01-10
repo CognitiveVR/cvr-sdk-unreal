@@ -10,13 +10,14 @@
 #include "Engine/StaticMesh.h"
 #include "TimerManager.h"
 #include "CoreMinimal.h"
-#include "CognitiveVR/Public/CustomEvent.h"
-#include "CognitiveVR/Public/DynamicIdPoolAsset.h"
 #include "MotionControllerComponent.h"
 #include "DynamicObject.generated.h"
 
 class UCustomEvent;
 class UCognitiveVRBlueprints;
+class UDynamicObjectManager;
+class FDynamicObjectId;
+class UDynamicIdPoolAsset;
 
 UENUM(BlueprintType)
 enum class EIdSourceType : uint8
@@ -26,32 +27,16 @@ enum class EIdSourceType : uint8
 	PoolId
 };
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class COGNITIVEVR_API UDynamicObject : public USceneComponent //UActorComponent
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class COGNITIVEVR_API UDynamicObject : public USceneComponent
 {
 	friend class FAnalyticsProviderCognitiveVR;
 
 	GENERATED_BODY()
 
 private:
-	static TArray<FDynamicObjectSnapshot> snapshots; //this should be cleared when session starts in PIE
-	static TArray<FDynamicObjectManifestEntry> manifest;
-	static TArray<FDynamicObjectManifestEntry> newManifest;
-	static TArray<TSharedPtr<FDynamicObjectId>> allObjectIds;
-	static int32 jsonPart;// = 1;
-	static int32 MaxSnapshots;// = -1;
-	static bool callbackInitialized;
 
-	static int32 MinTimer;// = 5;
-	static int32 AutoTimer;// = 10;
-	static int32 ExtremeBatchSize;// = 128;
-	static float NextSendTime;// = 0;
-	static float LastSendTime;// = -60;
-	static FTimerHandle CognitiveDynamicAutoSendHandle;
-	static FString DynamicObjectFileType;
-
-	static TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider;
-
+	UDynamicObjectManager* dynamicObjectManager;
 	float currentTime = 0;
 	TSharedPtr<FDynamicObjectId> ObjectID;
 	FVector LastPosition;
@@ -60,21 +45,17 @@ private:
 	bool HasInitialized = false;
 
 	//used to set unique object id from snapshot or when accessed from elsewhere
-	void GenerateObjectId();
+	//void GenerateObjectId();
 
+	//must be called after session begins - dynamicObjectManager doesn't exist until then - and holds all the dynamic object data
 	void Initialize();
-	static void TrySendData();
-	static void ClearSnapshots();
+	void OnPostSessionEnd();
 
-public:	
-	// Sets default values for this component's properties
-
-	static void OnSessionBegin();
-	static void OnSessionEnd();
+public:
 
 	//should this object be represented by a custom mesh. requires uploading this mesh to the dashboard
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool UseCustomMeshName = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
+		bool UseCustomMeshName = true;
 
 	bool IsController = false;
 
@@ -83,21 +64,21 @@ public:
 	FString ControllerType;
 
 	//the name of the mesh to render on the dashboard
-	UPROPERTY(EditAnywhere)
-	FString MeshName;
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
+		FString MeshName;
 
 	//if not using a custom mesh, which common mesh to render on the dashboard to represent this object
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
-	ECommonMeshName CommonMeshName;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		ECommonMeshName CommonMeshName;
 
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	bool SnapshotOnBeginPlay = true;
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		bool SnapshotOnBeginPlay = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
-	bool SnapshotOnInterval = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		bool SnapshotOnInterval = true;
 
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	bool ReleaseIdOnDestroy = true;
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		bool ReleaseIdOnDestroy = true;
 
 	//group and id
 
@@ -105,51 +86,50 @@ public:
 	//UPROPERTY(EditAnywhere, AdvancedDisplay)
 	//bool UseCustomId;
 
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	EIdSourceType IdSourceType;
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		EIdSourceType IdSourceType;
 
 	//the custom id for registering this dynamic object. recommended for non-spawned actors
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
-	FString CustomId = "";
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		FString CustomId = "";
 
 	//UPROPERTY(EditAnywhere, AdvancedDisplay)
 	//bool UseIdPool;
 
 	bool HasValidPoolId = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay)
-	UDynamicIdPoolAsset* IDPool;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		UDynamicIdPoolAsset* IDPool;
 
 	//snapshots
 
 	//time in seconds between checking if position and rotation updates need to be recorded
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	float SnapshotInterval = 0.1;
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		float SnapshotInterval = 0.1;
 
 	//distance in cm the object needs to move before sending an update
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	float PositionThreshold = 2;
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		float PositionThreshold = 2;
 
 	//rotation in degrees the object needs to rotate before sending an update
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	float RotationThreshold = 10;
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		float RotationThreshold = 10;
 
-	UPROPERTY(EditAnywhere, AdvancedDisplay)
-	float ScaleThreshold = 0.1;
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		float ScaleThreshold = 0.1;
 
 	UDynamicObject();
 	void TryGenerateMeshName();
-	void GenerateCustomId();
 	void TryGenerateCustomIdAndMesh();
-	
+
 	//engagements
 	UPROPERTY()//need uproperty to keep from custom events from being garbage collected
-	TMap<FString, UCustomEvent*> Engagements;
+		TMap<FString, UCustomEvent*> Engagements;
 
 	// Alternate method for beginning a Custom Event and setting a Dynamic Object as the target using the DynamicObjectID
 	// engagement name will be displayed as the event name
 	// engagement id should be used when multiple events of the same type are active on a dynamic object
 	void BeginEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
-	
+
 	// Alternate method for ending a Custom Event by DynamicObjectID
 	// the name of the event to end. if there isn't an active event, will immediately create and end the event
 	// engagement id should be used to cancel a specific event on a dynamic object if multiple with the same name are present
@@ -161,16 +141,9 @@ public:
 	TSharedPtr<FDynamicObjectId> GetObjectId();
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
-	FDynamicObjectSnapshot MakeSnapshot(bool hasChangedScale);
+		FDynamicObjectSnapshot MakeSnapshot(bool hasChangedScale);
 
-	static TSharedPtr<FJsonValueObject> WriteSnapshotToJson(FDynamicObjectSnapshot snapshot);
-
-	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
-
-	static void SendData(bool copyDataToCache = false);
-	static TArray<TSharedPtr<FJsonValueObject>> DynamicSnapshotsToString();
-	static TSharedPtr<FJsonObject> DynamicObjectManifestToString();
-
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
 		FDynamicObjectSnapshot SnapshotStringProperty(UPARAM(ref) FDynamicObjectSnapshot& target, FString key, FString stringValue);
@@ -214,9 +187,4 @@ public:
 	void FlushButtons(FControllerInputStateCollection& target);
 
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);
-
-	float static GetLastSendTime() { return LastSendTime; }
-	int32 static GetPartNumber() { return jsonPart; }
-	int32 static GetDataPoints() { return snapshots.Num(); }
-	int32 static GetDynamicObjectCount() { return manifest.Num(); }
 };

@@ -4,9 +4,12 @@
 
 #include "C3DCommonTypes.generated.h"
 
-//multicast delegates cannot be static. use static pointer to playertracker instance in BP
+//multicast delegates cannot be static. CognitiveActor holds the actual values
 //multicast also can't be used as argument in BP function (to implement custom bind function)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCognitiveSessionBegin, bool, Successful);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCognitiveSessionBegin);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCognitivePreSessionEnd);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCognitivePostSessionEnd);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRequestSend, const bool, copyDataToCache);
 
 UENUM(BlueprintType)
 enum class EAnswerValueTypeReturn : uint8
@@ -23,15 +26,15 @@ struct FExitPollAnswer
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
 		FString type; //question type
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		EAnswerValueTypeReturn AnswerValueType;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		int32 numberValue;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		bool boolValue; //converted to 0 or 1
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
+		EAnswerValueTypeReturn AnswerValueType = EAnswerValueTypeReturn::Null;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
+		int32 numberValue = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
+		bool boolValue = false; //converted to 0 or 1
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
 		FString stringValue; //for base64 voice
 };
 
@@ -41,17 +44,17 @@ struct FExitPollResponse
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
 		FString userId;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
 		FString participantId;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
 		FString questionSetId;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
 		FString sessionId;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
 		FString hook;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
 		TArray<FExitPollAnswer> answers;
 	double duration;
 };
@@ -62,10 +65,10 @@ struct FExitPollScaleRange
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintReadOnly)
-		int32 start;
-	UPROPERTY(BlueprintReadOnly)
-		int32 end;
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
+		int32 start = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
+		int32 end = 0;
 };
 
 USTRUCT(BlueprintType)
@@ -74,10 +77,10 @@ struct FExitPollMultipleChoice
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
 		FString answer;
-	UPROPERTY(BlueprintReadOnly)
-		bool icon;
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
+		bool icon = false;
 };
 
 USTRUCT(BlueprintType)
@@ -86,25 +89,25 @@ struct FExitPollQuestion
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
 		FString title;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
 		FString type;
 
 	//voice
-	UPROPERTY(BlueprintReadOnly)
-		int32 maxResponseLength;
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
+		int32 maxResponseLength = 0;
 
 	//scale
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
 		FString minLabel;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
 		FString maxLabel;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
 		FExitPollScaleRange range;
 
 	//multple choice
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "CognitiveVR Analytics")
 		TArray<FExitPollMultipleChoice> answers;
 };
 
@@ -114,21 +117,21 @@ struct FExitPollQuestionSet
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
 		FString customerId;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
 		//question set id
 		FString id;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
 		//question set name
 		FString name;
-	UPROPERTY(BlueprintReadOnly)
-		int32 version;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
+		int32 version = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
 		FString title;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
 		FString status;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "CognitiveVR Analytics")
 		TArray<FExitPollQuestion> questions;
 };
 
@@ -270,7 +273,7 @@ public:
 	FVector scale = FVector(1, 1, 1);
 	bool hasScaleChanged = false;
 	FQuat rotation = FQuat(0, 0, 0, 1);
-	double time = 0;
+	double timestamp = 0;
 	FString id = "";
 	TMap<FString, FString> StringProperties;
 	TMap<FString, int32> IntegerProperties;
@@ -278,4 +281,26 @@ public:
 	TMap<FString, bool> BoolProperties;
 
 	TMap<FString, FControllerInputState> Buttons;
+};
+
+struct COGNITIVEVR_API SensorData
+{
+public:
+	FString Name;
+	FString Rate;
+	float NextRecordTime;
+	float UpdateInterval;
+	SensorData(FString name, float rate)
+	{
+		Name = name;
+		Rate = FString::SanitizeFloat(rate);
+		if (rate == 0)
+		{
+			UpdateInterval = 1 / 10;
+		}
+		else
+		{
+			UpdateInterval = 1 / rate;
+		}
+	}
 };
