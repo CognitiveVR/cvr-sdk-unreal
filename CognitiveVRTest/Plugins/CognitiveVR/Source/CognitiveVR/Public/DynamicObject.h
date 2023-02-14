@@ -48,7 +48,9 @@ private:
 	//void GenerateObjectId();
 
 	//must be called after session begins - dynamicObjectManager doesn't exist until then - and holds all the dynamic object data
+	UFUNCTION()
 	void Initialize();
+	UFUNCTION()
 	void OnPostSessionEnd();
 
 public:
