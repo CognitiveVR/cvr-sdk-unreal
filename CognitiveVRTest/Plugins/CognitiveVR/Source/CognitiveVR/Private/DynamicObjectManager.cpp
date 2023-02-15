@@ -322,7 +322,7 @@ TSharedPtr<FJsonObject> UDynamicObjectManager::DynamicObjectManifestToString()
 		TSharedPtr<FJsonObject>entry = MakeShareable(new FJsonObject);
 		entry->SetStringField("name", newManifest[i].Name);
 		entry->SetStringField("mesh", newManifest[i].MeshName);
-		entry->SetStringField("fileType", DynamicObjectFileType);
+		entry->SetStringField("fileType", "gltf");
 		if (!newManifest[i].ControllerType.IsEmpty())
 		{
 			entry->SetStringField("controllerType", newManifest[i].ControllerType);
