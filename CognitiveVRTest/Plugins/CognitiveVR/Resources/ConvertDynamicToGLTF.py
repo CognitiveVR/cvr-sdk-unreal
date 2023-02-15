@@ -16,7 +16,7 @@ exportPath = args[3]
 
 dynamicNames = args[4].replace('\'','').split(",")
 
-sizeFactor = 1;
+sizeFactor = 100;
 
 #foreach dynamic object
 #just export into existing folder
@@ -58,7 +58,7 @@ for dir in subdirectories:
     #import fbx
     fbxname = workingdir + "/" + dir + ".fbx"
     if os.path.exists(fbxname):
-        ops.import_scene.fbx(filepath=fbxname)
+        ops.import_scene.fbx(filepath=fbxname, global_scale=sizeFactor)
         print("=============================================import fbx")
     
     #[0] is type, [1] is material name, [2] is diffuse, [3] is normal, [4] is opacity

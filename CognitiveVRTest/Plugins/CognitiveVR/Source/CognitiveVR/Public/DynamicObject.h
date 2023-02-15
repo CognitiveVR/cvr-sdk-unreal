@@ -48,8 +48,12 @@ private:
 	//void GenerateObjectId();
 
 	//must be called after session begins - dynamicObjectManager doesn't exist until then - and holds all the dynamic object data
+	UFUNCTION()
 	void Initialize();
+	UFUNCTION()
 	void OnPostSessionEnd();
+	UFUNCTION()
+	void OnPreSessionEnd();
 
 public:
 
@@ -187,4 +191,5 @@ public:
 	void FlushButtons(FControllerInputStateCollection& target);
 
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);
+	void CleanupDynamicObject();
 };

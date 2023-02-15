@@ -102,6 +102,12 @@ void UDynamicObject::BeginPlay()
 
 	cogProvider->OnSessionBegin.AddDynamic(this, &UDynamicObject::Initialize);
 	cogProvider->OnPostSessionEnd.AddDynamic(this, &UDynamicObject::OnPostSessionEnd);
+	cogProvider->OnPreSessionEnd.AddDynamic(this, &UDynamicObject::OnPreSessionEnd);
+}
+
+void UDynamicObject::OnPreSessionEnd()
+{
+	CleanupDynamicObject();
 }
 
 //reset so this dynamic can be re-registered in the next session (which might happen in the same game instance)
@@ -201,7 +207,7 @@ void UDynamicObject::Initialize()
 		}
 
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot(hasScaleChanged);
-		SnapshotBoolProperty(initSnapshot, "enable", true);
+		SnapshotBoolProperty(initSnapshot, "enabled", true);
 		dynamicObjectManager->AddSnapshot(initSnapshot);
 	}
 	HasInitialized = true;
@@ -423,6 +429,39 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 
 void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	Super::EndPlay(EndPlayReason);
+
+	//only write ending snapshot if component is destroyed during gameplay
+	bool shouldWriteEndSnapshot = false;
+	switch (EndPlayReason)
+	{
+	case EEndPlayReason::Destroyed:
+		shouldWriteEndSnapshot = true;
+		//this should normally never be destroyed. 4.19 bug - this is called instead of level transition
+		//cog->FlushEvents();
+		break;
+	case EEndPlayReason::EndPlayInEditor:
+		break;
+	case EEndPlayReason::LevelTransition:
+		shouldWriteEndSnapshot = true;
+		break;
+	case EEndPlayReason::Quit:
+		break;
+	case EEndPlayReason::RemovedFromWorld:
+		//removed from a sublevel unloading
+		shouldWriteEndSnapshot = true;
+		break;
+	default:
+		break;
+	}
+
+	if (!shouldWriteEndSnapshot) { return; }
+	CleanupDynamicObject();
+}
+
+//also called from cognitive actor broadcast end session
+void UDynamicObject::CleanupDynamicObject()
+{
 	if (IdSourceType == EIdSourceType::PoolId && HasValidPoolId && IDPool != NULL)
 	{
 		if (ObjectID.IsValid() && !ObjectID->Id.IsEmpty())
@@ -435,6 +474,7 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	cogProvider->OnSessionBegin.RemoveDynamic(this, &UDynamicObject::Initialize);
 	cogProvider->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPostSessionEnd);
+	cogProvider->OnPreSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPreSessionEnd);
 
 	HasInitialized = false;
 
@@ -443,21 +483,18 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	if (ReleaseIdOnDestroy)
 	{
 		FDynamicObjectSnapshot initSnapshot = MakeSnapshot(false);
-		SnapshotBoolProperty(initSnapshot, "enable", false);
+		SnapshotBoolProperty(initSnapshot, "enabled", false);
 		dynamicObjectManager->AddSnapshot(initSnapshot);
 		ObjectID->Used = false;
 	}
 
-	if (EndPlayReason == EEndPlayReason::EndPlayInEditor || EndPlayReason == EEndPlayReason::Destroyed || EndPlayReason == EEndPlayReason::LevelTransition || EndPlayReason == EEndPlayReason::RemovedFromWorld)
+	//go through all engagements and send any that match this objectid
+	for (auto& Elem : Engagements)
 	{
-		//go through all engagements and send any that match this objectid
-		for (auto &Elem : Engagements)
+		if (Elem.Value->GetDynamicId() == ObjectID->Id)
 		{
-			if (Elem.Value->GetDynamicId() == ObjectID->Id)
-			{
-				Elem.Value->SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
-				Elem.Value->Send();
-			}
+			Elem.Value->SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
+			Elem.Value->Send();
 		}
 	}
 }
