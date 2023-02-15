@@ -52,6 +52,8 @@ private:
 	void Initialize();
 	UFUNCTION()
 	void OnPostSessionEnd();
+	UFUNCTION()
+	void OnPreSessionEnd();
 
 public:
 
@@ -189,4 +191,5 @@ public:
 	void FlushButtons(FControllerInputStateCollection& target);
 
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);
+	void CleanupDynamicObject();
 };
