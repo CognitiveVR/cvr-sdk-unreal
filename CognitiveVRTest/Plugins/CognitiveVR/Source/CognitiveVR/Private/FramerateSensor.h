@@ -11,16 +11,18 @@ class UFramerateSensor : public UActorComponent
 
 	public:
 		UFramerateSensor();
-		UPROPERTY(EditAnywhere)
-			float framerateRecordIntervalInSeconds = 2;
 
 	private:
 		virtual void BeginPlay() override;
 		virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 		TSharedPtr<FAnalyticsProviderCognitiveVR> provider;
-		float aggregateFramerate = 0;
-		float numSamples = 0;
-		double lastTime;
-		void SendFramerateAsSensor();
+		
+		float FramerateTrackingInterval = 1;
+
+		//the number of frames in the interval
+		int32 intervalFrameCount = 0;
+		float currentTime = 0;
+		TArray<float> deltaTimes;
+		void IntervalEnd();
 
 };
