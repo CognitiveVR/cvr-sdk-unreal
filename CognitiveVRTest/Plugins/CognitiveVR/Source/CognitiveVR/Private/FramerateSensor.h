@@ -15,14 +15,13 @@ class UFramerateSensor : public UActorComponent
 	private:
 		virtual void BeginPlay() override;
 		virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-		TSharedPtr<FAnalyticsProviderCognitiveVR> provider;
-		
 		float FramerateTrackingInterval = 1;
 
-		//the number of frames in the interval
+		UFUNCTION()
+		void OnSessionBegin();
 		int32 intervalFrameCount = 0;
 		float currentTime = 0;
 		TArray<float> deltaTimes;
-		void IntervalEnd();
+		void EndInterval();
 
 };

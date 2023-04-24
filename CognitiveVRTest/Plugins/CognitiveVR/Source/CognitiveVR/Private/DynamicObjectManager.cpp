@@ -99,7 +99,6 @@ bool UDynamicObjectManager::HasRegisteredObjectId(FString id)
 }
 
 //should be rewritten to return an objectid and take some arguments
-//should include iscontroller and isrightcontroller args
 void UDynamicObjectManager::RegisterObjectId(FString MeshName, FString Id, FString ActorName, bool IsController, bool IsRightController, FString ControllerType)
 {
 	auto ObjectID = MakeShareable(new FDynamicObjectId(Id, MeshName));
@@ -112,6 +111,18 @@ void UDynamicObjectManager::RegisterObjectId(FString MeshName, FString Id, FStri
 	}
 	manifest.Add(entry);
 	newManifest.Add(entry);
+}
+
+void UDynamicObjectManager::CacheControllerPointer(UDynamicObject* object, bool isRight)
+{
+	if (isRight)
+	{
+		RightHandController = object;
+	}
+	else
+	{
+		LeftHandController = object;
+	}
 }
 
 TSharedPtr<FJsonValueObject> UDynamicObjectManager::WriteSnapshotToJson(FDynamicObjectSnapshot snapshot)

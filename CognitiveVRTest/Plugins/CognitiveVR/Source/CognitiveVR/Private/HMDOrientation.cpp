@@ -10,39 +10,72 @@ void UHMDOrientation::BeginPlay()
 	if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
 
-	GEngine->GetAllLocalPlayerControllers(controllers);
+	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (cognitive.IsValid())
+	{
+		cognitive->OnSessionBegin.AddDynamic(this, &UHMDOrientation::OnSessionBegin);
+		cognitive->OnPreSessionEnd.AddDynamic(this, &UHMDOrientation::OnSessionEnd);
+		if (cognitive->HasStartedSession())
+		{
+			OnSessionBegin();
+		}
+	}
 }
 
-void UHMDOrientation::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UHMDOrientation::OnSessionBegin()
 {
-	currentTime += DeltaTime;
+	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	if (world == nullptr) { return; }
+	world->GetTimerManager().SetTimer(IntervalHandle, FTimerDelegate::CreateUObject(this, &UHMDOrientation::EndInterval), IntervalDuration, true);
+}
 
-	if (currentTime > Interval)
-	{
-		currentTime = 0;
-		RecordYaw();
-		RecordPitch();
-	}
+void UHMDOrientation::EndInterval()
+{
+	RecordYaw();
+	RecordPitch();
 }
 
 void UHMDOrientation::RecordYaw()
 {
-	FRotator hmdRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
-	float yaw = hmdRotation.Yaw;
 	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (cognitive.IsValid() && cognitive->HasStartedSession())
 	{
-		cognitive->sensors->RecordSensor("c3d.hmd.yaw", yaw);
+		FXRHMDData data;
+		if (cognitive->TryGetHMD(data))
+		{
+			float yaw = data.Rotation.Rotator().Yaw;
+			cognitive->sensors->RecordSensor("c3d.hmd.yaw", yaw);
+		}
 	}
 }
 
 void UHMDOrientation::RecordPitch()
 {
-	FRotator hmdRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
-	float pitch = hmdRotation.Pitch;
 	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (cognitive.IsValid() && cognitive->HasStartedSession())
 	{
-		cognitive->sensors->RecordSensor("c3d.hmd.pitch", pitch);
+		FXRHMDData data;
+		if (cognitive->TryGetHMD(data))
+		{
+			float pitch = data.Rotation.Rotator().Pitch;
+			cognitive->sensors->RecordSensor("c3d.hmd.pitch", pitch);
+		}
+	}
+}
+
+void UHMDOrientation::OnSessionEnd()
+{
+	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	if (world == nullptr) { return; }
+	world->GetTimerManager().ClearTimer(IntervalHandle);
+}
+
+void UHMDOrientation::EndPlay(EEndPlayReason::Type EndPlayReason)
+{
+	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (cognitive.IsValid())
+	{
+		cognitive->OnSessionBegin.RemoveDynamic(this, &UHMDOrientation::OnSessionBegin);
+		cognitive->OnPreSessionEnd.RemoveDynamic(this, &UHMDOrientation::OnSessionEnd);
 	}
 }

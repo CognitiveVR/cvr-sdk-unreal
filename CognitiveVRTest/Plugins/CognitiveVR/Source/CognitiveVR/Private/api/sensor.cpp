@@ -81,8 +81,9 @@ void USensors::InitializeSensor(FString sensorName, float hzRate, float initialV
 
 void USensors::RecordSensor(FString Name, float value)
 {
-	UWorld* world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	if (FMath::IsNaN(value)) { return; }
 
+	UWorld* world = ACognitiveVRActor::GetCognitiveSessionWorld();
 	float realtime = UGameplayStatics::GetRealTimeSeconds(world);
 	if (SensorDataPoints.Contains(Name))
 	{
@@ -109,6 +110,8 @@ void USensors::RecordSensor(FString Name, float value)
 
 void USensors::RecordSensor(FString Name, double value)
 {
+	if (FMath::IsNaN(value)) { return; }
+
 	UWorld* world = ACognitiveVRActor::GetCognitiveSessionWorld();
 	float realtime = UGameplayStatics::GetRealTimeSeconds(world);
 	if (SensorDataPoints.Contains(Name))

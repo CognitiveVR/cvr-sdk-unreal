@@ -9,21 +9,46 @@ void UFramerateSensor::BeginPlay()
 {
 	if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
+
+	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (cognitive.IsValid())
+	{
+		cognitive->OnSessionBegin.AddDynamic(this, &UFramerateSensor::OnSessionBegin);
+		if (cognitive->HasStartedSession())
+		{
+			OnSessionBegin();
+		}
+	}
+}
+
+void UFramerateSensor::OnSessionBegin()
+{
+	deltaTimes.Empty();
 }
 
 void UFramerateSensor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (!cognitive.IsValid())
+	{
+		return;
+	}
+	if (!cognitive->HasStartedSession())
+	{
+		return;
+	}
+
 	intervalFrameCount++;
 	currentTime += DeltaTime;
 	deltaTimes.Add(DeltaTime);
 
 	if (currentTime > FramerateTrackingInterval)
 	{
-		IntervalEnd();
+		EndInterval();
 	}
 }
 
-void UFramerateSensor::IntervalEnd()
+void UFramerateSensor::EndInterval()
 {
 	float framesPerSecond = intervalFrameCount / currentTime;
 

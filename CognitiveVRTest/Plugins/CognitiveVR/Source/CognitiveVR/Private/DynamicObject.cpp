@@ -198,6 +198,11 @@ void UDynamicObject::Initialize()
 
 	dynamicObjectManager->RegisterObjectId(MeshName, ObjectID->Id, GetOwner()->GetName(),IsController,IsRightController,ControllerType);
 
+	if (IsController)
+	{
+		dynamicObjectManager->CacheControllerPointer(this, IsRightController);
+	}
+
 	if (SnapshotOnBeginPlay)
 	{
 		bool hasScaleChanged = true;

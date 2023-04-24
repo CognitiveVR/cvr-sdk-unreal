@@ -51,8 +51,9 @@ namespace UnrealBuildTool.Rules
                     "JsonUtilities",
 					"UMG",
 					"EngineSettings",
-					"EyeTracker" //openxr
-                }
+					"EyeTracker",
+					"OculusHMD"
+				}
 				);
 
 #if UE_4_26_OR_LATER

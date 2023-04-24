@@ -268,7 +268,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		SessionId = FString::FromInt(GetSessionTimestamp()) + TEXT("_") + DeviceId;
 	}
 	bHasSessionStarted = true;
-	
+
 	//set initial scene data
 	auto level = currentWorld->GetCurrentLevel();
 	if (level != nullptr)
@@ -933,6 +933,58 @@ bool FAnalyticsProviderCognitiveVR::HasEyeTrackingSDK()
 #else
 	return false;
 #endif
+}
+
+bool FAnalyticsProviderCognitiveVR::TryGetRoomSize(FVector& roomsize)
+{
+#if ENGINE_MAJOR_VERSION == 5
+	FTransform OutTransform;
+	FVector2D OutRect;
+	return UHeadMountedDisplayFunctionLibrary::GetPlayAreaRect(OutTransform, OutRect)
+#endif
+
+	//oculus room size
+	roomsize = UOculusFunctionLibrary::GetGuardianDimensions(EBoundaryType::Boundary_PlayArea);
+	return true;
+
+}
+
+TWeakObjectPtr<UDynamicObject> FAnalyticsProviderCognitiveVR::GetControllerDynamic(bool right)
+{
+	if (right)
+	{
+		if (dynamicObjectManager != nullptr && dynamicObjectManager->RightHandController.IsValid())
+		{
+			return dynamicObjectManager->RightHandController;
+		}
+	}
+	else
+	{
+		if (dynamicObjectManager != nullptr && dynamicObjectManager->LeftHandController.IsValid())
+		{
+			return dynamicObjectManager->LeftHandController;
+		}
+	}
+	return nullptr;
+}
+
+//returns data in local space
+bool FAnalyticsProviderCognitiveVR::TryGetHMD(FXRHMDData& hmdData)
+{
+	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
+	if (cognitiveActor == nullptr)
+	{
+		return false;
+	}
+
+	FXRHMDData data;
+	UHeadMountedDisplayFunctionLibrary::GetHMDData(cognitiveActor->GetWorld(), data);
+	return true;
+}
+
+FString FAnalyticsProviderCognitiveVR::GetRuntime()
+{
+	return FString();
 }
 
 void FAnalyticsProviderCognitiveVR::HandleApplicationWillEnterBackground()

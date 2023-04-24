@@ -56,6 +56,7 @@ public:
 	void AddSnapshot(FDynamicObjectSnapshot snapshot);
 	bool HasRegisteredObjectId(const FString id);
 	void RegisterObjectId(FString MeshName, FString Id, FString ActorName, bool IsController, bool IsRightController, FString ControllerName);
+	void CacheControllerPointer(UDynamicObject* object, bool isRight);
 	UFUNCTION()
 	void SendData(bool copyDataToCache);
 	
@@ -68,4 +69,8 @@ public:
 	int32 GetPartNumber() { return jsonPart; }
 	int32 GetDataPoints() { return snapshots.Num(); }
 	int32 GetDynamicObjectCount() { return manifest.Num(); }
+
+private:
+	TWeakObjectPtr<UDynamicObject> LeftHandController;
+	TWeakObjectPtr<UDynamicObject> RightHandController;
 };

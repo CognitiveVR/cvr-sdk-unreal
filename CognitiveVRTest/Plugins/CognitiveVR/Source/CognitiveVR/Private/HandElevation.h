@@ -2,27 +2,28 @@
 
 #include "CognitiveVR/Private/util/util.h"
 #include "CognitiveVR/Public/CognitiveVR.h"
-#include "HMDOrientation.generated.h"
+#include "HandElevation.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class UHMDOrientation : public UActorComponent
+class UHandElevation : public UActorComponent
 {
 	GENERATED_BODY()
 
 	public:
-		UHMDOrientation();
+		UHandElevation();
 
 	private:
+		float IntervalDuration = 1;
+
 		virtual void BeginPlay() override;
 		UFUNCTION()
 		void OnSessionBegin();
 		UFUNCTION()
 		void OnSessionEnd();
+
 		FTimerHandle IntervalHandle;
 		void EndInterval();
+
 		virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-		float IntervalDuration = 1;
-		void RecordYaw();
-		void RecordPitch();
 
 };
