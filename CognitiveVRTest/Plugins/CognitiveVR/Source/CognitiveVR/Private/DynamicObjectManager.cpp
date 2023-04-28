@@ -72,7 +72,7 @@ void UDynamicObjectManager::OnSessionBegin()
 	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &UDynamicObjectManager::SendData, false), AutoTimer, true);
 }
 
-//TODO is this used?
+//this is used when generating a simple unique id at runtime
 TSharedPtr<FDynamicObjectId> UDynamicObjectManager::GetUniqueId(FString meshName)
 {
 	TSharedPtr<FDynamicObjectId> freeId;
@@ -101,7 +101,11 @@ bool UDynamicObjectManager::HasRegisteredObjectId(FString id)
 //should be rewritten to return an objectid and take some arguments
 void UDynamicObjectManager::RegisterObjectId(FString MeshName, FString Id, FString ActorName, bool IsController, bool IsRightController, FString ControllerType)
 {
-	auto ObjectID = MakeShareable(new FDynamicObjectId(Id, MeshName));
+	if (Id.IsEmpty())
+	{
+		return;
+	}
+	TSharedPtr<FDynamicObjectId> ObjectID = MakeShareable(new FDynamicObjectId(Id, MeshName));
 	allObjectIds.Add(ObjectID);
 	FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(Id, ActorName, MeshName);
 	if (IsController)

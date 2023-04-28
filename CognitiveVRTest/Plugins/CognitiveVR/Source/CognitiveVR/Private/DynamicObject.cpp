@@ -12,6 +12,12 @@ UDynamicObject::UDynamicObject()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
+void UDynamicObject::OnComponentCreated()
+{
+	Super::OnComponentCreated();
+	TryGenerateCustomIdAndMesh();
+}
+
 //utility used in editor
 void UDynamicObject::TryGenerateMeshName()
 {
@@ -77,13 +83,11 @@ void UDynamicObject::TryGenerateCustomIdAndMesh()
 		if (foundAnyMesh)
 		{
 			UseCustomMeshName = true;
-			GWorld->MarkPackageDirty();
 		}
 	}
 	if (CustomId.IsEmpty())
 	{
 		CustomId = FGuid::NewGuid().ToString();
-		GWorld->MarkPackageDirty();
 	}
 }
 
@@ -137,47 +141,53 @@ void UDynamicObject::Initialize()
 	LastForward = GetComponentTransform().TransformVector(FVector::ForwardVector);
 	LastScale = FVector(1, 1, 1);
 
-	if (!UseCustomMeshName)
+	if (IsController)
 	{
-		UseCustomMeshName = true;
-		if (CommonMeshName == ECommonMeshName::OculusRiftTouchLeft)
+		switch (ControllerType)
 		{
-			MeshName = "oculustouchleft";
-		}
-		else if (CommonMeshName == ECommonMeshName::OculusRiftTouchRight)
-		{
-			MeshName = "oculustouchright";
-		}
-		else if (CommonMeshName == ECommonMeshName::ViveController)
-		{
+		case EC3DControllerType::Vive:
+			ControllerInputImageName = "vivecontroller";
 			MeshName = "vivecontroller";
+			break;
+		case EC3DControllerType::Oculus:
+			if (IsRightController)
+			{
+				ControllerInputImageName = "oculustouchright";
+				MeshName = "oculustouchleft";
+			}
+			else
+			{
+				ControllerInputImageName = "oculustouchleft";
+				MeshName = "oculustouchright";
+			}
+			break;
+		case EC3DControllerType::WindowsMixedReality:
+			if (IsRightController)
+			{
+				ControllerInputImageName = "windows_mixed_reality_controller_right";
+				MeshName = "windows_mixed_reality_controller_right";
+			}
+			else
+			{
+				ControllerInputImageName = "windows_mixed_reality_controller_left";
+				MeshName = "windows_mixed_reality_controller_left";
+			}
+			break;
+		case EC3DControllerType::PicoNeo2Eye:
+			if (IsRightController)
+			{
+				ControllerInputImageName = "pico_neo_2_eye_controller_right";
+				MeshName = "pico_neo_2_eye_controller_right";
+			}
+			else
+			{
+				ControllerInputImageName = "pico_neo_2_eye_controller_left";
+				MeshName = "pico_neo_2_eye_controller_left";
+			}
+			break;
+		default:
+			break;
 		}
-		else if (CommonMeshName == ECommonMeshName::ViveTracker)
-		{
-			MeshName = "vivetracker";
-		}
-		else if (CommonMeshName == ECommonMeshName::WindowsMixedRealityLeft)
-		{
-			MeshName = "windows_mixed_reality_controller_left";
-		}
-		else if (CommonMeshName == ECommonMeshName::WindowsMixedRealityRight)
-		{
-			MeshName = "windows_mixed_reality_controller_right";
-		}
-		else if (CommonMeshName == ECommonMeshName::PicoNeo2EyeControllerLeft)
-		{
-			MeshName = "pico_neo_2_eye_controller_left";
-		}
-		else if (CommonMeshName == ECommonMeshName::PicoNeo2EyeControllerRight)
-		{
-			MeshName = "pico_neo_2_eye_controller_right";
-		}
-	}
-
-	if (MeshName == "")
-	{
-		//hasn't been initialized correctly
-		return;
 	}
 
 	if (IdSourceType == EIdSourceType::PoolId)
@@ -196,37 +206,23 @@ void UDynamicObject::Initialize()
 		ObjectID = MakeShareable(new FDynamicObjectId(generatedId, MeshName));
 	}
 
-	dynamicObjectManager->RegisterObjectId(MeshName, ObjectID->Id, GetOwner()->GetName(),IsController,IsRightController,ControllerType);
+	dynamicObjectManager->RegisterObjectId(MeshName, ObjectID->Id, GetOwner()->GetName(),IsController,IsRightController,ControllerInputImageName);
 
 	if (IsController)
 	{
 		dynamicObjectManager->CacheControllerPointer(this, IsRightController);
 	}
 
-	if (SnapshotOnBeginPlay)
+	bool hasScaleChanged = true;
+	if (FMath::Abs(LastScale.Size() - GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
 	{
-		bool hasScaleChanged = true;
-		if (FMath::Abs(LastScale.Size() - GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
-		{
-			hasScaleChanged = true;
-		}
-
-		FDynamicObjectSnapshot initSnapshot = MakeSnapshot(hasScaleChanged);
-		SnapshotBoolProperty(initSnapshot, "enabled", true);
-		dynamicObjectManager->AddSnapshot(initSnapshot);
+		hasScaleChanged = true;
 	}
+
+	FDynamicObjectSnapshot initSnapshot = MakeSnapshot(hasScaleChanged);
+	SnapshotBoolProperty(initSnapshot, "enabled", true);
+	dynamicObjectManager->AddSnapshot(initSnapshot);
 	HasInitialized = true;
-}
-
-//TODO is this used?
-TSharedPtr<FDynamicObjectId> UDynamicObject::GetUniqueId(FString meshName)
-{
-	TSharedPtr<FDynamicObjectId> freeId;
-	static int32 originalId = 1000;
-	originalId++;
-
-	freeId = MakeShareable(new FDynamicObjectId(FString::FromInt(originalId), meshName));
-	return freeId;
 }
 
 TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
@@ -238,8 +234,8 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 
+	if (!HasInitialized) { return; }
 	if (dynamicObjectManager == nullptr) { return; }
-	if (!SnapshotOnInterval) { return; }
 
 	currentTime += DeltaTime;
 	if (currentTime > SnapshotInterval)
@@ -293,7 +289,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 {
 	//decide if the object needs a new entry in the manifest
 	bool needObjectId = false;
-	if (!ObjectID.IsValid() || ObjectID->Id == "")
+	if (!ObjectID.IsValid() || ObjectID->Id.IsEmpty())
 	{
 		needObjectId = true;
 	}
@@ -308,8 +304,17 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 
 	if (needObjectId)
 	{
-		//GenerateObjectId();
-		dynamicObjectManager->RegisterObjectId(MeshName, GetObjectId()->Id, GetOwner()->GetName(), IsController, IsRightController, ControllerType);
+		if (!GetObjectId().IsValid())
+		{
+			FString generatedId = FGuid::NewGuid().ToString();
+			ObjectID = MakeShareable(new FDynamicObjectId(generatedId, MeshName));
+		}
+		else if (GetObjectId()->Id.IsEmpty())
+		{
+			FString generatedId = FGuid::NewGuid().ToString();
+			ObjectID = MakeShareable(new FDynamicObjectId(generatedId, MeshName));
+		}
+		dynamicObjectManager->RegisterObjectId(MeshName, GetObjectId()->Id, GetOwner()->GetName(), IsController, IsRightController, ControllerInputImageName);
 	}
 
 	FDynamicObjectSnapshot snapshot = FDynamicObjectSnapshot();
@@ -485,13 +490,10 @@ void UDynamicObject::CleanupDynamicObject()
 
 	if (dynamicObjectManager == nullptr) { return; }
 
-	if (ReleaseIdOnDestroy)
-	{
-		FDynamicObjectSnapshot initSnapshot = MakeSnapshot(false);
-		SnapshotBoolProperty(initSnapshot, "enabled", false);
-		dynamicObjectManager->AddSnapshot(initSnapshot);
-		ObjectID->Used = false;
-	}
+	FDynamicObjectSnapshot initSnapshot = MakeSnapshot(false);
+	SnapshotBoolProperty(initSnapshot, "enabled", false);
+	dynamicObjectManager->AddSnapshot(initSnapshot);
+	ObjectID->Used = false;
 
 	//go through all engagements and send any that match this objectid
 	for (auto& Elem : Engagements)
@@ -502,221 +504,6 @@ void UDynamicObject::CleanupDynamicObject()
 			Elem.Value->Send();
 		}
 	}
-}
-
-//static uility
-UDynamicObject* UDynamicObject::SetupControllerActor(AActor* target, bool IsRight, EC3DControllerType controllerType)
-{
-	UDynamicObject* dyn = target->FindComponentByClass<UDynamicObject>();
-	if (dyn == NULL)
-	{
-		auto mcc = target->FindComponentByClass< UMotionControllerComponent>();
-		dyn = NewObject<UDynamicObject>(target, UDynamicObject::StaticClass());
-		dyn->SetupAttachment(mcc);
-		dyn->RegisterComponent();
-	}
-
-	dyn->IsRightController = IsRight;
-
-	switch (controllerType)
-	{
-	case EC3DControllerType::Vive:
-		dyn->ControllerType = "vivecontroller";
-		dyn->CommonMeshName = ECommonMeshName::ViveController;
-		break;
-	case EC3DControllerType::Oculus:
-		if (IsRight)
-		{
-			dyn->ControllerType = "oculustouchright";
-			dyn->CommonMeshName = ECommonMeshName::OculusRiftTouchRight;
-		}
-		else
-		{
-			dyn->ControllerType = "oculustouchleft";
-			dyn->CommonMeshName = ECommonMeshName::OculusRiftTouchLeft;
-		}
-		break;
-	case EC3DControllerType::WindowsMixedReality:
-		if (IsRight)
-		{
-			dyn->ControllerType = "windows_mixed_reality_controller_right";
-			dyn->CommonMeshName = ECommonMeshName::WindowsMixedRealityRight;
-		}
-		else
-		{
-			dyn->ControllerType = "windows_mixed_reality_controller_left";
-			dyn->CommonMeshName = ECommonMeshName::WindowsMixedRealityLeft;
-		}
-		break;
-	case EC3DControllerType::PicoNeo2Eye:
-		if (IsRight)
-		{
-			dyn->ControllerType = "pico_neo_2_eye_controller_right";
-			dyn->CommonMeshName = ECommonMeshName::PicoNeo2EyeControllerRight;
-		}
-		else
-		{
-			dyn->ControllerType = "pico_neo_2_eye_controller_left";
-			dyn->CommonMeshName = ECommonMeshName::PicoNeo2EyeControllerLeft;
-		}
-		break;
-	default:
-		break;
-	}
-
-	dyn->UseCustomMeshName = false;
-	dyn->IsController = true;
-
-	dyn->IdSourceType = EIdSourceType::CustomId;
-	dyn->CustomId = FGuid::NewGuid().ToString();
-	dyn->Initialize();
-	return dyn;
-}
-
-//static utility
-UDynamicObject* UDynamicObject::SetupControllerDynamic(UDynamicObject* dyn, bool IsRight, EC3DControllerType controllerType)
-{
-	if (dyn == NULL)
-	{
-		return NULL;
-	}
-
-	dyn->IsRightController = IsRight;
-
-	switch (controllerType)
-	{
-	case EC3DControllerType::Vive:
-		dyn->ControllerType = "vivecontroller";
-		dyn->CommonMeshName = ECommonMeshName::ViveController;
-		break;
-	case EC3DControllerType::Oculus:
-		if (IsRight)
-		{
-			dyn->ControllerType = "oculustouchright";
-			dyn->CommonMeshName = ECommonMeshName::OculusRiftTouchRight;
-		}
-		else
-		{
-			dyn->ControllerType = "oculustouchleft";
-			dyn->CommonMeshName = ECommonMeshName::OculusRiftTouchLeft;
-		}
-		break;
-	case EC3DControllerType::PicoNeo2Eye:
-		if (IsRight)
-		{
-			dyn->ControllerType = "pico_neo_2_eye_controller_right";
-			dyn->CommonMeshName = ECommonMeshName::PicoNeo2EyeControllerRight;
-		}
-		else
-		{
-			dyn->ControllerType = "pico_neo_2_eye_controller_left";
-			dyn->CommonMeshName = ECommonMeshName::PicoNeo2EyeControllerLeft;
-		}
-		break;
-	case EC3DControllerType::WindowsMixedReality:
-		if (IsRight)
-		{
-			dyn->ControllerType = "windows_mixed_reality_controller_right";
-			dyn->CommonMeshName = ECommonMeshName::WindowsMixedRealityRight;
-		}
-		else
-		{
-			dyn->ControllerType = "windows_mixed_reality_controller_left";
-			dyn->CommonMeshName = ECommonMeshName::WindowsMixedRealityLeft;
-		}
-		break;
-	default:
-		break;
-	}
-
-	dyn->UseCustomMeshName = false;
-	dyn->IsController = true;
-
-	dyn->IdSourceType = EIdSourceType::CustomId;
-	dyn->CustomId = FGuid::NewGuid().ToString();
-	dyn->Initialize();
-	return dyn;
-}
-
-//static utility
-UDynamicObject* UDynamicObject::SetupControllerMotionController(UMotionControllerComponent* mc, bool IsRight, EC3DControllerType controllerType)
-{
-	TArray<USceneComponent*> childComponents;
-	mc->GetChildrenComponents(true, childComponents);
-
-	UDynamicObject* dyn = NULL;
-
-	for (auto& Elem : childComponents)
-	{
-		dyn = Cast<UDynamicObject>(Elem);
-		if (dyn != NULL)
-		{
-			break;
-		}
-	}
-
-	if (dyn == NULL)
-	{
-		dyn = NewObject<UDynamicObject>(mc->GetOwner(), UDynamicObject::StaticClass());
-		dyn->SetupAttachment(mc);
-		dyn->RegisterComponent();
-	}
-
-	dyn->IsRightController = IsRight;
-
-	switch (controllerType)
-	{
-	case EC3DControllerType::Vive:
-		dyn->ControllerType = "vivecontroller";
-		dyn->CommonMeshName = ECommonMeshName::ViveController;
-		break;
-	case EC3DControllerType::Oculus:
-		if (IsRight)
-		{
-			dyn->ControllerType = "oculustouchright";
-			dyn->CommonMeshName = ECommonMeshName::OculusRiftTouchRight;
-		}
-		else
-		{
-			dyn->ControllerType = "oculustouchleft";
-			dyn->CommonMeshName = ECommonMeshName::OculusRiftTouchLeft;
-		}
-		break;
-	case EC3DControllerType::PicoNeo2Eye:
-		if (IsRight)
-		{
-			dyn->ControllerType = "pico_neo_2_eye_controller_right";
-			dyn->CommonMeshName = ECommonMeshName::PicoNeo2EyeControllerRight;
-		}
-		else
-		{
-			dyn->ControllerType = "pico_neo_2_eye_controller_left";
-			dyn->CommonMeshName = ECommonMeshName::PicoNeo2EyeControllerLeft;
-		}
-		break;
-	case EC3DControllerType::WindowsMixedReality:
-		if (IsRight)
-		{
-			dyn->ControllerType = "windows_mixed_reality_controller_right";
-			dyn->CommonMeshName = ECommonMeshName::WindowsMixedRealityRight;
-		}
-		else
-		{
-			dyn->ControllerType = "windows_mixed_reality_controller_left";
-			dyn->CommonMeshName = ECommonMeshName::WindowsMixedRealityLeft;
-		}
-		break;
-	default:
-		break;
-	}
-
-	dyn->UseCustomMeshName = false;
-	dyn->IsController = true;
-
-	dyn->IdSourceType = EIdSourceType::CustomId;
-	dyn->CustomId = FGuid::NewGuid().ToString();
-	dyn->Initialize();
-	return dyn;
 }
 
 //called from optional input tracker to serialize button states

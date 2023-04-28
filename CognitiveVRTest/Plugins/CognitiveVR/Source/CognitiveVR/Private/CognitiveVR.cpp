@@ -940,12 +940,13 @@ bool FAnalyticsProviderCognitiveVR::TryGetRoomSize(FVector& roomsize)
 #if ENGINE_MAJOR_VERSION == 5
 	FTransform OutTransform;
 	FVector2D OutRect;
-	return UHeadMountedDisplayFunctionLibrary::GetPlayAreaRect(OutTransform, OutRect)
-#endif
+	return UHeadMountedDisplayFunctionLibrary::GetPlayAreaRect(OutTransform, OutRect);
+#else
 
 	//oculus room size
 	roomsize = UOculusFunctionLibrary::GetGuardianDimensions(EBoundaryType::Boundary_PlayArea);
 	return true;
+#endif
 
 }
 

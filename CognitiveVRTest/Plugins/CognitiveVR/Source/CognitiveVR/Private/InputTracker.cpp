@@ -113,22 +113,22 @@ void AInputTracker::FindControllers()
 				{
 					if (!dyn->IsController) { continue; }
 
-					if (dyn->ControllerType == "oculustouchleft")
+					if (dyn->ControllerInputImageName == "oculustouchleft")
 					{
 						ControllerType = EC3DControllerType::Oculus;
 						LeftHand = dyn;
 					}
-					else if (dyn->ControllerType == "windows_mixed_reality_controller_left")
+					else if (dyn->ControllerInputImageName == "windows_mixed_reality_controller_left")
 					{
 						ControllerType = EC3DControllerType::WindowsMixedReality;
 						LeftHand = dyn;
 					}
-					else if (dyn->ControllerType == "vivecontroller")
+					else if (dyn->ControllerInputImageName == "vivecontroller")
 					{
 						ControllerType = EC3DControllerType::Vive;
 						LeftHand = dyn;
 					}
-					else if (dyn->ControllerType == "pico_neo_2_eye_controller_left")
+					else if (dyn->ControllerInputImageName == "pico_neo_2_eye_controller_left")
 					{
 						ControllerType = EC3DControllerType::PicoNeo2Eye;
 						LeftHand = dyn;
@@ -149,22 +149,22 @@ void AInputTracker::FindControllers()
 				{
 					if (!dyn->IsController) { continue; }
 
-					if (dyn->ControllerType == "oculustouchright")
+					if (dyn->ControllerInputImageName == "oculustouchright")
 					{
 						ControllerType = EC3DControllerType::Oculus;
 						RightHand = dyn;
 					}
-					else if (dyn->ControllerType == "windows_mixed_reality_controller_right")
+					else if (dyn->ControllerInputImageName == "windows_mixed_reality_controller_right")
 					{
 						ControllerType = EC3DControllerType::WindowsMixedReality;
 						RightHand = dyn;
 					}
-					else if (dyn->ControllerType == "vivecontroller")
+					else if (dyn->ControllerInputImageName == "vivecontroller")
 					{
 						ControllerType = EC3DControllerType::Vive;
 						RightHand = dyn;
 					}
-					else if (dyn->ControllerType == "pico_neo_2_eye_controller_right")
+					else if (dyn->ControllerInputImageName == "pico_neo_2_eye_controller_right")
 					{
 						ControllerType = EC3DControllerType::PicoNeo2Eye;
 						RightHand = dyn;
