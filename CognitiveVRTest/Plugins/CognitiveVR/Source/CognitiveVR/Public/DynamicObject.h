@@ -108,7 +108,7 @@ public:
 
 	UDynamicObject();
 	void TryGenerateMeshName();
-	void TryGenerateCustomIdAndMesh();
+	void TryGenerateCustomId();
 
 	//engagements
 	UPROPERTY()//need uproperty to keep from custom events from being garbage collected

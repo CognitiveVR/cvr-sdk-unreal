@@ -28,7 +28,6 @@ public:
 private:
 	/** IDetailCustomization interface */
 	virtual void CustomizeDetails( IDetailLayoutBuilder& DetailLayout ) override;
-	FReply OnUpdateMeshAndId();
 	FReply TakeScreenshot();
 	FReply Export();
 	FReply Upload();

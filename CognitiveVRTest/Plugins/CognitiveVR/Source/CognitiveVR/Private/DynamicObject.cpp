@@ -15,12 +15,18 @@ UDynamicObject::UDynamicObject()
 void UDynamicObject::OnComponentCreated()
 {
 	Super::OnComponentCreated();
-	TryGenerateCustomIdAndMesh();
+	TryGenerateMeshName();
+	TryGenerateCustomId();
 }
 
 //utility used in editor
 void UDynamicObject::TryGenerateMeshName()
 {
+	if (GetOwner() == NULL)
+	{
+		return;
+	}
+
 	if (MeshName.IsEmpty())
 	{
 		UActorComponent* actorComponent = GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
@@ -49,41 +55,11 @@ void UDynamicObject::TryGenerateMeshName()
 }
 
 //utility used in editor
-void UDynamicObject::TryGenerateCustomIdAndMesh()
+void UDynamicObject::TryGenerateCustomId()
 {
 	if (GetOwner() == NULL)
 	{
 		return;
-	}
-
-	if (MeshName.IsEmpty())
-	{
-		bool foundAnyMesh = false;
-		UActorComponent* actorComponent = GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
-		if (actorComponent != NULL)
-		{
-			UStaticMeshComponent* staticmeshComponent = Cast<UStaticMeshComponent>(actorComponent);
-			if (staticmeshComponent != NULL && staticmeshComponent->GetStaticMesh() != NULL)
-			{
-				MeshName = staticmeshComponent->GetStaticMesh()->GetName();
-				foundAnyMesh = true;
-			}
-		}
-
-		UActorComponent* actorSkeletalComponent = GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass());
-		if (actorSkeletalComponent != NULL)
-		{
-			USkeletalMeshComponent* staticmeshComponent = Cast<USkeletalMeshComponent>(actorSkeletalComponent);
-			if (staticmeshComponent != NULL && staticmeshComponent->SkeletalMesh != NULL)
-			{
-				MeshName = staticmeshComponent->SkeletalMesh->GetName();
-				foundAnyMesh = true;
-			}
-		}
-		if (foundAnyMesh)
-		{
-			UseCustomMeshName = true;
-		}
 	}
 	if (CustomId.IsEmpty())
 	{

@@ -36,24 +36,6 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 	[
 		SNew(SButton)
 		.ContentPadding(1)
-		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasOwner)
-		.VAlign(VAlign_Center)
-		.HAlign(HAlign_Center)
-		.OnClicked(this, &UDynamicObjectComponentDetails::OnUpdateMeshAndId)
-		[
-			SNew( STextBlock )
-			.Font( IDetailLayoutBuilder::GetDetailFont() )
-			.Text(FText::FromString("Generate Mesh Name and Unique ID") )
-		]
-	];
-	DetailLayout.EditCategory( "DynamicObject" )
-	.AddCustomRow( NSLOCTEXT("SkyLightDetails", "UpdateSkyLight", "Recapture Scene") )
-	.ValueContent()
-	.MaxDesiredWidth(200.f)
-	.MinDesiredWidth(200.f)
-	[
-		SNew(SButton)
-		.ContentPadding(1)
 		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasOwnerAndExportDirAndName)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
@@ -137,16 +119,6 @@ FText UDynamicObjectComponentDetails::InvalidUploadText() const
 	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return FText::FromString("Mesh Name is empty"); }
 	if (!FCognitiveEditorTools::GetInstance()->GetCurrentSceneData().IsValid()) { return FText::FromString("Scene Data is invalid"); }
 	return FText::FromString("Valid");
-}
-
-FReply UDynamicObjectComponentDetails::OnUpdateMeshAndId()
-{
-	if (SelectedDynamicObject.IsValid())
-	{
-		SelectedDynamicObject->TryGenerateCustomIdAndMesh();
-	}
-
-	return FReply::Handled();
 }
 
 FReply UDynamicObjectComponentDetails::TakeScreenshot()
