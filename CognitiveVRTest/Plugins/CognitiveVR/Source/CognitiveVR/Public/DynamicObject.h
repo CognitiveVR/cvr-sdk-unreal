@@ -11,6 +11,9 @@
 #include "TimerManager.h"
 #include "CoreMinimal.h"
 #include "MotionControllerComponent.h"
+
+#include "EngineUtils.h"
+
 #include "DynamicObject.generated.h"
 
 class UCustomEvent;
@@ -125,7 +128,9 @@ public:
 	void EndEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
 
 	virtual void BeginPlay() override;
-	virtual void OnComponentCreated() override;
+#if WITH_EDITOR
+	virtual bool Modify(bool alwaysMarkDirty) override;
+#endif
 
 	TSharedPtr<FDynamicObjectId> GetObjectId();
 
@@ -168,4 +173,7 @@ public:
 
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);
 	void CleanupDynamicObject();
+
+	private:
+		void SetUniqueDynamicIds();
 };

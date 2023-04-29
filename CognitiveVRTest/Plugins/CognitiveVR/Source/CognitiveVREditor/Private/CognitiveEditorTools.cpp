@@ -667,8 +667,6 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 	GWorld->MarkPackageDirty();
 	//save the scene? mark the scene as changed?
 
-	RefreshDisplayDynamicObjectsCountInScene();
-
 	return FReply::Handled();
 }
 

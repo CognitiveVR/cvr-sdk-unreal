@@ -12,11 +12,94 @@ UDynamicObject::UDynamicObject()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-void UDynamicObject::OnComponentCreated()
+#if WITH_EDITOR
+bool UDynamicObject::Modify(bool alwaysMarkDirty)
 {
-	Super::OnComponentCreated();
-	TryGenerateMeshName();
-	TryGenerateCustomId();
+	//this may crash at startup while owner is not set
+	if (GetOwner() != NULL)
+	{
+		//owner may become 'unreachable' on scene changes
+		if (GetOwner()->IsUnreachable())
+		{
+			return false;
+		}
+
+		TryGenerateMeshName();
+		TryGenerateCustomId();
+		SetUniqueDynamicIds();
+	}
+	return false;
+}
+#endif
+
+void UDynamicObject::SetUniqueDynamicIds()
+{
+	//loop thorugh all dynamics in the scene
+	TArray<UDynamicObject*> dynamics;
+
+	//make a list of all the used objectids
+
+	TArray<FDynamicObjectId> usedIds;
+
+	//get all the dynamic objects in the scene
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		//AStaticMeshActor *Mesh = *ActorItr;
+
+		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
+		if (actorComponent == NULL)
+		{
+			continue;
+		}
+		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
+		if (dynamic == NULL)
+		{
+			continue;
+		}
+		dynamics.Add(dynamic);
+	}
+
+	int32 changedDynamics = 0;
+
+	//unassigned or invalid numbers
+	TArray<UDynamicObject*> UnassignedDynamics;
+
+	//try to put all ids back where they were
+	for (auto& dynamic : dynamics)
+	{
+		//id dynamic custom id is not in usedids - add it
+
+		if (dynamic->MeshName.IsEmpty())
+		{
+			dynamic->TryGenerateMeshName();
+		}
+		FString findId = dynamic->CustomId;
+
+		FDynamicObjectId* FoundId = usedIds.FindByPredicate([findId](const FDynamicObjectId& InItem)
+			{
+				return InItem.Id == findId;
+			});
+
+		if (FoundId == NULL && dynamic->CustomId != "")
+		{
+			usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
+		}
+		else
+		{
+			//assign a new and unused id
+			//GLog->Log("UDynamicObject::SetUniqueDynamicIds found Duplicate or Invalid Id: " + dynamic->CustomId);
+			UnassignedDynamics.Add(dynamic);
+		}
+	}
+
+	for (auto& dynamic : UnassignedDynamics)
+	{
+		dynamic->CustomId = FGuid::NewGuid().ToString();
+		dynamic->IdSourceType = EIdSourceType::CustomId;
+		usedIds.Add(FDynamicObjectId(dynamic->CustomId, dynamic->MeshName));
+		changedDynamics++;
+	}
 }
 
 //utility used in editor
@@ -50,7 +133,6 @@ void UDynamicObject::TryGenerateMeshName()
 				MeshName = staticmeshComponent->GetName();
 			}
 		}
-		
 	}
 }
 
