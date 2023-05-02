@@ -77,5 +77,9 @@ void UHMDOrientation::EndPlay(EEndPlayReason::Type EndPlayReason)
 	{
 		cognitive->OnSessionBegin.RemoveDynamic(this, &UHMDOrientation::OnSessionBegin);
 		cognitive->OnPreSessionEnd.RemoveDynamic(this, &UHMDOrientation::OnSessionEnd);
+		if (cognitive->HasStartedSession())
+		{
+			OnSessionEnd();
+		}
 	}
 }
