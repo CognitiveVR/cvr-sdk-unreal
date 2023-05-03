@@ -34,9 +34,11 @@ void UBatteryLevel::EndInterval()
 	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (cognitive.IsValid())
 	{
-		//get battery level
-		float batteryLevel = FGenericPlatformMisc::GetBatteryLevel();
-		cognitive->sensors->RecordSensor("c3d.battery.level", batteryLevel);
+		int32 batteryLevel = 0;
+#if PLATFORM_ANDROID
+		batteryLevel = FAndroidMisc::GetBatteryState().Level;
+#endif
+		cognitive->sensors->RecordSensor("HMD Battery Level", (float)batteryLevel);
 	}
 }
 void UBatteryLevel::OnSessionEnd()
