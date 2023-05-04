@@ -804,6 +804,41 @@ FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 	return controllers[0]->PlayerCameraManager->GetCameraLocation();
 }
 
+FRotator FAnalyticsProviderCognitiveVR::GetPlayerHMDRotation()
+{
+	//IMPROVEMENT cache this and check for null. playercontrollers DO NOT persist across level changes
+
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	if (controllers.Num() == 0)
+	{
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition no controllers skip");
+		return FRotator();
+	}
+
+	return controllers[0]->PlayerCameraManager->GetCameraRotation();
+}
+
+FRotator FAnalyticsProviderCognitiveVR::GetPlayerHMDLocalRotation()
+{
+	//IMPROVEMENT cache this and check for null. playercontrollers DO NOT persist across level changes
+
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	if (controllers.Num() == 0)
+	{
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition no controllers skip");
+		return FRotator();
+	}
+
+	APawn* pawn = controllers[0]->GetPawn();
+	UActorComponent* pawnComponent = pawn->GetComponentByClass(UCameraComponent::StaticClass());
+	UCameraComponent* pawnCamera = Cast<UCameraComponent>(pawnComponent);
+
+	auto relativeRotation = pawnCamera->GetRelativeRotation();
+	return relativeRotation;
+}
+
 void FAnalyticsProviderCognitiveVR::SetSessionProperty(FString name, int32 value)
 {
 	if (NewSessionProperties.HasField(name))
@@ -967,20 +1002,6 @@ TWeakObjectPtr<UDynamicObject> FAnalyticsProviderCognitiveVR::GetControllerDynam
 		}
 	}
 	return nullptr;
-}
-
-//returns data in local space
-bool FAnalyticsProviderCognitiveVR::TryGetHMD(FXRHMDData& hmdData)
-{
-	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr)
-	{
-		return false;
-	}
-
-	FXRHMDData data;
-	UHeadMountedDisplayFunctionLibrary::GetHMDData(cognitiveActor->GetWorld(), data);
-	return true;
 }
 
 FString FAnalyticsProviderCognitiveVR::GetRuntime()

@@ -38,28 +38,22 @@ void UHMDOrientation::EndInterval()
 void UHMDOrientation::RecordYaw()
 {
 	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	if (cognitive.IsValid() && cognitive->HasStartedSession())
+	if (cognitive.IsValid())
 	{
-		FXRHMDData data;
-		if (cognitive->TryGetHMD(data))
-		{
-			float yaw = data.Rotation.Rotator().Yaw;
-			cognitive->sensors->RecordSensor("c3d.hmd.yaw", yaw);
-		}
+		FRotator rot = cognitive->GetPlayerHMDLocalRotation();
+		float yaw = rot.Yaw;
+		cognitive->sensors->RecordSensor("c3d.hmd.yaw", yaw);
 	}
 }
 
 void UHMDOrientation::RecordPitch()
 {
 	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	if (cognitive.IsValid() && cognitive->HasStartedSession())
+	if (cognitive.IsValid())
 	{
-		FXRHMDData data;
-		if (cognitive->TryGetHMD(data))
-		{
-			float pitch = data.Rotation.Rotator().Pitch;
-			cognitive->sensors->RecordSensor("c3d.hmd.pitch", pitch);
-		}
+		FRotator rot = cognitive->GetPlayerHMDLocalRotation();
+		float pitch = rot.Pitch;
+		cognitive->sensors->RecordSensor("c3d.hmd.pitch", pitch);
 	}
 }
 

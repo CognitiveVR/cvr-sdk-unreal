@@ -18,6 +18,7 @@
 #include "CognitiveVR/Public/DynamicObject.h"
 #include "CognitiveVR/Private/FixationRecorder.h"
 #include "CognitiveVR/Public/CognitiveVRActor.h"
+#include "Classes/Camera/CameraComponent.h"
 
 #include "CognitiveVR/Private/util/util.h"
 #include "CognitiveVR/Private/util/cognitive_log.h"
@@ -134,6 +135,8 @@
 		double GetSessionTimestamp() const;
 
 		FVector GetPlayerHMDPosition();
+		FRotator GetPlayerHMDRotation();
+		FRotator GetPlayerHMDLocalRotation();
 
 		bool HasStartedSession();
 
@@ -178,7 +181,6 @@
 		bool HasEyeTrackingSDK();
 		bool TryGetRoomSize(FVector& roomsize);
 		TWeakObjectPtr<UDynamicObject> GetControllerDynamic(const bool right);
-		bool TryGetHMD(FXRHMDData& hmdData);
 		FString GetRuntime();
 
 		private:
