@@ -70,12 +70,16 @@ void UCustomEventRecorder::StartSession()
 
 void UCustomEventRecorder::Send(FString category)
 {
-	UCustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), NULL, "");
+	FVector position;
+	cog->TryGetPlayerHMDPosition(position);
+	UCustomEventRecorder::Send(category, position, NULL, "");
 }
 
 void UCustomEventRecorder::Send(FString category, TSharedPtr<FJsonObject> properties)
 {
-	UCustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), properties, "");
+	FVector position;
+	cog->TryGetPlayerHMDPosition(position);
+	UCustomEventRecorder::Send(category, position, properties, "");
 }
 
 void UCustomEventRecorder::Send(FString category, FVector Position)
@@ -90,12 +94,16 @@ void UCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<F
 
 void UCustomEventRecorder::Send(FString category, FString dynamicObjectId)
 {
-	UCustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), NULL, dynamicObjectId);
+	FVector position;
+	cog->TryGetPlayerHMDPosition(position);
+	UCustomEventRecorder::Send(category, position, NULL, dynamicObjectId);
 }
 
 void UCustomEventRecorder::Send(FString category, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
 {
-	UCustomEventRecorder::Send(category, cog->GetPlayerHMDPosition(), properties, dynamicObjectId);
+	FVector position;
+	cog->TryGetPlayerHMDPosition(position);
+	UCustomEventRecorder::Send(category, position, properties, dynamicObjectId);
 }
 
 void UCustomEventRecorder::Send(FString category, FVector Position, FString dynamicObjectId)

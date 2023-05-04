@@ -24,6 +24,7 @@ class UArmLength : public UActorComponent
 		float IntervalDuration = 1;
 		int32 CurrentSampleCount = 0; 
 		int32 NumberOfSamples = 60;
+		int32 IntermediateSampleCount = 10;
 
 		float EyeToShoulderHeight = 18.6f;
 		float ArmLength = 0;

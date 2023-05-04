@@ -36,29 +36,47 @@ void UArmLength::EndInterval()
 	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (cognitive.IsValid())
 	{
-		//get arm length
-
-		auto hmdpos = cognitive->GetPlayerHMDPosition();
+		FVector hmdpos;
+		if (!cognitive->TryGetPlayerHMDPosition(hmdpos))
+		{
+			return;
+		}
 		FVector shoulderPos = hmdpos + FVector(0, 0, -EyeToShoulderHeight);
 
+		bool recordedSample = false;
 		TWeakObjectPtr<UDynamicObject> object = cognitive->GetControllerDynamic(false);
 		if (object != nullptr)
 		{
 			auto handPos = object.Get()->GetComponentLocation();
 			ArmLength = FMath::Max(ArmLength, FVector::Distance(handPos, shoulderPos));
+			recordedSample = true;
 		}
 		object = cognitive->GetControllerDynamic(true);
 		if (object != nullptr)
 		{
 			auto handPos = object.Get()->GetComponentLocation();
 			ArmLength = FMath::Max(ArmLength, FVector::Distance(handPos, shoulderPos));
+			recordedSample = true;
 		}
 
-		CurrentSampleCount++;
+		//record arm lengths while continuing to record more sampels
+		if (recordedSample)
+		{
+			CurrentSampleCount++;
+			if (CurrentSampleCount % IntermediateSampleCount == 0)
+			{
+				cognitive->SetSessionProperty("c3d.armlength", ArmLength);
+			}
+		}
+		
 		if (CurrentSampleCount > NumberOfSamples)
 		{
-			cognitive->OnSessionBegin.RemoveDynamic(this, &UArmLength::OnSessionBegin);
 			cognitive->SetSessionProperty("c3d.armlength", ArmLength);
+			
+			//when complete, clear timer
+			auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+			if (world == nullptr) { return; }
+			world->GetTimerManager().ClearTimer(IntervalHandle);
 		}
 	}
 }

@@ -23,9 +23,10 @@ class UHMDHeight : public UActorComponent
 
 		void EndInterval();
 
+		TArray<float> SampledHeights;
 		FTimerHandle IntervalHandle;
 		float IntervalDuration = 1;
 		int32 NumberOfSamples = 60;
-		int32 CurrentSampleCount = 0;
-		float HMDHeight = 0;
+		int32 IntermediateSampleCount = 10;
+		float GetMedianHeight();
 };

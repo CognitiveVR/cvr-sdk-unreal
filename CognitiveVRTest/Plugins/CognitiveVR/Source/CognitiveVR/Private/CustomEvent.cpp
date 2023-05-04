@@ -52,7 +52,7 @@ void UCustomEvent::SendAtHMDPosition()
 		CognitiveLog::Error("UCustomEvent::Send Session not started");
 		return;
 	}
-	Position = cog->GetPlayerHMDPosition();
+	cog->TryGetPlayerHMDPosition(Position);
 	float duration = Util::GetTimestamp() - StartTime;
 	FloatProperties.Add("duration", duration);
 	cog->customEventRecorder->Send(this);

@@ -134,10 +134,9 @@
 
 		double GetSessionTimestamp() const;
 
-		FVector GetPlayerHMDPosition();
-		FRotator GetPlayerHMDRotation();
-		FRotator GetPlayerHMDLocalRotation();
-
+		bool TryGetPlayerHMDPosition(FVector& vector);
+		bool TryGetPlayerHMDRotation(FRotator& rotator);
+		bool TryGetPlayerHMDLocalRotation(FRotator& rotator);
 		bool HasStartedSession();
 
 		FString ApplicationKey = "";

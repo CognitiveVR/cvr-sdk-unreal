@@ -40,9 +40,12 @@ void UHMDOrientation::RecordYaw()
 	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (cognitive.IsValid())
 	{
-		FRotator rot = cognitive->GetPlayerHMDLocalRotation();
-		float yaw = rot.Yaw;
-		cognitive->sensors->RecordSensor("c3d.hmd.yaw", yaw);
+		FRotator rot;
+		if (cognitive->TryGetPlayerHMDLocalRotation(rot))
+		{
+			float yaw = rot.Yaw;
+			cognitive->sensors->RecordSensor("c3d.hmd.yaw", yaw);
+		}
 	}
 }
 
@@ -51,9 +54,12 @@ void UHMDOrientation::RecordPitch()
 	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (cognitive.IsValid())
 	{
-		FRotator rot = cognitive->GetPlayerHMDLocalRotation();
-		float pitch = rot.Pitch;
-		cognitive->sensors->RecordSensor("c3d.hmd.pitch", pitch);
+		FRotator rot;
+		if (cognitive->TryGetPlayerHMDLocalRotation(rot))
+		{
+			float pitch = rot.Pitch;
+			cognitive->sensors->RecordSensor("c3d.hmd.pitch", pitch);
+		}
 	}
 }
 

@@ -34,7 +34,11 @@ void UHandElevation::EndInterval()
 	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cognitive.IsValid() || !cognitive->HasStartedSession()) { return; }
 
-	auto hmdpos = cognitive->GetPlayerHMDPosition();
+	FVector hmdpos;
+	if (!cognitive->TryGetPlayerHMDPosition(hmdpos))
+	{
+		return;
+	}
 	float hmdHeight = hmdpos.Z;
 
 	TWeakObjectPtr<UDynamicObject> object = cognitive->GetControllerDynamic(false);

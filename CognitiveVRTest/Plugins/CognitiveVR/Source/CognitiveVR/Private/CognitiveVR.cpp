@@ -789,7 +789,7 @@ void FAnalyticsProviderCognitiveVR::CacheSceneData()
 	}
 }
 
-FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
+bool FAnalyticsProviderCognitiveVR::TryGetPlayerHMDPosition(FVector& vector)
 {
 	//IMPROVEMENT cache this and check for null. playercontrollers DO NOT persist across level changes
 
@@ -798,13 +798,14 @@ FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 	if (controllers.Num() == 0)
 	{
 		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition no controllers skip");
-		return FVector();
+		return false;
 	}
 
-	return controllers[0]->PlayerCameraManager->GetCameraLocation();
+	vector = controllers[0]->PlayerCameraManager->GetCameraLocation();
+	return true;
 }
 
-FRotator FAnalyticsProviderCognitiveVR::GetPlayerHMDRotation()
+ bool FAnalyticsProviderCognitiveVR::TryGetPlayerHMDRotation(FRotator& rotator)
 {
 	//IMPROVEMENT cache this and check for null. playercontrollers DO NOT persist across level changes
 
@@ -813,13 +814,14 @@ FRotator FAnalyticsProviderCognitiveVR::GetPlayerHMDRotation()
 	if (controllers.Num() == 0)
 	{
 		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition no controllers skip");
-		return FRotator();
+		return false;
 	}
 
-	return controllers[0]->PlayerCameraManager->GetCameraRotation();
+	rotator = controllers[0]->PlayerCameraManager->GetCameraRotation();
+	return true;
 }
 
-FRotator FAnalyticsProviderCognitiveVR::GetPlayerHMDLocalRotation()
+bool FAnalyticsProviderCognitiveVR::TryGetPlayerHMDLocalRotation(FRotator& rotator)
 {
 	//IMPROVEMENT cache this and check for null. playercontrollers DO NOT persist across level changes
 
@@ -828,15 +830,18 @@ FRotator FAnalyticsProviderCognitiveVR::GetPlayerHMDLocalRotation()
 	if (controllers.Num() == 0)
 	{
 		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition no controllers skip");
-		return FRotator();
+		return false;
 	}
 
 	APawn* pawn = controllers[0]->GetPawn();
+	if (pawn == NULL) { return false; }
 	UActorComponent* pawnComponent = pawn->GetComponentByClass(UCameraComponent::StaticClass());
+	if (pawnComponent == NULL) { return false; }
 	UCameraComponent* pawnCamera = Cast<UCameraComponent>(pawnComponent);
+	if (pawnCamera == NULL) { return false; }
 
-	auto relativeRotation = pawnCamera->GetRelativeRotation();
-	return relativeRotation;
+	rotator = pawnCamera->GetRelativeRotation();
+	return true;
 }
 
 void FAnalyticsProviderCognitiveVR::SetSessionProperty(FString name, int32 value)

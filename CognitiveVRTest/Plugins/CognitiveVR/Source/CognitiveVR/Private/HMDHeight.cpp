@@ -27,8 +27,7 @@ void UHMDHeight::OnSessionBegin()
 	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
 	if (world == nullptr) { return; }
 	world->GetTimerManager().SetTimer(IntervalHandle, FTimerDelegate::CreateUObject(this, &UHMDHeight::EndInterval), IntervalDuration, true);
-	CurrentSampleCount = 0;
-	HMDHeight = 0;
+	SampledHeights.Empty();
 }
 
 void UHMDHeight::EndInterval()
@@ -37,18 +36,36 @@ void UHMDHeight::EndInterval()
 	if (cognitive.IsValid())
 	{
 		//get hmd height
-		auto hmdpos = cognitive->GetPlayerHMDPosition();
-		HMDHeight = FMath::Max(HMDHeight,hmdpos.Z);
-		
-		//TODO record average or median hmd height instead of maximum
-
-		CurrentSampleCount++;
-		if (CurrentSampleCount > NumberOfSamples)
+		FVector hmdpos;
+		if (cognitive->TryGetPlayerHMDPosition(hmdpos))
 		{
-			cognitive->OnSessionBegin.RemoveDynamic(this, &UHMDHeight::OnSessionBegin);
-			cognitive->SetSessionProperty("c3d.hmdHeight", HMDHeight);
+			SampledHeights.Add(hmdpos.Z);
+
+			//record median hmd height while still collecting samples
+			if (SampledHeights.Num() % IntermediateSampleCount == 0)
+			{
+				cognitive->SetSessionProperty("c3d.hmdHeight", GetMedianHeight());
+			}
+
+			//record a final median hmd height
+			if (SampledHeights.Num() > NumberOfSamples)
+			{
+				cognitive->SetSessionProperty("c3d.hmdHeight", GetMedianHeight());
+				
+				//when complete, clear timer
+				auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+				if (world == nullptr) { return; }
+				world->GetTimerManager().ClearTimer(IntervalHandle);
+			}
 		}
 	}
+}
+
+float UHMDHeight::GetMedianHeight()
+{
+	int32 index = SampledHeights.Num() / 2;
+	SampledHeights.Sort();
+	return SampledHeights[index];
 }
 
 void UHMDHeight::OnSessionEnd()
