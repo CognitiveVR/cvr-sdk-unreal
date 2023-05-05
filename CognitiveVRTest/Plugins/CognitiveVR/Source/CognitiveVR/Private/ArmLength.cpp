@@ -65,13 +65,13 @@ void UArmLength::EndInterval()
 			CurrentSampleCount++;
 			if (CurrentSampleCount % IntermediateSampleCount == 0)
 			{
-				cognitive->SetSessionProperty("c3d.armlength", ArmLength);
+				cognitive->SetParticipantProperty("armlength", ArmLength);
 			}
 		}
 		
 		if (CurrentSampleCount > NumberOfSamples)
 		{
-			cognitive->SetSessionProperty("c3d.armlength", ArmLength);
+			cognitive->SetParticipantProperty("armlength", ArmLength);
 			
 			//when complete, clear timer
 			auto world = ACognitiveVRActor::GetCognitiveSessionWorld();

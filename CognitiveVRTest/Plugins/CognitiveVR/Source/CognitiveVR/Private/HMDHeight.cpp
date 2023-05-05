@@ -44,13 +44,13 @@ void UHMDHeight::EndInterval()
 			//record median hmd height while still collecting samples
 			if (SampledHeights.Num() % IntermediateSampleCount == 0)
 			{
-				cognitive->SetSessionProperty("c3d.hmdHeight", GetMedianHeight());
+				cognitive->SetParticipantProperty("hmdHeight", GetMedianHeight());
 			}
 
 			//record a final median hmd height
 			if (SampledHeights.Num() > NumberOfSamples)
 			{
-				cognitive->SetSessionProperty("c3d.hmdHeight", GetMedianHeight());
+				cognitive->SetParticipantProperty("hmdHeight", GetMedianHeight());
 				
 				//when complete, clear timer
 				auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
