@@ -47,16 +47,27 @@ void UArmLength::EndInterval()
 		TWeakObjectPtr<UDynamicObject> object = cognitive->GetControllerDynamic(false);
 		if (object != nullptr)
 		{
-			auto handPos = object.Get()->GetComponentLocation();
-			ArmLength = FMath::Max(ArmLength, FVector::Distance(handPos, shoulderPos));
-			recordedSample = true;
+
+			FXRMotionControllerData data;
+			UHeadMountedDisplayFunctionLibrary::GetMotionControllerData(object->GetWorld(), EControllerHand::Right, data);
+			if (data.TrackingStatus == ETrackingStatus::Tracked)
+			{
+				auto handPos = object.Get()->GetComponentLocation();
+				ArmLength = FMath::Max(ArmLength, FVector::Distance(handPos, shoulderPos));
+				recordedSample = true;
+			}
 		}
 		object = cognitive->GetControllerDynamic(true);
 		if (object != nullptr)
 		{
-			auto handPos = object.Get()->GetComponentLocation();
-			ArmLength = FMath::Max(ArmLength, FVector::Distance(handPos, shoulderPos));
-			recordedSample = true;
+			FXRMotionControllerData data;
+			UHeadMountedDisplayFunctionLibrary::GetMotionControllerData(object->GetWorld(), EControllerHand::Right, data);
+			if (data.TrackingStatus == ETrackingStatus::Tracked)
+			{
+				auto handPos = object.Get()->GetComponentLocation();
+				ArmLength = FMath::Max(ArmLength, FVector::Distance(handPos, shoulderPos));
+				recordedSample = true;
+			}
 		}
 
 		//record arm lengths while continuing to record more sampels
