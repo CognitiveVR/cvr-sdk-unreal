@@ -85,6 +85,42 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 			.Text(FText::FromString("Upload Mesh") )
 		]
 	];
+	DetailLayout.EditCategory( "DynamicObject" )
+	.AddCustomRow( NSLOCTEXT("SkyLightDetails", "UpdateSkyLight", "Recapture Scene") )
+	.ValueContent()
+	.MaxDesiredWidth(200.f)
+	.MinDesiredWidth(200.f)
+	[
+		SNew(SHorizontalBox)		
+		+SHorizontalBox::Slot()
+		[
+			SNew(SButton)
+			.ContentPadding(1)
+			.VAlign(VAlign_Center)
+			.HAlign(HAlign_Center)
+			.ToolTipText(this, &UDynamicObjectComponentDetails::HandSetupText)
+			.OnClicked(this, &UDynamicObjectComponentDetails::SetLeftHand)
+			[
+				SNew(STextBlock)
+				.Font(IDetailLayoutBuilder::GetDetailFont())
+				.Text(FText::FromString("Set Left Hand"))
+			]
+		]
+		+ SHorizontalBox::Slot()
+		[
+			SNew(SButton)
+			.ContentPadding(1)
+			.VAlign(VAlign_Center)
+			.HAlign(HAlign_Center)
+			.ToolTipText(this, &UDynamicObjectComponentDetails::HandSetupText)
+			.OnClicked(this, &UDynamicObjectComponentDetails::SetRightHand)
+			[
+				SNew(STextBlock)
+				.Font(IDetailLayoutBuilder::GetDetailFont())
+				.Text(FText::FromString("Set Right Hand"))
+			]
+		]		
+	];
 }
 
 bool UDynamicObjectComponentDetails::HasOwner() const
@@ -119,6 +155,43 @@ FText UDynamicObjectComponentDetails::InvalidUploadText() const
 	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return FText::FromString("Mesh Name is empty"); }
 	if (!FCognitiveEditorTools::GetInstance()->GetCurrentSceneData().IsValid()) { return FText::FromString("Scene Data is invalid"); }
 	return FText::FromString("Valid");
+}
+
+FText UDynamicObjectComponentDetails::HandSetupText() const
+{
+	return FText::FromString("This will configure the Dynamic Object for a specific hand. Make sure to select the Controller Type!");
+}
+
+FReply UDynamicObjectComponentDetails::SetRightHand()
+{
+	SelectedDynamicObject.Get()->IsController = true;
+	SelectedDynamicObject.Get()->IsRightController = true;
+	SelectedDynamicObject.Get()->SyncUpdateWithPlayer = true;
+	SelectedDynamicObject.Get()->IdSourceType = EIdSourceType::GeneratedId;
+
+	//mark package to be saved
+	UWorld* world = SelectedDynamicObject.Get()->GetWorld();
+	if (world != NULL)
+	{
+		world->MarkPackageDirty();
+	}
+	return FReply::Handled();
+}
+
+FReply UDynamicObjectComponentDetails::SetLeftHand()
+{
+	SelectedDynamicObject.Get()->IsController = true;
+	SelectedDynamicObject.Get()->IsRightController = false;
+	SelectedDynamicObject.Get()->SyncUpdateWithPlayer = true;
+	SelectedDynamicObject.Get()->IdSourceType = EIdSourceType::GeneratedId;
+
+	//mark package to be saved
+	UWorld* world = SelectedDynamicObject.Get()->GetWorld();
+	if (world != NULL)
+	{
+		world->MarkPackageDirty();
+	}
+	return FReply::Handled();
 }
 
 FReply UDynamicObjectComponentDetails::TakeScreenshot()

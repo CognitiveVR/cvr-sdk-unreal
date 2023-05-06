@@ -60,19 +60,6 @@ private:
 
 public:
 
-	//should this object be represented by a custom mesh. requires uploading this mesh to the dashboard
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
-		bool UseCustomMeshName = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
-	bool IsController = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
-	bool IsRightController = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
-		EC3DControllerType ControllerType;
-
 	FString ControllerInputImageName;
 
 	//the name of the mesh to render on the dashboard
@@ -81,22 +68,36 @@ public:
 
 	//group and id
 
-	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		EIdSourceType IdSourceType;
 
 	//the custom id for registering this dynamic object. recommended for non-spawned actors
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
 		FString CustomId = "";
 
 	bool HasValidPoolId = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
 		UDynamicIdPoolAsset* IDPool;
 
+	//controllers
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		bool IsController = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		bool IsRightController = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		EC3DControllerType ControllerType;
+
 	//snapshots
+
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		bool SyncUpdateWithPlayer = false;
 
 	//time in seconds between checking if position and rotation updates need to be recorded
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
-		float SnapshotInterval = 0.1;
+		float UpdateInterval = 0.1;
 
 	//distance in cm the object needs to move before sending an update
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
@@ -171,6 +172,7 @@ public:
 	//write all controller input states to snapshot to be written to json next frame
 	void FlushButtons(FControllerInputStateCollection& target);
 
+	void UpdateSyncWithPlayer();
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);
 	void CleanupDynamicObject();
 

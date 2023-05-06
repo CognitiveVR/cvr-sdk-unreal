@@ -118,7 +118,6 @@ void UDynamicObject::TryGenerateMeshName()
 			UStaticMeshComponent* staticmeshComponent = Cast<UStaticMeshComponent>(actorComponent);
 			if (staticmeshComponent != NULL && staticmeshComponent->GetStaticMesh() != NULL)
 			{
-				UseCustomMeshName = true;
 				MeshName = staticmeshComponent->GetStaticMesh()->GetName();
 			}
 		}
@@ -129,7 +128,6 @@ void UDynamicObject::TryGenerateMeshName()
 			USkeletalMeshComponent* staticmeshComponent = Cast<USkeletalMeshComponent>(actorSkeletalComponent);
 			if (staticmeshComponent != NULL && staticmeshComponent->SkeletalMesh != NULL)
 			{
-				UseCustomMeshName = true;
 				MeshName = staticmeshComponent->GetName();
 			}
 		}
@@ -170,6 +168,8 @@ void UDynamicObject::BeginPlay()
 void UDynamicObject::OnPreSessionEnd()
 {
 	CleanupDynamicObject();
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	cogProvider->OnCognitiveInterval.RemoveDynamic(this, &UDynamicObject::UpdateSyncWithPlayer);
 }
 
 //reset so this dynamic can be re-registered in the next session (which might happen in the same game instance)
@@ -281,11 +281,60 @@ void UDynamicObject::Initialize()
 	SnapshotBoolProperty(initSnapshot, "enabled", true);
 	dynamicObjectManager->AddSnapshot(initSnapshot);
 	HasInitialized = true;
+
+	if (SyncUpdateWithPlayer)
+	{
+		cogProvider->OnCognitiveInterval.AddDynamic(this, &UDynamicObject::UpdateSyncWithPlayer);
+	}
 }
 
 TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
 {
 	return ObjectID;
+}
+
+void UDynamicObject::UpdateSyncWithPlayer()
+{
+	FVector currentForward = GetForwardVector();
+
+	float dotRot = FVector::DotProduct(LastForward, currentForward);
+
+	float actualDegrees = FMath::Acos(FMath::Clamp<float>(dotRot, -1.0, 1.0)) * 57.29578;
+
+	bool hasScaleChanged = false;
+
+	if (FMath::Abs(LastScale.Size() - GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+	{
+		hasScaleChanged = true;
+	}
+
+	if (!hasScaleChanged)
+	{
+		if ((LastPosition - GetComponentLocation()).Size() > PositionThreshold)
+		{
+			//moved
+		}
+		else if (actualDegrees > RotationThreshold) //rotator stuff
+		{
+			//rotated
+		}
+		else
+		{
+			//hasn't moved enough
+			return;
+		}
+	}
+
+	//scene component
+	LastPosition = GetComponentLocation();
+	LastForward = currentForward;
+	if (hasScaleChanged)
+	{
+		LastScale = GetComponentTransform().GetScale3D();
+	}
+
+	FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
+	dynamicObjectManager->AddSnapshot(snapObj);
 }
 
 void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction )
@@ -295,10 +344,12 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 	if (!HasInitialized) { return; }
 	if (dynamicObjectManager == nullptr) { return; }
 
+	if (SyncUpdateWithPlayer){return;}
+
 	currentTime += DeltaTime;
-	if (currentTime > SnapshotInterval)
+	if (currentTime > UpdateInterval)
 	{
-		currentTime -= SnapshotInterval;
+		currentTime -= UpdateInterval;
 
 		FVector currentForward = GetForwardVector();
 		

@@ -81,6 +81,9 @@
 			FOnCognitivePostSessionEnd OnPostSessionEnd;
 		UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
 			FOnRequestSend OnRequestSend;
+		UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
+			FOnCognitiveInterval OnCognitiveInterval;
+		
 
 		bool StartSession();
 		virtual bool StartSession(const TArray<FAnalyticsEventAttribute>& Attributes) override;
