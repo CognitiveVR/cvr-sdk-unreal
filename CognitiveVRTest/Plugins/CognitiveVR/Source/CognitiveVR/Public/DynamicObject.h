@@ -172,6 +172,7 @@ public:
 	//write all controller input states to snapshot to be written to json next frame
 	void FlushButtons(FControllerInputStateCollection& target);
 
+	UFUNCTION()
 	void UpdateSyncWithPlayer();
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);
 	void CleanupDynamicObject();
