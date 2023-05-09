@@ -3,7 +3,7 @@
 #include "CognitiveVR/Public/CognitiveVR.h"
 #include "CognitiveVR/Public/CognitiveVRProvider.h"
 //IMPROVEMENT this should be in the header, but can't find ControllerType enum
-#include "CognitiveVR/Public/InputTracker.h"
+#include "CognitiveVR/Private/InputTracker.h"
 
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
