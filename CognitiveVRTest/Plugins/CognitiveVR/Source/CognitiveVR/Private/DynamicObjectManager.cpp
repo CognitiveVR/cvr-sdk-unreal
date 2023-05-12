@@ -4,11 +4,22 @@
 
 UDynamicObjectManager::UDynamicObjectManager()
 {
-
+	cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 }
 
-void UDynamicObjectManager::Initialize()
+void UDynamicObjectManager::OnSessionBegin()
 {
+	//should all these be reset? will dynamic object components correctly re-add themselves?
+	//do they manage their registration outside of sessions?
+
+	snapshots.Empty();
+	manifest.Empty();
+	newManifest.Empty();
+	allObjectIds.Empty();
+	jsonPart = 1;
+	MaxSnapshots = -1;
+
+
 	MaxSnapshots = 16;
 	FString ValueReceived;
 
@@ -52,17 +63,6 @@ void UDynamicObjectManager::Initialize()
 		}
 	}
 
-	cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-}
-
-void UDynamicObjectManager::ClearSnapshots()
-{
-	//when playing in editor, sometimes snapshots will persist in this list
-	snapshots.Empty();
-}
-
-void UDynamicObjectManager::OnSessionBegin()
-{
 	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
 	if (world == nullptr)
 	{
@@ -380,7 +380,6 @@ void UDynamicObjectManager::OnPreSessionEnd()
 	world->GetTimerManager().ClearTimer(AutoSendHandle);
 }
 
-//this uobject is getting deleted - should only happen after OnPreSessionEnd
 void UDynamicObjectManager::OnPostSessionEnd()
 {
 	//clean up variables
@@ -388,8 +387,6 @@ void UDynamicObjectManager::OnPostSessionEnd()
 	manifest.Empty();
 	newManifest.Empty();
 	jsonPart = 1;
-	callbackInitialized = false;
-	cogProvider.Reset();
 }
 
 void UDynamicObjectManager::AddSnapshot(FDynamicObjectSnapshot snapshot)

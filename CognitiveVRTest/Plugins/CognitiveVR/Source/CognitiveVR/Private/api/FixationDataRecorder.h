@@ -41,8 +41,6 @@ class UCognitiveVRBlueprints;
 
 	public:
 		UFixationDataRecorder();
-		//call this immediately after creation - sets callbacks and reference to CognitiveVRProvider
-		void Initialize();
 		void RecordFixationEnd(const FFixation& data);
 
 		//send all outstanding fixations to Cognitive dashboard

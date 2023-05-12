@@ -2,6 +2,7 @@
 
 #include "CognitiveVR/Public/CognitiveVR.h"
 #include "CognitiveVR/Public/CognitiveVRProvider.h"
+#include "Classes/Camera/CameraComponent.h"
 //IMPROVEMENT this should be in the header, but can't find ControllerType enum
 #include "CognitiveVR/Private/InputTracker.h"
 
@@ -11,10 +12,21 @@ bool FAnalyticsProviderCognitiveVR::bHasSessionStarted = false;
 
 void FAnalyticsCognitiveVR::StartupModule()
 {
+	GLog->Log("AnalyticsCognitiveVR::StartupModule");
+
 	TSharedPtr<FAnalyticsProviderCognitiveVR> cog = MakeShareable(new FAnalyticsProviderCognitiveVR());
 	AnalyticsProvider = cog;
 	CognitiveVRProvider = TWeakPtr<FAnalyticsProviderCognitiveVR>(cog);
-	GLog->Log("AnalyticsCognitiveVR::StartupModule");
+
+	//create non-initialized data collectors and other internal stuff
+	CognitiveVRProvider.Pin()->exitpoll = MakeShareable(new ExitPoll());
+	CognitiveVRProvider.Pin()->customEventRecorder = new UCustomEventRecorder();
+	CognitiveVRProvider.Pin()->sensors = new USensors();
+	CognitiveVRProvider.Pin()->fixationDataRecorder = new UFixationDataRecorder();
+	CognitiveVRProvider.Pin()->gazeDataRecorder = new UGazeDataRecorder();
+	CognitiveVRProvider.Pin()->localCache = MakeShareable(new LocalCache(FPaths::GeneratedConfigDir()));
+	CognitiveVRProvider.Pin()->network = MakeShareable(new Network());
+	CognitiveVRProvider.Pin()->dynamicObjectManager = new UDynamicObjectManager();
 }
 
 void FAnalyticsProviderCognitiveVR::HandleSublevelLoaded(ULevel* level, UWorld* world)
@@ -221,7 +233,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	}
 
 	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr)
+	if (cognitiveActor == nullptr || !cognitiveActor->IsValidLowLevel())
 	{
 		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::StartSession could not find Cognitive Actor in your level");
 		return false;
@@ -242,23 +254,6 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::StartSession ApplicationKey is invalid");
 		return false;
 	}
-
-	//construct data recording streams
-	//Q: why don't these listen for relevant DECLARE_DYNAMIC_MULTICAST_DELEGATE?
-	//A: because they would have to be uobjects and uobjects are garbaged on scene change
-	exitpoll = MakeShareable(new ExitPoll());
-	customEventRecorder = new UCustomEventRecorder();
-	customEventRecorder->Initialize();
-	sensors = new USensors();
-	sensors->Initialize();
-	fixationDataRecorder = new UFixationDataRecorder();
-	fixationDataRecorder->Initialize();
-	gazeDataRecorder = new UGazeDataRecorder();
-	gazeDataRecorder->Initialize();
-	localCache = MakeShareable(new LocalCache(FPaths::GeneratedConfigDir()));
-	network = MakeShareable(new Network());
-	dynamicObjectManager = new UDynamicObjectManager();
-	dynamicObjectManager->Initialize();
 
 	//pre session startup
 	CacheSceneData();
@@ -369,21 +364,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	dynamicObjectManager->OnPostSessionEnd();
 	sensors->PostSessionEnd();
 	OnPostSessionEnd.Broadcast();
-
-	//reset components and uobjects
-	network.Reset();
-	delete(customEventRecorder);
-	delete(fixationDataRecorder);
-	delete(gazeDataRecorder);
-	delete(sensors);
-	delete(dynamicObjectManager);
-	UCognitiveVRBlueprints::cog.Reset();
-	UCustomEvent::cog.Reset();
-	if (localCache.IsValid())
-	{
-		localCache->Close();
-		localCache.Reset();
-	}
+	localCache->Close();
 
 	//cleanup pause and level load delegates
 	if (!PauseHandle.IsValid())
@@ -400,7 +381,6 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	SessionId = "";
 	bHasCustomSessionName = false;
 	bHasSessionStarted = false;
-	//currentWorld.Reset();
 
 	//broadcast end session
 	CognitiveLog::Info("CognitiveVR EndSession");

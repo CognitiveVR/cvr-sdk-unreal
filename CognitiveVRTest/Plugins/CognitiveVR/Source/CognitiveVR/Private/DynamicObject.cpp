@@ -295,6 +295,8 @@ TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
 
 void UDynamicObject::UpdateSyncWithPlayer()
 {
+	if (dynamicObjectManager == nullptr) { return; }
+
 	FVector currentForward = GetForwardVector();
 
 	float dotRot = FVector::DotProduct(LastForward, currentForward);
@@ -475,6 +477,7 @@ FDynamicObjectSnapshot UDynamicObject::SnapshotIntegerProperty(UPARAM(ref)FDynam
 
 void UDynamicObject::SendDynamicObjectSnapshot(UPARAM(ref)FDynamicObjectSnapshot& snapshot)
 {
+	if (dynamicObjectManager == nullptr) { return; }
 	dynamicObjectManager->AddSnapshot(snapshot);
 }
 

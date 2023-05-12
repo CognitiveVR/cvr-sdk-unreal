@@ -6,12 +6,16 @@
 
 USensors::USensors()
 {
-
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 }
 
-void USensors::Initialize()
+void USensors::StartSession()
 {
 	LastSensorValues.Empty();
+	SensorDataPoints.Empty();
+	sensorData.Empty();
+	jsonPart = 1;
+
 	FString ValueReceived;
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorDataLimit", false);
@@ -54,11 +58,6 @@ void USensors::Initialize()
 		}
 	}
 
-	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-}
-
-void USensors::StartSession()
-{
 	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
 	if (world == nullptr)
 	{
@@ -84,6 +83,8 @@ void USensors::RecordSensor(FString Name, float value)
 	if (FMath::IsNaN(value)) { return; }
 
 	UWorld* world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	if (world == nullptr) { return; }
+
 	float realtime = UGameplayStatics::GetRealTimeSeconds(world);
 	if (SensorDataPoints.Contains(Name))
 	{
@@ -113,6 +114,8 @@ void USensors::RecordSensor(FString Name, double value)
 	if (FMath::IsNaN(value)) { return; }
 
 	UWorld* world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	if (world == nullptr) { return; }
+
 	float realtime = UGameplayStatics::GetRealTimeSeconds(world);
 	if (SensorDataPoints.Contains(Name))
 	{
@@ -255,5 +258,5 @@ void USensors::PreSessionEnd()
 
 void USensors::PostSessionEnd()
 {
-	cog.Reset();
+	
 }

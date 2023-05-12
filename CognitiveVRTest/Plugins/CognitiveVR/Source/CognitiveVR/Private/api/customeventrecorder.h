@@ -22,8 +22,8 @@ class UCognitiveVRBlueprints;
 
 	private:
 
-		uint64 lastFrameCount;
-		int32 consecutiveFrame;
+		uint64 lastFrameCount = 0;
+		int32 consecutiveFrame = 0;
 
 		
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
@@ -48,10 +48,10 @@ class UCognitiveVRBlueprints;
 		UFUNCTION()
 		void PostSessionEnd();
 
+		bool HasInitialized = false;
+
 	public:
 		UCustomEventRecorder();
-		//call this immediately after creation - sets callbacks and reference to CognitiveVRProvider
-		void Initialize();
 
 		//record event with name linked to a dynamic object
 		void Send(FString category, FString dynamicObjectId);

@@ -8,7 +8,7 @@
 #include "MotionControllerComponent.h"
 #include "InputTracker.generated.h"
 
-UCLASS()
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class COGNITIVEVR_API UInputTracker : public UActorComponent
 {
 	GENERATED_BODY()
@@ -17,9 +17,11 @@ private:
 	UDynamicObject* LeftHand;
 	UDynamicObject* RightHand;
 
-public:	
 	float Interval = 0.1;
 	UInputTracker();
+
+public:	
+	UFUNCTION()
 	void FindControllers();
 
 private:

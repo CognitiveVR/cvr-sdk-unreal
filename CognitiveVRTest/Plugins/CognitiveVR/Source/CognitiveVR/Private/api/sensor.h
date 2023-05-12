@@ -48,7 +48,6 @@ class UCognitiveVRBlueprints;
 
 	public:
 		USensors();
-		void Initialize();
 		void InitializeSensor(FString sensorName, float hzRate = 10, float initialValue = 0);
 		void RecordSensor(FString Name, float value);
 		void RecordSensor(FString Name, double value);

@@ -33,17 +33,15 @@ class UCognitiveVRBlueprints;
 		float LastSendTime = -60;
 		int32 GazeBatchSize = 100;
 
+		//send all outstanding gaze data to Cognitive dashboard
+		UFUNCTION()
+			void SendData(bool copyDataToCache);
+
 	public:
 		UGazeDataRecorder();
-		//call this immediately after creation - sets callbacks and reference to CognitiveVRProvider
-		void Initialize();
 
 		void BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos, FString objectId = "");
 		void BuildSnapshot(FVector position, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos);
-
-		//send all outstanding gaze data to Cognitive dashboard
-		UFUNCTION()
-		void SendData(bool copyDataToCache);
 
 		float GetLastSendTime() { return LastSendTime; }
 		int32 GetPartNumber() { return jsonPart; }

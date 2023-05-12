@@ -18,7 +18,6 @@
 #include "CognitiveVR/Public/DynamicObject.h"
 #include "CognitiveVR/Private/FixationRecorder.h"
 #include "CognitiveVR/Public/CognitiveVRActor.h"
-#include "Classes/Camera/CameraComponent.h"
 
 #include "CognitiveVR/Private/util/util.h"
 #include "CognitiveVR/Private/util/cognitive_log.h"
