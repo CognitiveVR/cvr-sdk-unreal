@@ -29,12 +29,9 @@ private:
 	TArray<FDynamicObjectManifestEntry> newManifest;
 	TArray<TSharedPtr<FDynamicObjectId>> allObjectIds;
 	int32 jsonPart = 1;
-	int32 MaxSnapshots = -1;
+	int32 MaxSnapshots = 64;
 
-	int32 MinTimer = 5;
 	int32 AutoTimer = 10;
-	int32 ExtremeBatchSize = 128;
-	float NextSendTime = 0;
 	float LastSendTime = -60;
 	FTimerHandle AutoSendHandle;
 	FString DynamicObjectFileType;
@@ -42,7 +39,6 @@ private:
 	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider;
 
 	UDynamicObjectManager();
-	void TrySendData();
 	UFUNCTION()
 	void OnSessionBegin();
 	UFUNCTION()

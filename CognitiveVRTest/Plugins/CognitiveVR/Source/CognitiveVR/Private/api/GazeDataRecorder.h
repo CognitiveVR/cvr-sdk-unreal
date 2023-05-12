@@ -16,6 +16,7 @@ class UCognitiveVRBlueprints;
 	class COGNITIVEVR_API UGazeDataRecorder
 	{
 		friend class FAnalyticsProviderCognitiveVR;
+		friend class FAnalyticsCognitiveVR;		
 
 	private:
 
@@ -37,8 +38,10 @@ class UCognitiveVRBlueprints;
 		UFUNCTION()
 			void SendData(bool copyDataToCache);
 
-	public:
 		UGazeDataRecorder();
+
+	public:
+		
 
 		void BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos, FString objectId = "");
 		void BuildSnapshot(FVector position, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos);

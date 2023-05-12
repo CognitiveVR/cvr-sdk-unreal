@@ -28,26 +28,6 @@ void USensors::StartSession()
 		}
 	}
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorExtremeLimit", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			ExtremeBatchSize = parsedValue;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorMinTimer", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			MinTimer = parsedValue;
-		}
-	}
-
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SensorAutoTimer", false);
 	if (ValueReceived.Len() > 0)
 	{
@@ -105,7 +85,7 @@ void USensors::RecordSensor(FString Name, float value)
 	sensorDataCount ++;
 	if (sensorDataCount >= SensorThreshold)
 	{
-		USensors::TrySendData();
+		SendData(false);
 	}
 }
 
@@ -136,20 +116,8 @@ void USensors::RecordSensor(FString Name, double value)
 	sensorDataCount++;
 	if (sensorDataCount >= SensorThreshold)
 	{
-		USensors::TrySendData();
+		SendData(false);
 	}
-}
-
-void USensors::TrySendData()
-{
-	bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
-	bool withinExtremeBatchSize = sensorDataCount < ExtremeBatchSize;
-
-	if (withinMinTimer && withinExtremeBatchSize)
-	{
-		return;
-	}
-	SendData(false);
 }
 
 void USensors::SendData(bool copyDataToCache)
@@ -216,14 +184,15 @@ void USensors::SendData(bool copyDataToCache)
 		allData.Append("]},");
 	}
 
+	sensorDataCount = 0;
+	for (auto& entry : SensorDataPoints)
+	{
+		entry.Value.Empty();
+	}
+
 	//if no data was serialized, skip sending an empty request
 	if (allData.Len() == 0)
-	{
-		for (auto& entry : SensorDataPoints)
-		{
-			entry.Value.Empty();
-		}
-		sensorDataCount = 0;
+	{	
 		return;
 	}
 
@@ -240,7 +209,6 @@ void USensors::SendData(bool copyDataToCache)
 	{
 		entry.Value.Empty();
 	}
-	sensorDataCount = 0;
 }
 
 TMap<FString, float> USensors::GetLastSensorValues()

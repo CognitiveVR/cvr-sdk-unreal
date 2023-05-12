@@ -25,26 +25,6 @@ void UFixationDataRecorder::StartSession()
 		}
 	}
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationExtremeLimit", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			ExtremeBatchSize = parsedValue;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationMinTimer", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			MinTimer = parsedValue;
-		}
-	}
-
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationAutoTimer", false);
 	if (ValueReceived.Len() > 0)
 	{

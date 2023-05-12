@@ -27,26 +27,6 @@ void UCustomEventRecorder::StartSession()
 		}
 	}
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventExtremeLimit", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			ExtremeBatchSize = parsedValue;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventMinTimer", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			MinTimer = parsedValue;
-		}
-	}
-
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "CustomEventAutoTimer", false);
 	if (ValueReceived.Len() > 0)
 	{
@@ -208,20 +188,8 @@ void UCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<F
 
 	if (events.Num() > CustomEventBatchSize)
 	{
-		TrySendData();
+		SendData(false);
 	}
-}
-
-void UCustomEventRecorder::TrySendData()
-{
-	bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
-	bool withinExtremeBatchSize = events.Num() < ExtremeBatchSize;
-
-	if (withinMinTimer && withinExtremeBatchSize)
-	{
-		return;
-	}
-	SendData(false);
 }
 
 void UCustomEventRecorder::SendData(bool copyDataToCache)

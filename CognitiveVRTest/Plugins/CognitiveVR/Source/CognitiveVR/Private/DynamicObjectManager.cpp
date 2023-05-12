@@ -17,10 +17,8 @@ void UDynamicObjectManager::OnSessionBegin()
 	newManifest.Empty();
 	allObjectIds.Empty();
 	jsonPart = 1;
-	MaxSnapshots = -1;
 
-
-	MaxSnapshots = 16;
+	MaxSnapshots = 64;
 	FString ValueReceived;
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicDataLimit", false);
@@ -30,26 +28,6 @@ void UDynamicObjectManager::OnSessionBegin()
 		if (dynamicLimit > 0)
 		{
 			MaxSnapshots = dynamicLimit;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicExtremeLimit", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			ExtremeBatchSize = parsedValue;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicMinTimer", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			MinTimer = parsedValue;
 		}
 	}
 
@@ -253,18 +231,6 @@ TSharedPtr<FJsonValueObject> UDynamicObjectManager::WriteSnapshotToJson(FDynamic
 	return MakeShareable(new FJsonValueObject(snapObj));
 }
 
-void UDynamicObjectManager::TrySendData()
-{
-	bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
-	bool withinExtremeBatchSize = newManifest.Num() + snapshots.Num() < ExtremeBatchSize;
-
-	if (withinMinTimer && withinExtremeBatchSize)
-	{
-		return;
-	}
-	SendData(false);
-}
-
 void UDynamicObjectManager::SendData(bool copyDataToCache)
 {
 	if (!cogProvider.IsValid() || !cogProvider->HasStartedSession())
@@ -394,6 +360,6 @@ void UDynamicObjectManager::AddSnapshot(FDynamicObjectSnapshot snapshot)
 	snapshots.Add(snapshot);
 	if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
 	{
-		TrySendData();
+		SendData(false);
 	}
 }
