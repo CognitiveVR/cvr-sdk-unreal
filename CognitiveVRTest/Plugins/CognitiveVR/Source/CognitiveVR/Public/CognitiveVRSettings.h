@@ -35,6 +35,9 @@ class UCognitiveVRSettings : public UAnalyticsSettingsBase
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 		FString Dashboard = "app.cognitive3d.com/";
 
+	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
+		bool AutomaticallySetTrackingScene = true;
+
 	/** The number of player snapshots that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Gaze")
 		int32 GazeBatchSize = 64;

@@ -171,8 +171,9 @@
 
 		FString GetAttributionParameters();
 		bool HasEyeTrackingSDK();
+		void SetTrackingScene(FString levelName);
 
-		private:
+	private:
 		FDelegateHandle PauseHandle;
 		FDelegateHandle LevelLoadHandle;
 		FDelegateHandle SublevelLoadedHandle;
@@ -182,4 +183,6 @@
 		void HandleSublevelLoaded(ULevel* level, UWorld* world);
 		void HandleSublevelUnloaded(ULevel* level, UWorld* world);
 		void HandleApplicationWillEnterBackground();
+		bool AutomaticallySetTrackingScene = true;
+		
 	};

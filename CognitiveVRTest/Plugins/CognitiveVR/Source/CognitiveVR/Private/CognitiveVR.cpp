@@ -24,6 +24,9 @@ void FAnalyticsProviderCognitiveVR::HandleSublevelLoaded(ULevel* level, UWorld* 
 		FlushAndCacheEvents();
 		return;
 	}
+
+	if (!AutomaticallySetTrackingScene) { return; }
+
 	FString levelName = level->GetFullGroupName(true);
 	//GLog->Log("FAnalyticsProviderCognitiveVR::HandleSublevelUnloaded Loaded sublevel: " + levelName);
 	auto currentSceneData = GetCurrentSceneData();
@@ -70,6 +73,9 @@ void FAnalyticsProviderCognitiveVR::HandleSublevelUnloaded(ULevel* level, UWorld
 		FlushAndCacheEvents();
 		return;
 	}
+
+	if (!AutomaticallySetTrackingScene) { return; }
+
 	FString levelName = level->GetFullGroupName(true);
 	//GLog->Log("FAnalyticsProviderCognitiveVR::HandleSublevelUnloaded Unloaded sublevel: " + levelName);
 	auto currentSceneData = GetCurrentSceneData();
@@ -132,6 +138,7 @@ void FAnalyticsProviderCognitiveVR::HandlePostLevelLoad(UWorld* world)
 		FlushAndCacheEvents();
 		return;
 	}
+	if (!AutomaticallySetTrackingScene) { return; }
 
 	FString levelName = level->GetFullGroupName(true);
 	//GLog->Log("FAnalyticsProviderCognitiveVR::HandlePostLevelLoad level post load level: " + levelName);
@@ -943,4 +950,17 @@ void FAnalyticsProviderCognitiveVR::HandleApplicationWillEnterBackground()
 		return;
 	}
 	localCache->SerializeToFile();
+}
+
+void FAnalyticsProviderCognitiveVR::SetTrackingScene(FString levelName)
+{
+	TSharedPtr<FSceneData> data = GetSceneData(levelName);
+	if (data.IsValid())
+	{
+		ForceWriteSessionMetadata = true;
+		CurrentTrackingSceneId = data->Id;
+		LastSceneData = data;
+		SceneStartTime = Util::GetTimestamp();
+	}
+	//todo consider events for arrival/departure from scenes here
 }
