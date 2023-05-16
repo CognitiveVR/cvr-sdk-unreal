@@ -45,7 +45,7 @@ private:
 	bool HasInitialized = false;
 
 	//used to set unique object id from snapshot or when accessed from elsewhere
-	//void GenerateObjectId();
+	void ValidateObjectId();
 
 	//must be called after session begins - dynamicObjectManager doesn't exist until then - and holds all the dynamic object data
 	UFUNCTION()

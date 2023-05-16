@@ -180,22 +180,7 @@ void UDynamicObject::Initialize()
 		return;
 	}
 
-	if (IdSourceType == EIdSourceType::PoolId)
-	{
-		FString id;
-		IDPool->GetId(id);
-		ObjectID = MakeShareable(new FDynamicObjectId(id, MeshName));
-	}
-	else if (IdSourceType == EIdSourceType::CustomId)
-	{
-		ObjectID = MakeShareable(new FDynamicObjectId(CustomId, MeshName));
-	}
-	else if (IdSourceType == EIdSourceType::GeneratedId)
-	{
-		FString generatedId = FGuid::NewGuid().ToString();
-		ObjectID = MakeShareable(new FDynamicObjectId(generatedId, MeshName));
-	}
-
+	ValidateObjectId();
 	dynamicObjectManager->RegisterObjectId(MeshName, ObjectID->Id, GetOwner()->GetName(),IsController,IsRightController,ControllerType);
 
 	if (SnapshotOnBeginPlay)
@@ -284,6 +269,37 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 	}
 }
 
+void UDynamicObject::ValidateObjectId()
+{
+	//skip if id is already valid
+	if (ObjectID.IsValid() && !ObjectID->Id.IsEmpty())
+	{
+		return;
+	}
+
+	//if id pool isn't set up correctly, fall back to generating an id from a guid
+	if (IdSourceType == EIdSourceType::PoolId && IDPool == NULL)
+	{
+		IdSourceType = EIdSourceType::GeneratedId;
+	}
+
+	if (IdSourceType == EIdSourceType::PoolId)
+	{
+		FString id;
+		IDPool->GetId(id);
+		ObjectID = MakeShareable(new FDynamicObjectId(id, MeshName));
+	}
+	else if (IdSourceType == EIdSourceType::CustomId)
+	{
+		ObjectID = MakeShareable(new FDynamicObjectId(CustomId, MeshName));
+	}
+	else if (IdSourceType == EIdSourceType::GeneratedId)
+	{
+		FString generatedId = FGuid::NewGuid().ToString();
+		ObjectID = MakeShareable(new FDynamicObjectId(generatedId, MeshName));
+	}
+}
+
 FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 {
 	//decide if the object needs a new entry in the manifest
@@ -303,7 +319,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 
 	if (needObjectId)
 	{
-		//GenerateObjectId();
+		ValidateObjectId();
 		dynamicObjectManager->RegisterObjectId(MeshName, GetObjectId()->Id, GetOwner()->GetName(), IsController, IsRightController, ControllerType);
 	}
 
@@ -363,10 +379,8 @@ void UDynamicObject::BeginEngagement(UDynamicObject* target, FString engagementN
 {
 	if (target != nullptr)
 	{
-		if (target->ObjectID.IsValid())
-		{
-			target->BeginEngagementId(target->ObjectID->Id, engagementName, UniqueEngagementId);
-		}
+		target->ValidateObjectId();
+		target->BeginEngagementId(target->ObjectID->Id, engagementName, UniqueEngagementId);
 	}
 }
 
@@ -396,10 +410,8 @@ void UDynamicObject::EndEngagement(UDynamicObject* target, FString engagementNam
 {
 	if (target != nullptr)
 	{
-		if (target->ObjectID.IsValid())
-		{
-			target->EndEngagementId(target->ObjectID->Id, engagementName, UniqueEngagementId);
-		}
+		target->ValidateObjectId();
+		target->EndEngagementId(target->ObjectID->Id, engagementName, UniqueEngagementId);
 	}
 }
 
@@ -491,6 +503,10 @@ void UDynamicObject::CleanupDynamicObject()
 	//go through all engagements and send any that match this objectid
 	for (auto& Elem : Engagements)
 	{
+		if (!ObjectID.IsValid() || ObjectID->Id.IsEmpty())
+		{
+			continue;
+		}
 		if (Elem.Value->GetDynamicId() == ObjectID->Id)
 		{
 			Elem.Value->SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
