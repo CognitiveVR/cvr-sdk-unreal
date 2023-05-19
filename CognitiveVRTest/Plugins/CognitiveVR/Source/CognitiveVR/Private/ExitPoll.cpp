@@ -160,14 +160,20 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 {
 	auto provider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+	if (!provider.IsValid())
+	{
+		return;
+	}
+
+	auto cog = provider.Pin();
 	auto questionSet = GetCurrentQuestionSet();
 	FExitPollResponse responses = FExitPollResponse();
 	responses.duration = Util::GetTimestamp() - lastStartTime;
 	responses.hook = lastHook;
-	responses.userId = provider.Pin()->GetDeviceID();
-	responses.participantId = provider.Pin()->GetUserID();
+	responses.userId = cog->GetDeviceID();
+	responses.participantId = cog->GetUserID();
 	responses.questionSetId = questionSet.id;
-	responses.sessionId = provider.Pin()->GetSessionID();
+	responses.sessionId = cog->GetSessionID();
 	responses.answers = answers;
 	SendQuestionResponse(responses);
 }

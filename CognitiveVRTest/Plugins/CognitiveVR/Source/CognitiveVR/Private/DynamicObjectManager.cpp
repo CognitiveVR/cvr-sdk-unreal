@@ -4,12 +4,21 @@
 
 UDynamicObjectManager::UDynamicObjectManager()
 {
-
+	cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 }
 
-void UDynamicObjectManager::Initialize()
+void UDynamicObjectManager::OnSessionBegin()
 {
-	MaxSnapshots = 16;
+	//should all these be reset? will dynamic object components correctly re-add themselves?
+	//do they manage their registration outside of sessions?
+
+	snapshots.Empty();
+	manifest.Empty();
+	newManifest.Empty();
+	allObjectIds.Empty();
+	jsonPart = 1;
+
+	MaxSnapshots = 64;
 	FString ValueReceived;
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicDataLimit", false);
@@ -19,26 +28,6 @@ void UDynamicObjectManager::Initialize()
 		if (dynamicLimit > 0)
 		{
 			MaxSnapshots = dynamicLimit;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicExtremeLimit", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			ExtremeBatchSize = parsedValue;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "DynamicMinTimer", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			MinTimer = parsedValue;
 		}
 	}
 
@@ -52,17 +41,6 @@ void UDynamicObjectManager::Initialize()
 		}
 	}
 
-	cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-}
-
-void UDynamicObjectManager::ClearSnapshots()
-{
-	//when playing in editor, sometimes snapshots will persist in this list
-	snapshots.Empty();
-}
-
-void UDynamicObjectManager::OnSessionBegin()
-{
 	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
 	if (world == nullptr)
 	{
@@ -72,7 +50,7 @@ void UDynamicObjectManager::OnSessionBegin()
 	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &UDynamicObjectManager::SendData, false), AutoTimer, true);
 }
 
-//TODO is this used?
+//this is used when generating a simple unique id at runtime
 TSharedPtr<FDynamicObjectId> UDynamicObjectManager::GetUniqueId(FString meshName)
 {
 	TSharedPtr<FDynamicObjectId> freeId;
@@ -99,10 +77,13 @@ bool UDynamicObjectManager::HasRegisteredObjectId(FString id)
 }
 
 //should be rewritten to return an objectid and take some arguments
-//should include iscontroller and isrightcontroller args
 void UDynamicObjectManager::RegisterObjectId(FString MeshName, FString Id, FString ActorName, bool IsController, bool IsRightController, FString ControllerType)
 {
-	auto ObjectID = MakeShareable(new FDynamicObjectId(Id, MeshName));
+	if (Id.IsEmpty())
+	{
+		return;
+	}
+	TSharedPtr<FDynamicObjectId> ObjectID = MakeShareable(new FDynamicObjectId(Id, MeshName));
 	allObjectIds.Add(ObjectID);
 	FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(Id, ActorName, MeshName);
 	if (IsController)
@@ -112,6 +93,18 @@ void UDynamicObjectManager::RegisterObjectId(FString MeshName, FString Id, FStri
 	}
 	manifest.Add(entry);
 	newManifest.Add(entry);
+}
+
+void UDynamicObjectManager::CacheControllerPointer(UDynamicObject* object, bool isRight)
+{
+	if (isRight)
+	{
+		RightHandController = object;
+	}
+	else
+	{
+		LeftHandController = object;
+	}
 }
 
 TSharedPtr<FJsonValueObject> UDynamicObjectManager::WriteSnapshotToJson(FDynamicObjectSnapshot snapshot)
@@ -238,18 +231,6 @@ TSharedPtr<FJsonValueObject> UDynamicObjectManager::WriteSnapshotToJson(FDynamic
 	return MakeShareable(new FJsonValueObject(snapObj));
 }
 
-void UDynamicObjectManager::TrySendData()
-{
-	bool withinMinTimer = LastSendTime + MinTimer > UCognitiveVRBlueprints::GetSessionDuration();
-	bool withinExtremeBatchSize = newManifest.Num() + snapshots.Num() < ExtremeBatchSize;
-
-	if (withinMinTimer && withinExtremeBatchSize)
-	{
-		return;
-	}
-	SendData(false);
-}
-
 void UDynamicObjectManager::SendData(bool copyDataToCache)
 {
 	if (!cogProvider.IsValid() || !cogProvider->HasStartedSession())
@@ -365,7 +346,6 @@ void UDynamicObjectManager::OnPreSessionEnd()
 	world->GetTimerManager().ClearTimer(AutoSendHandle);
 }
 
-//this uobject is getting deleted - should only happen after OnPreSessionEnd
 void UDynamicObjectManager::OnPostSessionEnd()
 {
 	//clean up variables
@@ -373,8 +353,6 @@ void UDynamicObjectManager::OnPostSessionEnd()
 	manifest.Empty();
 	newManifest.Empty();
 	jsonPart = 1;
-	callbackInitialized = false;
-	cogProvider.Reset();
 }
 
 void UDynamicObjectManager::AddSnapshot(FDynamicObjectSnapshot snapshot)
@@ -382,6 +360,6 @@ void UDynamicObjectManager::AddSnapshot(FDynamicObjectSnapshot snapshot)
 	snapshots.Add(snapshot);
 	if (snapshots.Num() + newManifest.Num() > MaxSnapshots)
 	{
-		TrySendData();
+		SendData(false);
 	}
 }

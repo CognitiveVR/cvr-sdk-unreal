@@ -2,8 +2,9 @@
 
 #include "CognitiveVR/Public/CognitiveVR.h"
 #include "CognitiveVR/Public/CognitiveVRProvider.h"
+#include "Classes/Camera/CameraComponent.h"
 //IMPROVEMENT this should be in the header, but can't find ControllerType enum
-#include "CognitiveVR/Public/InputTracker.h"
+#include "CognitiveVR/Private/InputTracker.h"
 
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
@@ -11,10 +12,21 @@ bool FAnalyticsProviderCognitiveVR::bHasSessionStarted = false;
 
 void FAnalyticsCognitiveVR::StartupModule()
 {
+	GLog->Log("AnalyticsCognitiveVR::StartupModule");
+
 	TSharedPtr<FAnalyticsProviderCognitiveVR> cog = MakeShareable(new FAnalyticsProviderCognitiveVR());
 	AnalyticsProvider = cog;
 	CognitiveVRProvider = TWeakPtr<FAnalyticsProviderCognitiveVR>(cog);
-	GLog->Log("AnalyticsCognitiveVR::StartupModule");
+
+	//create non-initialized data collectors and other internal stuff
+	CognitiveVRProvider.Pin()->exitpoll = MakeShareable(new ExitPoll());
+	CognitiveVRProvider.Pin()->customEventRecorder = new UCustomEventRecorder();
+	CognitiveVRProvider.Pin()->sensors = new USensors();
+	CognitiveVRProvider.Pin()->fixationDataRecorder = new UFixationDataRecorder();
+	CognitiveVRProvider.Pin()->gazeDataRecorder = new UGazeDataRecorder();
+	CognitiveVRProvider.Pin()->localCache = MakeShareable(new LocalCache(FPaths::GeneratedConfigDir()));
+	CognitiveVRProvider.Pin()->network = MakeShareable(new Network());
+	CognitiveVRProvider.Pin()->dynamicObjectManager = new UDynamicObjectManager();
 }
 
 void FAnalyticsProviderCognitiveVR::HandleSublevelLoaded(ULevel* level, UWorld* world)
@@ -228,7 +240,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	}
 
 	auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	if (cognitiveActor == nullptr)
+	if (cognitiveActor == nullptr || !cognitiveActor->IsValidLowLevel())
 	{
 		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::StartSession could not find Cognitive Actor in your level");
 		return false;
@@ -250,23 +262,6 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		return false;
 	}
 
-	//construct data recording streams
-	//Q: why don't these listen for relevant DECLARE_DYNAMIC_MULTICAST_DELEGATE?
-	//A: because they would have to be uobjects and uobjects are garbaged on scene change
-	exitpoll = MakeShareable(new ExitPoll());
-	customEventRecorder = new UCustomEventRecorder();
-	customEventRecorder->Initialize();
-	sensors = new USensors();
-	sensors->Initialize();
-	fixationDataRecorder = new UFixationDataRecorder();
-	fixationDataRecorder->Initialize();
-	gazeDataRecorder = new UGazeDataRecorder();
-	gazeDataRecorder->Initialize();
-	localCache = MakeShareable(new LocalCache(FPaths::GeneratedConfigDir()));
-	network = MakeShareable(new Network());
-	dynamicObjectManager = new UDynamicObjectManager();
-	dynamicObjectManager->Initialize();
-
 	//pre session startup
 	CacheSceneData();
 	SessionTimestamp = Util::GetTimestamp();
@@ -275,7 +270,7 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		SessionId = FString::FromInt(GetSessionTimestamp()) + TEXT("_") + DeviceId;
 	}
 	bHasSessionStarted = true;
-	
+
 	//set initial scene data
 	auto level = currentWorld->GetCurrentLevel();
 	if (level != nullptr)
@@ -376,21 +371,7 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	dynamicObjectManager->OnPostSessionEnd();
 	sensors->PostSessionEnd();
 	OnPostSessionEnd.Broadcast();
-
-	//reset components and uobjects
-	network.Reset();
-	delete(customEventRecorder);
-	delete(fixationDataRecorder);
-	delete(gazeDataRecorder);
-	delete(sensors);
-	delete(dynamicObjectManager);
-	UCognitiveVRBlueprints::cog.Reset();
-	UCustomEvent::cog.Reset();
-	if (localCache.IsValid())
-	{
-		localCache->Close();
-		localCache.Reset();
-	}
+	localCache->Close();
 
 	//cleanup pause and level load delegates
 	if (!PauseHandle.IsValid())
@@ -407,7 +388,6 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	SessionId = "";
 	bHasCustomSessionName = false;
 	bHasSessionStarted = false;
-	//currentWorld.Reset();
 
 	//broadcast end session
 	CognitiveLog::Info("CognitiveVR EndSession");
@@ -796,7 +776,7 @@ void FAnalyticsProviderCognitiveVR::CacheSceneData()
 	}
 }
 
-FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
+bool FAnalyticsProviderCognitiveVR::TryGetPlayerHMDPosition(FVector& vector)
 {
 	//IMPROVEMENT cache this and check for null. playercontrollers DO NOT persist across level changes
 
@@ -805,10 +785,50 @@ FVector FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition()
 	if (controllers.Num() == 0)
 	{
 		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition no controllers skip");
-		return FVector();
+		return false;
 	}
 
-	return controllers[0]->PlayerCameraManager->GetCameraLocation();
+	vector = controllers[0]->PlayerCameraManager->GetCameraLocation();
+	return true;
+}
+
+ bool FAnalyticsProviderCognitiveVR::TryGetPlayerHMDRotation(FRotator& rotator)
+{
+	//IMPROVEMENT cache this and check for null. playercontrollers DO NOT persist across level changes
+
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	if (controllers.Num() == 0)
+	{
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition no controllers skip");
+		return false;
+	}
+
+	rotator = controllers[0]->PlayerCameraManager->GetCameraRotation();
+	return true;
+}
+
+bool FAnalyticsProviderCognitiveVR::TryGetPlayerHMDLocalRotation(FRotator& rotator)
+{
+	//IMPROVEMENT cache this and check for null. playercontrollers DO NOT persist across level changes
+
+	TArray<APlayerController*, FDefaultAllocator> controllers;
+	GEngine->GetAllLocalPlayerControllers(controllers);
+	if (controllers.Num() == 0)
+	{
+		CognitiveLog::Warning("FAnalyticsProviderCognitiveVR::GetPlayerHMDPosition no controllers skip");
+		return false;
+	}
+
+	APawn* pawn = controllers[0]->GetPawn();
+	if (pawn == NULL) { return false; }
+	UActorComponent* pawnComponent = pawn->GetComponentByClass(UCameraComponent::StaticClass());
+	if (pawnComponent == NULL) { return false; }
+	UCameraComponent* pawnCamera = Cast<UCameraComponent>(pawnComponent);
+	if (pawnCamera == NULL) { return false; }
+
+	rotator = pawnCamera->GetRelativeRotation();
+	return true;
 }
 
 void FAnalyticsProviderCognitiveVR::SetSessionProperty(FString name, int32 value)
@@ -940,6 +960,45 @@ bool FAnalyticsProviderCognitiveVR::HasEyeTrackingSDK()
 #else
 	return false;
 #endif
+}
+
+bool FAnalyticsProviderCognitiveVR::TryGetRoomSize(FVector& roomsize)
+{
+#if ENGINE_MAJOR_VERSION == 5
+	FTransform OutTransform;
+	FVector2D OutRect;
+	return UHeadMountedDisplayFunctionLibrary::GetPlayAreaRect(OutTransform, OutRect);
+#else
+
+	//oculus room size
+	roomsize = UOculusFunctionLibrary::GetGuardianDimensions(EBoundaryType::Boundary_PlayArea);
+	return true;
+#endif
+
+}
+
+TWeakObjectPtr<UDynamicObject> FAnalyticsProviderCognitiveVR::GetControllerDynamic(bool right)
+{
+	if (right)
+	{
+		if (dynamicObjectManager != nullptr && dynamicObjectManager->RightHandController.IsValid())
+		{
+			return dynamicObjectManager->RightHandController;
+		}
+	}
+	else
+	{
+		if (dynamicObjectManager != nullptr && dynamicObjectManager->LeftHandController.IsValid())
+		{
+			return dynamicObjectManager->LeftHandController;
+		}
+	}
+	return nullptr;
+}
+
+FString FAnalyticsProviderCognitiveVR::GetRuntime()
+{
+	return FString();
 }
 
 void FAnalyticsProviderCognitiveVR::HandleApplicationWillEnterBackground()

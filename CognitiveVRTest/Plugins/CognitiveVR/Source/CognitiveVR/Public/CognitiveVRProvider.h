@@ -32,6 +32,9 @@
 #include "CognitiveVR/Private/api/GazeDataRecorder.h"
 #include "Misc/PackageName.h"//to get friendly name of streaming levels
 
+//OCULUS
+#include "OculusFunctionLibrary.h"
+
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
 	class Network;
@@ -77,6 +80,9 @@
 			FOnCognitivePostSessionEnd OnPostSessionEnd;
 		UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
 			FOnRequestSend OnRequestSend;
+		UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
+			FOnCognitiveInterval OnCognitiveInterval;
+		
 
 		bool StartSession();
 		virtual bool StartSession(const TArray<FAnalyticsEventAttribute>& Attributes) override;
@@ -130,8 +136,9 @@
 
 		double GetSessionTimestamp() const;
 
-		FVector GetPlayerHMDPosition();
-
+		bool TryGetPlayerHMDPosition(FVector& vector);
+		bool TryGetPlayerHMDRotation(FRotator& rotator);
+		bool TryGetPlayerHMDLocalRotation(FRotator& rotator);
 		bool HasStartedSession();
 
 		FString ApplicationKey = "";
@@ -170,8 +177,13 @@
 		void SetSessionProperty(FString name, FString value);
 
 		FString GetAttributionParameters();
+
+		//gameplay references
 		bool HasEyeTrackingSDK();
 		void SetTrackingScene(FString levelName);
+		bool TryGetRoomSize(FVector& roomsize);
+		TWeakObjectPtr<UDynamicObject> GetControllerDynamic(const bool right);
+		FString GetRuntime();
 
 	private:
 		FDelegateHandle PauseHandle;

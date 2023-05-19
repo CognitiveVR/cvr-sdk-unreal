@@ -243,6 +243,8 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		//hit nothing. use position and rotation only
 		cog->gazeDataRecorder->BuildSnapshot(captureLocation, captureRotation, timestamp, DidHitFloor, FloorHitPosition);
 	}
+
+	cog->OnCognitiveInterval.Broadcast();
 }
 
 void UPlayerTracker::EndPlay(EEndPlayReason::Type EndPlayReason)

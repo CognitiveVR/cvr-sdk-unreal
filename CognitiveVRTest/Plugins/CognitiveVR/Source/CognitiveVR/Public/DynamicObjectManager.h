@@ -21,20 +21,17 @@ class UCognitiveVRBlueprints;
 class COGNITIVEVR_API UDynamicObjectManager
 {
 	friend class FAnalyticsProviderCognitiveVR;
+	friend class FAnalyticsCognitiveVR;
 
 private:
-	TArray<FDynamicObjectSnapshot> snapshots; //this should be cleared when session starts in PIE
+	TArray<FDynamicObjectSnapshot> snapshots;
 	TArray<FDynamicObjectManifestEntry> manifest;
 	TArray<FDynamicObjectManifestEntry> newManifest;
 	TArray<TSharedPtr<FDynamicObjectId>> allObjectIds;
 	int32 jsonPart = 1;
-	int32 MaxSnapshots = -1;
-	bool callbackInitialized;
+	int32 MaxSnapshots = 64;
 
-	int32 MinTimer = 5;
 	int32 AutoTimer = 10;
-	int32 ExtremeBatchSize = 128;
-	float NextSendTime = 0;
 	float LastSendTime = -60;
 	FTimerHandle AutoSendHandle;
 	FString DynamicObjectFileType;
@@ -42,8 +39,6 @@ private:
 	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider;
 
 	UDynamicObjectManager();
-	void TrySendData();
-	void ClearSnapshots();
 	UFUNCTION()
 	void OnSessionBegin();
 	UFUNCTION()
@@ -52,20 +47,26 @@ private:
 	void OnPostSessionEnd();
 
 public:
-	void Initialize();
 	void AddSnapshot(FDynamicObjectSnapshot snapshot);
 	bool HasRegisteredObjectId(const FString id);
 	void RegisterObjectId(FString MeshName, FString Id, FString ActorName, bool IsController, bool IsRightController, FString ControllerName);
+	void CacheControllerPointer(UDynamicObject* object, bool isRight);
 	UFUNCTION()
 	void SendData(bool copyDataToCache);
-	
+
+private:
 	TArray<TSharedPtr<FJsonValueObject>> DynamicSnapshotsToString();
 	TSharedPtr<FJsonObject> DynamicObjectManifestToString();
 	TSharedPtr<FDynamicObjectId> GetUniqueId(FString meshName);
 	TSharedPtr<FJsonValueObject> WriteSnapshotToJson(FDynamicObjectSnapshot snapshot);
 
+public:
 	float GetLastSendTime() { return LastSendTime; }
 	int32 GetPartNumber() { return jsonPart; }
 	int32 GetDataPoints() { return snapshots.Num(); }
 	int32 GetDynamicObjectCount() { return manifest.Num(); }
+
+private:
+	TWeakObjectPtr<UDynamicObject> LeftHandController;
+	TWeakObjectPtr<UDynamicObject> RightHandController;
 };

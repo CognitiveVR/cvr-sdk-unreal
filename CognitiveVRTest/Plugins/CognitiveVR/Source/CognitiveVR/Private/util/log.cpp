@@ -23,7 +23,7 @@ void CognitiveLog::Init()
 			HasInitialized = true;
 			Warning("==========================");
 			Warning("See 'Project Settings > Cognitive VR' for preferences and to toggle debug messages");
-			Warning("https://docs.cognitivevr.io/unreal/troubleshooting/ for help");
+			Warning("https://docs.cognitive3d.com/unreal/troubleshooting/ for help");
 			Warning("==========================");
 		}
 	}

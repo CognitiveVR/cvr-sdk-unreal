@@ -3,70 +3,63 @@
 #include "InputTracker.h"
 
 // Sets default values
-AInputTracker::AInputTracker()
+UInputTracker::UInputTracker()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = true;
 
 }
 
-void AInputTracker::BeginPlay()
+void UInputTracker::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//TODO when this is a component - check that this is on the CognitiveVRActor instance and not a copy elsewhere
-	//auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	//if (cognitiveActor != GetOwner())
-	//{
-	//	CognitiveLog::Warning("AInputTracker::BeginPlay found outside of cognitive actor instance - unregister the component");
-	//	UnregisterComponent();
-	//	return;
-	//}
-
-	//get player controller 0
+	//get player controller 0 and enable input
 	APlayerController* p0 = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	EnableInput(p0);
+	GetOwner()->EnableInput(p0);
+	InputComponent = GetOwner()->InputComponent;
+	
 	InputComponent->bBlockInput = 0;
 
-	InputComponent->BindAction("C3D_RightMenuButton", EInputEvent::IE_Pressed, this, &AInputTracker::RightMenuButtonPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightMenuButton", EInputEvent::IE_Released, this, &AInputTracker::RightMenuButtonReleased).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftMenuButton", EInputEvent::IE_Pressed, this, &AInputTracker::LeftMenuButtonPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftMenuButton", EInputEvent::IE_Released, this, &AInputTracker::LeftMenuButtonReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightMenuButton", EInputEvent::IE_Pressed, this, &UInputTracker::RightMenuButtonPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightMenuButton", EInputEvent::IE_Released, this, &UInputTracker::RightMenuButtonReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftMenuButton", EInputEvent::IE_Pressed, this, &UInputTracker::LeftMenuButtonPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftMenuButton", EInputEvent::IE_Released, this, &UInputTracker::LeftMenuButtonReleased).bConsumeInput = 0;
 
-	InputComponent->BindAction("C3D_RightTrigger", EInputEvent::IE_Pressed, this, &AInputTracker::RightTriggerPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightTrigger", EInputEvent::IE_Released, this, &AInputTracker::RightTriggerReleased).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftTrigger", EInputEvent::IE_Pressed, this, &AInputTracker::LeftTriggerPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftTrigger", EInputEvent::IE_Released, this, &AInputTracker::LeftTriggerReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightTrigger", EInputEvent::IE_Pressed, this, &UInputTracker::RightTriggerPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightTrigger", EInputEvent::IE_Released, this, &UInputTracker::RightTriggerReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftTrigger", EInputEvent::IE_Pressed, this, &UInputTracker::LeftTriggerPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftTrigger", EInputEvent::IE_Released, this, &UInputTracker::LeftTriggerReleased).bConsumeInput = 0;
 
-	InputComponent->BindAction("C3D_RightGrip", EInputEvent::IE_Pressed, this, &AInputTracker::RightGripPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightGrip", EInputEvent::IE_Released, this, &AInputTracker::RightGripReleased).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftGrip", EInputEvent::IE_Pressed, this, &AInputTracker::LeftGripPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftGrip", EInputEvent::IE_Released, this, &AInputTracker::LeftGripReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightGrip", EInputEvent::IE_Pressed, this, &UInputTracker::RightGripPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightGrip", EInputEvent::IE_Released, this, &UInputTracker::RightGripReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftGrip", EInputEvent::IE_Pressed, this, &UInputTracker::LeftGripPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftGrip", EInputEvent::IE_Released, this, &UInputTracker::LeftGripReleased).bConsumeInput = 0;
 
-	InputComponent->BindAction("C3D_RightTouchpadPress", EInputEvent::IE_Pressed, this, &AInputTracker::RightTouchpadPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightTouchpadPress", EInputEvent::IE_Released, this, &AInputTracker::RightTouchpadPressRelease).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightTouchpadTouch", EInputEvent::IE_Pressed, this, &AInputTracker::RightTouchpadTouched).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightTouchpadTouch", EInputEvent::IE_Released, this, &AInputTracker::RightTouchpadReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightTouchpadPress", EInputEvent::IE_Pressed, this, &UInputTracker::RightTouchpadPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightTouchpadPress", EInputEvent::IE_Released, this, &UInputTracker::RightTouchpadPressRelease).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightTouchpadTouch", EInputEvent::IE_Pressed, this, &UInputTracker::RightTouchpadTouched).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightTouchpadTouch", EInputEvent::IE_Released, this, &UInputTracker::RightTouchpadReleased).bConsumeInput = 0;
 
-	InputComponent->BindAction("C3D_LeftTouchpadPress", EInputEvent::IE_Pressed, this, &AInputTracker::LeftTouchpadPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftTouchpadPress", EInputEvent::IE_Released, this, &AInputTracker::LeftTouchpadPressRelease).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftTouchpadTouch", EInputEvent::IE_Pressed, this, &AInputTracker::LeftTouchpadTouched).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftTouchpadTouch", EInputEvent::IE_Released, this, &AInputTracker::LeftTouchpadReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftTouchpadPress", EInputEvent::IE_Pressed, this, &UInputTracker::LeftTouchpadPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftTouchpadPress", EInputEvent::IE_Released, this, &UInputTracker::LeftTouchpadPressRelease).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftTouchpadTouch", EInputEvent::IE_Pressed, this, &UInputTracker::LeftTouchpadTouched).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftTouchpadTouch", EInputEvent::IE_Released, this, &UInputTracker::LeftTouchpadReleased).bConsumeInput = 0;
 
-	InputComponent->BindAction("C3D_RightJoystick", EInputEvent::IE_Pressed, this, &AInputTracker::RightJoystickPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightJoystick", EInputEvent::IE_Released, this, &AInputTracker::RightJoystickReleased).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftJoystick", EInputEvent::IE_Pressed, this, &AInputTracker::LeftJoystickPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftJoystick", EInputEvent::IE_Released, this, &AInputTracker::LeftJoystickReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightJoystick", EInputEvent::IE_Pressed, this, &UInputTracker::RightJoystickPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightJoystick", EInputEvent::IE_Released, this, &UInputTracker::RightJoystickReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftJoystick", EInputEvent::IE_Pressed, this, &UInputTracker::LeftJoystickPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftJoystick", EInputEvent::IE_Released, this, &UInputTracker::LeftJoystickReleased).bConsumeInput = 0;
 
-	InputComponent->BindAction("C3D_LeftFaceButtonOne", EInputEvent::IE_Pressed, this, &AInputTracker::LeftFaceButtonOnePressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftFaceButtonOne", EInputEvent::IE_Released, this, &AInputTracker::LeftFaceButtonOneReleased).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftFaceButtonTwo", EInputEvent::IE_Pressed, this, &AInputTracker::LeftFaceButtonTwoPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftFaceButtonTwo", EInputEvent::IE_Released, this, &AInputTracker::LeftFaceButtonTwoReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftFaceButtonOne", EInputEvent::IE_Pressed, this, &UInputTracker::LeftFaceButtonOnePressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftFaceButtonOne", EInputEvent::IE_Released, this, &UInputTracker::LeftFaceButtonOneReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftFaceButtonTwo", EInputEvent::IE_Pressed, this, &UInputTracker::LeftFaceButtonTwoPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftFaceButtonTwo", EInputEvent::IE_Released, this, &UInputTracker::LeftFaceButtonTwoReleased).bConsumeInput = 0;
 
-	InputComponent->BindAction("C3D_RightFaceButtonOne", EInputEvent::IE_Pressed, this, &AInputTracker::RightFaceButtonOnePressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightFaceButtonOne", EInputEvent::IE_Released, this, &AInputTracker::RightFaceButtonOneReleased).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightFaceButtonTwo", EInputEvent::IE_Pressed, this, &AInputTracker::RightFaceButtonTwoPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightFaceButtonTwo", EInputEvent::IE_Released, this, &AInputTracker::RightFaceButtonTwoReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightFaceButtonOne", EInputEvent::IE_Pressed, this, &UInputTracker::RightFaceButtonOnePressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightFaceButtonOne", EInputEvent::IE_Released, this, &UInputTracker::RightFaceButtonOneReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightFaceButtonTwo", EInputEvent::IE_Pressed, this, &UInputTracker::RightFaceButtonTwoPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightFaceButtonTwo", EInputEvent::IE_Released, this, &UInputTracker::RightFaceButtonTwoReleased).bConsumeInput = 0;
 
 	InputComponent->BindAxis(TEXT("C3D_LeftTriggerAxis")).bConsumeInput = 0;
 	InputComponent->BindAxis(TEXT("C3D_RightTriggerAxis")).bConsumeInput = 0;
@@ -88,10 +81,10 @@ void AInputTracker::BeginPlay()
 	{
 		FindControllers();
 	}
-	cogProvider->OnSessionBegin.AddDynamic(this, &AInputTracker::FindControllers);
+	cogProvider->OnSessionBegin.AddDynamic(this, &UInputTracker::FindControllers);
 }
 
-void AInputTracker::FindControllers()
+void UInputTracker::FindControllers()
 {
 	for (TObjectIterator<UMotionControllerComponent> Itr; Itr; ++Itr)
 	{
@@ -113,22 +106,22 @@ void AInputTracker::FindControllers()
 				{
 					if (!dyn->IsController) { continue; }
 
-					if (dyn->ControllerType == "oculustouchleft")
+					if (dyn->ControllerInputImageName == "oculustouchleft")
 					{
 						ControllerType = EC3DControllerType::Oculus;
 						LeftHand = dyn;
 					}
-					else if (dyn->ControllerType == "windows_mixed_reality_controller_left")
+					else if (dyn->ControllerInputImageName == "windows_mixed_reality_controller_left")
 					{
 						ControllerType = EC3DControllerType::WindowsMixedReality;
 						LeftHand = dyn;
 					}
-					else if (dyn->ControllerType == "vivecontroller")
+					else if (dyn->ControllerInputImageName == "vivecontroller")
 					{
 						ControllerType = EC3DControllerType::Vive;
 						LeftHand = dyn;
 					}
-					else if (dyn->ControllerType == "pico_neo_2_eye_controller_left")
+					else if (dyn->ControllerInputImageName == "pico_neo_2_eye_controller_left")
 					{
 						ControllerType = EC3DControllerType::PicoNeo2Eye;
 						LeftHand = dyn;
@@ -149,22 +142,22 @@ void AInputTracker::FindControllers()
 				{
 					if (!dyn->IsController) { continue; }
 
-					if (dyn->ControllerType == "oculustouchright")
+					if (dyn->ControllerInputImageName == "oculustouchright")
 					{
 						ControllerType = EC3DControllerType::Oculus;
 						RightHand = dyn;
 					}
-					else if (dyn->ControllerType == "windows_mixed_reality_controller_right")
+					else if (dyn->ControllerInputImageName == "windows_mixed_reality_controller_right")
 					{
 						ControllerType = EC3DControllerType::WindowsMixedReality;
 						RightHand = dyn;
 					}
-					else if (dyn->ControllerType == "vivecontroller")
+					else if (dyn->ControllerInputImageName == "vivecontroller")
 					{
 						ControllerType = EC3DControllerType::Vive;
 						RightHand = dyn;
 					}
-					else if (dyn->ControllerType == "pico_neo_2_eye_controller_right")
+					else if (dyn->ControllerInputImageName == "pico_neo_2_eye_controller_right")
 					{
 						ControllerType = EC3DControllerType::PicoNeo2Eye;
 						RightHand = dyn;
@@ -175,7 +168,7 @@ void AInputTracker::FindControllers()
 	}
 }
 
-void AInputTracker::Tick(float DeltaTime)
+void UInputTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	//TODO IMPORTANT shouldn't record inputs if session is not started
 
@@ -196,7 +189,6 @@ void AInputTracker::Tick(float DeltaTime)
 		//flush right controller states
 	}
 
-	Super::Tick(DeltaTime);
 	CurrentIntervalTime += DeltaTime;
 	if (CurrentIntervalTime > Interval)
 	{
@@ -212,7 +204,7 @@ void AInputTracker::Tick(float DeltaTime)
 	}
 }
 
-void AInputTracker::IntervalUpdate()
+void UInputTracker::IntervalUpdate()
 {
 	//check if touchpad/joystick/grip/trigger values have changed
 	switch (ControllerType)
@@ -419,7 +411,7 @@ void AInputTracker::IntervalUpdate()
 	}
 }
 
-void AInputTracker::AppendInputState(const bool isRight, FControllerInputState& state)
+void UInputTracker::AppendInputState(const bool isRight, FControllerInputState& state)
 {
 	//append or change value
 	if (isRight)
@@ -446,7 +438,7 @@ void AInputTracker::AppendInputState(const bool isRight, FControllerInputState& 
 	}
 }
 
-void AInputTracker::LeftFaceButtonOnePressed()
+void UInputTracker::LeftFaceButtonOnePressed()
 {
 	switch (ControllerType)
 	{
@@ -469,7 +461,7 @@ void AInputTracker::LeftFaceButtonOnePressed()
 	}
 }
 
-void AInputTracker::LeftFaceButtonOneReleased()
+void UInputTracker::LeftFaceButtonOneReleased()
 {
 	switch (ControllerType)
 	{
@@ -492,7 +484,7 @@ void AInputTracker::LeftFaceButtonOneReleased()
 	}
 }
 
-void AInputTracker::LeftFaceButtonTwoPressed()
+void UInputTracker::LeftFaceButtonTwoPressed()
 {
 	switch (ControllerType)
 	{
@@ -514,7 +506,7 @@ void AInputTracker::LeftFaceButtonTwoPressed()
 		break;
 	}
 }
-void AInputTracker::LeftFaceButtonTwoReleased()
+void UInputTracker::LeftFaceButtonTwoReleased()
 {
 	switch (ControllerType)
 	{
@@ -537,7 +529,7 @@ void AInputTracker::LeftFaceButtonTwoReleased()
 	}
 }
 
-void AInputTracker::LeftMenuButtonPressed()
+void UInputTracker::LeftMenuButtonPressed()
 {
 	switch (ControllerType)
 	{
@@ -567,7 +559,7 @@ void AInputTracker::LeftMenuButtonPressed()
 	}
 	}
 }
-void AInputTracker::LeftMenuButtonReleased()
+void UInputTracker::LeftMenuButtonReleased()
 {
 	switch (ControllerType)
 	{
@@ -598,7 +590,7 @@ void AInputTracker::LeftMenuButtonReleased()
 	}
 }
 
-void AInputTracker::LeftJoystickPressed()
+void UInputTracker::LeftJoystickPressed()
 {
 	switch (ControllerType)
 	{
@@ -633,7 +625,7 @@ void AInputTracker::LeftJoystickPressed()
 	}
 	}
 }
-void AInputTracker::LeftJoystickReleased()
+void UInputTracker::LeftJoystickReleased()
 {
 	switch (ControllerType)
 	{
@@ -669,7 +661,7 @@ void AInputTracker::LeftJoystickReleased()
 	}
 }
 
-void AInputTracker::LeftTouchpadReleased()
+void UInputTracker::LeftTouchpadReleased()
 {
 	switch (ControllerType)
 	{
@@ -695,7 +687,7 @@ void AInputTracker::LeftTouchpadReleased()
 	}
 	}
 }
-void AInputTracker::LeftTouchpadTouched()
+void UInputTracker::LeftTouchpadTouched()
 {
 	switch (ControllerType)
 	{
@@ -721,7 +713,7 @@ void AInputTracker::LeftTouchpadTouched()
 	}
 	}
 }
-void AInputTracker::LeftTouchpadPressed()
+void UInputTracker::LeftTouchpadPressed()
 {
 	switch (ControllerType)
 	{
@@ -748,7 +740,7 @@ void AInputTracker::LeftTouchpadPressed()
 	}
 }
 
-void AInputTracker::LeftTouchpadPressRelease()
+void UInputTracker::LeftTouchpadPressRelease()
 {
 	switch (ControllerType)
 	{
@@ -776,7 +768,7 @@ void AInputTracker::LeftTouchpadPressRelease()
 }
 
 
-void AInputTracker::RightFaceButtonOnePressed()
+void UInputTracker::RightFaceButtonOnePressed()
 {
 	switch (ControllerType)
 	{
@@ -798,7 +790,7 @@ void AInputTracker::RightFaceButtonOnePressed()
 		break;
 	}
 }
-void AInputTracker::RightFaceButtonOneReleased()
+void UInputTracker::RightFaceButtonOneReleased()
 {
 	switch (ControllerType)
 	{
@@ -821,7 +813,7 @@ void AInputTracker::RightFaceButtonOneReleased()
 	}
 }
 
-void AInputTracker::RightFaceButtonTwoPressed()
+void UInputTracker::RightFaceButtonTwoPressed()
 {
 	switch (ControllerType)
 	{
@@ -843,7 +835,7 @@ void AInputTracker::RightFaceButtonTwoPressed()
 		break;
 	}
 }
-void AInputTracker::RightFaceButtonTwoReleased()
+void UInputTracker::RightFaceButtonTwoReleased()
 {
 	switch (ControllerType)
 	{
@@ -866,7 +858,7 @@ void AInputTracker::RightFaceButtonTwoReleased()
 	}
 }
 
-void AInputTracker::RightMenuButtonPressed()
+void UInputTracker::RightMenuButtonPressed()
 {
 	switch (ControllerType)
 	{
@@ -896,7 +888,7 @@ void AInputTracker::RightMenuButtonPressed()
 	}
 	}
 }
-void AInputTracker::RightMenuButtonReleased()
+void UInputTracker::RightMenuButtonReleased()
 {
 	switch (ControllerType)
 	{
@@ -927,7 +919,7 @@ void AInputTracker::RightMenuButtonReleased()
 	}
 }
 
-void AInputTracker::RightJoystickPressed()
+void UInputTracker::RightJoystickPressed()
 {
 	switch (ControllerType)
 	{
@@ -962,7 +954,7 @@ void AInputTracker::RightJoystickPressed()
 	}
 	}
 }
-void AInputTracker::RightJoystickReleased()
+void UInputTracker::RightJoystickReleased()
 {
 	switch (ControllerType)
 	{
@@ -998,7 +990,7 @@ void AInputTracker::RightJoystickReleased()
 	}
 }
 
-void AInputTracker::RightTouchpadReleased()
+void UInputTracker::RightTouchpadReleased()
 {
 	switch (ControllerType)
 	{
@@ -1024,7 +1016,7 @@ void AInputTracker::RightTouchpadReleased()
 	}
 	}
 }
-void AInputTracker::RightTouchpadTouched()
+void UInputTracker::RightTouchpadTouched()
 {
 	switch (ControllerType)
 	{
@@ -1050,7 +1042,7 @@ void AInputTracker::RightTouchpadTouched()
 	}
 	}
 }
-void AInputTracker::RightTouchpadPressed()
+void UInputTracker::RightTouchpadPressed()
 {
 	switch (ControllerType)
 	{
@@ -1077,7 +1069,7 @@ void AInputTracker::RightTouchpadPressed()
 	}
 }
 
-void AInputTracker::RightTouchpadPressRelease()
+void UInputTracker::RightTouchpadPressRelease()
 {
 	switch (ControllerType)
 	{
@@ -1104,7 +1096,7 @@ void AInputTracker::RightTouchpadPressRelease()
 	}
 }
 
-void AInputTracker::RightGripPressed()
+void UInputTracker::RightGripPressed()
 {
 	switch (ControllerType)
 	{
@@ -1135,7 +1127,7 @@ void AInputTracker::RightGripPressed()
 	}
 }
 
-void AInputTracker::RightGripReleased()
+void UInputTracker::RightGripReleased()
 {
 	switch (ControllerType)
 	{
@@ -1169,7 +1161,7 @@ void AInputTracker::RightGripReleased()
 	}
 }
 
-void AInputTracker::LeftGripPressed()
+void UInputTracker::LeftGripPressed()
 {
 	switch (ControllerType)
 	{
@@ -1200,7 +1192,7 @@ void AInputTracker::LeftGripPressed()
 	}
 }
 
-void AInputTracker::LeftGripReleased()
+void UInputTracker::LeftGripReleased()
 {
 	switch (ControllerType)
 	{
@@ -1235,7 +1227,7 @@ void AInputTracker::LeftGripReleased()
 }
 
 
-void AInputTracker::LeftTriggerPressed()
+void UInputTracker::LeftTriggerPressed()
 {
 	switch (ControllerType)
 	{
@@ -1270,7 +1262,7 @@ void AInputTracker::LeftTriggerPressed()
 	}
 }
 
-void AInputTracker::LeftTriggerReleased()
+void UInputTracker::LeftTriggerReleased()
 {
 	switch (ControllerType)
 	{
@@ -1311,7 +1303,7 @@ void AInputTracker::LeftTriggerReleased()
 	}
 }
 
-void AInputTracker::RightTriggerPressed()
+void UInputTracker::RightTriggerPressed()
 {
 	switch (ControllerType)
 	{
@@ -1346,7 +1338,7 @@ void AInputTracker::RightTriggerPressed()
 	}
 }
 
-void AInputTracker::RightTriggerReleased()
+void UInputTracker::RightTriggerReleased()
 {
 	switch (ControllerType)
 	{
@@ -1387,8 +1379,8 @@ void AInputTracker::RightTriggerReleased()
 	}
 }
 
-void AInputTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void UInputTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	cogProvider->OnSessionBegin.RemoveDynamic(this, &AInputTracker::FindControllers);
+	cogProvider->OnSessionBegin.RemoveDynamic(this, &UInputTracker::FindControllers);
 }
