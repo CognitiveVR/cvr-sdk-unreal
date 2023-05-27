@@ -971,8 +971,9 @@ bool FAnalyticsProviderCognitiveVR::TryGetRoomSize(FVector& roomsize)
 #else
 
 	//oculus room size
-	roomsize = UOculusFunctionLibrary::GetGuardianDimensions(EBoundaryType::Boundary_PlayArea);
-	return true;
+	//TODO including this causes the editor to fail launching. can't find the OculusHMD internal module
+	//roomsize = UOculusFunctionLibrary::GetGuardianDimensions(EBoundaryType::Boundary_PlayArea);
+	return false;
 #endif
 
 }
