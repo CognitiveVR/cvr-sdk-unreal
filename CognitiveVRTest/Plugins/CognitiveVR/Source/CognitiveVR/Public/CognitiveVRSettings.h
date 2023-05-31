@@ -45,12 +45,6 @@ class UCognitiveVRSettings : public UAnalyticsSettingsBase
 	/** The number of Custom Events that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Events")
 		int32 CustomEventBatchSize = 64;
-	//Threshold for ignoring the Event Minimum Timer. If this many Events have been recorded, immediately send
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Events")
-		int32 CustomEventExtremeLimit = 128;
-	//Time (in seconds) that must be elapsed before sending a new batch of Event data. Ignored if the batch size reaches Event Extreme Limit
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Events", AdvancedDisplay)
-		int32 CustomEventMinTimer = 2;
 	//The time (in seconds) to automatically send any outstanding Event data
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Events")
 		int32 CustomEventAutoTimer = 10;
@@ -58,12 +52,6 @@ class UCognitiveVRSettings : public UAnalyticsSettingsBase
 	/** The number of dynamic object snapshots that will be collected together before being sent to scene explorer */
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Dynamic Objects")
 		int32 DynamicDataLimit = 64;
-	//Threshold for ignoring the Dynamic Minimum Timer. If this many Dynamic snapshots have been recorded, immediately send
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Dynamic Objects")
-		int32 DynamicExtremeLimit = 128;
-	//Time (in seconds) that must be elapsed before sending a new batch of Dynamic data. Ignored if the batch size reaches Dynamic Extreme Limit
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Dynamic Objects")
-		int32 DynamicMinTimer = 2;
 	//The time (in seconds) to automatically send any outstanding Dynamic snapshots or Manifest entries
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Dynamic Objects")
 		int32 DynamicAutoTimer = 10;
@@ -71,12 +59,6 @@ class UCognitiveVRSettings : public UAnalyticsSettingsBase
 	/** The number of sensor data points that will be collected together before being sent to scene explorer */
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Sensors")
 		int32 SensorDataLimit = 64;
-	//Threshold for ignoring the Sensor Minimum Timer. If this many Sensor data points have been recorded, immediately send
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Sensors")
-		int32 SensorExtremeLimit = 128;
-	//Time (in seconds) that must be elapsed before sending a new batch of Sensor data. Ignored if the batch size reaches Sensor Extreme Limit
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Sensors")
-		int32 SensorMinTimer = 2;
 	//The time (in seconds) to automatically send any outstanding Sensor data
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Sensors")
 		int32 SensorAutoTimer = 10;
@@ -84,12 +66,6 @@ class UCognitiveVRSettings : public UAnalyticsSettingsBase
 	/** The number of fixations that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Fixations")
 		int32 FixationBatchSize = 64;
-	//Threshold for ignoring the Event Minimum Timer. If this many Fixations have been recorded, immediately send
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Fixations")
-		int32 FixationExtremeLimit = 128;
-	//Time (in seconds) that must be elapsed before sending a new batch of Fixation data. Ignored if the batch size reaches Event Extreme Limit
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Fixations")
-		int32 FixationMinTimer = 2;
 	//The time (in seconds) to automatically send any outstanding Fixations
 	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Fixations")
 		int32 FixationAutoTimer = 10;
