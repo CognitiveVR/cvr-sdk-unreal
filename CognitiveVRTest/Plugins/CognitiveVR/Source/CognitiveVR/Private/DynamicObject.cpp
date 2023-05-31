@@ -249,7 +249,7 @@ void UDynamicObject::Initialize()
 	}
 
 	ValidateObjectId();
-	dynamicObjectManager->RegisterObjectId(MeshName, ObjectID->Id, GetOwner()->GetName(),IsController,IsRightController,ControllerType);
+	dynamicObjectManager->RegisterObjectId(MeshName, ObjectID->Id, GetOwner()->GetName(),IsController,IsRightController, ControllerInputImageName);
 
 	if (IsController)
 	{
@@ -432,7 +432,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 	if (needObjectId)
 	{
 		ValidateObjectId();
-		dynamicObjectManager->RegisterObjectId(MeshName, GetObjectId()->Id, GetOwner()->GetName(), IsController, IsRightController, ControllerType);
+		dynamicObjectManager->RegisterObjectId(MeshName, GetObjectId()->Id, GetOwner()->GetName(), IsController, IsRightController, ControllerInputImageName);
 	}
 
 	FDynamicObjectSnapshot snapshot = FDynamicObjectSnapshot();

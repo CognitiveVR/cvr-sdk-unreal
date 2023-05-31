@@ -32,9 +32,6 @@
 #include "CognitiveVR/Private/api/GazeDataRecorder.h"
 #include "Misc/PackageName.h"//to get friendly name of streaming levels
 
-//OCULUS
-#include "OculusFunctionLibrary.h"
-
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
 	class Network;
