@@ -30,44 +30,38 @@ class UCognitiveVRSettings : public UAnalyticsSettingsBase
 		FString Gateway = "data.cognitive3d.com";
 
 	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-		FString SessionViewer = "viewer.cognitive3d.com/scene/";
-
-	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
-		FString Dashboard = "app.cognitive3d.com/";
-
-	UPROPERTY(config, EditAnywhere, Category = CognitiveVR)
 		bool AutomaticallySetTrackingScene = true;
 
 	/** The number of player snapshots that will be collected together before being sent to analytics server and scene explorer*/
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Gaze")
+	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data")
 		int32 GazeBatchSize = 64;
 
 	/** The number of Custom Events that will be collected together before being sent to analytics server and scene explorer*/
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Events")
+	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data")
 		int32 CustomEventBatchSize = 64;
 	//The time (in seconds) to automatically send any outstanding Event data
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Events")
+	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data")
 		int32 CustomEventAutoTimer = 10;
 
 	/** The number of dynamic object snapshots that will be collected together before being sent to scene explorer */
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Dynamic Objects")
+	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data")
 		int32 DynamicDataLimit = 64;
 	//The time (in seconds) to automatically send any outstanding Dynamic snapshots or Manifest entries
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Dynamic Objects")
+	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data")
 		int32 DynamicAutoTimer = 10;
 
 	/** The number of sensor data points that will be collected together before being sent to scene explorer */
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Sensors")
+	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data")
 		int32 SensorDataLimit = 64;
 	//The time (in seconds) to automatically send any outstanding Sensor data
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Sensors")
+	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data")
 		int32 SensorAutoTimer = 10;
 
 	/** The number of fixations that will be collected together before being sent to analytics server and scene explorer*/
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Fixations")
+	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data")
 		int32 FixationBatchSize = 64;
 	//The time (in seconds) to automatically send any outstanding Fixations
-	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data\|Fixations")
+	UPROPERTY(config, EditAnywhere, Category = "Cognitive_VR_Data")
 		int32 FixationAutoTimer = 10;
 
 protected:

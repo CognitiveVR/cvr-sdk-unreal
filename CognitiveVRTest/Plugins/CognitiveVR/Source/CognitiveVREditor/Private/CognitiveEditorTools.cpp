@@ -92,8 +92,14 @@ FString FCognitiveEditorTools::PostUpdateScene(FString sceneid)
 //WEB used to open scenes on sceneexplorer or custom session viewer
 FString FCognitiveEditorTools::SceneExplorerOpen(FString sceneid)
 {
-	auto sessionviewer = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SessionViewer", false);
-	return "https://" + sessionviewer + sceneid;
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	if (Gateway.Len() == 0)
+	{
+		Gateway = "data.cognitive3d.com";
+	}
+	FString split = Gateway.RightChop(5);
+	FString url = "https://viewer." + split + "/scene/" + sceneid;
+	return url;
 }
 
 

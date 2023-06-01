@@ -168,6 +168,7 @@ FReply UDynamicObjectComponentDetails::SetRightHand()
 	SelectedDynamicObject.Get()->IsRightController = true;
 	SelectedDynamicObject.Get()->SyncUpdateWithPlayer = true;
 	SelectedDynamicObject.Get()->IdSourceType = EIdSourceType::GeneratedId;
+	SelectedDynamicObject.Get()->MeshName = "RightHandMesh";
 
 	//mark package to be saved
 	UWorld* world = SelectedDynamicObject.Get()->GetWorld();
@@ -184,6 +185,7 @@ FReply UDynamicObjectComponentDetails::SetLeftHand()
 	SelectedDynamicObject.Get()->IsRightController = false;
 	SelectedDynamicObject.Get()->SyncUpdateWithPlayer = true;
 	SelectedDynamicObject.Get()->IdSourceType = EIdSourceType::GeneratedId;
+	SelectedDynamicObject.Get()->MeshName = "LeftHandMesh";
 
 	//mark package to be saved
 	UWorld* world = SelectedDynamicObject.Get()->GetWorld();
