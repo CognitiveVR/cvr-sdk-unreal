@@ -244,6 +244,16 @@ void UDynamicObject::Initialize()
 			}
 			break;
 		default:
+			if (IsRightController)
+			{
+				ControllerInputImageName = "oculustouchright";
+				MeshName = "oculustouchleft";
+			}
+			else
+			{
+				ControllerInputImageName = "oculustouchleft";
+				MeshName = "oculustouchright";
+			}
 			break;
 		}
 	}
@@ -630,6 +640,10 @@ void UDynamicObject::FlushButtons(FControllerInputStateCollection& target)
 {
 	//write an new snapshot and append input state
 	if (target.States.Num() == 0)
+	{
+		return;
+	}
+	if (dynamicObjectManager == NULL)
 	{
 		return;
 	}

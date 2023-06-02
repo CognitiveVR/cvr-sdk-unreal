@@ -968,6 +968,12 @@ bool FAnalyticsProviderCognitiveVR::TryGetRoomSize(FVector& roomsize)
 	FTransform OutTransform;
 	FVector2D OutRect;
 	return UHeadMountedDisplayFunctionLibrary::GetPlayAreaRect(OutTransform, OutRect);
+#elif ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION == 27
+
+	FVector2D areaBounds = UHeadMountedDisplayFunctionLibrary::GetPlayAreaBounds();
+	roomsize.X = areaBounds.X;
+	roomsize.Y = areaBounds.Y;
+	return true;
 #else
 
 	//oculus room size
@@ -975,7 +981,6 @@ bool FAnalyticsProviderCognitiveVR::TryGetRoomSize(FVector& roomsize)
 	//roomsize = UOculusFunctionLibrary::GetGuardianDimensions(EBoundaryType::Boundary_PlayArea);
 	return false;
 #endif
-
 }
 
 TWeakObjectPtr<UDynamicObject> FAnalyticsProviderCognitiveVR::GetControllerDynamic(bool right)

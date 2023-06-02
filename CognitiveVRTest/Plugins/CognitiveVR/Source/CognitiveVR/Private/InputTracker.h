@@ -56,7 +56,7 @@ private:
 	FVector RightTouchpadAxis;
 
 	//events
-
+public:
 	void LeftFaceButtonOnePressed();
 	void LeftFaceButtonOneReleased();
 	

@@ -171,6 +171,7 @@ void UInputTracker::FindControllers()
 void UInputTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	//TODO IMPORTANT shouldn't record inputs if session is not started
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	if (LeftInputStates.States.Num() > 0)
 	{
@@ -194,7 +195,7 @@ void UInputTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 	{
 		if (LeftHand == NULL || RightHand == NULL)
 		{
-			//FindControllers(false);
+			FindControllers();
 		}
 		else
 		{
