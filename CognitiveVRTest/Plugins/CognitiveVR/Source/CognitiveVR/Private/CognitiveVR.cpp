@@ -272,20 +272,23 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	bHasSessionStarted = true;
 
 	//set initial scene data
-	auto level = currentWorld->GetCurrentLevel();
-	if (level != nullptr)
+	if (AutomaticallySetTrackingScene)
 	{
-		FString levelName = level->GetFullGroupName(true);
-		TSharedPtr<FSceneData> data = GetSceneData(levelName);
-		if (data.IsValid())
+		auto level = currentWorld->GetCurrentLevel();
+		if (level != nullptr)
 		{
-			LoadedSceneDataStack.Push(data);
-			ForceWriteSessionMetadata = true;
-			CurrentTrackingSceneId = data->Id;
-			LastSceneData = data;
+			FString levelName = level->GetFullGroupName(true);
+			TSharedPtr<FSceneData> data = GetSceneData(levelName);
+			if (data.IsValid())
+			{
+				LoadedSceneDataStack.Push(data);
+				ForceWriteSessionMetadata = true;
+				CurrentTrackingSceneId = data->Id;
+				LastSceneData = data;
+			}
 		}
+		SceneStartTime = Util::GetTimestamp();
 	}
-	SceneStartTime = Util::GetTimestamp();
 
 	//register delegates
 	if (!PauseHandle.IsValid())

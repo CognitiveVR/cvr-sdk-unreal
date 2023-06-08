@@ -12,6 +12,7 @@ UInputTracker::UInputTracker()
 
 void UInputTracker::BeginPlay()
 {
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	Super::BeginPlay();
 
 	//get player controller 0 and enable input
@@ -200,7 +201,7 @@ void UInputTracker::FindControllers()
 
 void UInputTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	//TODO IMPORTANT shouldn't record inputs if session is not started
+	if (!cog->HasStartedSession()) { return; }
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	if (LeftInputStates.States.Num() > 0)

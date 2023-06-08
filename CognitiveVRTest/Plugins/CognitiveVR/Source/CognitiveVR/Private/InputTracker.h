@@ -26,6 +26,7 @@ public:
 
 private:
 
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 	UInputComponent* InputComponent;
 
 	EC3DControllerType ControllerType;
