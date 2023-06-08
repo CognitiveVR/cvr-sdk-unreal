@@ -176,6 +176,10 @@ FReply UDynamicObjectComponentDetails::SetRightHand()
 	{
 		world->MarkPackageDirty();
 	}
+	else
+	{
+		SelectedDynamicObject.Get()->MarkPackageDirty();
+	}
 	return FReply::Handled();
 }
 
@@ -192,6 +196,10 @@ FReply UDynamicObjectComponentDetails::SetLeftHand()
 	if (world != NULL)
 	{
 		world->MarkPackageDirty();
+	}
+	else
+	{
+		SelectedDynamicObject.Get()->MarkPackageDirty();
 	}
 	return FReply::Handled();
 }
