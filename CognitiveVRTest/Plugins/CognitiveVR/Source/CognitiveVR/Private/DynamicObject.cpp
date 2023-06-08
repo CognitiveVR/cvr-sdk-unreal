@@ -207,7 +207,7 @@ void UDynamicObject::Initialize()
 			ControllerInputImageName = "vivecontroller";
 			MeshName = "vivecontroller";
 			break;
-		case EC3DControllerType::Oculus:
+		case EC3DControllerType::OculusRift:
 			if (IsRightController)
 			{
 				ControllerInputImageName = "oculustouchright";
@@ -217,6 +217,30 @@ void UDynamicObject::Initialize()
 			{
 				ControllerInputImageName = "oculustouchleft";
 				MeshName = "oculustouchright";
+			}
+			break;
+		case EC3DControllerType::Quest2:
+			if (IsRightController)
+			{
+				ControllerInputImageName = "oculusquesttouchright";
+				MeshName = "OculusQuestTouchRight";
+			}
+			else
+			{
+				ControllerInputImageName = "oculusquesttouchleft";
+				MeshName = "OculusQuestTouchLeft";
+			}
+			break;
+		case EC3DControllerType::QuestPro:
+			if (IsRightController)
+			{
+				ControllerInputImageName = "quest_pro_touch_right";
+				MeshName = "QuestProTouchRight";
+			}
+			else
+			{
+				ControllerInputImageName = "quest_pro_touch_left";
+				MeshName = "QuestProTouchLeft";
 			}
 			break;
 		case EC3DControllerType::WindowsMixedReality:
@@ -231,7 +255,7 @@ void UDynamicObject::Initialize()
 				MeshName = "windows_mixed_reality_controller_left";
 			}
 			break;
-		case EC3DControllerType::PicoNeo2Eye:
+		case EC3DControllerType::PicoNeo2:
 			if (IsRightController)
 			{
 				ControllerInputImageName = "pico_neo_2_eye_controller_right";
@@ -243,16 +267,28 @@ void UDynamicObject::Initialize()
 				MeshName = "pico_neo_2_eye_controller_left";
 			}
 			break;
-		default:
+		case EC3DControllerType::PicoNeo3:
 			if (IsRightController)
 			{
-				ControllerInputImageName = "oculustouchright";
-				MeshName = "oculustouchleft";
+				ControllerInputImageName = "pico_neo_3_eye_controller_right";
+				MeshName = "pico_neo_3_eye_controller_right";
 			}
 			else
 			{
-				ControllerInputImageName = "oculustouchleft";
-				MeshName = "oculustouchright";
+				ControllerInputImageName = "pico_neo_3_eye_controller_left";
+				MeshName = "pico_neo_3_eye_controller_left";
+			}
+			break;
+		default:
+			if (IsRightController)
+			{
+				ControllerInputImageName = "oculusquesttouchright";
+				MeshName = "OculusQuestTouchRight";
+			}
+			else
+			{
+				ControllerInputImageName = "oculusquesttouchleft";
+				MeshName = "OculusQuestTouchLeft";
 			}
 			break;
 		}

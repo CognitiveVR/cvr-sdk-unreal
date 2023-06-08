@@ -187,9 +187,17 @@ enum class EC3DControllerType : uint8
 {
 	None,
 	Vive,
-	Oculus,
+	OculusRift,
 	WindowsMixedReality,
-	PicoNeo2Eye
+	PicoNeo2,
+	
+	Quest2,
+	QuestPro,
+	PicoNeo3,
+	//PicoNeo4
+	//ViveFocus,
+	//Generic,
+	//Hand
 };
 
 class FDynamicObjectManifestEntry

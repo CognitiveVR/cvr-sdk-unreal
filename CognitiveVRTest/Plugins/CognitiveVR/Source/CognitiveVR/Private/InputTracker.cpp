@@ -108,7 +108,7 @@ void UInputTracker::FindControllers()
 
 					if (dyn->ControllerInputImageName == "oculustouchleft")
 					{
-						ControllerType = EC3DControllerType::Oculus;
+						ControllerType = EC3DControllerType::OculusRift;
 						LeftHand = dyn;
 					}
 					else if (dyn->ControllerInputImageName == "windows_mixed_reality_controller_left")
@@ -123,7 +123,22 @@ void UInputTracker::FindControllers()
 					}
 					else if (dyn->ControllerInputImageName == "pico_neo_2_eye_controller_left")
 					{
-						ControllerType = EC3DControllerType::PicoNeo2Eye;
+						ControllerType = EC3DControllerType::PicoNeo2;
+						LeftHand = dyn;
+					}
+					else if (dyn->ControllerInputImageName == "pico_neo_3_eye_controller_left")
+					{
+						ControllerType = EC3DControllerType::PicoNeo3;
+						LeftHand = dyn;
+					}
+					else if (dyn->ControllerInputImageName == "oculusquesttouchleft")
+					{
+						ControllerType = EC3DControllerType::Quest2;
+						LeftHand = dyn;
+					}
+					else if (dyn->ControllerInputImageName == "quest_pro_touch_left")
+					{
+						ControllerType = EC3DControllerType::QuestPro;
 						LeftHand = dyn;
 					}
 				}
@@ -144,7 +159,7 @@ void UInputTracker::FindControllers()
 
 					if (dyn->ControllerInputImageName == "oculustouchright")
 					{
-						ControllerType = EC3DControllerType::Oculus;
+						ControllerType = EC3DControllerType::OculusRift;
 						RightHand = dyn;
 					}
 					else if (dyn->ControllerInputImageName == "windows_mixed_reality_controller_right")
@@ -159,7 +174,22 @@ void UInputTracker::FindControllers()
 					}
 					else if (dyn->ControllerInputImageName == "pico_neo_2_eye_controller_right")
 					{
-						ControllerType = EC3DControllerType::PicoNeo2Eye;
+						ControllerType = EC3DControllerType::PicoNeo2;
+						RightHand = dyn;
+					}
+					else if (dyn->ControllerInputImageName == "pico_neo_3_eye_controller_right")
+					{
+						ControllerType = EC3DControllerType::PicoNeo3;
+						RightHand = dyn;
+					}
+					else if (dyn->ControllerInputImageName == "oculusquesttouchright")
+					{
+						ControllerType = EC3DControllerType::Quest2;
+						RightHand = dyn;
+					}
+					else if (dyn->ControllerInputImageName == "quest_pro_touch_right")
+					{
+						ControllerType = EC3DControllerType::QuestPro;
 						RightHand = dyn;
 					}
 				}
@@ -250,7 +280,7 @@ void UInputTracker::IntervalUpdate()
 		}
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		//triggers
 		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
@@ -304,6 +334,65 @@ void UInputTracker::IntervalUpdate()
 			//write new stuff
 			RightJoystickAxis = currentRightJoystick;
 			auto b = FControllerInputState("rift_joystick", RightJoystickAxis);
+			AppendInputState(true, b);
+		}
+		break;
+	}
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		//triggers
+		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		if (LeftTriggerValue != icurrentValue)
+		{
+			auto b = FControllerInputState("trigger", icurrentValue);
+			AppendInputState(false, b);
+			LeftTriggerValue = icurrentValue;
+		}
+		currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");
+		icurrentValue = (int32)(currentValue * 100);
+		if (RightTriggerValue != icurrentValue)
+		{
+			auto b = FControllerInputState("trigger", icurrentValue);
+			AppendInputState(true, b);
+			RightTriggerValue = icurrentValue;
+		}
+
+		//grip
+		currentValue = InputComponent->GetAxisValue("C3D_LeftGripAxis");
+		icurrentValue = (int32)(currentValue * 100);
+		if (LeftGripValue != icurrentValue)
+		{
+			auto b = FControllerInputState("grip", icurrentValue);
+			AppendInputState(false, b);
+			LeftGripValue = icurrentValue;
+		}
+		currentValue = InputComponent->GetAxisValue("C3D_RightGripAxis");
+		icurrentValue = (int32)(currentValue * 100);
+		if (RightGripValue != icurrentValue)
+		{
+			auto b = FControllerInputState("grip", icurrentValue);
+			AppendInputState(true, b);
+			RightGripValue = icurrentValue;
+		}
+
+		//joysticks
+		FVector currentLeftJoystick = FVector(InputComponent->GetAxisValue("C3D_LeftJoystickH"), InputComponent->GetAxisValue("C3D_LeftJoystickV"), LeftJoystickAxis.Z);
+		if (FVector::Distance(LeftJoystickAxis, currentLeftJoystick) > MinimumVectorChange)
+		{
+			//write new stuff
+			LeftJoystickAxis = currentLeftJoystick;
+			auto b = FControllerInputState("joystick", LeftJoystickAxis);
+			AppendInputState(false, b);
+		}
+
+		FVector currentRightJoystick = FVector(InputComponent->GetAxisValue("C3D_RightJoystickH"), InputComponent->GetAxisValue("C3D_RightJoystickV"), RightJoystickAxis.Z);
+		if (FVector::Distance(RightJoystickAxis, currentRightJoystick) > MinimumVectorChange)
+		{
+			//write new stuff
+			RightJoystickAxis = currentRightJoystick;
+			auto b = FControllerInputState("joystick", RightJoystickAxis);
 			AppendInputState(true, b);
 		}
 		break;
@@ -369,7 +458,8 @@ void UInputTracker::IntervalUpdate()
 		}
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo2:
 	{
 		//triggers
 		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
@@ -445,13 +535,21 @@ void UInputTracker::LeftFaceButtonOnePressed()
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_xbtn", 100);
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("xbtn", 100);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_xbtn", 100);
 		AppendInputState(false, b);
@@ -468,13 +566,21 @@ void UInputTracker::LeftFaceButtonOneReleased()
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_xbtn", 0);
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("xbtn", 0);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_xbtn", 0);
 		AppendInputState(false, b);
@@ -491,13 +597,21 @@ void UInputTracker::LeftFaceButtonTwoPressed()
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_ybtn", 100);
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("ybtn", 100);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_ybtn", 100);
 		AppendInputState(false, b);
@@ -513,13 +627,21 @@ void UInputTracker::LeftFaceButtonTwoReleased()
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_ybtn", 0);
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("ybtn", 0);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_ybtn", 0);
 		AppendInputState(false, b);
@@ -540,13 +662,21 @@ void UInputTracker::LeftMenuButtonPressed()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_start", 100);
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("menu", 100);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_menubtn", 100);
 		AppendInputState(false, b);
@@ -570,13 +700,21 @@ void UInputTracker::LeftMenuButtonReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_start", 0);
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("menu", 0);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_menubtn", 0);
 		AppendInputState(false, b);
@@ -597,7 +735,7 @@ void UInputTracker::LeftJoystickPressed()
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
@@ -606,7 +744,18 @@ void UInputTracker::LeftJoystickPressed()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
+		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
+		auto b = FControllerInputState("joystick", FVector(x, y, 100));
+		LeftJoystickAxis = FVector(x, y, 100);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
@@ -632,7 +781,7 @@ void UInputTracker::LeftJoystickReleased()
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
@@ -641,7 +790,18 @@ void UInputTracker::LeftJoystickReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
+		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
+		auto b = FControllerInputState("joystick", FVector(x, y, 0));
+		LeftJoystickAxis = FVector(x, y, 0);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
@@ -675,7 +835,7 @@ void UInputTracker::LeftTouchpadReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -701,7 +861,7 @@ void UInputTracker::LeftTouchpadTouched()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -727,7 +887,7 @@ void UInputTracker::LeftTouchpadPressed()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -754,7 +914,7 @@ void UInputTracker::LeftTouchpadPressRelease()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -775,13 +935,21 @@ void UInputTracker::RightFaceButtonOnePressed()
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_abtn", 100);
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("abtn", 100);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_abtn", 100);
 		AppendInputState(true, b);
@@ -797,13 +965,21 @@ void UInputTracker::RightFaceButtonOneReleased()
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_abtn", 0);
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("abtn", 0);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_abtn", 0);
 		AppendInputState(true, b);
@@ -820,13 +996,21 @@ void UInputTracker::RightFaceButtonTwoPressed()
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_bbtn", 100);
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("bbtn", 100);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_bbtn", 100);
 		AppendInputState(true, b);
@@ -842,13 +1026,21 @@ void UInputTracker::RightFaceButtonTwoReleased()
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_bbtn", 0);
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("bbtn", 0);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_bbtn", 0);
 		AppendInputState(true, b);
@@ -869,13 +1061,21 @@ void UInputTracker::RightMenuButtonPressed()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_start", 100);
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("menu", 100);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_menubtn", 100);
 		AppendInputState(true, b);
@@ -899,13 +1099,21 @@ void UInputTracker::RightMenuButtonReleased()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_start", 0);
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("menu", 0);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_menubtn", 0);
 		AppendInputState(true, b);
@@ -926,7 +1134,7 @@ void UInputTracker::RightJoystickPressed()
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
@@ -935,7 +1143,18 @@ void UInputTracker::RightJoystickPressed()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
+		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
+		auto b = FControllerInputState("joystick", FVector(x, y, 100));
+		RightJoystickAxis = FVector(x, y, 100);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
@@ -961,7 +1180,7 @@ void UInputTracker::RightJoystickReleased()
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
@@ -970,7 +1189,18 @@ void UInputTracker::RightJoystickReleased()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
+		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
+		auto b = FControllerInputState("joystick", FVector(x, y, 0));
+		RightJoystickAxis = FVector(x, y, 0);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
@@ -1004,7 +1234,7 @@ void UInputTracker::RightTouchpadReleased()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -1030,7 +1260,7 @@ void UInputTracker::RightTouchpadTouched()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -1056,7 +1286,7 @@ void UInputTracker::RightTouchpadPressed()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -1083,7 +1313,7 @@ void UInputTracker::RightTouchpadPressRelease()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -1107,13 +1337,21 @@ void UInputTracker::RightGripPressed()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_grip", 100);
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("grip", 100);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_grip", 100);
 		AppendInputState(true, b);
@@ -1138,7 +1376,7 @@ void UInputTracker::RightGripReleased()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float currentValue = InputComponent->GetAxisValue("C3D_RightGripAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
@@ -1147,7 +1385,18 @@ void UInputTracker::RightGripReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float currentValue = InputComponent->GetAxisValue("C3D_RightGripAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		RightGripValue = icurrentValue;
+		auto b = FControllerInputState("grip", icurrentValue);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_grip", 0);
 		AppendInputState(true, b);
@@ -1172,13 +1421,21 @@ void UInputTracker::LeftGripPressed()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_grip", 100);
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("grip", 100);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_grip", 100);
 		AppendInputState(false, b);
@@ -1203,7 +1460,7 @@ void UInputTracker::LeftGripReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float currentValue = InputComponent->GetAxisValue("C3D_LeftGripAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
@@ -1212,7 +1469,18 @@ void UInputTracker::LeftGripReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float currentValue = InputComponent->GetAxisValue("C3D_LeftGripAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		LeftGripValue = icurrentValue;
+		auto b = FControllerInputState("grip", icurrentValue);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_grip", 0);
 		AppendInputState(false, b);
@@ -1239,14 +1507,23 @@ void UInputTracker::LeftTriggerPressed()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_trigger", 100);
 		LeftTriggerValue = 100;
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("trigger", 100);
+		LeftTriggerValue = 100;
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_trigger", 100);
 		LeftTriggerValue = 100;
@@ -1276,7 +1553,7 @@ void UInputTracker::LeftTriggerReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
@@ -1285,7 +1562,18 @@ void UInputTracker::LeftTriggerReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		LeftTriggerValue = icurrentValue;
+		auto b = FControllerInputState("trigger", icurrentValue);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_trigger", 0);
 		LeftTriggerValue = 0;
@@ -1315,14 +1603,23 @@ void UInputTracker::RightTriggerPressed()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_trigger", 100);
 		RightTriggerValue = 100;
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("trigger", 100);
+		RightTriggerValue = 100;
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_trigger", 100);
 		RightTriggerValue = 100;
@@ -1352,7 +1649,7 @@ void UInputTracker::RightTriggerReleased()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
@@ -1361,7 +1658,18 @@ void UInputTracker::RightTriggerReleased()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		RightTriggerValue = icurrentValue;
+		auto b = FControllerInputState("trigger", icurrentValue);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_trigger", 0);
 		RightTriggerValue = 0;
