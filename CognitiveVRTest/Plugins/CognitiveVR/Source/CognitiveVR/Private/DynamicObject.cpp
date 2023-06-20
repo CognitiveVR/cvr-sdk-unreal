@@ -327,6 +327,8 @@ TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
 void UDynamicObject::UpdateSyncWithPlayer()
 {
 	if (dynamicObjectManager == nullptr) { return; }
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	FVector currentForward = GetForwardVector();
 
@@ -376,6 +378,8 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 	if (!HasInitialized) { return; }
 	if (dynamicObjectManager == nullptr) { return; }
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	if (SyncUpdateWithPlayer){return;}
 
@@ -683,6 +687,8 @@ void UDynamicObject::FlushButtons(FControllerInputStateCollection& target)
 	{
 		return;
 	}
+	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	FDynamicObjectSnapshot snap = MakeSnapshot(false);
 	snap.Buttons = target.States;

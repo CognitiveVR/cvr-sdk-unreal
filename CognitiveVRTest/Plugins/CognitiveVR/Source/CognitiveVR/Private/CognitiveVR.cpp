@@ -256,6 +256,14 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
 	AttributionKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "AttributionKey", false);
 
+	FString ValueReceived;
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "AutomaticallySetTrackingScene", false);
+	if (ValueReceived.Len() > 0)
+	{
+		AutomaticallySetTrackingScene = FCString::ToBool(*ValueReceived);
+	}
+
 	if (ApplicationKey.Len() == 0)
 	{
 		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::StartSession ApplicationKey is invalid");
@@ -391,6 +399,8 @@ void FAnalyticsProviderCognitiveVR::EndSession()
 	SessionId = "";
 	bHasCustomSessionName = false;
 	bHasSessionStarted = false;
+	CurrentTrackingSceneId.Empty();
+	LastSceneData.Reset();
 
 	//broadcast end session
 	CognitiveLog::Info("CognitiveVR EndSession");
@@ -1022,6 +1032,7 @@ void FAnalyticsProviderCognitiveVR::HandleApplicationWillEnterBackground()
 
 void FAnalyticsProviderCognitiveVR::SetTrackingScene(FString levelName)
 {
+	FlushEvents();
 	TSharedPtr<FSceneData> data = GetSceneData(levelName);
 	if (data.IsValid())
 	{

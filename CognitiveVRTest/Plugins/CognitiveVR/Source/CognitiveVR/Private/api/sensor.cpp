@@ -64,6 +64,7 @@ void USensors::RecordSensor(FString Name, float value)
 
 	UWorld* world = ACognitiveVRActor::GetCognitiveSessionWorld();
 	if (world == nullptr) { return; }
+	if (cog->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	float realtime = UGameplayStatics::GetRealTimeSeconds(world);
 	if (SensorDataPoints.Contains(Name))
@@ -95,6 +96,7 @@ void USensors::RecordSensor(FString Name, double value)
 
 	UWorld* world = ACognitiveVRActor::GetCognitiveSessionWorld();
 	if (world == nullptr) { return; }
+	if (cog->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	float realtime = UGameplayStatics::GetRealTimeSeconds(world);
 	if (SensorDataPoints.Contains(Name))

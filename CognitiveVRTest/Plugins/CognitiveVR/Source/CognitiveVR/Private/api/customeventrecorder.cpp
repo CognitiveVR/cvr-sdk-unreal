@@ -158,6 +158,7 @@ void UCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<F
 		CognitiveLog::Warning("CustomEvent::Send - FAnalyticsProviderCognitiveVR is null!");
 		return;
 	}
+	if (cog->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	if (properties.Get() == NULL)
 	{

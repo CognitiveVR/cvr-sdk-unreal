@@ -151,6 +151,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		//don't record player position data before a session has begun
 		return;
 	}
+	if (cog->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 

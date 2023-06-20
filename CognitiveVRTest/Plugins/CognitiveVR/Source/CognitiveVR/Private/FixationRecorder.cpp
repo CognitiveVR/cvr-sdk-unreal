@@ -476,6 +476,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	{
 		return;
 	}
+	if (cog->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	if (!isFixating)
 	{
