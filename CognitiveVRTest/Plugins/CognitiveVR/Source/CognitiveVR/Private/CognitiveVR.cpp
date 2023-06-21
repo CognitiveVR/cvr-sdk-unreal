@@ -1041,5 +1041,12 @@ void FAnalyticsProviderCognitiveVR::SetTrackingScene(FString levelName)
 		LastSceneData = data;
 		SceneStartTime = Util::GetTimestamp();
 	}
+	else
+	{
+		ForceWriteSessionMetadata = true;
+		CurrentTrackingSceneId = FString();
+		LastSceneData = data;
+		SceneStartTime = Util::GetTimestamp();
+	}
 	//todo consider events for arrival/departure from scenes here
 }
