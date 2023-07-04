@@ -25,7 +25,7 @@ class SDynamicObjectManagerWidget : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SDynamicObjectManagerWidget){}
-	SLATE_ARGUMENT(TArray<TSharedPtr<FDynamicData>>, Items)
+	//SLATE_ARGUMENT(TArray<TSharedPtr<FDynamicData>>, Items)
 	//SLATE_ARGUMENT(FCognitiveEditorTools*, CognitiveEditorTools)
 	SLATE_END_ARGS()
 
@@ -40,7 +40,7 @@ public:
 	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 
 	/* Adds a new textbox with the string to the list */
-	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FDynamicData> Item, const TSharedRef<STableViewBase>& OwnerTable);
+	//TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FDynamicData> Item, const TSharedRef<STableViewBase>& OwnerTable);
 
 	/* The list of strings */
 	TArray<TSharedPtr<FDynamicData>> Items;

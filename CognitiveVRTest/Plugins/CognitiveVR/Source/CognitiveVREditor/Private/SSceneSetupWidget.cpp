@@ -55,13 +55,9 @@ void SSceneSetupWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, 
 
 void SSceneSetupWidget::Construct(const FArguments& Args)
 {
-	DisplayAPIKey = FCognitiveEditorTools::GetInstance()->GetApplicationKey().ToString();
-	DisplayDeveloperKey = FCognitiveEditorTools::GetInstance()->GetDeveloperKey().ToString();
-
 	float padding = 10;
 
 	CheckForExpiredDeveloperKey();
-
 
 	ChildSlot
 		[
@@ -167,365 +163,167 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 #pragma endregion
 
-#pragma region "key screen"
+#pragma region "controller screen"
 
 			+ SVerticalBox::Slot()
 			//.VAlign(VAlign_Center)
 			.AutoHeight()
 				.Padding(0, 0, 0, padding)
 			[
+				//SNew(STextBlock)
+				//.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+				//.Justification(ETextJustify::Center)
+				//.Text(FText::FromString("These are all the Dynamic Objects components currently found in your scene."))
+
 				SNew(SRichTextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
+				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
 				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Text(FText::FromString("Please add your <RichTextBlock.BoldHighlight>Cognitive3D Project API Keys</> below to continue\nThese are available on the Project Dashboard"))
-			]
-			+ SVerticalBox::Slot()
-			.MaxHeight(32)
-				.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
-				+ SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
-					.WidthOverride(128)
-					.HeightOverride(32)
-					[
-						SNew(STextBlock)
-						.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
-						.Text(FText::FromString("Developer Key"))
-					]
-				]
-				+ SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
-					.WidthOverride(128)
-					.HeightOverride(32)
-					[
-						SNew(SEditableTextBox)
-						.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
-						.Text(this, &SSceneSetupWidget::GetDisplayDeveloperKey)
-						.OnTextChanged(this,&SSceneSetupWidget::OnDeveloperKeyChanged)
-						//.OnTextCommitted()
-					]
-				]
-			]
-			+ SVerticalBox::Slot()
-			.MaxHeight(8)
-				.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(STextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
-			]
-			+ SVerticalBox::Slot()
-			.MaxHeight(32)
-				.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
-				+ SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
-					.WidthOverride(128)
-					.HeightOverride(32)
-					[
-						SNew(STextBlock)
-						.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
-						.Text(FText::FromString("Application Key"))
-					]
-				]
+				.Text(FText::FromString("These are all the Dynamic Objects components currently found in your scene."))
 
-				+ SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
-					.WidthOverride(128)
-					.HeightOverride(32)
-					[
-						SNew(SEditableTextBox)
-						.Visibility(this, &SSceneSetupWidget::IsKeysVisible)
-						.Text(this, &SSceneSetupWidget::GetDisplayAPIKey)
-						.OnTextChanged(this,&SSceneSetupWidget::OnAPIKeyChanged)
-					]
-				]
 			]
 
-#pragma endregion
-
-#pragma region "explain dynamics"
-
-			+ SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
-			.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SRichTextBlock)
-				.Justification(ETextJustify::Center)
-				.Visibility(this, &SSceneSetupWidget::IsExplainDynamicsVisible)
-				.AutoWrapText(true)
-				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Text(FText::FromString("A <RichTextBlock.BoldHighlight>Dynamic Object</> is an object that moves around during an experience which you wish to track"))
-			]
-
-			+ SVerticalBox::Slot()
-			.HAlign(HAlign_Center)
-			.VAlign(VAlign_Top)
-			.AutoHeight()
-			.Padding(0,0,0,padding)
-			[
-				SNew(SBox)
-				.Visibility(this, &SSceneSetupWidget::IsExplainDynamicsVisible)
-				.HeightOverride(180)
-				.WidthOverride(256)				
-				[
-					SNew(SOverlay)
-					+SOverlay::Slot()
-					[
-						SNew(SBox)
-						.WidthOverride(256)
-						.HeightOverride(180)
-						[
-							SNew(SImage)
-							.Visibility(this, &SSceneSetupWidget::IsExplainDynamicsVisible)
-							.Image(this, &SSceneSetupWidget::GetSceneGreyTexture)
-						]
-					]
-					+ SOverlay::Slot()
-					[
-						SNew(SBox)
-						.WidthOverride(256)
-						.HeightOverride(180)
-						[
-							SNew(SImage)
-							.Visibility(this, &SSceneSetupWidget::IsExplainDynamicsVisible)
-							.Image(this, &SSceneSetupWidget::GetDynamicsBlueTexture)
-						]
-					]
-				]
-			]
-			+ SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
-			.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SRichTextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsExplainDynamicsVisible)
-				.AutoWrapText(true)
-				.Justification(ETextJustify::Center)
-				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Text(FText::FromString("<RichTextBlock.BoldHighlight>You can add or remove Dynamic Objects without uploading a new Scene Version</>.\n\nYou must attach <RichTextBlock.BoldHighlight>Dynamic Object Components</> onto each actor you wish to track in your project. These objects must have collision so we can track user gaze on them."))
-			]
-
-#pragma endregion
-
-#pragma region "explain scene"
-
-			+ SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
-			.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SRichTextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsExplainSceneVisible)
-				.AutoWrapText(true)
-				.Justification(ETextJustify::Center)
-				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Text(FText::FromString("A <RichTextBlock.BoldHighlight>Scene</> is an approximation of your Unreal level and is uploaded to the Dashboard. It is all the static meshes"))
-			]
-
-			+ SVerticalBox::Slot()
-			.HAlign(HAlign_Center)
-			.VAlign(VAlign_Top)
-			.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			[
-				SNew(SBox)
-				.Visibility(this, &SSceneSetupWidget::IsExplainSceneVisible)
-				.HeightOverride(180)
-				.WidthOverride(256)				
-				[
-					SNew(SOverlay)
-					+SOverlay::Slot()
-					[
-						SNew(SBox)
-						.WidthOverride(256)
-						.HeightOverride(180)
-						[
-							SNew(SImage)
-							.Visibility(this, &SSceneSetupWidget::IsExplainSceneVisible)
-							.Image(this, &SSceneSetupWidget::GetSceneBlueTexture)
-						]
-					]
-					+ SOverlay::Slot()
-					[
-						SNew(SBox)
-						.WidthOverride(256)
-						.HeightOverride(180)
-						[
-							SNew(SImage)
-							.Visibility(this, &SSceneSetupWidget::IsExplainSceneVisible)
-							.Image(this, &SSceneSetupWidget::GetDynamicsGreyTexture)
-						]
-					]
-				]
-			]
-			+ SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
-			.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SRichTextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsExplainSceneVisible)
-				.AutoWrapText(true)
-				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("This will provide context to the data collected in your experience.\n\nIf you decide to change the scene in your Unreal project (such as moving a wall), the data you collect may no longer represent your experience. You can upload a new <RichTextBlock.BoldHighlight>Scene Version</> by running this setup again."))
-			]
-
-#pragma endregion
-
-#pragma region "blender"
 			+SVerticalBox::Slot()
+			//.VAlign(VAlign_Center)
 			.AutoHeight()
 				.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
-				.HAlign(HAlign_Center)
-				.VAlign(VAlign_Center)
-				.WidthOverride(256)
-				.HeightOverride(78)
-				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-				[
-					SNew(SImage)
-					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-					.Image(this, &SSceneSetupWidget::GetBlenderLogo)
-				]
-			]
-
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(STextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("When uploading your level to the dashboard, we use Blender to automatically prepare the scene.\nThis includes converting exported images to .pngs\nand reducing the polygon count of large meshes.\n\nWe also need a temporary Export Directory to save Unreal files to while we process them."))
-			]
-
-			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
-			.MaxHeight(30)
-				.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(STextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("Blender is free and open source."))
-			]
-
-			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
-			.MaxHeight(30)
-				.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-				+SHorizontalBox::Slot()
-				.HAlign(HAlign_Center)
-				[
-					SNew(SButton)
-					.HAlign(HAlign_Center)
-					.Visibility(this,&SSceneSetupWidget::IsBlenderVisible)
-					.Text(FText::FromString("www.blender.org"))
-					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenURL,FString("https://www.blender.org"))
-				]
-			]
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SSeparator)
-				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-			]
-
-			//path to blender
-			+ SVerticalBox::Slot()
-			.MaxHeight(32)
-				.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-				+SHorizontalBox::Slot()
-				.MaxWidth(200)
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-					.HeightOverride(32)
-					[
-						SNew(STextBlock)
-						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-						.Text(FText::FromString("Path to Blender.exe"))
-					]
-				]
-				+ SHorizontalBox::Slot()
-				.Padding(1)
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-					.HeightOverride(32)
-					.MaxDesiredHeight(32)
-					[
-						SNew(SEditableTextBox)
-						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBlenderPath)
-						.OnTextChanged(this, &SSceneSetupWidget::OnBlenderPathChanged)
-					]
-				]
-				+SHorizontalBox::Slot()
-				.MaxWidth(17)
+				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
 				[
 					SNew(SHorizontalBox)
+					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+					+SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SNew(SButton)
+						.Text(FText::FromString("Refresh"))
+						.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+						.OnClicked(this, &SSceneSetupWidget::RefreshDisplayDynamicObjectsCountInScene)
+					]
+					+SHorizontalBox::Slot()
+					[
+						SNew(STextBlock)
+						.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+						.AutoWrapText(true)
+						.Justification(ETextJustify::Center)
+						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::DisplayDynamicObjectsCountInScene)
+					]
+				]
+			]
+
+			/*+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, 0, 0, 4)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+				.Text(FText::FromString("Dynamic Objects In Scene"))
+			]*/
+			+ SVerticalBox::Slot()
+				.AutoHeight()
+				.MaxHeight(250)
+				.Padding(0, 0, 0, padding)
+			[
+				SNew(SBox)
+				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+				[
+					SAssignNew(SceneDynamicObjectList,SDynamicObjectListWidget)
+					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+					.Items(GetSceneDynamics())
+				]
+			]
+			
+			+ SVerticalBox::Slot()
+			.Padding(0, 0, 0, padding)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			.VAlign(VAlign_Center)
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+				+SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+					.HeightOverride(64)
+					.WidthOverride(128)
+					[
+						SNew(SButton)
+						.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+						.Text(FText::FromString("Export\nAll Meshes"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportAllDynamics)
+					]
+				]
+				+SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+					.HeightOverride(64)
+					.WidthOverride(128)
+					[
+						SNew(SButton)
+						.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+						.Text(FText::FromString("Export\nSelected Meshes"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportSelectedDynamics)
+					]
+				]
+			]
+
+			+SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(FMargin(64, 24, 64, 24))
+			[
+				SNew(SBorder)
+				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+				.BorderImage(FEditorStyle::GetBrush("ToolPanel.LightGroupBorder"))
+				.Padding(8.0f)
+				[
+					SNew(SHorizontalBox)
+					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
 					+ SHorizontalBox::Slot()
 					.AutoWidth()
-					.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
 					.VAlign(VAlign_Center)
 					[
-						SNew(SBox)
-						.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-						.HeightOverride(17)
-						.WidthOverride(17)
+						SNew(SImage)
+						.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
+						.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
+					]
+						// Notice
+					+SHorizontalBox::Slot()
+					.Padding(16.0f, 0.0f)
+					.VAlign(VAlign_Center)
+					[
+						SNew(STextBlock)
+						.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+						.ColorAndOpacity(FLinearColor::Black)
+						//.ShadowColorAndOpacity(FLinearColor::Black)
+						//.ShadowOffset(FVector2D::UnitVector)
+						.AutoWrapText(true)
+						.Text(FText::FromString("Dynamic Objects must have a valid Mesh Name\nTo have data aggregated, Dynamic Objects must have a Unique Id"))
+					]
+					+SHorizontalBox::Slot()
+					[
+						SNew(SButton)
+						.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+						.OnClicked_Raw(this, &SSceneSetupWidget::ValidateAndRefresh)
 						[
-							SNew(SButton)
-							.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-							//PickerWidget = SAssignNew(BrowseButton, SButton)
-							.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
-							.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
-							.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Blender)
-							.ContentPadding(2.0f)
-							.ForegroundColor(FSlateColor::UseForeground())
-							.IsFocusable(false)
-							[
-								SNew(SImage)
-								.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
-								.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
-								.ColorAndOpacity(FSlateColor::UseForeground())
-							]
+							SNew(STextBlock)
+							.Justification(ETextJustify::Center)
+							.AutoWrapText(true)
+							.Text(FText::FromString("Validate Mesh Names and Unique Ids"))
 						]
 					]
 				]
 			]
+
+
+#pragma endregion
+
+#pragma region "export screen"
+
 
 			//path to export directory
 			+ SVerticalBox::Slot()
@@ -534,16 +332,16 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
+				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 				+SHorizontalBox::Slot()
 				.MaxWidth(200)
 				[
 					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 					.HeightOverride(32)
 					[
 						SNew(STextBlock)
-						.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
+						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
 						.Text(FText::FromString("Path to Export Directory"))
 					]
@@ -552,12 +350,12 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Padding(1)
 				[
 					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 					.HeightOverride(32)
 					.MaxDesiredHeight(32)
 					[
 						SNew(SEditableTextBox)
-						.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
+						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBaseExportDirectoryDisplay)
 						.OnTextChanged(this, &SSceneSetupWidget::OnExportPathChanged)
 						//SNew(STextBlock)
@@ -574,12 +372,12 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.VAlign(VAlign_Center)
 					[
 						SNew(SBox)
-						.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
+						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 						.HeightOverride(17)
 						.WidthOverride(17)
 						[
 							SNew(SButton)
-							.Visibility(this, &SSceneSetupWidget::IsBlenderVisible)
+							.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 							//PickerWidget = SAssignNew(BrowseButton, SButton)
 							.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
 							.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
@@ -596,168 +394,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
-#pragma endregion
 
-#pragma region "dynamics screen"
-
-			+ SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
-			.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				//SNew(STextBlock)
-				//.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-				//.Justification(ETextJustify::Center)
-				//.Text(FText::FromString("These are all the Dynamic Objects components currently found in your scene."))
-
-				SNew(SRichTextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-				.AutoWrapText(true)
-				.Justification(ETextJustify::Center)
-				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Text(FText::FromString("These are all the Dynamic Objects components currently found in your scene."))
-
-			]
-
-			+SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
-			.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SBox)
-				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-				[
-					SNew(SHorizontalBox)
-					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-					+SHorizontalBox::Slot()
-					.AutoWidth()
-					[
-						SNew(SButton)
-						.Text(FText::FromString("Refresh"))
-						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-						.OnClicked(this, &SSceneSetupWidget::RefreshDisplayDynamicObjectsCountInScene)
-					]
-					+SHorizontalBox::Slot()
-					[
-						SNew(STextBlock)
-						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-						.AutoWrapText(true)
-						.Justification(ETextJustify::Center)
-						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::DisplayDynamicObjectsCountInScene)
-					]
-				]
-			]
-
-			/*+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0, 0, 0, 4)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			[
-				SNew(STextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-				.Text(FText::FromString("Dynamic Objects In Scene"))
-			]*/
-			+ SVerticalBox::Slot()
-				.AutoHeight()
-				.MaxHeight(250)
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SBox)
-				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-				[
-					SAssignNew(SceneDynamicObjectList,SDynamicObjectListWidget)
-					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-					.Items(GetSceneDynamics())
-				]
-			]
-			
-			+ SVerticalBox::Slot()
-			.Padding(0, 0, 0, padding)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.VAlign(VAlign_Center)
-			.AutoHeight()
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-						.Text(FText::FromString("Export\nAll Meshes"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportAllDynamics)
-					]
-				]
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-						.Text(FText::FromString("Export\nSelected Meshes"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportSelectedDynamics)
-					]
-				]
-			]
-
-			+SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(FMargin(64, 24, 64, 24))
-			[
-				SNew(SBorder)
-				.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-				.BorderImage(FEditorStyle::GetBrush("ToolPanel.LightGroupBorder"))
-				.Padding(8.0f)
-				[
-					SNew(SHorizontalBox)
-					.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					.VAlign(VAlign_Center)
-					[
-						SNew(SImage)
-						.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
-						.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
-					]
-						// Notice
-					+SHorizontalBox::Slot()
-					.Padding(16.0f, 0.0f)
-					.VAlign(VAlign_Center)
-					[
-						SNew(STextBlock)
-						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-						.ColorAndOpacity(FLinearColor::Black)
-						//.ShadowColorAndOpacity(FLinearColor::Black)
-						//.ShadowOffset(FVector2D::UnitVector)
-						.AutoWrapText(true)
-						.Text(FText::FromString("Dynamic Objects must have a valid Mesh Name\nTo have data aggregated, Dynamic Objects must have a Unique Id"))
-					]
-					+SHorizontalBox::Slot()
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsDynamicsVisible)
-						.OnClicked_Raw(this, &SSceneSetupWidget::ValidateAndRefresh)
-						[
-							SNew(STextBlock)
-							.Justification(ETextJustify::Center)
-							.AutoWrapText(true)
-							.Text(FText::FromString("Validate Mesh Names and Unique Ids"))
-						]
-					]
-				]
-			]
-
-
-#pragma endregion
-
-#pragma region "export screen"
 
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Center)
@@ -863,48 +500,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
-
-			//+ SVerticalBox::Slot()
-			//.Padding(0, 0, 0, 4)
-			//.HAlign(EHorizontalAlignment::HAlign_Center)
-			//.VAlign(VAlign_Center)
-			//[
-			//	SNew(SHorizontalBox)
-			//	+SHorizontalBox::Slot()
-			//	[
-			//		SNew(SBox)
-			//		.HeightOverride(64)
-			//		.WidthOverride(128)
-			//		[
-			//			SNew(SButton)
-			//			.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-			//			.Text(FText::FromString("Export Scene Materials"))
-			//			.OnClicked(this,&SSceneSetupWidget::ExportSceneMaterials)
-			//		]
-			//	]
-			//]
-
-			//+ SVerticalBox::Slot()
-			//.Padding(0, 0, 0, 4)
-			//.HAlign(EHorizontalAlignment::HAlign_Center)
-			//.VAlign(VAlign_Center)
-			//[
-			//	SNew(SHorizontalBox)
-			//	+SHorizontalBox::Slot()
-			//	[
-			//		SNew(SBox)
-			//		.HeightOverride(64)
-			//		.WidthOverride(128)
-			//		[
-			//			SNew(SButton)
-			//			.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-			//			.Text(FText::FromString("ConvertToGLTF"))
-			//			.OnClicked(this,&SSceneSetupWidget::ConvertSceneToGLTF)
-			//		]
-			//	]
-			//]
-
-
 #pragma endregion
 
 #pragma region "upload screen"
@@ -941,10 +536,10 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				SNew(SBox)
 				.WidthOverride(this,&SSceneSetupWidget::GetScreenshotWidth)
 				.HeightOverride(this, &SSceneSetupWidget::GetScreenshotHeight)
-				.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
+				.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 				[
 					SNew(SImage)
-					.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
+					.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 					.Image(this,&SSceneSetupWidget::GetScreenshotBrushTexture)
 				]
 			]
@@ -957,11 +552,11 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				SNew(SBox)
 				.HeightOverride(32)
 				.WidthOverride(256)
-				.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
+				.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 				[
 					SNew(SButton)
 					.Text(FText::FromString("Take Screenshot From Current View"))
-					.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
+					.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 					.OnClicked(this, &SSceneSetupWidget::TakeScreenshot)
 				]
 			]
@@ -973,7 +568,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			[
 				SNew(SListView<TSharedPtr<FString>>)
 					.ItemHeight(16.0f)
-					.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
+					.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 					.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneUploadFiles)
 					.OnGenerateRow(this, &SSceneSetupWidget::OnGenerateSceneExportFileRow)
 					.HeaderRow(
@@ -993,11 +588,11 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
-				.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
+				.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 				[
 					SNew(SListView<TSharedPtr<FString>>)
 					.ItemHeight(16.0f)
-					.Visibility(this, &SSceneSetupWidget::IsUploadVisible)
+					.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 					.ListItemsSource(&FCognitiveEditorTools::GetInstance()->DynamicUploadFiles)
 					.OnGenerateRow(this, &SSceneSetupWidget::OnGenerateSceneExportFileRow)
 					.HeaderRow(
@@ -1062,7 +657,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.AutoHeight()
 			[
 				SNew(STextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+				.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
 				.Text(FText::FromString("That's it!\n\nYou will be recording user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard"))
@@ -1078,7 +673,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				[
 					SNew(SButton)
 					.HAlign(HAlign_Center)
-					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+					.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
 					.Text(FText::FromString("Open Dashboard"))
 					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, "https://" + FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Dashboard", false))
 				]
@@ -1089,14 +684,14 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			[
 				SNew(SBox)
 				.HeightOverride(64)
-				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+				.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
 			]
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Center)
 			.AutoHeight()
 			[
 				SNew(STextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+				.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
 				.Text(FText::FromString("Want to ask users about their experience?\n\nNeed to add more Dynamic Objects?\n\nHave some Sensors?\n\nMultiplayer?"))
@@ -1112,7 +707,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				[
 					SNew(SButton)
 					.HAlign(HAlign_Center)
-					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+					.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
 					.Text(FText::FromString("Open Documentation"))
 					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/get-started/"))
 				]
@@ -1191,30 +786,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 		FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 		FCognitiveEditorTools::GetInstance()->WizardUploadError = "";
 		FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode = 0;
-
-		FString texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("objects_grey.png");
-		FName BrushName = FName(*texturepath);
-		DynamicsGreyTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 180));
-		
-		texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("scene_blue.png");
-		BrushName = FName(*texturepath);
-		SceneBlueTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 180));
-
-		texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("objects_blue.png");
-		BrushName = FName(*texturepath);
-		DynamicsBlueTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 180));
-
-		texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("scene_grey.png");
-		BrushName = FName(*texturepath);
-		SceneGreyTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 180));
-
-		texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("bp_startsession.png");
-		BrushName = FName(*texturepath);
-		BlueprintStartTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 180));
-
-		texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("blender_logo_socket_small.png");
-		BrushName = FName(*texturepath);
-		BlenderLogoTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 78));
 }
 
 FReply SSceneSetupWidget::EvaluateSceneExport()
@@ -1340,52 +911,14 @@ void SSceneSetupWidget::GetScreenshotBrush()
 	}
 }
 
-const FSlateBrush* SSceneSetupWidget::GetBlenderLogo() const
-{
-	return BlenderLogoTexture;
-}
-
-const FSlateBrush* SSceneSetupWidget::GetDynamicsGreyTexture() const
-{
-	return DynamicsGreyTexture;
-}
-const FSlateBrush* SSceneSetupWidget::GetSceneBlueTexture() const
-{
-	return SceneBlueTexture;
-}
-const FSlateBrush* SSceneSetupWidget::GetDynamicsBlueTexture() const
-{
-	return DynamicsBlueTexture;
-}
-const FSlateBrush* SSceneSetupWidget::GetSceneGreyTexture() const
-{
-	return SceneGreyTexture;
-}
-
 const FSlateBrush* SSceneSetupWidget::GetScreenshotBrushTexture() const
 {
 	return ScreenshotTexture;
 }
-const FSlateBrush* SSceneSetupWidget::GetBlueprintStartTexture() const
-{
-	return BlueprintStartTexture;
-}
-
-FText SSceneSetupWidget::GetDisplayAPIKey() const
-{
-	return FText::FromString(DisplayAPIKey);
-}
-
-FText SSceneSetupWidget::GetDisplayDeveloperKey() const
-{
-	return FText::FromString(DisplayDeveloperKey);
-}
 
 EVisibility SSceneSetupWidget::IsSceneVersionUpload() const
 {
-	if (CurrentPage != 7) { return EVisibility::Collapsed; }
-	
-
+	if (CurrentPageEnum != EPage::UploadChecklist) { return EVisibility::Collapsed; }
 	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
 	{
@@ -1396,8 +929,7 @@ EVisibility SSceneSetupWidget::IsSceneVersionUpload() const
 
 EVisibility SSceneSetupWidget::IsIntroNewVersionVisible() const
 {
-	if (CurrentPage != 0) { return EVisibility::Collapsed; }
-
+	if (CurrentPageEnum != EPage::Intro) { return EVisibility::Collapsed; }
 
 	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
@@ -1409,7 +941,7 @@ EVisibility SSceneSetupWidget::IsIntroNewVersionVisible() const
 
 EVisibility SSceneSetupWidget::IsNewSceneUpload() const
 {
-	if (CurrentPage != 7) { return EVisibility::Collapsed; }
+	if (CurrentPageEnum != EPage::UploadChecklist) { return EVisibility::Collapsed; }
 	
 	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
@@ -1421,68 +953,27 @@ EVisibility SSceneSetupWidget::IsNewSceneUpload() const
 
 EVisibility SSceneSetupWidget::IsIntroVisible() const
 {
-	return 0 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == EPage::Intro ? EVisibility::Visible : EVisibility::Collapsed;
 }
-EVisibility SSceneSetupWidget::IsKeysVisible() const
+EVisibility SSceneSetupWidget::IsControllerVisible() const
 {
-	return 1 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
-}
-EVisibility SSceneSetupWidget::IsBlenderVisible() const
-{
-	return 2 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
-}
-EVisibility SSceneSetupWidget::IsExplainDynamicsVisible() const
-{
-	return 4 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
-}
-EVisibility SSceneSetupWidget::IsExplainSceneVisible() const
-{
-	return 3 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
-}
-EVisibility SSceneSetupWidget::IsDynamicsVisible() const
-{
-	return 5 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == EPage::Controller ? EVisibility::Visible : EVisibility::Collapsed;
 }
 EVisibility SSceneSetupWidget::IsExportVisible() const
 {
-	return 6 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == EPage::Export ? EVisibility::Visible : EVisibility::Collapsed;
 }
-EVisibility SSceneSetupWidget::IsUploadVisible() const
+EVisibility SSceneSetupWidget::IsUploadProgressVisible() const
 {
-	return 7 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == EPage::UploadChecklist ? EVisibility::Visible : EVisibility::Collapsed;
+}
+EVisibility SSceneSetupWidget::IsUploadChecklistVisible() const
+{
+	return CurrentPageEnum == EPage::UploadChecklist ? EVisibility::Visible : EVisibility::Collapsed;
 }
 EVisibility SSceneSetupWidget::IsCompleteVisible() const
 {
-	return 8 == CurrentPage ? EVisibility::Visible : EVisibility::Collapsed;
-}
-EVisibility SSceneSetupWidget::IsUploadComplete() const
-{
-	if (FCognitiveEditorTools::GetInstance()->IsWizardUploading())
-	{
-		return EVisibility::Collapsed;
-	}
-	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 200) { return IsCompleteVisible(); }
-	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 201) { return IsCompleteVisible(); }
-	//if (FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() > 0)
-	//{
-		//return EVisibility::Collapsed;
-	//}
-	return IsCompleteVisible();
-}
-
-void SSceneSetupWidget::OnAPIKeyChanged(const FText& Text)
-{
-	DisplayAPIKey = Text.ToString();
-}
-
-void SSceneSetupWidget::OnDeveloperKeyChanged(const FText& Text)
-{
-	DisplayDeveloperKey = Text.ToString();
-}
-
-void SSceneSetupWidget::RefreshList()
-{
-	ListViewWidget->RequestListRefresh();
+	return CurrentPageEnum == EPage::Complete ? EVisibility::Visible : EVisibility::Collapsed;
 }
 
 FReply SSceneSetupWidget::TakeScreenshot()
@@ -1494,48 +985,47 @@ FReply SSceneSetupWidget::TakeScreenshot()
 
 FReply SSceneSetupWidget::DebugNextPage()
 {
-	CurrentPage++;
+	CurrentPageEnum = (EPage)(((uint8)CurrentPageEnum) + 1);
 	return FReply::Handled();
 }
 FReply SSceneSetupWidget::DebugPreviousPage()
 {
-	CurrentPage--;
+	CurrentPageEnum = (EPage)(((uint8)CurrentPageEnum) - 1);
 	return FReply::Handled();
 }
 
 FReply SSceneSetupWidget::NextPage()
 {
-	if (CurrentPage == 1)
+	if (CurrentPageEnum == EPage::Intro)
 	{
-		FCognitiveEditorTools::GetInstance()->SaveApplicationKeyToFile(DisplayAPIKey);
-		FCognitiveEditorTools::GetInstance()->SaveDeveloperKeyToFile(DisplayDeveloperKey);
 		FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
+
 		//save keys to ini
 		SpawnCognitiveVRActor();
 	}
-	if (CurrentPage == 2)
+	else if (CurrentPageEnum == EPage::Export)
 	{
 		GLog->Log("set dynamic and scene export directories. create if needed");
 		FCognitiveEditorTools::GetInstance()->CreateExportFolderStructure();
 	}
-	else if (CurrentPage == 6)
+	else if (CurrentPageEnum == EPage::Export)
 	{
 		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
 		GetScreenshotBrush();
 	}
-	else if (CurrentPage == 7)
+	else if (CurrentPageEnum == EPage::UploadChecklist)
 	{
 		FCognitiveEditorTools::GetInstance()->WizardUpload();
 	}
-	else if (CurrentPage == 8)
+	else if (CurrentPageEnum == EPage::UploadProgress)
 	{
 
 	}
 
-	if (CurrentPage != 8)
+	if (CurrentPageEnum != EPage::Complete)
 	{
-		CurrentPage++;
+		CurrentPageEnum = (EPage)(((uint8)CurrentPageEnum) + 1);
 	}
 
 	return FReply::Handled();
@@ -1543,14 +1033,19 @@ FReply SSceneSetupWidget::NextPage()
 
 FReply SSceneSetupWidget::LastPage()
 {
-	if (CurrentPage == 0) { return FReply::Handled(); }
-	CurrentPage--;
+	if (CurrentPageEnum == EPage::Complete) { return FReply::Handled(); }
+	CurrentPageEnum = (EPage)(((uint8)CurrentPageEnum) - 1);
 	return FReply::Handled();
 }
 
 EVisibility SSceneSetupWidget::DisplayWizardThrobber() const
 {
-	if (FCognitiveEditorTools::GetInstance()->IsWizardUploading() && 8 == CurrentPage)
+	if (CurrentPageEnum != EPage::UploadProgress)
+	{
+		return EVisibility::Collapsed;
+	}
+
+	if (FCognitiveEditorTools::GetInstance()->IsWizardUploading())
 	{
 		return EVisibility::Visible;
 	}
@@ -1649,7 +1144,7 @@ FReply SSceneSetupWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
 
 EVisibility SSceneSetupWidget::NextButtonVisibility() const
 {
-	if (CurrentPage == 8)
+	if (CurrentPageEnum == EPage::Complete)
 	{
 		return EVisibility::Hidden;
 	}
@@ -1657,11 +1152,7 @@ EVisibility SSceneSetupWidget::NextButtonVisibility() const
 }
 FText SSceneSetupWidget::NextButtonText() const
 {
-	if (CurrentPage == 1)
-	{
-		return FText::FromString("Save"); //save dev/api keys
-	}
-	else if (CurrentPage == 5)
+	if (CurrentPageEnum == EPage::Export)
 	{
 		if (FCognitiveEditorTools::GetInstance()->SubDirectoryNames.Num() > 0)
 		{
@@ -1672,49 +1163,21 @@ FText SSceneSetupWidget::NextButtonText() const
 			return FText::FromString("Skip");
 		}		
 	}
-	else if (CurrentPage == 6)
-	{
-		return FText::FromString("Next");
-	}
-	else if (CurrentPage == 7)
+	else if (CurrentPageEnum == EPage::UploadChecklist)
 	{
 		return FText::FromString("Upload");
 	}
 	return FText::FromString("Next");
 }
 
-//at the moment, AR scene export is not supported in unreal
-//TODO ar scene needs a settings.json file, but there isn't a clear place to write this without user input
-EVisibility SSceneSetupWidget::ARButtonVisibility() const
-{
-	return EVisibility::Collapsed;
-
-	if (CurrentPage == 6)
-	{
-		return EVisibility::Visible;
-	}
-	return EVisibility::Collapsed;
-}
-
-FReply SSceneSetupWidget::ARSkipExport()
-{
-	//set a working directory somewhere. write a settings.json file
-	//{ "scale":100,"sceneName":"SpeakerScene","sdkVersion":"0.7.4"}
-	CurrentPage++;
-
-	return FReply::Handled();
-}
-
 bool SSceneSetupWidget::NextButtonEnabled() const
 {
-	if (CurrentPage == 1)
+	if (CurrentPageEnum == EPage::Intro)
 	{
-		if (DisplayDeveloperKey.Len() > 0 && DisplayAPIKey.Len() > 0)
-			return true;
-		return false;
+		return true;
 	}
 
-	if (CurrentPage == 2)
+	if (CurrentPageEnum == EPage::Export)
 	{
 		if (FCognitiveEditorTools::GetInstance()->HasFoundBlender() && FCognitiveEditorTools::GetInstance()->BaseExportDirectory.Len() > 0)
 		{
@@ -1723,19 +1186,19 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 		return false;
 	}
 
-	if (CurrentPage == 5)
+	if (CurrentPageEnum == EPage::Export)
 	{
 		FCognitiveEditorTools::GetInstance()->FindAllSubDirectoryNames();
 	}
 
-	if (CurrentPage == 6)
+	if (CurrentPageEnum == EPage::Export)
 	{
 		FString sceneExportDir = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory();
 
 		return FCognitiveEditorTools::VerifyDirectoryExists(sceneExportDir);
 	}
 
-	if (CurrentPage == 7)
+	if (CurrentPageEnum == EPage::UploadProgress)
 	{
 		//refresh the upload filename lists
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
@@ -1761,11 +1224,11 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 
 EVisibility SSceneSetupWidget::BackButtonVisibility() const
 {
-	if (CurrentPage == 0)
+	if (CurrentPageEnum == EPage::Intro)
 	{
 		return EVisibility::Hidden;
 	}
-	if (CurrentPage == 8)
+	if (CurrentPageEnum == EPage::Complete)
 	{
 		return EVisibility::Hidden;
 	}
@@ -1814,7 +1277,7 @@ FReply SSceneSetupWidget::RefreshDisplayDynamicObjectsCountInScene()
 
 EVisibility SSceneSetupWidget::GetDuplicateDyanmicObjectVisibility() const
 {
-	if (IsDynamicsVisible() != EVisibility::Visible)
+	if (IsControllerVisible() != EVisibility::Visible)
 	{
 		return EVisibility::Collapsed;
 	}
@@ -1843,44 +1306,31 @@ FReply SSceneSetupWidget::ValidateAndRefresh()
 
 FText SSceneSetupWidget::GetHeaderTitle() const
 {
-	if (CurrentPage == 0)
+	if (CurrentPageEnum == EPage::Intro)
 	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 1 - WELCOME</>");
+		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 1 - INTRO</>");
 	}
-	if (CurrentPage == 1)
+	if (CurrentPageEnum == EPage::Controller)
 	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 2 - AUTHENTICATION</>"); //api keys
+		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 2 - CONTROLLER SETUP</>");
 	}
-	if (CurrentPage == 2)
+	if (CurrentPageEnum == EPage::Export)
 	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 3 - BLENDER</>"); //set up blender
+		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 3 - EXPORT SCENE GEOMETRY</>");
 	}
-	if (CurrentPage == 4)
+	if (CurrentPageEnum == EPage::UploadChecklist)
 	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 4a - WHAT IS A DYNAMIC OBJECT?</>"); //dynamic explainer
+		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 4 - UPLOAD</>");
 	}
-	if (CurrentPage == 3)
+	if (CurrentPageEnum == EPage::UploadProgress)
 	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 4a - WHAT IS A SCENE?</>"); //scene explainer
+		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 4 - UPLOAD IN PROGRESS</>");
 	}
-	if (CurrentPage == 5)
+	if (CurrentPageEnum == EPage::Complete)
 	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 6 - PREPARE DYNAMIC OBJECTS</>"); //dynamic object list + export
+		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 5 - DONE</>");
 	}
-	if (CurrentPage == 6)
-	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 7 - PREPARE SCENE</>"); //scene export
-	}
-	if (CurrentPage == 7)
-	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 8 - UPLOAD</>"); //scene upload
-	}
-	return FText::FromString("<RichTextBlock.BoldHighlight>STEP 9 - DONE</>"); //final page 
-}
-
-void SSceneSetupWidget::OnBlenderPathChanged(const FText& Text)
-{
-	FCognitiveEditorTools::GetInstance()->BlenderPath = Text.ToString();
+	return FText::FromString("<RichTextBlock.BoldHighlight>STEP 5 - DONE</>");
 }
 
 void SSceneSetupWidget::OnExportPathChanged(const FText& Text)

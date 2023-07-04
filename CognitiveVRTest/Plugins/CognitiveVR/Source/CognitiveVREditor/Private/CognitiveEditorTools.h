@@ -6,6 +6,7 @@
 #include "PropertyEditing.h"
 #include "PropertyCustomizationHelpers.h"
 #include "Json.h"
+#include "JsonObjectConverter.h"
 
 #include "UnrealEd.h"
 #include "Misc/FileHelper.h"
@@ -163,7 +164,6 @@ public:
 
 	//bakes textures from translucent and masked materials
 	void WizardExportStaticMaterials(FString directory, TArray<UStaticMeshComponent*> meshes, FString mtlFileName);
-	void WizardExportSkeletalMaterials(FString directory, TArray<USkeletalMeshComponent*> meshes, FString mtlFileName);
 	//returns array of strings describing materials being exported - the material type (opaque, translucent, masked) and the paths for each texture
 	//does the actual file writing for saving textures from material to bmps
 	TArray<FString> WizardExportMaterials(FString directory, TArray<FString> ExportedMaterialNames, TArray<UMaterialInterface*> materials);

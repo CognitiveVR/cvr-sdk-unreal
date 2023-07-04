@@ -11,7 +11,6 @@
 #include "IDetailsView.h"
 #include "DynamicObject.h"
 #include "CognitiveEditorTools.h"
-#include "BaseEditorTool.h"
 #include "coreminimal.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Input/Reply.h"
