@@ -19,27 +19,21 @@ class UCognitiveVRBlueprints;
 	class COGNITIVEVR_API UCustomEventRecorder
 	{
 		friend class FAnalyticsProviderCognitiveVR;
+		friend class FAnalyticsCognitiveVR;
 
 	private:
 
-		uint64 lastFrameCount;
-		int32 consecutiveFrame;
-
+		uint64 lastFrameCount = 0;
+		int32 consecutiveFrame = 0;
 		
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 		int32 jsonEventPart = 1;
-		int32 CustomEventBatchSize = 16;
-
+		int32 CustomEventBatchSize = 64;
 		int32 AutoTimer = 2;
-		int32 MinTimer = 2;
-		int32 ExtremeBatchSize = 64;
 		float LastSendTime = -60;
 		FTimerHandle AutoSendHandle;
 
 		TArray<TSharedPtr<FJsonObject>> events;
-
-		//checks minimum send timer before sending recorded data to dashboard
-		void TrySendData();
 
 		UFUNCTION()
 		void StartSession();
@@ -48,10 +42,11 @@ class UCognitiveVRBlueprints;
 		UFUNCTION()
 		void PostSessionEnd();
 
-	public:
+		bool HasInitialized = false;
 		UCustomEventRecorder();
-		//call this immediately after creation - sets callbacks and reference to CognitiveVRProvider
-		void Initialize();
+
+	public:
+		
 
 		//record event with name linked to a dynamic object
 		void Send(FString category, FString dynamicObjectId);

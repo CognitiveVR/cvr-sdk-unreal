@@ -3,70 +3,64 @@
 #include "InputTracker.h"
 
 // Sets default values
-AInputTracker::AInputTracker()
+UInputTracker::UInputTracker()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = true;
 
 }
 
-void AInputTracker::BeginPlay()
+void UInputTracker::BeginPlay()
 {
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	Super::BeginPlay();
 
-	//TODO when this is a component - check that this is on the CognitiveVRActor instance and not a copy elsewhere
-	//auto cognitiveActor = ACognitiveVRActor::GetCognitiveVRActor();
-	//if (cognitiveActor != GetOwner())
-	//{
-	//	CognitiveLog::Warning("AInputTracker::BeginPlay found outside of cognitive actor instance - unregister the component");
-	//	UnregisterComponent();
-	//	return;
-	//}
-
-	//get player controller 0
+	//get player controller 0 and enable input
 	APlayerController* p0 = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	EnableInput(p0);
+	GetOwner()->EnableInput(p0);
+	InputComponent = GetOwner()->InputComponent;
+	
 	InputComponent->bBlockInput = 0;
 
-	InputComponent->BindAction("C3D_RightMenuButton", EInputEvent::IE_Pressed, this, &AInputTracker::RightMenuButtonPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightMenuButton", EInputEvent::IE_Released, this, &AInputTracker::RightMenuButtonReleased).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftMenuButton", EInputEvent::IE_Pressed, this, &AInputTracker::LeftMenuButtonPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftMenuButton", EInputEvent::IE_Released, this, &AInputTracker::LeftMenuButtonReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightMenuButton", EInputEvent::IE_Pressed, this, &UInputTracker::RightMenuButtonPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightMenuButton", EInputEvent::IE_Released, this, &UInputTracker::RightMenuButtonReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftMenuButton", EInputEvent::IE_Pressed, this, &UInputTracker::LeftMenuButtonPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftMenuButton", EInputEvent::IE_Released, this, &UInputTracker::LeftMenuButtonReleased).bConsumeInput = 0;
 
-	InputComponent->BindAction("C3D_RightTrigger", EInputEvent::IE_Pressed, this, &AInputTracker::RightTriggerPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightTrigger", EInputEvent::IE_Released, this, &AInputTracker::RightTriggerReleased).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftTrigger", EInputEvent::IE_Pressed, this, &AInputTracker::LeftTriggerPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftTrigger", EInputEvent::IE_Released, this, &AInputTracker::LeftTriggerReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightTrigger", EInputEvent::IE_Pressed, this, &UInputTracker::RightTriggerPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightTrigger", EInputEvent::IE_Released, this, &UInputTracker::RightTriggerReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftTrigger", EInputEvent::IE_Pressed, this, &UInputTracker::LeftTriggerPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftTrigger", EInputEvent::IE_Released, this, &UInputTracker::LeftTriggerReleased).bConsumeInput = 0;
 
-	InputComponent->BindAction("C3D_RightGrip", EInputEvent::IE_Pressed, this, &AInputTracker::RightGripPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightGrip", EInputEvent::IE_Released, this, &AInputTracker::RightGripReleased).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftGrip", EInputEvent::IE_Pressed, this, &AInputTracker::LeftGripPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftGrip", EInputEvent::IE_Released, this, &AInputTracker::LeftGripReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightGrip", EInputEvent::IE_Pressed, this, &UInputTracker::RightGripPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightGrip", EInputEvent::IE_Released, this, &UInputTracker::RightGripReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftGrip", EInputEvent::IE_Pressed, this, &UInputTracker::LeftGripPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftGrip", EInputEvent::IE_Released, this, &UInputTracker::LeftGripReleased).bConsumeInput = 0;
 
-	InputComponent->BindAction("C3D_RightTouchpadPress", EInputEvent::IE_Pressed, this, &AInputTracker::RightTouchpadPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightTouchpadPress", EInputEvent::IE_Released, this, &AInputTracker::RightTouchpadPressRelease).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightTouchpadTouch", EInputEvent::IE_Pressed, this, &AInputTracker::RightTouchpadTouched).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightTouchpadTouch", EInputEvent::IE_Released, this, &AInputTracker::RightTouchpadReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightTouchpadPress", EInputEvent::IE_Pressed, this, &UInputTracker::RightTouchpadPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightTouchpadPress", EInputEvent::IE_Released, this, &UInputTracker::RightTouchpadPressRelease).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightTouchpadTouch", EInputEvent::IE_Pressed, this, &UInputTracker::RightTouchpadTouched).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightTouchpadTouch", EInputEvent::IE_Released, this, &UInputTracker::RightTouchpadReleased).bConsumeInput = 0;
 
-	InputComponent->BindAction("C3D_LeftTouchpadPress", EInputEvent::IE_Pressed, this, &AInputTracker::LeftTouchpadPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftTouchpadPress", EInputEvent::IE_Released, this, &AInputTracker::LeftTouchpadPressRelease).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftTouchpadTouch", EInputEvent::IE_Pressed, this, &AInputTracker::LeftTouchpadTouched).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftTouchpadTouch", EInputEvent::IE_Released, this, &AInputTracker::LeftTouchpadReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftTouchpadPress", EInputEvent::IE_Pressed, this, &UInputTracker::LeftTouchpadPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftTouchpadPress", EInputEvent::IE_Released, this, &UInputTracker::LeftTouchpadPressRelease).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftTouchpadTouch", EInputEvent::IE_Pressed, this, &UInputTracker::LeftTouchpadTouched).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftTouchpadTouch", EInputEvent::IE_Released, this, &UInputTracker::LeftTouchpadReleased).bConsumeInput = 0;
 
-	InputComponent->BindAction("C3D_RightJoystick", EInputEvent::IE_Pressed, this, &AInputTracker::RightJoystickPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightJoystick", EInputEvent::IE_Released, this, &AInputTracker::RightJoystickReleased).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftJoystick", EInputEvent::IE_Pressed, this, &AInputTracker::LeftJoystickPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftJoystick", EInputEvent::IE_Released, this, &AInputTracker::LeftJoystickReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightJoystick", EInputEvent::IE_Pressed, this, &UInputTracker::RightJoystickPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightJoystick", EInputEvent::IE_Released, this, &UInputTracker::RightJoystickReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftJoystick", EInputEvent::IE_Pressed, this, &UInputTracker::LeftJoystickPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftJoystick", EInputEvent::IE_Released, this, &UInputTracker::LeftJoystickReleased).bConsumeInput = 0;
 
-	InputComponent->BindAction("C3D_LeftFaceButtonOne", EInputEvent::IE_Pressed, this, &AInputTracker::LeftFaceButtonOnePressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftFaceButtonOne", EInputEvent::IE_Released, this, &AInputTracker::LeftFaceButtonOneReleased).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftFaceButtonTwo", EInputEvent::IE_Pressed, this, &AInputTracker::LeftFaceButtonTwoPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_LeftFaceButtonTwo", EInputEvent::IE_Released, this, &AInputTracker::LeftFaceButtonTwoReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftFaceButtonOne", EInputEvent::IE_Pressed, this, &UInputTracker::LeftFaceButtonOnePressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftFaceButtonOne", EInputEvent::IE_Released, this, &UInputTracker::LeftFaceButtonOneReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftFaceButtonTwo", EInputEvent::IE_Pressed, this, &UInputTracker::LeftFaceButtonTwoPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_LeftFaceButtonTwo", EInputEvent::IE_Released, this, &UInputTracker::LeftFaceButtonTwoReleased).bConsumeInput = 0;
 
-	InputComponent->BindAction("C3D_RightFaceButtonOne", EInputEvent::IE_Pressed, this, &AInputTracker::RightFaceButtonOnePressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightFaceButtonOne", EInputEvent::IE_Released, this, &AInputTracker::RightFaceButtonOneReleased).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightFaceButtonTwo", EInputEvent::IE_Pressed, this, &AInputTracker::RightFaceButtonTwoPressed).bConsumeInput = 0;
-	InputComponent->BindAction("C3D_RightFaceButtonTwo", EInputEvent::IE_Released, this, &AInputTracker::RightFaceButtonTwoReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightFaceButtonOne", EInputEvent::IE_Pressed, this, &UInputTracker::RightFaceButtonOnePressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightFaceButtonOne", EInputEvent::IE_Released, this, &UInputTracker::RightFaceButtonOneReleased).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightFaceButtonTwo", EInputEvent::IE_Pressed, this, &UInputTracker::RightFaceButtonTwoPressed).bConsumeInput = 0;
+	InputComponent->BindAction("C3D_RightFaceButtonTwo", EInputEvent::IE_Released, this, &UInputTracker::RightFaceButtonTwoReleased).bConsumeInput = 0;
 
 	InputComponent->BindAxis(TEXT("C3D_LeftTriggerAxis")).bConsumeInput = 0;
 	InputComponent->BindAxis(TEXT("C3D_RightTriggerAxis")).bConsumeInput = 0;
@@ -88,10 +82,10 @@ void AInputTracker::BeginPlay()
 	{
 		FindControllers();
 	}
-	cogProvider->OnSessionBegin.AddDynamic(this, &AInputTracker::FindControllers);
+	cogProvider->OnSessionBegin.AddDynamic(this, &UInputTracker::FindControllers);
 }
 
-void AInputTracker::FindControllers()
+void UInputTracker::FindControllers()
 {
 	for (TObjectIterator<UMotionControllerComponent> Itr; Itr; ++Itr)
 	{
@@ -113,24 +107,39 @@ void AInputTracker::FindControllers()
 				{
 					if (!dyn->IsController) { continue; }
 
-					if (dyn->ControllerType == "oculustouchleft")
+					if (dyn->ControllerInputImageName == "oculustouchleft")
 					{
-						ControllerType = EC3DControllerType::Oculus;
+						ControllerType = EC3DControllerType::OculusRift;
 						LeftHand = dyn;
 					}
-					else if (dyn->ControllerType == "windows_mixed_reality_controller_left")
+					else if (dyn->ControllerInputImageName == "windows_mixed_reality_controller_left")
 					{
 						ControllerType = EC3DControllerType::WindowsMixedReality;
 						LeftHand = dyn;
 					}
-					else if (dyn->ControllerType == "vivecontroller")
+					else if (dyn->ControllerInputImageName == "vivecontroller")
 					{
 						ControllerType = EC3DControllerType::Vive;
 						LeftHand = dyn;
 					}
-					else if (dyn->ControllerType == "pico_neo_2_eye_controller_left")
+					else if (dyn->ControllerInputImageName == "pico_neo_2_eye_controller_left")
 					{
-						ControllerType = EC3DControllerType::PicoNeo2Eye;
+						ControllerType = EC3DControllerType::PicoNeo2;
+						LeftHand = dyn;
+					}
+					else if (dyn->ControllerInputImageName == "pico_neo_3_eye_controller_left")
+					{
+						ControllerType = EC3DControllerType::PicoNeo3;
+						LeftHand = dyn;
+					}
+					else if (dyn->ControllerInputImageName == "oculusquesttouchleft")
+					{
+						ControllerType = EC3DControllerType::Quest2;
+						LeftHand = dyn;
+					}
+					else if (dyn->ControllerInputImageName == "quest_pro_touch_left")
+					{
+						ControllerType = EC3DControllerType::QuestPro;
 						LeftHand = dyn;
 					}
 				}
@@ -149,24 +158,39 @@ void AInputTracker::FindControllers()
 				{
 					if (!dyn->IsController) { continue; }
 
-					if (dyn->ControllerType == "oculustouchright")
+					if (dyn->ControllerInputImageName == "oculustouchright")
 					{
-						ControllerType = EC3DControllerType::Oculus;
+						ControllerType = EC3DControllerType::OculusRift;
 						RightHand = dyn;
 					}
-					else if (dyn->ControllerType == "windows_mixed_reality_controller_right")
+					else if (dyn->ControllerInputImageName == "windows_mixed_reality_controller_right")
 					{
 						ControllerType = EC3DControllerType::WindowsMixedReality;
 						RightHand = dyn;
 					}
-					else if (dyn->ControllerType == "vivecontroller")
+					else if (dyn->ControllerInputImageName == "vivecontroller")
 					{
 						ControllerType = EC3DControllerType::Vive;
 						RightHand = dyn;
 					}
-					else if (dyn->ControllerType == "pico_neo_2_eye_controller_right")
+					else if (dyn->ControllerInputImageName == "pico_neo_2_eye_controller_right")
 					{
-						ControllerType = EC3DControllerType::PicoNeo2Eye;
+						ControllerType = EC3DControllerType::PicoNeo2;
+						RightHand = dyn;
+					}
+					else if (dyn->ControllerInputImageName == "pico_neo_3_eye_controller_right")
+					{
+						ControllerType = EC3DControllerType::PicoNeo3;
+						RightHand = dyn;
+					}
+					else if (dyn->ControllerInputImageName == "oculusquesttouchright")
+					{
+						ControllerType = EC3DControllerType::Quest2;
+						RightHand = dyn;
+					}
+					else if (dyn->ControllerInputImageName == "quest_pro_touch_right")
+					{
+						ControllerType = EC3DControllerType::QuestPro;
 						RightHand = dyn;
 					}
 				}
@@ -175,9 +199,10 @@ void AInputTracker::FindControllers()
 	}
 }
 
-void AInputTracker::Tick(float DeltaTime)
+void UInputTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	//TODO IMPORTANT shouldn't record inputs if session is not started
+	if (!cog->HasStartedSession()) { return; }
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	if (LeftInputStates.States.Num() > 0)
 	{
@@ -196,13 +221,12 @@ void AInputTracker::Tick(float DeltaTime)
 		//flush right controller states
 	}
 
-	Super::Tick(DeltaTime);
 	CurrentIntervalTime += DeltaTime;
 	if (CurrentIntervalTime > Interval)
 	{
 		if (LeftHand == NULL || RightHand == NULL)
 		{
-			//FindControllers(false);
+			FindControllers();
 		}
 		else
 		{
@@ -212,7 +236,7 @@ void AInputTracker::Tick(float DeltaTime)
 	}
 }
 
-void AInputTracker::IntervalUpdate()
+void UInputTracker::IntervalUpdate()
 {
 	//check if touchpad/joystick/grip/trigger values have changed
 	switch (ControllerType)
@@ -257,7 +281,7 @@ void AInputTracker::IntervalUpdate()
 		}
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		//triggers
 		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
@@ -311,6 +335,65 @@ void AInputTracker::IntervalUpdate()
 			//write new stuff
 			RightJoystickAxis = currentRightJoystick;
 			auto b = FControllerInputState("rift_joystick", RightJoystickAxis);
+			AppendInputState(true, b);
+		}
+		break;
+	}
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		//triggers
+		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		if (LeftTriggerValue != icurrentValue)
+		{
+			auto b = FControllerInputState("trigger", icurrentValue);
+			AppendInputState(false, b);
+			LeftTriggerValue = icurrentValue;
+		}
+		currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");
+		icurrentValue = (int32)(currentValue * 100);
+		if (RightTriggerValue != icurrentValue)
+		{
+			auto b = FControllerInputState("trigger", icurrentValue);
+			AppendInputState(true, b);
+			RightTriggerValue = icurrentValue;
+		}
+
+		//grip
+		currentValue = InputComponent->GetAxisValue("C3D_LeftGripAxis");
+		icurrentValue = (int32)(currentValue * 100);
+		if (LeftGripValue != icurrentValue)
+		{
+			auto b = FControllerInputState("grip", icurrentValue);
+			AppendInputState(false, b);
+			LeftGripValue = icurrentValue;
+		}
+		currentValue = InputComponent->GetAxisValue("C3D_RightGripAxis");
+		icurrentValue = (int32)(currentValue * 100);
+		if (RightGripValue != icurrentValue)
+		{
+			auto b = FControllerInputState("grip", icurrentValue);
+			AppendInputState(true, b);
+			RightGripValue = icurrentValue;
+		}
+
+		//joysticks
+		FVector currentLeftJoystick = FVector(InputComponent->GetAxisValue("C3D_LeftJoystickH"), InputComponent->GetAxisValue("C3D_LeftJoystickV"), LeftJoystickAxis.Z);
+		if (FVector::Distance(LeftJoystickAxis, currentLeftJoystick) > MinimumVectorChange)
+		{
+			//write new stuff
+			LeftJoystickAxis = currentLeftJoystick;
+			auto b = FControllerInputState("joystick", LeftJoystickAxis);
+			AppendInputState(false, b);
+		}
+
+		FVector currentRightJoystick = FVector(InputComponent->GetAxisValue("C3D_RightJoystickH"), InputComponent->GetAxisValue("C3D_RightJoystickV"), RightJoystickAxis.Z);
+		if (FVector::Distance(RightJoystickAxis, currentRightJoystick) > MinimumVectorChange)
+		{
+			//write new stuff
+			RightJoystickAxis = currentRightJoystick;
+			auto b = FControllerInputState("joystick", RightJoystickAxis);
 			AppendInputState(true, b);
 		}
 		break;
@@ -376,7 +459,8 @@ void AInputTracker::IntervalUpdate()
 		}
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo2:
 	{
 		//triggers
 		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
@@ -419,7 +503,7 @@ void AInputTracker::IntervalUpdate()
 	}
 }
 
-void AInputTracker::AppendInputState(const bool isRight, FControllerInputState& state)
+void UInputTracker::AppendInputState(const bool isRight, FControllerInputState& state)
 {
 	//append or change value
 	if (isRight)
@@ -446,19 +530,27 @@ void AInputTracker::AppendInputState(const bool isRight, FControllerInputState& 
 	}
 }
 
-void AInputTracker::LeftFaceButtonOnePressed()
+void UInputTracker::LeftFaceButtonOnePressed()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_xbtn", 100);
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("xbtn", 100);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_xbtn", 100);
 		AppendInputState(false, b);
@@ -469,19 +561,27 @@ void AInputTracker::LeftFaceButtonOnePressed()
 	}
 }
 
-void AInputTracker::LeftFaceButtonOneReleased()
+void UInputTracker::LeftFaceButtonOneReleased()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_xbtn", 0);
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("xbtn", 0);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_xbtn", 0);
 		AppendInputState(false, b);
@@ -492,19 +592,27 @@ void AInputTracker::LeftFaceButtonOneReleased()
 	}
 }
 
-void AInputTracker::LeftFaceButtonTwoPressed()
+void UInputTracker::LeftFaceButtonTwoPressed()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_ybtn", 100);
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("ybtn", 100);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_ybtn", 100);
 		AppendInputState(false, b);
@@ -514,19 +622,27 @@ void AInputTracker::LeftFaceButtonTwoPressed()
 		break;
 	}
 }
-void AInputTracker::LeftFaceButtonTwoReleased()
+void UInputTracker::LeftFaceButtonTwoReleased()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_ybtn", 0);
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("ybtn", 0);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_ybtn", 0);
 		AppendInputState(false, b);
@@ -537,7 +653,7 @@ void AInputTracker::LeftFaceButtonTwoReleased()
 	}
 }
 
-void AInputTracker::LeftMenuButtonPressed()
+void UInputTracker::LeftMenuButtonPressed()
 {
 	switch (ControllerType)
 	{
@@ -547,13 +663,21 @@ void AInputTracker::LeftMenuButtonPressed()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_start", 100);
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("menu", 100);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_menubtn", 100);
 		AppendInputState(false, b);
@@ -567,7 +691,7 @@ void AInputTracker::LeftMenuButtonPressed()
 	}
 	}
 }
-void AInputTracker::LeftMenuButtonReleased()
+void UInputTracker::LeftMenuButtonReleased()
 {
 	switch (ControllerType)
 	{
@@ -577,13 +701,21 @@ void AInputTracker::LeftMenuButtonReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_start", 0);
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("menu", 0);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_menubtn", 0);
 		AppendInputState(false, b);
@@ -598,13 +730,13 @@ void AInputTracker::LeftMenuButtonReleased()
 	}
 }
 
-void AInputTracker::LeftJoystickPressed()
+void UInputTracker::LeftJoystickPressed()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
@@ -613,7 +745,18 @@ void AInputTracker::LeftJoystickPressed()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
+		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
+		auto b = FControllerInputState("joystick", FVector(x, y, 100));
+		LeftJoystickAxis = FVector(x, y, 100);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
@@ -633,13 +776,13 @@ void AInputTracker::LeftJoystickPressed()
 	}
 	}
 }
-void AInputTracker::LeftJoystickReleased()
+void UInputTracker::LeftJoystickReleased()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
@@ -648,7 +791,18 @@ void AInputTracker::LeftJoystickReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
+		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
+		auto b = FControllerInputState("joystick", FVector(x, y, 0));
+		LeftJoystickAxis = FVector(x, y, 0);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
@@ -669,7 +823,7 @@ void AInputTracker::LeftJoystickReleased()
 	}
 }
 
-void AInputTracker::LeftTouchpadReleased()
+void UInputTracker::LeftTouchpadReleased()
 {
 	switch (ControllerType)
 	{
@@ -682,7 +836,7 @@ void AInputTracker::LeftTouchpadReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -695,7 +849,7 @@ void AInputTracker::LeftTouchpadReleased()
 	}
 	}
 }
-void AInputTracker::LeftTouchpadTouched()
+void UInputTracker::LeftTouchpadTouched()
 {
 	switch (ControllerType)
 	{
@@ -708,7 +862,7 @@ void AInputTracker::LeftTouchpadTouched()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -721,7 +875,7 @@ void AInputTracker::LeftTouchpadTouched()
 	}
 	}
 }
-void AInputTracker::LeftTouchpadPressed()
+void UInputTracker::LeftTouchpadPressed()
 {
 	switch (ControllerType)
 	{
@@ -734,7 +888,7 @@ void AInputTracker::LeftTouchpadPressed()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -748,7 +902,7 @@ void AInputTracker::LeftTouchpadPressed()
 	}
 }
 
-void AInputTracker::LeftTouchpadPressRelease()
+void UInputTracker::LeftTouchpadPressRelease()
 {
 	switch (ControllerType)
 	{
@@ -761,7 +915,7 @@ void AInputTracker::LeftTouchpadPressRelease()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -776,19 +930,27 @@ void AInputTracker::LeftTouchpadPressRelease()
 }
 
 
-void AInputTracker::RightFaceButtonOnePressed()
+void UInputTracker::RightFaceButtonOnePressed()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_abtn", 100);
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("abtn", 100);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_abtn", 100);
 		AppendInputState(true, b);
@@ -798,19 +960,27 @@ void AInputTracker::RightFaceButtonOnePressed()
 		break;
 	}
 }
-void AInputTracker::RightFaceButtonOneReleased()
+void UInputTracker::RightFaceButtonOneReleased()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_abtn", 0);
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("abtn", 0);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_abtn", 0);
 		AppendInputState(true, b);
@@ -821,19 +991,27 @@ void AInputTracker::RightFaceButtonOneReleased()
 	}
 }
 
-void AInputTracker::RightFaceButtonTwoPressed()
+void UInputTracker::RightFaceButtonTwoPressed()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_bbtn", 100);
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("bbtn", 100);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_bbtn", 100);
 		AppendInputState(true, b);
@@ -843,19 +1021,27 @@ void AInputTracker::RightFaceButtonTwoPressed()
 		break;
 	}
 }
-void AInputTracker::RightFaceButtonTwoReleased()
+void UInputTracker::RightFaceButtonTwoReleased()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_bbtn", 0);
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("bbtn", 0);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_bbtn", 0);
 		AppendInputState(true, b);
@@ -866,7 +1052,7 @@ void AInputTracker::RightFaceButtonTwoReleased()
 	}
 }
 
-void AInputTracker::RightMenuButtonPressed()
+void UInputTracker::RightMenuButtonPressed()
 {
 	switch (ControllerType)
 	{
@@ -876,13 +1062,21 @@ void AInputTracker::RightMenuButtonPressed()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_start", 100);
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("menu", 100);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_menubtn", 100);
 		AppendInputState(true, b);
@@ -896,7 +1090,7 @@ void AInputTracker::RightMenuButtonPressed()
 	}
 	}
 }
-void AInputTracker::RightMenuButtonReleased()
+void UInputTracker::RightMenuButtonReleased()
 {
 	switch (ControllerType)
 	{
@@ -906,13 +1100,21 @@ void AInputTracker::RightMenuButtonReleased()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_start", 0);
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("menu", 0);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_menubtn", 0);
 		AppendInputState(true, b);
@@ -927,13 +1129,13 @@ void AInputTracker::RightMenuButtonReleased()
 	}
 }
 
-void AInputTracker::RightJoystickPressed()
+void UInputTracker::RightJoystickPressed()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
@@ -942,7 +1144,18 @@ void AInputTracker::RightJoystickPressed()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
+		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
+		auto b = FControllerInputState("joystick", FVector(x, y, 100));
+		RightJoystickAxis = FVector(x, y, 100);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
@@ -962,13 +1175,13 @@ void AInputTracker::RightJoystickPressed()
 	}
 	}
 }
-void AInputTracker::RightJoystickReleased()
+void UInputTracker::RightJoystickReleased()
 {
 	switch (ControllerType)
 	{
 	case EC3DControllerType::Vive:
 		break;
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
@@ -977,7 +1190,18 @@ void AInputTracker::RightJoystickReleased()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
+		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
+		auto b = FControllerInputState("joystick", FVector(x, y, 0));
+		RightJoystickAxis = FVector(x, y, 0);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
 		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
@@ -998,7 +1222,7 @@ void AInputTracker::RightJoystickReleased()
 	}
 }
 
-void AInputTracker::RightTouchpadReleased()
+void UInputTracker::RightTouchpadReleased()
 {
 	switch (ControllerType)
 	{
@@ -1011,7 +1235,7 @@ void AInputTracker::RightTouchpadReleased()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -1024,7 +1248,7 @@ void AInputTracker::RightTouchpadReleased()
 	}
 	}
 }
-void AInputTracker::RightTouchpadTouched()
+void UInputTracker::RightTouchpadTouched()
 {
 	switch (ControllerType)
 	{
@@ -1037,7 +1261,7 @@ void AInputTracker::RightTouchpadTouched()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -1050,7 +1274,7 @@ void AInputTracker::RightTouchpadTouched()
 	}
 	}
 }
-void AInputTracker::RightTouchpadPressed()
+void UInputTracker::RightTouchpadPressed()
 {
 	switch (ControllerType)
 	{
@@ -1063,7 +1287,7 @@ void AInputTracker::RightTouchpadPressed()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -1077,7 +1301,7 @@ void AInputTracker::RightTouchpadPressed()
 	}
 }
 
-void AInputTracker::RightTouchpadPressRelease()
+void UInputTracker::RightTouchpadPressRelease()
 {
 	switch (ControllerType)
 	{
@@ -1090,7 +1314,7 @@ void AInputTracker::RightTouchpadPressRelease()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
@@ -1104,7 +1328,7 @@ void AInputTracker::RightTouchpadPressRelease()
 	}
 }
 
-void AInputTracker::RightGripPressed()
+void UInputTracker::RightGripPressed()
 {
 	switch (ControllerType)
 	{
@@ -1114,13 +1338,21 @@ void AInputTracker::RightGripPressed()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_grip", 100);
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("grip", 100);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_grip", 100);
 		AppendInputState(true, b);
@@ -1135,7 +1367,7 @@ void AInputTracker::RightGripPressed()
 	}
 }
 
-void AInputTracker::RightGripReleased()
+void UInputTracker::RightGripReleased()
 {
 	switch (ControllerType)
 	{
@@ -1145,7 +1377,7 @@ void AInputTracker::RightGripReleased()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float currentValue = InputComponent->GetAxisValue("C3D_RightGripAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
@@ -1154,7 +1386,18 @@ void AInputTracker::RightGripReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float currentValue = InputComponent->GetAxisValue("C3D_RightGripAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		RightGripValue = icurrentValue;
+		auto b = FControllerInputState("grip", icurrentValue);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_grip", 0);
 		AppendInputState(true, b);
@@ -1169,7 +1412,7 @@ void AInputTracker::RightGripReleased()
 	}
 }
 
-void AInputTracker::LeftGripPressed()
+void UInputTracker::LeftGripPressed()
 {
 	switch (ControllerType)
 	{
@@ -1179,13 +1422,21 @@ void AInputTracker::LeftGripPressed()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_grip", 100);
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("grip", 100);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_grip", 100);
 		AppendInputState(false, b);
@@ -1200,7 +1451,7 @@ void AInputTracker::LeftGripPressed()
 	}
 }
 
-void AInputTracker::LeftGripReleased()
+void UInputTracker::LeftGripReleased()
 {
 	switch (ControllerType)
 	{
@@ -1210,7 +1461,7 @@ void AInputTracker::LeftGripReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float currentValue = InputComponent->GetAxisValue("C3D_LeftGripAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
@@ -1219,7 +1470,18 @@ void AInputTracker::LeftGripReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float currentValue = InputComponent->GetAxisValue("C3D_LeftGripAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		LeftGripValue = icurrentValue;
+		auto b = FControllerInputState("grip", icurrentValue);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_grip", 0);
 		AppendInputState(false, b);
@@ -1235,7 +1497,7 @@ void AInputTracker::LeftGripReleased()
 }
 
 
-void AInputTracker::LeftTriggerPressed()
+void UInputTracker::LeftTriggerPressed()
 {
 	switch (ControllerType)
 	{
@@ -1246,14 +1508,23 @@ void AInputTracker::LeftTriggerPressed()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_trigger", 100);
 		LeftTriggerValue = 100;
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("trigger", 100);
+		LeftTriggerValue = 100;
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_trigger", 100);
 		LeftTriggerValue = 100;
@@ -1270,7 +1541,7 @@ void AInputTracker::LeftTriggerPressed()
 	}
 }
 
-void AInputTracker::LeftTriggerReleased()
+void UInputTracker::LeftTriggerReleased()
 {
 	switch (ControllerType)
 	{
@@ -1283,7 +1554,7 @@ void AInputTracker::LeftTriggerReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
@@ -1292,7 +1563,18 @@ void AInputTracker::LeftTriggerReleased()
 		AppendInputState(false, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		LeftTriggerValue = icurrentValue;
+		auto b = FControllerInputState("trigger", icurrentValue);
+		AppendInputState(false, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_trigger", 0);
 		LeftTriggerValue = 0;
@@ -1311,7 +1593,7 @@ void AInputTracker::LeftTriggerReleased()
 	}
 }
 
-void AInputTracker::RightTriggerPressed()
+void UInputTracker::RightTriggerPressed()
 {
 	switch (ControllerType)
 	{
@@ -1322,14 +1604,23 @@ void AInputTracker::RightTriggerPressed()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		auto b = FControllerInputState("rift_trigger", 100);
 		RightTriggerValue = 100;
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		auto b = FControllerInputState("trigger", 100);
+		RightTriggerValue = 100;
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_trigger", 100);
 		RightTriggerValue = 100;
@@ -1346,7 +1637,7 @@ void AInputTracker::RightTriggerPressed()
 	}
 }
 
-void AInputTracker::RightTriggerReleased()
+void UInputTracker::RightTriggerReleased()
 {
 	switch (ControllerType)
 	{
@@ -1359,7 +1650,7 @@ void AInputTracker::RightTriggerReleased()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::Oculus:
+	case EC3DControllerType::OculusRift:
 	{
 		float currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
@@ -1368,7 +1659,18 @@ void AInputTracker::RightTriggerReleased()
 		AppendInputState(true, b);
 		break;
 	}
-	case EC3DControllerType::PicoNeo2Eye:
+	case EC3DControllerType::Quest2:
+	case EC3DControllerType::QuestPro:
+	{
+		float currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");
+		int32 icurrentValue = (int32)(currentValue * 100);
+		RightTriggerValue = icurrentValue;
+		auto b = FControllerInputState("trigger", icurrentValue);
+		AppendInputState(true, b);
+		break;
+	}
+	case EC3DControllerType::PicoNeo2:
+	case EC3DControllerType::PicoNeo3:
 	{
 		auto b = FControllerInputState("pico_trigger", 0);
 		RightTriggerValue = 0;
@@ -1387,8 +1689,8 @@ void AInputTracker::RightTriggerReleased()
 	}
 }
 
-void AInputTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void UInputTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	cogProvider->OnSessionBegin.RemoveDynamic(this, &AInputTracker::FindControllers);
+	cogProvider->OnSessionBegin.RemoveDynamic(this, &UInputTracker::FindControllers);
 }

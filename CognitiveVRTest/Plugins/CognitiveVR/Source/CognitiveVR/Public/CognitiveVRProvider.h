@@ -77,6 +77,9 @@
 			FOnCognitivePostSessionEnd OnPostSessionEnd;
 		UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
 			FOnRequestSend OnRequestSend;
+		UPROPERTY(BlueprintAssignable, Category = "CognitiveVR Analytics")
+			FOnCognitiveInterval OnCognitiveInterval;
+		
 
 		bool StartSession();
 		virtual bool StartSession(const TArray<FAnalyticsEventAttribute>& Attributes) override;
@@ -130,8 +133,9 @@
 
 		double GetSessionTimestamp() const;
 
-		FVector GetPlayerHMDPosition();
-
+		bool TryGetPlayerHMDPosition(FVector& vector);
+		bool TryGetPlayerHMDRotation(FRotator& rotator);
+		bool TryGetPlayerHMDLocalRotation(FRotator& rotator);
 		bool HasStartedSession();
 
 		FString ApplicationKey = "";
@@ -170,9 +174,15 @@
 		void SetSessionProperty(FString name, FString value);
 
 		FString GetAttributionParameters();
-		bool HasEyeTrackingSDK();
 
-		private:
+		//gameplay references
+		bool HasEyeTrackingSDK();
+		void SetTrackingScene(FString levelName);
+		bool TryGetRoomSize(FVector& roomsize);
+		TWeakObjectPtr<UDynamicObject> GetControllerDynamic(const bool right);
+		FString GetRuntime();
+
+	private:
 		FDelegateHandle PauseHandle;
 		FDelegateHandle LevelLoadHandle;
 		FDelegateHandle SublevelLoadedHandle;
@@ -182,4 +192,6 @@
 		void HandleSublevelLoaded(ULevel* level, UWorld* world);
 		void HandleSublevelUnloaded(ULevel* level, UWorld* world);
 		void HandleApplicationWillEnterBackground();
+		bool AutomaticallySetTrackingScene = true;
+		
 	};

@@ -23,7 +23,6 @@ struct FExitPollResponse;
 		FString Gateway;
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 		bool hasErrorResponse;
-		//TSharedPtr<LocalCache> localCache;
 		bool isUploadingFromCache = false;
 		FHttpRequestPtr localCacheRequest;
 		FString TArrayToString(const TArray<uint8> data, int32 count);

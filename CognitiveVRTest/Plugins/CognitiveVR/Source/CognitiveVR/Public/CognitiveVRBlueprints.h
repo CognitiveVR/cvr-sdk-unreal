@@ -208,4 +208,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "CognitiveVR Analytics")
 		static UPlayerTracker* GetPlayerTracker();
 
+	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics")
+		static void SetTrackingScene(const FString SceneName);
 };

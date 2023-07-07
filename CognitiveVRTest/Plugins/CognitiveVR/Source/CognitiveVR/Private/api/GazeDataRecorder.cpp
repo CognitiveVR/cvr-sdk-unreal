@@ -6,10 +6,14 @@
 //called at module startup to create a default uobject of this type
 UGazeDataRecorder::UGazeDataRecorder()
 {
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 }
 
-void UGazeDataRecorder::Initialize()
+void UGazeDataRecorder::StartSession()
 {
+	snapshots.Empty();
+	jsonPart = 1;
+
 	FString ValueReceived;
 
 	//gaze batch size
@@ -23,11 +27,6 @@ void UGazeDataRecorder::Initialize()
 		}
 	}
 
-	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-}
-
-void UGazeDataRecorder::StartSession()
-{
 	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
 	if (world == nullptr)
 	{
@@ -233,5 +232,5 @@ void UGazeDataRecorder::PreSessionEnd()
 
 void UGazeDataRecorder::PostSessionEnd()
 {
-	cog.Reset();
+	
 }

@@ -5,10 +5,14 @@
 
 UFixationDataRecorder::UFixationDataRecorder()
 {
+	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 }
 
-void UFixationDataRecorder::Initialize()
+void UFixationDataRecorder::StartSession()
 {
+	jsonPart = 1;
+	Fixations.Empty();
+
 	FString ValueReceived;
 
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationBatchSize", false);
@@ -18,26 +22,6 @@ void UFixationDataRecorder::Initialize()
 		if (fixationLimit > 0)
 		{
 			FixationBatchSize = fixationLimit;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationExtremeLimit", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			ExtremeBatchSize = parsedValue;
-		}
-	}
-
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "FixationMinTimer", false);
-	if (ValueReceived.Len() > 0)
-	{
-		int32 parsedValue = FCString::Atoi(*ValueReceived);
-		if (parsedValue > 0)
-		{
-			MinTimer = parsedValue;
 		}
 	}
 
@@ -51,11 +35,6 @@ void UFixationDataRecorder::Initialize()
 		}
 	}
 
-	cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-}
-
-void UFixationDataRecorder::StartSession()
-{
 	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
 	if (world == nullptr)
 	{
@@ -160,5 +139,5 @@ void UFixationDataRecorder::PreSessionEnd()
 
 void UFixationDataRecorder::PostSessionEnd()
 {
-	cog.Reset();
+	
 }
