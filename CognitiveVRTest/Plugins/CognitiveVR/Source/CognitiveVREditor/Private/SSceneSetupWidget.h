@@ -19,6 +19,7 @@
 #include "CognitiveVRActor.h"
 #include "Runtime/Online/HTTP/Public/Http.h"
 #include "C3DCommonEditorTypes.h"
+#include "CognitiveVREditorModule.h"
 
 class FCognitiveTools;
 class FCognitiveVREditorModule;
@@ -35,7 +36,6 @@ class SSceneSetupWidget : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SSceneSetupWidget){}
-	SLATE_ARGUMENT(TArray<TSharedPtr<FDynamicData>>, Items)
 	SLATE_ARGUMENT(FSlateBrush*,ScreenshotTexture)
 	SLATE_END_ARGS()
 
@@ -47,6 +47,7 @@ public:
 	UENUM()
 	enum class EPage : uint8
 	{
+		Invalid, //dev key isn't set
 		Intro,
 		Controller,
 		Export,
@@ -54,12 +55,9 @@ public:
 		UploadProgress,
 		Complete
 	};
-	EPage CurrentPageEnum;
+	EPage CurrentPageEnum = EPage::Intro;
 
 	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
-
-	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FDynamicData> Item, const TSharedRef<STableViewBase>& OwnerTable);
-	TArray<TSharedPtr<FDynamicData>> Items;
 
 	//int32 CurrentPage = 0;
 	bool SceneWasExported = false;
@@ -69,6 +67,7 @@ public:
 
 	
 	FText GetHeaderTitle() const;
+	EVisibility IsInvalidVisible() const;
 	EVisibility IsIntroVisible() const;
 	EVisibility IsControllerVisible() const;
 	EVisibility IsExportVisible() const;
@@ -92,25 +91,16 @@ public:
 	FReply LastPage();
 	
 	FText UploadErrorText() const;
-
-	TSharedRef<ITableRow> OnGenerateSceneExportFileRow(TSharedPtr<FString> InItem, const TSharedRef<STableViewBase>& OwnerTable);
 	EVisibility DisplayWizardThrobber() const;
 
 	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
 	TSharedPtr<SImage> ScreenshotImage;
 
 	FText DisplayDynamicObjectsCountInScene() const;
-	FReply RefreshDisplayDynamicObjectsCountInScene();
-	EVisibility GetDuplicateDyanmicObjectVisibility() const;
 	
 	int32 CountDynamicObjectsInScene() const;
 
 	FText DynamicCountInScene;
-
-	/* The actual UI list */
-	TSharedPtr< SListView< TSharedPtr<FDynamicData> > > ListViewWidget;
-
-	FReply SelectDynamic(TSharedPtr<FDynamicData> data);
 
 	FReply SelectAll();
 
@@ -123,8 +113,6 @@ public:
 	int32 ScreenshotHeight = 256;
 	FOptionalSize GetScreenshotWidth() const;
 	FOptionalSize GetScreenshotHeight() const;
-
-	FReply ValidateAndRefresh();
 
 	FReply EvaluateSceneExport();
 	bool OnlyExportSelected;
@@ -147,4 +135,5 @@ public:
 	/// checks if there's a BP_CognitiveVRActor in the world. spawns one if not
 	/// </summary>
 	void SpawnCognitiveVRActor();
+	FReply OpenProjectSetupWindow();
 };

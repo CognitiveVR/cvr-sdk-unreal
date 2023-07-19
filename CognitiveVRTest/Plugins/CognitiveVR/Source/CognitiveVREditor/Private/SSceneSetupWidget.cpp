@@ -45,10 +45,15 @@ void SSceneSetupWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, 
 	if (responseCode == 200)
 	{
 		GLog->Log("Developer Key Response Code is 200");
+		if (CurrentPageEnum == EPage::Invalid)
+		{
+			CurrentPageEnum = EPage::Intro;
+		}
 	}
 	else
 	{
-		SGenericDialogWidget::OpenDialog(FText::FromString("Your developer key has expired"), SNew(STextBlock).Text(FText::FromString("Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.")));
+		CurrentPageEnum = EPage::Invalid;
+		//SGenericDialogWidget::OpenDialog(FText::FromString("Your developer key has expired"), SNew(STextBlock).Text(FText::FromString("Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.")));
 		GLog->Log("Developer Key Response Code is not 200. Developer key may be invalid or expired");
 	}
 }
@@ -95,6 +100,40 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Text(FText::FromString(""))
 			]
 
+#pragma region invalid screen
+			+ SVerticalBox::Slot()
+			//.VAlign(VAlign_Center)
+			.AutoHeight()
+				.Padding(0,0,0, padding)
+			[
+				SNew(SRichTextBlock)
+				.Justification(ETextJustify::Center)
+				.Visibility(this, &SSceneSetupWidget::IsInvalidVisible)
+				.DecoratorStyleSet(&FEditorStyle::Get())
+				.Text(FText::FromString("The developer key is invalid. Please set the developer key in the Project Setup Window"))
+			]
+
+			+ SVerticalBox::Slot()
+			.VAlign(VAlign_Center)
+			.MaxHeight(30)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsInvalidVisible)
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Center)
+				[
+					SNew(SButton)
+					.HAlign(HAlign_Center)
+					.Visibility(this,&SSceneSetupWidget::IsInvalidVisible)
+					.Text(FText::FromString("open project setup window"))
+					.OnClicked(this, &SSceneSetupWidget::OpenProjectSetupWindow)
+					//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenURL,FString("https://www.blender.org"))
+				]
+			]
+
+#pragma endregion
 
 #pragma region "intro screen"
 			+ SVerticalBox::Slot()
@@ -166,22 +205,16 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 #pragma region "controller screen"
 
 			+ SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
 			.AutoHeight()
 				.Padding(0, 0, 0, padding)
 			[
-				//SNew(STextBlock)
-				//.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-				//.Justification(ETextJustify::Center)
-				//.Text(FText::FromString("These are all the Dynamic Objects components currently found in your scene."))
-
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
 				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Text(FText::FromString("These are all the Dynamic Objects components currently found in your scene."))
-
+				.Text(FText::FromString("Open the VR Pawn blueprint that is spawned for your player.\n\nAttach Dynamic Object components as children of each MotionController actor component.\n\nPress the Left"))
+				//TODO add pictures
 			]
 
 			+SVerticalBox::Slot()
@@ -198,132 +231,26 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.AutoWidth()
 					[
 						SNew(SButton)
-						.Text(FText::FromString("Refresh"))
+						.Text(FText::FromString("Append Input Data to Input.ini"))
 						.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-						.OnClicked(this, &SSceneSetupWidget::RefreshDisplayDynamicObjectsCountInScene)
+						//.OnClicked(this, &SSceneSetupWidget::RefreshDisplayDynamicObjectsCountInScene)
 					]
-					+SHorizontalBox::Slot()
-					[
-						SNew(STextBlock)
-						.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-						.AutoWrapText(true)
-						.Justification(ETextJustify::Center)
-						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::DisplayDynamicObjectsCountInScene)
-					]
+					//+SHorizontalBox::Slot()
+					//[
+					//	SNew(STextBlock)
+					//	.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+					//	.AutoWrapText(true)
+					//	.Justification(ETextJustify::Center)
+					//	.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::DisplayDynamicObjectsCountInScene)
+					//]
 				]
 			]
-
-			/*+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0, 0, 0, 4)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			[
-				SNew(STextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-				.Text(FText::FromString("Dynamic Objects In Scene"))
-			]*/
-			+ SVerticalBox::Slot()
-				.AutoHeight()
-				.MaxHeight(250)
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SBox)
-				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-				[
-					SAssignNew(SceneDynamicObjectList,SDynamicObjectListWidget)
-					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-					.Items(GetSceneDynamics())
-				]
-			]
-			
-			+ SVerticalBox::Slot()
-			.Padding(0, 0, 0, padding)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.VAlign(VAlign_Center)
-			.AutoHeight()
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-						.Text(FText::FromString("Export\nAll Meshes"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportAllDynamics)
-					]
-				]
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-					.HeightOverride(64)
-					.WidthOverride(128)
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-						.Text(FText::FromString("Export\nSelected Meshes"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportSelectedDynamics)
-					]
-				]
-			]
-
-			+SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(FMargin(64, 24, 64, 24))
-			[
-				SNew(SBorder)
-				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-				.BorderImage(FEditorStyle::GetBrush("ToolPanel.LightGroupBorder"))
-				.Padding(8.0f)
-				[
-					SNew(SHorizontalBox)
-					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					.VAlign(VAlign_Center)
-					[
-						SNew(SImage)
-						.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
-						.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
-					]
-						// Notice
-					+SHorizontalBox::Slot()
-					.Padding(16.0f, 0.0f)
-					.VAlign(VAlign_Center)
-					[
-						SNew(STextBlock)
-						.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-						.ColorAndOpacity(FLinearColor::Black)
-						//.ShadowColorAndOpacity(FLinearColor::Black)
-						//.ShadowOffset(FVector2D::UnitVector)
-						.AutoWrapText(true)
-						.Text(FText::FromString("Dynamic Objects must have a valid Mesh Name\nTo have data aggregated, Dynamic Objects must have a Unique Id"))
-					]
-					+SHorizontalBox::Slot()
-					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-						.OnClicked_Raw(this, &SSceneSetupWidget::ValidateAndRefresh)
-						[
-							SNew(STextBlock)
-							.Justification(ETextJustify::Center)
-							.AutoWrapText(true)
-							.Text(FText::FromString("Validate Mesh Names and Unique Ids"))
-						]
-					]
-				]
-			]
-
 
 #pragma endregion
 
 #pragma region "export screen"
 
+			//TODO add path to blender too
 
 			//path to export directory
 			+ SVerticalBox::Slot()
@@ -561,52 +488,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 
-			+ SVerticalBox::Slot()
-			.MaxHeight(250)
-				.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SListView<TSharedPtr<FString>>)
-					.ItemHeight(16.0f)
-					.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
-					.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneUploadFiles)
-					.OnGenerateRow(this, &SSceneSetupWidget::OnGenerateSceneExportFileRow)
-					.HeaderRow(
-					SNew(SHeaderRow)
-					+ SHeaderRow::Column("name")
-						[
-							SNew(SRichTextBlock)
-							.Justification(ETextJustify::Center)
-							.DecoratorStyleSet(&FEditorStyle::Get())
-							.Text(FText::FromString("<RichTextBlock.BoldHighlight>Scene Files</>"))
-						]
-					)
-			]
-			+ SVerticalBox::Slot()
-				.AutoHeight()
-			.MaxHeight(250)
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(SBox)
-				.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
-				[
-					SNew(SListView<TSharedPtr<FString>>)
-					.ItemHeight(16.0f)
-					.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
-					.ListItemsSource(&FCognitiveEditorTools::GetInstance()->DynamicUploadFiles)
-					.OnGenerateRow(this, &SSceneSetupWidget::OnGenerateSceneExportFileRow)
-					.HeaderRow(
-					SNew(SHeaderRow)
-					+ SHeaderRow::Column("name")
-						[
-							SNew(SRichTextBlock)
-							.Justification(ETextJustify::Center)
-							.DecoratorStyleSet(&FEditorStyle::Get())
-							.Text(FText::FromString("<RichTextBlock.BoldHighlight>Dynamic Mesh Files</>"))
-						]
-					)
-				]
-			]
+			//TODO number of dynamic objects
+			//TODO 
 
 #pragma endregion
 
@@ -750,34 +633,34 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 			//DEBUG NEXT/BACK BUTTONS
-			//+ SOverlay::Slot()
-			//.VAlign(VAlign_Bottom)
-			//.HAlign(HAlign_Left)
-			//[
-			//	SNew(SHorizontalBox)
-			//	+ SHorizontalBox::Slot()
-			//	[
-			//		SNew(SBox)
-			//		.WidthOverride(128)
-			//		.HeightOverride(32)
-			//		[
-			//			SNew(SButton)
-			//			.Text(FText::FromString("Debug Back"))
-			//			.OnClicked(this, &SSceneSetupWidget::DebugPreviousPage)
-			//		]
-			//	]
-			//	+ SHorizontalBox::Slot()
-			//	[
-			//		SNew(SBox)
-			//		.WidthOverride(128)
-			//		.HeightOverride(32)
-			//		[
-			//			SNew(SButton)
-			//			.Text(FText::FromString("Debug Next"))
-			//			.OnClicked(this, &SSceneSetupWidget::DebugNextPage)
-			//		]
-			//	]
-			//]
+			+ SOverlay::Slot()
+			.VAlign(VAlign_Bottom)
+			.HAlign(HAlign_Left)
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.Text(FText::FromString("Debug Back"))
+						.OnClicked(this, &SSceneSetupWidget::DebugPreviousPage)
+					]
+				]
+				+ SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.Text(FText::FromString("Debug Next"))
+						.OnClicked(this, &SSceneSetupWidget::DebugNextPage)
+					]
+				]
+			]
 
 #pragma endregion
 		];
@@ -951,6 +834,10 @@ EVisibility SSceneSetupWidget::IsNewSceneUpload() const
 	return EVisibility::Visible;
 }
 
+EVisibility SSceneSetupWidget::IsInvalidVisible() const
+{
+	return CurrentPageEnum == EPage::Invalid ? EVisibility::Visible : EVisibility::Collapsed;
+}
 EVisibility SSceneSetupWidget::IsIntroVisible() const
 {
 	return CurrentPageEnum == EPage::Intro ? EVisibility::Visible : EVisibility::Collapsed;
@@ -1052,98 +939,12 @@ EVisibility SSceneSetupWidget::DisplayWizardThrobber() const
 	return EVisibility::Collapsed;
 }
 
-TSharedRef<ITableRow> SSceneSetupWidget::OnGenerateSceneExportFileRow(TSharedPtr<FString>InItem, const TSharedRef<STableViewBase>& OwnerTable)
-{
-	return
-		SNew(SComboRow< TSharedPtr<FString> >, OwnerTable)
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			.FillWidth(1)
-			.Padding(2.0f)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString(*InItem))
-			]
-		];
-}
-
-TSharedRef<ITableRow> SSceneSetupWidget::OnGenerateRowForList(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
-{
-	return
-		SNew(SComboRow< TSharedPtr<FDynamicData> >, OwnerTable)
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			.MaxWidth(16)
-			.AutoWidth()
-			.Padding(2.0f)
-			[
-				SNew(SBox)
-				.HeightOverride(16)
-				.HeightOverride(16)
-				[
-					SNew(SButton)
-					.OnClicked(FOnClicked::CreateSP(this, &SSceneSetupWidget::SelectDynamic, InItem))
-				]
-			]
-			+ SHorizontalBox::Slot()
-		.FillWidth(1)
-		.Padding(2.0f)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString(InItem->Name))
-		]
-	+ SHorizontalBox::Slot()
-		.FillWidth(1)
-		.Padding(2.0f)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString(InItem->MeshName))
-		]
-	+ SHorizontalBox::Slot()
-		.FillWidth(0.3)
-		.Padding(2.0f)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString(InItem->Id))
-		]
-		];
-}
-
-FReply SSceneSetupWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
-{
-	GEditor->SelectNone(false, true, false);
-
-	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
-	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		//AStaticMeshActor *Mesh = *ActorItr;
-
-		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
-		if (actorComponent == NULL)
-		{
-			continue;
-		}
-		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
-		if (dynamic == NULL)
-		{
-			continue;
-		}
-		if (dynamic->GetOwner()->GetName() != data->Name) { continue; }
-		if (dynamic->CustomId != data->Id) { continue; }
-		if (dynamic->MeshName != data->MeshName) { continue; }
-
-		GEditor->SelectActor((*ActorItr), true, true, true, true);
-
-		break;
-	}
-
-	return FReply::Handled();
-}
-
 EVisibility SSceneSetupWidget::NextButtonVisibility() const
 {
+	if (CurrentPageEnum == EPage::Invalid)
+	{
+		return EVisibility::Hidden;
+	}
 	if (CurrentPageEnum == EPage::Complete)
 	{
 		return EVisibility::Hidden;
@@ -1160,6 +961,7 @@ FText SSceneSetupWidget::NextButtonText() const
 		}
 		else
 		{
+			//TODO this shows even after the scene has been exported
 			return FText::FromString("Skip");
 		}		
 	}
@@ -1228,6 +1030,10 @@ EVisibility SSceneSetupWidget::BackButtonVisibility() const
 	{
 		return EVisibility::Hidden;
 	}
+	if (CurrentPageEnum == EPage::Invalid)
+	{
+		return EVisibility::Hidden;
+	}
 	if (CurrentPageEnum == EPage::Complete)
 	{
 		return EVisibility::Hidden;
@@ -1267,23 +1073,6 @@ FText SSceneSetupWidget::DisplayDynamicObjectsCountInScene() const
 	return DynamicCountInScene;
 }
 
-FReply SSceneSetupWidget::RefreshDisplayDynamicObjectsCountInScene()
-{
-	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
-	SceneDynamicObjectList->RefreshList();
-
-	return FReply::Handled();
-}
-
-EVisibility SSceneSetupWidget::GetDuplicateDyanmicObjectVisibility() const
-{
-	if (IsControllerVisible() != EVisibility::Visible)
-	{
-		return EVisibility::Collapsed;
-	}
-	return FCognitiveEditorTools::GetInstance()->GetDuplicateDyanmicObjectVisibility();
-}
-
 EVisibility SSceneSetupWidget::UploadErrorVisibility() const
 {
 	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 200) { return EVisibility::Collapsed; }
@@ -1296,16 +1085,12 @@ FText SSceneSetupWidget::UploadErrorText() const
 	return FText::FromString(FCognitiveEditorTools::GetInstance()->WizardUploadError);
 }
 
-FReply SSceneSetupWidget::ValidateAndRefresh()
-{
-	FCognitiveEditorTools::GetInstance()->SetUniqueDynamicIds();
-	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
-	SceneDynamicObjectList->RefreshList();
-	return FReply::Handled();
-}
-
 FText SSceneSetupWidget::GetHeaderTitle() const
 {
+	if (CurrentPageEnum == EPage::Invalid)
+	{
+		return FText::FromString("<RichTextBlock.BoldHighlight>INVALID DEVELOPER KEY</>");
+	}
 	if (CurrentPageEnum == EPage::Intro)
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 1 - INTRO</>");
@@ -1380,4 +1165,10 @@ void SSceneSetupWidget::SpawnCognitiveVRActor()
 	{
 		GLog->Log("SSceneSetupWidget::SpawnCognitiveVRActor couldn't find BP_CognitiveVRActor class");
 	}
+}
+
+FReply SSceneSetupWidget::OpenProjectSetupWindow()
+{
+	FCognitiveVREditorModule::SpawnCognitiveProjectSetupTab();
+	return FReply::Handled();
 }

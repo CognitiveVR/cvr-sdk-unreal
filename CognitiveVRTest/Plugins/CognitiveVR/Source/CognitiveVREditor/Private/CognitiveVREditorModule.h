@@ -27,6 +27,7 @@ public:
 	static TSharedRef<SDockTab> SpawnCognitiveDynamicTab(const FSpawnTabArgs& SpawnTabArgs);
 	static void SpawnCognitiveDynamicTab();
 	static TSharedRef<SDockTab> SpawnCognitiveProjectSetupTab(const FSpawnTabArgs& SpawnTabArgs);
+	static void SpawnCognitiveProjectSetupTab();
 
 	static inline FCognitiveVREditorModule& Get()
 	{

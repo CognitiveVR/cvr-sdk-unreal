@@ -227,6 +227,22 @@ TSharedRef<SDockTab> FCognitiveVREditorModule::SpawnCognitiveProjectSetupTab(con
 	return MajorTab;
 }
 
+void FCognitiveVREditorModule::SpawnCognitiveProjectSetupTab()
+{
+	FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
+	FTabId tabId = FTabId(FName("CognitiveProjectSetup"));
+	auto foundTab = LocalLevelEditorModule.GetLevelEditorTabManager()->FindExistingLiveTab(tabId);
+	if (foundTab.IsValid())
+	{
+		FGlobalTabmanager::Get()->SetActiveTab(foundTab);
+	}
+	else
+	{
+		TSharedPtr<SDockTab> MajorTab = LocalLevelEditorModule.GetLevelEditorTabManager()->TryInvokeTab(tabId);
+		MajorTab->SetContent(SNew(SProjectSetupWidget));
+	}
+}
+
 void FCognitiveVREditorModule::CloseProjectSetupWindow()
 {
 	FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
