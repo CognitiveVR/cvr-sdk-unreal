@@ -51,8 +51,8 @@ namespace UnrealBuildTool.Rules
                     "JsonUtilities",
 					"UMG",
 					"EngineSettings",
-					"EyeTracker" //openxr
-                }
+					"EyeTracker"
+				}
 				);
 
 #if UE_4_26_OR_LATER

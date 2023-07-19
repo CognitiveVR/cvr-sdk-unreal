@@ -476,6 +476,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	{
 		return;
 	}
+	if (cog->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	if (!isFixating)
 	{
@@ -565,7 +566,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	EyeCaptures[index].HitDynamicId.Empty();
 
 	//============== draw some rays from the HMD
-	EyeCaptures[index].HMDPosition = cog->GetPlayerHMDPosition();
+	cog->TryGetPlayerHMDPosition(EyeCaptures[index].HMDPosition);
 #if defined TOBII_EYETRACKING_ACTIVE
 	auto eyetracker = ITobiiCore::GetEyeTracker();
 	EyeCaptures[index].EyesClosed = AreEyesClosed(eyetracker);

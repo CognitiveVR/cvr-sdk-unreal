@@ -15,19 +15,17 @@ class UCognitiveVRBlueprints;
 	class COGNITIVEVR_API UFixationDataRecorder
 	{
 		friend class FAnalyticsProviderCognitiveVR;
+		friend class FAnalyticsCognitiveVR;
 
 	private:
 
 		int32 FixationBatchSize = 64;
 		int32 AutoTimer = 2;
-		int32 MinTimer = 2;
-		int32 ExtremeBatchSize = 64;
 		float LastSendTime = -60;
 		FTimerHandle AutoSendHandle;
 		
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
 		int32 jsonPart = 1;
-		int32 CustomEventBatchSize = 16;
 
 		UPROPERTY()
 			TArray<FFixation> Fixations;
@@ -41,8 +39,6 @@ class UCognitiveVRBlueprints;
 
 	public:
 		UFixationDataRecorder();
-		//call this immediately after creation - sets callbacks and reference to CognitiveVRProvider
-		void Initialize();
 		void RecordFixationEnd(const FFixation& data);
 
 		//send all outstanding fixations to Cognitive dashboard
