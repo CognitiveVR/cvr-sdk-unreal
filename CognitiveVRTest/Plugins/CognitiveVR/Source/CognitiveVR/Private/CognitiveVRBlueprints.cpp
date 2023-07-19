@@ -711,3 +711,10 @@ UPlayerTracker* UCognitiveVRBlueprints::GetPlayerTracker()
 	if (actorComponent == nullptr) { return nullptr; }
 	return Cast<UPlayerTracker>(actorComponent);
 }
+
+void UCognitiveVRBlueprints::SetTrackingScene(FString SceneName)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
+	cog->SetTrackingScene(SceneName);
+}

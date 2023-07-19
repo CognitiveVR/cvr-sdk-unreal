@@ -9,6 +9,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCognitiveSessionBegin);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCognitivePreSessionEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCognitivePostSessionEnd);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCognitiveInterval);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRequestSend, const bool, copyDataToCache);
 
 UENUM(BlueprintType)
@@ -186,9 +187,17 @@ enum class EC3DControllerType : uint8
 {
 	None,
 	Vive,
-	Oculus,
+	OculusRift,
 	WindowsMixedReality,
-	PicoNeo2Eye
+	PicoNeo2,
+	
+	Quest2,
+	QuestPro,
+	PicoNeo3,
+	//PicoNeo4
+	//ViveFocus,
+	//Generic,
+	//Hand
 };
 
 class FDynamicObjectManifestEntry

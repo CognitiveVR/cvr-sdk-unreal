@@ -11,6 +11,9 @@
 #include "TimerManager.h"
 #include "CoreMinimal.h"
 #include "MotionControllerComponent.h"
+
+#include "EngineUtils.h"
+
 #include "DynamicObject.generated.h"
 
 class UCustomEvent;
@@ -45,7 +48,7 @@ private:
 	bool HasInitialized = false;
 
 	//used to set unique object id from snapshot or when accessed from elsewhere
-	//void GenerateObjectId();
+	void ValidateObjectId();
 
 	//must be called after session begins - dynamicObjectManager doesn't exist until then - and holds all the dynamic object data
 	UFUNCTION()
@@ -57,58 +60,44 @@ private:
 
 public:
 
-	//should this object be represented by a custom mesh. requires uploading this mesh to the dashboard
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
-		bool UseCustomMeshName = true;
-
-	bool IsController = false;
-
-	bool IsRightController = false;
-
-	FString ControllerType;
+	FString ControllerInputImageName;
 
 	//the name of the mesh to render on the dashboard
 	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		FString MeshName;
 
-	//if not using a custom mesh, which common mesh to render on the dashboard to represent this object
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
-		ECommonMeshName CommonMeshName;
-
-	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
-		bool SnapshotOnBeginPlay = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
-		bool SnapshotOnInterval = true;
-
-	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
-		bool ReleaseIdOnDestroy = true;
-
 	//group and id
 
-	//set a custom id for this dynamic object. recommended for non-spawned actors
-	//UPROPERTY(EditAnywhere, AdvancedDisplay)
-	//bool UseCustomId;
-
-	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+	UPROPERTY(EditAnywhere, Category = "CognitiveVR Analytics")
 		EIdSourceType IdSourceType;
 
 	//the custom id for registering this dynamic object. recommended for non-spawned actors
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CognitiveVR Analytics")
 		FString CustomId = "";
-
-	//UPROPERTY(EditAnywhere, AdvancedDisplay)
-	//bool UseIdPool;
 
 	bool HasValidPoolId = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
 		UDynamicIdPoolAsset* IDPool;
 
+	//controllers
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		bool IsController = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		bool IsRightController = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		EC3DControllerType ControllerType;
+
 	//snapshots
+
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+		bool SyncUpdateWithPlayer = false;
 
 	//time in seconds between checking if position and rotation updates need to be recorded
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
-		float SnapshotInterval = 0.1;
+		float UpdateInterval = 0.1;
 
 	//distance in cm the object needs to move before sending an update
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
@@ -123,7 +112,7 @@ public:
 
 	UDynamicObject();
 	void TryGenerateMeshName();
-	void TryGenerateCustomIdAndMesh();
+	void TryGenerateCustomId();
 
 	//engagements
 	UPROPERTY()//need uproperty to keep from custom events from being garbage collected
@@ -140,8 +129,10 @@ public:
 	void EndEngagementId(FString parentDynamicObjectId, FString engagementName, FString UniqueEngagementId);
 
 	virtual void BeginPlay() override;
+#if WITH_EDITOR
+	virtual bool Modify(bool alwaysMarkDirty) override;
+#endif
 
-	TSharedPtr<FDynamicObjectId> GetUniqueId(FString meshName);
 	TSharedPtr<FDynamicObjectId> GetObjectId();
 
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object")
@@ -178,18 +169,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object", DisplayName = "Record Dynamic Object")
 		void SendDynamicObjectSnapshot(UPARAM(ref) FDynamicObjectSnapshot& target);
 
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object", DisplayName = "Setup Controller (Actor)")
-		static UDynamicObject* SetupControllerActor(AActor* target, bool IsRight, EC3DControllerType controllerType);
-
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object", DisplayName = "Setup Controller (Motion Controller)")
-		static UDynamicObject* SetupControllerMotionController(UMotionControllerComponent* target, bool IsRight, EC3DControllerType controllerType);
-
-	UFUNCTION(BlueprintCallable, Category = "CognitiveVR Analytics|Dynamic Object", DisplayName = "Setup Controller (Dynamic)")
-		static UDynamicObject* SetupControllerDynamic(UDynamicObject* target, bool IsRight, EC3DControllerType controllerType);
-
 	//write all controller input states to snapshot to be written to json next frame
 	void FlushButtons(FControllerInputStateCollection& target);
 
+	UFUNCTION()
+	void UpdateSyncWithPlayer();
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);
 	void CleanupDynamicObject();
+
+	private:
+		void SetUniqueDynamicIds();
 };

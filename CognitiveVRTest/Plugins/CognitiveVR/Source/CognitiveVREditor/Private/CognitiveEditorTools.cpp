@@ -92,8 +92,14 @@ FString FCognitiveEditorTools::PostUpdateScene(FString sceneid)
 //WEB used to open scenes on sceneexplorer or custom session viewer
 FString FCognitiveEditorTools::SceneExplorerOpen(FString sceneid)
 {
-	auto sessionviewer = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "SessionViewer", false);
-	return "https://" + sessionviewer + sceneid;
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+	if (Gateway.Len() == 0)
+	{
+		Gateway = "data.cognitive3d.com";
+	}
+	FString split = Gateway.RightChop(5);
+	FString url = "https://viewer." + split + "/scene/" + sceneid;
+	return url;
 }
 
 
@@ -621,23 +627,6 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 		dynamics.Add(dynamic);
 	}
 
-	//create objectids for each dynamic that's already set
-	for (auto& dynamic : dynamics)
-	{
-		FString finalMeshName = dynamic->MeshName;
-		if (!dynamic->UseCustomMeshName)
-		{
-			if (dynamic->CommonMeshName == ECommonMeshName::ViveController) { finalMeshName = "vivecontroller"; }
-			if (dynamic->CommonMeshName == ECommonMeshName::ViveTracker) { finalMeshName = "vivecontroller"; }
-			if (dynamic->CommonMeshName == ECommonMeshName::OculusRiftTouchRight) { finalMeshName = "oculusrifttouchright"; }
-			if (dynamic->CommonMeshName == ECommonMeshName::OculusRiftTouchLeft) { finalMeshName = "oculusrifttouchleft"; }
-			if (dynamic->CommonMeshName == ECommonMeshName::WindowsMixedRealityRight) { finalMeshName = "windows_mixed_reality_controller_right"; }
-			if (dynamic->CommonMeshName == ECommonMeshName::WindowsMixedRealityLeft) { finalMeshName = "windows_mixed_reality_controller_left"; }
-			if (dynamic->CommonMeshName == ECommonMeshName::PicoNeo2EyeControllerRight) { finalMeshName = "pico_neo_2_eye_controller_right"; }
-			if (dynamic->CommonMeshName == ECommonMeshName::PicoNeo2EyeControllerLeft) { finalMeshName = "pico_neo_2_eye_controller_left"; }
-		}
-	}
-
 	//int32 currentUniqueId = 1;
 	int32 changedDynamics = 0;
 
@@ -683,8 +672,6 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 
 	GWorld->MarkPackageDirty();
 	//save the scene? mark the scene as changed?
-
-	RefreshDisplayDynamicObjectsCountInScene();
 
 	return FReply::Handled();
 }

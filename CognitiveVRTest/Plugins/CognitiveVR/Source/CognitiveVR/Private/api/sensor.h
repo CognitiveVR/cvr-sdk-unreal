@@ -16,6 +16,7 @@ class UCognitiveVRBlueprints;
 	class COGNITIVEVR_API USensors
 	{
 		friend class FAnalyticsProviderCognitiveVR;
+		friend class FAnalyticsCognitiveVR;
 
 	private:
 		TSharedPtr<FAnalyticsProviderCognitiveVR> cog;
@@ -29,16 +30,12 @@ class UCognitiveVRBlueprints;
 
 		int32 jsonPart = 1;
 		int32 sensorDataCount = 0;
-		int32 SensorThreshold = 16;
+		int32 SensorThreshold = 64;
 
 		int32 AutoTimer = 2;
-		int32 MinTimer = 2;
-		int32 ExtremeBatchSize = 64;
 		float LastSendTime = -60;
 		FTimerHandle AutoSendHandle;
 
-		//checks minimum send timer before sending recorded data to dashboard
-		void TrySendData();
 		UFUNCTION()
 		void StartSession();
 		UFUNCTION()
@@ -46,9 +43,10 @@ class UCognitiveVRBlueprints;
 		UFUNCTION()
 		void PostSessionEnd();
 
-	public:
 		USensors();
-		void Initialize();
+
+	public:
+		
 		void InitializeSensor(FString sensorName, float hzRate = 10, float initialValue = 0);
 		void RecordSensor(FString Name, float value);
 		void RecordSensor(FString Name, double value);

@@ -27,10 +27,11 @@ public:
 private:
 	/** IDetailCustomization interface */
 	virtual void CustomizeDetails( IDetailLayoutBuilder& DetailLayout ) override;
-	FReply OnUpdateMeshAndId();
 	FReply TakeScreenshot();
 	FReply Export();
 	FReply Upload();
+	FReply SetLeftHand();
+	FReply SetRightHand();
 	private:
 	TWeakObjectPtr<UDynamicObject> SelectedDynamicObject;
 
@@ -39,4 +40,5 @@ private:
 	bool HasOwnerAndExportDirAndName() const;
 	bool HasExportAndValidSceneData() const;
 	FText InvalidUploadText() const;
+	FText HandSetupText() const;
 };
