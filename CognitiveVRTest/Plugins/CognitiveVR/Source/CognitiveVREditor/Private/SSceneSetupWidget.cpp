@@ -213,7 +213,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
 				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Text(FText::FromString("Open the VR Pawn blueprint that is spawned for your player.\n\nAttach Dynamic Object components as children of each MotionController actor component.\n\nPress the Left"))
+				.Text(FText::FromString("Open the VR Pawn blueprint that is spawned for your player.\n\nAttach Dynamic Object components as children of each MotionController actor component.\n\nPress the Setup Left Controller and Setup Right Controller buttons on the appropriate actors.\n\nSave your changes.\n\nOptionally, you can append inputs to your DefaultInput.ini file. This will allow you to visualize the button presses of the player."))
 				//TODO add pictures
 			]
 
@@ -250,13 +250,80 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 #pragma region "export screen"
 
-			//TODO add path to blender too
+			//path to blender
+			+ SVerticalBox::Slot()
+			.MaxHeight(32)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				+SHorizontalBox::Slot()
+				.MaxWidth(200)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+					.HeightOverride(32)
+					[
+						SNew(STextBlock)
+						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
+						.Text(FText::FromString("Path to Blender.exe"))
+					]
+				]
+				+ SHorizontalBox::Slot()
+				.Padding(1)
+				.FillWidth(3)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+					.HeightOverride(32)
+					.MaxDesiredHeight(32)
+					[
+						SNew(SEditableTextBox)
+						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBlenderPath)
+						.OnTextChanged(this, &SSceneSetupWidget::OnBlenderPathChanged)
+					]
+				]
+				+SHorizontalBox::Slot()
+				.MaxWidth(17)
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+					.VAlign(VAlign_Center)
+					[
+						SNew(SBox)
+						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+						.HeightOverride(17)
+						.WidthOverride(17)
+						[
+							SNew(SButton)
+							.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+							//PickerWidget = SAssignNew(BrowseButton, SButton)
+							.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
+							.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
+							.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectBaseExportDirectory)
+							.ContentPadding(2.0f)
+							.ForegroundColor(FSlateColor::UseForeground())
+							.IsFocusable(false)
+							[
+								SNew(SImage)
+								.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
+								.ColorAndOpacity(FSlateColor::UseForeground())
+							]
+						]
+					]
+				]
+			]
 
 			//path to export directory
 			+ SVerticalBox::Slot()
 			.MaxHeight(32)
-				.AutoHeight()
-				.Padding(0, 0, 0, padding)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
 				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
@@ -275,6 +342,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 				+ SHorizontalBox::Slot()
 				.Padding(1)
+				.FillWidth(3)
 				[
 					SNew(SBox)
 					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
@@ -285,8 +353,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBaseExportDirectoryDisplay)
 						.OnTextChanged(this, &SSceneSetupWidget::OnExportPathChanged)
-						//SNew(STextBlock)
-						//
 					]
 				]
 				+SHorizontalBox::Slot()
@@ -474,7 +540,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			+ SVerticalBox::Slot()
 			.HAlign(HAlign_Center)
 			.AutoHeight()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
 				.HeightOverride(32)
@@ -488,8 +554,10 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 
+
+			//TODO checkboxes for stuff to upload
 			//TODO number of dynamic objects
-			//TODO 
+			//TODO number of scene files
 
 #pragma endregion
 
@@ -543,7 +611,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("That's it!\n\nYou will be recording user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard"))
+				.Text(FText::FromString("That's it!\n\nAfter saving your project, you will be recording user position, gaze and basic device information. Simply press play in the Unreal Editor or make a build for your target platform.\n\nPlease note that sessions run in the editor won't count towards aggregate metrics.\n\nYou can view sessions from the Dashboard."))
 			]
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Center)
@@ -577,7 +645,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("Want to ask users about their experience?\n\nNeed to add more Dynamic Objects?\n\nHave some Sensors?\n\nMultiplayer?"))
+				.Text(FText::FromString("You can continue your integration to get more insights including:\n\nCustom Events\n\nExitPoll surveys\n\nDynamic Objects\n\nMultiplayer"))
 			]
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Center)
@@ -894,11 +962,15 @@ FReply SSceneSetupWidget::NextPage()
 	{
 		GLog->Log("set dynamic and scene export directories. create if needed");
 		FCognitiveEditorTools::GetInstance()->CreateExportFolderStructure();
-	}
-	else if (CurrentPageEnum == EPage::Export)
-	{
 		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
+
+		if (FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount() == 0)
+		{
+			SGenericDialogWidget::OpenDialog(FText::FromString("No exported files found"),
+				SNew(STextBlock).Text(FText::FromString("No exported files were found. Are you sure you want to skip this step?")));
+		}
+
 		GetScreenshotBrush();
 	}
 	else if (CurrentPageEnum == EPage::UploadChecklist)
@@ -1121,6 +1193,11 @@ FText SSceneSetupWidget::GetHeaderTitle() const
 void SSceneSetupWidget::OnExportPathChanged(const FText& Text)
 {
 	FCognitiveEditorTools::GetInstance()->BaseExportDirectory = Text.ToString();
+}
+
+void SSceneSetupWidget::OnBlenderPathChanged(const FText& Text)
+{
+	FCognitiveEditorTools::GetInstance()->BlenderPath = Text.ToString();
 }
 
 void SSceneSetupWidget::SpawnCognitiveVRActor()

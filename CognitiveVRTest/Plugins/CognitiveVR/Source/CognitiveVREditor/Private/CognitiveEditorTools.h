@@ -361,6 +361,8 @@ public:
 	TArray<TSharedPtr<FString>> SubDirectoryNames;
 
 	void RefreshSceneUploadFiles();
+	int32 GetSceneExportFileCount();
+	int32 GetDynamicObjectExportedCount();
 	void RefreshDynamicUploadFiles();
 	TArray<TSharedPtr<FString>> SceneUploadFiles;
 	TArray<TSharedPtr<FString>> DynamicUploadFiles;

@@ -45,6 +45,13 @@ void SDynamicObjectListWidget::Construct(const FArguments& Args)
 						.DecoratorStyleSet(&FEditorStyle::Get())
 						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Exported</>"))
 					]
+					+ SHeaderRow::Column("uploaded")
+					.FillWidth(1)
+					[
+						SNew(SRichTextBlock)
+						.DecoratorStyleSet(&FEditorStyle::Get())
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Uploaded</>"))
+					]
 				)
 			]
 		];

@@ -56,11 +56,9 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 	ChildSlot
 		[
 			SNew(SOverlay)
-
 			+ SOverlay::Slot()
 			[
-				SNew(SVerticalBox)
-//warning if the scene has not been exported! + no scene id!
+			SNew(SVerticalBox)
 			+ SVerticalBox::Slot()
 			.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
@@ -82,9 +80,6 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
-
-
-#pragma region "dynamics screen"
 
 			+SVerticalBox::Slot()
 			.AutoHeight()
@@ -174,7 +169,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 			.Padding(FMargin(64, 24, 64, 24))
 			[
 				SNew(SBorder)
-				//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
+				.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
 				.BorderImage(FEditorStyle::GetBrush("ToolPanel.LightGroupBorder"))
 				.Padding(8.0f)
 				[
@@ -185,7 +180,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					.VAlign(VAlign_Center)
 					[
 						SNew(SImage)
-						.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
+						//.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
 						.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
 					]
 						// Notice
@@ -215,28 +210,26 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
-			+SVerticalBox::Slot()
-			.HAlign(HAlign_Center)
-			//.VAlign(valign_c)
-			.AutoHeight()
-			[
-				SNew(SBox)
-				.HeightOverride(64)
-				[
-					SNew(SButton)
-					.IsEnabled_Raw(this,&SDynamicObjectManagerWidget::IsUploadIdsEnabled)
-					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::UploadDynamicsManifest)
-					[
-						SNew(STextBlock)
-						.Justification(ETextJustify::Center)
-						.Text(FText::FromString("Upload Dynamic Objects Ids to SceneExplorer for Aggregation"))
-					]
-				]
-			]
+			//+SVerticalBox::Slot()
+			//.HAlign(HAlign_Center)
+			////.VAlign(valign_c)
+			//.AutoHeight()
+			//[
+			//	SNew(SBox)
+			//	.HeightOverride(64)
+			//	[
+			//		SNew(SButton)
+			//		.IsEnabled_Raw(this,&SDynamicObjectManagerWidget::IsUploadIdsEnabled)
+			//		.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::UploadDynamicsManifest)
+			//		[
+			//			SNew(STextBlock)
+			//			.Justification(ETextJustify::Center)
+			//			.Text(FText::FromString("Upload Dynamic Objects Ids to SceneExplorer for Aggregation"))
+			//		]
+			//	]
+			//]
 
-#pragma endregion
 			]
-#pragma endregion
 		];
 
 		FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
@@ -590,7 +583,7 @@ FText SDynamicObjectManagerWidget::UploadSelectedText() const
 	//get selected dynamic data
 	//for each unique mesh name
 
-	return FText::FromString("Upload " + FString::FromInt(dynamicMeshNames.Num()) + " Meshes");
+	return FText::FromString("Upload " + FString::FromInt(dynamicMeshNames.Num()) + " Selected Meshes");
 }
 
 FText SDynamicObjectManagerWidget::ExportSelectedText() const

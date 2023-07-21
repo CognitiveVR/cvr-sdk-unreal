@@ -420,6 +420,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 					]
 				]
 				+ SHorizontalBox::Slot()
+				.FillWidth(3)
 				.Padding(1)
 				[
 					SNew(SBox)
@@ -488,6 +489,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 					]
 				]
 				+ SHorizontalBox::Slot()
+				.FillWidth(3)
 				.Padding(1)
 				[
 					SNew(SBox)
@@ -542,12 +544,12 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 
 			+ SVerticalBox::Slot()
 			.AutoHeight()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(STextBlock)
 				.Visibility(this, &SProjectSetupWidget::IsCompleteVisible)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("quick setup description"))
+				.Text(FText::FromString("The project settings are complete. Next you'll be guided to upload a scene to give context to the data you record."))
 			]
 
 			+ SVerticalBox::Slot()
@@ -569,7 +571,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 					//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenURL,FString("https://www.blender.org"))
 				]
 			]
-			
+
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
@@ -577,7 +579,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				SNew(STextBlock)
 				.Visibility(this, &SProjectSetupWidget::IsCompleteVisible)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("dynamic object setup description"))
+				.Text(FText::FromString("Alternatively, you can use Dynamic Object components to identify key actors in your experience."))
 			]
 
 			+ SVerticalBox::Slot()
@@ -606,12 +608,12 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 
 			+ SVerticalBox::Slot()
 			.AutoHeight()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(STextBlock)
 				.Visibility(this, &SProjectSetupWidget::IsDynamicObjectsVisible)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("description of dynamic objects goes here"))
+				.Text(FText::FromString("Dynamic Objects record engagements with various objects in your experience. This includes the positions of moving objects and if/how a user gazes on an object. These can be used with Objectives to quickly evalute your users' performance.\n\nSome examples include Billboards, Vehicles or Tools.\n\nThe next screen is an overview of all the Dynamic Objects in your scene and what Dynamic Objects already exist on the dashboard.\n\nFor now, simply add Dynamic Object components to your key Actors"))
 			]
 
 			+ SVerticalBox::Slot()

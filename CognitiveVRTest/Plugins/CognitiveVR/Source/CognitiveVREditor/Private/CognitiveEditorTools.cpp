@@ -1330,6 +1330,11 @@ void FCognitiveEditorTools::RefreshSceneUploadFiles()
 	}
 }
 
+int32 FCognitiveEditorTools::GetSceneExportFileCount()
+{
+	return SceneUploadFiles.Num();
+}
+
 void FCognitiveEditorTools::RefreshDynamicUploadFiles()
 {
 	FString filesStartingWith = TEXT("");
@@ -1347,6 +1352,11 @@ void FCognitiveEditorTools::RefreshDynamicUploadFiles()
 	{
 		DynamicUploadFiles.Add(MakeShareable(new FString(imagesInDirectory[i])));
 	}
+}
+
+int32 FCognitiveEditorTools::GetDynamicObjectExportedCount()
+{
+	return DynamicUploadFiles.Num();
 }
 
 void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, FString expectedResponseType)

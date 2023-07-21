@@ -130,6 +130,7 @@ public:
 	}
 
 	void OnExportPathChanged(const FText& Text);
+	void OnBlenderPathChanged(const FText& Text);
 
 	/// <summary>
 	/// checks if there's a BP_CognitiveVRActor in the world. spawns one if not

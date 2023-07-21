@@ -25,8 +25,6 @@ class SDynamicObjectManagerWidget : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SDynamicObjectManagerWidget){}
-	//SLATE_ARGUMENT(TArray<TSharedPtr<FDynamicData>>, Items)
-	//SLATE_ARGUMENT(FCognitiveEditorTools*, CognitiveEditorTools)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& Args);
@@ -39,21 +37,14 @@ public:
 
 	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 
-	/* Adds a new textbox with the string to the list */
-	//TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FDynamicData> Item, const TSharedRef<STableViewBase>& OwnerTable);
-
 	/* The list of strings */
-	TArray<TSharedPtr<FDynamicData>> Items;
-	//FCognitiveTools* CognitiveTools;
+	//TArray<TSharedPtr<FDynamicData>> Items;
 
 	int32 CurrentPage = 0;
 	bool SceneWasExported = false;
 
 	EVisibility UploadErrorVisibility() const;
 	FText UploadErrorText() const;
-
-	//TSharedRef<ITableRow> OnGenerateSceneExportFileRow(TSharedPtr<FString> InItem, const TSharedRef<STableViewBase>& OwnerTable);
-
 	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
 	TSharedPtr<SImage> ScreenshotImage;
 
@@ -64,9 +55,6 @@ public:
 	int32 CountDynamicObjectsInScene() const;
 
 	FText DynamicCountInScene;
-
-	/* The actual UI list */
-	//TSharedPtr< SListView< TSharedPtr<FDynamicData> > > ListViewWidget;
 
 	FReply SelectDynamic(TSharedPtr<FDynamicData> data);
 
