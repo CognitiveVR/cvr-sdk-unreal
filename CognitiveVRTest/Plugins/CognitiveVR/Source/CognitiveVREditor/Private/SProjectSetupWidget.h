@@ -91,6 +91,8 @@ public:
 
 	const FSlateBrush* GetBlenderLogo() const;
 	FSlateBrush* BlenderLogoTexture;
+	const FSlateBrush* GetVideoImage() const;
+	FSlateBrush* VideoImage;
 
 	void OnExportPathChanged(const FText& Text);
 	void OnBlenderPathChanged(const FText& Text);

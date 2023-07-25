@@ -127,9 +127,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					SNew(SButton)
 					.HAlign(HAlign_Center)
 					.Visibility(this,&SSceneSetupWidget::IsInvalidVisible)
-					.Text(FText::FromString("open project setup window"))
+					.Text(FText::FromString("Open Project Setup Window"))
 					.OnClicked(this, &SSceneSetupWidget::OpenProjectSetupWindow)
-					//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenURL,FString("https://www.blender.org"))
 				]
 			]
 
@@ -235,20 +234,24 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
 						//.OnClicked(this, &SSceneSetupWidget::RefreshDisplayDynamicObjectsCountInScene)
 					]
-					//+SHorizontalBox::Slot()
-					//[
-					//	SNew(STextBlock)
-					//	.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-					//	.AutoWrapText(true)
-					//	.Justification(ETextJustify::Center)
-					//	.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::DisplayDynamicObjectsCountInScene)
-					//]
 				]
 			]
 
 #pragma endregion
 
 #pragma region "export screen"
+
+			+ SVerticalBox::Slot()
+			.VAlign(VAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				.AutoWrapText(true)
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("The current level will be exported and prepared to be uploaded to SceneExplorer."))
+			]
 
 			//path to blender
 			+ SVerticalBox::Slot()
@@ -388,41 +391,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 
-
-			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
-				.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(STextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-				.AutoWrapText(true)
-				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("The current level will be exported and prepared to be uploaded to SceneExplorer."))
-			]
-			/*+SVerticalBox::Slot()
-			.HAlign(HAlign_Center)
-			.AutoHeight()
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-				+SHorizontalBox::Slot()
-				.AutoWidth()
-				.HAlign(HAlign_Left)
-				[
-					SNew(SCheckBox)
-					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-					.IsChecked(this, &SSceneSetupWidget::GetNoExportGameplayMeshCheckbox)
-					.OnCheckStateChanged(this, &SSceneSetupWidget::OnChangeNoExportGameplayMesh)
-				]
-				+SHorizontalBox::Slot()
-				.HAlign(HAlign_Left)
-				[
-					SNew(STextBlock)
-					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-					.Text(FText::FromString("Do not export Skybox, Cameras or Dynamics"))
-				]
-			]*/
 			+SVerticalBox::Slot()
 			.HAlign(HAlign_Center)
 			.AutoHeight()
@@ -626,7 +594,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.HAlign(HAlign_Center)
 					.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
 					.Text(FText::FromString("Open Dashboard"))
-					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, "https://" + FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Dashboard", false))
+					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://app.cognitive3d.com"))
 				]
 			]
 			+ SVerticalBox::Slot()
@@ -802,6 +770,15 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 
 	SceneWasExported = true;
 
+	if (FCognitiveEditorTools::GetInstance()->SubDirectoryNames.Num() > 0)
+	{
+		ExportNextButtonText = FText::FromString("Next");
+	}
+	else
+	{
+		ExportNextButtonText = FText::FromString("Skip");
+	}
+
 	return FReply::Handled();
 }
 
@@ -967,8 +944,18 @@ FReply SSceneSetupWidget::NextPage()
 
 		if (FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount() == 0)
 		{
-			SGenericDialogWidget::OpenDialog(FText::FromString("No exported files found"),
-				SNew(STextBlock).Text(FText::FromString("No exported files were found. Are you sure you want to skip this step?")));
+			FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportMissingFilesBody", "No exported files were found. Are you sure you want to skip this step?"), LOCTEXT("ExportMissingFilesTitle", "No exported files found"), "cognitive3d_test");
+			Info.ConfirmText = LOCTEXT("Continue", "Continue");
+			Info.CancelText = LOCTEXT("Cancel", "Cancel");
+			Info.CheckBoxText = FText();
+
+			FSuppressableWarningDialog WarnAboutCoordinatesSystem(Info);
+			FSuppressableWarningDialog::EResult result = WarnAboutCoordinatesSystem.ShowModal();
+
+			if (result == FSuppressableWarningDialog::EResult::Cancel)
+			{
+				return FReply::Handled();
+			}
 		}
 
 		GetScreenshotBrush();
@@ -1027,13 +1014,13 @@ FText SSceneSetupWidget::NextButtonText() const
 {
 	if (CurrentPageEnum == EPage::Export)
 	{
+		//TODO should use a reference to a textblock on the button and update it directly. this doesn't update when the export directory changes
 		if (FCognitiveEditorTools::GetInstance()->SubDirectoryNames.Num() > 0)
 		{
 			return FText::FromString("Next");
 		}
 		else
 		{
-			//TODO this shows even after the scene has been exported
 			return FText::FromString("Skip");
 		}		
 	}

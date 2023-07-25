@@ -59,7 +59,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 			+ SOverlay::Slot()
 			[
 			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
+			+ SVerticalBox::Slot() //warning for invalid scenes
 			.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			.VAlign(VAlign_Center)
@@ -81,7 +81,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				]
 			]
 
-			+SVerticalBox::Slot()
+			+SVerticalBox::Slot() //refresh button and dynamic object count
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
 			[
@@ -108,7 +108,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
-			+ SVerticalBox::Slot()
+			+ SVerticalBox::Slot() //list widget
 			.AutoHeight()
 			.MaxHeight(250)
 			.Padding(0, 0, 0, padding)
@@ -116,14 +116,16 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				SNew(SBox)
 				//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
 				[
-					SAssignNew(SceneDynamicObjectList,SDynamicObjectListWidget)
-					//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
-					.Items(GetSceneDynamics())
+					//SAssignNew(SceneDynamicObjectList,SDynamicObjectListWidget)
+					//.Items(GetSceneDynamics())
+
+					SAssignNew(SceneDynamicObjectTable,SDynamicObjectTableWidget)
+					//.Items(GetSceneDynamics())
 				]
 			]
 
-			//upload buttons
-			+ SVerticalBox::Slot()
+			
+			+ SVerticalBox::Slot() //upload buttons
 			.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			.VAlign(VAlign_Center)
@@ -139,11 +141,8 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					.WidthOverride(128)
 					[
 						SNew(SButton)
-						//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
 						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadSelectedEnabled)
-						//.Text(FText::FromString("Upload Selected Meshes")) //data selected in the list
 						.Text_Raw(this, &SDynamicObjectManagerWidget::UploadSelectedText)
-						//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::ExportSelectedDynamics)
 						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::UploadSelectedDynamicData)
 					]
 				]
@@ -155,16 +154,14 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					.WidthOverride(128)
 					[
 						SNew(SButton)
-						//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
 						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadAllEnabled)
 						.Text(FText::FromString("Upload All Meshes"))
-						//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::UploadDynamics)
 						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::ExportAndUploadDynamics)
 					]
 				]
 			]
 
-			+SVerticalBox::Slot()
+			+SVerticalBox::Slot() //invalid dynamic data warning
 			.AutoHeight()
 			.Padding(FMargin(64, 24, 64, 24))
 			[
@@ -174,13 +171,11 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				.Padding(8.0f)
 				[
 					SNew(SHorizontalBox)
-					//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
 					+ SHorizontalBox::Slot()
 					.AutoWidth()
 					.VAlign(VAlign_Center)
 					[
 						SNew(SImage)
-						//.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
 						.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
 					]
 						// Notice
@@ -189,17 +184,13 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					.VAlign(VAlign_Center)
 					[
 						SNew(STextBlock)
-						//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
 						.ColorAndOpacity(FLinearColor::Black)
-						//.ShadowColorAndOpacity(FLinearColor::Black)
-						//.ShadowOffset(FVector2D::UnitVector)
 						.AutoWrapText(true)
 						.Text(FText::FromString("Dynamic Objects must have a valid Mesh Name\nTo have data aggregated, Dynamic Objects must have a Unique Id"))
 					]
 					+SHorizontalBox::Slot()
 					[
 						SNew(SButton)
-						//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
 						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::ValidateAndRefresh)
 						[
 							SNew(STextBlock)
@@ -210,25 +201,6 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
-			//+SVerticalBox::Slot()
-			//.HAlign(HAlign_Center)
-			////.VAlign(valign_c)
-			//.AutoHeight()
-			//[
-			//	SNew(SBox)
-			//	.HeightOverride(64)
-			//	[
-			//		SNew(SButton)
-			//		.IsEnabled_Raw(this,&SDynamicObjectManagerWidget::IsUploadIdsEnabled)
-			//		.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::UploadDynamicsManifest)
-			//		[
-			//			SNew(STextBlock)
-			//			.Justification(ETextJustify::Center)
-			//			.Text(FText::FromString("Upload Dynamic Objects Ids to SceneExplorer for Aggregation"))
-			//		]
-			//	]
-			//]
-
 			]
 		];
 
@@ -268,7 +240,8 @@ void SDynamicObjectManagerWidget::OnDeveloperKeyChanged(const FText& Text)
 
 void SDynamicObjectManagerWidget::RefreshList()
 {
-	SceneDynamicObjectList->ListViewWidget->RequestListRefresh();
+	//SceneDynamicObjectTable->TableViewWidget->RequestTreeRefresh(); //v1
+	SceneDynamicObjectTable->TableViewWidget->RequestListRefresh();
 }
 
 FReply SDynamicObjectManagerWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
@@ -337,7 +310,16 @@ FText SDynamicObjectManagerWidget::DisplayDynamicObjectsCountInScene() const
 FReply SDynamicObjectManagerWidget::RefreshDisplayDynamicObjectsCountInScene()
 {
 	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
-	SceneDynamicObjectList->RefreshList();
+	
+	//SceneDynamicObjectList->RefreshList();
+	if (!SceneDynamicObjectTable.IsValid())
+	{
+		GLog->Log("SceneDynamicObjectTable invalid!");
+	}
+	else
+	{
+		SceneDynamicObjectTable->RefreshTable();
+	}
 
 	return FReply::Handled();
 }
@@ -378,7 +360,8 @@ FReply SDynamicObjectManagerWidget::ValidateAndRefresh()
 {
 	FCognitiveEditorTools::GetInstance()->SetUniqueDynamicIds();
 	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
-	SceneDynamicObjectList->RefreshList();
+	//SceneDynamicObjectList->RefreshList();
+	SceneDynamicObjectTable->RefreshTable();
 
 	return FReply::Handled();
 }
@@ -408,7 +391,7 @@ FReply SDynamicObjectManagerWidget::ToggleSettingsVisible()
 FReply SDynamicObjectManagerWidget::ExportSelectedDynamicData()
 {
 	//get data from selected items in list
-	auto selected = SceneDynamicObjectList->ListViewWidget->GetSelectedItems();
+	auto selected = SceneDynamicObjectTable->TableViewWidget->GetSelectedItems();
 	TArray<TSharedPtr<FDynamicData>> dynamicData;
 	for (auto &elem : selected)
 	{
@@ -421,7 +404,7 @@ FReply SDynamicObjectManagerWidget::ExportSelectedDynamicData()
 
 FReply SDynamicObjectManagerWidget::UploadSelectedDynamicData()
 {
-	auto selected = SceneDynamicObjectList->ListViewWidget->GetSelectedItems();
+	auto selected = SceneDynamicObjectTable->TableViewWidget->GetSelectedItems();
 
 	//should export all dynamic objects that need it, then wait for blender to fix them all
 
@@ -565,7 +548,7 @@ bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
 
 FText SDynamicObjectManagerWidget::UploadSelectedText() const
 {
-	auto selected = SceneDynamicObjectList->ListViewWidget->GetSelectedItems();
+	auto selected = SceneDynamicObjectTable->TableViewWidget->GetSelectedItems();
 
 	//should export all dynamic objects that need it, then wait for blender to fix them all
 

@@ -6,6 +6,7 @@
 #include "IDetailCustomization.h"
 #include "PropertyEditing.h"
 #include "SDynamicObjectListWidget.h"
+#include "SDynamicObjectTableWidget.h"
 #include "PropertyCustomizationHelpers.h"
 #include "Json.h"
 #include "SCheckBox.h"
@@ -36,17 +37,11 @@ public:
 	void OnDeveloperKeyChanged(const FText& Text);
 
 	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
-
-	/* The list of strings */
-	//TArray<TSharedPtr<FDynamicData>> Items;
-
-	int32 CurrentPage = 0;
+	TSharedPtr<SDynamicObjectTableWidget> SceneDynamicObjectTable;
 	bool SceneWasExported = false;
 
 	EVisibility UploadErrorVisibility() const;
 	FText UploadErrorText() const;
-	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
-	TSharedPtr<SImage> ScreenshotImage;
 
 	FText DisplayDynamicObjectsCountInScene() const;
 	FReply RefreshDisplayDynamicObjectsCountInScene();

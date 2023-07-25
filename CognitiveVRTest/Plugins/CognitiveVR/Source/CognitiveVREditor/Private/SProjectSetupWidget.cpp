@@ -55,19 +55,24 @@ void SProjectSetupWidget::FetchApplicationKey(FString developerKey)
 
 void SProjectSetupWidget::GetApplicationKeyResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	//what is the response format?
-	//{"apikey":"asdf","valid":true}
-
-	auto content = Response->GetContentAsString();
-
-	FApplicationKeyResponse responseObject;
-	FJsonObjectConverter::JsonObjectStringToUStruct(content, &responseObject, 0, 0);
-
 	GLog->Log("SProjectSetupWidget::GetApplicationKeyResponse");
 
-	FCognitiveEditorTools::GetInstance()->SaveApplicationKeyToFile(responseObject.apikey);
-	//TODO update text field
-	DisplayAPIKey = responseObject.apikey;
+	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("UpdateApplicationKeyBody", "Do you want to use the Application Key available from the Dashboard?"), LOCTEXT("UpdateApplicationKeyTitle", "Found Application Key"), "Cognitive3dApplicationKey");
+	Info.ConfirmText = LOCTEXT("Yes", "Yes");
+	Info.CancelText = LOCTEXT("No", "No");
+	Info.CheckBoxText = FText();
+	FSuppressableWarningDialog WarnAboutCoordinatesSystem(Info);
+	FSuppressableWarningDialog::EResult result = WarnAboutCoordinatesSystem.ShowModal();
+
+	if (result == FSuppressableWarningDialog::EResult::Confirm)
+	{
+		auto content = Response->GetContentAsString();
+		FApplicationKeyResponse responseObject;
+		FJsonObjectConverter::JsonObjectStringToUStruct(content, &responseObject, 0, 0);
+
+		FCognitiveEditorTools::GetInstance()->SaveApplicationKeyToFile(responseObject.apikey);
+		DisplayAPIKey = responseObject.apikey;
+	}
 }
 
 void SProjectSetupWidget::FetchOrganizationDetails(FString developerKey)
@@ -164,23 +169,12 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 			+ SOverlay::Slot()
 			[
 				SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-				//.Padding(0, 0, 0, 40)
-			[
-				SNew(STextBlock)
-				//.Visibility(this, &SProjectSetupWidget::IsIntroVisible)
-				.Justification(ETextJustify::Center)
-				.AutoWrapText(true)
-				.Text(FText::FromString(""))
-			]
-
 
 #pragma region "intro screen"
 			+ SVerticalBox::Slot()
 			//.VAlign(VAlign_Center)
 			.AutoHeight()
-				.Padding(0,0,0, padding)
+			.Padding(0,0,0, padding)
 			[
 				SNew(SRichTextBlock)
 				.Justification(ETextJustify::Center)
@@ -191,13 +185,32 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 			+ SVerticalBox::Slot()
 			//.VAlign(VAlign_Center)
 			.AutoHeight()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(STextBlock)
 				.Visibility(this, &SProjectSetupWidget::IsIntroVisible)
 				.Justification(ETextJustify::Center)
 				.AutoWrapText(true)
 				.Text(FText::FromString("This will guide you through the initial setup of your scene and will have produciton ready analytics at the end of this setup."))
+			]
+			+SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SBox)
+				.HAlign(HAlign_Center)
+				.VAlign(VAlign_Center)
+				.WidthOverride(270)
+				.HeightOverride(150)
+				.Visibility(this, &SProjectSetupWidget::IsIntroVisible)
+				[
+					SNew(SButton)
+					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/get-started/"))
+					[
+						SNew(SImage)
+						.Image(this, &SProjectSetupWidget::GetVideoImage)
+					]
+				]
 			]
 
 #pragma endregion
@@ -357,6 +370,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				SNew(STextBlock)
 				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
 				.Justification(ETextJustify::Center)
+				.AutoWrapText(true)
 				.Text(FText::FromString("When uploading your level to the dashboard, we use Blender to automatically prepare the scene.\nThis includes converting exported images to .pngs\nand reducing the polygon count of large meshes.\n\nWe also need a temporary Export Directory to save Unreal files to while we process them."))
 			]
 
@@ -438,7 +452,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				[
 					SNew(SHorizontalBox)
 					+ SHorizontalBox::Slot()
-					.MaxWidth(17)
+					.AutoWidth()
 					.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
 					.VAlign(VAlign_Center)
 					[
@@ -549,6 +563,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				SNew(STextBlock)
 				.Visibility(this, &SProjectSetupWidget::IsCompleteVisible)
 				.Justification(ETextJustify::Center)
+				.AutoWrapText(true)
 				.Text(FText::FromString("The project settings are complete. Next you'll be guided to upload a scene to give context to the data you record."))
 			]
 
@@ -566,7 +581,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 					SNew(SButton)
 					.HAlign(HAlign_Center)
 					.Visibility(this,&SProjectSetupWidget::IsCompleteVisible)
-					.Text(FText::FromString("open scene setup window"))
+					.Text(FText::FromString("Open Scene Setup Window"))
 					.OnClicked(this, &SProjectSetupWidget::OpenSceneSetupWindow)
 					//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenURL,FString("https://www.blender.org"))
 				]
@@ -579,6 +594,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				SNew(STextBlock)
 				.Visibility(this, &SProjectSetupWidget::IsCompleteVisible)
 				.Justification(ETextJustify::Center)
+				.AutoWrapText(true)
 				.Text(FText::FromString("Alternatively, you can use Dynamic Object components to identify key actors in your experience."))
 			]
 
@@ -613,6 +629,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				SNew(STextBlock)
 				.Visibility(this, &SProjectSetupWidget::IsDynamicObjectsVisible)
 				.Justification(ETextJustify::Center)
+				.AutoWrapText(true)
 				.Text(FText::FromString("Dynamic Objects record engagements with various objects in your experience. This includes the positions of moving objects and if/how a user gazes on an object. These can be used with Objectives to quickly evalute your users' performance.\n\nSome examples include Billboards, Vehicles or Tools.\n\nThe next screen is an overview of all the Dynamic Objects in your scene and what Dynamic Objects already exist on the dashboard.\n\nFor now, simply add Dynamic Object components to your key Actors"))
 			]
 
@@ -630,7 +647,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 					SNew(SButton)
 					.HAlign(HAlign_Center)
 					.Visibility(this,&SProjectSetupWidget::IsDynamicObjectsVisible)
-					.Text(FText::FromString("open dynamic object window"))
+					.Text(FText::FromString("Open Dynamic Object Window"))
 					.OnClicked(this, &SProjectSetupWidget::OpenDynamicObjectWindow)
 					//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenURL,FString("https://www.blender.org"))
 				]
@@ -706,16 +723,23 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 #pragma endregion
 		];
 
-		FString texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("objects_grey.png");
+		FString texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("blender_logo_socket_small.png");
 		FName BrushName = FName(*texturepath);
-		texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("blender_logo_socket_small.png");
-		BrushName = FName(*texturepath);
 		BlenderLogoTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 78));
+
+		texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("getting_started_video.png");
+		BrushName = FName(*texturepath);
+		VideoImage = new FSlateDynamicImageBrush(BrushName, FVector2D(270, 150));
 }
 
 const FSlateBrush* SProjectSetupWidget::GetBlenderLogo() const
 {
 	return BlenderLogoTexture;
+}
+
+const FSlateBrush* SProjectSetupWidget::GetVideoImage() const
+{
+	return VideoImage;
 }
 
 FText SProjectSetupWidget::GetDisplayAPIKey() const

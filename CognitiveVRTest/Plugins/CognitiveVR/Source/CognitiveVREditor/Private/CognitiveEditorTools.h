@@ -422,12 +422,11 @@ public:
 	FProcHandle ConvertSceneToGLTF();
 };
 
-
-	//used for uploading multiple dynamics at once
-	class FContentContainer
-	{
-	public:
-		FString Headers;
-		FString BodyText;
-		TArray<uint8> BodyBinary;
-	};
+//used for uploading multiple dynamics at once
+class FContentContainer
+{
+public:
+	FString Headers;
+	FString BodyText;
+	TArray<uint8> BodyBinary;
+};

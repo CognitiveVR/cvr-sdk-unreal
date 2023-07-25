@@ -96,6 +96,8 @@ public:
 	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
 	TSharedPtr<SImage> ScreenshotImage;
 
+	FText ExportNextButtonText;
+
 	FText DisplayDynamicObjectsCountInScene() const;
 	
 	int32 CountDynamicObjectsInScene() const;
