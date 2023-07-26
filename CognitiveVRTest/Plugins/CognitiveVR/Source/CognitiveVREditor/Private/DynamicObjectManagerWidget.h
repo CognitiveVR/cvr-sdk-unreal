@@ -5,7 +5,6 @@
 #include "CognitiveVRSettings.h"
 #include "IDetailCustomization.h"
 #include "PropertyEditing.h"
-#include "SDynamicObjectListWidget.h"
 #include "SDynamicObjectTableWidget.h"
 #include "PropertyCustomizationHelpers.h"
 #include "Json.h"

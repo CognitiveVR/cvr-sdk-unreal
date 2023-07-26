@@ -8,7 +8,7 @@ void SDynamicObjectTableWidget::Construct(const FArguments& Args)
 			SNew(SVerticalBox)
 			+SVerticalBox::Slot()
 			[
-				SAssignNew(TableViewWidget, SListView<TSharedPtr<FDynamicData>>)
+				SAssignNew(TableViewWidget, SActorListView)
 				.ItemHeight(24)
 				.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneDynamics) //The Items array is the source of this listview
 				.OnGenerateRow(this, &SDynamicObjectTableWidget::OnGenerateRowForTable)
@@ -65,8 +65,6 @@ void SDynamicObjectTableWidget::OnSelectionChanged(TSharedPtr<FDynamicData> InNo
 	{
 		return;
 	}
-	SelectDynamic(InNode);
-	//OnComponentSelected.ExecuteIfBound(InNode);
 }
 
 TSharedRef<ITableRow> SDynamicObjectTableWidget::OnGenerateRowForTable(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)

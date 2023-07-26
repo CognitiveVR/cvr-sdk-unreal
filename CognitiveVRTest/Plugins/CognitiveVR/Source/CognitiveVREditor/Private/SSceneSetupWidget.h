@@ -5,7 +5,6 @@
 #include "CognitiveVRSettings.h"
 #include "IDetailCustomization.h"
 #include "PropertyEditing.h"
-#include "SDynamicObjectListWidget.h"
 #include "PropertyCustomizationHelpers.h"
 #include "Json.h"
 #include "SCheckBox.h"
@@ -59,7 +58,6 @@ public:
 
 	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 
-	//int32 CurrentPage = 0;
 	bool SceneWasExported = false;
 
 	FReply DebugNextPage();
@@ -93,7 +91,6 @@ public:
 	FText UploadErrorText() const;
 	EVisibility DisplayWizardThrobber() const;
 
-	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
 	TSharedPtr<SImage> ScreenshotImage;
 
 	FText ExportNextButtonText;
