@@ -96,10 +96,8 @@ public:
 	void OnBlenderPathChanged(const FText& Text);
 	EVisibility AreSettingsVisible() const;
 
-	FReply ExportSelectedDynamicData();
-	FReply UploadSelectedDynamicData();
-
-	FReply ExportAndUploadDynamics();
+	FReply UploadSelectedDynamicObjects();
+	FReply UploadAllDynamicObjects();
 
 	bool IsExportAllEnabled() const;
 	bool IsExportSelectedEnabled() const;

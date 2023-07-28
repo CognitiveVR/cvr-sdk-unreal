@@ -198,6 +198,10 @@ public:
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
 		FReply UploadDynamicsManifest();
 
+	//this is for aggregating dynamic objects
+	UFUNCTION(Exec, Category = "Dynamics Manifest")
+		FReply UploadSelectedDynamicsManifest(TArray<UDynamicObject*> selectedData);
+
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
 		FReply UploadDynamicsManifestIds(TArray<FString> ids, FString meshName, FString prefabName);
 
@@ -356,7 +360,6 @@ public:
 	void SceneVersionRequest(FEditorSceneData data);
 	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	FText GetDynamicsFromManifest() const;
 	TArray<TSharedPtr<FDynamicData>> SceneExplorerDynamics;
 	TArray<TSharedPtr<FString>> SubDirectoryNames;
 

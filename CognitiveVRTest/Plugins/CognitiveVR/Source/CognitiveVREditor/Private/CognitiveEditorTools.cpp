@@ -701,6 +701,13 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 
 	GLog->Log("CognitiveVR Tools uploading manifest for " + FString::FromInt(dynamics.Num()) + " objects");
 
+	UploadSelectedDynamicsManifest(dynamics);
+
+	return FReply::Handled();
+}
+
+FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObject*> dynamics)
+{
 	bool wroteAnyObjects = false;
 	FString objectManifest = "{\"objects\":[";
 	//write preset customids to manifest
@@ -2079,11 +2086,6 @@ FText FCognitiveEditorTools::GetDynamicObjectUploadText() const
 	//for each unique mesh name
 
 	return FText::FromString("Upload " + FString::FromInt(SubDirectoryNames.Num()) + " Dynamic Object Meshes to " + data->Name + " Version " + FString::FromInt(data->VersionNumber));
-}
-
-FText FCognitiveEditorTools::GetDynamicsFromManifest() const
-{
-	return FText::FromString("DYNAMICS");
 }
 
 FReply FCognitiveEditorTools::RefreshDynamicSubDirectory()

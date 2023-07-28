@@ -202,7 +202,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 						SNew(SButton)
 						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadSelectedEnabled)
 						.Text_Raw(this, &SDynamicObjectManagerWidget::UploadSelectedText)
-						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::UploadSelectedDynamicData)
+						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::UploadSelectedDynamicObjects)
 					]
 				]
 				+SHorizontalBox::Slot()
@@ -215,7 +215,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 						SNew(SButton)
 						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadAllEnabled)
 						.Text(FText::FromString("Upload All Meshes"))
-						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::ExportAndUploadDynamics)
+						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::UploadAllDynamicObjects)
 					]
 				]
 			]
@@ -393,17 +393,41 @@ FText SDynamicObjectManagerWidget::UploadErrorText() const
 	return FText::FromString(FCognitiveEditorTools::GetInstance()->WizardUploadError);
 }
 
-FReply SDynamicObjectManagerWidget::ExportAndUploadDynamics()
+FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 {
-	//try to export all dynamics that don't have directories
-	FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportNewDynamics();
-	if (fph.IsValid())
+	//popup asking if meshes should be exported too
+	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export the selected Dynamic Object meshes before uploading to Scene Explorer?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
+	Info.ConfirmText = LOCTEXT("Yes", "Yes");
+	Info.CancelText = LOCTEXT("No", "No");
+	Info.CheckBoxText = FText();
+	FSuppressableWarningDialog ExportSelectedDynamicMeshes(Info);
+	FSuppressableWarningDialog::EResult result = ExportSelectedDynamicMeshes.ShowModal();
+
+	if (result == FSuppressableWarningDialog::EResult::Confirm)
 	{
-		FPlatformProcess::WaitForProc(fph);
+		//try to export all dynamics that don't have directories
+		FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportNewDynamics();
+		if (fph.IsValid())
+		{
+			FPlatformProcess::WaitForProc(fph);
+		}
 	}
 
-	//then upload all
-	FCognitiveEditorTools::GetInstance()->UploadDynamics();
+	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload the selected Dynamic Object to Scene Explorer?"), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
+	Info.ConfirmText = LOCTEXT("Yes", "Yes");
+	Info.CancelText = LOCTEXT("No", "No");
+	Info.CheckBoxText = FText();
+	FSuppressableWarningDialog UploadSelectedDynamicMeshes(Info2);
+	FSuppressableWarningDialog::EResult result2 = UploadSelectedDynamicMeshes.ShowModal();
+
+	if (result2 == FSuppressableWarningDialog::EResult::Confirm)
+	{
+		//then upload all
+		FCognitiveEditorTools::GetInstance()->UploadDynamics();
+
+		//upload aggregation manifest data
+		FCognitiveEditorTools::GetInstance()->UploadDynamicsManifest();
+	}
 
 	return FReply::Handled();
 }
@@ -439,51 +463,91 @@ FReply SDynamicObjectManagerWidget::ToggleSettingsVisible()
 	return FReply::Handled();
 }
 
-FReply SDynamicObjectManagerWidget::ExportSelectedDynamicData()
-{
-	//get data from selected items in list
-	auto selected = SceneDynamicObjectTable->TableViewWidget->GetSelectedItems();
-	TArray<TSharedPtr<FDynamicData>> dynamicData;
-	for (auto &elem : selected)
-	{
-		GLog->Log("export dynamic data mesh name " + elem->MeshName);
-		dynamicData.Add(elem);
-	}
-	FCognitiveEditorTools::GetInstance()->ExportDynamicData(dynamicData);
-	return FReply::Handled();
-}
-
-FReply SDynamicObjectManagerWidget::UploadSelectedDynamicData()
+FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 {
 	auto selected = SceneDynamicObjectTable->TableViewWidget->GetSelectedItems();
 
-	//should export all dynamic objects that need it, then wait for blender to fix them all
+	//popup asking if meshes should be exported too
+	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export the selected Dynamic Object meshes before uploading to Scene Explorer?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
+	Info.ConfirmText = LOCTEXT("Yes", "Yes");
+	Info.CancelText = LOCTEXT("No", "No");
+	Info.CheckBoxText = FText();
+	FSuppressableWarningDialog ExportSelectedDynamicMeshes(Info);
+	FSuppressableWarningDialog::EResult result = ExportSelectedDynamicMeshes.ShowModal();
 
-	TArray<TSharedPtr<FDynamicData>> dynamicData;
-	
-	for (auto &elem : selected)
+	if (result == FSuppressableWarningDialog::EResult::Confirm)
 	{
-		//if files dont exist, export first
-		FString path = FCognitiveEditorTools::GetInstance()->GetDynamicsExportDirectory() + "/" + elem->MeshName + "/" + elem->MeshName;
-		FString gltfpath = path + ".gltf";
-		if (!FPaths::FileExists(*gltfpath))
+		//export
+		TArray<TSharedPtr<FDynamicData>> dynamicData;
+
+		for (auto& elem : selected)
 		{
-			//not exported
-			dynamicData.Add(elem);
+			//if files dont exist, export first
+			FString path = FCognitiveEditorTools::GetInstance()->GetDynamicsExportDirectory() + "/" + elem->MeshName + "/" + elem->MeshName;
+			FString gltfpath = path + ".gltf";
+			if (!FPaths::FileExists(*gltfpath))
+			{
+				//not exported
+				dynamicData.Add(elem);
+			}
 		}
+
+		FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportDynamicData(dynamicData);
+		if (fph.IsValid())
+		{
+			FPlatformProcess::WaitForProc(fph);
+		}
+	}	
+
+	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload the selected Dynamic Object to Scene Explorer?"), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
+	Info.ConfirmText = LOCTEXT("Yes", "Yes");
+	Info.CancelText = LOCTEXT("No", "No");
+	Info.CheckBoxText = FText();
+	FSuppressableWarningDialog UploadSelectedDynamicMeshes(Info2);
+	FSuppressableWarningDialog::EResult result2 = UploadSelectedDynamicMeshes.ShowModal();
+
+	if (result2 == FSuppressableWarningDialog::EResult::Confirm)
+	{
+		//then upload
+		for (auto& elem : selected)
+		{
+			FCognitiveEditorTools::GetInstance()->UploadDynamic(elem->MeshName);
+		}
+
+		//upload aggregation manifest data of selected objects
+
+		TArray<UDynamicObject*> dynamics;
+
+		//get all the dynamic objects in the scene
+		for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+		{
+			UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
+			if (actorComponent == NULL)
+			{
+				continue;
+			}
+			UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
+			if (dynamic == NULL)
+			{
+				continue;
+			}
+
+			if (dynamic->IdSourceType == EIdSourceType::CustomId && dynamic->CustomId != "")
+			{
+				FString findId = dynamic->CustomId;
+
+				auto isDynamicSelected = selected.ContainsByPredicate([findId](const TSharedPtr<FDynamicData> InItem) {return InItem->Id == findId;});
+
+				if (isDynamicSelected)
+				{
+					dynamics.Add(dynamic);
+				}
+			}
+		}
+
+		FCognitiveEditorTools::GetInstance()->UploadSelectedDynamicsManifest(dynamics);
 	}
 
-	FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportDynamicData(dynamicData);
-	if (fph.IsValid())
-	{
-		FPlatformProcess::WaitForProc(fph);
-	}
-
-	//then upload them all
-	for (auto& elem : selected)
-	{
-		FCognitiveEditorTools::GetInstance()->UploadDynamic(elem->MeshName);
-	}
 	return FReply::Handled();
 }
 
