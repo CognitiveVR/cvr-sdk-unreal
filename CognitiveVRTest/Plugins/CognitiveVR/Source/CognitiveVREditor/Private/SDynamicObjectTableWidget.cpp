@@ -69,12 +69,24 @@ void SDynamicObjectTableWidget::OnSelectionChanged(TSharedPtr<FDynamicData> InNo
 
 TSharedRef<ITableRow> SDynamicObjectTableWidget::OnGenerateRowForTable(TSharedPtr<FDynamicData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
+	//find matching InItem by id
+	bool hasUploadedId;
+	FString searchId = InItem->Id;
+	auto FoundId = SDynamicObjectManagerWidget::dashboardObjects.FindByPredicate([searchId](const FDashboardObject& InItem2)
+		{
+			return InItem2.sdkId == searchId;
+		});
+	hasUploadedId = FoundId != NULL;
+
+	//check if the export folder has files for this dynamic object
+	bool hasExportedMesh = FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(InItem->MeshName);
+
 	return SNew(SDynamicTableItem, OwnerTable)
 		.Name(FText::FromString(InItem->Name))
 		.MeshName(FText::FromString(InItem->MeshName))
 		.Id(FText::FromString(InItem->Id))
-		.Exported(true)
-		.Uploaded(true);
+		.Exported(hasExportedMesh)
+		.Uploaded(hasUploadedId);
 }
 
 FReply SDynamicObjectTableWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
@@ -133,8 +145,8 @@ void SDynamicTableItem::Construct(const FArguments& InArgs, const TSharedRef<STa
 	Name = InArgs._Name;
 	MeshName = InArgs._MeshName;
 	Id = InArgs._Id;
-	Exported = true;
-	Uploaded = true;
+	Exported = InArgs._Exported;
+	Uploaded = InArgs._Uploaded;
 
 	SMultiColumnTableRow<TSharedPtr<FDynamicData> >::Construct(FSuperRowType::FArguments(), InOwnerTableView);
 }
@@ -185,7 +197,7 @@ TSharedRef<SWidget> SDynamicTableItem::GenerateWidgetForColumn(const FName& Colu
 			.VAlign(VAlign_Center)
 			[
 				SNew(SCheckBox)
-				.IsChecked(ECheckBoxState::Checked)
+				.IsChecked(Exported ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
 				.IsEnabled(false)
 			];
 	}
@@ -197,7 +209,7 @@ TSharedRef<SWidget> SDynamicTableItem::GenerateWidgetForColumn(const FName& Colu
 			.VAlign(VAlign_Center)
 			[
 				SNew(SCheckBox)
-				.IsChecked(ECheckBoxState::Checked)
+				.IsChecked(Uploaded ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
 				.IsEnabled(false)
 			];
 	}

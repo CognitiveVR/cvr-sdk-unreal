@@ -17,8 +17,10 @@
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
 #include "Runtime/Online/HTTP/Public/Http.h"
+#include "C3DCommonEditorTypes.h"
 
 class FCognitiveTools;
+class SDynamicObjectTableWidget;
 class FCognitiveVREditorModule;
 
 class SDynamicObjectManagerWidget : public SCompoundWidget
@@ -112,4 +114,8 @@ public:
 	FText ExportSelectedText() const;
 	FText GetSettingsButtonText() const;
 	FText GetSceneText() const;
+
+	static TArray<FDashboardObject> dashboardObjects;
+	void GetDashboardManifest();
+	void OnDashboardManifestResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 };

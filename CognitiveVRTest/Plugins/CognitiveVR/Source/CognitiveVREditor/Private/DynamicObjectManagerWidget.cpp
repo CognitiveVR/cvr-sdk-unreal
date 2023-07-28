@@ -3,6 +3,8 @@
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
+TArray<FDashboardObject> SDynamicObjectManagerWidget::dashboardObjects = TArray<FDashboardObject>();
+
 TArray<TSharedPtr<FDynamicData>> SDynamicObjectManagerWidget::GetSceneDynamics()
 {
 	return FCognitiveEditorTools::GetInstance()->GetSceneDynamics();
@@ -42,6 +44,63 @@ void SDynamicObjectManagerWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr
 	{
 		SGenericDialogWidget::OpenDialog(FText::FromString("Your developer key has expired"), SNew(STextBlock).Text(FText::FromString("Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.")));
 		GLog->Log("Developer Key Response Code is not 200. Developer key may be invalid or expired");
+	}
+}
+
+void SDynamicObjectManagerWidget::GetDashboardManifest()
+{
+	if (FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
+	{
+		auto currentSceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
+		if (!currentSceneData.IsValid())
+		{
+			GLog->Log("SDynamicObjectManagerWidget::GetDashboardManifest failed. current scene is null");
+			return;
+		}
+
+		auto Request = FHttpModule::Get().CreateRequest();
+		Request->OnProcessRequestComplete().BindRaw(this, &SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived);
+		FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
+		FString versionid = FString::FromInt(currentSceneData->VersionId);
+		FString url = "https://" + gateway + "/v0/versions/"+versionid+"/objects";
+		Request->SetURL(url);
+		Request->SetVerb("GET");
+		Request->SetHeader(TEXT("Authorization"), "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey);
+		Request->ProcessRequest();
+	}
+	else
+	{
+		GLog->Log("SDynamicObjectManagerWidget::GetDashboardManifest failed. developer key missing");
+	}
+}
+
+void SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (Response.IsValid() == false)
+	{
+		SGenericDialogWidget::OpenDialog(FText::FromString("Your developer key has expired"), SNew(STextBlock).Text(FText::FromString("Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.")));
+
+		GLog->Log("Developer Key Response is invalid. Developer key may be invalid or expired. Check your internet connection");
+		return;
+	}
+
+	int32 responseCode = Response->GetResponseCode();
+	if (responseCode == 200)
+	{		
+		auto content = Response->GetContentAsString();		
+		if (FJsonObjectConverter::JsonArrayStringToUStruct(content, &dashboardObjects, 0, 0))
+		{
+			RefreshList();
+		}
+		else
+		{
+			GLog->Log("SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived failed to deserialize dynamic object list");
+			GLog->Log(content);
+		}
+	}
+	else
+	{
+		GLog->Log("SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived response code " + FString::FromInt(responseCode));
 	}
 }
 
@@ -240,7 +299,6 @@ void SDynamicObjectManagerWidget::OnDeveloperKeyChanged(const FText& Text)
 
 void SDynamicObjectManagerWidget::RefreshList()
 {
-	//SceneDynamicObjectTable->TableViewWidget->RequestTreeRefresh(); //v1
 	SceneDynamicObjectTable->TableViewWidget->RequestListRefresh();
 }
 
@@ -250,9 +308,6 @@ FReply SDynamicObjectManagerWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
 
 	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		//AStaticMeshActor *Mesh = *ActorItr;
-
 		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
 		if (actorComponent == NULL)
 		{
@@ -283,9 +338,6 @@ int32 SDynamicObjectManagerWidget::CountDynamicObjectsInScene() const
 	//get all the dynamic objects in the scene
 	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 	{
-		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-		//AStaticMeshActor *Mesh = *ActorItr;
-
 		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
 		if (actorComponent == NULL)
 		{
@@ -310,8 +362,8 @@ FText SDynamicObjectManagerWidget::DisplayDynamicObjectsCountInScene() const
 FReply SDynamicObjectManagerWidget::RefreshDisplayDynamicObjectsCountInScene()
 {
 	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
+	GetDashboardManifest();
 	
-	//SceneDynamicObjectList->RefreshList();
 	if (!SceneDynamicObjectTable.IsValid())
 	{
 		GLog->Log("SceneDynamicObjectTable invalid!");
@@ -360,7 +412,6 @@ FReply SDynamicObjectManagerWidget::ValidateAndRefresh()
 {
 	FCognitiveEditorTools::GetInstance()->SetUniqueDynamicIds();
 	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
-	//SceneDynamicObjectList->RefreshList();
 	SceneDynamicObjectTable->RefreshTable();
 
 	return FReply::Handled();

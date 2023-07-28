@@ -44,3 +44,19 @@ public:
 	UPROPERTY()
 		TArray< FSubscriptionDataResponse> subscriptions;
 };
+
+USTRUCT()
+struct FDashboardObject
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	FString sdkId;
+	UPROPERTY()
+	FString name;
+	UPROPERTY()
+	FString meshName;
+	UPROPERTY()
+	int64 updatedAt;
+};

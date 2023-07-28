@@ -13,6 +13,7 @@
 #include "STreeView.h"
 #include "SListView.h"
 #include "SActorListView.h"
+#include "DynamicObjectManagerWidget.h"
 
 class SDynamicTableItem;
 
