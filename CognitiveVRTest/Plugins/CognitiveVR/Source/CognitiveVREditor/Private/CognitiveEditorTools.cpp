@@ -1229,7 +1229,12 @@ FReply FCognitiveEditorTools::TakeScreenshot()
 	FString dir = BaseExportDirectory + "/" + GetCurrentSceneName() + "/screenshot/";
 	if (VerifyOrCreateDirectory(dir))
 	{
+		UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::TakeScreenshot create directory for screenshot: %s"), *dir);
 		FScreenshotRequest::RequestScreenshot(dir + "screenshot", false, false);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::TakeScreenshot unable create directory for screenshot"));
 	}
 	return FReply::Handled();
 }
@@ -2700,7 +2705,11 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	//create settings.json
 	FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(COGNITIVEVR_SDK_VERSION) + "\",\"sceneName\":\"" + GetCurrentSceneName() + "\"}";
 	FString settingsFullPath = escapedOutPath + "/settings.json";
-	bool success2 = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+	bool writeSettingsJsonSuccess = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+	if (writeSettingsJsonSuccess == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene unable to save settings.json"));
+	}
 
 	//Convert scene to GLTF. run python script. wait if blender process is running
 	FProcHandle fph = ConvertSceneToGLTF();
