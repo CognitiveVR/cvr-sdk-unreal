@@ -33,74 +33,26 @@ public:
 	void CheckForExpiredDeveloperKey();
 	void OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	FString DisplayDeveloperKey;
-	FText GetDisplayDeveloperKey() const;
-	void OnDeveloperKeyChanged(const FText& Text);
-
 	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 	TSharedPtr<SDynamicObjectTableWidget> SceneDynamicObjectTable;
-	bool SceneWasExported = false;
 
-	EVisibility UploadErrorVisibility() const;
-	FText UploadErrorText() const;
-
-	FText DisplayDynamicObjectsCountInScene() const;
 	FReply RefreshDisplayDynamicObjectsCountInScene();
 	EVisibility GetDuplicateDyanmicObjectVisibility() const;
-	
-	int32 CountDynamicObjectsInScene() const;
-
-	FText DynamicCountInScene;
 
 	FReply SelectDynamic(TSharedPtr<FDynamicData> data);
-
-	FReply SelectAll();
 
 	void RefreshList();
 
 	FReply ValidateAndRefresh();
 
-	//FReply EvaluateSceneExport();
-	bool NoExportGameplayMeshes = true;
-	ECheckBoxState GetNoExportGameplayMeshCheckbox() const;
-	void OnChangeNoExportGameplayMesh(ECheckBoxState newstate)
-	{
-		if (newstate == ECheckBoxState::Checked)
-		{
-			NoExportGameplayMeshes = true;
-		}
-		else
-		{
-			NoExportGameplayMeshes = false;
-		}
-	}
-
-	bool bSettingsVisible = true;
-	FReply ToggleSettingsVisible();
-
-	bool OnlyExportSelected;
-	ECheckBoxState GetOnlyExportSelectedCheckbox() const;
-	void OnChangeOnlyExportSelected(ECheckBoxState newstate)
-	{
-		if (newstate == ECheckBoxState::Checked)
-		{
-			OnlyExportSelected = true;
-		}
-		else
-		{
-			OnlyExportSelected = false;
-		}
-	}
-
+	//TODO make export path and blender path configurable here
 	void OnExportPathChanged(const FText& Text);
 	void OnBlenderPathChanged(const FText& Text);
-	EVisibility AreSettingsVisible() const;
 
 	FReply UploadSelectedDynamicObjects();
 	FReply UploadAllDynamicObjects();
 
-	bool IsExportAllEnabled() const;
-	bool IsExportSelectedEnabled() const;
+	EVisibility GetSceneWarningVisibility() const;
 
 	bool IsUploadAllEnabled() const;
 	bool IsUploadSelectedEnabled() const;
@@ -110,7 +62,6 @@ public:
 
 	FText UploadSelectedText() const;
 	FText ExportSelectedText() const;
-	FText GetSettingsButtonText() const;
 	FText GetSceneText() const;
 
 	static TArray<FDashboardObject> dashboardObjects;

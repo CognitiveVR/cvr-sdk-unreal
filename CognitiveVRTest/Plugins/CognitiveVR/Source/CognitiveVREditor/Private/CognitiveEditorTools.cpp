@@ -138,7 +138,7 @@ TArray<TSharedPtr<FDynamicData>> FCognitiveEditorTools::GetSceneDynamics()
 
 bool FCognitiveEditorTools::HasDeveloperKey() const
 {
-	return FAnalyticsCognitiveVR::Get().DeveloperKey.Len() > 0;
+	return DeveloperKey.Len() > 0;
 }
 
 bool FCognitiveEditorTools::HasApplicationKey() const
@@ -767,7 +767,7 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObje
 	//send manifest to api/objects/sceneid
 
 	GLog->Log("CognitiveTools::UploadDynamicsManifest send dynamic object aggregation manifest");
-	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
 	auto HttpRequest = FHttpModule::Get().CreateRequest();
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("POST");
@@ -843,7 +843,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FSt
 	//send manifest to api/objects/sceneid
 
 	GLog->Log("CognitiveTools::UploadDynamicsManifest send dynamic object aggregation manifest");
-	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
 	auto HttpRequest = FHttpModule::Get().CreateRequest();
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("POST");
@@ -905,7 +905,7 @@ FReply FCognitiveEditorTools::GetDynamicsManifest()
 	HttpRequest->SetURL(GetDynamicObjectManifest(FString::FromInt(currentSceneData->VersionId)));
 
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
-	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
 	HttpRequest->SetHeader("Authorization", AuthValue);
 
 	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnDynamicManifestResponse);
@@ -1501,7 +1501,7 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 	HttpRequest->SetURL(url);
 	HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=\"cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i\"");
 	HttpRequest->SetHeader("Accept-Encoding", "identity");
-	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetContent(AllBytes);
@@ -1886,9 +1886,6 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 {
 	DynamicCountInScene = FText::FromString("Found " + FString::FromInt(CountDynamicObjectsInScene()) + " Dynamic Objects in scene");
 	DuplicateDyanmicObjectVisibility = EVisibility::Hidden;
-	//SceneDynamicObjectList->RefreshList();
-
-	GLog->Log("FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene");
 
 	SceneDynamics.Empty();
 	//get all the dynamic objects in the scene
@@ -2012,7 +2009,7 @@ FText FCognitiveEditorTools::GetApplicationKey() const
 
 FText FCognitiveEditorTools::GetDeveloperKey() const
 {
-	return FText::FromString(FAnalyticsCognitiveVR::Get().DeveloperKey);
+	return FText::FromString(DeveloperKey);
 }
 
 FText FCognitiveEditorTools::GetAttributionKey() const
@@ -2022,7 +2019,7 @@ FText FCognitiveEditorTools::GetAttributionKey() const
 
 void FCognitiveEditorTools::OnDeveloperKeyChanged(const FText& Text)
 {
-	FAnalyticsCognitiveVR::Get().DeveloperKey = Text.ToString();
+	DeveloperKey = Text.ToString();
 }
 
 void FCognitiveEditorTools::OnAttributionKeyChanged(const FText& Text)
@@ -2036,8 +2033,14 @@ void FCognitiveEditorTools::OnBlenderPathChanged(const FText& Text)
 }
 void FCognitiveEditorTools::OnExportPathChanged(const FText& Text)
 {
-
 	BaseExportDirectory = Text.ToString();
+}
+
+void FCognitiveEditorTools::SaveBlenderPathAndExportPath()
+{
+	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+	GConfig->SetString(TEXT("Analytics"), TEXT("BlenderPath"), *FCognitiveEditorTools::GetInstance()->BlenderPath, EditorIni);
+	GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
 }
 
 FText FCognitiveEditorTools::UploadSceneNameFiles() const
@@ -2190,7 +2193,7 @@ void FCognitiveEditorTools::SceneVersionRequest(FEditorSceneData data)
 
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
 	//HttpRequest->SetHeader("Authorization", TEXT("Data " + FAnalyticsCognitiveVR::Get().EditorAuthToken));
-	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetHeader("Content-Type", "application/json");
 
@@ -2227,7 +2230,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		{
 			//not authorized or scene id does not exist
 			GLog->Log("FCognitiveTools::SceneVersionResponse not authorized or scene doesn't exist!");
-			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode()) + "\nThe Developer Key: " + FAnalyticsCognitiveVR::Get().DeveloperKey + " does not have access to the scene";
+			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode()) + "\nThe Developer Key: " + DeveloperKey + " does not have access to the scene";
 			return;
 		}
 		else
@@ -2358,16 +2361,14 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 {
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
-	//GLog->Log("FCognitiveTools::SaveAPIDeveloperKeysToFile save: " + CustomerId);
-
-	//GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, EngineIni);
+	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, EditorIni);
 
-	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
+	SaveBlenderPathAndExportPath();
 
 	GConfig->Flush(false, GEngineIni);
-
+	GConfig->Flush(false, GEditorIni);
 	ConfigFileHasChanged = true;
 
 	return FReply::Handled();
@@ -2385,14 +2386,12 @@ void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 
 void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
 {
-	//FString EngineIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
 	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
-	//GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, EditorIni);
 	GConfig->Flush(false, GEngineIni);
 	ConfigFileHasChanged = true;
 
-	FAnalyticsCognitiveVR::Get().DeveloperKey = key;
+	DeveloperKey = key;
 }
 
 TSharedPtr<FEditorSceneData> FCognitiveEditorTools::GetCurrentSceneData() const
@@ -2896,12 +2895,12 @@ FString FCognitiveEditorTools::BuildDebugFileContents() const
 	outputString += "\n";
 
 	//api key ****
-	FString tempApiKey = FCognitiveEditorTools::GetInstance()->GetApplicationKey().ToString();
+	FString tempApiKey = ApplicationKey;
 	outputString += FString("API Key: ****") + tempApiKey.RightChop(tempApiKey.Len() - 4);
 	outputString += "\n";
 
 	//dev key ****
-	FString tempDevKey = FAnalyticsCognitiveVR::Get().DeveloperKey;
+	FString tempDevKey = DeveloperKey;
 	outputString += FString("DEV Key: ****") + tempDevKey.RightChop(tempDevKey.Len() - 4);
 	outputString += "\n";
 

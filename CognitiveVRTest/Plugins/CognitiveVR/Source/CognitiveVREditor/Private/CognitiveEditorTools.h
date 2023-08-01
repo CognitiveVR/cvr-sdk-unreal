@@ -68,7 +68,7 @@ public:
 
 	FString ApplicationKey;
 	FString AttributionKey;
-	//FString DeveloperKey;
+	FString DeveloperKey;
 
 	FString GetDynamicObjectManifest(FString versionid);
 
@@ -221,8 +221,8 @@ public:
 	void* ChooseParentWindowHandle();
 
 	FString BlenderPath;
-
 	FString BaseExportDirectory;
+	void SaveBlenderPathAndExportPath();
 
 	//c:/users/me/desktop/export/
 	FText GetBaseExportDirectoryDisplay() const;

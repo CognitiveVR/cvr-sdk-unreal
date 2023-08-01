@@ -46,7 +46,7 @@ void SProjectSetupWidget::FetchApplicationKey(FString developerKey)
 	FString url = FString("https://" + Gateway + "/v0/applicationKey");
 	HttpRequest->SetURL(url);
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
-	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	FString AuthValue = "APIKEY:DEVELOPER " + FCognitiveEditorTools::GetInstance()->DeveloperKey;
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetHeader("Content-Type", "application/json");
 	HttpRequest->OnProcessRequestComplete().BindRaw(this, &SProjectSetupWidget::GetApplicationKeyResponse);
@@ -84,7 +84,7 @@ void SProjectSetupWidget::FetchOrganizationDetails(FString developerKey)
 	FString url = FString("https://" + Gateway + "/v0/subscriptions");
 	HttpRequest->SetURL(url);
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
-	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	FString AuthValue = "APIKEY:DEVELOPER " + FCognitiveEditorTools::GetInstance()->DeveloperKey;
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetHeader("Content-Type", "application/json");
 	HttpRequest->OnProcessRequestComplete().BindRaw(this, &SProjectSetupWidget::GetOrganizationDetailsResponse);
@@ -815,6 +815,7 @@ FReply SProjectSetupWidget::NextPage()
 	{
 		GLog->Log("set dynamic and scene export directories. create if needed");
 		FCognitiveEditorTools::GetInstance()->CreateExportFolderStructure();
+		FCognitiveEditorTools::GetInstance()->SaveBlenderPathAndExportPath();
 	}
 
 	CurrentPageEnum = (EPage)(((uint8)CurrentPageEnum) + 1);

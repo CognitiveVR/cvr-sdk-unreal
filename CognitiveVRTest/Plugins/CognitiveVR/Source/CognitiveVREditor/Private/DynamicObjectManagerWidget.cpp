@@ -20,7 +20,7 @@ void SDynamicObjectManagerWidget::CheckForExpiredDeveloperKey()
 		FString url = "https://" + gateway + "/v0/apiKeys/verify";
 		Request->SetURL(url);
 		Request->SetVerb("GET");
-		Request->SetHeader(TEXT("Authorization"), "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey);
+		Request->SetHeader(TEXT("Authorization"), "APIKEY:DEVELOPER " + FCognitiveEditorTools::GetInstance()->DeveloperKey);
 		Request->ProcessRequest();
 	}
 }
@@ -65,7 +65,7 @@ void SDynamicObjectManagerWidget::GetDashboardManifest()
 		FString url = "https://" + gateway + "/v0/versions/"+versionid+"/objects";
 		Request->SetURL(url);
 		Request->SetVerb("GET");
-		Request->SetHeader(TEXT("Authorization"), "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey);
+		Request->SetHeader(TEXT("Authorization"), "APIKEY:DEVELOPER " + FCognitiveEditorTools::GetInstance()->DeveloperKey);
 		Request->ProcessRequest();
 	}
 	else
@@ -106,8 +106,6 @@ void SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived(FHttpReque
 
 void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 {
-	DisplayDeveloperKey = FCognitiveEditorTools::GetInstance()->GetDeveloperKey().ToString();
-
 	float padding = 10;
 
 	CheckForExpiredDeveloperKey();
@@ -119,6 +117,24 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 			[
 			SNew(SVerticalBox)
 			+ SVerticalBox::Slot() //warning for invalid scenes
+			.Padding(0, 10, 0, padding) //slight padding so
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			.VAlign(VAlign_Center)
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					[
+						SNew(STextBlock)
+						.Visibility(this, &SDynamicObjectManagerWidget::GetSceneWarningVisibility)
+						.Text(this, &SDynamicObjectManagerWidget::GetUploadInvalidCause)
+					]
+				]
+			]
+
+			+ SVerticalBox::Slot() //warning for invalid scenes
 			.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			.VAlign(VAlign_Center)
@@ -128,14 +144,9 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				+SHorizontalBox::Slot()
 				[
 					SNew(SBox)
-					//.Visibility(this, &SDynamicObjectManagerWidget::IsUploadInvalid)
-					//.HeightOverride(64)
-					//.WidthOverride(128)
 					[
 						SNew(STextBlock)
-						//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
-						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadInvalid)
-						.Text(this, &SDynamicObjectManagerWidget::GetUploadInvalidCause)
+						.Text(this, &SDynamicObjectManagerWidget::GetSceneText)
 					]
 				]
 			]
@@ -145,22 +156,18 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 			.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
-				//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
 				[
 					SNew(SHorizontalBox)
-					//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
 					+SHorizontalBox::Slot()
 					.AutoWidth()
 					[
 						SNew(SButton)
 						.Text(FText::FromString("Refresh"))
-						//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
 						.OnClicked(this, &SDynamicObjectManagerWidget::RefreshDisplayDynamicObjectsCountInScene)
 					]
 					+SHorizontalBox::Slot()
 					[
 						SNew(STextBlock)
-						//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
 						.AutoWrapText(true)
 						.Justification(ETextJustify::Center)
 						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::DisplayDynamicObjectsCountInScene)
@@ -173,13 +180,8 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 			.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
-				//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
 				[
-					//SAssignNew(SceneDynamicObjectList,SDynamicObjectListWidget)
-					//.Items(GetSceneDynamics())
-
 					SAssignNew(SceneDynamicObjectTable,SDynamicObjectTableWidget)
-					//.Items(GetSceneDynamics())
 				]
 			]
 
@@ -191,11 +193,9 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 			.AutoHeight()
 			[
 				SNew(SHorizontalBox)
-				//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
 				+SHorizontalBox::Slot()
 				[
 					SNew(SBox)
-					//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
 					.HeightOverride(64)
 					.WidthOverride(128)
 					[
@@ -208,7 +208,6 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				+SHorizontalBox::Slot()
 				[
 					SNew(SBox)
-					//.Visibility(this, &SDynamicObjectManagerWidget::IsDynamicsVisible)
 					.HeightOverride(64)
 					.WidthOverride(128)
 					[
@@ -264,37 +263,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 		];
 
 		FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
-		FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
-
-}
-
-FReply SDynamicObjectManagerWidget::SelectAll()
-{
-	UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();
-	GEditor->Exec(World, TEXT("actor select all"));
-	return FReply::Handled();
-}
-
-ECheckBoxState SDynamicObjectManagerWidget::GetNoExportGameplayMeshCheckbox() const
-{
-	if (NoExportGameplayMeshes)return ECheckBoxState::Checked;
-	return ECheckBoxState::Unchecked;
-}
-
-ECheckBoxState SDynamicObjectManagerWidget::GetOnlyExportSelectedCheckbox() const
-{
-	if (OnlyExportSelected)return ECheckBoxState::Checked;
-	return ECheckBoxState::Unchecked;
-}
-
-FText SDynamicObjectManagerWidget::GetDisplayDeveloperKey() const
-{
-	return FText::FromString(DisplayDeveloperKey);
-}
-
-void SDynamicObjectManagerWidget::OnDeveloperKeyChanged(const FText& Text)
-{
-	DisplayDeveloperKey = Text.ToString();
+		RefreshDisplayDynamicObjectsCountInScene();
 }
 
 void SDynamicObjectManagerWidget::RefreshList()
@@ -330,35 +299,6 @@ FReply SDynamicObjectManagerWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
 	return FReply::Handled();
 }
 
-int32 SDynamicObjectManagerWidget::CountDynamicObjectsInScene() const
-{
-	//loop thorugh all dynamics in the scene
-	TArray<UDynamicObject*> dynamics;
-
-	//get all the dynamic objects in the scene
-	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
-	{
-		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
-		if (actorComponent == NULL)
-		{
-			continue;
-		}
-		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
-		if (dynamic == NULL)
-		{
-			continue;
-		}
-		dynamics.Add(dynamic);
-	}
-
-	return dynamics.Num();
-}
-
-FText SDynamicObjectManagerWidget::DisplayDynamicObjectsCountInScene() const
-{
-	return DynamicCountInScene;
-}
-
 FReply SDynamicObjectManagerWidget::RefreshDisplayDynamicObjectsCountInScene()
 {
 	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
@@ -379,18 +319,6 @@ FReply SDynamicObjectManagerWidget::RefreshDisplayDynamicObjectsCountInScene()
 EVisibility SDynamicObjectManagerWidget::GetDuplicateDyanmicObjectVisibility() const
 {
 	return FCognitiveEditorTools::GetInstance()->GetDuplicateDyanmicObjectVisibility();
-}
-
-EVisibility SDynamicObjectManagerWidget::UploadErrorVisibility() const
-{
-	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 200) { return EVisibility::Collapsed; }
-	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 201) { return EVisibility::Collapsed; }
-	return EVisibility::Visible;
-}
-
-FText SDynamicObjectManagerWidget::UploadErrorText() const
-{
-	return FText::FromString(FCognitiveEditorTools::GetInstance()->WizardUploadError);
 }
 
 FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
@@ -414,9 +342,9 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 	}
 
 	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload the selected Dynamic Object to Scene Explorer?"), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
-	Info.ConfirmText = LOCTEXT("Yes", "Yes");
-	Info.CancelText = LOCTEXT("No", "No");
-	Info.CheckBoxText = FText();
+	Info2.ConfirmText = LOCTEXT("Yes", "Yes");
+	Info2.CancelText = LOCTEXT("No", "No");
+	Info2.CheckBoxText = FText();
 	FSuppressableWarningDialog UploadSelectedDynamicMeshes(Info2);
 	FSuppressableWarningDialog::EResult result2 = UploadSelectedDynamicMeshes.ShowModal();
 
@@ -435,9 +363,7 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 FReply SDynamicObjectManagerWidget::ValidateAndRefresh()
 {
 	FCognitiveEditorTools::GetInstance()->SetUniqueDynamicIds();
-	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
-	SceneDynamicObjectTable->RefreshTable();
-
+	RefreshDisplayDynamicObjectsCountInScene();
 	return FReply::Handled();
 }
 
@@ -450,17 +376,6 @@ void SDynamicObjectManagerWidget::OnExportPathChanged(const FText& Text)
 {
 	FCognitiveEditorTools::GetInstance()->BaseExportDirectory = Text.ToString();
 	RefreshList();
-}
-
-EVisibility SDynamicObjectManagerWidget::AreSettingsVisible() const
-{
-	return bSettingsVisible ? EVisibility::Visible : EVisibility::Collapsed;
-}
-
-FReply SDynamicObjectManagerWidget::ToggleSettingsVisible()
-{
-	bSettingsVisible = !bSettingsVisible;
-	return FReply::Handled();
 }
 
 FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
@@ -500,9 +415,9 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 	}	
 
 	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload the selected Dynamic Object to Scene Explorer?"), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
-	Info.ConfirmText = LOCTEXT("Yes", "Yes");
-	Info.CancelText = LOCTEXT("No", "No");
-	Info.CheckBoxText = FText();
+	Info2.ConfirmText = LOCTEXT("Yes", "Yes");
+	Info2.CancelText = LOCTEXT("No", "No");
+	Info2.CheckBoxText = FText();
 	FSuppressableWarningDialog UploadSelectedDynamicMeshes(Info2);
 	FSuppressableWarningDialog::EResult result2 = UploadSelectedDynamicMeshes.ShowModal();
 
@@ -551,58 +466,12 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 	return FReply::Handled();
 }
 
-bool SDynamicObjectManagerWidget::IsExportAllEnabled() const
-{
-	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlenderAndExportDir()) { return false; }
-	return true;
-}
-
-bool SDynamicObjectManagerWidget::IsExportSelectedEnabled() const
-{
-	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlenderAndExportDir()) { return false; }
-	
-	for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
-	{
-		if (AActor* Actor = Cast<AActor>(*It))
-		{
-			//SelectionSetCache.Add(Actor);
-			UActorComponent* actorComponent = Actor->GetComponentByClass(UDynamicObject::StaticClass());
-			if (actorComponent == NULL)
-			{
-				continue;
-			}
-			UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
-			if (dynamicComponent == NULL)
-			{
-				continue;
-			}
-
-			//check directory for obj/gltf files
-
-			//auto tools = FCognitiveEditorTools::GetInstance();
-			////
-			//FString path = tools->GetDynamicsExportDirectory() + "/" + dynamicComponent->MeshName + "/" + dynamicComponent->MeshName;
-			//FString objpath = path + ".obj";
-			//FString gltfpath = path + ".gltf";
-			//
-			//if (!FPaths::FileExists(*objpath) && !FPaths::FileExists(*gltfpath))
-			//{
-			//	continue;
-			//}
-			return true;
-		}
-	}
-
-	return false;
-}
-
 bool SDynamicObjectManagerWidget::IsUploadAllEnabled() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
-	//if (!FCognitiveEditorTools::GetInstance()->HasExportedAnyDynamicMeshes()) { return false; }
 	return true;
 }
 
@@ -612,7 +481,6 @@ bool SDynamicObjectManagerWidget::IsUploadInvalid() const
 	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return true; }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return true; }
 	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return true; }
-	//if (!FCognitiveEditorTools::GetInstance()->HasExportedAnyDynamicMeshes()) { return true; }
 	return false;
 }
 
@@ -623,6 +491,15 @@ FText SDynamicObjectManagerWidget::GetUploadInvalidCause() const
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return FText::FromString("Upload Invalid. Export Path is invalid"); }
 	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return FText::FromString("Upload Invalid. Scene does not have a Scene ID"); }
 	return FText::GetEmpty();
+}
+
+EVisibility SDynamicObjectManagerWidget::GetSceneWarningVisibility() const
+{
+	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return EVisibility::Visible; }
+	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return EVisibility::Visible; }
+	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return EVisibility::Visible; }
+	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return EVisibility::Visible;}
+	return EVisibility::Collapsed;
 }
 
 bool SDynamicObjectManagerWidget::IsUploadIdsEnabled() const
@@ -709,21 +586,13 @@ FText SDynamicObjectManagerWidget::ExportSelectedText() const
 	return FText::FromString("Export " + FString::FromInt(validExportCount) + " Selected");
 }
 
-FText SDynamicObjectManagerWidget::GetSettingsButtonText() const
-{
-	if (bSettingsVisible)
-		return FText::FromString("Hide Settings");
-	else
-		return FText::FromString("Show Settings");
-}
-
 FText SDynamicObjectManagerWidget::GetSceneText() const
 {
 	auto tools = FCognitiveEditorTools::GetInstance();
 	if (tools->CurrentSceneHasSceneId())
 	{
 		auto data = tools->GetCurrentSceneData();
-		return FText::FromString("SceneName: " + data->Name + "   Id: " + data->Id);
+		return FText::FromString("Scene: " + data->Name + "   Version: " + FString::FromInt(data->VersionNumber));
 	}
 	return FText::FromString("Scene has not been exported!");
 }
