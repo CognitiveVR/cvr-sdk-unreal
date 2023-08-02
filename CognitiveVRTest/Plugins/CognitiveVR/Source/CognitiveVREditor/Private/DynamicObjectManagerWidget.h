@@ -64,6 +64,7 @@ public:
 	FText ExportSelectedText() const;
 	FText GetSceneText() const;
 
+	//static so its easier to set content from response without getting a reference to this window. especially for updating the sub-widgets!
 	static TArray<FDashboardObject> dashboardObjects;
 	void GetDashboardManifest();
 	void OnDashboardManifestResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);

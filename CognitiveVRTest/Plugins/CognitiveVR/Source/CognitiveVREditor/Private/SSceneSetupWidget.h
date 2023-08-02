@@ -136,4 +136,9 @@ public:
 	/// </summary>
 	void SpawnCognitiveVRActor();
 	FReply OpenProjectSetupWindow();
+
+	const FSlateBrush* GetControllerConfigureBrush() const;
+	FSlateBrush* ControllerConfigureBrush;
+	const FSlateBrush* GetControllerComponentBrush() const;
+	FSlateBrush* ControllerComponentBrush;
 };

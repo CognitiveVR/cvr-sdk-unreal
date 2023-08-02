@@ -73,9 +73,9 @@ TSharedRef<ITableRow> SDynamicObjectTableWidget::OnGenerateRowForTable(TSharedPt
 	bool hasUploadedId;
 	FString searchId = InItem->Id;
 	auto FoundId = SDynamicObjectManagerWidget::dashboardObjects.FindByPredicate([searchId](const FDashboardObject& InItem2)
-		{
-			return InItem2.sdkId == searchId;
-		});
+	{
+		return InItem2.sdkId == searchId;
+	});
 	hasUploadedId = FoundId != NULL;
 
 	//check if the export folder has files for this dynamic object

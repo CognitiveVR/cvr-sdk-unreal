@@ -60,5 +60,7 @@ private:
 	void UnregisterMenuExtensions();
 
 	void UnregisterAssetTools();
+public:
 	static void CloseProjectSetupWindow();
+	static void CloseSceneSetupWindow();
 };

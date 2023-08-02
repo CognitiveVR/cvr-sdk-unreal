@@ -170,11 +170,18 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 			[
 				SNew(SVerticalBox)
 
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString(""))
+				]
+
 #pragma region "intro screen"
 			+ SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
 			.AutoHeight()
-			.Padding(0,0,0, padding)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(SRichTextBlock)
 				.Justification(ETextJustify::Center)
@@ -183,7 +190,6 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				.Text(FText::FromString("Welcome to the <RichTextBlock.BoldHighlight>Cognitive3D Scene Setup</>"))
 			]
 			+ SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
 			[
@@ -191,7 +197,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SProjectSetupWidget::IsIntroVisible)
 				.Justification(ETextJustify::Center)
 				.AutoWrapText(true)
-				.Text(FText::FromString("This will guide you through the initial setup of your scene and will have produciton ready analytics at the end of this setup."))
+				.Text(FText::FromString("This will guide you through the initial setup of your scene and will have production ready analytics at the end of this setup."))
 			]
 			+SVerticalBox::Slot()
 			.AutoHeight()
@@ -218,9 +224,8 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 #pragma region "key screen"
 
 			+ SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
 			.AutoHeight()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(SRichTextBlock)
 				.Visibility(this, &SProjectSetupWidget::IsDevKeyVisible)
@@ -267,16 +272,6 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 #pragma endregion
 
 #pragma region Organization Details
-
-			+ SVerticalBox::Slot()
-			.MaxHeight(8)
-			.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			[
-				SNew(STextBlock)
-				.Visibility(this, &SProjectSetupWidget::IsOrganizationDetailsVisible)
-			]
-			
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
@@ -285,7 +280,6 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SProjectSetupWidget::IsOrganizationDetailsVisible)
 				.Justification(ETextJustify::Center)
 				.Text(FText::FromString("Unknown"))
-				//.Text(InArgs._LabelText)
 			]
 
 			+ SVerticalBox::Slot()
@@ -371,7 +365,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
 				.Justification(ETextJustify::Center)
 				.AutoWrapText(true)
-				.Text(FText::FromString("When uploading your level to the dashboard, we use Blender to automatically prepare the scene.\nThis includes converting exported images to .pngs\nand reducing the polygon count of large meshes.\n\nWe also need a temporary Export Directory to save Unreal files to while we process them."))
+				.Text(FText::FromString("When uploading your level to the dashboard, we use Blender to automatically prepare the scene.\nThis includes converting exported images to .pngs and reducing the polygon count of large meshes.\n\nWe also need a temporary Export Directory to save Unreal files to while we process them."))
 			]
 
 			+ SVerticalBox::Slot()
@@ -397,17 +391,21 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				+SHorizontalBox::Slot()
 				.HAlign(HAlign_Center)
 				[
-					SNew(SButton)
-					.HAlign(HAlign_Center)
-					.Visibility(this,&SProjectSetupWidget::IsExportPathVisible)
-					.Text(FText::FromString("www.blender.org"))
-					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenURL,FString("https://www.blender.org"))
+					SNew(SBox)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("www.blender.org"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenURL,FString("https://www.blender.org"))
+					]
 				]
 			]
 
 			+ SVerticalBox::Slot()
 			.AutoHeight()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(SSeparator)
 				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
@@ -578,12 +576,15 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				+SHorizontalBox::Slot()
 				.HAlign(HAlign_Center)
 				[
-					SNew(SButton)
-					.HAlign(HAlign_Center)
-					.Visibility(this,&SProjectSetupWidget::IsCompleteVisible)
-					.Text(FText::FromString("Open Scene Setup Window"))
-					.OnClicked(this, &SProjectSetupWidget::OpenSceneSetupWindow)
-					//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenURL,FString("https://www.blender.org"))
+					SNew(SBox)
+					.WidthOverride(256)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("Quick Scene Setup"))
+						.OnClicked(this, &SProjectSetupWidget::OpenSceneSetupWindow)
+					]
 				]
 			]
 
@@ -609,18 +610,21 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				+SHorizontalBox::Slot()
 				.HAlign(HAlign_Center)
 				[
-					SNew(SButton)
-					.HAlign(HAlign_Center)
-					.Visibility(this,&SProjectSetupWidget::IsCompleteVisible)
-					.Text(FText::FromString("open dynamic object window"))
-					.OnClicked(this, &SProjectSetupWidget::NextPage)
-					//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenURL,FString("https://www.blender.org"))
+					SNew(SBox)
+					.WidthOverride(256)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("Advanced Scene Setup"))
+						.OnClicked(this, &SProjectSetupWidget::NextPage)
+					]
 				]
 			]
 
 #pragma endregion
 
-			#pragma region dynamic object intro
+#pragma region dynamic object intro
 
 			+ SVerticalBox::Slot()
 			.AutoHeight()
@@ -644,12 +648,15 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				+SHorizontalBox::Slot()
 				.HAlign(HAlign_Center)
 				[
-					SNew(SButton)
-					.HAlign(HAlign_Center)
-					.Visibility(this,&SProjectSetupWidget::IsDynamicObjectsVisible)
-					.Text(FText::FromString("Open Dynamic Object Window"))
-					.OnClicked(this, &SProjectSetupWidget::OpenDynamicObjectWindow)
-					//.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenURL,FString("https://www.blender.org"))
+					SNew(SBox)
+					.WidthOverride(256)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("Open Dynamic Object Window"))
+						.OnClicked(this, &SProjectSetupWidget::OpenDynamicObjectWindow)
+					]
 				]
 			]
 			

@@ -88,15 +88,12 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 			+ SOverlay::Slot()
 			[
-				SNew(SVerticalBox)
+			SNew(SVerticalBox)
 			+ SVerticalBox::Slot()
 			.AutoHeight()
-				//.Padding(0, 0, 0, 40)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(STextBlock)
-				//.Visibility(this, &SSceneSetupWidget::IsIntroVisible)
-				.Justification(ETextJustify::Center)
-				.AutoWrapText(true)
 				.Text(FText::FromString(""))
 			]
 
@@ -104,7 +101,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			+ SVerticalBox::Slot()
 			//.VAlign(VAlign_Center)
 			.AutoHeight()
-				.Padding(0,0,0, padding)
+			.Padding(0,10,0, padding)
 			[
 				SNew(SRichTextBlock)
 				.Justification(ETextJustify::Center)
@@ -124,11 +121,17 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				+SHorizontalBox::Slot()
 				.HAlign(HAlign_Center)
 				[
-					SNew(SButton)
-					.HAlign(HAlign_Center)
-					.Visibility(this,&SSceneSetupWidget::IsInvalidVisible)
-					.Text(FText::FromString("Open Project Setup Window"))
-					.OnClicked(this, &SSceneSetupWidget::OpenProjectSetupWindow)
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsInvalidVisible)
+					.HeightOverride(128)
+					.WidthOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Visibility(this,&SSceneSetupWidget::IsInvalidVisible)
+						.Text(FText::FromString("Open Project Setup Window"))
+						.OnClicked(this, &SSceneSetupWidget::OpenProjectSetupWindow)
+					]
 				]
 			]
 
@@ -136,9 +139,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 #pragma region "intro screen"
 			+ SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
 			.AutoHeight()
-				.Padding(0,0,0, padding)
+			.Padding(0,0,0, padding)
 			[
 				SNew(SRichTextBlock)
 				.Justification(ETextJustify::Center)
@@ -149,7 +151,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			+ SVerticalBox::Slot()
 			//.VAlign(VAlign_Center)
 			.AutoHeight()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(STextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsIntroVisible)
@@ -158,26 +160,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Text(FText::FromString("This will guide you through the initial setup of your scene and will have produciton ready analytics at the end of this setup."))
 			]
 
-			+SVerticalBox::Slot()
-				.AutoHeight()
-				.Padding(0, 0, 0, padding)
-				.HAlign(HAlign_Center)
-				[
-					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					.VAlign(VAlign_Center)
-					[
-						SNew(SImage)
-						.Visibility(this, &SSceneSetupWidget::IsIntroNewVersionVisible)
-						.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
-					]
-				]
-
 			+ SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
 			.AutoHeight()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsIntroNewVersionVisible)
@@ -189,7 +174,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			+ SVerticalBox::Slot()
 			//.VAlign(VAlign_Center)
 			.AutoHeight()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(SRichTextBlock)
 				.AutoWrapText(true)
@@ -205,34 +190,112 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 			+ SVerticalBox::Slot()
 			.AutoHeight()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				[
+					SNew(SRichTextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+					.AutoWrapText(true)
+					.Justification(ETextJustify::Center)
+					.DecoratorStyleSet(&FEditorStyle::Get())
+					.Text(FText::FromString("Open the VR Pawn blueprint that is spawned for your player.\n\n\n\nAttach Dynamic Object components as children of each MotionController actor component."))
+				]
+				+SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.HAlign(HAlign_Center)
+					.VAlign(VAlign_Center)
+					.WidthOverride(265)
+					.HeightOverride(215)
+					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+					[
+						SNew(SImage)
+						.Image(this, &SSceneSetupWidget::GetControllerComponentBrush)
+					]
+				]
+			]
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SSeparator)
+				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+			]
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				[
+					SNew(SRichTextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+					.AutoWrapText(true)
+					.Justification(ETextJustify::Center)
+					.DecoratorStyleSet(&FEditorStyle::Get())
+					.Text(FText::FromString("Press the Setup Left Controller and Setup Right Controller buttons on the appropriate actors.\n\n\n\nSave your changes."))
+				]
+				+SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.HAlign(HAlign_Center)
+					.VAlign(VAlign_Center)
+					.WidthOverride(265)
+					.HeightOverride(138)
+					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+					[
+						SNew(SImage)
+						.Image(this, &SSceneSetupWidget::GetControllerConfigureBrush)
+					]
+				]
+			]
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SSeparator)
+				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+			]
+
+			+SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
 			[
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
 				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Text(FText::FromString("Open the VR Pawn blueprint that is spawned for your player.\n\nAttach Dynamic Object components as children of each MotionController actor component.\n\nPress the Setup Left Controller and Setup Right Controller buttons on the appropriate actors.\n\nSave your changes.\n\nOptionally, you can append inputs to your DefaultInput.ini file. This will allow you to visualize the button presses of the player."))
-				//TODO add pictures
+				.Text(FText::FromString("Optionally, you can append inputs to your DefaultInput.ini file. This will allow you to visualize the button presses of the player."))
 			]
 
 			+SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
 			.AutoHeight()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
 			[
 				SNew(SBox)
 				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
 				[
 					SNew(SHorizontalBox)
-					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
 					+SHorizontalBox::Slot()
 					.AutoWidth()
 					[
-						SNew(SButton)
-						.Text(FText::FromString("Append Input Data to Input.ini"))
+						SNew(SBox)
 						.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
-						//.OnClicked(this, &SSceneSetupWidget::RefreshDisplayDynamicObjectsCountInScene)
+						.WidthOverride(256)
+						.HeightOverride(32)
+						[
+							SNew(SButton)
+							.Text(FText::FromString("Append Input Data to Input.ini"))
+							//.OnClicked(this, &SSceneSetupWidget::RefreshDisplayDynamicObjectsCountInScene)
+						]
 					]
 				]
 			]
@@ -250,7 +313,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("The current level will be exported and prepared to be uploaded to SceneExplorer."))
+				.Text(FText::FromString("The current level geometry will be exported and uploaded to our dashboard. This will provide context for the spatial data points we automatically collect."))
 			]
 
 			//path to blender
@@ -391,10 +454,18 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SSeparator)
+				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+			]
+
 			+SVerticalBox::Slot()
 			.HAlign(HAlign_Center)
 			.AutoHeight()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
 				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
@@ -417,14 +488,15 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 
 			+ SVerticalBox::Slot()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			.VAlign(VAlign_Center)
-				.MaxHeight(40)
-				.AutoHeight()
+			.MaxHeight(40)
+			.AutoHeight()
 			[
 				SNew(SBox)
-				.WidthOverride(256)
+				.WidthOverride(128)
+				.HeightOverride(32)
 				[
 					SNew(SButton)
 					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
@@ -435,24 +507,24 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 			+ SVerticalBox::Slot()
 			.AutoHeight()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(SSeparator)
 				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 			]
 
 			+ SVerticalBox::Slot()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			.VAlign(VAlign_Center)
-				.AutoHeight()
+			.AutoHeight()
 			[
 				SNew(SHorizontalBox)
 				+SHorizontalBox::Slot()
 				[
 					SNew(SBox)
-					.HeightOverride(64)
 					.WidthOverride(128)
+					.HeightOverride(32)
 					[
 						SNew(SButton)
 						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
@@ -464,35 +536,10 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 #pragma endregion
 
 #pragma region "upload screen"
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-				.Padding(0, 0, 0, padding)
-				.VAlign(VAlign_Top)
-			[
-				SNew(SRichTextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsNewSceneUpload)
-				.AutoWrapText(true)
-				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Upload New Scene</> including a screenshot, all the Scene Files listed below and all Dynamic Mesh Files listed below."))
-			]
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-				.Padding(0, 0, 0, padding)
-				.VAlign(VAlign_Top)
-			[
-				SNew(SRichTextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsSceneVersionUpload)
-				.DecoratorStyleSet(&FEditorStyle::Get())
-				.AutoWrapText(true)
-				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Upload New Version of this Scene</> This will archive the previous version of this scene."))
-			]
-
 			+SVerticalBox::Slot()
 			.HAlign(HAlign_Center)
 			.AutoHeight()
-				.Padding(0, 0, 0, padding)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
 				.WidthOverride(this,&SSceneSetupWidget::GetScreenshotWidth)
@@ -511,8 +558,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
-				.HeightOverride(32)
 				.WidthOverride(256)
+				.HeightOverride(32)
 				.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 				[
 					SNew(SButton)
@@ -522,6 +569,46 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 
+			+ SVerticalBox::Slot() //upload number of dynamic objects to scene
+			.HAlign(HAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
+				.AutoWrapText(true)
+				.Justification(ETextJustify::Center)
+				.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::DisplayDynamicObjectsCountInScene)
+				//TODO this should instead display the number of exported dynamic meshes
+			]
+
+			+ SVerticalBox::Slot() //upload number of dynamic objects to scene
+			.HAlign(HAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SRichTextBlock)
+				.Visibility(this, &SSceneSetupWidget::IsNewSceneUpload)
+				.AutoWrapText(true)
+				.DecoratorStyleSet(&FEditorStyle::Get())
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Upload New Scene</> including a screenshot, all the Scene Files listed below and all Dynamic Mesh Files listed below."))
+			]
+
+			+ SVerticalBox::Slot() //upload number of dynamic objects to scene
+			.HAlign(HAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SRichTextBlock)
+				.Visibility(this, &SSceneSetupWidget::IsSceneVersionUpload)
+				.DecoratorStyleSet(&FEditorStyle::Get())
+				.AutoWrapText(true)
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Upload New Version of this Scene</> This will archive the previous version of this scene."))
+			]
+
+
 
 			//TODO checkboxes for stuff to upload
 			//TODO number of dynamic objects
@@ -529,10 +616,12 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 #pragma endregion
 
-#pragma region "done screen"
+#pragma region uploading
+
 			+ SVerticalBox::Slot()
 			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Bottom)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(SThrobber)
 				.NumPieces(7)
@@ -547,9 +636,12 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Text(FText::FromString("Uploading"))
 			]
 
+#pragma endregion
+
+#pragma region "done screen"
 			+SVerticalBox::Slot()
 			.AutoHeight()
-			.VAlign(VAlign_Center)
+			.Padding(0, 0, 0, padding)
 			[
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::UploadErrorVisibility)
@@ -561,7 +653,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 			+SVerticalBox::Slot()
 			.AutoHeight()
-			.VAlign(VAlign_Center)
 			[
 				SNew(STextBlock)
 				.Visibility(this, &SSceneSetupWidget::UploadErrorVisibility)
@@ -572,7 +663,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
 			.AutoHeight()
 			[
 				SNew(STextBlock)
@@ -582,7 +672,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Text(FText::FromString("That's it!\n\nAfter saving your project, you will be recording user position, gaze and basic device information. Simply press play in the Unreal Editor or make a build for your target platform.\n\nPlease note that sessions run in the editor won't count towards aggregate metrics.\n\nYou can view sessions from the Dashboard."))
 			]
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
 			.AutoHeight()
 			[
 				SNew(SHorizontalBox)
@@ -590,15 +679,20 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.HAlign(HAlign_Center)
 				.Padding(0, 5, 0, 5)
 				[
-					SNew(SButton)
-					.HAlign(HAlign_Center)
+					SNew(SBox)
 					.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
-					.Text(FText::FromString("Open Dashboard"))
-					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://app.cognitive3d.com"))
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
+						.Text(FText::FromString("Open Dashboard"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://app.cognitive3d.com"))
+					]
 				]
 			]
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
 			.AutoHeight()
 			[
 				SNew(SBox)
@@ -606,7 +700,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
 			]
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
 			.AutoHeight()
 			[
 				SNew(STextBlock)
@@ -616,7 +709,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Text(FText::FromString("You can continue your integration to get more insights including:\n\nCustom Events\n\nExitPoll surveys\n\nDynamic Objects\n\nMultiplayer"))
 			]
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
 			.AutoHeight()
 			[
 				SNew(SHorizontalBox)
@@ -624,11 +716,17 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.HAlign(HAlign_Center)
 				.Padding(0,5,0,5)
 				[
-					SNew(SButton)
-					.HAlign(HAlign_Center)
+					SNew(SBox)
 					.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
-					.Text(FText::FromString("Open Documentation"))
-					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/get-started/"))
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
+						.Text(FText::FromString("Open Documentation"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/get-started/"))
+					]
 				]
 			]
 
@@ -700,6 +798,14 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 #pragma endregion
 		];
+
+		FString texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("controller-components.png");
+		FName BrushName = FName(*texturepath);
+		ControllerComponentBrush = new FSlateDynamicImageBrush(BrushName, FVector2D(265, 215));
+
+		texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("controller-configure.png");
+		BrushName = FName(*texturepath);
+		ControllerConfigureBrush = new FSlateDynamicImageBrush(BrushName, FVector2D(265, 138));
 
 		FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
 		FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
@@ -973,6 +1079,10 @@ FReply SSceneSetupWidget::NextPage()
 	{
 		CurrentPageEnum = (EPage)(((uint8)CurrentPageEnum) + 1);
 	}
+	if (CurrentPageEnum == EPage::Complete)
+	{
+		FCognitiveVREditorModule::CloseSceneSetupWindow();
+	}
 
 	return FReply::Handled();
 }
@@ -986,12 +1096,7 @@ FReply SSceneSetupWidget::LastPage()
 
 EVisibility SSceneSetupWidget::DisplayWizardThrobber() const
 {
-	if (CurrentPageEnum != EPage::UploadProgress)
-	{
-		return EVisibility::Collapsed;
-	}
-
-	if (FCognitiveEditorTools::GetInstance()->IsWizardUploading())
+	if (CurrentPageEnum == EPage::UploadProgress)
 	{
 		return EVisibility::Visible;
 	}
@@ -1004,7 +1109,7 @@ EVisibility SSceneSetupWidget::NextButtonVisibility() const
 	{
 		return EVisibility::Hidden;
 	}
-	if (CurrentPageEnum == EPage::Complete)
+	if (CurrentPageEnum == EPage::UploadProgress)
 	{
 		return EVisibility::Hidden;
 	}
@@ -1027,6 +1132,10 @@ FText SSceneSetupWidget::NextButtonText() const
 	else if (CurrentPageEnum == EPage::UploadChecklist)
 	{
 		return FText::FromString("Upload");
+	}
+	else if (CurrentPageEnum == EPage::Complete)
+	{
+		return FText::FromString("Close");
 	}
 	return FText::FromString("Next");
 }
@@ -1094,6 +1203,10 @@ EVisibility SSceneSetupWidget::BackButtonVisibility() const
 		return EVisibility::Hidden;
 	}
 	if (CurrentPageEnum == EPage::Complete)
+	{
+		return EVisibility::Hidden;
+	}
+	if (CurrentPageEnum == EPage::UploadProgress)
 	{
 		return EVisibility::Hidden;
 	}
@@ -1235,4 +1348,14 @@ FReply SSceneSetupWidget::OpenProjectSetupWindow()
 {
 	FCognitiveVREditorModule::SpawnCognitiveProjectSetupTab();
 	return FReply::Handled();
+}
+
+const FSlateBrush* SSceneSetupWidget::GetControllerConfigureBrush() const
+{
+	return ControllerConfigureBrush;
+}
+
+const FSlateBrush* SSceneSetupWidget::GetControllerComponentBrush() const
+{
+	return ControllerComponentBrush;
 }

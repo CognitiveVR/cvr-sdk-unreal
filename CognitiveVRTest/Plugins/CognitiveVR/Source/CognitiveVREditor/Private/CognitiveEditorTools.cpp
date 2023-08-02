@@ -1229,7 +1229,6 @@ FReply FCognitiveEditorTools::TakeScreenshot()
 	FString dir = BaseExportDirectory + "/" + GetCurrentSceneName() + "/screenshot/";
 	if (VerifyOrCreateDirectory(dir))
 	{
-		UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::TakeScreenshot create directory for screenshot: %s"), *dir);
 		FScreenshotRequest::RequestScreenshot(dir + "screenshot", false, false);
 	}
 	else

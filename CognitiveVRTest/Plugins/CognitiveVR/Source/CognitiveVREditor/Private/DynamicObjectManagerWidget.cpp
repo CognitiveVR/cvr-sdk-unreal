@@ -87,10 +87,10 @@ void SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived(FHttpReque
 	int32 responseCode = Response->GetResponseCode();
 	if (responseCode == 200)
 	{		
-		auto content = Response->GetContentAsString();		
+		auto content = Response->GetContentAsString();
 		if (FJsonObjectConverter::JsonArrayStringToUStruct(content, &dashboardObjects, 0, 0))
 		{
-			RefreshList();
+
 		}
 		else
 		{
