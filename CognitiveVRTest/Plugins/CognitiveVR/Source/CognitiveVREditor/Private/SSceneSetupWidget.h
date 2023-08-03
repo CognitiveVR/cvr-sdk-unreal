@@ -141,4 +141,6 @@ public:
 	FSlateBrush* ControllerConfigureBrush;
 	const FSlateBrush* GetControllerComponentBrush() const;
 	FSlateBrush* ControllerComponentBrush;
+
+	FReply AppendInputs();
 };
