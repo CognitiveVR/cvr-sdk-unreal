@@ -154,29 +154,20 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 			+SVerticalBox::Slot() //refresh button and dynamic object count
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
+				.HAlign(EHorizontalAlignment::HAlign_Left)
 			[
 				SNew(SBox)
+				.WidthOverride(128)
 				[
-					SNew(SHorizontalBox)
-					+SHorizontalBox::Slot()
-					.AutoWidth()
-					[
-						SNew(SButton)
-						.Text(FText::FromString("Refresh"))
-						.OnClicked(this, &SDynamicObjectManagerWidget::RefreshDisplayDynamicObjectsCountInScene)
-					]
-					+SHorizontalBox::Slot()
-					[
-						SNew(STextBlock)
-						.AutoWrapText(true)
-						.Justification(ETextJustify::Center)
-						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::DisplayDynamicObjectsCountInScene)
-					]
+					SNew(SButton)
+					.Text(FText::FromString("Refresh"))
+					.OnClicked(this, &SDynamicObjectManagerWidget::RefreshDisplayDynamicObjectsCountInScene)
 				]
 			]
+
 			+ SVerticalBox::Slot() //list widget
-			.AutoHeight()
-			.MaxHeight(250)
+			.FillHeight(1)
+			.MaxHeight(500)
 			.Padding(0, 0, 0, padding)
 			[
 				SNew(SBox)
@@ -196,8 +187,8 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				+SHorizontalBox::Slot()
 				[
 					SNew(SBox)
-					.HeightOverride(64)
-					.WidthOverride(128)
+					.HeightOverride(32)
+					.WidthOverride(256)
 					[
 						SNew(SButton)
 						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadSelectedEnabled)
@@ -208,8 +199,8 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				+SHorizontalBox::Slot()
 				[
 					SNew(SBox)
-					.HeightOverride(64)
-					.WidthOverride(128)
+					.HeightOverride(32)
+					.WidthOverride(256)
 					[
 						SNew(SButton)
 						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadAllEnabled)
@@ -219,6 +210,37 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				]
 			]
 
+			+ SVerticalBox::Slot() //text to scene setup window
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				.HAlign(EHorizontalAlignment::HAlign_Center)
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SDynamicObjectManagerWidget::SceneNotUploadedVisibility)
+					.AutoWrapText(true)
+					.Justification(ETextJustify::Center)
+					.Text(FText::FromString("This window is also accessible from the Tools menu.\n\nYou can review and upload Dynamic Objects from here.\n\n You will be prompted to export mesh geometry when you continue to the Scene Setup Window."))
+				]
+			]
+			+ SVerticalBox::Slot() //button to scene setup window
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			[
+				SNew(SBox)
+				.Visibility(this, &SDynamicObjectManagerWidget::SceneNotUploadedVisibility)
+				.WidthOverride(256)
+				.HeightOverride(32)
+				[
+					SNew(SButton)
+					.Text(FText::FromString("Open Scene Setup Window"))
+					.OnClicked(this,&SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow)
+				]
+			]
 			+SVerticalBox::Slot() //invalid dynamic data warning
 			.AutoHeight()
 			.Padding(FMargin(64, 24, 64, 24))
@@ -333,8 +355,7 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 
 	if (result == FSuppressableWarningDialog::EResult::Confirm)
 	{
-		//try to export all dynamics that don't have directories
-		FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportNewDynamics();
+		FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportAllDynamics();
 		if (fph.IsValid())
 		{
 			FPlatformProcess::WaitForProc(fph);
@@ -595,4 +616,49 @@ FText SDynamicObjectManagerWidget::GetSceneText() const
 		return FText::FromString("Scene: " + data->Name + "   Version: " + FString::FromInt(data->VersionNumber));
 	}
 	return FText::FromString("Scene has not been exported!");
+}
+
+EVisibility SDynamicObjectManagerWidget::SceneNotUploadedVisibility() const
+{
+	if (FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
+	{
+		return EVisibility::Collapsed;
+	}
+	return EVisibility::Visible;
+}
+
+EVisibility SDynamicObjectManagerWidget::SceneUploadedVisibility() const
+{
+	if (FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
+	{
+		return EVisibility::Visible;
+	}
+	return EVisibility::Collapsed;
+}
+
+FReply SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow()
+{
+	//popup asking if meshes should be exported too
+	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export the selected Dynamic Object meshes?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
+	Info.ConfirmText = LOCTEXT("Yes", "Yes");
+	Info.CancelText = LOCTEXT("No", "No");
+	Info.CheckBoxText = FText();
+	FSuppressableWarningDialog ExportSelectedDynamicMeshes(Info);
+	FSuppressableWarningDialog::EResult result = ExportSelectedDynamicMeshes.ShowModal();
+
+	if (result == FSuppressableWarningDialog::EResult::Confirm)
+	{
+		//try to export all dynamics that don't have directories
+		FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportAllDynamics();
+		if (fph.IsValid())
+		{
+			FPlatformProcess::WaitForProc(fph);
+		}
+	}
+
+	//close this window and open the scene setup window
+	FCognitiveVREditorModule::CloseDynamicObjectWindow();
+	FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab();
+
+	return FReply::Handled();
 }

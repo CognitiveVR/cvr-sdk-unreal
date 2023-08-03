@@ -172,7 +172,7 @@ public:
 
 	//dynamic objects
 	//Runs the built-in fbx exporter with all meshes
-		FReply ExportAllDynamics();
+	FProcHandle ExportAllDynamics();
 	//Runs the built-in fbx exporter with all meshes that don't have an exported .gltf
 		FProcHandle ExportNewDynamics();
 

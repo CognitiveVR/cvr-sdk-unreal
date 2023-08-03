@@ -63,4 +63,5 @@ private:
 public:
 	static void CloseProjectSetupWindow();
 	static void CloseSceneSetupWindow();
+	static void CloseDynamicObjectWindow();
 };

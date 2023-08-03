@@ -267,6 +267,18 @@ void FCognitiveVREditorModule::CloseSceneSetupWindow()
 	}
 }
 
+void FCognitiveVREditorModule::CloseDynamicObjectWindow()
+{
+	FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
+
+	FTabId projectTabId = FTabId(FName("CognitiveDynamicObjectManager"));
+	auto projectTab = LocalLevelEditorModule.GetLevelEditorTabManager()->FindExistingLiveTab(projectTabId);
+	if (projectTab.IsValid())
+	{
+		projectTab->RequestCloseTab();
+	}
+}
+
 /** Unregisters asset tool actions. */
 void FCognitiveVREditorModule::UnregisterAssetTools()
 {

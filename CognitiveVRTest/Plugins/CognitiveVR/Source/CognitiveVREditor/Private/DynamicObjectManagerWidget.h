@@ -18,6 +18,7 @@
 #include "IImageWrapperModule.h"
 #include "Runtime/Online/HTTP/Public/Http.h"
 #include "C3DCommonEditorTypes.h"
+#include "CognitiveVREditorModule.h"
 
 class FCognitiveTools;
 class SDynamicObjectTableWidget;
@@ -54,6 +55,9 @@ public:
 
 	EVisibility GetSceneWarningVisibility() const;
 
+	EVisibility SceneNotUploadedVisibility() const;
+	EVisibility SceneUploadedVisibility() const;
+
 	bool IsUploadAllEnabled() const;
 	bool IsUploadSelectedEnabled() const;
 	bool IsUploadIdsEnabled() const;
@@ -68,4 +72,6 @@ public:
 	static TArray<FDashboardObject> dashboardObjects;
 	void GetDashboardManifest();
 	void OnDashboardManifestResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
+	FReply ExportAndOpenSceneSetupWindow();
 };

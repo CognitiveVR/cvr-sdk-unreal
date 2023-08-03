@@ -767,34 +767,34 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 			//DEBUG NEXT/BACK BUTTONS
-			+ SOverlay::Slot()
-			.VAlign(VAlign_Bottom)
-			.HAlign(HAlign_Left)
-			[
-				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.WidthOverride(128)
-					.HeightOverride(32)
-					[
-						SNew(SButton)
-						.Text(FText::FromString("Debug Back"))
-						.OnClicked(this, &SSceneSetupWidget::DebugPreviousPage)
-					]
-				]
-				+ SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.WidthOverride(128)
-					.HeightOverride(32)
-					[
-						SNew(SButton)
-						.Text(FText::FromString("Debug Next"))
-						.OnClicked(this, &SSceneSetupWidget::DebugNextPage)
-					]
-				]
-			]
+			//+ SOverlay::Slot()
+			//.VAlign(VAlign_Bottom)
+			//.HAlign(HAlign_Left)
+			//[
+			//	SNew(SHorizontalBox)
+			//	+ SHorizontalBox::Slot()
+			//	[
+			//		SNew(SBox)
+			//		.WidthOverride(128)
+			//		.HeightOverride(32)
+			//		[
+			//			SNew(SButton)
+			//			.Text(FText::FromString("Debug Back"))
+			//			.OnClicked(this, &SSceneSetupWidget::DebugPreviousPage)
+			//		]
+			//	]
+			//	+ SHorizontalBox::Slot()
+			//	[
+			//		SNew(SBox)
+			//		.WidthOverride(128)
+			//		.HeightOverride(32)
+			//		[
+			//			SNew(SButton)
+			//			.Text(FText::FromString("Debug Next"))
+			//			.OnClicked(this, &SSceneSetupWidget::DebugNextPage)
+			//		]
+			//	]
+			//]
 
 #pragma endregion
 		];

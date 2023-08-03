@@ -202,14 +202,21 @@ FProcHandle FCognitiveEditorTools::ExportNewDynamics()
 	return ExportDynamicObjectArray(exportObjects);
 }
 
-FReply FCognitiveEditorTools::ExportAllDynamics()
+FProcHandle FCognitiveEditorTools::ExportAllDynamics()
 {
+	FProcHandle fph;
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
 	if (!tempworld)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorToolsCustomization::ExportDynamics world is null"));
-		return FReply::Handled();
+		return fph;
+	}
+
+	if (BaseExportDirectory.Len() == 0)
+	{
+		GLog->Log("base directory not selected");
+		return fph;
 	}
 
 	TArray<FString> meshNames;
@@ -239,17 +246,10 @@ FReply FCognitiveEditorTools::ExportAllDynamics()
 
 	if (meshNames.Num() == 0)
 	{
-		return FReply::Handled();
+		return fph;
 	}
 
-	if (BaseExportDirectory.Len() == 0)
-	{
-		GLog->Log("base directory not selected");
-		return FReply::Handled();
-	}
-
-	ExportDynamicObjectArray(exportObjects);
-	return FReply::Handled();
+	return ExportDynamicObjectArray(exportObjects);
 }
 
 FReply FCognitiveEditorTools::ExportSelectedDynamics()
