@@ -99,7 +99,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 #pragma region invalid screen
 			+ SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
 			.AutoHeight()
 			.Padding(0,10,0, padding)
 			[
@@ -111,7 +110,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
+			//.VAlign(VAlign_Center)
 			.MaxHeight(30)
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
@@ -146,10 +145,10 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Justification(ETextJustify::Center)
 				.Visibility(this, &SSceneSetupWidget::IsIntroVisible)
 				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Text(FText::FromString("Welcome to the <RichTextBlock.BoldHighlight>Cognitive3D Scene Setup</>"))
+				.AutoWrapText(true)
+				.Text(FText::FromString("Welcome to the <RichTextBlock.BoldHighlight>Cognitive3D Level Setup</>. This window will guide you through a basic configuration to ensure your level is ready to record data."))
 			]
 			+ SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
 			[
@@ -157,31 +156,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsIntroVisible)
 				.Justification(ETextJustify::Center)
 				.AutoWrapText(true)
-				.Text(FText::FromString("This will guide you through the initial setup of your scene and will have produciton ready analytics at the end of this setup."))
-			]
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			[
-				SNew(SRichTextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsIntroNewVersionVisible)
-				.AutoWrapText(true)
-				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("<RichTextBlock.BoldHighlight>This scene has already been uploaded to SceneExplorer</>.\n\nUnless there are meaningful changes to the static scene geometry you probably don't need to upload this scene again."))
-			]
-			+ SVerticalBox::Slot()
-			//.VAlign(VAlign_Center)
-			.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			[
-				SNew(SRichTextBlock)
-				.AutoWrapText(true)
-				.Visibility(this, &SSceneSetupWidget::IsIntroNewVersionVisible)
-				.Justification(ETextJustify::Center)
-				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Text(FText::FromString("If you want to upload new Dynamic Objects to your existing scene, see the <RichTextBlock.BoldHighlight>CognitiveVR section in Project Settings</>."))
+				.Text(FText::FromString("This will include:\n\n-Setting up your Player Actor\n\n-Setting up controller inputs\n\n-Exporting Level Geometry to SceneExplorer"))
 			]
 
 #pragma endregion
@@ -193,6 +168,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
 				+SHorizontalBox::Slot()
 				[
 					SNew(SRichTextBlock)
@@ -230,6 +206,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
 				+SHorizontalBox::Slot()
 				[
 					SNew(SRichTextBlock)
@@ -305,7 +282,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 #pragma region "export screen"
 
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
 			[
@@ -319,7 +295,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			//path to blender
 			+ SVerticalBox::Slot()
 			.MaxHeight(32)
-			.AutoHeight()
+			//.AutoHeight()
 			.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
@@ -388,7 +364,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			//path to export directory
 			+ SVerticalBox::Slot()
 			.MaxHeight(32)
-			.AutoHeight()
+			//.AutoHeight()
 			.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
@@ -490,7 +466,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			+ SVerticalBox::Slot()
 			.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.VAlign(VAlign_Center)
 			.MaxHeight(40)
 			.AutoHeight()
 			[
@@ -516,7 +491,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			+ SVerticalBox::Slot()
 			.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.VAlign(VAlign_Center)
 			.AutoHeight()
 			[
 				SNew(SHorizontalBox)
@@ -536,6 +510,32 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 #pragma endregion
 
 #pragma region "upload screen"
+
+			+ SVerticalBox::Slot() //upload number of dynamic objects to scene
+			.HAlign(HAlign_Center)
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SRichTextBlock)
+				.Visibility(this, &SSceneSetupWidget::IsNewSceneUpload)
+				.AutoWrapText(true)
+				.DecoratorStyleSet(&FEditorStyle::Get())
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Upload a New Level</>"))
+			]
+			
+			+ SVerticalBox::Slot() //upload number of dynamic objects to scene
+			.HAlign(HAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SRichTextBlock)
+				.Visibility(this, &SSceneSetupWidget::IsSceneVersionUpload)
+				.DecoratorStyleSet(&FEditorStyle::Get())
+				.AutoWrapText(true)
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Upload a New Version of this Level</>. This will archive the previous version of this level."))
+			]
+
 			+SVerticalBox::Slot()
 			.HAlign(HAlign_Center)
 			.AutoHeight()
@@ -578,8 +578,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::DisplayDynamicObjectsCountInScene)
-				//TODO this should instead display the number of exported dynamic meshes
+				.Text(this, &SSceneSetupWidget::GetSceneVersionToUploadText)
 			]
 
 			+ SVerticalBox::Slot() //upload number of dynamic objects to scene
@@ -587,12 +586,11 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
 			[
-				SNew(SRichTextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsNewSceneUpload)
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 				.AutoWrapText(true)
-				.DecoratorStyleSet(&FEditorStyle::Get())
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Upload New Scene</> including a screenshot, all the Scene Files listed below and all Dynamic Mesh Files listed below."))
+				.Text(this, &SSceneSetupWidget::GetDynamicObjectCountToUploadText)
 			]
 
 			+ SVerticalBox::Slot() //upload number of dynamic objects to scene
@@ -600,19 +598,12 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
 			[
-				SNew(SRichTextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsSceneVersionUpload)
-				.DecoratorStyleSet(&FEditorStyle::Get())
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::UploadThumbnailTextVisibility)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Upload New Version of this Scene</> This will archive the previous version of this scene."))
+				.Text(FText::FromString("Upload Screenshot"))
 			]
-
-
-
-			//TODO checkboxes for stuff to upload
-			//TODO number of dynamic objects
-			//TODO number of scene files
 
 #pragma endregion
 
@@ -1240,11 +1231,6 @@ int32 SSceneSetupWidget::CountDynamicObjectsInScene() const
 	return dynamics.Num();
 }
 
-FText SSceneSetupWidget::DisplayDynamicObjectsCountInScene() const
-{
-	return DynamicCountInScene;
-}
-
 EVisibility SSceneSetupWidget::UploadErrorVisibility() const
 {
 	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 200) { return EVisibility::Collapsed; }
@@ -1490,4 +1476,42 @@ FReply SSceneSetupWidget::AppendInputs()
 	GLog->Log("SSceneSetupWidget::AppendInputs complete");
 
 	return FReply::Handled();
+}
+
+EVisibility SSceneSetupWidget::UploadThumbnailTextVisibility() const
+{
+	if (CurrentPageEnum != EPage::UploadChecklist)
+	{
+		return EVisibility::Collapsed;
+	}
+
+	FString ScreenshotPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/screenshot/screenshot.png";
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	if (PlatformFile.FileExists(*ScreenshotPath))
+	{
+		return EVisibility::Visible;
+	}
+	else
+	{
+		return EVisibility::Collapsed;
+	}	
+}
+
+FText SSceneSetupWidget::GetDynamicObjectCountToUploadText() const
+{
+	FString dynamicCount = FString::FromInt(FCognitiveEditorTools::GetInstance()->GetDynamicObjectExportedCount());
+	return FText::FromString("Upload " + dynamicCount + " Dynamic Object Meshes");
+}
+
+FText SSceneSetupWidget::GetSceneVersionToUploadText() const
+{
+	auto sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
+	if (sceneData.IsValid())
+	{
+		return FText::FromString("Upload Scene Geometry (Version " + FString::FromInt(sceneData->VersionNumber+1) + ")");
+	}
+	else
+	{
+		return FText::FromString("Upload Scene Geometry (Version 1)");
+	}
 }

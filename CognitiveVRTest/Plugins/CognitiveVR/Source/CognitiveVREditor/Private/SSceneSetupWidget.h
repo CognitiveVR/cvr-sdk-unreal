@@ -78,7 +78,7 @@ public:
 	EVisibility IsSceneVersionUpload() const;
 	EVisibility IsIntroNewVersionVisible() const;
 	EVisibility UploadErrorVisibility() const;
-
+	EVisibility UploadThumbnailTextVisibility() const;
 
 
 	FReply NextPage();
@@ -93,13 +93,8 @@ public:
 
 	TSharedPtr<SImage> ScreenshotImage;
 
-	FText ExportNextButtonText;
-
-	FText DisplayDynamicObjectsCountInScene() const;
-	
+	FText ExportNextButtonText;	
 	int32 CountDynamicObjectsInScene() const;
-
-	FText DynamicCountInScene;
 
 	FReply SelectAll();
 
@@ -143,4 +138,8 @@ public:
 	FSlateBrush* ControllerComponentBrush;
 
 	FReply AppendInputs();
+
+
+	FText GetDynamicObjectCountToUploadText() const;
+	FText GetSceneVersionToUploadText() const;
 };

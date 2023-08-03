@@ -1365,9 +1365,29 @@ void FCognitiveEditorTools::RefreshDynamicUploadFiles()
 	}
 }
 
-int32 FCognitiveEditorTools::GetDynamicObjectExportedCount()
+TArray<FString> FCognitiveEditorTools::GetValidDirectories(const FString& Directory)
+{
+	TArray<FString> FoundFolders;
+	if (FPaths::DirectoryExists(Directory))
+	{
+		FFileManagerGeneric::Get().FindFilesRecursive(FoundFolders, *Directory, TEXT("*"), false, true, true);
+		for (int i = 0; i < FoundFolders.Num(); i++)
+		{
+			FoundFolders[i] = Directory + FoundFolders[i];
+		}
+	}
+	return FoundFolders;
+}
+
+int32 FCognitiveEditorTools::GetDynamicObjectFileExportedCount()
 {
 	return DynamicUploadFiles.Num();
+}
+
+int32 FCognitiveEditorTools::GetDynamicObjectExportedCount()
+{
+	auto folders = GetValidDirectories(BaseExportDirectory + "/dynamics");
+	return folders.Num();
 }
 
 void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, FString expectedResponseType)
@@ -1774,7 +1794,7 @@ FText FCognitiveEditorTools::GetDynamicsOnSceneExplorerTooltip() const
 	auto scene = GetCurrentSceneData();
 	if (!scene.IsValid())
 	{
-		return FText::FromString("Scene does not have valid data. Must export your scene before uploading dynamics!");
+		return FText::FromString("Scene does not have valid data. Must export your level before uploading dynamics!");
 	}
 	return FText::FromString("Something went wrong!");
 }
@@ -1809,22 +1829,11 @@ bool FCognitiveEditorTools::HasExportedAnyDynamicMeshes() const
 	if (GetBaseExportDirectory().Len() == 0) { return false; }
 
 	FString filesStartingWith = TEXT("");
-	FString pngextension = TEXT("png");
-	TArray<FString> filesInDirectory = GetAllFilesInDirectory(BaseExportDirectory + "/dynamics", true, filesStartingWith, filesStartingWith, pngextension, false);
-
-	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(BaseExportDirectory + "/dynamics", true, filesStartingWith, pngextension, filesStartingWith, false);
-
-	//DynamicUploadFiles.Empty();
+	TArray<FString> filesInDirectory = GetAllFilesInDirectory(BaseExportDirectory + "/dynamics", true, filesStartingWith, filesStartingWith, "", false);
 	for (int32 i = 0; i < filesInDirectory.Num(); i++)
 	{
 		return true;
-		//DynamicUploadFiles.Add(MakeShareable(new FString(filesInDirectory[i])));
 	}
-	for (int32 i = 0; i < imagesInDirectory.Num(); i++)
-	{
-		//DynamicUploadFiles.Add(MakeShareable(new FString(imagesInDirectory[i])));
-	}
-
 	return false;
 }
 
@@ -1888,7 +1897,7 @@ FText FCognitiveEditorTools::DisplayDynamicObjectsCountOnWeb() const
 
 FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 {
-	DynamicCountInScene = FText::FromString("Found " + FString::FromInt(CountDynamicObjectsInScene()) + " Dynamic Objects in scene");
+	DynamicCountInScene = FText::FromString("Found " + FString::FromInt(CountDynamicObjectsInScene()) + " Dynamic Objects in level");
 	DuplicateDyanmicObjectVisibility = EVisibility::Hidden;
 
 	SceneDynamics.Empty();

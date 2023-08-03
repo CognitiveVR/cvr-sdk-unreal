@@ -365,10 +365,15 @@ public:
 
 	void RefreshSceneUploadFiles();
 	int32 GetSceneExportFileCount();
+	int32 GetDynamicObjectFileExportedCount();
 	int32 GetDynamicObjectExportedCount();
+
 	void RefreshDynamicUploadFiles();
 	TArray<TSharedPtr<FString>> SceneUploadFiles;
 	TArray<TSharedPtr<FString>> DynamicUploadFiles;
+	
+	TArray<FString> GetValidDirectories(const FString& Directory);
+	int32 DynamicObjectExportedCount;
 
 	FText UploadSceneNameFiles() const;
 	FText OpenSceneNameInBrowser() const;
@@ -410,7 +415,6 @@ public:
 	FString BuildDebugFileContents() const;
 
 	void AppendDirectoryContents(FString FullPath, int32 depth, FString& outputString);
-
 
 
 	//exporting scene.
