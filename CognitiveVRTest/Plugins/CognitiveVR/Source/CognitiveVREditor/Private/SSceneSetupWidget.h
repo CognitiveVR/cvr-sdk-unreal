@@ -92,8 +92,6 @@ public:
 	EVisibility DisplayWizardThrobber() const;
 
 	TSharedPtr<SImage> ScreenshotImage;
-
-	FText ExportNextButtonText;	
 	int32 CountDynamicObjectsInScene() const;
 
 	FReply SelectAll();

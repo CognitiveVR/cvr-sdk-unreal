@@ -211,6 +211,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SProjectSetupWidget::IsIntroVisible)
 				[
 					SNew(SButton)
+					.ContentPadding(0)
 					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/get-started/"))
 					[
 						SNew(SImage)

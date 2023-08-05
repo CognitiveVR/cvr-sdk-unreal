@@ -507,10 +507,10 @@ bool SDynamicObjectManagerWidget::IsUploadInvalid() const
 
 FText SDynamicObjectManagerWidget::GetUploadInvalidCause() const
 {
-	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return FText::FromString("Upload Invalid. Developer Key is not set"); }
-	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return FText::FromString("Upload Invalid. Blender path is invalid"); }
-	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return FText::FromString("Upload Invalid. Export Path is invalid"); }
-	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return FText::FromString("Upload Invalid. Scene does not have a Scene ID"); }
+	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return FText::FromString("Developer Key is not set"); }
+	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return FText::FromString("Blender path is invalid"); }
+	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return FText::FromString("Export Path is invalid"); }
+	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return FText::FromString("Scene does not have a Scene ID"); }
 	return FText::GetEmpty();
 }
 

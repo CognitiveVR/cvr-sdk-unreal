@@ -750,7 +750,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.HeightOverride(32)
 					[
 						SNew(SButton)
-						.Text(this, &SSceneSetupWidget::NextButtonText)
+						.Text(this,&SSceneSetupWidget::NextButtonText)
 						.IsEnabled(this,&SSceneSetupWidget::NextButtonEnabled)
 						.Visibility(this, &SSceneSetupWidget::NextButtonVisibility)
 						.OnClicked(this, &SSceneSetupWidget::NextPage)
@@ -866,16 +866,6 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 	FCognitiveEditorTools::GetInstance()->ExportScene(ToBeExportedFinal);
 
 	SceneWasExported = true;
-
-	if (FCognitiveEditorTools::GetInstance()->SubDirectoryNames.Num() > 0)
-	{
-		ExportNextButtonText = FText::FromString("Next");
-	}
-	else
-	{
-		ExportNextButtonText = FText::FromString("Skip");
-	}
-
 	return FReply::Handled();
 }
 
@@ -1110,8 +1100,8 @@ FText SSceneSetupWidget::NextButtonText() const
 {
 	if (CurrentPageEnum == EPage::Export)
 	{
-		//TODO should use a reference to a textblock on the button and update it directly. this doesn't update when the export directory changes
-		if (FCognitiveEditorTools::GetInstance()->SubDirectoryNames.Num() > 0)
+		FString sceneExportDir = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory();
+		if (FCognitiveEditorTools::VerifyDirectoryExists(sceneExportDir))
 		{
 			return FText::FromString("Next");
 		}
@@ -1140,23 +1130,7 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 
 	if (CurrentPageEnum == EPage::Export)
 	{
-		if (FCognitiveEditorTools::GetInstance()->HasFoundBlender() && FCognitiveEditorTools::GetInstance()->BaseExportDirectory.Len() > 0)
-		{
-			return true;
-		}
-		return false;
-	}
-
-	if (CurrentPageEnum == EPage::Export)
-	{
-		FCognitiveEditorTools::GetInstance()->FindAllSubDirectoryNames();
-	}
-
-	if (CurrentPageEnum == EPage::Export)
-	{
-		FString sceneExportDir = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory();
-
-		return FCognitiveEditorTools::VerifyDirectoryExists(sceneExportDir);
+		return true;
 	}
 
 	if (CurrentPageEnum == EPage::UploadProgress)
