@@ -45,14 +45,14 @@ void SSceneSetupWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, 
 	if (responseCode == 200)
 	{
 		GLog->Log("Developer Key Response Code is 200");
-		if (CurrentPageEnum == EPage::Invalid)
+		if (CurrentPageEnum == ESceneSetupPage::Invalid)
 		{
-			CurrentPageEnum = EPage::Intro;
+			CurrentPageEnum = ESceneSetupPage::Intro;
 		}
 	}
 	else
 	{
-		CurrentPageEnum = EPage::Invalid;
+		CurrentPageEnum = ESceneSetupPage::Invalid;
 		//SGenericDialogWidget::OpenDialog(FText::FromString("Your developer key has expired"), SNew(STextBlock).Text(FText::FromString("Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.")));
 		GLog->Log("Developer Key Response Code is not 200. Developer key may be invalid or expired");
 	}
@@ -933,7 +933,7 @@ const FSlateBrush* SSceneSetupWidget::GetScreenshotBrushTexture() const
 
 EVisibility SSceneSetupWidget::IsSceneVersionUpload() const
 {
-	if (CurrentPageEnum != EPage::UploadChecklist) { return EVisibility::Collapsed; }
+	if (CurrentPageEnum != ESceneSetupPage::UploadChecklist) { return EVisibility::Collapsed; }
 	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
 	{
@@ -944,7 +944,7 @@ EVisibility SSceneSetupWidget::IsSceneVersionUpload() const
 
 EVisibility SSceneSetupWidget::IsIntroNewVersionVisible() const
 {
-	if (CurrentPageEnum != EPage::Intro) { return EVisibility::Collapsed; }
+	if (CurrentPageEnum != ESceneSetupPage::Intro) { return EVisibility::Collapsed; }
 
 	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
@@ -956,7 +956,7 @@ EVisibility SSceneSetupWidget::IsIntroNewVersionVisible() const
 
 EVisibility SSceneSetupWidget::IsNewSceneUpload() const
 {
-	if (CurrentPageEnum != EPage::UploadChecklist) { return EVisibility::Collapsed; }
+	if (CurrentPageEnum != ESceneSetupPage::UploadChecklist) { return EVisibility::Collapsed; }
 	
 	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
@@ -968,31 +968,31 @@ EVisibility SSceneSetupWidget::IsNewSceneUpload() const
 
 EVisibility SSceneSetupWidget::IsInvalidVisible() const
 {
-	return CurrentPageEnum == EPage::Invalid ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == ESceneSetupPage::Invalid ? EVisibility::Visible : EVisibility::Collapsed;
 }
 EVisibility SSceneSetupWidget::IsIntroVisible() const
 {
-	return CurrentPageEnum == EPage::Intro ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == ESceneSetupPage::Intro ? EVisibility::Visible : EVisibility::Collapsed;
 }
 EVisibility SSceneSetupWidget::IsControllerVisible() const
 {
-	return CurrentPageEnum == EPage::Controller ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == ESceneSetupPage::Controller ? EVisibility::Visible : EVisibility::Collapsed;
 }
 EVisibility SSceneSetupWidget::IsExportVisible() const
 {
-	return CurrentPageEnum == EPage::Export ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == ESceneSetupPage::Export ? EVisibility::Visible : EVisibility::Collapsed;
 }
 EVisibility SSceneSetupWidget::IsUploadProgressVisible() const
 {
-	return CurrentPageEnum == EPage::UploadChecklist ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == ESceneSetupPage::UploadChecklist ? EVisibility::Visible : EVisibility::Collapsed;
 }
 EVisibility SSceneSetupWidget::IsUploadChecklistVisible() const
 {
-	return CurrentPageEnum == EPage::UploadChecklist ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == ESceneSetupPage::UploadChecklist ? EVisibility::Visible : EVisibility::Collapsed;
 }
 EVisibility SSceneSetupWidget::IsCompleteVisible() const
 {
-	return CurrentPageEnum == EPage::Complete ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == ESceneSetupPage::Complete ? EVisibility::Visible : EVisibility::Collapsed;
 }
 
 FReply SSceneSetupWidget::TakeScreenshot()
@@ -1004,25 +1004,25 @@ FReply SSceneSetupWidget::TakeScreenshot()
 
 FReply SSceneSetupWidget::DebugNextPage()
 {
-	CurrentPageEnum = (EPage)(((uint8)CurrentPageEnum) + 1);
+	CurrentPageEnum = (ESceneSetupPage)(((uint8)CurrentPageEnum) + 1);
 	return FReply::Handled();
 }
 FReply SSceneSetupWidget::DebugPreviousPage()
 {
-	CurrentPageEnum = (EPage)(((uint8)CurrentPageEnum) - 1);
+	CurrentPageEnum = (ESceneSetupPage)(((uint8)CurrentPageEnum) - 1);
 	return FReply::Handled();
 }
 
 FReply SSceneSetupWidget::NextPage()
 {
-	if (CurrentPageEnum == EPage::Intro)
+	if (CurrentPageEnum == ESceneSetupPage::Intro)
 	{
 		FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
 
 		//save keys to ini
 		SpawnCognitiveVRActor();
 	}
-	else if (CurrentPageEnum == EPage::Export)
+	else if (CurrentPageEnum == ESceneSetupPage::Export)
 	{
 		GLog->Log("set dynamic and scene export directories. create if needed");
 		FCognitiveEditorTools::GetInstance()->CreateExportFolderStructure();
@@ -1047,20 +1047,20 @@ FReply SSceneSetupWidget::NextPage()
 
 		GetScreenshotBrush();
 	}
-	else if (CurrentPageEnum == EPage::UploadChecklist)
+	else if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
 	{
 		FCognitiveEditorTools::GetInstance()->WizardUpload();
 	}
-	else if (CurrentPageEnum == EPage::UploadProgress)
+	else if (CurrentPageEnum == ESceneSetupPage::UploadProgress)
 	{
 
 	}
 
-	if (CurrentPageEnum != EPage::Complete)
+	if (CurrentPageEnum != ESceneSetupPage::Complete)
 	{
-		CurrentPageEnum = (EPage)(((uint8)CurrentPageEnum) + 1);
+		CurrentPageEnum = (ESceneSetupPage)(((uint8)CurrentPageEnum) + 1);
 	}
-	if (CurrentPageEnum == EPage::Complete)
+	if (CurrentPageEnum == ESceneSetupPage::Complete)
 	{
 		FCognitiveVREditorModule::CloseSceneSetupWindow();
 	}
@@ -1070,14 +1070,14 @@ FReply SSceneSetupWidget::NextPage()
 
 FReply SSceneSetupWidget::LastPage()
 {
-	if (CurrentPageEnum == EPage::Complete) { return FReply::Handled(); }
-	CurrentPageEnum = (EPage)(((uint8)CurrentPageEnum) - 1);
+	if (CurrentPageEnum == ESceneSetupPage::Complete) { return FReply::Handled(); }
+	CurrentPageEnum = (ESceneSetupPage)(((uint8)CurrentPageEnum) - 1);
 	return FReply::Handled();
 }
 
 EVisibility SSceneSetupWidget::DisplayWizardThrobber() const
 {
-	if (CurrentPageEnum == EPage::UploadProgress)
+	if (CurrentPageEnum == ESceneSetupPage::UploadProgress)
 	{
 		return EVisibility::Visible;
 	}
@@ -1086,11 +1086,11 @@ EVisibility SSceneSetupWidget::DisplayWizardThrobber() const
 
 EVisibility SSceneSetupWidget::NextButtonVisibility() const
 {
-	if (CurrentPageEnum == EPage::Invalid)
+	if (CurrentPageEnum == ESceneSetupPage::Invalid)
 	{
 		return EVisibility::Hidden;
 	}
-	if (CurrentPageEnum == EPage::UploadProgress)
+	if (CurrentPageEnum == ESceneSetupPage::UploadProgress)
 	{
 		return EVisibility::Hidden;
 	}
@@ -1098,7 +1098,7 @@ EVisibility SSceneSetupWidget::NextButtonVisibility() const
 }
 FText SSceneSetupWidget::NextButtonText() const
 {
-	if (CurrentPageEnum == EPage::Export)
+	if (CurrentPageEnum == ESceneSetupPage::Export)
 	{
 		FString sceneExportDir = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory();
 		if (FCognitiveEditorTools::VerifyDirectoryExists(sceneExportDir))
@@ -1110,11 +1110,11 @@ FText SSceneSetupWidget::NextButtonText() const
 			return FText::FromString("Skip");
 		}		
 	}
-	else if (CurrentPageEnum == EPage::UploadChecklist)
+	else if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
 	{
 		return FText::FromString("Upload");
 	}
-	else if (CurrentPageEnum == EPage::Complete)
+	else if (CurrentPageEnum == ESceneSetupPage::Complete)
 	{
 		return FText::FromString("Close");
 	}
@@ -1123,17 +1123,17 @@ FText SSceneSetupWidget::NextButtonText() const
 
 bool SSceneSetupWidget::NextButtonEnabled() const
 {
-	if (CurrentPageEnum == EPage::Intro)
+	if (CurrentPageEnum == ESceneSetupPage::Intro)
 	{
 		return true;
 	}
 
-	if (CurrentPageEnum == EPage::Export)
+	if (CurrentPageEnum == ESceneSetupPage::Export)
 	{
 		return true;
 	}
 
-	if (CurrentPageEnum == EPage::UploadProgress)
+	if (CurrentPageEnum == ESceneSetupPage::UploadProgress)
 	{
 		//refresh the upload filename lists
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
@@ -1159,19 +1159,19 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 
 EVisibility SSceneSetupWidget::BackButtonVisibility() const
 {
-	if (CurrentPageEnum == EPage::Intro)
+	if (CurrentPageEnum == ESceneSetupPage::Intro)
 	{
 		return EVisibility::Hidden;
 	}
-	if (CurrentPageEnum == EPage::Invalid)
+	if (CurrentPageEnum == ESceneSetupPage::Invalid)
 	{
 		return EVisibility::Hidden;
 	}
-	if (CurrentPageEnum == EPage::Complete)
+	if (CurrentPageEnum == ESceneSetupPage::Complete)
 	{
 		return EVisibility::Hidden;
 	}
-	if (CurrentPageEnum == EPage::UploadProgress)
+	if (CurrentPageEnum == ESceneSetupPage::UploadProgress)
 	{
 		return EVisibility::Hidden;
 	}
@@ -1219,31 +1219,31 @@ FText SSceneSetupWidget::UploadErrorText() const
 
 FText SSceneSetupWidget::GetHeaderTitle() const
 {
-	if (CurrentPageEnum == EPage::Invalid)
+	if (CurrentPageEnum == ESceneSetupPage::Invalid)
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>INVALID DEVELOPER KEY</>");
 	}
-	if (CurrentPageEnum == EPage::Intro)
+	if (CurrentPageEnum == ESceneSetupPage::Intro)
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 1 - INTRO</>");
 	}
-	if (CurrentPageEnum == EPage::Controller)
+	if (CurrentPageEnum == ESceneSetupPage::Controller)
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 2 - CONTROLLER SETUP</>");
 	}
-	if (CurrentPageEnum == EPage::Export)
+	if (CurrentPageEnum == ESceneSetupPage::Export)
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 3 - EXPORT SCENE GEOMETRY</>");
 	}
-	if (CurrentPageEnum == EPage::UploadChecklist)
+	if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 4 - UPLOAD</>");
 	}
-	if (CurrentPageEnum == EPage::UploadProgress)
+	if (CurrentPageEnum == ESceneSetupPage::UploadProgress)
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 4 - UPLOAD IN PROGRESS</>");
 	}
-	if (CurrentPageEnum == EPage::Complete)
+	if (CurrentPageEnum == ESceneSetupPage::Complete)
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 5 - DONE</>");
 	}
@@ -1454,7 +1454,7 @@ FReply SSceneSetupWidget::AppendInputs()
 
 EVisibility SSceneSetupWidget::UploadThumbnailTextVisibility() const
 {
-	if (CurrentPageEnum != EPage::UploadChecklist)
+	if (CurrentPageEnum != ESceneSetupPage::UploadChecklist)
 	{
 		return EVisibility::Collapsed;
 	}

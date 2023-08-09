@@ -1707,14 +1707,24 @@ TArray<FString> FCognitiveEditorTools::GetAllFilesInDirectory(const FString dire
 
 bool FCognitiveEditorTools::HasFoundBlender() const
 {
-	if (!HasDeveloperKey()) { return false; }
-	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe");
+	if (BlenderPath.IsEmpty())
+	{
+		return false;
+	}
+	if (!BlenderPath.Contains("blender.exe"))
+	{
+		return false;
+	}
+	if (!IFileManager::Get().FileExists(*BlenderPath))
+	{
+		return false;
+	}
+	return true;
 }
 
 bool FCognitiveEditorTools::HasFoundBlenderAndHasSelection() const
 {
-	if (!HasDeveloperKey()) { return false; }
-	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe") && GEditor->GetSelectedActorCount() > 0;
+	return HasFoundBlender() && GEditor->GetSelectedActorCount() > 0;
 }
 
 //checks for json and no bmps files in export directory
@@ -1747,20 +1757,20 @@ bool FCognitiveEditorTools::LoginAndCustonerIdAndBlenderExportDir() const
 bool FCognitiveEditorTools::HasFoundBlenderAndExportDir() const
 {
 	if (GetBaseExportDirectory().Len() == 0) { return false; }
-	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe");
+	return HasFoundBlender();
 }
 
 bool FCognitiveEditorTools::HasFoundBlenderAndDynamicExportDir() const
 {
 	if (GetBaseExportDirectory().Len() == 0) { return false; }
-	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe");
+	return HasFoundBlender();
 }
 
 bool FCognitiveEditorTools::HasFoundBlenderDynamicExportDirSelection() const
 {
 	if (GetBaseExportDirectory().Len() == 0) { return false; }
 	if (GEditor->GetSelectedActorCount() == 0) { return false; }
-	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe");
+	return HasFoundBlender();
 }
 
 bool FCognitiveEditorTools::CurrentSceneHasSceneId() const

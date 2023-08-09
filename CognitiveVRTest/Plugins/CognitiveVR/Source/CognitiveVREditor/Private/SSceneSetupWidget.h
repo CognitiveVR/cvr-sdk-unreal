@@ -44,7 +44,7 @@ public:
 
 
 	UENUM()
-	enum class EPage : uint8
+	enum class ESceneSetupPage : uint8
 	{
 		Invalid, //dev key isn't set
 		Intro,
@@ -54,7 +54,7 @@ public:
 		UploadProgress,
 		Complete
 	};
-	EPage CurrentPageEnum = EPage::Intro;
+	ESceneSetupPage CurrentPageEnum = ESceneSetupPage::Intro;
 
 	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 

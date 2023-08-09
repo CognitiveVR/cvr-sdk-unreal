@@ -21,13 +21,13 @@
 class FCognitiveVREditorModule : public IModuleInterface, IHasMenuExtensibility, IHasToolBarExtensibility
 {
 public:
-
-	static TSharedRef<SDockTab> SpawnCognitiveSceneSetupTab(const FSpawnTabArgs& SpawnTabArgs);
 	static void SpawnCognitiveSceneSetupTab();
-	static TSharedRef<SDockTab> SpawnCognitiveDynamicTab(const FSpawnTabArgs& SpawnTabArgs);
 	static void SpawnCognitiveDynamicTab();
-	static TSharedRef<SDockTab> SpawnCognitiveProjectSetupTab(const FSpawnTabArgs& SpawnTabArgs);
 	static void SpawnCognitiveProjectSetupTab();
+	static void OpenOnlineDocumentation();
+	static void CloseProjectSetupWindow();
+	static void CloseSceneSetupWindow();
+	static void CloseDynamicObjectWindow();
 
 	static inline FCognitiveVREditorModule& Get()
 	{
@@ -38,12 +38,6 @@ private:
 
 	/** Holds the menu extensibility manager. */
 	TSharedPtr<FExtensibilityManager> MenuExtensibilityManager;
-
-	/** The collection of registered asset type actions. */
-	TArray<TSharedRef<IAssetTypeActions>> RegisteredAssetTypeActions;
-
-	/** Holds the plug-ins style set. */
-	//TSharedPtr<ISlateStyle> Style;
 
 	/** Holds the tool bar extensibility manager. */
 	TSharedPtr<FExtensibilityManager> ToolBarExtensibilityManager;
@@ -56,12 +50,7 @@ private:
 	virtual TSharedPtr<FExtensibilityManager> GetToolBarExtensibilityManager() override;
 	virtual bool SupportsDynamicReloading() override;
 
-	void RegisterMenuExtensions();
-	void UnregisterMenuExtensions();
-
-	void UnregisterAssetTools();
-public:
-	static void CloseProjectSetupWindow();
-	static void CloseSceneSetupWindow();
-	static void CloseDynamicObjectWindow();
+	TSharedPtr<FUICommandList> PluginCommands;
+	static void AddMenu(FMenuBarBuilder& MenuBuilder);
+	static void FillMenu(FMenuBuilder& MenuBuilder);
 };

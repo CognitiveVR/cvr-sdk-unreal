@@ -42,7 +42,7 @@ public:
 	SLATE_END_ARGS()
 
 	UENUM()
-	enum class EPage : uint8
+	enum class EProjectSetupPage : uint8
 	{
 		Intro,
 		DeveloperKey,
@@ -51,7 +51,7 @@ public:
 		Complete,
 		DynamicObjects
 	};
-	EPage CurrentPageEnum;
+	EProjectSetupPage CurrentPageEnum;
 
 	void Construct(const FArguments& Args);
 	void CheckForExpiredDeveloperKey(FString developerKey);

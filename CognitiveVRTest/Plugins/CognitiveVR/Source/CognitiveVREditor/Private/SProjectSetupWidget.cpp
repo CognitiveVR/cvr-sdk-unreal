@@ -28,7 +28,7 @@ void SProjectSetupWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr Request
 	if (responseCode == 200)
 	{
 		GLog->Log("Developer Key Response Code is 200");
-		CurrentPageEnum = EPage::OrganizationDetails;
+		CurrentPageEnum = EProjectSetupPage::OrganizationDetails;
 	}
 	else
 	{
@@ -206,17 +206,20 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				SNew(SBox)
 				.HAlign(HAlign_Center)
 				.VAlign(VAlign_Center)
-				.WidthOverride(270)
-				.HeightOverride(150)
+				//set width/height override to match the image size
+				//.HeightOverride(150)
+				.WidthOverride(256)
+				.HeightOverride(32)
 				.Visibility(this, &SProjectSetupWidget::IsIntroVisible)
 				[
 					SNew(SButton)
-					.ContentPadding(0)
+					//.ContentPadding(0)
+					.Text(FText::FromString("Online Documentation"))
 					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/get-started/"))
-					[
-						SNew(SImage)
-						.Image(this, &SProjectSetupWidget::GetVideoImage)
-					]
+					//[
+						//SNew(SImage)
+						//.Image(this, &SProjectSetupWidget::GetVideoImage)
+					//]
 				]
 			]
 
@@ -762,27 +765,27 @@ FText SProjectSetupWidget::GetDisplayDeveloperKey() const
 
 EVisibility SProjectSetupWidget::IsIntroVisible() const
 {
-	return CurrentPageEnum == EPage::Intro ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == EProjectSetupPage::Intro ? EVisibility::Visible : EVisibility::Collapsed;
 }
 EVisibility SProjectSetupWidget::IsDevKeyVisible() const
 {
-	return CurrentPageEnum == EPage::DeveloperKey ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == EProjectSetupPage::DeveloperKey ? EVisibility::Visible : EVisibility::Collapsed;
 }
 EVisibility SProjectSetupWidget::IsOrganizationDetailsVisible() const
 {
-	return CurrentPageEnum == EPage::OrganizationDetails ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == EProjectSetupPage::OrganizationDetails ? EVisibility::Visible : EVisibility::Collapsed;
 }
 EVisibility SProjectSetupWidget::IsExportPathVisible() const
 {
-	return CurrentPageEnum == EPage::ExportPath ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == EProjectSetupPage::ExportPath ? EVisibility::Visible : EVisibility::Collapsed;
 }
 EVisibility SProjectSetupWidget::IsCompleteVisible() const
 {
-	return CurrentPageEnum == EPage::Complete ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == EProjectSetupPage::Complete ? EVisibility::Visible : EVisibility::Collapsed;
 }
 EVisibility SProjectSetupWidget::IsDynamicObjectsVisible() const
 {
-	return CurrentPageEnum == EPage::DynamicObjects ? EVisibility::Visible : EVisibility::Collapsed;
+	return CurrentPageEnum == EProjectSetupPage::DynamicObjects ? EVisibility::Visible : EVisibility::Collapsed;
 }
 
 void SProjectSetupWidget::OnAPIKeyChanged(const FText& Text)
@@ -797,18 +800,18 @@ void SProjectSetupWidget::OnDeveloperKeyChanged(const FText& Text)
 
 FReply SProjectSetupWidget::DebugNextPage()
 {
-	CurrentPageEnum = (EPage)(((uint8)CurrentPageEnum) + 1);
+	CurrentPageEnum = (EProjectSetupPage)(((uint8)CurrentPageEnum) + 1);
 	return FReply::Handled();
 }
 FReply SProjectSetupWidget::DebugPreviousPage()
 {
-	CurrentPageEnum = (EPage)(((uint8)CurrentPageEnum) - 1);
+	CurrentPageEnum = (EProjectSetupPage)(((uint8)CurrentPageEnum) - 1);
 	return FReply::Handled();
 }
 
 FReply SProjectSetupWidget::NextPage()
 {
-	if (CurrentPageEnum == EPage::DeveloperKey)
+	if (CurrentPageEnum == EProjectSetupPage::DeveloperKey)
 	{
 		CheckForExpiredDeveloperKey(DisplayDeveloperKey);
 
@@ -819,28 +822,28 @@ FReply SProjectSetupWidget::NextPage()
 		GLog->Log("SProjectSetupWidget::NextPage");
 		return FReply::Handled();
 	}
-	if (CurrentPageEnum == EPage::ExportPath)
+	if (CurrentPageEnum == EProjectSetupPage::ExportPath)
 	{
 		GLog->Log("set dynamic and scene export directories. create if needed");
 		FCognitiveEditorTools::GetInstance()->CreateExportFolderStructure();
 		FCognitiveEditorTools::GetInstance()->SaveBlenderPathAndExportPath();
 	}
 
-	CurrentPageEnum = (EPage)(((uint8)CurrentPageEnum) + 1);
+	CurrentPageEnum = (EProjectSetupPage)(((uint8)CurrentPageEnum) + 1);
 
 	return FReply::Handled();
 }
 
 FReply SProjectSetupWidget::LastPage()
 {
-	if (CurrentPageEnum == EPage::Intro) { return FReply::Handled(); }
-	CurrentPageEnum = (EPage)(((uint8)CurrentPageEnum) - 1);
+	if (CurrentPageEnum == EProjectSetupPage::Intro) { return FReply::Handled(); }
+	CurrentPageEnum = (EProjectSetupPage)(((uint8)CurrentPageEnum) - 1);
 	return FReply::Handled();
 }
 
 EVisibility SProjectSetupWidget::NextButtonVisibility() const
 {
-	if (CurrentPageEnum == EPage::Complete || CurrentPageEnum == EPage::DynamicObjects)
+	if (CurrentPageEnum == EProjectSetupPage::Complete || CurrentPageEnum == EProjectSetupPage::DynamicObjects)
 	{
 		return EVisibility::Hidden;
 	}
@@ -848,7 +851,7 @@ EVisibility SProjectSetupWidget::NextButtonVisibility() const
 }
 FText SProjectSetupWidget::NextButtonText() const
 {
-	if (CurrentPageEnum == EPage::DeveloperKey)
+	if (CurrentPageEnum == EProjectSetupPage::DeveloperKey)
 	{
 		return FText::FromString("Validate");
 	}
@@ -857,14 +860,14 @@ FText SProjectSetupWidget::NextButtonText() const
 
 bool SProjectSetupWidget::NextButtonEnabled() const
 {
-	if (CurrentPageEnum == EPage::DeveloperKey)
+	if (CurrentPageEnum == EProjectSetupPage::DeveloperKey)
 	{
 		if (DisplayDeveloperKey.Len() > 0)
 			return true;
 		return false;
 	}
 
-	if (CurrentPageEnum == EPage::ExportPath)
+	if (CurrentPageEnum == EProjectSetupPage::ExportPath)
 	{
 		if (FCognitiveEditorTools::GetInstance()->HasFoundBlender() && FCognitiveEditorTools::GetInstance()->BaseExportDirectory.Len() > 0)
 		{
@@ -878,7 +881,7 @@ bool SProjectSetupWidget::NextButtonEnabled() const
 
 EVisibility SProjectSetupWidget::BackButtonVisibility() const
 {
-	if (CurrentPageEnum == EPage::Intro)
+	if (CurrentPageEnum == EProjectSetupPage::Intro)
 	{
 		return EVisibility::Hidden;
 	}
@@ -889,22 +892,22 @@ FText SProjectSetupWidget::GetHeaderTitle() const
 {
 	switch (CurrentPageEnum)
 	{
-	case SProjectSetupWidget::EPage::Intro:
+	case SProjectSetupWidget::EProjectSetupPage::Intro:
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 1 - WELCOME</>");
 		break;
-	case SProjectSetupWidget::EPage::DeveloperKey:
+	case SProjectSetupWidget::EProjectSetupPage::DeveloperKey:
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 2 - AUTHENTICATION</>");
 		break;
-	case SProjectSetupWidget::EPage::OrganizationDetails:
+	case SProjectSetupWidget::EProjectSetupPage::OrganizationDetails:
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 3 - ORGANIZATION DETAILS</>");
 		break;
-	case SProjectSetupWidget::EPage::ExportPath:
+	case SProjectSetupWidget::EProjectSetupPage::ExportPath:
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 4 - EXPORT</>");
 		break;
-	case SProjectSetupWidget::EPage::Complete:
+	case SProjectSetupWidget::EProjectSetupPage::Complete:
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 5 - NEXT STEPS</>");
 		break;
-	case SProjectSetupWidget::EPage::DynamicObjects:
+	case SProjectSetupWidget::EProjectSetupPage::DynamicObjects:
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 6 - DYNAMIC OBJECTS</>");
 		break;
 	default:

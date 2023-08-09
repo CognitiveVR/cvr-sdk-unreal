@@ -1,6 +1,7 @@
 
 
 #include "CognitiveVREditorModule.h"
+#include "C3DCommands.h"
 
 IMPLEMENT_MODULE(FCognitiveVREditorModule, CognitiveVREditor);
 
@@ -74,34 +75,52 @@ void FCognitiveVREditorModule::StartupModule()
 	}
 
 	FCognitiveEditorTools::Initialize();
+
+	//do i need to unregister this dynamic object pool action?
 	IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
 	TSharedPtr< FDynamicIdPoolAssetActions> action = MakeShared<FDynamicIdPoolAssetActions>();
 	AssetTools.RegisterAssetTypeActions(action.ToSharedRef());
+	
 	GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, EngineIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, EngineIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, EditorIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("BlenderPath"), FCognitiveEditorTools::GetInstance()->BlenderPath, EditorIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("ExportPath"), FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
 
-	// register standalone UI
-	LevelEditorTabManagerChangedHandle = LevelEditorModule.OnTabManagerChanged().AddLambda([]()
-		{
-			FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-			LocalLevelEditorModule.GetLevelEditorTabManager()->RegisterTabSpawner(FName("CognitiveSceneSetup"), FOnSpawnTab::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab))
-				.SetGroup(WorkspaceMenu::GetMenuStructure().GetToolsCategory())
-				.SetDisplayName(LOCTEXT("SceneSetupTabTitle", "Cognitive Scene Setup"))
-				.SetTooltipText(LOCTEXT("SceneSetupTooltipText", "Open the Cognitive Scene Setup Wizard"));
 
-			LocalLevelEditorModule.GetLevelEditorTabManager()->RegisterTabSpawner(FName("CognitiveProjectSetup"), FOnSpawnTab::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveProjectSetupTab))
-				.SetGroup(WorkspaceMenu::GetMenuStructure().GetToolsCategory())
-				.SetDisplayName(LOCTEXT("ProjectSetupTabTitle", "Cognitive Project Setup"))
-				.SetTooltipText(LOCTEXT("ProjectSetupTooltipText", "Open the Cognitive Project Setup Wizard"));
+	FCognitive3DCommands::Register();
+	PluginCommands = MakeShareable(new FUICommandList);
 
-			LocalLevelEditorModule.GetLevelEditorTabManager()->RegisterTabSpawner(FName("CognitiveDynamicObjectManager"), FOnSpawnTab::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveDynamicTab))
-				.SetGroup(WorkspaceMenu::GetMenuStructure().GetToolsCategory())
-				.SetDisplayName(LOCTEXT("DynamicObjectManagerTabTitle", "Cognitive Dynamic Object Manager"))
-				.SetTooltipText(LOCTEXT("DynamicObjectManagerTooltipText", "Open the Cognitive Dynamic Object Manager"));
-		});
+	//map all the menu items to functions
+	PluginCommands->MapAction(
+		FCognitive3DCommands::Get().OpenDynamicObjectWindow,
+		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveDynamicTab)
+	);
+
+	PluginCommands->MapAction(
+		FCognitive3DCommands::Get().OpenProjectSetupWindow,
+		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveProjectSetupTab)
+	);
+
+	PluginCommands->MapAction(
+		FCognitive3DCommands::Get().OpenSceneSetupWindow,
+		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab)
+	);
+
+	PluginCommands->MapAction(
+		FCognitive3DCommands::Get().OpenOnlineDocumentation,
+		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::OpenOnlineDocumentation)
+	);
+
+	//append the menu after help
+	TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
+	MenuExtender->AddMenuBarExtension(
+		"Help",
+		EExtensionHook::After,
+		PluginCommands,
+		FMenuBarExtensionDelegate::CreateStatic(&FCognitiveVREditorModule::AddMenu)
+	);
+	LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
 
 	// Register the details customizations
 	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
@@ -112,20 +131,28 @@ void FCognitiveVREditorModule::StartupModule()
 #endif
 }
 
+	//defines the menu to add the contents of the menu
+	void FCognitiveVREditorModule::AddMenu(FMenuBarBuilder& MenuBuilder)
+	{
+		MenuBuilder.AddPullDownMenu(
+			LOCTEXT("MenuLocKey", "Cognitive3D"),
+			LOCTEXT("MenuTooltipKey", "Open Cognitive3D menu"),
+			FNewMenuDelegate::CreateStatic(&FCognitiveVREditorModule::FillMenu),
+			FName(TEXT("Cognitive3D")),
+			FName(TEXT("Cognitive3DName")));
+	}
+
+	void FCognitiveVREditorModule::FillMenu(FMenuBuilder& MenuBuilder)
+	{
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenDynamicObjectWindow);
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenSceneSetupWindow);
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenProjectSetupWindow);
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenOnlineDocumentation);
+	}
+
 void FCognitiveVREditorModule::ShutdownModule()
 {
-	//TODO why is this wrapped in 'WITH_EDITOR'? this module should only ever exist in the editor
-#if WITH_EDITOR
-
-	if (GEditor)
-	{
-		if (FModuleManager::Get().IsModuleLoaded(TEXT("LevelEditor")))
-		{
-			FLevelEditorModule& LevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-			LevelEditorModule.OnTabManagerChanged().Remove(LevelEditorTabManagerChangedHandle);
-		}
-	}
-#endif
+	FCognitive3DCommands::Unregister();
 }
 
 bool FCognitiveVREditorModule::SupportsDynamicReloading()
@@ -133,33 +160,8 @@ bool FCognitiveVREditorModule::SupportsDynamicReloading()
 	return true;
 }
 
-TSharedRef<SDockTab> FCognitiveVREditorModule::SpawnCognitiveDynamicTab(const FSpawnTabArgs& SpawnTabArgs)
-{
-	FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-
-	FTabId tabId = FTabId(FName("CognitiveDynamicObjectManager"));
-	auto foundTab = LocalLevelEditorModule.GetLevelEditorTabManager()->FindExistingLiveTab(tabId);
-	if (foundTab.IsValid())
-	{
-		FGlobalTabmanager::Get()->SetActiveTab(foundTab);
-		return foundTab.ToSharedRef();
-	}
-	else
-	{
-		const TSharedRef<SDockTab> MajorTab =
-			SNew(SDockTab)
-			.TabRole(ETabRole::NomadTab);
-
-		MajorTab->SetContent(SNew(SDynamicObjectManagerWidget));
-
-		return MajorTab;
-	}
-}
-
 void FCognitiveVREditorModule::SpawnCognitiveDynamicTab()
 {
-	CloseProjectSetupWindow();
-
 	FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
 	FTabId tabId = FTabId(FName("CognitiveDynamicObjectManager"));
 	auto foundTab = LocalLevelEditorModule.GetLevelEditorTabManager()->FindExistingLiveTab(tabId);
@@ -171,36 +173,11 @@ void FCognitiveVREditorModule::SpawnCognitiveDynamicTab()
 	{
 		TSharedPtr<SDockTab> MajorTab = LocalLevelEditorModule.GetLevelEditorTabManager()->TryInvokeTab(tabId);
 		MajorTab->SetContent(SNew(SDynamicObjectManagerWidget));
-	}
-}
-
-TSharedRef<SDockTab> FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab(const FSpawnTabArgs& SpawnTabArgs)
-{
-	FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-
-	FTabId tabId = FTabId(FName("CognitiveSceneSetup"));
-	auto foundTab = LocalLevelEditorModule.GetLevelEditorTabManager()->FindExistingLiveTab(tabId);
-	if (foundTab.IsValid())
-	{
-		FGlobalTabmanager::Get()->SetActiveTab(foundTab);
-		return foundTab.ToSharedRef();
-	}
-	else
-	{
-		const TSharedRef<SDockTab> MajorTab =
-			SNew(SDockTab)
-			.TabRole(ETabRole::NomadTab);
-
-		MajorTab->SetContent(SNew(SSceneSetupWidget));
-
-		return MajorTab;
 	}
 }
 
 void FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab()
 {
-	CloseProjectSetupWindow();
-
 	FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
 	FTabId tabId = FTabId(FName("CognitiveSceneSetup"));
 	auto foundTab = LocalLevelEditorModule.GetLevelEditorTabManager()->FindExistingLiveTab(tabId);
@@ -213,18 +190,6 @@ void FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab()
 		TSharedPtr<SDockTab> MajorTab = LocalLevelEditorModule.GetLevelEditorTabManager()->TryInvokeTab(tabId);
 		MajorTab->SetContent(SNew(SSceneSetupWidget));
 	}
-}
-
-TSharedRef<SDockTab> FCognitiveVREditorModule::SpawnCognitiveProjectSetupTab(const FSpawnTabArgs& SpawnTabArgs)
-{
-	const TSharedRef<SDockTab> MajorTab =
-		SNew(SDockTab)
-		.Tag(FName("CognitiveProjectSetup"))
-		.TabRole(ETabRole::NomadTab);
-
-	MajorTab->SetContent(SNew(SProjectSetupWidget));
-
-	return MajorTab;
 }
 
 void FCognitiveVREditorModule::SpawnCognitiveProjectSetupTab()
@@ -241,6 +206,12 @@ void FCognitiveVREditorModule::SpawnCognitiveProjectSetupTab()
 		TSharedPtr<SDockTab> MajorTab = LocalLevelEditorModule.GetLevelEditorTabManager()->TryInvokeTab(tabId);
 		MajorTab->SetContent(SNew(SProjectSetupWidget));
 	}
+}
+
+void FCognitiveVREditorModule::OpenOnlineDocumentation()
+{
+	FString url = "https://docs.cognitive3d.com/unreal/get-started/";
+	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);
 }
 
 void FCognitiveVREditorModule::CloseProjectSetupWindow()
@@ -277,36 +248,6 @@ void FCognitiveVREditorModule::CloseDynamicObjectWindow()
 	{
 		projectTab->RequestCloseTab();
 	}
-}
-
-/** Unregisters asset tool actions. */
-void FCognitiveVREditorModule::UnregisterAssetTools()
-{
-	FAssetToolsModule* AssetToolsModule = FModuleManager::GetModulePtr<FAssetToolsModule>("AssetTools");
-
-	if (AssetToolsModule != nullptr)
-	{
-		IAssetTools& AssetTools = AssetToolsModule->Get();
-
-		for (auto Action : RegisteredAssetTypeActions)
-		{
-			AssetTools.UnregisterAssetTypeActions(Action);
-		}
-	}
-}
-
-/** Registers main menu and tool bar menu extensions. */
-void FCognitiveVREditorModule::RegisterMenuExtensions()
-{
-	MenuExtensibilityManager = MakeShareable(new FExtensibilityManager);
-	ToolBarExtensibilityManager = MakeShareable(new FExtensibilityManager);
-}
-
-/** Unregisters main menu and tool bar menu extensions. */
-void FCognitiveVREditorModule::UnregisterMenuExtensions()
-{
-	MenuExtensibilityManager.Reset();
-	ToolBarExtensibilityManager.Reset();
 }
 
 #undef LOCTEXT_NAMESPACE
