@@ -21,6 +21,33 @@ TSharedPtr<FExtensibilityManager> FCognitiveVREditorModule::GetToolBarExtensibil
 	return ToolBarExtensibilityManager;
 }
 
+TSharedRef<SDockTab> CreateCognitiveSceneSetupTabArgs(const FSpawnTabArgs& SpawnTabArgs)
+{
+	return SNew(SDockTab)
+	.TabRole(ETabRole::NomadTab)
+	[
+		SNew(SSceneSetupWidget)
+	];
+}
+
+TSharedRef<SDockTab> CreateCognitiveProjectSetupTabArgs(const FSpawnTabArgs& SpawnTabArgs)
+{
+	return SNew(SDockTab)
+		.TabRole(ETabRole::NomadTab)
+		[
+			SNew(SProjectSetupWidget)
+		];
+}
+
+TSharedRef<SDockTab> CreateCognitiveDynamicObjectTabArgs(const FSpawnTabArgs& SpawnTabArgs)
+{
+	return SNew(SDockTab)
+		.TabRole(ETabRole::NomadTab)
+		[
+			SNew(SDynamicObjectManagerWidget)
+		];
+}
+
 void FCognitiveVREditorModule::StartupModule()
 {
 #if WITH_EDITOR
@@ -87,6 +114,10 @@ void FCognitiveVREditorModule::StartupModule()
 	GConfig->GetString(TEXT("Analytics"), TEXT("BlenderPath"), FCognitiveEditorTools::GetInstance()->BlenderPath, EditorIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("ExportPath"), FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
 
+
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveSceneSetup"), FOnSpawnTab::CreateStatic(&CreateCognitiveSceneSetupTabArgs));
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveProjectSetup"), FOnSpawnTab::CreateStatic(&CreateCognitiveProjectSetupTabArgs));
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveDynamicObjectManager"), FOnSpawnTab::CreateStatic(&CreateCognitiveDynamicObjectTabArgs));
 
 	FCognitive3DCommands::Register();
 	PluginCommands = MakeShareable(new FUICommandList);
@@ -162,48 +193,45 @@ bool FCognitiveVREditorModule::SupportsDynamicReloading()
 
 void FCognitiveVREditorModule::SpawnCognitiveDynamicTab()
 {
-	FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
 	FTabId tabId = FTabId(FName("CognitiveDynamicObjectManager"));
-	auto foundTab = LocalLevelEditorModule.GetLevelEditorTabManager()->FindExistingLiveTab(tabId);
+	auto foundTab = FGlobalTabmanager::Get()->FindExistingLiveTab(tabId);
 	if (foundTab.IsValid())
 	{
 		FGlobalTabmanager::Get()->SetActiveTab(foundTab);
 	}
 	else
 	{
-		TSharedPtr<SDockTab> MajorTab = LocalLevelEditorModule.GetLevelEditorTabManager()->TryInvokeTab(tabId);
+		TSharedPtr<SDockTab> MajorTab = FGlobalTabmanager::Get()->TryInvokeTab(tabId);
 		MajorTab->SetContent(SNew(SDynamicObjectManagerWidget));
 	}
 }
 
 void FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab()
 {
-	FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
 	FTabId tabId = FTabId(FName("CognitiveSceneSetup"));
-	auto foundTab = LocalLevelEditorModule.GetLevelEditorTabManager()->FindExistingLiveTab(tabId);
+	auto foundTab = FGlobalTabmanager::Get()->FindExistingLiveTab(tabId);
 	if (foundTab.IsValid())
 	{
 		FGlobalTabmanager::Get()->SetActiveTab(foundTab);
 	}
 	else
 	{
-		TSharedPtr<SDockTab> MajorTab = LocalLevelEditorModule.GetLevelEditorTabManager()->TryInvokeTab(tabId);
+		TSharedPtr<SDockTab> MajorTab = FGlobalTabmanager::Get()->TryInvokeTab(tabId);
 		MajorTab->SetContent(SNew(SSceneSetupWidget));
 	}
 }
 
 void FCognitiveVREditorModule::SpawnCognitiveProjectSetupTab()
 {
-	FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
 	FTabId tabId = FTabId(FName("CognitiveProjectSetup"));
-	auto foundTab = LocalLevelEditorModule.GetLevelEditorTabManager()->FindExistingLiveTab(tabId);
+	auto foundTab = FGlobalTabmanager::Get()->FindExistingLiveTab(tabId);
 	if (foundTab.IsValid())
 	{
 		FGlobalTabmanager::Get()->SetActiveTab(foundTab);
 	}
 	else
 	{
-		TSharedPtr<SDockTab> MajorTab = LocalLevelEditorModule.GetLevelEditorTabManager()->TryInvokeTab(tabId);
+		TSharedPtr<SDockTab> MajorTab = FGlobalTabmanager::Get()->TryInvokeTab(tabId);
 		MajorTab->SetContent(SNew(SProjectSetupWidget));
 	}
 }
@@ -216,10 +244,8 @@ void FCognitiveVREditorModule::OpenOnlineDocumentation()
 
 void FCognitiveVREditorModule::CloseProjectSetupWindow()
 {
-	FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-
 	FTabId projectTabId = FTabId(FName("CognitiveProjectSetup"));
-	auto projectTab = LocalLevelEditorModule.GetLevelEditorTabManager()->FindExistingLiveTab(projectTabId);
+	auto projectTab = FGlobalTabmanager::Get()->FindExistingLiveTab(projectTabId);
 	if (projectTab.IsValid())
 	{
 		projectTab->RequestCloseTab();
@@ -228,10 +254,8 @@ void FCognitiveVREditorModule::CloseProjectSetupWindow()
 
 void FCognitiveVREditorModule::CloseSceneSetupWindow()
 {
-	FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-
 	FTabId projectTabId = FTabId(FName("CognitiveSceneSetup"));
-	auto projectTab = LocalLevelEditorModule.GetLevelEditorTabManager()->FindExistingLiveTab(projectTabId);
+	auto projectTab = FGlobalTabmanager::Get()->FindExistingLiveTab(projectTabId);
 	if (projectTab.IsValid())
 	{
 		projectTab->RequestCloseTab();
@@ -240,10 +264,8 @@ void FCognitiveVREditorModule::CloseSceneSetupWindow()
 
 void FCognitiveVREditorModule::CloseDynamicObjectWindow()
 {
-	FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-
 	FTabId projectTabId = FTabId(FName("CognitiveDynamicObjectManager"));
-	auto projectTab = LocalLevelEditorModule.GetLevelEditorTabManager()->FindExistingLiveTab(projectTabId);
+	auto projectTab = FGlobalTabmanager::Get()->FindExistingLiveTab(projectTabId);
 	if (projectTab.IsValid())
 	{
 		projectTab->RequestCloseTab();
