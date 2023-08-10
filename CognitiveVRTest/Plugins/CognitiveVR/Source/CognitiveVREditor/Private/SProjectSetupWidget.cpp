@@ -41,7 +41,7 @@ void SProjectSetupWidget::FetchApplicationKey(FString developerKey)
 {
 	auto HttpRequest = FHttpModule::Get().CreateRequest();
 
-	FString Gateway = FString("data.cognitive3d.com");
+	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
 
 	FString url = FString("https://" + Gateway + "/v0/applicationKey");
 	HttpRequest->SetURL(url);
@@ -56,6 +56,12 @@ void SProjectSetupWidget::FetchApplicationKey(FString developerKey)
 void SProjectSetupWidget::GetApplicationKeyResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	GLog->Log("SProjectSetupWidget::GetApplicationKeyResponse");
+	int32 responseCode = Response->GetResponseCode();
+	if (responseCode != 200)
+	{
+		GLog->Log("Developer Key Response Code is not 200. Developer key may be invalid or expired");
+		return;
+	}
 
 	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("UpdateApplicationKeyBody", "Do you want to use the Application Key available from the Dashboard?"), LOCTEXT("UpdateApplicationKeyTitle", "Found Application Key"), "Cognitive3dApplicationKey");
 	Info.ConfirmText = LOCTEXT("Yes", "Yes");
@@ -79,7 +85,7 @@ void SProjectSetupWidget::FetchOrganizationDetails(FString developerKey)
 {
 	auto HttpRequest = FHttpModule::Get().CreateRequest();
 
-	FString Gateway = FString("data.cognitive3d.com");
+	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
 
 	FString url = FString("https://" + Gateway + "/v0/subscriptions");
 	HttpRequest->SetURL(url);
