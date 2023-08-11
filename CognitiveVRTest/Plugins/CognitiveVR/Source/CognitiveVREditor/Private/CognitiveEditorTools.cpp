@@ -1033,6 +1033,8 @@ FReply FCognitiveEditorTools::UploadDynamics()
 		WizardUploading = false;
 	}
 
+	OnUploadSceneGeometry.ExecuteIfBound(nullptr, nullptr, true);
+
 	return FReply::Handled();
 }
 
@@ -1586,13 +1588,9 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 			ReadSceneDataFromFile();
 		}
 		ConfigFileHasChanged = true;
-
 		if (WizardUploading)
 		{
 			CurrentSceneVersionRequest();
-			//ReadSceneDataFromFile();
-
-			//UploadDynamics();
 		}
 	}
 	else
@@ -2814,7 +2812,6 @@ void FCognitiveEditorTools::WizardUpload()
 	WizardUploadResponseCode = 0;
 	UploadScene();
 }
-
 
 FText FCognitiveEditorTools::GetBaseExportDirectoryDisplay() const
 {

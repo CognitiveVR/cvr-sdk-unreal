@@ -2,7 +2,10 @@
 
 #pragma once
 
+#include "http.h"
 #include "C3DCommonEditorTypes.generated.h"
+
+DECLARE_DELEGATE_ThreeParams(FOnUploadSceneGeometry, FHttpRequestPtr, FHttpResponsePtr, bool)
 
 USTRUCT()
 struct FApplicationKeyResponse

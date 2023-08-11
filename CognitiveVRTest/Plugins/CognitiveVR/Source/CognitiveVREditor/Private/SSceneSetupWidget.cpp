@@ -58,6 +58,12 @@ void SSceneSetupWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, 
 	}
 }
 
+void SSceneSetupWidget::OnSceneUploaded(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	SceneUploadStatus = ESceneUploadStatus::Completed;
+	CurrentPageEnum = ESceneSetupPage::Complete;
+}
+
 void SSceneSetupWidget::Construct(const FArguments& Args)
 {
 	float padding = 10;
@@ -513,6 +519,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 			+ SVerticalBox::Slot() //upload number of dynamic objects to scene
 			.HAlign(HAlign_Center)
+				.AutoHeight()
 			.Padding(0, 0, 0, padding)
 			[
 				SNew(SRichTextBlock)
@@ -657,7 +664,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.AutoHeight()
 			[
 				SNew(STextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
+				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
 				.Text(FText::FromString("That's it!\n\nAfter saving your project, you will be recording user position, gaze and basic device information. Simply press play in the Unreal Editor or make a build for your target platform.\n\nPlease note that sessions run in the editor won't count towards aggregate metrics.\n\nYou can view sessions from the Dashboard."))
@@ -671,13 +678,12 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Padding(0, 5, 0, 5)
 				[
 					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 					.WidthOverride(128)
 					.HeightOverride(32)
 					[
 						SNew(SButton)
 						.HAlign(HAlign_Center)
-						.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
 						.Text(FText::FromString("Open Dashboard"))
 						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://app.cognitive3d.com"))
 					]
@@ -688,13 +694,13 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			[
 				SNew(SBox)
 				.HeightOverride(64)
-				.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
+				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
 				SNew(STextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
+				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
 				.Text(FText::FromString("You can continue your integration to get more insights including:\n\nCustom Events\n\nExitPoll surveys\n\nDynamic Objects\n\nMultiplayer"))
@@ -708,13 +714,12 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Padding(0,5,0,5)
 				[
 					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 					.WidthOverride(128)
 					.HeightOverride(32)
 					[
 						SNew(SButton)
 						.HAlign(HAlign_Center)
-						.Visibility(this, &SSceneSetupWidget::IsCompleteVisible)
 						.Text(FText::FromString("Open Documentation"))
 						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/get-started/"))
 					]
@@ -800,8 +805,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 		FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
 		FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
-		FCognitiveEditorTools::GetInstance()->WizardUploadError = "";
-		FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode = 0;
+		SceneUploadStatus = ESceneUploadStatus::NotStarted;
 }
 
 FReply SSceneSetupWidget::EvaluateSceneExport()
@@ -994,6 +998,14 @@ EVisibility SSceneSetupWidget::IsCompleteVisible() const
 {
 	return CurrentPageEnum == ESceneSetupPage::Complete ? EVisibility::Visible : EVisibility::Collapsed;
 }
+EVisibility SSceneSetupWidget::IsUploadComplete() const
+{
+	if (SceneUploadStatus == ESceneUploadStatus::NotStarted)
+	{
+		return EVisibility::Collapsed;
+	}
+	return EVisibility::Visible;
+}
 
 FReply SSceneSetupWidget::TakeScreenshot()
 {
@@ -1049,6 +1061,8 @@ FReply SSceneSetupWidget::NextPage()
 	}
 	else if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
 	{
+		FCognitiveEditorTools::GetInstance()->OnUploadSceneGeometry.BindSP(this, &SSceneSetupWidget::OnSceneUploaded);
+
 		FCognitiveEditorTools::GetInstance()->WizardUpload();
 	}
 	else if (CurrentPageEnum == ESceneSetupPage::UploadProgress)

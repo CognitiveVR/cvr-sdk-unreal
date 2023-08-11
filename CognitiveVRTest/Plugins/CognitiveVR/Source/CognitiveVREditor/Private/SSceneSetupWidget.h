@@ -33,6 +33,7 @@ class FCognitiveVREditorModule;
 
 class SSceneSetupWidget : public SCompoundWidget
 {
+
 public:
 	SLATE_BEGIN_ARGS(SSceneSetupWidget){}
 	SLATE_ARGUMENT(FSlateBrush*,ScreenshotTexture)
@@ -42,6 +43,7 @@ public:
 	void CheckForExpiredDeveloperKey();
 	void OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
+	void OnSceneUploaded(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	UENUM()
 	enum class ESceneSetupPage : uint8
@@ -55,6 +57,15 @@ public:
 		Complete
 	};
 	ESceneSetupPage CurrentPageEnum = ESceneSetupPage::Intro;
+
+	UENUM()
+	enum class ESceneUploadStatus : uint8
+	{
+		NotStarted,
+		Uploading,
+		Completed
+	};
+	ESceneUploadStatus SceneUploadStatus = ESceneUploadStatus::NotStarted;
 
 	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 
@@ -72,7 +83,7 @@ public:
 	EVisibility IsUploadChecklistVisible() const;
 	EVisibility IsUploadProgressVisible() const;
 	EVisibility IsCompleteVisible() const;
-
+	EVisibility IsUploadComplete() const;
 
 	EVisibility IsNewSceneUpload() const;
 	EVisibility IsSceneVersionUpload() const;

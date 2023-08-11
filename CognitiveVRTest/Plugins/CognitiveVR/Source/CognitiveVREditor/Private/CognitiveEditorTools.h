@@ -36,6 +36,7 @@
 #include "RenderingThread.h"
 #include "Classes/Engine/Level.h"
 #include "CoreMisc.h"
+#include "C3DCommonEditorTypes.h"
 
 //all sorts of functionality for Cognitive SDK
 
@@ -43,12 +44,13 @@
 class FCognitiveEditorTools
 {
 public:
-
 	static void Initialize();
 	static FString Gateway;
 
 	static FCognitiveEditorTools* CognitiveEditorToolsInstance;
 	static FCognitiveEditorTools* GetInstance();
+
+	FOnUploadSceneGeometry OnUploadSceneGeometry;
 
 	void SaveSceneData(FString sceneName, FString sceneKey);
 
