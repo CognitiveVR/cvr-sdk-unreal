@@ -159,6 +159,13 @@ void FAnalyticsProviderCognitiveVR::HandlePostLevelLoad(UWorld* world)
 	//lookup scenedata and if valid, add it to the stack
 	LoadedSceneDataStack.Empty();
 	TSharedPtr<FSceneData> data = GetSceneData(levelName);
+
+	//if the new scene is the same as the current scene, return
+	if (LastSceneData.IsValid() && data.IsValid() && LastSceneData->Id == data->Id)
+	{
+		return;
+	}
+
 	if (currentSceneData.IsValid()) //currently has valid scene data
 	{
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
