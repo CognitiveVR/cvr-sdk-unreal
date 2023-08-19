@@ -1343,6 +1343,16 @@ FReply SSceneSetupWidget::AppendInputs()
 	TArray<FString> actionMapping;
 	TArray<FString> axisMapping;
 
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, InputIni);
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+AxisMappings"), axisMapping, InputIni);
+
+	if (actionMapping.Contains("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Left_Grip_Click)"))
+	{
+		GLog->Log("SSceneSetupWidget::AppendInputs already includes Cognitive3D Inputs");
+		//already added! don't append again
+		return FReply::Handled();
+	}
+
 #if defined PICOMOBILE_API
 	actionMapping.Add("(ActionName=\"C3D_LeftTrigger\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_L_TriggerAxis)");
 	actionMapping.Add("(ActionName=\"C3D_RightGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_R_LGrip)");
