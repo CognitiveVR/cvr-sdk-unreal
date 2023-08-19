@@ -73,18 +73,12 @@ void FCognitiveVREditorModule::StartupModule()
 		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("GazeBatchSize"), 64, EngineIni);
 
 		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("CustomEventBatchSize"), 64, EngineIni);
-		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("CustomEventExtremeLimit"), 128, EngineIni);
-		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("CustomEventMinTimer"), 2, EngineIni);
 		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("CustomEventAutoTimer"), 30, EngineIni);
 
 		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("DynamicDataLimit"), 64, EngineIni);
-		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("DynamicExtremeLimit"), 128, EngineIni);
-		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("DynamicMinTimer"), 2, EngineIni);
 		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("DynamicAutoTimer"), 30, EngineIni);
 
 		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SensorDataLimit"), 64, EngineIni);
-		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SensorExtremeLimit"), 128, EngineIni);
-		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SensorMinTimer"), 2, EngineIni);
 		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SensorAutoTimer"), 30, EngineIni);
 
 		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
@@ -114,20 +108,10 @@ void FCognitiveVREditorModule::StartupModule()
 	GConfig->GetString(TEXT("Analytics"), TEXT("BlenderPath"), FCognitiveEditorTools::GetInstance()->BlenderPath, EditorIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("ExportPath"), FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
 
-
-	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveSceneSetup"), FOnSpawnTab::CreateStatic(&CreateCognitiveSceneSetupTabArgs));
-	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveProjectSetup"), FOnSpawnTab::CreateStatic(&CreateCognitiveProjectSetupTabArgs));
-	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveDynamicObjectManager"), FOnSpawnTab::CreateStatic(&CreateCognitiveDynamicObjectTabArgs));
-
 	FCognitive3DCommands::Register();
 	PluginCommands = MakeShareable(new FUICommandList);
 
 	//map all the menu items to functions
-	PluginCommands->MapAction(
-		FCognitive3DCommands::Get().OpenDynamicObjectWindow,
-		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveDynamicTab)
-	);
-
 	PluginCommands->MapAction(
 		FCognitive3DCommands::Get().OpenProjectSetupWindow,
 		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveProjectSetupTab)
@@ -136,6 +120,11 @@ void FCognitiveVREditorModule::StartupModule()
 	PluginCommands->MapAction(
 		FCognitive3DCommands::Get().OpenSceneSetupWindow,
 		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab)
+	);
+
+	PluginCommands->MapAction(
+		FCognitive3DCommands::Get().OpenDynamicObjectWindow,
+		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveDynamicTab)
 	);
 
 	PluginCommands->MapAction(
