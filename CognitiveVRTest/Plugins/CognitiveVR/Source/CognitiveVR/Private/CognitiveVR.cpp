@@ -159,6 +159,13 @@ void FAnalyticsProviderCognitiveVR::HandlePostLevelLoad(UWorld* world)
 	//lookup scenedata and if valid, add it to the stack
 	LoadedSceneDataStack.Empty();
 	TSharedPtr<FSceneData> data = GetSceneData(levelName);
+
+	//if the new scene is the same as the current scene, return
+	if (LastSceneData.IsValid() && data.IsValid() && LastSceneData->Id == data->Id)
+	{
+		return;
+	}
+
 	if (currentSceneData.IsValid()) //currently has valid scene data
 	{
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
@@ -978,9 +985,10 @@ bool FAnalyticsProviderCognitiveVR::HasEyeTrackingSDK()
 bool FAnalyticsProviderCognitiveVR::TryGetRoomSize(FVector& roomsize)
 {
 #if ENGINE_MAJOR_VERSION == 5
-	FTransform OutTransform;
-	FVector2D OutRect;
-	return UHeadMountedDisplayFunctionLibrary::GetPlayAreaRect(OutTransform, OutRect);
+	FVector2D areaBounds = UHeadMountedDisplayFunctionLibrary::GetPlayAreaBounds();
+	roomsize.X = areaBounds.X;
+	roomsize.Y = areaBounds.Y;
+	return true;
 #elif ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION == 27
 
 	FVector2D areaBounds = UHeadMountedDisplayFunctionLibrary::GetPlayAreaBounds();
