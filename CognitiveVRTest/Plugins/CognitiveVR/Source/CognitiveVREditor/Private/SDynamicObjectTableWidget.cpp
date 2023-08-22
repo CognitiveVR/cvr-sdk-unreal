@@ -79,7 +79,7 @@ TSharedRef<ITableRow> SDynamicObjectTableWidget::OnGenerateRowForTable(TSharedPt
 	hasUploadedId = FoundId != NULL;
 
 	//check if the export folder has files for this dynamic object
-	bool hasExportedMesh = FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(InItem->MeshName);
+	bool hasExportedMesh = !InItem->MeshName.IsEmpty() && FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(InItem->MeshName);
 
 	return SNew(SDynamicTableItem, OwnerTable)
 		.Name(FText::FromString(InItem->Name))

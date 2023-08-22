@@ -60,12 +60,9 @@ public:
 
 	bool IsUploadAllEnabled() const;
 	bool IsUploadSelectedEnabled() const;
-	bool IsUploadIdsEnabled() const;
-	bool IsUploadInvalid() const;
 	FText GetUploadInvalidCause() const;
 
 	FText UploadSelectedText() const;
-	FText ExportSelectedText() const;
 	FText GetSceneText() const;
 
 	//static so its easier to set content from response without getting a reference to this window. especially for updating the sub-widgets!

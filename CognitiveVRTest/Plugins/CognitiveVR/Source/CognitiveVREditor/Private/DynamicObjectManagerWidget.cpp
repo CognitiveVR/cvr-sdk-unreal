@@ -116,8 +116,8 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 			+ SOverlay::Slot()
 			[
 			SNew(SVerticalBox)
-			+ SVerticalBox::Slot() //warning for invalid scenes
-			.Padding(0, 10, 0, padding) //slight padding so
+			+ SVerticalBox::Slot() //if the scene isn't valid, display the onboarding prompt
+			.Padding(0, 10, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			.VAlign(VAlign_Center)
 			.AutoHeight()
@@ -133,6 +133,37 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
+			+ SVerticalBox::Slot() //text to scene setup window
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				.HAlign(EHorizontalAlignment::HAlign_Center)
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SDynamicObjectManagerWidget::SceneNotUploadedVisibility)
+					.AutoWrapText(true)
+					.Justification(ETextJustify::Center)
+					.Text(FText::FromString("This window is also accessible from the Tools menu.\n\nYou can review and upload Dynamic Objects from here.\n\n You will be prompted to export mesh geometry when you continue to the Scene Setup Window."))
+				]
+			]
+			+ SVerticalBox::Slot() //button to scene setup window
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			[
+				SNew(SBox)
+				.Visibility(this, &SDynamicObjectManagerWidget::SceneNotUploadedVisibility)
+				.WidthOverride(256)
+				.HeightOverride(32)
+				[
+					SNew(SButton)
+					.Text(FText::FromString("Open Scene Setup Window"))
+					.OnClicked(this,&SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow)
+				]
+			]
 
 			+ SVerticalBox::Slot() //warning for invalid scenes
 			.Padding(0, 0, 0, padding)
@@ -144,6 +175,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				+SHorizontalBox::Slot()
 				[
 					SNew(SBox)
+					.Visibility(this, &SDynamicObjectManagerWidget::SceneUploadedVisibility)
 					[
 						SNew(STextBlock)
 						.Text(this, &SDynamicObjectManagerWidget::GetSceneText)
@@ -154,7 +186,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 			+SVerticalBox::Slot() //refresh button and dynamic object count
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
-				.HAlign(EHorizontalAlignment::HAlign_Left)
+			.HAlign(EHorizontalAlignment::HAlign_Left)
 			[
 				SNew(SBox)
 				.WidthOverride(128)
@@ -210,37 +242,6 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				]
 			]
 
-			+ SVerticalBox::Slot() //text to scene setup window
-			.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			[
-				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-				.HAlign(EHorizontalAlignment::HAlign_Center)
-				[
-					SNew(STextBlock)
-					.Visibility(this, &SDynamicObjectManagerWidget::SceneNotUploadedVisibility)
-					.AutoWrapText(true)
-					.Justification(ETextJustify::Center)
-					.Text(FText::FromString("This window is also accessible from the Tools menu.\n\nYou can review and upload Dynamic Objects from here.\n\n You will be prompted to export mesh geometry when you continue to the Scene Setup Window."))
-				]
-			]
-			+ SVerticalBox::Slot() //button to scene setup window
-			.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			[
-				SNew(SBox)
-				.Visibility(this, &SDynamicObjectManagerWidget::SceneNotUploadedVisibility)
-				.WidthOverride(256)
-				.HeightOverride(32)
-				[
-					SNew(SButton)
-					.Text(FText::FromString("Open Scene Setup Window"))
-					.OnClicked(this,&SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow)
-				]
-			]
 			+SVerticalBox::Slot() //invalid dynamic data warning
 			.AutoHeight()
 			.Padding(FMargin(64, 24, 64, 24))
@@ -496,21 +497,11 @@ bool SDynamicObjectManagerWidget::IsUploadAllEnabled() const
 	return true;
 }
 
-bool SDynamicObjectManagerWidget::IsUploadInvalid() const
-{
-	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return true; }
-	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return true; }
-	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return true; }
-	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return true; }
-	return false;
-}
-
 FText SDynamicObjectManagerWidget::GetUploadInvalidCause() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return FText::FromString("Developer Key is not set"); }
 	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return FText::FromString("Blender path is invalid"); }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return FText::FromString("Export Path is invalid"); }
-	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return FText::FromString("Scene does not have a Scene ID"); }
 	return FText::GetEmpty();
 }
 
@@ -519,15 +510,7 @@ EVisibility SDynamicObjectManagerWidget::GetSceneWarningVisibility() const
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return EVisibility::Visible; }
 	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return EVisibility::Visible; }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return EVisibility::Visible; }
-	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return EVisibility::Visible;}
 	return EVisibility::Collapsed;
-}
-
-bool SDynamicObjectManagerWidget::IsUploadIdsEnabled() const
-{
-	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
-	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
-	return true;
 }
 
 bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
@@ -582,31 +565,6 @@ FText SDynamicObjectManagerWidget::UploadSelectedText() const
 	return FText::FromString("Upload " + FString::FromInt(dynamicMeshNames.Num()) + " Selected Meshes");
 }
 
-FText SDynamicObjectManagerWidget::ExportSelectedText() const
-{
-	int32 validExportCount=0;
-	for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
-	{
-		if (AActor* Actor = Cast<AActor>(*It))
-		{
-			//SelectionSetCache.Add(Actor);
-			UActorComponent* actorComponent = Actor->GetComponentByClass(UDynamicObject::StaticClass());
-			if (actorComponent == NULL)
-			{
-				continue;
-			}
-			UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
-			if (dynamicComponent == NULL)
-			{
-				continue;
-			}
-			validExportCount++;
-		}
-	}
-
-	return FText::FromString("Export " + FString::FromInt(validExportCount) + " Selected");
-}
-
 FText SDynamicObjectManagerWidget::GetSceneText() const
 {
 	auto tools = FCognitiveEditorTools::GetInstance();
@@ -639,7 +597,7 @@ EVisibility SDynamicObjectManagerWidget::SceneUploadedVisibility() const
 FReply SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow()
 {
 	//popup asking if meshes should be exported too
-	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export the selected Dynamic Object meshes?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
+	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export all Dynamic Object meshes?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export all Dynamic Objects"), "ExportSelectedDynamicsBody");
 	Info.ConfirmText = LOCTEXT("Yes", "Yes");
 	Info.CancelText = LOCTEXT("No", "No");
 	Info.CheckBoxText = FText();
