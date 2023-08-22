@@ -38,12 +38,14 @@ void SDynamicObjectTableWidget::Construct(const FArguments& Args)
 						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Id</>"))
 					]
 					+ SHeaderRow::Column("exported")
+					.FixedWidth(80)
 					[
 						SNew(SRichTextBlock)
 						.DecoratorStyleSet(&FEditorStyle::Get())
 						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Exported</>"))
 					]
 					+ SHeaderRow::Column("uploaded")
+					.FixedWidth(80)
 					[
 						SNew(SRichTextBlock)
 						.DecoratorStyleSet(&FEditorStyle::Get())
@@ -149,6 +151,24 @@ void SDynamicTableItem::Construct(const FArguments& InArgs, const TSharedRef<STa
 	Uploaded = InArgs._Uploaded;
 
 	SMultiColumnTableRow<TSharedPtr<FDynamicData> >::Construct(FSuperRowType::FArguments(), InOwnerTableView);
+
+	FString texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("box_empty.png");
+	FName BrushName = FName(*texturepath);
+	BoxEmptyIcon = new FSlateDynamicImageBrush(BrushName, FVector2D(20, 20));
+
+	texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("box_check.png");
+	BrushName = FName(*texturepath);
+	BoxCheckIcon = new FSlateDynamicImageBrush(BrushName, FVector2D(20, 20));
+}
+
+const FSlateBrush* SDynamicTableItem::GetBoxCheckIcon() const
+{
+	return BoxCheckIcon;
+}
+
+const FSlateBrush* SDynamicTableItem::GetBoxEmptyIcon() const
+{
+	return BoxEmptyIcon;
 }
 
 TSharedRef<SWidget> SDynamicTableItem::GenerateWidgetForColumn(const FName& ColumnName)
@@ -193,28 +213,69 @@ TSharedRef<SWidget> SDynamicTableItem::GenerateWidgetForColumn(const FName& Colu
 	{
 		return	SNew(SBox)
 			.HeightOverride(20)
-			.Padding(FMargin(3, 0))
+			.WidthOverride(20)
+			//.Padding(FMargin(3, 0))
+			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Center)
 			[
-				SNew(SCheckBox)
-				.IsChecked(Exported ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
-				.IsEnabled(false)
+				SNew(SImage)
+				.ToolTipText(this, &SDynamicTableItem::GetExportedTooltip)
+				.Image(this, &SDynamicTableItem::GetExportedStateIcon)
 			];
 	}
 	if (ColumnName == TEXT("uploaded"))
 	{
 		return	SNew(SBox)
 			.HeightOverride(20)
-			.Padding(FMargin(3, 0))
+			.WidthOverride(20)
+			//.Padding(FMargin(3, 0))
+			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Center)
 			[
-				SNew(SCheckBox)
-				.IsChecked(Uploaded ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
-				.IsEnabled(false)
+				SNew(SImage)
+				.ToolTipText(this, &SDynamicTableItem::GetUploadedTooltip)
+				.Image(this, &SDynamicTableItem::GetUploadedStateIcon)
 			];
 	}
 
 	return SNullWidget::NullWidget;
+}
+
+
+const FSlateBrush* SDynamicTableItem::GetExportedStateIcon() const
+{
+	if (Exported)
+	{
+		return BoxCheckIcon;
+	}
+	return BoxEmptyIcon;
+}
+
+const FSlateBrush* SDynamicTableItem::GetUploadedStateIcon() const
+{
+	if (Uploaded)
+	{
+		return BoxCheckIcon;
+	}
+	return BoxEmptyIcon;
+}
+
+FText SDynamicTableItem::GetExportedTooltip() const
+{
+	if (Exported)
+	{
+		return FText::FromString("Mesh has been exported to temrporary directory");
+	}
+	return FText::FromString("Mesh has NOT been exported to temrporary directory");
+}
+
+FText SDynamicTableItem::GetUploadedTooltip() const
+{
+	if (Uploaded)
+	{
+		return FText::FromString("Mesh and Id have been uploaded to the dashboard");
+	}
+	return FText::FromString("Mesh and Id have NOT been uploaded to the dashboard");
 }
 
 FText SDynamicTableItem::GetDefaultResponse() const

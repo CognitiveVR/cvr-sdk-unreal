@@ -33,7 +33,7 @@ public:
 
 	void RefreshTable();
 
-	FText ExportStatusText(TSharedPtr<FDynamicData> data);
+	FText ExportStatusText(TSharedPtr<FDynamicData> data);	
 };
 
 class SDynamicTableItem : public SMultiColumnTableRow< TSharedPtr<class FDynamicData> >
@@ -57,8 +57,17 @@ public:
 	*/
 	void Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView);
 	virtual TSharedRef<SWidget> GenerateWidgetForColumn(const FName& ColumnName) override;
-
 private:
+
+	const FSlateBrush* GetBoxEmptyIcon() const;
+	FSlateBrush* BoxEmptyIcon;
+	const FSlateBrush* GetBoxCheckIcon() const;
+	FSlateBrush* BoxCheckIcon;
+
+	const FSlateBrush* GetExportedStateIcon() const;
+	const FSlateBrush* GetUploadedStateIcon() const;
+	FText GetExportedTooltip() const;
+	FText GetUploadedTooltip() const;
 
 	FText Name;
 	FText MeshName;

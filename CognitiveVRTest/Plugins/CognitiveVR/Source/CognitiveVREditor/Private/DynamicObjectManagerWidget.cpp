@@ -565,6 +565,7 @@ FText SDynamicObjectManagerWidget::UploadSelectedText() const
 	return FText::FromString("Upload " + FString::FromInt(dynamicMeshNames.Num()) + " Selected Meshes");
 }
 
+//if the scene has not been exported, the window displays the onboarding text instead of this scene text
 FText SDynamicObjectManagerWidget::GetSceneText() const
 {
 	auto tools = FCognitiveEditorTools::GetInstance();
