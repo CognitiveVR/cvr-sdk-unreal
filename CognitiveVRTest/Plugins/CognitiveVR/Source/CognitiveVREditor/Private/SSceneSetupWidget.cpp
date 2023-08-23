@@ -251,11 +251,24 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			[
 				SNew(SRichTextBlock)
-				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+				.Visibility(this, &SSceneSetupWidget::GetAppendedInputsFoundHidden)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
 				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Text(FText::FromString("Optionally, you can append inputs to your DefaultInput.ini file. This will allow you to visualize the button presses of the player."))
+				.Text(FText::FromString("You can append inputs to your DefaultInput.ini file. This will allow you to visualize the button presses of the player."))
+			]
+
+			+SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			[
+				SNew(SRichTextBlock)
+				.Visibility(this, &SSceneSetupWidget::GetAppendedInputsFoundVisibility)
+				.AutoWrapText(true)
+				.Justification(ETextJustify::Center)
+				.DecoratorStyleSet(&FEditorStyle::Get())
+				.Text(FText::FromString("The Cognitive3D action maps have been added to DefaultInputs.ini"))
 			]
 
 			+SVerticalBox::Slot()
@@ -758,6 +771,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						.Text(this,&SSceneSetupWidget::NextButtonText)
 						.IsEnabled(this,&SSceneSetupWidget::NextButtonEnabled)
 						.Visibility(this, &SSceneSetupWidget::NextButtonVisibility)
+						.ToolTipText(this,&SSceneSetupWidget::GetNextButtonTooltipText)
 						.OnClicked(this, &SSceneSetupWidget::NextPage)
 					]
 				]
@@ -803,6 +817,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 		BrushName = FName(*texturepath);
 		ControllerConfigureBrush = new FSlateDynamicImageBrush(BrushName, FVector2D(265, 138));
 
+		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 		FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
 		FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 		SceneUploadStatus = ESceneUploadStatus::NotStarted;
@@ -870,6 +885,7 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 	FCognitiveEditorTools::GetInstance()->ExportScene(ToBeExportedFinal);
 
 	SceneWasExported = true;
+	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 	return FReply::Handled();
 }
 
@@ -1025,6 +1041,18 @@ FReply SSceneSetupWidget::DebugPreviousPage()
 	return FReply::Handled();
 }
 
+FText SSceneSetupWidget::GetNextButtonTooltipText() const
+{
+	if (CurrentPageEnum == ESceneSetupPage::Export)
+	{
+		if (FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount() == 0)
+		{
+			return FText::FromString("You must export the scene geometry to continue");
+		}
+	}
+	return FText::FromString("");
+}
+
 FReply SSceneSetupWidget::NextPage()
 {
 	if (CurrentPageEnum == ESceneSetupPage::Intro)
@@ -1040,23 +1068,6 @@ FReply SSceneSetupWidget::NextPage()
 		FCognitiveEditorTools::GetInstance()->CreateExportFolderStructure();
 		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
-
-		if (FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount() == 0)
-		{
-			FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportMissingFilesBody", "No exported files were found. Are you sure you want to skip this step?"), LOCTEXT("ExportMissingFilesTitle", "No exported files found"), "cognitive3d_test");
-			Info.ConfirmText = LOCTEXT("Continue", "Continue");
-			Info.CancelText = LOCTEXT("Cancel", "Cancel");
-			Info.CheckBoxText = FText();
-
-			FSuppressableWarningDialog WarnAboutCoordinatesSystem(Info);
-			FSuppressableWarningDialog::EResult result = WarnAboutCoordinatesSystem.ShowModal();
-
-			if (result == FSuppressableWarningDialog::EResult::Cancel)
-			{
-				return FReply::Handled();
-			}
-		}
-
 		GetScreenshotBrush();
 	}
 	else if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
@@ -1114,15 +1125,7 @@ FText SSceneSetupWidget::NextButtonText() const
 {
 	if (CurrentPageEnum == ESceneSetupPage::Export)
 	{
-		FString sceneExportDir = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory();
-		if (FCognitiveEditorTools::VerifyDirectoryExists(sceneExportDir))
-		{
-			return FText::FromString("Next");
-		}
-		else
-		{
-			return FText::FromString("Skip");
-		}		
+		return FText::FromString("Next");
 	}
 	else if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
 	{
@@ -1144,6 +1147,11 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 
 	if (CurrentPageEnum == ESceneSetupPage::Export)
 	{
+		//disable if no scene has been exported
+		if (FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount() == 0)
+		{
+			return false;
+		}
 		return true;
 	}
 
@@ -1332,6 +1340,42 @@ const FSlateBrush* SSceneSetupWidget::GetControllerConfigureBrush() const
 const FSlateBrush* SSceneSetupWidget::GetControllerComponentBrush() const
 {
 	return ControllerComponentBrush;
+}
+
+EVisibility SSceneSetupWidget::GetAppendedInputsFoundHidden() const
+{
+	if (CurrentPageEnum != ESceneSetupPage::Controller)
+	{
+		return EVisibility::Collapsed;
+	}
+
+	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
+	//TODO IMPROVEMENT instead of hard coding strings here, should append a list from the resources folder
+	TArray<FString> actionMapping;
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, InputIni);
+	if (actionMapping.Contains("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Left_Grip_Click)"))
+	{
+		return EVisibility::Collapsed;
+	}
+	return EVisibility::Visible;
+}
+
+EVisibility SSceneSetupWidget::GetAppendedInputsFoundVisibility() const
+{
+	if (CurrentPageEnum != ESceneSetupPage::Controller)
+	{
+		return EVisibility::Collapsed;
+	}
+
+	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
+	//TODO IMPROVEMENT instead of hard coding strings here, should append a list from the resources folder
+	TArray<FString> actionMapping;
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, InputIni);
+	if (actionMapping.Contains("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Left_Grip_Click)"))
+	{
+		return EVisibility::Visible;
+	}
+	return EVisibility::Collapsed;
 }
 
 FReply SSceneSetupWidget::AppendInputs()

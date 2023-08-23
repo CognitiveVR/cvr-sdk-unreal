@@ -96,6 +96,8 @@ public:
 	EVisibility NextButtonVisibility() const;
 	bool NextButtonEnabled() const;
 	FText NextButtonText() const;
+	FText GetNextButtonTooltipText() const;
+
 	EVisibility BackButtonVisibility() const;
 	FReply LastPage();
 	
@@ -147,7 +149,8 @@ public:
 	FSlateBrush* ControllerComponentBrush;
 
 	FReply AppendInputs();
-
+	EVisibility GetAppendedInputsFoundVisibility() const;
+	EVisibility GetAppendedInputsFoundHidden() const;
 
 	FText GetDynamicObjectCountToUploadText() const;
 	FText GetSceneVersionToUploadText() const;
