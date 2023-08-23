@@ -110,11 +110,17 @@ void FCognitiveEditorTools::Initialize()
 	//should be able to update gateway while unreal is running, but cache if not in editor since that's nuts
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
 
-	//CognitiveEditorToolsInstance->BaseExportDirectory = FPaths::GameDir();
-
 	//should update both editor urls and session data urls
 	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(TEXT("ImageWrapper"));
 	CognitiveEditorToolsInstance->ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
+
+	FString texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("box_empty.png");
+	FName BrushName = FName(*texturepath);
+	CognitiveEditorToolsInstance->BoxEmptyIcon = new FSlateDynamicImageBrush(BrushName, FVector2D(20, 20));
+
+	texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("box_check.png");
+	BrushName = FName(*texturepath);
+	CognitiveEditorToolsInstance->BoxCheckIcon = new FSlateDynamicImageBrush(BrushName, FVector2D(20, 20));
 }
 
 //at any step in the uploading process

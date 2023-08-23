@@ -487,6 +487,28 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 						]
 					]
 				]
+				+SHorizontalBox::Slot()
+				.MaxWidth(17)
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+					.VAlign(VAlign_Center)
+					[
+						SNew(SBox)
+						.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+						.HeightOverride(17)
+						.WidthOverride(17)
+						[
+							SNew(SImage)
+							.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+							.Image(this, &SProjectSetupWidget::GetBlenderPathStateIcon)
+							.ToolTipText(this, &SProjectSetupWidget::GetBlenderPathTooltipText)
+							.ColorAndOpacity(FSlateColor::UseForeground())
+						]
+					]
+				]
 			]
 
 			//path to export directory
@@ -555,6 +577,28 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 								.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
 								.ColorAndOpacity(FSlateColor::UseForeground())
 							]
+						]
+					]
+				]
+				+SHorizontalBox::Slot()
+				.MaxWidth(17)
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+					.VAlign(VAlign_Center)
+					[
+						SNew(SBox)
+						.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+						.HeightOverride(17)
+						.WidthOverride(17)
+						[
+							SNew(SImage)
+							.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+							.Image(this, &SProjectSetupWidget::GetExportPathStateIcon)
+							.ToolTipText(this, &SProjectSetupWidget::GetExportPathTooltipText)
+							.ColorAndOpacity(FSlateColor::UseForeground())
 						]
 					]
 				]
@@ -757,6 +801,42 @@ const FSlateBrush* SProjectSetupWidget::GetBlenderLogo() const
 const FSlateBrush* SProjectSetupWidget::GetVideoImage() const
 {
 	return VideoImage;
+}
+
+const FSlateBrush* SProjectSetupWidget::GetBlenderPathStateIcon() const
+{
+	if (FCognitiveEditorTools::GetInstance()->HasFoundBlender())
+	{
+		return FCognitiveEditorTools::GetInstance()->BoxCheckIcon;
+	}
+	return FCognitiveEditorTools::GetInstance()->BoxEmptyIcon;
+}
+
+const FSlateBrush* SProjectSetupWidget::GetExportPathStateIcon() const
+{
+	if (FCognitiveEditorTools::GetInstance()->HasSetExportDirectory())
+	{
+		return FCognitiveEditorTools::GetInstance()->BoxCheckIcon;
+	}
+	return FCognitiveEditorTools::GetInstance()->BoxEmptyIcon;
+}
+
+FText SProjectSetupWidget::GetBlenderPathTooltipText() const
+{
+	if (FCognitiveEditorTools::GetInstance()->HasFoundBlender())
+	{
+		return FText::FromString("");
+	}
+	return FText::FromString("Blender path is not set or invalid");
+}
+
+FText SProjectSetupWidget::GetExportPathTooltipText() const
+{
+	if (FCognitiveEditorTools::GetInstance()->HasSetExportDirectory())
+	{
+		return FText::FromString("");
+	}
+	return FText::FromString("Temporary export directory is not set");
 }
 
 FText SProjectSetupWidget::GetDisplayAPIKey() const

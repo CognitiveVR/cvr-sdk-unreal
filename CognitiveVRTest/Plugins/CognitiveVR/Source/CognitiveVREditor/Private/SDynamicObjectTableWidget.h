@@ -58,12 +58,6 @@ public:
 	void Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView);
 	virtual TSharedRef<SWidget> GenerateWidgetForColumn(const FName& ColumnName) override;
 private:
-
-	const FSlateBrush* GetBoxEmptyIcon() const;
-	FSlateBrush* BoxEmptyIcon;
-	const FSlateBrush* GetBoxCheckIcon() const;
-	FSlateBrush* BoxCheckIcon;
-
 	const FSlateBrush* GetExportedStateIcon() const;
 	const FSlateBrush* GetUploadedStateIcon() const;
 	FText GetExportedTooltip() const;

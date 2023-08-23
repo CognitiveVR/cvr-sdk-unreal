@@ -93,6 +93,12 @@ public:
 	const FSlateBrush* GetVideoImage() const;
 	FSlateBrush* VideoImage;
 
+
+	const FSlateBrush* GetBlenderPathStateIcon() const;
+	const FSlateBrush* GetExportPathStateIcon() const;
+	FText GetBlenderPathTooltipText() const;
+	FText GetExportPathTooltipText() const;
+
 	void OnExportPathChanged(const FText& Text);
 	void OnBlenderPathChanged(const FText& Text);
 

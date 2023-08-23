@@ -151,24 +151,6 @@ void SDynamicTableItem::Construct(const FArguments& InArgs, const TSharedRef<STa
 	Uploaded = InArgs._Uploaded;
 
 	SMultiColumnTableRow<TSharedPtr<FDynamicData> >::Construct(FSuperRowType::FArguments(), InOwnerTableView);
-
-	FString texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("box_empty.png");
-	FName BrushName = FName(*texturepath);
-	BoxEmptyIcon = new FSlateDynamicImageBrush(BrushName, FVector2D(20, 20));
-
-	texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("box_check.png");
-	BrushName = FName(*texturepath);
-	BoxCheckIcon = new FSlateDynamicImageBrush(BrushName, FVector2D(20, 20));
-}
-
-const FSlateBrush* SDynamicTableItem::GetBoxCheckIcon() const
-{
-	return BoxCheckIcon;
-}
-
-const FSlateBrush* SDynamicTableItem::GetBoxEmptyIcon() const
-{
-	return BoxEmptyIcon;
 }
 
 TSharedRef<SWidget> SDynamicTableItem::GenerateWidgetForColumn(const FName& ColumnName)
@@ -246,18 +228,18 @@ const FSlateBrush* SDynamicTableItem::GetExportedStateIcon() const
 {
 	if (Exported)
 	{
-		return BoxCheckIcon;
+		return FCognitiveEditorTools::GetInstance()->BoxCheckIcon;
 	}
-	return BoxEmptyIcon;
+	return FCognitiveEditorTools::GetInstance()->BoxEmptyIcon;
 }
 
 const FSlateBrush* SDynamicTableItem::GetUploadedStateIcon() const
 {
 	if (Uploaded)
 	{
-		return BoxCheckIcon;
+		return FCognitiveEditorTools::GetInstance()->BoxCheckIcon;
 	}
-	return BoxEmptyIcon;
+	return FCognitiveEditorTools::GetInstance()->BoxEmptyIcon;
 }
 
 FText SDynamicTableItem::GetExportedTooltip() const

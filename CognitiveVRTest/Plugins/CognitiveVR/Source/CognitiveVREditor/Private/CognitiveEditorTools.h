@@ -429,6 +429,11 @@ public:
 
 	//opens blender and run python script. returns process to do stuff after blender has finished
 	FProcHandle ConvertSceneToGLTF();
+
+	const FSlateBrush* GetBoxEmptyIcon() const;
+	FSlateBrush* BoxEmptyIcon;
+	const FSlateBrush* GetBoxCheckIcon() const;
+	FSlateBrush* BoxCheckIcon;
 };
 
 //used for uploading multiple dynamics at once
