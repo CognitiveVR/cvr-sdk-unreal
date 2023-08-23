@@ -477,8 +477,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			SelectedActors = GEditor->GetSelectedActors();
 			SelectedActors->GetSelectedObjects(ActorObjs);
 
-			FString message = "Number of objects selected after duplication: " + FString::FromInt(ActorObjs.Num()) + " " + ActorObjs[0]->GetName();
-			UE_LOG(LogTemp, Warning, TEXT("%s"), *message);
 
 			//setup temp meshes package
 			UPackage* NewPackageName = CreatePackage(TEXT("/Game/TempMesh"));
@@ -486,8 +484,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			//take the static meshes that we set up earlier and use them to create a static mesh
 			UStaticMesh* tmpStatMesh = MeshUtilities.ConvertMeshesToStaticMesh(meshComponentsFromSkel, exportObjects[i]->GetOwner()->GetTransform(), NewPackageName->GetName());
 
-			FString message2 = "created static mesh out of skeletal meshes: " + tmpStatMesh->GetName();
-			UE_LOG(LogTemp, Warning, TEXT("%s"), *message2);
 
 			//create a new static mesh component for the currently selected actor
 			FName NewCompName = TEXT("StaticMeshComponent");
@@ -506,8 +502,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 				if (childrenToBeMoved[k]->GetName() != NewCompName.ToString())
 				{
 					childrenToBeMoved[k]->AttachToComponent(NewComp, FAttachmentTransformRules::KeepRelativeTransform);
-					FString message3 = "reattached component: " + childrenToBeMoved[k]->GetName() + " to: " + NewComp->GetName();
-					UE_LOG(LogTemp, Warning, TEXT("%s"), *message3);
 				}
 			}
 			//delete the skeletal mesh component
