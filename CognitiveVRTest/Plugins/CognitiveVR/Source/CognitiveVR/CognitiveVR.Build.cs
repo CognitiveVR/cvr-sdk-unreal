@@ -22,7 +22,9 @@ namespace UnrealBuildTool.Rules
 				new string[] {
 					"CognitiveVR/Private",
                     "CognitiveVR/Public",
-					"CognitiveVR/Private/util"
+					"CognitiveVR/Private/util",
+					System.IO.Path.GetFullPath(Target.RelativeEnginePath) + "/Source/Editor/Blutility/Private",
+					System.IO.Path.GetFullPath(Target.RelativeEnginePath) + "/Source/Developer/MeshUtilities/Private"
 					// ... add other private include paths required here ...
 				}
 				);
@@ -51,7 +53,13 @@ namespace UnrealBuildTool.Rules
                     "JsonUtilities",
 					"UMG",
 					"EngineSettings",
-					"EyeTracker"
+					"EyeTracker",
+					"Blutility",
+					"UnrealEd",
+					"AssetTools",
+					"SceneOutliner",
+					"EditorScriptingUtilities",
+					"MeshUtilities"
 				}
 				);
 
