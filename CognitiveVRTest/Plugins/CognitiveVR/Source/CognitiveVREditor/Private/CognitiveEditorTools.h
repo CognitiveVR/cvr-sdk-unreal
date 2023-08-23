@@ -382,7 +382,7 @@ public:
 	FReply OpenURL(FString url);
 	void FindAllSubDirectoryNames();
 	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
-	FReply TakeScreenshot();
+	FReply SaveScreenshotToFile();
 	FReply TakeDynamicScreenshot(FString dynamicName);
 
 	void DelayScreenshot(FString filePath, FLevelEditorViewportClient* perspectiveView, FVector startPos, FRotator startRot);

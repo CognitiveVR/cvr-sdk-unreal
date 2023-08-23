@@ -19,6 +19,7 @@
 #include "Runtime/Online/HTTP/Public/Http.h"
 #include "C3DCommonEditorTypes.h"
 #include "CognitiveVREditorModule.h"
+#include "Editor/EditorEngine.h"
 
 class FCognitiveTools;
 class FCognitiveVREditorModule;
@@ -110,7 +111,7 @@ public:
 	FReply SelectAll();
 
 
-	void GetScreenshotBrush();
+	void GenerateScreenshotBrush();
 	FSlateBrush* ScreenshotTexture;
 	const FSlateBrush* GetScreenshotBrushTexture() const;
 	FReply TakeScreenshot();

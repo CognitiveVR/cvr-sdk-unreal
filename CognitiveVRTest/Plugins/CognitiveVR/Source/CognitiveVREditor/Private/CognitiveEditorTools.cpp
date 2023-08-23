@@ -1232,7 +1232,7 @@ bool FCognitiveEditorTools::PickFile(const FString& Title, const FString& FileTy
 	return bFileChosen;
 }
 
-FReply FCognitiveEditorTools::TakeScreenshot()
+FReply FCognitiveEditorTools::SaveScreenshotToFile()
 {
 	FString dir = BaseExportDirectory + "/" + GetCurrentSceneName() + "/screenshot/";
 	if (VerifyOrCreateDirectory(dir))
@@ -2719,7 +2719,7 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	//build materiallist.txt and export textures for transparent materials
 	WizardExportStaticMaterials(sceneDirectory, sceneMeshes, FCognitiveEditorTools::GetInstance()->GetCurrentSceneName());
 
-	TakeScreenshot();
+	SaveScreenshotToFile();
 
 	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));

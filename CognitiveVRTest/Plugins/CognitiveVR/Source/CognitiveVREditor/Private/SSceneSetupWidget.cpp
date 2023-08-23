@@ -9,12 +9,12 @@ TArray<TSharedPtr<FDynamicData>> SSceneSetupWidget::GetSceneDynamics()
 }
 FOptionalSize SSceneSetupWidget::GetScreenshotWidth() const
 {
-	return FOptionalSize(FMath::Max(ScreenshotWidth, ScreenshotHeight));
+	return FOptionalSize(ScreenshotWidth);
 }
 
 FOptionalSize SSceneSetupWidget::GetScreenshotHeight() const
 {
-	return FOptionalSize(FMath::Max(ScreenshotWidth, ScreenshotHeight));
+	return FOptionalSize(ScreenshotHeight);
 }
 
 void SSceneSetupWidget::CheckForExpiredDeveloperKey()
@@ -902,13 +902,16 @@ ECheckBoxState SSceneSetupWidget::GetOnlyExportSelectedCheckbox() const
 	return ECheckBoxState::Unchecked;
 }
 
-void SSceneSetupWidget::GetScreenshotBrush()
+void SSceneSetupWidget::GenerateScreenshotBrush()
 {
 	FString ScreenshotPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/screenshot/screenshot.png";
 	FName BrushName = FName(*ScreenshotPath);
 
 	TArray<uint8> RawFileData;
-	if (!FFileHelper::LoadFileToArray(RawFileData, *ScreenshotPath)) return;
+	if (!FFileHelper::LoadFileToArray(RawFileData, *ScreenshotPath))
+	{
+		return;
+	}
 
 	if (ScreenshotTexture != nullptr)
 	{
@@ -919,30 +922,7 @@ void SSceneSetupWidget::GetScreenshotBrush()
 
 	if (imageWrapper.IsValid() && imageWrapper->SetCompressed(RawFileData.GetData(), RawFileData.Num()))
 	{
-		ScreenshotWidth = imageWrapper->GetWidth();
-		ScreenshotHeight = imageWrapper->GetHeight();
-
-		if (ScreenshotHeight > ScreenshotWidth)
-		{
-			ScreenshotWidth = (int32)(((float)ScreenshotWidth / (float)ScreenshotHeight) * 256);
-			ScreenshotHeight = 256;
-		}
-		else if (ScreenshotHeight < ScreenshotWidth)
-		{
-			ScreenshotHeight = (int32)(((float)ScreenshotHeight / (float)ScreenshotWidth) * 256);
-			ScreenshotWidth = 256;
-		}
-		else
-		{
-			ScreenshotHeight = 256;
-			ScreenshotWidth = 256;
-		}
-		//ScreenshotImage->SetImage(new FSlateDynamicImageBrush(BrushName, FVector2D(ScreenshotWidth, ScreenshotHeight)));
 		ScreenshotTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(ScreenshotWidth, ScreenshotHeight));
-	}
-	else
-	{
-		GLog->Log("image wrap screenshot failed!");
 	}
 }
 
@@ -1025,8 +1005,31 @@ EVisibility SSceneSetupWidget::IsUploadComplete() const
 
 FReply SSceneSetupWidget::TakeScreenshot()
 {
-	FCognitiveEditorTools::GetInstance()->TakeScreenshot();
-	GetScreenshotBrush();
+	FCognitiveEditorTools::GetInstance()->SaveScreenshotToFile();
+
+	FViewport* CurrentViewport = GEditor->GetActiveViewport();
+	auto size = CurrentViewport->GetSizeXY();
+	auto width = size.X;
+	auto height = size.Y;
+
+	int32 maxPixelSize = 384;
+
+	if (height > width)
+	{
+		ScreenshotWidth = (int32)(((float)width / (float)height) * maxPixelSize);
+		ScreenshotHeight = maxPixelSize;
+	}
+	else if (height < width)
+	{
+		ScreenshotHeight = (int32)(((float)height / (float)width) * maxPixelSize);
+		ScreenshotWidth = maxPixelSize;
+	}
+	else
+	{
+		ScreenshotHeight = maxPixelSize;
+		ScreenshotWidth = maxPixelSize;
+	}
+	GenerateScreenshotBrush();
 	return FReply::Handled();
 }
 
@@ -1068,7 +1071,7 @@ FReply SSceneSetupWidget::NextPage()
 		FCognitiveEditorTools::GetInstance()->CreateExportFolderStructure();
 		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
-		GetScreenshotBrush();
+		TakeScreenshot();
 	}
 	else if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
 	{
