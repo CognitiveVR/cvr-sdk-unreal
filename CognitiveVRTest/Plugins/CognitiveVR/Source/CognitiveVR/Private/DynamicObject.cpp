@@ -57,6 +57,8 @@ void UDynamicObject::OnRegister()
 
 void UDynamicObject::SetUniqueDynamicIds()
 {
+	if (GWorld == NULL) { return; }
+
 	//loop thorugh all dynamics in the scene
 	TArray<UDynamicObject*> dynamics;
 
