@@ -183,6 +183,47 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				]
 			]
 
+			+SVerticalBox::Slot() //invalid dynamic data warning
+			.AutoHeight()
+			.Padding(FMargin(64, 24, 64, 24))
+			[
+				SNew(SBorder)
+				.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
+				.BorderImage(FEditorStyle::GetBrush("ToolPanel.LightGroupBorder"))
+				.BorderBackgroundColor(FLinearColor(0.8f, 0, 0))
+				.Padding(8.0f)
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.VAlign(VAlign_Center)
+					[
+						SNew(SImage)
+						.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
+					]
+						// Notice
+					+SHorizontalBox::Slot()
+					.Padding(16.0f, 0.0f)
+					.VAlign(VAlign_Center)
+					[
+						SNew(STextBlock)
+						.AutoWrapText(true)
+						.Text(FText::FromString("Dynamic Objects must have a valid Mesh Name\nTo have data aggregated, Dynamic Objects must have a Unique Id"))
+					]
+					+SHorizontalBox::Slot()
+					[
+						SNew(SButton)
+						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::ValidateAndRefresh)
+						[
+							SNew(STextBlock)
+							.Justification(ETextJustify::Center)
+							.AutoWrapText(true)
+							.Text(FText::FromString("Validate Mesh Names and Unique Ids"))
+						]
+					]
+				]
+			]
+
 			+SVerticalBox::Slot() //refresh button and dynamic object count
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
@@ -247,47 +288,6 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadAllEnabled)
 						.Text(FText::FromString("Upload All Meshes"))
 						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::UploadAllDynamicObjects)
-					]
-				]
-			]
-
-			+SVerticalBox::Slot() //invalid dynamic data warning
-			.AutoHeight()
-			.Padding(FMargin(64, 24, 64, 24))
-			[
-				SNew(SBorder)
-				.Visibility_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetDuplicateDyanmicObjectVisibility)
-				.BorderImage(FEditorStyle::GetBrush("ToolPanel.LightGroupBorder"))
-				.Padding(8.0f)
-				[
-					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					.VAlign(VAlign_Center)
-					[
-						SNew(SImage)
-						.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
-					]
-						// Notice
-					+SHorizontalBox::Slot()
-					.Padding(16.0f, 0.0f)
-					.VAlign(VAlign_Center)
-					[
-						SNew(STextBlock)
-						.ColorAndOpacity(FLinearColor::Black)
-						.AutoWrapText(true)
-						.Text(FText::FromString("Dynamic Objects must have a valid Mesh Name\nTo have data aggregated, Dynamic Objects must have a Unique Id"))
-					]
-					+SHorizontalBox::Slot()
-					[
-						SNew(SButton)
-						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::ValidateAndRefresh)
-						[
-							SNew(STextBlock)
-							.Justification(ETextJustify::Center)
-							.AutoWrapText(true)
-							.Text(FText::FromString("Validate Mesh Names and Unique Ids"))
-						]
 					]
 				]
 			]
