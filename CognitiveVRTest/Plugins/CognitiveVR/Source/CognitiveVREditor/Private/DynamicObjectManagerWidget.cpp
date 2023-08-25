@@ -202,9 +202,18 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 			.MaxHeight(500)
 			.Padding(0, 0, 0, padding)
 			[
-				SNew(SBox)
+				SNew(SOverlay)
+				+ SOverlay::Slot()
 				[
-					SAssignNew(SceneDynamicObjectTable,SDynamicObjectTableWidget)
+					SNew(SBorder)
+					.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
+				]
+				+ SOverlay::Slot()
+				[
+					SNew(SBox)
+					[
+						SAssignNew(SceneDynamicObjectTable,SDynamicObjectTableWidget)
+					]
 				]
 			]
 
