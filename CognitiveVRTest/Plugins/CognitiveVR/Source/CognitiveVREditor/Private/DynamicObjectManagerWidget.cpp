@@ -356,7 +356,7 @@ EVisibility SDynamicObjectManagerWidget::GetDuplicateDyanmicObjectVisibility() c
 FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 {
 	//popup asking if meshes should be exported too
-	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export the selected Dynamic Object meshes before uploading to Scene Explorer?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
+	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export all Dynamic Object meshes before uploading to Scene Explorer?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
 	Info.ConfirmText = LOCTEXT("Yes", "Yes");
 	Info.CancelText = LOCTEXT("No", "No");
 	Info.CheckBoxText = FText();
@@ -372,7 +372,7 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 		}
 	}
 
-	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload the selected Dynamic Object to Scene Explorer?"), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
+	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload all Dynamic Object to Scene Explorer?"), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
 	Info2.ConfirmText = LOCTEXT("Yes", "Yes");
 	Info2.CancelText = LOCTEXT("No", "No");
 	Info2.CheckBoxText = FText();
@@ -423,22 +423,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 
 	if (result == FSuppressableWarningDialog::EResult::Confirm)
 	{
-		//export
-		TArray<TSharedPtr<FDynamicData>> dynamicData;
-
-		for (auto& elem : selected)
-		{
-			//if files dont exist, export first
-			FString path = FCognitiveEditorTools::GetInstance()->GetDynamicsExportDirectory() + "/" + elem->MeshName + "/" + elem->MeshName;
-			FString gltfpath = path + ".gltf";
-			if (!FPaths::FileExists(*gltfpath))
-			{
-				//not exported
-				dynamicData.Add(elem);
-			}
-		}
-
-		FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportDynamicData(dynamicData);
+		FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportDynamicData(selected);
 		if (fph.IsValid())
 		{
 			FPlatformProcess::WaitForProc(fph);

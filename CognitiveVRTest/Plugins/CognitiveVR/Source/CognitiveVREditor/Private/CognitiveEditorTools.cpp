@@ -358,6 +358,9 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 	TMap<FString, TArray< UStaticMeshComponent*>> BakeExportMaterials;
 	TMap<FString, TArray< USkeletalMeshComponent*>> BakeExportSkeletonMaterials;
 
+	//used to check that export popup was confirmed, rather than canceled, and there are exported files for blender to work on
+	int32 RawExportFilesFound = 0;
+
 	for (int32 i = 0; i < exportObjects.Num(); i++)
 	{
 		GEditor->SelectNone(false, true, false);
@@ -455,16 +458,25 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 		//export to obj skips skeletal fbx?
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
-
 		GUnrealEd->ExportMap(GWorld, *tempObject, true);
-		//FEditorFileUtils::Export(true);
-
+		
+		//reset dynamic back to original transform
 		exportObjects[i]->GetOwner()->SetActorLocation(originalLocation);
 		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
 		exportObjects[i]->GetOwner()->SetActorScale3D(originalScale);
 
+		//check that files were actually exported
+		if (PlatformFile.FileExists(*tempObject))
+		{
+			RawExportFilesFound++;
+		}
+		else
+		{
+			//don't export screenshots or save materials unless export popup was confirmed
+			continue;
+		}
+
 		//bake + export materials
-		//if (skeletalMeshes.Num() > meshes.Num())
 		if (skeletalMeshes.Num() > 0)
 		{
 			BakeExportSkeletonMaterials.Add(exportObjects[i]->MeshName, skeletalMeshes);
@@ -512,10 +524,15 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		}
 	}
 
-	GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
+	if (RawExportFilesFound == 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray Cancelled mesh export"));
+		return fph;
+	}
 
 	if (ActorsExported > 0)
 	{
+		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
 		fph = ConvertDynamicsToGLTF(DynamicMeshNames);
 		FindAllSubDirectoryNames();
 	}
@@ -2699,6 +2716,14 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
 	GEditor->ExportMap(tempworld, *ExportedSceneFile2, true);
 
+	//check that the map was actually exported and generated temporary files
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	if (!PlatformFile.FileExists(*ExportedSceneFile2))
+	{
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene Cancelled scene geometry export"));
+		return;
+	}
+
 	//export materials
 	TArray< UStaticMeshComponent*> sceneMeshes;
 
@@ -2744,7 +2769,32 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	//should happen after blender finishes/next button is pressed
 	FString fullPath = escapedOutPath + "/debug.log";
 	FString fileContents = BuildDebugFileContents();
-	bool success = FFileHelper::SaveStringToFile(fileContents, *fullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+	FFileHelper::SaveStringToFile(fileContents, *fullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+}
+
+void FCognitiveEditorTools::GenerateSettingsJsonFile()
+{
+	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
+	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
+
+	//create settings.json
+	FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(COGNITIVEVR_SDK_VERSION) + "\",\"sceneName\":\"" + GetCurrentSceneName() + "\"}";
+	FString settingsFullPath = escapedOutPath + "/settings.json";
+	bool writeSettingsJsonSuccess = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+	if (writeSettingsJsonSuccess == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene unable to save settings.json"));
+	}
+}
+
+bool FCognitiveEditorTools::HasSettingsJsonFile() const
+{
+	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
+	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
+	FString settingsFullPath = escapedOutPath + "/settings.json";
+
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	return PlatformFile.FileExists(*settingsFullPath);
 }
 
 FProcHandle FCognitiveEditorTools::ConvertSceneToGLTF()
@@ -2816,6 +2866,13 @@ void FCognitiveEditorTools::WizardUpload()
 	WizardUploading = true;
 	WizardUploadError = "";
 	WizardUploadResponseCode = 0;
+
+	if (!HasSettingsJsonFile())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorToolsCustomization::WizardUpload settings.json file missing! Creating for current scene"));
+		GenerateSettingsJsonFile();
+	}
+
 	UploadScene();
 }
 

@@ -255,7 +255,7 @@ public:
 	}
 	FReply SelectBaseExportDirectory();
 
-	FString GetCurrentSceneName()
+	FString GetCurrentSceneName() const
 	{
 		UWorld* myworld = GWorld->GetWorld();
 
@@ -426,6 +426,9 @@ public:
 	//build materiallist.txt
 	//run python script
 	void ExportScene(TArray<AActor*> actorsToExport);
+
+	void GenerateSettingsJsonFile();
+	bool HasSettingsJsonFile() const;
 
 	//opens blender and run python script. returns process to do stuff after blender has finished
 	FProcHandle ConvertSceneToGLTF();
