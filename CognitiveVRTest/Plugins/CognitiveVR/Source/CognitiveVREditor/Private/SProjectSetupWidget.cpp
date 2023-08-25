@@ -63,7 +63,7 @@ void SProjectSetupWidget::GetApplicationKeyResponse(FHttpRequestPtr Request, FHt
 		return;
 	}
 
-	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("UpdateApplicationKeyBody", "Do you want to use the Application Key available from the Dashboard?"), LOCTEXT("UpdateApplicationKeyTitle", "Found Application Key"), "Cognitive3dApplicationKey");
+	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("UpdateApplicationKeyBody", "We recommend using the Application Key available from the Dashboard."), LOCTEXT("UpdateApplicationKeyTitle", "Found Application Key"), "Cognitive3dApplicationKey");
 	Info.ConfirmText = LOCTEXT("Yes", "Yes");
 	Info.CancelText = LOCTEXT("No", "No");
 	Info.CheckBoxText = FText();
@@ -260,7 +260,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 					[
 						SNew(STextBlock)
 						.Visibility(this, &SProjectSetupWidget::IsDevKeyVisible)
-						.Text(FText::FromString("Developer Key"))
+						.Text(FText::FromString("Developer Key\nThis key is secret and should be kept safe, make sure not to commit to version control"))
 					]
 				]
 				+ SHorizontalBox::Slot()
@@ -328,7 +328,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 					[
 						SNew(STextBlock)
 						.Visibility(this, &SProjectSetupWidget::IsOrganizationDetailsVisible)
-						.Text(FText::FromString("Application Key"))
+						.Text(FText::FromString("Application Key\nThis key identifies and authorizes the session data being uploaded to your project"))
 					]
 				]
 
@@ -375,7 +375,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
 				.Justification(ETextJustify::Center)
 				.AutoWrapText(true)
-				.Text(FText::FromString("When uploading your level to the dashboard, we use Blender to automatically prepare the scene.\nThis includes converting exported images to .pngs and reducing the polygon count of large meshes.\n\nWe also need a temporary Export Directory to save Unreal files to while we process them."))
+				.Text(FText::FromString("When uploading your level to the dashboard, we use Blender to automatically prepare the scene.\nThis includes converting exported images to .pngs\n\nWe also need a temporary Export Directory to save Unreal files to while we process them."))
 			]
 
 			+ SVerticalBox::Slot()
@@ -387,7 +387,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				SNew(STextBlock)
 				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("Blender is free and open source."))
+				.Text(FText::FromString("First, download Blender using the link below. Blender is free and open source."))
 			]
 
 			+ SVerticalBox::Slot()
@@ -411,6 +411,16 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenURL,FString("https://www.blender.org"))
 					]
 				]
+			]
+			+ SVerticalBox::Slot()
+			.VAlign(VAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("Second, you will need to create a temporary directory to store the exported files."))
 			]
 
 			+ SVerticalBox::Slot()
@@ -616,7 +626,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SProjectSetupWidget::IsCompleteVisible)
 				.Justification(ETextJustify::Center)
 				.AutoWrapText(true)
-				.Text(FText::FromString("The project settings are complete. Next you'll be guided to upload a scene to give context to the data you record."))
+				.Text(FText::FromString("The project settings are complete. Next you'll be guided to setup a scene to export and upload its geometry, which will give context to the runtime data you record."))
 			]
 
 			+ SVerticalBox::Slot()
@@ -650,7 +660,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SProjectSetupWidget::IsCompleteVisible)
 				.Justification(ETextJustify::Center)
 				.AutoWrapText(true)
-				.Text(FText::FromString("Alternatively, you can use Dynamic Object components to identify key actors in your experience."))
+				.Text(FText::FromString("Alternatively, you can use Dynamic Object components to identify key actors in your experience. Scene geometry will be exported later on as well"))
 			]
 
 			+ SVerticalBox::Slot()

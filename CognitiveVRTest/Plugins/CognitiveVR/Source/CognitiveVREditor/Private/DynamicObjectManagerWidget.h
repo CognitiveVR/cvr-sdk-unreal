@@ -65,6 +65,9 @@ public:
 	FText UploadSelectedText() const;
 	FText GetSceneText() const;
 
+	FText UploadSelectedMeshesTooltip() const;
+	FText UploadAllMeshesTooltip() const;
+
 	//static so its easier to set content from response without getting a reference to this window. especially for updating the sub-widgets!
 	static TArray<FDashboardObject> dashboardObjects;
 	void GetDashboardManifest();

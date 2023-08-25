@@ -540,7 +540,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.AutoWrapText(true)
 				.DecoratorStyleSet(&FEditorStyle::Get())
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Upload a New Level</>"))
+				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Upload a New Level to the Dashboard</>"))
 			]
 			
 			+ SVerticalBox::Slot() //upload number of dynamic objects to scene
@@ -553,7 +553,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.DecoratorStyleSet(&FEditorStyle::Get())
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Upload a New Version of this Level</>. This will archive the previous version of this level."))
+				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Upload a New Version of this Level to the Dashboard</>. This will archive the previous version of this level."))
 			]
 
 			+SVerticalBox::Slot()
@@ -579,17 +579,30 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			[
 				SNew(SBox)
 				.WidthOverride(256)
-				.HeightOverride(32)
+				.HeightOverride(40)
 				.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 				[
 					SNew(SButton)
-					.Text(FText::FromString("Take Screenshot From Current View"))
+					.HAlign(HAlign_Center)
+					.VAlign(VAlign_Center)
+					.Text(FText::FromString("Take Screenshot From Current View to set \na Dashboard Thumbnail"))
 					.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 					.OnClicked(this, &SSceneSetupWidget::TakeScreenshot)
 				]
 			]
 
-			+ SVerticalBox::Slot() //upload number of dynamic objects to scene
+			+ SVerticalBox::Slot() //upload scene geometry to scene
+			.HAlign(HAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, 0)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
+				.AutoWrapText(true)
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("The Scene Geometry"))
+			]
+			+ SVerticalBox::Slot() //upload scene geometry to scene
 			.HAlign(HAlign_Center)
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
@@ -604,6 +617,17 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			+ SVerticalBox::Slot() //upload number of dynamic objects to scene
 			.HAlign(HAlign_Center)
 			.AutoHeight()
+			.Padding(0, 0, 0, 0)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
+				.AutoWrapText(true)
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("Dynamic Object Meshes"))
+			]
+			+ SVerticalBox::Slot() //upload scene geometry to scene
+			.HAlign(HAlign_Center)
+			.AutoHeight()
 			.Padding(0, 0, 0, padding)
 			[
 				SNew(STextBlock)
@@ -613,7 +637,18 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Text(this, &SSceneSetupWidget::GetDynamicObjectCountToUploadText)
 			]
 
-			+ SVerticalBox::Slot() //upload number of dynamic objects to scene
+			+ SVerticalBox::Slot() //upload thumbnail to scene
+			.HAlign(HAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, 0)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::UploadThumbnailTextVisibility)
+				.AutoWrapText(true)
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("Screenshot"))
+			]
+			+ SVerticalBox::Slot() //upload scene geometry to scene
 			.HAlign(HAlign_Center)
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
@@ -1262,7 +1297,7 @@ FText SSceneSetupWidget::GetHeaderTitle() const
 	}
 	if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
 	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 4 - UPLOAD</>");
+		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 4 - UPLOAD TO DASHBOARD</>");
 	}
 	if (CurrentPageEnum == ESceneSetupPage::UploadProgress)
 	{

@@ -275,6 +275,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 						SNew(SButton)
 						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadSelectedEnabled)
 						.Text_Raw(this, &SDynamicObjectManagerWidget::UploadSelectedText)
+						.ToolTipText(this, &SDynamicObjectManagerWidget::UploadSelectedMeshesTooltip)
 						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::UploadSelectedDynamicObjects)
 					]
 				]
@@ -287,6 +288,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 						SNew(SButton)
 						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadAllEnabled)
 						.Text(FText::FromString("Upload All Meshes"))
+						.ToolTipText(this, &SDynamicObjectManagerWidget::UploadAllMeshesTooltip)
 						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::UploadAllDynamicObjects)
 					]
 				]
@@ -480,6 +482,28 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 	}
 
 	return FReply::Handled();
+}
+
+FText SDynamicObjectManagerWidget::UploadSelectedMeshesTooltip() const
+{
+	
+	if (IsUploadSelectedEnabled())
+	{
+		return FText::FromString("");
+	}
+	
+	return FText::FromString("Must export meshes first to upload");
+}
+
+FText SDynamicObjectManagerWidget::UploadAllMeshesTooltip() const
+{
+	
+	if (IsUploadAllEnabled())
+	{
+		return FText::FromString("");
+	}
+	
+	return FText::FromString("Must export meshes first to upload");
 }
 
 bool SDynamicObjectManagerWidget::IsUploadAllEnabled() const
