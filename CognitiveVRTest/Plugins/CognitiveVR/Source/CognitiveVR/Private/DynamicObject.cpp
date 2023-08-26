@@ -220,8 +220,8 @@ void UDynamicObject::Initialize()
 	//scene id must be valid to send
 
 	//scene component
-	LastPosition = GetComponentLocation();
-	LastForward = GetComponentTransform().TransformVector(FVector::ForwardVector);
+	LastPosition = GetAttachParent()->GetComponentLocation();
+	LastForward = GetAttachParent()->GetComponentTransform().TransformVector(FVector::ForwardVector);
 	LastScale = FVector(1, 1, 1);
 
 	if (IsController)
@@ -328,7 +328,7 @@ void UDynamicObject::Initialize()
 	}
 
 	bool hasScaleChanged = true;
-	if (FMath::Abs(LastScale.Size() - GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+	if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
 	{
 		hasScaleChanged = true;
 	}
@@ -363,14 +363,14 @@ void UDynamicObject::UpdateSyncWithPlayer()
 
 	bool hasScaleChanged = false;
 
-	if (FMath::Abs(LastScale.Size() - GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+	if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
 	{
 		hasScaleChanged = true;
 	}
 
 	if (!hasScaleChanged)
 	{
-		if ((LastPosition - GetComponentLocation()).Size() > PositionThreshold)
+		if ((LastPosition - GetAttachParent()->GetComponentLocation()).Size() > PositionThreshold)
 		{
 			//moved
 		}
@@ -386,11 +386,11 @@ void UDynamicObject::UpdateSyncWithPlayer()
 	}
 
 	//scene component
-	LastPosition = GetComponentLocation();
+	LastPosition = GetAttachParent()->GetComponentLocation();
 	LastForward = currentForward;
 	if (hasScaleChanged)
 	{
-		LastScale = GetComponentTransform().GetScale3D();
+		LastScale = GetAttachParent()->GetComponentScale();
 	}
 
 	FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
@@ -421,14 +421,14 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 		bool hasScaleChanged = false;
 
-		if (FMath::Abs(LastScale.Size() - GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+		if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
 		{
 			hasScaleChanged = true;
 		}
 
 		if (!hasScaleChanged)
 		{
-			if ((LastPosition - GetComponentLocation()).Size() > PositionThreshold)
+			if ((LastPosition - GetAttachParent()->GetComponentLocation()).Size() > PositionThreshold)
 			{
 				//moved
 			}
@@ -444,11 +444,11 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		}
 
 		//scene component
-		LastPosition = GetComponentLocation();
+		LastPosition = GetAttachParent()->GetComponentLocation();
 		LastForward = currentForward;
 		if (hasScaleChanged)
 		{
-			LastScale = GetComponentTransform().GetScale3D();
+			LastScale = GetAttachParent()->GetComponentScale();
 		}
 
 		FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
@@ -516,16 +516,16 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 
 	snapshot.timestamp = ts;
 	snapshot.id = ObjectID->Id;
-	snapshot.position = FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y);
+	snapshot.position = FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y);
 
 	if (hasChangedScale)
 	{
 		snapshot.hasScaleChanged = true;
-		snapshot.scale = GetComponentTransform().GetScale3D();
+		snapshot.scale = GetAttachParent()->GetComponentScale();
 	}
 
 	FQuat quat;
-	FRotator rot = GetComponentRotation();
+	FRotator rot = GetAttachParent()->GetComponentRotation();
 	quat = rot.Quaternion();
 
 	snapshot.rotation = FQuat(quat.X, quat.Z, quat.Y, quat.W);
@@ -588,7 +588,7 @@ void UDynamicObject::BeginEngagementId(FString parentDynamicObjectId, FString en
 	}
 	else
 	{
-		Engagements[UniqueEngagementId]->SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
+		Engagements[UniqueEngagementId]->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));
 		Engagements[UniqueEngagementId]->Send();
 		Engagements[UniqueEngagementId] = ce;
 	}
@@ -612,7 +612,7 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 
 	if (Engagements.Contains(UniqueEngagementId))
 	{
-		Engagements[UniqueEngagementId]->SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
+		Engagements[UniqueEngagementId]->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));
 		Engagements[UniqueEngagementId]->Send();
 		Engagements.Remove(UniqueEngagementId);
 	}
@@ -622,7 +622,7 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 		UCustomEvent* ce = NewObject<UCustomEvent>(this);
 		ce->SetCategory(engagementName);
 		ce->SetDynamicObject(parentDynamicObjectId);
-		ce->SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
+		ce->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));
 		ce->Send();
 	}
 }
@@ -694,7 +694,7 @@ void UDynamicObject::CleanupDynamicObject()
 		}
 		if (Elem.Value->GetDynamicId() == ObjectID->Id)
 		{
-			Elem.Value->SetPosition(FVector(-GetComponentLocation().X, GetComponentLocation().Z, GetComponentLocation().Y));
+			Elem.Value->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));
 			Elem.Value->Send();
 		}
 	}
