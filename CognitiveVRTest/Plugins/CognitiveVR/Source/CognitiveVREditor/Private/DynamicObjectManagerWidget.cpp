@@ -146,7 +146,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					.Visibility(this, &SDynamicObjectManagerWidget::SceneNotUploadedVisibility)
 					.AutoWrapText(true)
 					.Justification(ETextJustify::Center)
-					.Text(FText::FromString("This window is also accessible from the Tools menu.\n\nYou can review and upload Dynamic Objects from here.\n\n You will be prompted to export mesh geometry when you continue to the Scene Setup Window."))
+					.Text(FText::FromString("This window is also accessible from the Cognitive3D menu.\n\nYou can review and upload Dynamic Objects from here.\n\n You will be prompted to export mesh geometry when you continue to the Scene Setup Window."))
 				]
 			]
 			+ SVerticalBox::Slot() //button to scene setup window

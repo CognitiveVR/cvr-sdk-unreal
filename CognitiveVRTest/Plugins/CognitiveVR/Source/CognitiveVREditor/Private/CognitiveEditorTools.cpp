@@ -458,6 +458,11 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 		//export to obj skips skeletal fbx?
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
+		FSuppressableWarningDialog::FSetupInfo ExportSettingsInfo(LOCTEXT("ExportSettingsBody", "The recommended settings for exporting meshes is to disable Level of Detail and disable Collision"), LOCTEXT("ExportSettingsTitle", "Recommended Export Settings"), "ExportSelectedDynamicsBody");
+		ExportSettingsInfo.ConfirmText = LOCTEXT("Yes", "Yes");
+		ExportSettingsInfo.CheckBoxText = FText::FromString("Don't show again");
+		FSuppressableWarningDialog ExportSelectedDynamicMeshes(ExportSettingsInfo);
+		ExportSelectedDynamicMeshes.ShowModal();
 		GUnrealEd->ExportMap(GWorld, *tempObject, true);
 		
 		//reset dynamic back to original transform
@@ -2714,6 +2719,11 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 
 	//export scene
 	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
+	FSuppressableWarningDialog::FSetupInfo ExportSettingsInfo(LOCTEXT("ExportSettingsBody", "The recommended settings for exporting meshes is to disable Level of Detail and disable Collision"), LOCTEXT("ExportSettingsTitle", "Recommended Export Settings"), "ExportSelectedDynamicsBody");
+	ExportSettingsInfo.ConfirmText = LOCTEXT("Yes", "Yes");
+	ExportSettingsInfo.CheckBoxText = FText::FromString("Don't show again");
+	FSuppressableWarningDialog ExportSelectedDynamicMeshes(ExportSettingsInfo);
+	ExportSelectedDynamicMeshes.ShowModal();
 	GEditor->ExportMap(tempworld, *ExportedSceneFile2, true);
 
 	//check that the map was actually exported and generated temporary files

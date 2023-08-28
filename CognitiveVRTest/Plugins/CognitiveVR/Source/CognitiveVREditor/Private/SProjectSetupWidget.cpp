@@ -407,6 +407,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 					[
 						SNew(SButton)
 						.HAlign(HAlign_Center)
+						.ContentPadding(2.0f)
 						.Text(FText::FromString("www.blender.org"))
 						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenURL,FString("https://www.blender.org"))
 					]
@@ -1024,12 +1025,14 @@ void SProjectSetupWidget::OnExportPathChanged(const FText& Text)
 
 FReply SProjectSetupWidget::OpenSceneSetupWindow()
 {
+	FCognitiveVREditorModule::CloseProjectSetupWindow();
 	FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab();
 	return FReply::Handled();
 }
 
 FReply SProjectSetupWidget::OpenDynamicObjectWindow()
 {
+	FCognitiveVREditorModule::CloseProjectSetupWindow();
 	FCognitiveVREditorModule::SpawnCognitiveDynamicTab();
 	return FReply::Handled();
 }
