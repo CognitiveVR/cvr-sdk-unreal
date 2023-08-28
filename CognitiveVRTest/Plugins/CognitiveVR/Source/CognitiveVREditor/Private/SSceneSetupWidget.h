@@ -107,6 +107,8 @@ public:
 
 	TSharedPtr<SImage> ScreenshotImage;
 	int32 CountDynamicObjectsInScene() const;
+	EVisibility HasExportedSceneTextVisibility() const;
+	FText ExportedSceneText() const;
 
 	FReply SelectAll();
 

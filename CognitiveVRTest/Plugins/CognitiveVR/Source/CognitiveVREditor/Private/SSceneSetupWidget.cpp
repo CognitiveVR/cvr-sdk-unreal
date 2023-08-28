@@ -526,6 +526,18 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SSceneSetupWidget::HasExportedSceneTextVisibility)
+				.AutoWrapText(true)
+				.Justification(ETextJustify::Center)
+				.Text(this, &SSceneSetupWidget::ExportedSceneText)
+			]
+
 #pragma endregion
 
 #pragma region "upload screen"
@@ -596,11 +608,12 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.AutoHeight()
 			.Padding(0, 0, 0, 0)
 			[
-				SNew(STextBlock)
+				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 				.AutoWrapText(true)
+				.DecoratorStyleSet(&FEditorStyle::Get())
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("The Scene Geometry"))
+				.Text(FText::FromString("<RichTextBlock.BoldHighlight>The Scene Geometry</>"))
 			]
 			+ SVerticalBox::Slot() //upload scene geometry to scene
 			.HAlign(HAlign_Center)
@@ -619,11 +632,12 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.AutoHeight()
 			.Padding(0, 0, 0, 0)
 			[
-				SNew(STextBlock)
+				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 				.AutoWrapText(true)
+				.DecoratorStyleSet(&FEditorStyle::Get())
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("Dynamic Object Meshes"))
+				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Dynamic Object Meshes</>"))
 			]
 			+ SVerticalBox::Slot() //upload scene geometry to scene
 			.HAlign(HAlign_Center)
@@ -642,11 +656,12 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.AutoHeight()
 			.Padding(0, 0, 0, 0)
 			[
-				SNew(STextBlock)
+				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::UploadThumbnailTextVisibility)
 				.AutoWrapText(true)
+				.DecoratorStyleSet(&FEditorStyle::Get())
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("Screenshot"))
+				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Screenshot</>"))
 			]
 			+ SVerticalBox::Slot() //upload scene geometry to scene
 			.HAlign(HAlign_Center)
@@ -657,7 +672,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::UploadThumbnailTextVisibility)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("Upload Screenshot"))
+				.Text(FText::FromString("Level Viewport Screenshot"))
 			]
 
 #pragma endregion
@@ -1265,6 +1280,35 @@ int32 SSceneSetupWidget::CountDynamicObjectsInScene() const
 	return dynamics.Num();
 }
 
+FText SSceneSetupWidget::ExportedSceneText() const
+{
+	int32 fileCount = FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount();
+	if (fileCount == 0)
+	{
+		return FText::FromString("No files were exported");
+	}
+	else
+	{
+		return FText::FromString("Scene has been exported with a total of " + FString::FromInt(fileCount) + " files");
+	}
+}
+
+EVisibility SSceneSetupWidget::HasExportedSceneTextVisibility() const
+{
+	if (CurrentPageEnum != ESceneSetupPage::Export)
+	{
+		return EVisibility::Collapsed;
+	}
+	if (FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount() == 0)
+	{
+		return EVisibility::Collapsed;
+	}
+	else
+	{
+		return EVisibility::Visible;
+	}
+}
+
 EVisibility SSceneSetupWidget::UploadErrorVisibility() const
 {
 	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 200) { return EVisibility::Collapsed; }
@@ -1586,12 +1630,14 @@ FText SSceneSetupWidget::GetDynamicObjectCountToUploadText() const
 FText SSceneSetupWidget::GetSceneVersionToUploadText() const
 {
 	auto sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
+	int32 fileCount = FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount();
 	if (sceneData.IsValid())
 	{
-		return FText::FromString("Upload Scene Geometry (Version " + FString::FromInt(sceneData->VersionNumber+1) + ")");
+		
+		return FText::FromString("Upload " +FString::FromInt(fileCount)+" files for Scene Geometry (Version " + FString::FromInt(sceneData->VersionNumber+1) + ")");
 	}
 	else
 	{
-		return FText::FromString("Upload Scene Geometry (Version 1)");
+		return FText::FromString("Upload " + FString::FromInt(fileCount) + " files for Scene Geometry (Version 1)");
 	}
 }
