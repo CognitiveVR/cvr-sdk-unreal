@@ -125,10 +125,10 @@ void UDynamicObject::TryGenerateMeshName()
 		UActorComponent* actorSkeletalComponent = GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass());
 		if (actorSkeletalComponent != NULL)
 		{
-			USkeletalMeshComponent* staticmeshComponent = Cast<USkeletalMeshComponent>(actorSkeletalComponent);
-			if (staticmeshComponent != NULL && staticmeshComponent->SkeletalMesh != NULL)
+			USkeletalMeshComponent* skeletalmeshComponent = Cast<USkeletalMeshComponent>(actorSkeletalComponent);
+			if (skeletalmeshComponent != NULL && skeletalmeshComponent->SkeletalMesh != NULL)
 			{
-				MeshName = staticmeshComponent->GetName();
+				MeshName = skeletalmeshComponent->SkeletalMesh->GetName();
 			}
 		}
 	}

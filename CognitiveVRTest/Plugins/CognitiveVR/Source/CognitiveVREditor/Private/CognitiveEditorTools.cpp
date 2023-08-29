@@ -1,7 +1,10 @@
 
+
 #include "CognitiveEditorTools.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
+
+
 
 //TSharedRef<FCognitiveEditorTools> ToolsInstance;
 FCognitiveEditorTools* FCognitiveEditorTools::CognitiveEditorToolsInstance;
@@ -393,6 +396,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		TArray<UActorComponent*> actorSkeletalComponents;
 		exportObjects[i]->GetOwner()->GetComponents(USkeletalMeshComponent::StaticClass(), actorSkeletalComponents);
 		TArray< USkeletalMeshComponent*> skeletalMeshes;
+		TArray<UMeshComponent*> meshComponentsFromSkel;
 		for (int32 j = 0; j < actorSkeletalComponents.Num(); j++)
 		{
 			USkeletalMeshComponent* mesh = Cast<USkeletalMeshComponent>(actorSkeletalComponents[j]);
@@ -409,6 +413,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			}
 
 			skeletalMeshes.Add(mesh);
+			meshComponentsFromSkel.Add(mesh);
 		}
 
 		DynamicMeshNames.Add(exportObjects[i]->MeshName);
@@ -444,14 +449,91 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			PlatformFile.CreateDirectory(*justDirectory);
 		}
 
+		//after confirming the meshes and creating the directories, select this actor we are iterating on and increment actors exported for later
 		GEditor->SelectActor(exportObjects[i]->GetOwner(), true, false, true);
 		ActorsExported++;
+
+		/*
+			check if skeletal mesh, if so:
+			duplicate the actor with the skeletal mesh
+			newly duplicated actor will be selected only
+			convert new actor skeletal mesh to static mesh
+		*/
+
+		TArray<FAssetData> TempStaticMeshes;
+
+		if (skeletalMeshes.Num() > 0)
+		{
+			//get the selected actor that we will duplicate
+			USelection* SelectedActors = GEditor->GetSelectedActors();
+			TArray<AActor*> ActorObjs;
+			SelectedActors->GetSelectedObjects(ActorObjs);
+
+			//duplicate the selected actor
+			GEditor->edactDuplicateSelected(ActorObjs[0]->GetLevel(), false);
+
+			//UE selects only the duplicated actor after duplication
+
+			SelectedActors = GEditor->GetSelectedActors();
+			SelectedActors->GetSelectedObjects(ActorObjs);
+
+
+			//setup temp meshes package
+			UPackage* NewPackageName = CreatePackage(TEXT("/Game/TempMesh"));
+
+			//take the static meshes that we set up earlier and use them to create a static mesh
+			UStaticMesh* tmpStatMesh = MeshUtilities.ConvertMeshesToStaticMesh(meshComponentsFromSkel, exportObjects[i]->GetOwner()->GetTransform(), NewPackageName->GetName());
+
+
+			//create a new static mesh component for the currently selected actor
+			FName NewCompName = TEXT("StaticMeshComponent");
+			UStaticMeshComponent* NewComp = NewObject<UStaticMeshComponent>(ActorObjs[0], NewCompName);
+			//register the component, attach it to the root component of the actor, and set the static mesh
+			NewComp->RegisterComponent();
+			NewComp->AttachToComponent(exportObjects[i]->GetAttachParent(), FAttachmentTransformRules::KeepRelativeTransform);
+			NewComp->SetStaticMesh(tmpStatMesh);
+			//get the children of the skeletal mesh component and prepare to move them over to the new static mesh component
+			TArray<USceneComponent*> childrenToBeMoved;
+			USkeletalMeshComponent* skelToBeRemoved = ActorObjs[0]->FindComponentByClass<USkeletalMeshComponent>();
+			skelToBeRemoved->GetChildrenComponents(true, childrenToBeMoved);
+			for (int k = 0; k < childrenToBeMoved.Num(); k++)
+			{
+				//make sure we do not move our newly created static mesh component
+				if (childrenToBeMoved[k]->GetName() != NewCompName.ToString())
+				{
+					childrenToBeMoved[k]->AttachToComponent(NewComp, FAttachmentTransformRules::KeepRelativeTransform);
+				}
+			}
+			//delete the skeletal mesh component
+			skelToBeRemoved->DestroyComponent(false);
+			//save the meshes for deletion later
+			TempStaticMeshes.Add(tmpStatMesh);
+		}
+
+		
 
 		//export to obj skips skeletal fbx?
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
 
+		//exports the currently selected actor(s)
 		GUnrealEd->ExportMap(GWorld, *tempObject, true);
 		//FEditorFileUtils::Export(true);
+
+		//after export, if skeletal mesh, clean up duplicate actor
+		if (skeletalMeshes.Num() > 0)
+		{
+			GUnrealEd->edactDeleteSelected(GWorld, false, false, false);
+
+			//clean up static mesh
+			if (TempStaticMeshes.Num() > 0)
+			{
+				ObjectTools::DeleteAssets(TempStaticMeshes, false);
+			}
+			
+		}
+
+		
+		
 
 		exportObjects[i]->GetOwner()->SetActorLocation(originalLocation);
 		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);

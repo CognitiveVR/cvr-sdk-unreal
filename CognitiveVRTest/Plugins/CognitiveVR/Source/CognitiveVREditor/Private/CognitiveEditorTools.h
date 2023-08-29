@@ -1,5 +1,7 @@
 #pragma once
 
+#include "CoreMinimal.h"
+
 #include "CognitiveVRSettings.h"
 #include "CognitiveEditorData.h"
 #include "IDetailCustomization.h"
@@ -24,6 +26,9 @@
 #include "MaterialUtilities.h"
 #include "MaterialBakingStructures.h"
 #include "IMaterialBakingModule.h"
+#include "MeshUtilities.h"
+#include "UObject/Object.h"
+//#include "Subsystems/EditorActorSubsystem.h"
 //#include "MaterialBakingModule.h"
 #include "MaterialOptions.h"
 #include "DynamicObject.h"
@@ -418,6 +423,9 @@ public:
 
 	//opens blender and run python script. returns process to do stuff after blender has finished
 	FProcHandle ConvertSceneToGLTF();
+
+	IMeshUtilities& MeshUtilities = FModuleManager::Get().LoadModuleChecked<IMeshUtilities>("MeshUtilities");
+
 };
 
 
