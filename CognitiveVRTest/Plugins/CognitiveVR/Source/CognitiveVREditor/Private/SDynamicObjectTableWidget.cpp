@@ -142,6 +142,11 @@ FText SDynamicObjectTableWidget::ExportStatusText(TSharedPtr<FDynamicData> data)
 	return FText::FromString("none");
 }
 
+int32 SDynamicObjectTableWidget::GetSelectedDataCount()
+{
+	return TableViewWidget->GetNumItemsSelected();
+}
+
 void SDynamicTableItem::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
 {
 	Name = InArgs._Name;

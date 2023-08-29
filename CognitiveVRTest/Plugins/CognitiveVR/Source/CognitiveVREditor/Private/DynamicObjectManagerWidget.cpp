@@ -486,23 +486,19 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 
 FText SDynamicObjectManagerWidget::UploadSelectedMeshesTooltip() const
 {
-	
 	if (IsUploadSelectedEnabled())
 	{
 		return FText::FromString("");
 	}
-	
 	return FText::FromString("Must export meshes first to upload");
 }
 
 FText SDynamicObjectManagerWidget::UploadAllMeshesTooltip() const
 {
-	
 	if (IsUploadAllEnabled())
 	{
 		return FText::FromString("");
 	}
-	
 	return FText::FromString("Must export meshes first to upload");
 }
 
@@ -537,27 +533,9 @@ bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
 	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlenderAndExportDir()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
 	
-	auto tools = FCognitiveEditorTools::GetInstance();
-	for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
-	{
-		if (AActor* Actor = Cast<AActor>(*It))
-		{
-			//SelectionSetCache.Add(Actor);
-			UActorComponent* actorComponent = Actor->GetComponentByClass(UDynamicObject::StaticClass());
-			if (actorComponent == NULL)
-			{
-				continue;
-			}
-			UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
-			if (dynamicComponent == NULL)
-			{
-				continue;
-			}
-			return true;
-		}
-	}
-
-	return false;
+	//use the selection in the table, not in the scene
+	auto data = SceneDynamicObjectTable->GetSelectedDataCount();
+	return data > 0;
 }
 
 FText SDynamicObjectManagerWidget::UploadSelectedText() const

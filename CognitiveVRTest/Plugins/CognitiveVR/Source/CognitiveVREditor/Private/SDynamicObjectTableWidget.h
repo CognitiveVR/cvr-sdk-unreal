@@ -34,6 +34,7 @@ public:
 	void RefreshTable();
 
 	FText ExportStatusText(TSharedPtr<FDynamicData> data);	
+	int32 GetSelectedDataCount();
 };
 
 class SDynamicTableItem : public SMultiColumnTableRow< TSharedPtr<class FDynamicData> >
