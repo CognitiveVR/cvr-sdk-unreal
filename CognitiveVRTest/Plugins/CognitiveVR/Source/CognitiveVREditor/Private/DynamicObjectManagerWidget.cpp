@@ -368,10 +368,6 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 	if (result == FSuppressableWarningDialog::EResult::Confirm)
 	{
 		FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportAllDynamics();
-		if (fph.IsValid())
-		{
-			FPlatformProcess::WaitForProc(fph);
-		}
 	}
 
 	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload all Dynamic Object to Scene Explorer?"), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
