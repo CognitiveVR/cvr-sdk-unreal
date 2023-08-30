@@ -1,5 +1,7 @@
 #pragma once
 
+#include "CoreMinimal.h"
+
 #include "CognitiveVRSettings.h"
 #include "CognitiveEditorData.h"
 #include "IDetailCustomization.h"
@@ -25,7 +27,8 @@
 #include "MaterialUtilities.h"
 #include "MaterialBakingStructures.h"
 #include "IMaterialBakingModule.h"
-//#include "MaterialBakingModule.h"
+#include "MeshUtilities.h"
+#include "UObject/Object.h"
 #include "MaterialOptions.h"
 #include "DynamicObject.h"
 #include "GenericPlatformFile.h"
@@ -437,6 +440,7 @@ public:
 	FSlateBrush* BoxEmptyIcon;
 	const FSlateBrush* GetBoxCheckIcon() const;
 	FSlateBrush* BoxCheckIcon;
+	IMeshUtilities& MeshUtilities = FModuleManager::Get().LoadModuleChecked<IMeshUtilities>("MeshUtilities");
 };
 
 //used for uploading multiple dynamics at once
