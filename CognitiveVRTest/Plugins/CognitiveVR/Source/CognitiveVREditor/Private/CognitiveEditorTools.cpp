@@ -525,11 +525,9 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		ExportSettingsInfo.CheckBoxText = FText::FromString("Don't show again");
 		FSuppressableWarningDialog ExportSelectedDynamicMeshes(ExportSettingsInfo);
 		ExportSelectedDynamicMeshes.ShowModal();
-		GUnrealEd->ExportMap(GWorld, *tempObject, true);
-
+		
 		//exports the currently selected actor(s)
 		GUnrealEd->ExportMap(GWorld, *tempObject, true);
-		//FEditorFileUtils::Export(true);
 
 		//after export, if skeletal mesh, clean up duplicate actor
 		if (skeletalMeshes.Num() > 0)
@@ -541,7 +539,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			{
 				ObjectTools::DeleteAssets(TempStaticMeshes, false);
 			}
-			
 		}
 
 		//reset dynamic back to original transform
