@@ -11,7 +11,6 @@ TSharedRef<IDetailCustomization> UDynamicObjectComponentDetails::MakeInstance()
 
 void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& DetailLayout )
 {
-	//const TArray< TWeakObjectPtr<UObject> >& SelectedObjects = DetailLayout.GetSelectedObjects(); 4.18
 	const TArray< TWeakObjectPtr<UObject> >& SelectedObjects = DetailLayout.GetSelectedObjects();
 
 	for( int32 ObjectIndex = 0; ObjectIndex < SelectedObjects.Num(); ++ObjectIndex )
@@ -39,7 +38,7 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasOwnerAndExportDirAndName)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
-		.ToolTipText(FText::FromString("Export Directory must be set. See CognitiveVR Settings"))
+		.ToolTipText(this, &UDynamicObjectComponentDetails::GetExportTooltip)
 		.OnClicked(this, &UDynamicObjectComponentDetails::Export)
 		[
 			SNew( STextBlock )
@@ -55,10 +54,10 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 	[
 		SNew(SButton)
 		.ContentPadding(1)
-		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasOwnerAndExportDirAndName)
+		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasOwnerAndMeshExportDirAndName)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
-		.ToolTipText(FText::FromString("Export Directory must be set. See CognitiveVR Settings"))
+		.ToolTipText(this, &UDynamicObjectComponentDetails::GetScreenshotTooltip)
 		.OnClicked(this, &UDynamicObjectComponentDetails::TakeScreenshot)
 		[
 			SNew( STextBlock )
@@ -77,7 +76,7 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasExportAndValidSceneData)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
-		.ToolTipText(this,&UDynamicObjectComponentDetails::InvalidUploadText)
+		.ToolTipText(this,&UDynamicObjectComponentDetails::GetUploadTooltip)
 		.OnClicked(this, &UDynamicObjectComponentDetails::Upload)
 		[
 			SNew( STextBlock )
@@ -128,11 +127,6 @@ bool UDynamicObjectComponentDetails::HasOwner() const
 	return SelectedDynamicObject.Get() != NULL && SelectedDynamicObject.Get()->GetOwner() != NULL;
 }
 
-bool UDynamicObjectComponentDetails::HasOwnerAndExportDir() const
-{
-	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return false; }
-	return HasOwner();
-}
 bool UDynamicObjectComponentDetails::HasOwnerAndExportDirAndName() const
 {
 	if (!HasOwner()) { return false; }
@@ -140,26 +134,56 @@ bool UDynamicObjectComponentDetails::HasOwnerAndExportDirAndName() const
 	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return false; }
 	return true;
 }
-bool UDynamicObjectComponentDetails::HasExportAndValidSceneData() const
+
+bool UDynamicObjectComponentDetails::HasOwnerAndMeshExportDirAndName() const
 {
 	if (!HasOwner()) { return false; }
 	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return false; }
 	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return false; }
-	if (!FCognitiveEditorTools::GetInstance()->GetCurrentSceneData().IsValid()) { return false; }
+	if (!FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(SelectedDynamicObject.Get()->MeshName)) { return false; } //mesh directory exists
 	return true;
 }
-FText UDynamicObjectComponentDetails::InvalidUploadText() const
+
+bool UDynamicObjectComponentDetails::HasExportAndValidSceneData() const
 {
-	if (!HasOwner()) { return FText::FromString("No owner actor"); }
-	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return FText::FromString("No Export Directory set"); }
-	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return FText::FromString("Mesh Name is empty"); }
+	if (!HasOwner()) { return false; }
+	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return false; } //base export directory exists
+	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return false; } //mesh name is valid
+	if (!FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(SelectedDynamicObject.Get()->MeshName)) { return false; } //mesh directory exists
+	if (!FCognitiveEditorTools::GetInstance()->GetCurrentSceneData().IsValid()) { return false; } //scene is valid
+	return true;
+}
+
+FText UDynamicObjectComponentDetails::GetUploadTooltip() const
+{
+	if (!HasOwner()) { return FText::FromString(""); }
+	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return FText::FromString("Export Directory doesn't exist"); }
+	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return FText::FromString("MeshName should not be empty"); }
 	if (!FCognitiveEditorTools::GetInstance()->GetCurrentSceneData().IsValid()) { return FText::FromString("Scene Data is invalid"); }
-	return FText::FromString("Valid");
+	return FText::FromString("Upload the Dynamic Object Mesh to the current scene");
 }
 
 FText UDynamicObjectComponentDetails::HandSetupText() const
 {
 	return FText::FromString("This will configure the Dynamic Object for a specific hand. Make sure to select the Controller Type!");
+}
+
+FText UDynamicObjectComponentDetails::GetExportTooltip() const
+{
+	if (!HasOwner()) { return FText::FromString(""); }
+	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return FText::FromString("Export Directory doesn't exist"); } //base export directory exists
+	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return FText::FromString("MeshName should not be empty"); } //mesh name is valid
+	if (!FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(SelectedDynamicObject.Get()->MeshName)) { return FText::FromString("Export Directory doesn't exist"); } //mesh directory exists
+	return FText::FromString("Exports the Dynamic Object Mesh to a temporary folder");
+}
+
+FText UDynamicObjectComponentDetails::GetScreenshotTooltip() const
+{
+	if (!HasOwner()) { return FText::FromString(""); }
+	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return FText::FromString("Export Directory doesn't exist"); } //base export directory exists
+	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return FText::FromString("MeshName should not be empty"); } //mesh name is valid
+	if (!FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(SelectedDynamicObject.Get()->MeshName)) { return FText::FromString("Export Directory doesn't exist"); } //mesh directory exists
+	return FText::FromString("Saves a screenshot of this Dynamic Object Mesh from the level viewport to a temporary folder");
 }
 
 FReply UDynamicObjectComponentDetails::SetRightHand()

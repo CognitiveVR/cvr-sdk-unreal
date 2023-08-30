@@ -246,7 +246,6 @@ void UDynamicObjectManager::SendData(bool copyDataToCache)
 
 	if (newManifest.Num() + snapshots.Num() == 0)
 	{
-		CognitiveLog::Info("UDynamicObjectManager::SendData no objects or data to send!");
 		return;
 	}
 

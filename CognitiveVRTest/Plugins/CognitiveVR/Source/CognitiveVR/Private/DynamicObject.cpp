@@ -15,25 +15,50 @@ UDynamicObject::UDynamicObject()
 #if WITH_EDITOR
 bool UDynamicObject::Modify(bool alwaysMarkDirty)
 {
-	//this may crash at startup while owner is not set
 	if (GetOwner() != NULL)
 	{
-		//owner may become 'unreachable' on scene changes
 		if (GetOwner()->IsUnreachable())
 		{
-			return false;
+			return Super::Modify(alwaysMarkDirty);
 		}
-
 		TryGenerateMeshName();
 		TryGenerateCustomId();
 		SetUniqueDynamicIds();
 	}
-	return false;
+	return Super::Modify(true);
+}
+
+void UDynamicObject::OnRegister()
+{
+	Super::OnRegister();
+
+	const UClass* ActorClass = GetOwner()->GetClass();
+	check(ActorClass != nullptr);
+
+	UBlueprint* bp = UBlueprint::GetBlueprintFromClass(ActorClass);
+	
+	if (bp != nullptr) //class has a blueprint - don't overwrite the dynamic object custom id
+	{
+		return;
+	}
+
+	if (GetOwner() != NULL)
+	{
+		if (GetOwner()->IsUnreachable())
+		{
+			return;
+		}
+		TryGenerateMeshName();
+		TryGenerateCustomId();
+		SetUniqueDynamicIds();
+	}
 }
 #endif
 
 void UDynamicObject::SetUniqueDynamicIds()
 {
+	if (GWorld == NULL) { return; }
+
 	//loop thorugh all dynamics in the scene
 	TArray<UDynamicObject*> dynamics;
 
