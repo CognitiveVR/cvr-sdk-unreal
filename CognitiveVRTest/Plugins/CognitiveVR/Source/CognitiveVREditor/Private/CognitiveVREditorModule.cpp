@@ -1,6 +1,9 @@
 
 
 #include "CognitiveVREditorModule.h"
+#include "C3DCommands.h"
+
+IMPLEMENT_MODULE(FCognitiveVREditorModule, CognitiveVREditor);
 
 //sets up customization for settings
 //adds scene setup window
@@ -8,274 +11,259 @@
 
 #define LOCTEXT_NAMESPACE "DemoTools"
 
-class FCognitiveVREditorModule : public IModuleInterface, IHasMenuExtensibility, IHasToolBarExtensibility
+TSharedPtr<FExtensibilityManager> FCognitiveVREditorModule::GetMenuExtensibilityManager()
 {
-public:
+	return MenuExtensibilityManager;
+}
 
-	//	FName SequenceRecorderTabName = FName("SequenceRecorder");
-		// IMoudleInterface interface
-		//virtual void StartupModule() override;
-		//virtual void ShutdownModule() override;
-		// End of IModuleInterface interface
+TSharedPtr<FExtensibilityManager> FCognitiveVREditorModule::GetToolBarExtensibilityManager()
+{
+	return ToolBarExtensibilityManager;
+}
 
-		//static void OnToolWindowClosed(const TSharedRef<SWindow>& Window, UBaseEditorTool* Instance);
+TSharedRef<SDockTab> CreateCognitiveSceneSetupTabArgs(const FSpawnTabArgs& SpawnTabArgs)
+{
+	return SNew(SDockTab)
+	.TabRole(ETabRole::NomadTab)
+	[
+		SNew(SSceneSetupWidget)
+	];
+}
 
-		//void AddMenuEntry(FMenuBuilder& MenuBuilder);
-		//void DisplayPopup();
-		//void SpawnSequenceRecorderTab(const FSpawnTabArgs& SpawnTabArgs);
+TSharedRef<SDockTab> CreateCognitiveProjectSetupTabArgs(const FSpawnTabArgs& SpawnTabArgs)
+{
+	return SNew(SDockTab)
+		.TabRole(ETabRole::NomadTab)
+		[
+			SNew(SProjectSetupWidget)
+		];
+}
 
-		/*static void HandleTestCommandExcute();
+TSharedRef<SDockTab> CreateCognitiveDynamicObjectTabArgs(const FSpawnTabArgs& SpawnTabArgs)
+{
+	return SNew(SDockTab)
+		.TabRole(ETabRole::NomadTab)
+		[
+			SNew(SDynamicObjectManagerWidget)
+		];
+}
 
-		static bool HandleTestCommandCanExcute();*/
-
-	//TSharedPtr<FUICommandList> CommandList;
-
-	//FCognitiveTools* CognitiveEditorTools;
-
-	FTickerDelegate TickDelegate;
-	FDelegateHandle TickDelegateHandle;
-
-	
-	//TODO CONSIDER do we need this for anything?
-	bool Tick(float deltatime)
-	{
-		return true;
-	}
-	
-	public:
-
-	//~ IHasMenuExtensibility interface
-
-	virtual TSharedPtr<FExtensibilityManager> GetMenuExtensibilityManager() override
-	{
-		return MenuExtensibilityManager;
-	}
-
-public:
-
-	//~ IHasToolBarExtensibility interface
-
-	virtual TSharedPtr<FExtensibilityManager> GetToolBarExtensibilityManager() override
-	{
-		return ToolBarExtensibilityManager;
-	}
-
-	virtual void StartupModule() override
-	{
-		
+void FCognitiveVREditorModule::StartupModule()
+{
 #if WITH_EDITOR
-		// Create the Extender that will add content to the menu
-		FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-		FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+	// Create the Extender that will add content to the menu
+	FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
+	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 
-		FString tempGateway;
-		GConfig->GetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), tempGateway, EngineIni);
+	FString tempGateway;
+	GConfig->GetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), tempGateway, EngineIni);
 
-		if (tempGateway.IsEmpty())
-		{
-			GLog->Log("CognitiveVRModule::StartupModule write defaults to ini");
-			FString defaultgateway = "data.cognitive3d.com";
-			FString trueString = "True";
-			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), *defaultgateway, EngineIni);
-			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("AutomaticallySetTrackingScene"), *trueString, EngineIni);
-
-			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("GazeBatchSize"), 64, EngineIni);
-			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("CustomEventBatchSize"), 64, EngineIni);
-			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("CustomEventAutoTimer"), 10, EngineIni);
-			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("DynamicDataLimit"), 64, EngineIni);
-			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("DynamicAutoTimer"), 10, EngineIni);
-			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SensorDataLimit"), 64, EngineIni);
-			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SensorAutoTimer"), 10, EngineIni);
-
-			GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-			GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-			GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-			GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-			
-			GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-			GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-			GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-			GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-
-			GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("EnableLocalCache"), *trueString, EngineIni);
-			GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("LocalCacheSize"), 100, EngineIni);
-		}
-		
-		FCognitiveEditorTools::Initialize();
-		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
-		TSharedPtr< FDynamicIdPoolAssetActions> action = MakeShared<FDynamicIdPoolAssetActions>();
-		AssetTools.RegisterAssetTypeActions(action.ToSharedRef());
-		GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, EngineIni);
-		GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, EngineIni);
-		GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
-		GConfig->GetString(TEXT("Analytics"), TEXT("BlenderPath"), FCognitiveEditorTools::GetInstance()->BlenderPath, EditorIni);
-		GConfig->GetString(TEXT("Analytics"), TEXT("ExportPath"), FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
-		//ConfigFileHasChanged = true;
-
-		//TickDelegate = FTickerDelegate::CreateRaw(this, &FCognitiveVREditorModule::Tick);
-		//TickDelegateHandle = FTicker::GetCoreTicker().AddTicker(TickDelegate);
-
-		/*
-		TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
-		MenuExtender->AddMenuExtension(
-			"EditMain",
-			EExtensionHook::After,
-			NULL,
-			FMenuExtensionDelegate::CreateRaw(this, &FCognitiveVREditorModule::AddMenuEntry)
-		);
-
-		LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);*/
-
-
-		// register 'keep simulation changes' recorder
-		//FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-		//LevelEditorModule.OnCaptureSingleFrameAnimSequence().BindStatic(&FCognitiveVREditorModule::HandleCaptureSingleFrameAnimSequence);
-
-		// register standalone UI
-		LevelEditorTabManagerChangedHandle = LevelEditorModule.OnTabManagerChanged().AddLambda([]()
-		{
-			//TSharedPtr<FSlateStyleSet> StyleSet = MakeShareable(new FSlateStyleSet("CognitiveEditor"));
-			//StyleSet->SetCoreContentRoot(FPaths::EngineContentDir() / TEXT("Slate"));
-			
-			//FString iconpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("CognitiveSceneWizardTabIcon.png");
-			//FName BrushName = FName(*iconpath);
-
-			//const TCHAR* charPath = *iconpath;
-			//StyleSet->Set(FName(*iconpath),new FSlateImageBrush(iconpath,FVector2D(128,128),FSlateColor()));
-
-			//FSlateStyleRegistry::RegisterSlateStyle(*StyleSet.Get()); //need to make a new class for this style? silently crashes unreal if this is called here
-
-			//FSlateIcon& iconRef = FSlateIcon(StyleSet, "CognitiveSceneWizardTabIcon");
-
-			FLevelEditorModule& LocalLevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-			LocalLevelEditorModule.GetLevelEditorTabManager()->RegisterTabSpawner(FName("CognitiveSceneSetup"), FOnSpawnTab::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab))
-				.SetGroup(WorkspaceMenu::GetMenuStructure().GetToolsCategory())
-				.SetDisplayName(LOCTEXT("SceneSetupTabTitle", "Cognitive Scene Setup"))
-				.SetTooltipText(LOCTEXT("SceneSetupTooltipText", "Open the Cognitive Scene Setup Wizard"));
-
-			LocalLevelEditorModule.GetLevelEditorTabManager()->RegisterTabSpawner(FName("CognitiveDynamicObjectManager"), FOnSpawnTab::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveDynamicTab))
-				.SetGroup(WorkspaceMenu::GetMenuStructure().GetToolsCategory())
-				.SetDisplayName(LOCTEXT("DynamicObjectManagerTabTitle", "Cognitive Dynamic Object Manager"))
-				.SetTooltipText(LOCTEXT("DynamicObjectManagerTooltipText", "Open the Cognitive Dynamic Object Manager"));
-				//.SetIcon(FSlateIcon(StyleSet.Get()->GetStyleSetName(), "CognitiveSceneWizardTabIcon"));
-		});
-
-		// Register the details customizations
-		FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
-
-		PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FCognitiveSettingsCustomization::MakeInstance));
-		//PropertyModule.RegisterCustomClassLayout(TEXT("BaseEditorTool"), FOnGetDetailCustomizationInstance::CreateStatic(&FSetupCustomization::MakeInstance));
-		PropertyModule.RegisterCustomClassLayout(TEXT("DynamicObject"), FOnGetDetailCustomizationInstance::CreateStatic(&UDynamicObjectComponentDetails::MakeInstance));
-		PropertyModule.RegisterCustomClassLayout(TEXT("DynamicIdPoolAsset"), FOnGetDetailCustomizationInstance::CreateStatic(&UDynamicIdPoolAssetDetails::MakeInstance));
-#endif
-	}
-
-	virtual void ShutdownModule() override
+	if (tempGateway.IsEmpty())
 	{
-#if WITH_EDITOR
+		GLog->Log("CognitiveVRModule::StartupModule write defaults to ini");
+		FString defaultgateway = "data.cognitive3d.com";
+		FString defaultsessionviewer = "viewer.cognitive3d.com/scene/";
+		FString defaultdashboard = "app.cognitive3d.com";
+		FString trueString = "True";
+		GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), *defaultgateway, EngineIni);
+		GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SessionViewer"), *defaultsessionviewer, EngineIni);
+		GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Dashboard"), *defaultdashboard, EngineIni);
 
-		//FTicker::GetCoreTicker().RemoveTicker(TickDelegateHandle);
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("GazeBatchSize"), 64, EngineIni);
 
-		if (GEditor)
-		{
-			//FDemoCommands::Unregister();
-			//FDemoStyle::Shutdown();
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("CustomEventBatchSize"), 64, EngineIni);
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("CustomEventAutoTimer"), 30, EngineIni);
 
-			if (FModuleManager::Get().IsModuleLoaded(TEXT("LevelEditor")))
-			{
-				FLevelEditorModule& LevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
-				//LevelEditorModule.OnCaptureSingleFrameAnimSequence().Unbind();
-				LevelEditorModule.OnTabManagerChanged().Remove(LevelEditorTabManagerChangedHandle);
-			}
-		}
-#endif
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("DynamicDataLimit"), 64, EngineIni);
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("DynamicAutoTimer"), 30, EngineIni);
+
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SensorDataLimit"), 64, EngineIni);
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SensorAutoTimer"), 30, EngineIni);
+
+		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+
+		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+
+		GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("EnableLocalCache"), *trueString, EngineIni);
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("LocalCacheSize"), 100, EngineIni);
 	}
+
+	FCognitiveEditorTools::Initialize();
+
+	//do i need to unregister this dynamic object pool action?
+	IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
+	TSharedPtr< FDynamicIdPoolAssetActions> action = MakeShared<FDynamicIdPoolAssetActions>();
+	AssetTools.RegisterAssetTypeActions(action.ToSharedRef());
 	
-	virtual bool SupportsDynamicReloading() override
+	GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, EngineIni);
+	GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, EngineIni);
+	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, EditorIni);
+	GConfig->GetString(TEXT("Analytics"), TEXT("BlenderPath"), FCognitiveEditorTools::GetInstance()->BlenderPath, EditorIni);
+	GConfig->GetString(TEXT("Analytics"), TEXT("ExportPath"), FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
+
+
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveSceneSetup"), FOnSpawnTab::CreateStatic(&CreateCognitiveSceneSetupTabArgs)).SetMenuType(ETabSpawnerMenuType::Hidden);
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveProjectSetup"), FOnSpawnTab::CreateStatic(&CreateCognitiveProjectSetupTabArgs)).SetMenuType(ETabSpawnerMenuType::Hidden);
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveDynamicObjectManager"), FOnSpawnTab::CreateStatic(&CreateCognitiveDynamicObjectTabArgs)).SetMenuType(ETabSpawnerMenuType::Hidden);
+
+	FCognitive3DCommands::Register();
+	PluginCommands = MakeShareable(new FUICommandList);
+
+	//map all the menu items to functions
+	PluginCommands->MapAction(
+		FCognitive3DCommands::Get().OpenProjectSetupWindow,
+		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveProjectSetupTab)
+	);
+
+	PluginCommands->MapAction(
+		FCognitive3DCommands::Get().OpenSceneSetupWindow,
+		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab)
+	);
+
+	PluginCommands->MapAction(
+		FCognitive3DCommands::Get().OpenDynamicObjectWindow,
+		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::SpawnCognitiveDynamicTab)
+	);
+
+	PluginCommands->MapAction(
+		FCognitive3DCommands::Get().OpenOnlineDocumentation,
+		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::OpenOnlineDocumentation)
+	);
+
+	//append the menu after help
+	TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
+	MenuExtender->AddMenuBarExtension(
+		"Help",
+		EExtensionHook::After,
+		PluginCommands,
+		FMenuBarExtensionDelegate::CreateStatic(&FCognitiveVREditorModule::AddMenu)
+	);
+	LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
+
+	// Register the details customizations
+	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
+
+	PropertyModule.RegisterCustomClassLayout(TEXT("CognitiveVRSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&FCognitiveSettingsCustomization::MakeInstance));
+	PropertyModule.RegisterCustomClassLayout(TEXT("DynamicObject"), FOnGetDetailCustomizationInstance::CreateStatic(&UDynamicObjectComponentDetails::MakeInstance));
+	PropertyModule.RegisterCustomClassLayout(TEXT("DynamicIdPoolAsset"), FOnGetDetailCustomizationInstance::CreateStatic(&UDynamicIdPoolAssetDetails::MakeInstance));
+#endif
+}
+
+	//defines the menu to add the contents of the menu
+	void FCognitiveVREditorModule::AddMenu(FMenuBarBuilder& MenuBuilder)
 	{
-		return true;
+		MenuBuilder.AddPullDownMenu(
+			LOCTEXT("MenuLocKey", "Cognitive3D"),
+			LOCTEXT("MenuTooltipKey", "Open Cognitive3D menu"),
+			FNewMenuDelegate::CreateStatic(&FCognitiveVREditorModule::FillMenu),
+			FName(TEXT("Cognitive3D")),
+			FName(TEXT("Cognitive3DName")));
 	}
 
-	void OnToolWindowClosed(const TSharedRef<SWindow>& Window, UBaseEditorTool* Instance)
+	void FCognitiveVREditorModule::FillMenu(FMenuBuilder& MenuBuilder)
 	{
-		Instance->RemoveFromRoot();
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenDynamicObjectWindow);
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenSceneSetupWindow);
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenProjectSetupWindow);
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenOnlineDocumentation);
 	}
 
-	static TSharedRef<SDockTab> SpawnCognitiveDynamicTab(const FSpawnTabArgs& SpawnTabArgs)
-	{
-		const TSharedRef<SDockTab> MajorTab =
-			SNew(SDockTab)
-			//.Icon(FEditorStyle::Get().GetBrush("SequenceRecorder.TabIcon"))
-			.TabRole(ETabRole::NomadTab);
+void FCognitiveVREditorModule::ShutdownModule()
+{
+	FCognitive3DCommands::Unregister();
+}
 
+bool FCognitiveVREditorModule::SupportsDynamicReloading()
+{
+	return true;
+}
+
+void FCognitiveVREditorModule::SpawnCognitiveDynamicTab()
+{
+	FTabId tabId = FTabId(FName("CognitiveDynamicObjectManager"));
+	auto foundTab = FGlobalTabmanager::Get()->FindExistingLiveTab(tabId);
+	if (foundTab.IsValid())
+	{
+		FGlobalTabmanager::Get()->SetActiveTab(foundTab);
+	}
+	else
+	{
+		TSharedPtr<SDockTab> MajorTab = FGlobalTabmanager::Get()->TryInvokeTab(tabId);
 		MajorTab->SetContent(SNew(SDynamicObjectManagerWidget));
-
-		return MajorTab;
 	}
+}
 
-	static TSharedRef<SDockTab> SpawnCognitiveSceneSetupTab(const FSpawnTabArgs& SpawnTabArgs)
+void FCognitiveVREditorModule::SpawnCognitiveSceneSetupTab()
+{
+	FTabId tabId = FTabId(FName("CognitiveSceneSetup"));
+	auto foundTab = FGlobalTabmanager::Get()->FindExistingLiveTab(tabId);
+	if (foundTab.IsValid())
 	{
-		const TSharedRef<SDockTab> MajorTab =
-			SNew(SDockTab)
-			//.Icon(FEditorStyle::Get().GetBrush("SequenceRecorder.TabIcon"))
-			.TabRole(ETabRole::NomadTab);
-
+		FGlobalTabmanager::Get()->SetActiveTab(foundTab);
+	}
+	else
+	{
+		TSharedPtr<SDockTab> MajorTab = FGlobalTabmanager::Get()->TryInvokeTab(tabId);
 		MajorTab->SetContent(SNew(SSceneSetupWidget));
-
-		return MajorTab;
 	}
+}
 
-	FDelegateHandle LevelEditorTabManagerChangedHandle;
-	
-	protected:
-
-	/** Unregisters asset tool actions. */
-	void UnregisterAssetTools()
+void FCognitiveVREditorModule::SpawnCognitiveProjectSetupTab()
+{
+	FTabId tabId = FTabId(FName("CognitiveProjectSetup"));
+	auto foundTab = FGlobalTabmanager::Get()->FindExistingLiveTab(tabId);
+	if (foundTab.IsValid())
 	{
-		FAssetToolsModule* AssetToolsModule = FModuleManager::GetModulePtr<FAssetToolsModule>("AssetTools");
-
-		if (AssetToolsModule != nullptr)
-		{
-			IAssetTools& AssetTools = AssetToolsModule->Get();
-
-			for (auto Action : RegisteredAssetTypeActions)
-			{
-				AssetTools.UnregisterAssetTypeActions(Action);
-			}
-		}
+		FGlobalTabmanager::Get()->SetActiveTab(foundTab);
 	}
-
-protected:
-
-	/** Registers main menu and tool bar menu extensions. */
-	void RegisterMenuExtensions()
+	else
 	{
-		MenuExtensibilityManager = MakeShareable(new FExtensibilityManager);
-		ToolBarExtensibilityManager = MakeShareable(new FExtensibilityManager);
+		TSharedPtr<SDockTab> MajorTab = FGlobalTabmanager::Get()->TryInvokeTab(tabId);
+		MajorTab->SetContent(SNew(SProjectSetupWidget));
 	}
+}
 
-	/** Unregisters main menu and tool bar menu extensions. */
-	void UnregisterMenuExtensions()
+void FCognitiveVREditorModule::OpenOnlineDocumentation()
+{
+	FString url = "https://docs.cognitive3d.com/unreal/get-started/";
+	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);
+}
+
+void FCognitiveVREditorModule::CloseProjectSetupWindow()
+{
+	FTabId projectTabId = FTabId(FName("CognitiveProjectSetup"));
+	auto projectTab = FGlobalTabmanager::Get()->FindExistingLiveTab(projectTabId);
+	if (projectTab.IsValid())
 	{
-		MenuExtensibilityManager.Reset();
-		ToolBarExtensibilityManager.Reset();
+		projectTab->RequestCloseTab();
 	}
+}
 
-private:
+void FCognitiveVREditorModule::CloseSceneSetupWindow()
+{
+	FTabId projectTabId = FTabId(FName("CognitiveSceneSetup"));
+	auto projectTab = FGlobalTabmanager::Get()->FindExistingLiveTab(projectTabId);
+	if (projectTab.IsValid())
+	{
+		projectTab->RequestCloseTab();
+	}
+}
 
-	/** Holds the menu extensibility manager. */
-	TSharedPtr<FExtensibilityManager> MenuExtensibilityManager;
-
-	/** The collection of registered asset type actions. */
-	TArray<TSharedRef<IAssetTypeActions>> RegisteredAssetTypeActions;
-
-	/** Holds the plug-ins style set. */
-	//TSharedPtr<ISlateStyle> Style;
-
-	/** Holds the tool bar extensibility manager. */
-	TSharedPtr<FExtensibilityManager> ToolBarExtensibilityManager;
-};
-IMPLEMENT_MODULE(FCognitiveVREditorModule, CognitiveVREditor);
+void FCognitiveVREditorModule::CloseDynamicObjectWindow()
+{
+	FTabId projectTabId = FTabId(FName("CognitiveDynamicObjectManager"));
+	auto projectTab = FGlobalTabmanager::Get()->FindExistingLiveTab(projectTabId);
+	if (projectTab.IsValid())
+	{
+		projectTab->RequestCloseTab();
+	}
+}
 
 #undef LOCTEXT_NAMESPACE

@@ -55,8 +55,6 @@ public:
 	virtual TSharedPtr<IAnalyticsProvider> CreateAnalyticsProvider(const FAnalyticsProviderConfigurationDelegate& GetConfigValue) const override;
 	virtual TWeakPtr<FAnalyticsProviderCognitiveVR> GetCognitiveVRProvider() const;
 
-	FString DeveloperKey;
-
 private:
 	//mutable TMap<FString, TSharedPtr<IAnalyticsProvider>> Analytics;
 	virtual void StartupModule() override;

@@ -113,11 +113,17 @@ void FCognitiveEditorTools::Initialize()
 	//should be able to update gateway while unreal is running, but cache if not in editor since that's nuts
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
 
-	//CognitiveEditorToolsInstance->BaseExportDirectory = FPaths::GameDir();
-
 	//should update both editor urls and session data urls
 	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(TEXT("ImageWrapper"));
 	CognitiveEditorToolsInstance->ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
+
+	FString texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("box_empty.png");
+	FName BrushName = FName(*texturepath);
+	CognitiveEditorToolsInstance->BoxEmptyIcon = new FSlateDynamicImageBrush(BrushName, FVector2D(20, 20));
+
+	texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("box_check.png");
+	BrushName = FName(*texturepath);
+	CognitiveEditorToolsInstance->BoxCheckIcon = new FSlateDynamicImageBrush(BrushName, FVector2D(20, 20));
 }
 
 //at any step in the uploading process
@@ -141,7 +147,7 @@ TArray<TSharedPtr<FDynamicData>> FCognitiveEditorTools::GetSceneDynamics()
 
 bool FCognitiveEditorTools::HasDeveloperKey() const
 {
-	return FAnalyticsCognitiveVR::Get().DeveloperKey.Len() > 0;
+	return DeveloperKey.Len() > 0;
 }
 
 bool FCognitiveEditorTools::HasApplicationKey() const
@@ -205,14 +211,21 @@ FProcHandle FCognitiveEditorTools::ExportNewDynamics()
 	return ExportDynamicObjectArray(exportObjects);
 }
 
-FReply FCognitiveEditorTools::ExportAllDynamics()
+FProcHandle FCognitiveEditorTools::ExportAllDynamics()
 {
+	FProcHandle fph;
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
 	if (!tempworld)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorToolsCustomization::ExportDynamics world is null"));
-		return FReply::Handled();
+		return fph;
+	}
+
+	if (BaseExportDirectory.Len() == 0)
+	{
+		GLog->Log("base directory not selected");
+		return fph;
 	}
 
 	TArray<FString> meshNames;
@@ -242,17 +255,10 @@ FReply FCognitiveEditorTools::ExportAllDynamics()
 
 	if (meshNames.Num() == 0)
 	{
-		return FReply::Handled();
+		return fph;
 	}
 
-	if (BaseExportDirectory.Len() == 0)
-	{
-		GLog->Log("base directory not selected");
-		return FReply::Handled();
-	}
-
-	ExportDynamicObjectArray(exportObjects);
-	return FReply::Handled();
+	return ExportDynamicObjectArray(exportObjects);
 }
 
 FReply FCognitiveEditorTools::ExportSelectedDynamics()
@@ -354,6 +360,9 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 	TArray<FString> DynamicMeshNames;
 	TMap<FString, TArray< UStaticMeshComponent*>> BakeExportMaterials;
 	TMap<FString, TArray< USkeletalMeshComponent*>> BakeExportSkeletonMaterials;
+
+	//used to check that export popup was confirmed, rather than canceled, and there are exported files for blender to work on
+	int32 RawExportFilesFound = 0;
 
 	for (int32 i = 0; i < exportObjects.Num(); i++)
 	{
@@ -510,14 +519,15 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			TempStaticMeshes.Add(tmpStatMesh);
 		}
 
-		
-
-		//export to obj skips skeletal fbx?
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
-
+		FSuppressableWarningDialog::FSetupInfo ExportSettingsInfo(LOCTEXT("ExportSettingsBody", "The recommended settings for exporting meshes is to disable Level of Detail and disable Collision"), LOCTEXT("ExportSettingsTitle", "Recommended Export Settings"), "ExportSettingsPopup");
+		ExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
+		ExportSettingsInfo.CheckBoxText = FText::FromString("Don't show again");
+		FSuppressableWarningDialog ExportSelectedDynamicMeshes(ExportSettingsInfo);
+		ExportSelectedDynamicMeshes.ShowModal();
+		
 		//exports the currently selected actor(s)
 		GUnrealEd->ExportMap(GWorld, *tempObject, true);
-		//FEditorFileUtils::Export(true);
 
 		//after export, if skeletal mesh, clean up duplicate actor
 		if (skeletalMeshes.Num() > 0)
@@ -529,18 +539,25 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			{
 				ObjectTools::DeleteAssets(TempStaticMeshes, false);
 			}
-			
 		}
 
-		
-		
-
+		//reset dynamic back to original transform
 		exportObjects[i]->GetOwner()->SetActorLocation(originalLocation);
 		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
 		exportObjects[i]->GetOwner()->SetActorScale3D(originalScale);
 
+		//check that files were actually exported
+		if (PlatformFile.FileExists(*tempObject))
+		{
+			RawExportFilesFound++;
+		}
+		else
+		{
+			//don't export screenshots or save materials unless export popup was confirmed
+			continue;
+		}
+
 		//bake + export materials
-		//if (skeletalMeshes.Num() > meshes.Num())
 		if (skeletalMeshes.Num() > 0)
 		{
 			BakeExportSkeletonMaterials.Add(exportObjects[i]->MeshName, skeletalMeshes);
@@ -588,10 +605,15 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		}
 	}
 
-	GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
+	if (RawExportFilesFound == 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray Cancelled mesh export"));
+		return fph;
+	}
 
 	if (ActorsExported > 0)
 	{
+		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
 		fph = ConvertDynamicsToGLTF(DynamicMeshNames);
 		FindAllSubDirectoryNames();
 	}
@@ -678,6 +700,9 @@ FProcHandle FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnam
 	const TCHAR* params = *stringParamSlashed;
 	int32 priorityMod = 0;
 	fph = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
+	//this sleep and close is needed so unreal gets control after blender finishes
+	FPlatformProcess::Sleep(1);
+	FPlatformProcess::CloseProc(fph);
 	return fph;
 }
 
@@ -783,6 +808,13 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 
 	GLog->Log("CognitiveVR Tools uploading manifest for " + FString::FromInt(dynamics.Num()) + " objects");
 
+	UploadSelectedDynamicsManifest(dynamics);
+
+	return FReply::Handled();
+}
+
+FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObject*> dynamics)
+{
 	bool wroteAnyObjects = false;
 	FString objectManifest = "{\"objects\":[";
 	//write preset customids to manifest
@@ -842,7 +874,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 	//send manifest to api/objects/sceneid
 
 	GLog->Log("CognitiveTools::UploadDynamicsManifest send dynamic object aggregation manifest");
-	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
 	auto HttpRequest = FHttpModule::Get().CreateRequest();
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("POST");
@@ -918,7 +950,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FSt
 	//send manifest to api/objects/sceneid
 
 	GLog->Log("CognitiveTools::UploadDynamicsManifest send dynamic object aggregation manifest");
-	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
 	auto HttpRequest = FHttpModule::Get().CreateRequest();
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("POST");
@@ -980,7 +1012,7 @@ FReply FCognitiveEditorTools::GetDynamicsManifest()
 	HttpRequest->SetURL(GetDynamicObjectManifest(FString::FromInt(currentSceneData->VersionId)));
 
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
-	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
 	HttpRequest->SetHeader("Authorization", AuthValue);
 
 	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnDynamicManifestResponse);
@@ -1107,6 +1139,8 @@ FReply FCognitiveEditorTools::UploadDynamics()
 		GLog->Log("FCognitiveEditorTools::UploadDynamics has no dynamics to upload!");
 		WizardUploading = false;
 	}
+
+	OnUploadSceneGeometry.ExecuteIfBound(nullptr, nullptr, true);
 
 	return FReply::Handled();
 }
@@ -1299,12 +1333,11 @@ bool FCognitiveEditorTools::PickFile(const FString& Title, const FString& FileTy
 	return bFileChosen;
 }
 
-FReply FCognitiveEditorTools::TakeScreenshot()
+FReply FCognitiveEditorTools::SaveScreenshotToFile()
 {
 	FString dir = BaseExportDirectory + "/" + GetCurrentSceneName() + "/screenshot/";
 	if (VerifyOrCreateDirectory(dir))
 	{
-		UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::TakeScreenshot create directory for screenshot: %s"), *dir);
 		FScreenshotRequest::RequestScreenshot(dir + "screenshot", false, false);
 	}
 	else
@@ -1417,6 +1450,11 @@ void FCognitiveEditorTools::RefreshSceneUploadFiles()
 	}
 }
 
+int32 FCognitiveEditorTools::GetSceneExportFileCount()
+{
+	return SceneUploadFiles.Num();
+}
+
 void FCognitiveEditorTools::RefreshDynamicUploadFiles()
 {
 	FString filesStartingWith = TEXT("");
@@ -1434,6 +1472,31 @@ void FCognitiveEditorTools::RefreshDynamicUploadFiles()
 	{
 		DynamicUploadFiles.Add(MakeShareable(new FString(imagesInDirectory[i])));
 	}
+}
+
+TArray<FString> FCognitiveEditorTools::GetValidDirectories(const FString& Directory)
+{
+	TArray<FString> FoundFolders;
+	if (FPaths::DirectoryExists(Directory))
+	{
+		FFileManagerGeneric::Get().FindFilesRecursive(FoundFolders, *Directory, TEXT("*"), false, true, true);
+		for (int i = 0; i < FoundFolders.Num(); i++)
+		{
+			FoundFolders[i] = Directory + FoundFolders[i];
+		}
+	}
+	return FoundFolders;
+}
+
+int32 FCognitiveEditorTools::GetDynamicObjectFileExportedCount()
+{
+	return DynamicUploadFiles.Num();
+}
+
+int32 FCognitiveEditorTools::GetDynamicObjectExportedCount()
+{
+	auto folders = GetValidDirectories(BaseExportDirectory + "/dynamics");
+	return folders.Num();
 }
 
 void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, FString expectedResponseType)
@@ -1571,7 +1634,7 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 	HttpRequest->SetURL(url);
 	HttpRequest->SetHeader("Content-Type", "multipart/form-data; boundary=\"cJkER9eqUVwt2tgnugnSBFkGLAgt7djINNHkQP0i\"");
 	HttpRequest->SetHeader("Accept-Encoding", "identity");
-	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetContent(AllBytes);
@@ -1632,13 +1695,9 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 			ReadSceneDataFromFile();
 		}
 		ConfigFileHasChanged = true;
-
 		if (WizardUploading)
 		{
 			CurrentSceneVersionRequest();
-			//ReadSceneDataFromFile();
-
-			//UploadDynamics();
 		}
 	}
 	else
@@ -1753,14 +1812,24 @@ TArray<FString> FCognitiveEditorTools::GetAllFilesInDirectory(const FString dire
 
 bool FCognitiveEditorTools::HasFoundBlender() const
 {
-	if (!HasDeveloperKey()) { return false; }
-	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe");
+	if (BlenderPath.IsEmpty())
+	{
+		return false;
+	}
+	if (!BlenderPath.Contains("blender.exe"))
+	{
+		return false;
+	}
+	if (!IFileManager::Get().FileExists(*BlenderPath))
+	{
+		return false;
+	}
+	return true;
 }
 
 bool FCognitiveEditorTools::HasFoundBlenderAndHasSelection() const
 {
-	if (!HasDeveloperKey()) { return false; }
-	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe") && GEditor->GetSelectedActorCount() > 0;
+	return HasFoundBlender() && GEditor->GetSelectedActorCount() > 0;
 }
 
 //checks for json and no bmps files in export directory
@@ -1793,20 +1862,20 @@ bool FCognitiveEditorTools::LoginAndCustonerIdAndBlenderExportDir() const
 bool FCognitiveEditorTools::HasFoundBlenderAndExportDir() const
 {
 	if (GetBaseExportDirectory().Len() == 0) { return false; }
-	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe");
+	return HasFoundBlender();
 }
 
 bool FCognitiveEditorTools::HasFoundBlenderAndDynamicExportDir() const
 {
 	if (GetBaseExportDirectory().Len() == 0) { return false; }
-	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe");
+	return HasFoundBlender();
 }
 
 bool FCognitiveEditorTools::HasFoundBlenderDynamicExportDirSelection() const
 {
 	if (GetBaseExportDirectory().Len() == 0) { return false; }
 	if (GEditor->GetSelectedActorCount() == 0) { return false; }
-	return FCognitiveEditorTools::GetBlenderPath().ToString().Contains("blender.exe");
+	return HasFoundBlender();
 }
 
 bool FCognitiveEditorTools::CurrentSceneHasSceneId() const
@@ -1840,7 +1909,7 @@ FText FCognitiveEditorTools::GetDynamicsOnSceneExplorerTooltip() const
 	auto scene = GetCurrentSceneData();
 	if (!scene.IsValid())
 	{
-		return FText::FromString("Scene does not have valid data. Must export your scene before uploading dynamics!");
+		return FText::FromString("Scene does not have valid data. Must export your level before uploading dynamics!");
 	}
 	return FText::FromString("Something went wrong!");
 }
@@ -1875,22 +1944,11 @@ bool FCognitiveEditorTools::HasExportedAnyDynamicMeshes() const
 	if (GetBaseExportDirectory().Len() == 0) { return false; }
 
 	FString filesStartingWith = TEXT("");
-	FString pngextension = TEXT("png");
-	TArray<FString> filesInDirectory = GetAllFilesInDirectory(BaseExportDirectory + "/dynamics", true, filesStartingWith, filesStartingWith, pngextension, false);
-
-	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(BaseExportDirectory + "/dynamics", true, filesStartingWith, pngextension, filesStartingWith, false);
-
-	//DynamicUploadFiles.Empty();
+	TArray<FString> filesInDirectory = GetAllFilesInDirectory(BaseExportDirectory + "/dynamics", true, filesStartingWith, filesStartingWith, "", false);
 	for (int32 i = 0; i < filesInDirectory.Num(); i++)
 	{
 		return true;
-		//DynamicUploadFiles.Add(MakeShareable(new FString(filesInDirectory[i])));
 	}
-	for (int32 i = 0; i < imagesInDirectory.Num(); i++)
-	{
-		//DynamicUploadFiles.Add(MakeShareable(new FString(imagesInDirectory[i])));
-	}
-
 	return false;
 }
 
@@ -1954,11 +2012,8 @@ FText FCognitiveEditorTools::DisplayDynamicObjectsCountOnWeb() const
 
 FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 {
-	DynamicCountInScene = FText::FromString("Found " + FString::FromInt(CountDynamicObjectsInScene()) + " Dynamic Objects in scene");
+	DynamicCountInScene = FText::FromString("Found " + FString::FromInt(CountDynamicObjectsInScene()) + " Dynamic Objects in level");
 	DuplicateDyanmicObjectVisibility = EVisibility::Hidden;
-	//SceneDynamicObjectList->RefreshList();
-
-	GLog->Log("FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene");
 
 	SceneDynamics.Empty();
 	//get all the dynamic objects in the scene
@@ -2082,7 +2137,7 @@ FText FCognitiveEditorTools::GetApplicationKey() const
 
 FText FCognitiveEditorTools::GetDeveloperKey() const
 {
-	return FText::FromString(FAnalyticsCognitiveVR::Get().DeveloperKey);
+	return FText::FromString(DeveloperKey);
 }
 
 FText FCognitiveEditorTools::GetAttributionKey() const
@@ -2092,7 +2147,7 @@ FText FCognitiveEditorTools::GetAttributionKey() const
 
 void FCognitiveEditorTools::OnDeveloperKeyChanged(const FText& Text)
 {
-	FAnalyticsCognitiveVR::Get().DeveloperKey = Text.ToString();
+	DeveloperKey = Text.ToString();
 }
 
 void FCognitiveEditorTools::OnAttributionKeyChanged(const FText& Text)
@@ -2106,8 +2161,14 @@ void FCognitiveEditorTools::OnBlenderPathChanged(const FText& Text)
 }
 void FCognitiveEditorTools::OnExportPathChanged(const FText& Text)
 {
-
 	BaseExportDirectory = Text.ToString();
+}
+
+void FCognitiveEditorTools::SaveBlenderPathAndExportPath()
+{
+	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+	GConfig->SetString(TEXT("Analytics"), TEXT("BlenderPath"), *FCognitiveEditorTools::GetInstance()->BlenderPath, EditorIni);
+	GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
 }
 
 FText FCognitiveEditorTools::UploadSceneNameFiles() const
@@ -2156,11 +2217,6 @@ FText FCognitiveEditorTools::GetDynamicObjectUploadText() const
 	//for each unique mesh name
 
 	return FText::FromString("Upload " + FString::FromInt(SubDirectoryNames.Num()) + " Dynamic Object Meshes to " + data->Name + " Version " + FString::FromInt(data->VersionNumber));
-}
-
-FText FCognitiveEditorTools::GetDynamicsFromManifest() const
-{
-	return FText::FromString("DYNAMICS");
 }
 
 FReply FCognitiveEditorTools::RefreshDynamicSubDirectory()
@@ -2265,7 +2321,7 @@ void FCognitiveEditorTools::SceneVersionRequest(FEditorSceneData data)
 
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
 	//HttpRequest->SetHeader("Authorization", TEXT("Data " + FAnalyticsCognitiveVR::Get().EditorAuthToken));
-	FString AuthValue = "APIKEY:DEVELOPER " + FAnalyticsCognitiveVR::Get().DeveloperKey;
+	FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetHeader("Content-Type", "application/json");
 
@@ -2302,7 +2358,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		{
 			//not authorized or scene id does not exist
 			GLog->Log("FCognitiveTools::SceneVersionResponse not authorized or scene doesn't exist!");
-			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode()) + "\nThe Developer Key: " + FAnalyticsCognitiveVR::Get().DeveloperKey + " does not have access to the scene";
+			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode()) + "\nThe Developer Key: " + DeveloperKey + " does not have access to the scene";
 			return;
 		}
 		else
@@ -2433,16 +2489,14 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 {
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
-	//GLog->Log("FCognitiveTools::SaveAPIDeveloperKeysToFile save: " + CustomerId);
-
-	//GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, EngineIni);
+	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, EditorIni);
 
-	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *FAnalyticsCognitiveVR::Get().DeveloperKey, EditorIni);
+	SaveBlenderPathAndExportPath();
 
 	GConfig->Flush(false, GEngineIni);
-
+	GConfig->Flush(false, GEditorIni);
 	ConfigFileHasChanged = true;
 
 	return FReply::Handled();
@@ -2460,14 +2514,12 @@ void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 
 void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
 {
-	//FString EngineIni = FPaths::Combine(*(FPaths::GameDir()), TEXT("Config/DefaultEngine.ini"));
 	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
-	//GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, EditorIni);
 	GConfig->Flush(false, GEngineIni);
 	ConfigFileHasChanged = true;
 
-	FAnalyticsCognitiveVR::Get().DeveloperKey = key;
+	DeveloperKey = key;
 }
 
 TSharedPtr<FEditorSceneData> FCognitiveEditorTools::GetCurrentSceneData() const
@@ -2746,7 +2798,20 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 
 	//export scene
 	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
+	FSuppressableWarningDialog::FSetupInfo ExportSettingsInfo(LOCTEXT("ExportSettingsBody", "The recommended settings for exporting meshes is to disable Level of Detail and disable Collision"), LOCTEXT("ExportSettingsTitle", "Recommended Export Settings"), "ExportSelectedDynamicsBody");
+	ExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
+	ExportSettingsInfo.CheckBoxText = FText::FromString("Don't show again");
+	FSuppressableWarningDialog ExportSelectedDynamicMeshes(ExportSettingsInfo);
+	ExportSelectedDynamicMeshes.ShowModal();
 	GEditor->ExportMap(tempworld, *ExportedSceneFile2, true);
+
+	//check that the map was actually exported and generated temporary files
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	if (!PlatformFile.FileExists(*ExportedSceneFile2))
+	{
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene Cancelled scene geometry export"));
+		return;
+	}
 
 	//export materials
 	TArray< UStaticMeshComponent*> sceneMeshes;
@@ -2768,7 +2833,7 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	//build materiallist.txt and export textures for transparent materials
 	WizardExportStaticMaterials(sceneDirectory, sceneMeshes, FCognitiveEditorTools::GetInstance()->GetCurrentSceneName());
 
-	TakeScreenshot();
+	SaveScreenshotToFile();
 
 	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
@@ -2793,7 +2858,32 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	//should happen after blender finishes/next button is pressed
 	FString fullPath = escapedOutPath + "/debug.log";
 	FString fileContents = BuildDebugFileContents();
-	bool success = FFileHelper::SaveStringToFile(fileContents, *fullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+	FFileHelper::SaveStringToFile(fileContents, *fullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+}
+
+void FCognitiveEditorTools::GenerateSettingsJsonFile()
+{
+	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
+	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
+
+	//create settings.json
+	FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(COGNITIVEVR_SDK_VERSION) + "\",\"sceneName\":\"" + GetCurrentSceneName() + "\"}";
+	FString settingsFullPath = escapedOutPath + "/settings.json";
+	bool writeSettingsJsonSuccess = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+	if (writeSettingsJsonSuccess == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene unable to save settings.json"));
+	}
+}
+
+bool FCognitiveEditorTools::HasSettingsJsonFile() const
+{
+	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
+	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
+	FString settingsFullPath = escapedOutPath + "/settings.json";
+
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	return PlatformFile.FileExists(*settingsFullPath);
 }
 
 FProcHandle FCognitiveEditorTools::ConvertSceneToGLTF()
@@ -2865,9 +2955,15 @@ void FCognitiveEditorTools::WizardUpload()
 	WizardUploading = true;
 	WizardUploadError = "";
 	WizardUploadResponseCode = 0;
+
+	if (!HasSettingsJsonFile())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorToolsCustomization::WizardUpload settings.json file missing! Creating for current scene"));
+		GenerateSettingsJsonFile();
+	}
+
 	UploadScene();
 }
-
 
 FText FCognitiveEditorTools::GetBaseExportDirectoryDisplay() const
 {
@@ -2975,12 +3071,12 @@ FString FCognitiveEditorTools::BuildDebugFileContents() const
 	outputString += "\n";
 
 	//api key ****
-	FString tempApiKey = FCognitiveEditorTools::GetInstance()->GetApplicationKey().ToString();
+	FString tempApiKey = ApplicationKey;
 	outputString += FString("API Key: ****") + tempApiKey.RightChop(tempApiKey.Len() - 4);
 	outputString += "\n";
 
 	//dev key ****
-	FString tempDevKey = FAnalyticsCognitiveVR::Get().DeveloperKey;
+	FString tempDevKey = DeveloperKey;
 	outputString += FString("DEV Key: ****") + tempDevKey.RightChop(tempDevKey.Len() - 4);
 	outputString += "\n";
 

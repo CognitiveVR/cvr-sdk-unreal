@@ -7,10 +7,8 @@
 #include "Json.h"
 #include "SCheckBox.h"
 #include "STableRow.h"
-#include "SFStringListWidget.h"
 #include "CognitiveEditorTools.h"
 #include "STextComboBox.h"
-#include "SDynamicObjectListWidget.h"
 
 //customization ui for cognitive settings/preferences. most of this is interface code that calls FCognitiveEditorTools logic
 

@@ -11,7 +11,6 @@
 #include "IDetailsView.h"
 #include "DynamicObject.h"
 #include "CognitiveEditorTools.h"
-#include "BaseEditorTool.h"
 #include "coreminimal.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Input/Reply.h"
@@ -33,13 +32,15 @@ private:
 	FReply Upload();
 	FReply SetLeftHand();
 	FReply SetRightHand();
-	private:
 	TWeakObjectPtr<UDynamicObject> SelectedDynamicObject;
 
 	bool HasOwner() const;
-	bool HasOwnerAndExportDir() const;
 	bool HasOwnerAndExportDirAndName() const;
+	bool HasOwnerAndMeshExportDirAndName() const;
 	bool HasExportAndValidSceneData() const;
-	FText InvalidUploadText() const;
 	FText HandSetupText() const;
+
+	FText GetExportTooltip() const;
+	FText GetScreenshotTooltip() const;
+	FText GetUploadTooltip() const;
 };
