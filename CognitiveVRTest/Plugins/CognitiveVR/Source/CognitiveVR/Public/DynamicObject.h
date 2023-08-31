@@ -105,7 +105,9 @@ public:
 
 	//rotation in degrees the object needs to rotate before sending an update
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
-		float RotationThreshold = 10;
+		float RotationThreshold = 0.995f; //10
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
+	FRotator PreviousRotation; //initialized in beginplay
 
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
 		float ScaleThreshold = 0.1;

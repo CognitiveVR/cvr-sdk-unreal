@@ -188,6 +188,9 @@ void UDynamicObject::BeginPlay()
 	cogProvider->OnSessionBegin.AddDynamic(this, &UDynamicObject::Initialize);
 	cogProvider->OnPostSessionEnd.AddDynamic(this, &UDynamicObject::OnPostSessionEnd);
 	cogProvider->OnPreSessionEnd.AddDynamic(this, &UDynamicObject::OnPreSessionEnd);
+
+
+	PreviousRotation = GetOwner()->GetActorRotation();
 }
 
 void UDynamicObject::OnPreSessionEnd()
@@ -413,11 +416,19 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 	{
 		currentTime -= UpdateInterval;
 
-		FVector currentForward = GetForwardVector();
-		
-		float dotRot = FVector::DotProduct(LastForward, currentForward);
+		FVector currentForward = GetForwardVector().GetSafeNormal();
 
-		float actualDegrees = FMath::Acos(FMath::Clamp<float>(dotRot, -1.0, 1.0)) * 57.29578;
+		//get the dot product, if less than threshold, rotated
+		float dotRot = FVector::DotProduct(currentForward, LastForward.GetSafeNormal());
+
+		//find the quaternion degree rotation, if more than threshold, rotated
+		FQuat RotQuat = FQuat::FindBetweenNormals(LastForward.GetSafeNormal(), currentForward);
+		float quatDegrees = FMath::RadiansToDegrees(2.0f * FMath::Acos(RotQuat.W));
+
+		//get current rotation, if changed from previous rotation, rotated
+		FRotator CurrentRotation = GetOwner()->GetActorRotation();
+
+		//multiple methods for getting rotation ensure we get rotation along all axis accounted for
 
 		bool hasScaleChanged = false;
 
@@ -432,9 +443,14 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 			{
 				//moved
 			}
-			else if (actualDegrees > RotationThreshold) //rotator stuff
+			else if (FMath::Abs(quatDegrees) > RotationThreshold || FMath::Abs(dotRot) < RotationThreshold) //rotator stuff
 			{
 				//rotated
+			}
+			else if (CurrentRotation != PreviousRotation)
+			{
+				//rotated, making sure to account for forward vector rotation as well
+				PreviousRotation = CurrentRotation;
 			}
 			else
 			{
