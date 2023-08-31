@@ -5,6 +5,7 @@
 
 void SProjectSetupWidget::CheckForExpiredDeveloperKey(FString developerKey)
 {
+	GConfig->Flush(true, GEngineIni);
 	auto Request = FHttpModule::Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindRaw(this, &SProjectSetupWidget::OnDeveloperKeyResponseReceived);
 	FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
@@ -145,6 +146,7 @@ void SProjectSetupWidget::GetOrganizationDetailsResponse(FHttpRequestPtr Request
 
 void SProjectSetupWidget::Construct(const FArguments& Args)
 {
+	FCognitiveEditorTools::CheckIniConfigured();
 	DisplayAPIKey = FCognitiveEditorTools::GetInstance()->GetApplicationKey().ToString();
 	DisplayDeveloperKey = FCognitiveEditorTools::GetInstance()->GetDeveloperKey().ToString();
 
@@ -193,7 +195,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				.Justification(ETextJustify::Center)
 				.Visibility(this, &SProjectSetupWidget::IsIntroVisible)
 				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Text(FText::FromString("Welcome to the <RichTextBlock.BoldHighlight>Cognitive3D Scene Setup</>"))
+				.Text(FText::FromString("Welcome to the <RichTextBlock.BoldHighlight>Cognitive3D Project Setup</>"))
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
@@ -203,7 +205,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SProjectSetupWidget::IsIntroVisible)
 				.Justification(ETextJustify::Center)
 				.AutoWrapText(true)
-				.Text(FText::FromString("This will guide you through the initial setup of your scene and will have production ready analytics at the end of this setup."))
+				.Text(FText::FromString("This will guide you through the initial setup of your project and will have production ready analytics at the end of this setup."))
 			]
 			+SVerticalBox::Slot()
 			.AutoHeight()

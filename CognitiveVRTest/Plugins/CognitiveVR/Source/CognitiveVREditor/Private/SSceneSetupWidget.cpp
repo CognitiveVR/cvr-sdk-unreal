@@ -21,6 +21,7 @@ void SSceneSetupWidget::CheckForExpiredDeveloperKey()
 {
 	if (FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
 	{
+		GConfig->Flush(true, GEngineIni);
 		auto Request = FHttpModule::Get().CreateRequest();
 		Request->OnProcessRequestComplete().BindRaw(this, &SSceneSetupWidget::OnDeveloperKeyResponseReceived);
 		FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
@@ -67,7 +68,7 @@ void SSceneSetupWidget::OnSceneUploaded(FHttpRequestPtr Request, FHttpResponsePt
 void SSceneSetupWidget::Construct(const FArguments& Args)
 {
 	float padding = 10;
-
+	FCognitiveEditorTools::CheckIniConfigured();
 	CheckForExpiredDeveloperKey();
 
 	ChildSlot

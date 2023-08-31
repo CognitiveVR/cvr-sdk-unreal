@@ -14,6 +14,7 @@ void SDynamicObjectManagerWidget::CheckForExpiredDeveloperKey()
 {
 	if (FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
 	{
+		GConfig->Flush(true, GEngineIni);
 		auto Request = FHttpModule::Get().CreateRequest();
 		Request->OnProcessRequestComplete().BindRaw(this, &SDynamicObjectManagerWidget::OnDeveloperKeyResponseReceived);
 		FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
@@ -108,6 +109,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 {
 	float padding = 10;
 
+	FCognitiveEditorTools::CheckIniConfigured();
 	CheckForExpiredDeveloperKey();
 
 	ChildSlot
