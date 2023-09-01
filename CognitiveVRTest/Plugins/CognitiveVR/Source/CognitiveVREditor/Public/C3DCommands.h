@@ -13,8 +13,8 @@ public:
 	virtual void RegisterCommands() override;
 
 public:
-	TSharedPtr< FUICommandInfo > OpenDynamicObjectWindow;
 	TSharedPtr< FUICommandInfo > OpenProjectSetupWindow;
 	TSharedPtr< FUICommandInfo > OpenSceneSetupWindow;
+	TSharedPtr< FUICommandInfo > OpenDynamicObjectWindow;
 	TSharedPtr< FUICommandInfo > OpenOnlineDocumentation;
 };
