@@ -89,7 +89,8 @@ namespace UnrealBuildTool.Rules
 				string sranipalPlugin = System.IO.Path.Combine(pluginsDirectory, "SRanipal");
 				string sranipalSource = System.IO.Path.Combine(sranipalPlugin, "Source");
 				string[] sourceModules = System.IO.Directory.GetDirectories(sranipalSource);
-				if (sourceModules.Length == 2) //1.1.0.1 and 1.2.0.1 only have eye and lip modules
+				if ((includeModule.HasValue && includeModule.Value == true)
+				|| sourceModules.Length == 2) //1.1.0.1 and 1.2.0.1 only have eye and lip modules
 				{
 					PublicDefinitions.Add("SRANIPAL_1_2_API");
 					System.Console.WriteLine("CognitiveVR.Build.cs adding SRanipal Plugin 1.2 dependencies");
@@ -122,7 +123,8 @@ namespace UnrealBuildTool.Rules
 				string sranipalPlugin = System.IO.Path.Combine(pluginsDirectory, "SRanipal");
 				string sranipalSource = System.IO.Path.Combine(sranipalPlugin, "Source");
 				string[] sourceModules = System.IO.Directory.GetDirectories(sranipalSource);
-				if (sourceModules.Length == 5)
+				if ((includeModule.HasValue && includeModule.Value == true)
+				|| sourceModules.Length == 5)
 				{
 					PublicDefinitions.Add("SRANIPAL_1_3_API");
 					System.Console.WriteLine("CognitiveVR.Build.cs adding SRanipal Plugin 1.3.0.9 (or newer) dependencies");
