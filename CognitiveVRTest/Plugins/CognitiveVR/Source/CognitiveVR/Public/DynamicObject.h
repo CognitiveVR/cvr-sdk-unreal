@@ -101,11 +101,11 @@ public:
 
 	//distance in cm the object needs to move before sending an update
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
-		float PositionThreshold = 2;
+		float PositionThreshold = 1;
 
 	//rotation in degrees the object needs to rotate before sending an update
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
-		float RotationThreshold = 0.995f; //10
+		float RotationThreshold = 1;
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "CognitiveVR Analytics")
 	FRotator PreviousRotation; //initialized in beginplay
 
