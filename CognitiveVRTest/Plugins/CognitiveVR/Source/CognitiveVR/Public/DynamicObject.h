@@ -43,7 +43,7 @@ private:
 	float currentTime = 0;
 	TSharedPtr<FDynamicObjectId> ObjectID;
 	FVector LastPosition;
-	FVector LastForward;
+	FQuat LastRotation;
 	FVector LastScale;
 	bool HasInitialized = false;
 
