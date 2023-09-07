@@ -186,6 +186,8 @@ void UCognitiveVRBlueprints::RecordSensor(const FString Name, const float Value)
 
 void UCognitiveVRBlueprints::GetQuestionSet(const FString Hook, FCognitiveExitPollResponse response)
 {
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return; }
 	if (!cog->exitpoll.IsValid()) { return; }
 	if (!HasSessionStarted()) {return;}
@@ -211,6 +213,8 @@ FExitPollQuestionSet UCognitiveVRBlueprints::GetCurrentExitPollQuestionSet()
 
 void UCognitiveVRBlueprints::SendExitPollAnswers(const TArray<FExitPollAnswer>& Answers)
 {
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cog.IsValid()) { return; }
 	if (!cog->exitpoll.IsValid()) { return; }
 	cog->exitpoll->SendQuestionAnswers(Answers);
