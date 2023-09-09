@@ -63,8 +63,8 @@ void SProjectSetupWidget::GetApplicationKeyResponse(FHttpRequestPtr Request, FHt
 		GLog->Log("Developer Key Response Code is not 200. Developer key may be invalid or expired");
 		return;
 	}
-
-	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("UpdateApplicationKeyBody", "We recommend using the Application Key available from the Dashboard."), LOCTEXT("UpdateApplicationKeyTitle", "Found Application Key"), "Cognitive3dApplicationKey");
+	
+	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("UpdateApplicationKeyBody", "We recommend using the Application Key available from the Dashboard. Do you accept?"), LOCTEXT("UpdateApplicationKeyTitle", "Found Application Key"), "Cognitive3dApplicationKey");
 	Info.ConfirmText = LOCTEXT("Yes", "Yes");
 	Info.CancelText = LOCTEXT("No", "No");
 	Info.CheckBoxText = FText();
