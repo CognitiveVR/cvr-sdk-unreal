@@ -2873,7 +2873,7 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	//build materiallist.txt and export textures for transparent materials
 	WizardExportStaticMaterials(sceneDirectory, sceneMeshes, FCognitiveEditorTools::GetInstance()->GetCurrentSceneName());
 
-	SaveScreenshotToFile();
+	//SaveScreenshotToFile();
 
 	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
