@@ -86,6 +86,9 @@ public:
 	EVisibility IsCompleteVisible() const;
 	EVisibility IsUploadComplete() const;
 
+	EVisibility IsOnlyExportSelected() const;
+	EVisibility IsNotOnlyExportSelected() const;
+
 	EVisibility IsNewSceneUpload() const;
 	EVisibility IsSceneVersionUpload() const;
 	EVisibility IsIntroNewVersionVisible() const;
