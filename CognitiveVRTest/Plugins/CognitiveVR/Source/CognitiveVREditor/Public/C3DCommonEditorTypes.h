@@ -1,0 +1,65 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "http.h"
+#include "C3DCommonEditorTypes.generated.h"
+
+DECLARE_DELEGATE_ThreeParams(FOnUploadSceneGeometry, FHttpRequestPtr, FHttpResponsePtr, bool)
+
+USTRUCT()
+struct FApplicationKeyResponse
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+		FString apikey;
+
+	UPROPERTY()
+		bool valid;
+};
+
+USTRUCT()
+struct FSubscriptionDataResponse
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+		int64 beginning;
+	UPROPERTY()
+		int64 expiration;
+	UPROPERTY()
+		FString planType;
+	UPROPERTY()
+		bool isFreeTrial;
+};
+
+USTRUCT()
+struct FOrganizationDataResponse
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+		FString organizationName;
+	UPROPERTY()
+		TArray< FSubscriptionDataResponse> subscriptions;
+};
+
+USTRUCT()
+struct FDashboardObject
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	FString sdkId;
+	UPROPERTY()
+	FString name;
+	UPROPERTY()
+	FString meshName;
+	UPROPERTY()
+	int64 updatedAt;
+};

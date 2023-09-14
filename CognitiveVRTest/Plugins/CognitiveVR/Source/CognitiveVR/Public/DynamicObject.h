@@ -131,6 +131,7 @@ public:
 	virtual void BeginPlay() override;
 #if WITH_EDITOR
 	virtual bool Modify(bool alwaysMarkDirty) override;
+	virtual void OnRegister() override;
 #endif
 
 	TSharedPtr<FDynamicObjectId> GetObjectId();

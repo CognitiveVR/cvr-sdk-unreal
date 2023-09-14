@@ -5,7 +5,6 @@
 #include "CognitiveVRSettings.h"
 #include "IDetailCustomization.h"
 #include "PropertyEditing.h"
-#include "SDynamicObjectListWidget.h"
 #include "PropertyCustomizationHelpers.h"
 #include "Json.h"
 #include "SCheckBox.h"
@@ -18,133 +17,115 @@
 #include "IImageWrapperModule.h"
 #include "CognitiveVRActor.h"
 #include "Runtime/Online/HTTP/Public/Http.h"
+#include "C3DCommonEditorTypes.h"
+#include "CognitiveVREditorModule.h"
+#include "Editor/EditorEngine.h"
 
 class FCognitiveTools;
 class FCognitiveVREditorModule;
 
+//screens:
+//intro + dev key check
+//controller setup, input.ini
+//export and export path
+//upload checklist
+//upload progress bar
+//complete
+
 class SSceneSetupWidget : public SCompoundWidget
 {
+
 public:
 	SLATE_BEGIN_ARGS(SSceneSetupWidget){}
-	SLATE_ARGUMENT(TArray<TSharedPtr<FDynamicData>>, Items)
-		SLATE_ARGUMENT(FSlateBrush*,ScreenshotTexture)
-	//SLATE_ARGUMENT(FCognitiveEditorTools*, CognitiveEditorTools)
+	SLATE_ARGUMENT(FSlateBrush*,ScreenshotTexture)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& Args);
 	void CheckForExpiredDeveloperKey();
 	void OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	FString DisplayAPIKey;
-	FText GetDisplayAPIKey() const;
-	void OnAPIKeyChanged(const FText& Text);
+	void OnSceneUploaded(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	FString DisplayDeveloperKey;
-	FText GetDisplayDeveloperKey() const;
-	void OnDeveloperKeyChanged(const FText& Text);
+	UENUM()
+	enum class ESceneSetupPage : uint8
+	{
+		Invalid, //dev key isn't set
+		Intro,
+		Controller,
+		Export,
+		UploadChecklist,
+		UploadProgress,
+		Complete
+	};
+	ESceneSetupPage CurrentPageEnum = ESceneSetupPage::Intro;
 
-
+	UENUM()
+	enum class ESceneUploadStatus : uint8
+	{
+		NotStarted,
+		Uploading,
+		Completed
+	};
+	ESceneUploadStatus SceneUploadStatus = ESceneUploadStatus::NotStarted;
 
 	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 
-	/* Adds a new textbox with the string to the list */
-	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FDynamicData> Item, const TSharedRef<STableViewBase>& OwnerTable);
-
-	/* The list of strings */
-	TArray<TSharedPtr<FDynamicData>> Items;
-	//FCognitiveTools* CognitiveTools;
-
-	int32 CurrentPage = 0;
 	bool SceneWasExported = false;
 
 	FReply DebugNextPage();
 	FReply DebugPreviousPage();
-	
-	//FString APIKey;
-	//FText GetAPIKey() const;
-
-	//FText GetDeveloperKey() const;
 
 	
 	FText GetHeaderTitle() const;
+	EVisibility IsInvalidVisible() const;
 	EVisibility IsIntroVisible() const;
-	EVisibility IsKeysVisible() const;
-	EVisibility IsBlenderVisible() const;
-	EVisibility IsExplainDynamicsVisible() const;
-	EVisibility IsExplainSceneVisible() const;
-	EVisibility IsDynamicsVisible() const;
+	EVisibility IsControllerVisible() const;
 	EVisibility IsExportVisible() const;
-	EVisibility IsUploadVisible() const;
+	EVisibility IsUploadChecklistVisible() const;
+	EVisibility IsUploadProgressVisible() const;
 	EVisibility IsCompleteVisible() const;
 	EVisibility IsUploadComplete() const;
-	FReply NextPage();
-	EVisibility NextButtonVisibility() const;
-	bool NextButtonEnabled() const;
-	FText NextButtonText() const;
-	EVisibility BackButtonVisibility() const;
-	FReply LastPage();
-	EVisibility UploadErrorVisibility() const;
-	FText UploadErrorText() const;
+
+	EVisibility IsOnlyExportSelected() const;
+	EVisibility IsNotOnlyExportSelected() const;
+
+	FText ExportButtonText() const;
 
 	EVisibility IsNewSceneUpload() const;
 	EVisibility IsSceneVersionUpload() const;
 	EVisibility IsIntroNewVersionVisible() const;
+	EVisibility UploadErrorVisibility() const;
+	EVisibility UploadThumbnailTextVisibility() const;
 
-	EVisibility ARButtonVisibility() const;
-	FReply ARSkipExport();
 
-	void GetScreenshotBrush();
-	FSlateBrush* ScreenshotTexture;
-	const FSlateBrush* GetScreenshotBrushTexture() const;
+	FReply NextPage();
+	EVisibility NextButtonVisibility() const;
+	bool NextButtonEnabled() const;
+	FText NextButtonText() const;
+	FText GetNextButtonTooltipText() const;
 
-	const FSlateBrush* GetDynamicsGreyTexture() const;
-	FSlateBrush* DynamicsGreyTexture;
-	const FSlateBrush* GetDynamicsBlueTexture() const;
-	FSlateBrush* DynamicsBlueTexture;
-	const FSlateBrush* GetSceneGreyTexture() const;
-	FSlateBrush* SceneGreyTexture;
-	const FSlateBrush* GetSceneBlueTexture() const;
-	FSlateBrush* SceneBlueTexture;
-
-	const FSlateBrush* GetBlenderLogo() const;
-	FSlateBrush* BlenderLogoTexture;
-
-	const FSlateBrush* GetBlueprintStartTexture() const;
-	FSlateBrush* BlueprintStartTexture;
-
-	TSharedRef<ITableRow> OnGenerateSceneExportFileRow(TSharedPtr<FString> InItem, const TSharedRef<STableViewBase>& OwnerTable);
+	EVisibility BackButtonVisibility() const;
+	FReply LastPage();
+	
+	FText UploadErrorText() const;
 	EVisibility DisplayWizardThrobber() const;
-	
 
-	TSharedPtr<SDynamicObjectListWidget> SceneDynamicObjectList;
 	TSharedPtr<SImage> ScreenshotImage;
-
-	FText DisplayDynamicObjectsCountInScene() const;
-	FReply RefreshDisplayDynamicObjectsCountInScene();
-	EVisibility GetDuplicateDyanmicObjectVisibility() const;
-	
 	int32 CountDynamicObjectsInScene() const;
-
-	FText DynamicCountInScene;
-
-	/* The actual UI list */
-	TSharedPtr< SListView< TSharedPtr<FDynamicData> > > ListViewWidget;
-
-	FReply SelectDynamic(TSharedPtr<FDynamicData> data);
+	EVisibility HasExportedSceneTextVisibility() const;
+	FText ExportedSceneText() const;
 
 	FReply SelectAll();
 
-	void RefreshList();
 
+	void GenerateScreenshotBrush();
+	FSlateBrush* ScreenshotTexture;
+	const FSlateBrush* GetScreenshotBrushTexture() const;
 	FReply TakeScreenshot();
-
 	int32 ScreenshotWidth = 256;
 	int32 ScreenshotHeight = 256;
-
 	FOptionalSize GetScreenshotWidth() const;
 	FOptionalSize GetScreenshotHeight() const;
-
-	FReply ValidateAndRefresh();
 
 	FReply EvaluateSceneExport();
 	bool OnlyExportSelected;
@@ -168,4 +149,17 @@ public:
 	/// checks if there's a BP_CognitiveVRActor in the world. spawns one if not
 	/// </summary>
 	void SpawnCognitiveVRActor();
+	FReply OpenProjectSetupWindow();
+
+	const FSlateBrush* GetControllerConfigureBrush() const;
+	FSlateBrush* ControllerConfigureBrush;
+	const FSlateBrush* GetControllerComponentBrush() const;
+	FSlateBrush* ControllerComponentBrush;
+
+	FReply AppendInputs();
+	EVisibility GetAppendedInputsFoundVisibility() const;
+	EVisibility GetAppendedInputsFoundHidden() const;
+
+	FText GetDynamicObjectCountToUploadText() const;
+	FText GetSceneVersionToUploadText() const;
 };

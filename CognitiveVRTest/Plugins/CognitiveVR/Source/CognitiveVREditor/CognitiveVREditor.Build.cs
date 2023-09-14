@@ -12,7 +12,9 @@ public class CognitiveVREditor : ModuleRules
                 "CognitiveVR/Private",
                 "CognitiveVR/Private/api",
                 "CognitiveVR/Private/network",
-                "CognitiveVR/Private/util"
+                "CognitiveVR/Private/util",
+                System.IO.Path.GetFullPath(Target.RelativeEnginePath) + "/Source/Editor/Blutility/Private",
+                System.IO.Path.GetFullPath(Target.RelativeEnginePath) + "/Source/Developer/MeshUtilities/Private"
             });
 
 
@@ -23,7 +25,13 @@ public class CognitiveVREditor : ModuleRules
 				"HTTP",
 				"Json",
 				"JsonUtilities",
-				"MaterialBaking"
+				"MaterialBaking",
+                "Blutility",
+                "UnrealEd",
+                "AssetTools",
+                "SceneOutliner",
+                "EditorScriptingUtilities",
+                "MeshUtilities"
             });
 
         PrivateDependencyModuleNames.AddRange(

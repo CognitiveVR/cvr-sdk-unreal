@@ -1,11 +1,14 @@
 #pragma once
 
+#include "CoreMinimal.h"
+
 #include "CognitiveVRSettings.h"
 #include "CognitiveEditorData.h"
 #include "IDetailCustomization.h"
 #include "PropertyEditing.h"
 #include "PropertyCustomizationHelpers.h"
 #include "Json.h"
+#include "JsonObjectConverter.h"
 
 #include "UnrealEd.h"
 #include "Misc/FileHelper.h"
@@ -24,7 +27,8 @@
 #include "MaterialUtilities.h"
 #include "MaterialBakingStructures.h"
 #include "IMaterialBakingModule.h"
-//#include "MaterialBakingModule.h"
+#include "MeshUtilities.h"
+#include "UObject/Object.h"
 #include "MaterialOptions.h"
 #include "DynamicObject.h"
 #include "GenericPlatformFile.h"
@@ -35,6 +39,7 @@
 #include "RenderingThread.h"
 #include "Classes/Engine/Level.h"
 #include "CoreMisc.h"
+#include "C3DCommonEditorTypes.h"
 
 //all sorts of functionality for Cognitive SDK
 
@@ -42,12 +47,15 @@
 class FCognitiveEditorTools
 {
 public:
-
 	static void Initialize();
 	static FString Gateway;
 
+	static void CheckIniConfigured();
+
 	static FCognitiveEditorTools* CognitiveEditorToolsInstance;
 	static FCognitiveEditorTools* GetInstance();
+
+	FOnUploadSceneGeometry OnUploadSceneGeometry;
 
 	void SaveSceneData(FString sceneName, FString sceneKey);
 
@@ -67,7 +75,7 @@ public:
 
 	FString ApplicationKey;
 	FString AttributionKey;
-	//FString DeveloperKey;
+	FString DeveloperKey;
 
 	FString GetDynamicObjectManifest(FString versionid);
 
@@ -163,7 +171,6 @@ public:
 
 	//bakes textures from translucent and masked materials
 	void WizardExportStaticMaterials(FString directory, TArray<UStaticMeshComponent*> meshes, FString mtlFileName);
-	void WizardExportSkeletalMaterials(FString directory, TArray<USkeletalMeshComponent*> meshes, FString mtlFileName);
 	//returns array of strings describing materials being exported - the material type (opaque, translucent, masked) and the paths for each texture
 	//does the actual file writing for saving textures from material to bmps
 	TArray<FString> WizardExportMaterials(FString directory, TArray<FString> ExportedMaterialNames, TArray<UMaterialInterface*> materials);
@@ -172,7 +179,7 @@ public:
 
 	//dynamic objects
 	//Runs the built-in fbx exporter with all meshes
-		FReply ExportAllDynamics();
+	FProcHandle ExportAllDynamics();
 	//Runs the built-in fbx exporter with all meshes that don't have an exported .gltf
 		FProcHandle ExportNewDynamics();
 
@@ -198,6 +205,10 @@ public:
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
 		FReply UploadDynamicsManifest();
 
+	//this is for aggregating dynamic objects
+	UFUNCTION(Exec, Category = "Dynamics Manifest")
+		FReply UploadSelectedDynamicsManifest(TArray<UDynamicObject*> selectedData);
+
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
 		FReply UploadDynamicsManifestIds(TArray<FString> ids, FString meshName, FString prefabName);
 
@@ -217,8 +228,8 @@ public:
 	void* ChooseParentWindowHandle();
 
 	FString BlenderPath;
-
 	FString BaseExportDirectory;
+	void SaveBlenderPathAndExportPath();
 
 	//c:/users/me/desktop/export/
 	FText GetBaseExportDirectoryDisplay() const;
@@ -249,7 +260,7 @@ public:
 	}
 	FReply SelectBaseExportDirectory();
 
-	FString GetCurrentSceneName()
+	FString GetCurrentSceneName() const
 	{
 		UWorld* myworld = GWorld->GetWorld();
 
@@ -356,21 +367,27 @@ public:
 	void SceneVersionRequest(FEditorSceneData data);
 	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	FText GetDynamicsFromManifest() const;
 	TArray<TSharedPtr<FDynamicData>> SceneExplorerDynamics;
 	TArray<TSharedPtr<FString>> SubDirectoryNames;
 
 	void RefreshSceneUploadFiles();
+	int32 GetSceneExportFileCount();
+	int32 GetDynamicObjectFileExportedCount();
+	int32 GetDynamicObjectExportedCount();
+
 	void RefreshDynamicUploadFiles();
 	TArray<TSharedPtr<FString>> SceneUploadFiles;
 	TArray<TSharedPtr<FString>> DynamicUploadFiles;
+	
+	TArray<FString> GetValidDirectories(const FString& Directory);
+	int32 DynamicObjectExportedCount;
 
 	FText UploadSceneNameFiles() const;
 	FText OpenSceneNameInBrowser() const;
 	FReply OpenURL(FString url);
 	void FindAllSubDirectoryNames();
 	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
-	FReply TakeScreenshot();
+	FReply SaveScreenshotToFile();
 	FReply TakeDynamicScreenshot(FString dynamicName);
 
 	void DelayScreenshot(FString filePath, FLevelEditorViewportClient* perspectiveView, FVector startPos, FRotator startRot);
@@ -407,7 +424,6 @@ public:
 	void AppendDirectoryContents(FString FullPath, int32 depth, FString& outputString);
 
 
-
 	//exporting scene.
 	//create directory
 	//export scene as obj
@@ -416,16 +432,24 @@ public:
 	//run python script
 	void ExportScene(TArray<AActor*> actorsToExport);
 
+	void GenerateSettingsJsonFile();
+	bool HasSettingsJsonFile() const;
+
 	//opens blender and run python script. returns process to do stuff after blender has finished
 	FProcHandle ConvertSceneToGLTF();
+
+	const FSlateBrush* GetBoxEmptyIcon() const;
+	FSlateBrush* BoxEmptyIcon;
+	const FSlateBrush* GetBoxCheckIcon() const;
+	FSlateBrush* BoxCheckIcon;
+	IMeshUtilities& MeshUtilities = FModuleManager::Get().LoadModuleChecked<IMeshUtilities>("MeshUtilities");
 };
 
-
-	//used for uploading multiple dynamics at once
-	class FContentContainer
-	{
-	public:
-		FString Headers;
-		FString BodyText;
-		TArray<uint8> BodyBinary;
-	};
+//used for uploading multiple dynamics at once
+class FContentContainer
+{
+public:
+	FString Headers;
+	FString BodyText;
+	TArray<uint8> BodyBinary;
+};
