@@ -89,6 +89,8 @@ public:
 	EVisibility IsOnlyExportSelected() const;
 	EVisibility IsNotOnlyExportSelected() const;
 
+	FText ExportButtonText() const;
+
 	EVisibility IsNewSceneUpload() const;
 	EVisibility IsSceneVersionUpload() const;
 	EVisibility IsIntroNewVersionVisible() const;

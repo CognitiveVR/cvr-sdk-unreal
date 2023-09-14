@@ -560,7 +560,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						[
 							SNew(SButton)
 							.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-							.Text(FText::FromString("Export"))
+							.Text(this, &SSceneSetupWidget::ExportButtonText)
 							.OnClicked(this, &SSceneSetupWidget::EvaluateSceneExport)
 						]
 					]
@@ -1124,6 +1124,19 @@ EVisibility SSceneSetupWidget::IsNotOnlyExportSelected() const
 		return EVisibility::Collapsed;
 	}
 	return EVisibility::Collapsed;
+}
+
+FText SSceneSetupWidget::ExportButtonText()const
+{
+	if (CurrentPageEnum == ESceneSetupPage::Export)
+	{
+		if (OnlyExportSelected)
+		{
+			return FText::FromString(TEXT("Export Selected"));
+		}
+		return FText::FromString(TEXT("Export All"));
+	}
+	return FText::FromString(TEXT("Export All"));
 }
 
 FReply SSceneSetupWidget::TakeScreenshot()
