@@ -464,6 +464,52 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsNotOnlyExportSelected)
+				+SHorizontalBox::Slot()
+				.AutoWidth()
+				.HAlign(HAlign_Left)
+				[
+					SNew(SImage)
+					.Image(FEditorStyle::GetBrush("SettingsEditor.GoodIcon"))
+				]
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Left)
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsNotOnlyExportSelected)
+					.Text(FText::FromString("All geometry in the scene will be exported"))
+				]
+			]
+
+			+ SVerticalBox::Slot()
+				.HAlign(HAlign_Center)
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsOnlyExportSelected)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.HAlign(HAlign_Left)
+				[
+					SNew(SImage)
+					.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
+				]
+				+ SHorizontalBox::Slot()
+				.HAlign(HAlign_Left)
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsOnlyExportSelected)
+					.Text(FText::FromString("Only selected items will be exported. This might cause loss of context when viewing in Scene Explorer"))
+				]
+			]
+
+			+SVerticalBox::Slot()
+			.HAlign(HAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SHorizontalBox)
 				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 				+SHorizontalBox::Slot()
 				.AutoWidth()
@@ -490,44 +536,36 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.AutoHeight()
 			[
 				SNew(SBox)
-				.WidthOverride(128)
-				.HeightOverride(32)
+				.WidthOverride(256)
 				[
-					SNew(SButton)
-					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-					.Text(FText::FromString("Select All"))
-					.OnClicked(this,&SSceneSetupWidget::SelectAll)
-				]
-			]
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			[
-				SNew(SSeparator)
-				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-			]
-
-			+ SVerticalBox::Slot()
-			.Padding(0, 0, 0, padding)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.AutoHeight()
-			[
-				SNew(SHorizontalBox)
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.WidthOverride(128)
-					.HeightOverride(32)
+					SNew(SHorizontalBox)
+					+SHorizontalBox::Slot()
 					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.Text(FText::FromString("Export"))
-						.OnClicked(this,&SSceneSetupWidget::EvaluateSceneExport)
+						SNew(SBox)
+						.WidthOverride(128)
+						.HeightOverride(32)
+						[
+							SNew(SButton)
+							.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+							.Text(FText::FromString("Select All"))
+							.OnClicked(this,&SSceneSetupWidget::SelectAll)
+						]
+					]
+
+					+SHorizontalBox::Slot()
+					[
+						SNew(SBox)
+						.WidthOverride(128)
+						.HeightOverride(32)
+						[
+							SNew(SButton)
+							.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+							.Text(this, &SSceneSetupWidget::ExportButtonText)
+							.OnClicked(this, &SSceneSetupWidget::EvaluateSceneExport)
+						]
 					]
 				]
 			]
-
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
@@ -538,6 +576,14 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Justification(ETextJustify::Center)
 				.Text(this, &SSceneSetupWidget::ExportedSceneText)
 			]
+
+			+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
+				[
+					SNew(SSeparator)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				]
 
 #pragma endregion
 
@@ -1052,6 +1098,45 @@ EVisibility SSceneSetupWidget::IsUploadComplete() const
 		return EVisibility::Collapsed;
 	}
 	return EVisibility::Visible;
+}
+EVisibility SSceneSetupWidget::IsOnlyExportSelected() const
+{
+	if (CurrentPageEnum == ESceneSetupPage::Export)
+	{
+
+		if (OnlyExportSelected)
+		{
+			return EVisibility::Visible;
+		}
+		return EVisibility::Collapsed;
+	}
+	return EVisibility::Collapsed;
+}
+
+EVisibility SSceneSetupWidget::IsNotOnlyExportSelected() const
+{
+	if (CurrentPageEnum == ESceneSetupPage::Export)
+	{
+		if (!OnlyExportSelected)
+		{
+			return EVisibility::Visible;
+		}
+		return EVisibility::Collapsed;
+	}
+	return EVisibility::Collapsed;
+}
+
+FText SSceneSetupWidget::ExportButtonText()const
+{
+	if (CurrentPageEnum == ESceneSetupPage::Export)
+	{
+		if (OnlyExportSelected)
+		{
+			return FText::FromString(TEXT("Export Selected"));
+		}
+		return FText::FromString(TEXT("Export All"));
+	}
+	return FText::FromString(TEXT("Export All"));
 }
 
 FReply SSceneSetupWidget::TakeScreenshot()
