@@ -930,56 +930,19 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 		return FReply::Handled();
 	}
 
+	TArray<AActor*> ConvertedActorsToBeDeleted;
+	TArray<FAssetData> TempAssetsToBeDeleted;
 
-	//should put this all in a CognitiveEditorTools export function
-	//take array of actors to be exported
-	TArray<AActor*> ToBeExported;
-	if (OnlyExportSelected) //only export selected
-	{
-		for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
-		{
-			if (AActor* Actor = Cast<AActor>(*It))
-			{
-				ToBeExported.Add(Actor);
-			}
-		}
-	}
-	else //select all
-	{
-		UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();
-		GEditor->Exec(World, TEXT("actor select all"));
-		for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
-		{
-			if (AActor* Actor = Cast<AActor>(*It))
-			{
-				ULevel* level = Actor->GetLevel();
-				if (level->bIsVisible == 0) { continue; } //sublevel probably. invisible
-				ToBeExported.Add(Actor);
-			}
-		}
-	}
+	//prepare actors in the scene to be exported
+	//if actor has a skeletal mesh component, convert to static mesh and export the static mesh version of the actor
+	//clean up after to maintain original level
 
-	TArray<AActor*> ToBeExportedFinal;
-	for (int32 i = 0; i < ToBeExported.Num(); i++)
-	{
-		if (ToBeExported[i]->GetName().StartsWith("SkySphereBlueprint"))
-		{
-			continue;
-		}
-		UActorComponent* cameraComponent = ToBeExported[i]->GetComponentByClass(UCameraComponent::StaticClass());
-		if (cameraComponent != NULL)
-		{
-			continue;
-		}
+	TArray<AActor*> ToBeExportedFinal = FCognitiveEditorTools::GetInstance()->PrepareSceneForExport(OnlyExportSelected, ConvertedActorsToBeDeleted, TempAssetsToBeDeleted);
 
-		UActorComponent* actorComponent = ToBeExported[i]->GetComponentByClass(UDynamicObject::StaticClass());
-		if (actorComponent != NULL)
-		{
-			continue;
-		}
-		ToBeExportedFinal.Add(ToBeExported[i]);
-	}
 	FCognitiveEditorTools::GetInstance()->ExportScene(ToBeExportedFinal);
+
+	FCognitiveEditorTools::GetInstance()->CleanUpDuplicatesAndTempAssets(ConvertedActorsToBeDeleted, TempAssetsToBeDeleted);
+	
 
 	SceneWasExported = true;
 	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();

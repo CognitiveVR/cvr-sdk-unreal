@@ -174,6 +174,12 @@ public:
 	//returns array of strings describing materials being exported - the material type (opaque, translucent, masked) and the paths for each texture
 	//does the actual file writing for saving textures from material to bmps
 	TArray<FString> WizardExportMaterials(FString directory, TArray<FString> ExportedMaterialNames, TArray<UMaterialInterface*> materials);
+
+	void CleanUpDuplicatesAndTempAssets(TArray<AActor*>& ConvertedActorsToDelete, TArray<FAssetData>& TempAssetsToDelete);
+
+	AActor* PrepareSkeletalMeshForExport(AActor* SkeletalMeshActor, TArray<AActor*>& ConvertedActorsToDelete, TArray<FAssetData>& TempAssetsToDelete);
+
+	TArray<AActor*> PrepareSceneForExport(bool OnlyExportSelected, TArray<AActor*>& ConvertedActorsToDelete, TArray<FAssetData>& TempAssetsToDelete);
 	
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
 
