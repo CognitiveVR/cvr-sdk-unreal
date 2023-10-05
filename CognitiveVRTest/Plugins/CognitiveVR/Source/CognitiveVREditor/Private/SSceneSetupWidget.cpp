@@ -795,7 +795,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						SNew(SButton)
 						.HAlign(HAlign_Center)
 						.Text(FText::FromString("Open Dashboard"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://app.cognitive3d.com"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, ConstructDashboardURL())
 					]
 				]
 			]
@@ -813,8 +813,97 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("You can continue your integration to get more insights including:\n\nCustom Events\n\nExitPoll surveys\n\nDynamic Objects\n\nMultiplayer"))
+				.Text(FText::FromString("You can continue your integration to get more insights including:"))//\n\nCustom Events\n\nExitPoll surveys\n\nDynamic Objects\n\nMultiplayer
 			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Center)
+				.Padding(0,5,0,5)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("Custom Events"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/customevents/"))
+					]
+				]
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Center)
+				.Padding(0,5,0,5)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("ExitPoll surveys"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/exitpoll/"))
+					]
+				]
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Center)
+				.Padding(0,5,0,5)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("Dynamic Objects"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/dynamic-objects/"))
+					]
+				]
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Center)
+				.Padding(0,5,0,5)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("Multiplayer"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/multiplayer/"))
+					]
+				]
+			]
+			+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+				.AutoWrapText(true)
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("Or check out the getting started guide:"))
+				]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
@@ -1100,6 +1189,25 @@ FText SSceneSetupWidget::ExportButtonText()const
 		return FText::FromString(TEXT("Export All"));
 	}
 	return FText::FromString(TEXT("Export All"));
+}
+
+
+FString SSceneSetupWidget::ConstructDashboardURL()
+{
+	FString outputString = "";
+	//scene settings (name, id, version)
+	for (auto& elem : FCognitiveEditorTools::GetInstance()->SceneData)
+	{
+		if (elem->Name == UGameplayStatics::GetCurrentLevelName(GWorld))
+		{
+			outputString += FString("https://app.cognitive3d.com/scenes/") + elem->Id;
+			outputString += FString("/v/") + elem->Id;
+			outputString += FString::FromInt(elem->VersionNumber);
+			outputString += FString("/insights");
+		}
+	}
+
+	return outputString;
 }
 
 FReply SSceneSetupWidget::TakeScreenshot()

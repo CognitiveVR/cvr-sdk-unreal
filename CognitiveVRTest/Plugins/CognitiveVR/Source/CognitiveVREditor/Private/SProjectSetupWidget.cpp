@@ -64,9 +64,9 @@ void SProjectSetupWidget::GetApplicationKeyResponse(FHttpRequestPtr Request, FHt
 		return;
 	}
 	
-	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("UpdateApplicationKeyBody", "We recommend using the Application Key available from the Dashboard. Do you accept?"), LOCTEXT("UpdateApplicationKeyTitle", "Found Application Key"), "Cognitive3dApplicationKey");
-	Info.ConfirmText = LOCTEXT("Yes", "Yes");
-	Info.CancelText = LOCTEXT("No", "No");
+	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("UpdateApplicationKeyBody", "Found Application Key on the Dashboard, we recommend using this key."), LOCTEXT("UpdateApplicationKeyTitle", "Found Application Key"), "Cognitive3dApplicationKey");
+	Info.ConfirmText = LOCTEXT("Yes", "Ok");
+	//Info.CancelText = LOCTEXT("No", "No");
 	Info.CheckBoxText = FText();
 	FSuppressableWarningDialog WarnAboutCoordinatesSystem(Info);
 	FSuppressableWarningDialog::EResult result = WarnAboutCoordinatesSystem.ShowModal();
