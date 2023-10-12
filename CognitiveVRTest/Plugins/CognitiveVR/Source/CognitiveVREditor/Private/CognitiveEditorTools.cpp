@@ -2994,7 +2994,7 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	FCognitiveEditorTools::VerifyOrCreateDirectory(dir);
 	
 
-#if ENGINE_MAJOR_VERSION == 4
+
 	//export scene in fbx
 	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".fbx";
 	FSuppressableWarningDialog::FSetupInfo ExportSettingsInfo(LOCTEXT("ExportSettingsBody", "The recommended settings for exporting meshes is to disable Level of Detail and disable Collision"), LOCTEXT("ExportSettingsTitle", "Recommended Export Settings"), "ExportSelectedDynamicsBody");
@@ -3002,16 +3002,6 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	ExportSettingsInfo.CheckBoxText = FText::FromString("Don't show again");
 	FSuppressableWarningDialog ExportSelectedDynamicMeshes(ExportSettingsInfo);
 	ExportSelectedDynamicMeshes.ShowModal();
-#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 0
-	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".fbx";
-	FSuppressableWarningDialog::FSetupInfo ExportSettingsInfo(LOCTEXT("ExportSettingsBody", "The recommended settings for exporting meshes is to disable Level of Detail and disable Collision"), LOCTEXT("ExportSettingsTitle", "Recommended Export Settings"), "ExportSelectedDynamicsBody");
-	ExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
-	ExportSettingsInfo.CheckBoxText = FText::FromString("Don't show again");
-	FSuppressableWarningDialog ExportSelectedDynamicMeshes(ExportSettingsInfo);
-	ExportSelectedDynamicMeshes.ShowModal();
-#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 1 || ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3
-	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".gltf";
-#endif
 	
 	GEditor->ExportMap(tempworld, *ExportedSceneFile2, true);
 
@@ -3057,21 +3047,13 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene unable to save settings.json"));
 	}
 
-#if ENGINE_MAJOR_VERSION == 4
+
 	//Convert scene to GLTF. run python script. wait if blender process is running
 	FProcHandle fph = ConvertSceneToGLTF();
 	if (fph.IsValid())
 	{
 		FPlatformProcess::WaitForProc(fph);
 	}
-#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 0
-	//Convert scene to GLTF. run python script. wait if blender process is running
-	FProcHandle fph = ConvertSceneToGLTF();
-	if (fph.IsValid())
-	{
-		FPlatformProcess::WaitForProc(fph);
-	}
-#endif
 
 	//write debug.log including unreal data, scene contents, folder contents
 	//should happen after blender finishes/next button is pressed

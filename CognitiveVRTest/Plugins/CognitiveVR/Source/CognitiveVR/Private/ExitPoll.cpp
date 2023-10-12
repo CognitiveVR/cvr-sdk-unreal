@@ -23,9 +23,6 @@ void ExitPoll::MakeQuestionSetRequest(const FString Hook, FCognitiveExitPollResp
 	lastResponse = response;
 	lastHook = Hook;
 	cogProvider.Pin()->network->NetworkExitPollGetQuestionSet(Hook,response);
-
-	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
-	cognitive->customEventRecorder->Send("cvr.exitpoll");
 }
 
 void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)

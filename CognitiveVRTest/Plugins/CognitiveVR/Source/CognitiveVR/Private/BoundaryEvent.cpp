@@ -1,13 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "CognitiveVR/Private/BoundaryEvent.h"
-#if ENGINE_MAJOR_VERSION == 4
-#include "OculusFunctionLibrary.h"
-#elif ENGINE_MAJOR_VERSION == 5
-#include "OculusXRFunctionLibrary.h"
-#endif
 #include "DrawDebugHelpers.h"
-
+#include "Interfaces/IPluginManager.h"
 
 // Sets default values
 UBoundaryEvent::UBoundaryEvent()
@@ -66,25 +61,6 @@ void UBoundaryEvent::OnSessionEnd()
 	world->GetTimerManager().ClearTimer(IntervalHandle);
 }
 
-//Find out if a point resides inside a polygon
-bool UBoundaryEvent::IsPointInPolygon4(TArray<FVector> polygon, FVector testPoint)
-{
-	bool result = false;
-	int j = polygon.Num() - 1;
-	for (int i = 0; i < polygon.Num(); i++)
-	{
-		if (polygon[i].Y < testPoint.Y && polygon[j].Y >= testPoint.Y || polygon[j].Y < testPoint.Y && polygon[i].Y >= testPoint.Y)
-		{
-			if (polygon[i].X + (testPoint.Y - polygon[i].Y) / (polygon[j].Y - polygon[i].Y) * (polygon[j].X - polygon[i].X) < testPoint.X)
-			{
-				result = !result;
-			}
-		}
-		j = i;
-	}
-	return result;
-}
-
 
 void UBoundaryEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -101,31 +77,25 @@ void UBoundaryEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	//check if player hmd is outside of bounds
 	if (UHeadMountedDisplayFunctionLibrary::HasValidTrackingPosition())
 	{
-		//oculus hmd
-#if OCULUS_HMD_SUPPORTED_PLATFORMS
 
 		if (cognitive->TryGetRoomSize(RoomSize))
 		{
 			if (RoomSize.X > 0 && RoomSize.Y > 0) //room scale boundary
 			{
 				//get the 4 corners of the boundary in world space
-#if ENGINE_MAJOR_VERSION == 4 
-				TArray<FVector> GuardianPoints = UOculusFunctionLibrary::GetGuardianPoints(EBoundaryType::Boundary_PlayArea, false);
-#elif ENGINE_MAJOR_VERSION == 5
-				TArray<FVector> GuardianPoints = UOculusXRFunctionLibrary::GetGuardianPoints(EOculusXRBoundaryType::Boundary_PlayArea, false);
-#endif
-				for (int i = 0; i < GuardianPoints.Num(); i++)
-				{
-					FString PointsMessage = "Guardian Boundary Points: " + FString::SanitizeFloat(GuardianPoints[i].X) + ", " + FString::SanitizeFloat(GuardianPoints[i].Y) + ", " + FString::SanitizeFloat(GuardianPoints[i].Z);
-					GEngine->AddOnScreenDebugMessage(90 + i, 50, FColor::Blue, PointsMessage);
-				}
+				cognitive->TryGetHMDGuardianPoints(GuardianPoints);
 
 				//get player position in world space
 				cognitive->TryGetPlayerHMDPosition(HMDWorldPos);
 
 
 				//compare the points
-				bool isInsideBoundary = IsPointInPolygon4(GuardianPoints, HMDWorldPos);
+				bool isInsideBoundary = cognitive->IsPointInPolygon4(GuardianPoints, HMDWorldPos);
+
+				//we do this instead of using the functions to check for node or point intersection 
+				//because they were tested and shown to not be consistent amongst UE versions and also
+				//would not work properly when deployed to the quest 2.
+
 
 				//if we are not inside the boundary anymore, switch the flag to true so it can be captured by the timer event
 				if (!isInsideBoundary)
@@ -139,16 +109,11 @@ void UBoundaryEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 			}
 			else //stationary boundary
 			{
-				//for stationary, we compare the local (inside tracking area) position of the hmd against pre-set points
-#if ENGINE_MAJOR_VERSION == 4 
-				UOculusFunctionLibrary::GetPose(HMDRotation, HMDPosition, HMDNeckPos, true, true, FVector::OneVector); //position inside bounds
-#elif ENGINE_MAJOR_VERSION == 5
-				UOculusXRFunctionLibrary::GetPose(HMDRotation, HMDPosition, HMDNeckPos, true, true, FVector::OneVector);
-#endif
-				
-				cognitive->TryGetPlayerHMDPosition(HMDWorldPos);
+				//for stationary, we compare the local (inside tracking area) position of the hmd against pre-set points'
+				cognitive->TryGetHMDPose(HMDRotation, HMDPosition, HMDNeckPos);
 
-				bool isInsideBoundary = IsPointInPolygon4(StationaryPoints, HMDPosition);
+				bool isInsideBoundary = cognitive->IsPointInPolygon4(StationaryPoints, HMDPosition);
+
 
 				if (!isInsideBoundary)
 				{
@@ -160,11 +125,6 @@ void UBoundaryEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 				}
 			}
 		}
-	
-#else
-		//todo: other platforms
-		
-#endif
 
 	}
 

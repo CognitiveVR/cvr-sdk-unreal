@@ -24,7 +24,6 @@ private:
 	UFUNCTION()
 		void OnSessionEnd();
 
-	bool IsPointInPolygon4(TArray<FVector> polygon, FVector testPoint);
 
 	FVector RoomSize;
 	FVector HMDWorldPos;
@@ -33,8 +32,9 @@ private:
 	FVector HMDPosition;
 	FVector HMDNeckPos;
 	TArray<FVector> StationaryPoints;
+	TArray<FVector> GuardianPoints;
 
-	float Interval = 1;
+	float Interval = 0.1f; //change
 	FTimerHandle IntervalHandle;
 	void EndInterval();
 

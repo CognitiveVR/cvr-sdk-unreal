@@ -55,16 +55,12 @@ namespace UnrealBuildTool.Rules
 				}
 				);
 
-#if UE_4_26_OR_LATER
-	PublicDependencyModuleNames.Add("DeveloperSettings");
-#endif
+			PublicDependencyModuleNames.Add("DeveloperSettings");
 
-			//editor/windows and android
-			if (Target.Platform == UnrealTargetPlatform.Win64 || Target.Platform == UnrealTargetPlatform.Android)
-			{
-				PublicDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem", "OnlineSubsystemOculus", "LibOVRPlatform", "OculusHMD" });
-			}
-
+		
+			//if not using oculus, comment these out
+			Definitions.Add("INCLUDE_OCULUS_PLUGIN");
+			PublicDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem", "OnlineSubsystemOculus", "LibOVRPlatform", "OculusHMD" });
 			//uncomment this to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
 			//PublicDefinitions.Add("OPENXR_EYETRACKING");
 			//PublicDefinitions.Add("OPENXR_LOCALSPACE"); //uncomment this if OPENXR implemented in local space instead of worldspace
