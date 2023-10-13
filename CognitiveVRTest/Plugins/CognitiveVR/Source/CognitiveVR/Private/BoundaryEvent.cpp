@@ -34,6 +34,7 @@ void UBoundaryEvent::OnSessionBegin()
 	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
 	if (world == nullptr) { return; }
 	BoundaryCrossed = false;
+	StillOutsideBoundary = false;
 	StationaryPoints.Add(FVector(75, 50, 0));
 	StationaryPoints.Add(FVector(75, -70, 0));
 	StationaryPoints.Add(FVector(-65, -70, 0));
@@ -46,11 +47,10 @@ void UBoundaryEvent::EndInterval()
 {
 	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 
-	if (BoundaryCrossed)
+	if (BoundaryCrossed && !StillOutsideBoundary)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("c3d.user.exited.boundary"));
-		GEngine->AddOnScreenDebugMessage(3, 8, FColor::Yellow, TEXT("c3d.user.exited.boundary"));
 		cognitive->customEventRecorder->Send("c3d.user.exited.boundary");
+		StillOutsideBoundary = true;
 	}
 }
 
@@ -105,6 +105,7 @@ void UBoundaryEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 				else
 				{
 					BoundaryCrossed = false;
+					StillOutsideBoundary = false;
 				}
 			}
 			else //stationary boundary
@@ -122,6 +123,7 @@ void UBoundaryEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 				else
 				{
 					BoundaryCrossed = false;
+					StillOutsideBoundary = false;
 				}
 			}
 		}

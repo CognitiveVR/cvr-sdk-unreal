@@ -39,4 +39,5 @@ private:
 	void EndInterval();
 
 	bool BoundaryCrossed;
+	bool StillOutsideBoundary;
 };
