@@ -2,7 +2,7 @@
 
 UTrackingEvent::UTrackingEvent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
 void UTrackingEvent::BeginPlay()
@@ -16,9 +16,24 @@ void UTrackingEvent::BeginPlay()
 		//cognitive->OnSessionBegin.AddDynamic(this, &UTrackingEvent::OnSessionBegin);
 		if (cognitive->HasStartedSession())
 		{
-			//OnSessionBegin();
+			OnSessionBegin();
+			
 		}
 	}
+}
+
+void UTrackingEvent::OnSessionBegin()
+{
+	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	if (world == nullptr) { return; }
+	float DelaySeconds = 1.0f;
+	world->GetTimerManager().SetTimer(IntervalHandle, this, &UTrackingEvent::EnableTick, DelaySeconds, false);
+}
+
+
+void UTrackingEvent::EnableTick()
+{
+	PrimaryComponentTick.bCanEverTick = true;
 }
 
 void UTrackingEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
