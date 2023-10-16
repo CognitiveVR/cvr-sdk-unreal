@@ -13,16 +13,36 @@ void UTrackingEvent::BeginPlay()
 	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (cognitive.IsValid())
 	{
-		//cognitive->OnSessionBegin.AddDynamic(this, &UTrackingEvent::OnSessionBegin);
+		cognitive->OnSessionBegin.AddDynamic(this, &UTrackingEvent::OnSessionBegin);
 		if (cognitive->HasStartedSession())
 		{
-			//OnSessionBegin();
+			OnSessionBegin();
+			
 		}
 	}
 }
 
+void UTrackingEvent::OnSessionBegin()
+{
+	auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+	if (world == nullptr) { return; }
+	float DelaySeconds = 1.0f;
+	bCanTick = false;
+	world->GetTimerManager().SetTimer(IntervalHandle, this, &UTrackingEvent::EnableTick, DelaySeconds, false);
+}
+
+
+void UTrackingEvent::EnableTick()
+{
+	bCanTick = true;
+}
+
 void UTrackingEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+	if (!bCanTick)
+	{
+		return;
+	}
 	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (!cognitive.IsValid())
 	{

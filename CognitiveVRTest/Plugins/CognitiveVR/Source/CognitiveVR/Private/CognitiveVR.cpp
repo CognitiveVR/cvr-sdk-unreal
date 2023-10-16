@@ -3,6 +3,14 @@
 #include "CognitiveVR/Public/CognitiveVR.h"
 #include "CognitiveVR/Public/CognitiveVRProvider.h"
 #include "Classes/Camera/CameraComponent.h"
+#ifdef INCLUDE_OCULUS_PLUGIN
+#if ENGINE_MAJOR_VERSION == 4
+#include "OculusFunctionLibrary.h"
+#elif ENGINE_MAJOR_VERSION == 5 
+#include "OculusXRFunctionLibrary.h"
+#endif
+#endif
+#include "Interfaces/IPluginManager.h"
 //IMPROVEMENT this should be in the header, but can't find ControllerType enum
 #include "CognitiveVR/Private/InputTracker.h"
 
@@ -984,12 +992,24 @@ bool FAnalyticsProviderCognitiveVR::HasEyeTrackingSDK()
 
 bool FAnalyticsProviderCognitiveVR::TryGetRoomSize(FVector& roomsize)
 {
+#if INCLUDE_OCULUS_PLUGIN
 #if ENGINE_MAJOR_VERSION == 5
+	FVector BoundaryPoints = UOculusXRFunctionLibrary::GetGuardianDimensions(EOculusXRBoundaryType::Boundary_PlayArea);
+	roomsize.X = BoundaryPoints.X;
+	roomsize.Y = BoundaryPoints.Y;
+	return true;
+#elif ENGINE_MAJOR_VERSION == 4
+	FVector BoundaryPoints = UOculusFunctionLibrary::GetGuardianDimensions(EBoundaryType::Boundary_PlayArea);
+	roomsize.X = BoundaryPoints.X;
+	roomsize.Y = BoundaryPoints.Y;
+	return true;
+#endif
+#elif ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION == 27 
 	FVector2D areaBounds = UHeadMountedDisplayFunctionLibrary::GetPlayAreaBounds();
 	roomsize.X = areaBounds.X;
 	roomsize.Y = areaBounds.Y;
 	return true;
-#elif ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION == 27
+#elif ENGINE_MAJOR_VERSION == 5
 	FVector2D areaBounds = UHeadMountedDisplayFunctionLibrary::GetPlayAreaBounds();
 	roomsize.X = areaBounds.X;
 	roomsize.Y = areaBounds.Y;
@@ -997,6 +1017,73 @@ bool FAnalyticsProviderCognitiveVR::TryGetRoomSize(FVector& roomsize)
 #else
 	return false;
 #endif
+}
+
+bool FAnalyticsProviderCognitiveVR::TryGetHMDGuardianPoints(TArray<FVector>& GuardianPoints)
+{
+#ifdef INCLUDE_OCULUS_PLUGIN
+#if ENGINE_MAJOR_VERSION == 4 
+	GuardianPoints = UOculusFunctionLibrary::GetGuardianPoints(EBoundaryType::Boundary_PlayArea, false);
+	return true;
+#elif ENGINE_MAJOR_VERSION == 5 
+	GuardianPoints = UOculusXRFunctionLibrary::GetGuardianPoints(EOculusXRBoundaryType::Boundary_PlayArea, false);
+	return true;
+#endif
+#else
+	return false;
+#endif
+	
+}
+
+//this function tries to get the pose of an HMD inside the pre-set boundaries
+//primarily used for stationary guardian intersection
+bool FAnalyticsProviderCognitiveVR::TryGetHMDPose(FRotator& HMDRotation, FVector& HMDPosition, FVector& HMDNeckPos)
+{
+
+#ifdef INCLUDE_OCULUS_PLUGIN
+#if ENGINE_MAJOR_VERSION == 4 
+	UOculusFunctionLibrary::GetPose(HMDRotation, HMDPosition, HMDNeckPos, true, true, FVector::OneVector); //position inside bounds
+	return true;
+#elif ENGINE_MAJOR_VERSION == 5
+	UOculusXRFunctionLibrary::GetPose(HMDRotation, HMDPosition, HMDNeckPos, true, true, FVector::OneVector);
+	return true;
+#endif
+#else
+	return false;
+#endif
+
+}
+
+bool FAnalyticsProviderCognitiveVR::IsPointInPolygon4(TArray<FVector> polygon, FVector testPoint)
+{
+	bool result = false;
+	int j = polygon.Num() - 1;
+	for (int i = 0; i < polygon.Num(); i++)
+	{
+		if (polygon[i].Y < testPoint.Y && polygon[j].Y >= testPoint.Y || polygon[j].Y < testPoint.Y && polygon[i].Y >= testPoint.Y)
+		{
+			if (polygon[i].X + (testPoint.Y - polygon[i].Y) / (polygon[j].Y - polygon[i].Y) * (polygon[j].X - polygon[i].X) < testPoint.X)
+			{
+				result = !result;
+			}
+		}
+		j = i;
+	}
+	return result;
+}
+
+
+bool FAnalyticsProviderCognitiveVR::IsPluginEnabled(const FString& PluginName)
+{
+	IPluginManager& PluginManager = IPluginManager::Get();
+	TSharedPtr<IPlugin> Plugin = PluginManager.FindPlugin(PluginName);
+
+	if (Plugin.IsValid())
+	{
+		return Plugin->IsEnabled();
+	}
+
+	return false;
 }
 
 TWeakObjectPtr<UDynamicObject> FAnalyticsProviderCognitiveVR::GetControllerDynamic(bool right)

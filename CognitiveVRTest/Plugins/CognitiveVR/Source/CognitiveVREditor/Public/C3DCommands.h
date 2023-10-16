@@ -17,4 +17,5 @@ public:
 	TSharedPtr< FUICommandInfo > OpenSceneSetupWindow;
 	TSharedPtr< FUICommandInfo > OpenDynamicObjectWindow;
 	TSharedPtr< FUICommandInfo > OpenOnlineDocumentation;
+	TSharedPtr< FUICommandInfo > OpenCognitiveDashboard;
 };

@@ -438,6 +438,8 @@ public:
 	//run python script
 	void ExportScene(TArray<AActor*> actorsToExport);
 
+	void ValidateGeneratedFiles();
+
 	void GenerateSettingsJsonFile();
 	bool HasSettingsJsonFile() const;
 

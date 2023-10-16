@@ -25,6 +25,7 @@ public:
 	static void SpawnCognitiveDynamicTab();
 	static void SpawnCognitiveProjectSetupTab();
 	static void OpenOnlineDocumentation();
+	static void OpenCognitiveDashboard();
 	static void CloseProjectSetupWindow();
 	static void CloseSceneSetupWindow();
 	static void CloseDynamicObjectWindow();

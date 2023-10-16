@@ -55,19 +55,21 @@ namespace UnrealBuildTool.Rules
 				}
 				);
 
-#if UE_4_26_OR_LATER
-	PublicDependencyModuleNames.Add("DeveloperSettings");
-#endif
+			PublicDependencyModuleNames.Add("DeveloperSettings");
 
-		//uncomment this to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
-		//PublicDefinitions.Add("OPENXR_EYETRACKING");
-		//PublicDefinitions.Add("OPENXR_LOCALSPACE"); //uncomment this if OPENXR implemented in local space instead of worldspace
+		
+			//if not using oculus, comment these out
+			Definitions.Add("INCLUDE_OCULUS_PLUGIN");
+			PublicDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem", "OnlineSubsystemOculus", "LibOVRPlatform", "OculusHMD" });
+			//uncomment this to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
+			//PublicDefinitions.Add("OPENXR_EYETRACKING");
+			//PublicDefinitions.Add("OPENXR_LOCALSPACE"); //uncomment this if OPENXR implemented in local space instead of worldspace
 
-		//uncomment these lines to enable Vive WaveVR eye tracking support
-		//PublicDefinitions.Add("WAVEVR_EYETRACKING");
-		//PublicDependencyModuleNames.Add("WaveVR");
+			//uncomment these lines to enable Vive WaveVR eye tracking support
+			//PublicDefinitions.Add("WAVEVR_EYETRACKING");
+			//PublicDependencyModuleNames.Add("WaveVR");
 
-		var pluginsDirectory = System.IO.Path.Combine(Target.ProjectFile.Directory.ToString(),"Plugins");
+			var pluginsDirectory = System.IO.Path.Combine(Target.ProjectFile.Directory.ToString(),"Plugins");
 		
 		//Varjo (up to and including version 3.0.0)
 		if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory,"Varjo")))
@@ -175,6 +177,6 @@ namespace UnrealBuildTool.Rules
 					}
 				);
 			}
-        }
+		}
 	}
 }

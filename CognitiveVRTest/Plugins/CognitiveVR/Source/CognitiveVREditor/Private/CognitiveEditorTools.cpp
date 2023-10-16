@@ -164,6 +164,44 @@ void FCognitiveEditorTools::CheckIniConfigured()
 		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("LocalCacheSize"), 100, GEngineIni);
 		GConfig->Flush(false, GEngineIni);
 	}
+
+	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+	GConfig->Flush(true, EngineIni);
+	FString tempGatewaydefault;
+	GConfig->GetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), tempGatewaydefault, EngineIni);
+
+	if (tempGatewaydefault.IsEmpty())
+	{
+		GLog->Log("FCognitiveEditorTools::CheckIniConfigured write defaults to ini");
+		FString defaultgateway = "data.cognitive3d.com";
+		FString trueString = "True";
+		GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), *defaultgateway, EngineIni);
+
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("GazeBatchSize"), 64, EngineIni);
+
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("CustomEventBatchSize"), 64, EngineIni);
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("CustomEventAutoTimer"), 30, EngineIni);
+
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("DynamicDataLimit"), 64, EngineIni);
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("DynamicAutoTimer"), 30, EngineIni);
+
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SensorDataLimit"), 64, EngineIni);
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SensorAutoTimer"), 30, EngineIni);
+
+		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+
+		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
+
+		GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("EnableLocalCache"), *trueString, EngineIni);
+		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("LocalCacheSize"), 100, EngineIni);
+		GConfig->Flush(false, EngineIni);
+	}
 }
 
 //at any step in the uploading process
@@ -2951,13 +2989,20 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	FString sceneDirectory = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/";
 	FCognitiveEditorTools::VerifyOrCreateDirectory(sceneDirectory);
 
-	//export scene
-	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".obj";
+	//create screenshot directory
+	FString dir = BaseExportDirectory + "/" + GetCurrentSceneName() + "/screenshot/";
+	FCognitiveEditorTools::VerifyOrCreateDirectory(dir);
+	
+
+
+	//export scene in fbx
+	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".fbx";
 	FSuppressableWarningDialog::FSetupInfo ExportSettingsInfo(LOCTEXT("ExportSettingsBody", "The recommended settings for exporting meshes is to disable Level of Detail and disable Collision"), LOCTEXT("ExportSettingsTitle", "Recommended Export Settings"), "ExportSelectedDynamicsBody");
 	ExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
 	ExportSettingsInfo.CheckBoxText = FText::FromString("Don't show again");
 	FSuppressableWarningDialog ExportSelectedDynamicMeshes(ExportSettingsInfo);
 	ExportSelectedDynamicMeshes.ShowModal();
+	
 	GEditor->ExportMap(tempworld, *ExportedSceneFile2, true);
 
 	//check that the map was actually exported and generated temporary files
@@ -3002,6 +3047,7 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene unable to save settings.json"));
 	}
 
+
 	//Convert scene to GLTF. run python script. wait if blender process is running
 	FProcHandle fph = ConvertSceneToGLTF();
 	if (fph.IsValid())
@@ -3014,6 +3060,62 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	FString fullPath = escapedOutPath + "/debug.log";
 	FString fileContents = BuildDebugFileContents();
 	FFileHelper::SaveStringToFile(fileContents, *fullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+
+	ValidateGeneratedFiles();
+	
+
+}
+
+void FCognitiveEditorTools::ValidateGeneratedFiles()
+{
+	//validate other files:
+	FString ExportDirPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/";
+	TArray<FString> FoundFiles;
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+	// Get all files with .gltf extension in the directory
+	PlatformFile.FindFiles(FoundFiles, *ExportDirPath, TEXT("gltf"));
+	//bin
+	PlatformFile.FindFiles(FoundFiles, *ExportDirPath, TEXT("bin"));
+	//json
+	PlatformFile.FindFiles(FoundFiles, *ExportDirPath, TEXT("json"));
+	//fbx
+	PlatformFile.FindFiles(FoundFiles, *ExportDirPath, TEXT("fbx"));
+	//bmp
+	PlatformFile.FindFiles(FoundFiles, *ExportDirPath, TEXT("bmp"));
+
+	bool FoundErrorFile = false;
+
+	//see if the size is more than or equal to 3, meaning we found the gltf, the bin and json files
+	if (FoundFiles.Num() >= 3)
+	{
+		// Found at least one .txt file in the directory.
+		for (FString File : FoundFiles)
+		{
+			// Do something with each file, if needed.
+			UE_LOG(LogTemp, Warning, TEXT("Found file: %s"), *File);
+			if (File.Contains(".fbx"))
+			{
+				UE_LOG(LogTemp, Error, TEXT("Warning!! Found fbx file: %s. Please try exporting again."), *File);
+				FoundErrorFile = true;
+			}
+			if (File.Contains(".bmp"))
+			{
+				UE_LOG(LogTemp, Error, TEXT("Warning!! Found bmp file: %s. Please try exporting again."), *File);
+				FoundErrorFile = true;
+			}
+		}
+		if (!FoundErrorFile)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportScene verified generated files"));
+		}
+		
+	}
+	else
+	{
+		// No required files found in the directory.
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene could not validate generated files"));
+	}
 }
 
 void FCognitiveEditorTools::GenerateSettingsJsonFile()
