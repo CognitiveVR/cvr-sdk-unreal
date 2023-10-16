@@ -98,6 +98,12 @@ void FCognitiveVREditorModule::StartupModule()
 		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::OpenOnlineDocumentation)
 	);
 
+	PluginCommands->MapAction(
+		FCognitive3DCommands::Get().OpenCognitiveDashboard,
+		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::OpenCognitiveDashboard)
+	);
+
+
 	//append the menu after help
 	TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
 	MenuExtender->AddMenuBarExtension(
@@ -134,6 +140,7 @@ void FCognitiveVREditorModule::StartupModule()
 		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenSceneSetupWindow);
 		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenDynamicObjectWindow);
 		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenOnlineDocumentation);
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenCognitiveDashboard);
 	}
 
 void FCognitiveVREditorModule::ShutdownModule()
@@ -194,6 +201,12 @@ void FCognitiveVREditorModule::SpawnCognitiveProjectSetupTab()
 void FCognitiveVREditorModule::OpenOnlineDocumentation()
 {
 	FString url = "https://docs.cognitive3d.com/unreal/get-started/";
+	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);
+}
+
+void FCognitiveVREditorModule::OpenCognitiveDashboard()
+{
+	FString url = "https://app.cognitive3d.com";
 	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);
 }
 

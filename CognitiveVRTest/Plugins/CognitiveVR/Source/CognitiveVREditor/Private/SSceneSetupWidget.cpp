@@ -795,7 +795,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						SNew(SButton)
 						.HAlign(HAlign_Center)
 						.Text(FText::FromString("Open Dashboard"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://app.cognitive3d.com"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, ConstructDashboardURL())
 					]
 				]
 			]
@@ -813,8 +813,97 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("You can continue your integration to get more insights including:\n\nCustom Events\n\nExitPoll surveys\n\nDynamic Objects\n\nMultiplayer"))
+				.Text(FText::FromString("You can continue your integration to get more insights including:"))//\n\nCustom Events\n\nExitPoll surveys\n\nDynamic Objects\n\nMultiplayer
 			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Center)
+				.Padding(0,5,0,5)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("Custom Events"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/customevents/"))
+					]
+				]
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Center)
+				.Padding(0,5,0,5)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("ExitPoll surveys"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/exitpoll/"))
+					]
+				]
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Center)
+				.Padding(0,5,0,5)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("Dynamic Objects"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/dynamic-objects/"))
+					]
+				]
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Center)
+				.Padding(0,5,0,5)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("Multiplayer"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/multiplayer/"))
+					]
+				]
+			]
+			+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+				.AutoWrapText(true)
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("Or check out the getting started guide:"))
+				]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
@@ -930,56 +1019,19 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 		return FReply::Handled();
 	}
 
+	TArray<AActor*> ConvertedActorsToBeDeleted;
+	TArray<FAssetData> TempAssetsToBeDeleted;
 
-	//should put this all in a CognitiveEditorTools export function
-	//take array of actors to be exported
-	TArray<AActor*> ToBeExported;
-	if (OnlyExportSelected) //only export selected
-	{
-		for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
-		{
-			if (AActor* Actor = Cast<AActor>(*It))
-			{
-				ToBeExported.Add(Actor);
-			}
-		}
-	}
-	else //select all
-	{
-		UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();
-		GEditor->Exec(World, TEXT("actor select all"));
-		for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
-		{
-			if (AActor* Actor = Cast<AActor>(*It))
-			{
-				ULevel* level = Actor->GetLevel();
-				if (level->bIsVisible == 0) { continue; } //sublevel probably. invisible
-				ToBeExported.Add(Actor);
-			}
-		}
-	}
+	//prepare actors in the scene to be exported
+	//if actor has a skeletal mesh component, convert to static mesh and export the static mesh version of the actor
+	//clean up after to maintain original level
 
-	TArray<AActor*> ToBeExportedFinal;
-	for (int32 i = 0; i < ToBeExported.Num(); i++)
-	{
-		if (ToBeExported[i]->GetName().StartsWith("SkySphereBlueprint"))
-		{
-			continue;
-		}
-		UActorComponent* cameraComponent = ToBeExported[i]->GetComponentByClass(UCameraComponent::StaticClass());
-		if (cameraComponent != NULL)
-		{
-			continue;
-		}
+	TArray<AActor*> ToBeExportedFinal = FCognitiveEditorTools::GetInstance()->PrepareSceneForExport(OnlyExportSelected, ConvertedActorsToBeDeleted, TempAssetsToBeDeleted);
 
-		UActorComponent* actorComponent = ToBeExported[i]->GetComponentByClass(UDynamicObject::StaticClass());
-		if (actorComponent != NULL)
-		{
-			continue;
-		}
-		ToBeExportedFinal.Add(ToBeExported[i]);
-	}
 	FCognitiveEditorTools::GetInstance()->ExportScene(ToBeExportedFinal);
+
+	FCognitiveEditorTools::GetInstance()->CleanUpDuplicatesAndTempAssets(ConvertedActorsToBeDeleted, TempAssetsToBeDeleted);
+	
 
 	SceneWasExported = true;
 	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
@@ -1137,6 +1189,25 @@ FText SSceneSetupWidget::ExportButtonText()const
 		return FText::FromString(TEXT("Export All"));
 	}
 	return FText::FromString(TEXT("Export All"));
+}
+
+
+FString SSceneSetupWidget::ConstructDashboardURL()
+{
+	FString outputString = "";
+	//scene settings (name, id, version)
+	for (auto& elem : FCognitiveEditorTools::GetInstance()->SceneData)
+	{
+		if (elem->Name == UGameplayStatics::GetCurrentLevelName(GWorld))
+		{
+			outputString += FString("https://app.cognitive3d.com/scenes/") + elem->Id;
+			outputString += FString("/v/") + elem->Id;
+			outputString += FString::FromInt(elem->VersionNumber);
+			outputString += FString("/insights");
+		}
+	}
+
+	return outputString;
 }
 
 FReply SSceneSetupWidget::TakeScreenshot()

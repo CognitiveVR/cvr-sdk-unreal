@@ -14,8 +14,21 @@ class UTrackingEvent : public UActorComponent
 
 	private:
 		virtual void BeginPlay() override;
+
+		UFUNCTION()
+		void OnSessionBegin();
+
+		UFUNCTION()
+		void EnableTick();
+
 		virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-		
+
+		UPROPERTY()
+		FTimerHandle IntervalHandle;
+
+		UPROPERTY()
+		bool bCanTick;
+
 		bool IsTrackingLeftController = true;
 		bool IsTrackingRightController = true;
 };

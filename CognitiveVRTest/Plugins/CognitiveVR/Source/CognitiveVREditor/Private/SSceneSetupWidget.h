@@ -121,6 +121,7 @@ public:
 	void GenerateScreenshotBrush();
 	FSlateBrush* ScreenshotTexture;
 	const FSlateBrush* GetScreenshotBrushTexture() const;
+	FString ConstructDashboardURL();
 	FReply TakeScreenshot();
 	int32 ScreenshotWidth = 256;
 	int32 ScreenshotHeight = 256;
