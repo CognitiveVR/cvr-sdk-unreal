@@ -992,7 +992,7 @@ bool FAnalyticsProviderCognitiveVR::HasEyeTrackingSDK()
 
 bool FAnalyticsProviderCognitiveVR::TryGetRoomSize(FVector& roomsize)
 {
-#if OCULUS_HMD_SUPPORTED_PLATFORMS
+#if INCLUDE_OCULUS_PLUGIN
 #if ENGINE_MAJOR_VERSION == 5
 	FVector BoundaryPoints = UOculusXRFunctionLibrary::GetGuardianDimensions(EOculusXRBoundaryType::Boundary_PlayArea);
 	roomsize.X = BoundaryPoints.X;
