@@ -104,6 +104,10 @@ print (version)
 #1 comment out unsupport platform in build.cs
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","			|| Target.Platform == UnrealTargetPlatform.Win32","//			|| Target.Platform == UnrealTargetPlatform.Win32")
 
+#change definitions and oculus plugin include in build.cs
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","			Definitions.Add(\"INCLUDE_OCULUS_PLUGIN\");","			PublicDefinitions.Add(\"INCLUDE_OCULUS_PLUGIN\");")
+
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","			PublicDependencyModuleNames.AddRange(new string[] { \"OnlineSubsystem\", \"OnlineSubsystemOculus\", \"LibOVRPlatform\", \"OculusHMD\" });","			PublicDependencyModuleNames.AddRange(new string[] { \"OnlineSubsystem\", \"OnlineSubsystemOculus\", \"LibOVRPlatform\", \"OculusXRHMD\" });")
 
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue"+engineversion+"_"+enginesubversion
