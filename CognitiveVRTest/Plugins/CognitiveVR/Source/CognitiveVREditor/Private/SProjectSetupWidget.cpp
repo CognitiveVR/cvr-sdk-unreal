@@ -351,6 +351,134 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 
 
 #pragma region "blender"
+
+#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 1 || ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+				.Padding(0, 0, 0, padding)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+				.Justification(ETextJustify::Center)
+				.AutoWrapText(true)
+				.Text(FText::FromString("When uploading your level to the dashboard, we use Unreal's GLTF exporter to automatically prepare the scene.\nThis includes exporting images as .pngs\n\nWe also need a temporary Export Directory to save Unreal files to while we process them."))
+			]
+
+
+			
+			+ SVerticalBox::Slot()
+			.VAlign(VAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(STextBlock)
+				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("You will need to create a temporary directory to store the exported files."))
+			]
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SSeparator)
+				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+			]
+
+			//path to export directory
+			+ SVerticalBox::Slot()
+			.MaxHeight(32)
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+				+SHorizontalBox::Slot()
+				.MaxWidth(200)
+				[
+					SNew(SBox)
+					.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+					.HeightOverride(32)
+					[
+						SNew(STextBlock)
+						.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
+						.Text(FText::FromString("Path to Export Directory"))
+					]
+				]
+				+ SHorizontalBox::Slot()
+				.FillWidth(3)
+				.Padding(1)
+				[
+					SNew(SBox)
+					.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+					.HeightOverride(32)
+					.MaxDesiredHeight(32)
+					[
+						SNew(SEditableTextBox)
+						.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBaseExportDirectoryDisplay)
+						.OnTextChanged(this, &SProjectSetupWidget::OnExportPathChanged)
+						//SNew(STextBlock)
+						//
+					]
+				]
+				+SHorizontalBox::Slot()
+				.MaxWidth(17)
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+					.VAlign(VAlign_Center)
+					[
+						SNew(SBox)
+						.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+						.HeightOverride(17)
+						.WidthOverride(17)
+						[
+							SNew(SButton)
+							.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+							//PickerWidget = SAssignNew(BrowseButton, SButton)
+							.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
+							.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
+							.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectBaseExportDirectory)
+							.ContentPadding(2.0f)
+							.ForegroundColor(FSlateColor::UseForeground())
+							.IsFocusable(false)
+							[
+								SNew(SImage)
+								.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
+								.ColorAndOpacity(FSlateColor::UseForeground())
+							]
+						]
+					]
+				]
+				+SHorizontalBox::Slot()
+				.MaxWidth(17)
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+					.VAlign(VAlign_Center)
+					[
+						SNew(SBox)
+						.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+						.HeightOverride(17)
+						.WidthOverride(17)
+						[
+							SNew(SImage)
+							.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
+							.Image(this, &SProjectSetupWidget::GetExportPathStateIcon)
+							.ToolTipText(this, &SProjectSetupWidget::GetExportPathTooltipText)
+							.ColorAndOpacity(FSlateColor::UseForeground())
+						]
+					]
+				]
+			]
+#else
 			+SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
@@ -616,7 +744,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
-			
+#endif
 #pragma endregion
 
 #pragma region complete

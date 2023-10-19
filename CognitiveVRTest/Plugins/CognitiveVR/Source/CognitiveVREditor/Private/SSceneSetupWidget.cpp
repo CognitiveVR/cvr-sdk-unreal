@@ -312,6 +312,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Text(FText::FromString("The current level geometry will be exported and uploaded to our dashboard. This will provide context for the spatial data points we automatically collect."))
 			]
 
+#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 1 || ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+
+#else
 			//path to blender
 			+ SVerticalBox::Slot()
 			.MaxHeight(32)
@@ -380,7 +383,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
-
+#endif
 			//path to export directory
 			+ SVerticalBox::Slot()
 			.MaxHeight(32)
