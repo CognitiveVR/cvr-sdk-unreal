@@ -3116,11 +3116,13 @@ void FCognitiveEditorTools::ValidateGeneratedFiles()
 			UE_LOG(LogTemp, Warning, TEXT("Found file: %s"), *File);
 			if (File.Contains(".fbx"))
 			{
+				FMessageDialog::Open(EAppMsgType::Ok, FText::FromString("Warning!! Found fbx file in export folder. Please try exporting again."));
 				UE_LOG(LogTemp, Error, TEXT("Warning!! Found fbx file: %s. Please try exporting again."), *File);
 				FoundErrorFile = true;
 			}
 			if (File.Contains(".bmp"))
 			{
+				FMessageDialog::Open(EAppMsgType::Ok, FText::FromString("Warning!! Found bmp file in export folder. Please try exporting again."));
 				UE_LOG(LogTemp, Error, TEXT("Warning!! Found bmp file: %s. Please try exporting again."), *File);
 				FoundErrorFile = true;
 			}

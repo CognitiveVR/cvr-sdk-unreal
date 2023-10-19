@@ -13,6 +13,8 @@
 #include "Interfaces/IPluginManager.h"
 //IMPROVEMENT this should be in the header, but can't find ControllerType enum
 #include "CognitiveVR/Private/InputTracker.h"
+#include "Editor.h"
+#include "Misc/MessageDialog.h"
 
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
@@ -281,6 +283,8 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 
 	if (ApplicationKey.Len() == 0)
 	{
+		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString("The Application Key is Invalid, this session will not be recorded on the dashboard. Please restart the editor."));
+
 		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::StartSession ApplicationKey is invalid");
 		return false;
 	}
