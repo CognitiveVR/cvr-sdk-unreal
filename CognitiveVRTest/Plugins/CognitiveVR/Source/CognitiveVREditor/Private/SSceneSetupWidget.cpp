@@ -777,7 +777,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("That's it!\n\nAfter saving your project, you will be recording user position, gaze and basic device information. Simply press play in the Unreal Editor or make a build for your target platform.\n\nPlease note that sessions run in the editor won't count towards aggregate metrics.\n\nYou can view sessions from the Dashboard."))
+				.Text(FText::FromString("That's it!\n\nAfter saving your project, we recommend restarting the Unreal Editor. You will be recording user position, gaze and basic device information. Simply press play in the Unreal Editor or make a build for your target platform.\n\nPlease note that sessions run in the editor won't count towards aggregate metrics.\n\nYou can view sessions from the Dashboard."))
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
