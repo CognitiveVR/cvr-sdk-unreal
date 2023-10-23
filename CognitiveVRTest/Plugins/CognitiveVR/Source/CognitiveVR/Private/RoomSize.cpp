@@ -29,6 +29,8 @@ void URoomSize::OnSessionBegin()
 		FVector size;
 		if (cognitive->TryGetRoomSize(size))
 		{
+			//if the boundary is stationary, we will get one dimension as 0
+			//so we set a hard-coded room size
 			if (size.X == 0 || size.Y == 0)
 			{
 				size.X = 141.0f;
