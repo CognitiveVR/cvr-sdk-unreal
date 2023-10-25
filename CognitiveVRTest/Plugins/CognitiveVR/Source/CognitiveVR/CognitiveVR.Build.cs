@@ -58,12 +58,15 @@ namespace UnrealBuildTool.Rules
 			PublicDependencyModuleNames.Add("DeveloperSettings");
 
 		
-			//if not using oculus, comment these out
-			Definitions.Add("INCLUDE_OCULUS_PLUGIN");
-			PublicDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem", "OnlineSubsystemOculus", "LibOVRPlatform", "OculusHMD" });
+			//uncomment these lines to enable Oculus/Meta platform functionality. Uses OculusVR for UE4 and OculusXR (MetaXR) for UE5.
+			//Definitions.Add("INCLUDE_OCULUS_PLUGIN");
+			//PublicDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem", "OnlineSubsystemOculus", "OculusHMD" });
+			
+			
 			//uncomment this to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
 			//PublicDefinitions.Add("OPENXR_EYETRACKING");
 			//PublicDefinitions.Add("OPENXR_LOCALSPACE"); //uncomment this if OPENXR implemented in local space instead of worldspace
+
 
 			//uncomment these lines to enable Vive WaveVR eye tracking support
 			//PublicDefinitions.Add("WAVEVR_EYETRACKING");
