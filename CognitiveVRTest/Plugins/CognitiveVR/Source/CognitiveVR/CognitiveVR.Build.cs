@@ -59,7 +59,7 @@ namespace UnrealBuildTool.Rules
 
 		
 			//uncomment these lines to enable Oculus/Meta platform functionality. Uses OculusVR for UE4 and OculusXR (MetaXR) for UE5.
-			//Definitions.Add("INCLUDE_OCULUS_PLUGIN");
+			//PublicDefinitions.Add("INCLUDE_OCULUS_PLUGIN");
 			//PublicDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem", "OnlineSubsystemOculus", "OculusHMD" });
 			
 			
