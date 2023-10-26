@@ -713,10 +713,6 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 			else
 			{
 				WorldDirection = gazeData.GazeDirection;
-				//unclear if the OpenXR gaze direction is world or local
-				#if defined OPENXR_LOCALSPACE
-				WorldDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(gazeData.GazeDirection);
-				#endif
 				Start = gazeData.GazeOrigin;
 				End = Start + WorldDirection * MaxFixationDistance;
 			}
@@ -736,19 +732,19 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		if (pEyeManager->GetCombindedEyeDirectionNormalized(direction))
 		{
 			direction = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(direction);
-			End = Start + direction * 100000.0f;
+			End = Start + direction * MaxFixationDistance;
 		}
 		else
 		{
 			FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
-			End = Start + captureRotation.Vector() * 10000.0f;
+			End = Start + captureRotation.Vector() * MaxFixationDistance;
 			EyeCaptures[index].Discard = true;
 		}
 	}
 	else
 	{
 		FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
-		End = Start + captureRotation.Vector() * 10000.0f;
+		End = Start + captureRotation.Vector() * MaxFixationDistance;
 		EyeCaptures[index].Discard = true;
 	}
 #else
