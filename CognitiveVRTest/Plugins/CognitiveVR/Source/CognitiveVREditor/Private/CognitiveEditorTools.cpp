@@ -517,14 +517,14 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		FString tempObject;
 		FString ExportFilename;
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 1 || ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+		FSuppressableWarningDialog::FSetupInfo ExportSettingsInfo(LOCTEXT("ExportSettingsBody", "Make sure the scale is set to 1.0 to get the correct representation on the Dashboard"), LOCTEXT("ExportSettingsTitle", "Recommended Export Settings"), "ExportSelectedDynamicsBody");
+		ExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
+		ExportSettingsInfo.CheckBoxText = FText::FromString("Don't show again");
+		FSuppressableWarningDialog ExportSelectedDynamicMeshes(ExportSettingsInfo);
+		ExportSelectedDynamicMeshes.ShowModal();
 		ExportFilename = exportObjects[i]->MeshName + ".gltf";
 		tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".gltf";
-#else
-		//export skeletal meshes as fbx (missing material pre 4.26) and static meshes as obj
-		ExportFilename = exportObjects[i]->MeshName + ".fbx";
-		tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".fbx";
-#endif
+
 		//create directory before export
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 
@@ -561,15 +561,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 1 || ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
-		//do nothing for now, do not need to show any warning here
-#else //fbx export related warning
-		FSuppressableWarningDialog::FSetupInfo ExportSettingsInfo(LOCTEXT("ExportSettingsBody", "The recommended settings for exporting meshes is to disable Level of Detail and disable Collision"), LOCTEXT("ExportSettingsTitle", "Recommended Export Settings"), "ExportSettingsPopup");
-		ExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
-		ExportSettingsInfo.CheckBoxText = FText::FromString("Don't show again");
-		FSuppressableWarningDialog ExportSelectedDynamicMeshes(ExportSettingsInfo);
-		ExportSelectedDynamicMeshes.ShowModal();
-#endif
+
 
 		//exports the currently selected actor(s)
 		GUnrealEd->ExportMap(GWorld, *tempObject, true);
@@ -650,11 +642,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 	if (ActorsExported > 0)
 	{
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 1 || ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
-		//do not convert to gltf if 5.1 or higher (already exported as gltf)
-#else
-		fph = ConvertDynamicsToGLTF(DynamicMeshNames);
-#endif
 		FindAllSubDirectoryNames();
 	}
 	return fph;
@@ -3005,18 +2992,12 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	FString dir = BaseExportDirectory + "/" + GetCurrentSceneName() + "/screenshot/";
 	FCognitiveEditorTools::VerifyOrCreateDirectory(dir);
 	
-
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 1 || ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
-	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".gltf";
-#else
-	//export scene in fbx
-	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".fbx";
-	FSuppressableWarningDialog::FSetupInfo ExportSettingsInfo(LOCTEXT("ExportSettingsBody", "The recommended settings for exporting meshes is to disable Level of Detail and disable Collision"), LOCTEXT("ExportSettingsTitle", "Recommended Export Settings"), "ExportSelectedDynamicsBody");
+	FSuppressableWarningDialog::FSetupInfo ExportSettingsInfo(LOCTEXT("ExportSettingsBody", "Make sure the scale is set to 1.0 to get the correct representation on the Dashboard"), LOCTEXT("ExportSettingsTitle", "Recommended Export Settings"), "ExportSelectedDynamicsBody");
 	ExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
 	ExportSettingsInfo.CheckBoxText = FText::FromString("Don't show again");
 	FSuppressableWarningDialog ExportSelectedDynamicMeshes(ExportSettingsInfo);
 	ExportSelectedDynamicMeshes.ShowModal();
-#endif
+	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".gltf";
 
 
 	
@@ -3063,17 +3044,6 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	{
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene unable to save settings.json"));
 	}
-
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 1 || ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
-	//do nothing, already exported in gltf so no need to convert it using blender
-#else
-	//Convert scene to GLTF. run python script. wait if blender process is running
-	FProcHandle fph = ConvertSceneToGLTF();
-	if (fph.IsValid())
-	{
-		FPlatformProcess::WaitForProc(fph);
-	}
-#endif
 
 	//write debug.log including unreal data, scene contents, folder contents
 	//should happen after blender finishes/next button is pressed
@@ -3135,6 +3105,95 @@ void FCognitiveEditorTools::ValidateGeneratedFiles()
 	{
 		// No required files found in the directory.
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene could not validate generated files"));
+	}
+
+	//rename exports and .bin reference in the .gltf when exporting with arbitrary names to be scene.gltf and scene.bin
+	FString levelName = GWorld->GetMapName(); //GetWorld()->GetMapName();
+	levelName.RemoveFromStart(GWorld->StreamingLevelsPrefix);
+
+	FString scenegltfPath = ExportDirPath + "/scene.gltf";
+	FString levelgltfPath = ExportDirPath + "/" + levelName +  ".gltf";
+
+	FString scenebinPath = ExportDirPath + "/scene.bin";
+	FString levelbinPath = ExportDirPath + "/" + levelName + ".bin";
+
+	FString scenemtlPath = ExportDirPath + "/scene.mtl";
+	FString levelmtlPath = ExportDirPath + "/" + levelName + ".mtl";
+
+
+
+	RenameFile(levelgltfPath, scenegltfPath);
+	RenameFile(levelbinPath, scenebinPath);
+	RenameFile(levelmtlPath, scenemtlPath);
+
+	ModifyGLTFContent(scenegltfPath);
+}
+
+bool FCognitiveEditorTools::RenameFile(FString oldPath, FString newPath)
+{
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	// Check if the old file exists
+	if (PlatformFile.FileExists(*oldPath))
+	{
+		// Rename the file
+		bool bFileExists = PlatformFile.FileExists(*newPath);
+		if (bFileExists)
+		{
+			PlatformFile.DeleteFile(*newPath);
+		}
+		bool bRenameSuccess = PlatformFile.MoveFile(*newPath, *oldPath);
+		if (bRenameSuccess)
+		{
+			UE_LOG(LogSlate, Log, TEXT("File renamed successfully!"));
+			return true;
+		}
+		else
+		{
+			UE_LOG(LogSlate, Log, TEXT("Failed to rename the file!"));
+			return false;
+		}
+	}
+	else
+	{
+		UE_LOG(LogSlate, Log, TEXT("Old file does not exist!"));
+	}
+
+	return false;
+}
+
+void FCognitiveEditorTools::ModifyGLTFContent(FString FilePath)
+{
+	FString FileContent;
+
+	// Load the .gltf file content
+	if (FFileHelper::LoadFileToString(FileContent, *FilePath))
+	{
+		TSharedPtr<FJsonObject> JsonObject;
+		TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(FileContent);
+
+		if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
+		{
+			// find the uri under buffers and change it
+			if (JsonObject->HasField("buffers"))
+			{
+				TArray<TSharedPtr<FJsonValue>> Buffers = JsonObject->GetArrayField("buffers");
+				if (Buffers.Num() > 0)
+				{
+					TSharedPtr<FJsonObject> FirstBuffer = Buffers[0]->AsObject();
+					if (FirstBuffer->HasField("uri"))
+					{
+						FirstBuffer->SetStringField("uri", "scene.bin");
+					}
+				}
+			}
+
+			// Save modified content back to file
+			FString OutputString;
+			TSharedRef<TJsonWriter<>> JsonWriter = TJsonWriterFactory<>::Create(&OutputString);
+			FJsonSerializer::Serialize(JsonObject.ToSharedRef(), JsonWriter);
+
+			FFileHelper::SaveStringToFile(OutputString, *FilePath);
+		}
 	}
 }
 

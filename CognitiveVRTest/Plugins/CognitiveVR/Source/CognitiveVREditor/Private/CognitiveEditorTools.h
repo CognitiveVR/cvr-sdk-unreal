@@ -440,6 +440,10 @@ public:
 
 	void ValidateGeneratedFiles();
 
+	bool RenameFile(FString oldPath, FString newPath);
+
+	void ModifyGLTFContent(FString FilePath);
+
 	void GenerateSettingsJsonFile();
 	bool HasSettingsJsonFile() const;
 
