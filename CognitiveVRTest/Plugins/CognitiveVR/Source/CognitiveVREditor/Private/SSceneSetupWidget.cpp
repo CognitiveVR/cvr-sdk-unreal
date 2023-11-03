@@ -950,18 +950,13 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 		return FReply::Handled();
 	}
 
-	TArray<AActor*> ConvertedActorsToBeDeleted;
-	TArray<FAssetData> TempAssetsToBeDeleted;
-
 	//prepare actors in the scene to be exported
 	//if actor has a skeletal mesh component, convert to static mesh and export the static mesh version of the actor
 	//clean up after to maintain original level
 
-	TArray<AActor*> ToBeExportedFinal = FCognitiveEditorTools::GetInstance()->PrepareSceneForExport(OnlyExportSelected, ConvertedActorsToBeDeleted, TempAssetsToBeDeleted);
+	TArray<AActor*> ToBeExportedFinal = FCognitiveEditorTools::GetInstance()->PrepareSceneForExport(OnlyExportSelected);
 
 	FCognitiveEditorTools::GetInstance()->ExportScene(ToBeExportedFinal);
-
-	FCognitiveEditorTools::GetInstance()->CleanUpDuplicatesAndTempAssets(ConvertedActorsToBeDeleted, TempAssetsToBeDeleted);
 	
 
 	SceneWasExported = true;

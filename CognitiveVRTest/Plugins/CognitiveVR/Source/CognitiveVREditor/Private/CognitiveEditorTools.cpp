@@ -436,8 +436,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 	int32 ActorsExported = 0;
 
 	TArray<FString> DynamicMeshNames;
-	TMap<FString, TArray< UStaticMeshComponent*>> BakeExportMaterials;
-	TMap<FString, TArray< USkeletalMeshComponent*>> BakeExportSkeletonMaterials;
 
 	//used to check that export popup was confirmed, rather than canceled, and there are exported files for blender to work on
 	int32 RawExportFilesFound = 0;
@@ -457,50 +455,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		if (exportObjects[i]->MeshName.IsEmpty())
 		{
 			continue;
-		}
-
-		TArray<UActorComponent*> actorComponents;
-		exportObjects[i]->GetOwner()->GetComponents(UStaticMeshComponent::StaticClass(), actorComponents);
-		TArray< UStaticMeshComponent*> meshes;
-		for (int32 j = 0; j < actorComponents.Num(); j++)
-		{
-			UStaticMeshComponent* mesh = Cast<UStaticMeshComponent>(actorComponents[j]);
-			if (mesh == NULL)
-			{
-				continue;
-			}
-
-			ULevel* componentLevel = actorComponents[j]->GetComponentLevel();
-			if (componentLevel->bIsVisible == 0)
-			{
-				continue;
-				//not visible! possibly on a disabled sublevel
-			}
-
-			meshes.Add(mesh);
-		}
-
-		TArray<UActorComponent*> actorSkeletalComponents;
-		exportObjects[i]->GetOwner()->GetComponents(USkeletalMeshComponent::StaticClass(), actorSkeletalComponents);
-		TArray< USkeletalMeshComponent*> skeletalMeshes;
-		TArray<UMeshComponent*> meshComponentsFromSkel;
-		for (int32 j = 0; j < actorSkeletalComponents.Num(); j++)
-		{
-			USkeletalMeshComponent* mesh = Cast<USkeletalMeshComponent>(actorSkeletalComponents[j]);
-			if (mesh == NULL)
-			{
-				continue;
-			}
-
-			ULevel* componentLevel = actorSkeletalComponents[j]->GetComponentLevel();
-			if (componentLevel->bIsVisible == 0)
-			{
-				continue;
-				//not visible! possibly on a disabled sublevel
-			}
-
-			skeletalMeshes.Add(mesh);
-			meshComponentsFromSkel.Add(mesh);
 		}
 
 		DynamicMeshNames.Add(exportObjects[i]->MeshName);
@@ -524,7 +478,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		ExportSelectedDynamicMeshes.ShowModal();
 		ExportFilename = exportObjects[i]->MeshName + ".gltf";
 		tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".gltf";
-
+		
 		//create directory before export
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 
@@ -541,32 +495,13 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		}
 
 
-		TArray<FAssetData> TempStaticMeshes;
-		TArray<AActor*> ConvertedActorsToDelete;
-
-		//after confirming the meshes and creating the directories, select this actor we are iterating on and increment actors exported for later
-		//however if it is a skeletal mesh, we need to prepare it first
-		if (skeletalMeshes.Num() > 0)
-		{
-			AActor* DuplicatedActor = PrepareSkeletalMeshForExport(exportObjects[i]->GetOwner(), ConvertedActorsToDelete, TempStaticMeshes);
-			GEditor->SelectNone(false, true, false);
-			GEditor->SelectActor(DuplicatedActor, true, false, true);
-			ActorsExported++;
-		}
-		else
-		{
-			GEditor->SelectActor(exportObjects[i]->GetOwner(), true, false, true);
-			ActorsExported++;
-		}
-
-
+		GEditor->SelectActor(exportObjects[i]->GetOwner(), true, false, true);
+		ActorsExported++;
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
 
 
 		//exports the currently selected actor(s)
 		GUnrealEd->ExportMap(GWorld, *tempObject, true);
-
-		CleanUpDuplicatesAndTempAssets(ConvertedActorsToDelete, TempStaticMeshes);
 
 
 		//reset dynamic back to original transform
@@ -583,16 +518,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		{
 			//don't export screenshots or save materials unless export popup was confirmed
 			continue;
-		}
-
-		//bake + export materials
-		if (skeletalMeshes.Num() > 0)
-		{
-			BakeExportSkeletonMaterials.Add(exportObjects[i]->MeshName, skeletalMeshes);
-		}
-		if (meshes.Num() > 0)
-		{
-			BakeExportMaterials.Add(exportObjects[i]->MeshName, meshes);
 		}
 
 		//automatic screenshot
@@ -2802,110 +2727,9 @@ TArray<FString> FCognitiveEditorTools::WizardExportMaterials(FString directory, 
 	return MaterialLine;
 }
 
-void FCognitiveEditorTools::CleanUpDuplicatesAndTempAssets(TArray<AActor*>& ConvertedActorsToDelete, TArray<FAssetData>& TempAssetsToDelete)
-{
-	//clean up duplicated actors after export
-	if (ConvertedActorsToDelete.Num() > 0)
-	{
-		for (int k = 0; k < ConvertedActorsToDelete.Num(); k++)
-		{
-			GEditor->SelectNone(false, true, false);
-			GEditor->SelectActor(ConvertedActorsToDelete[k], true, false, true);
-			GUnrealEd->edactDeleteSelected(GWorld, false, false, false);
-		}
-	}
-	//clean up temp assets after export
-	if (TempAssetsToDelete.Num() > 0)
-	{
-		ObjectTools::DeleteAssets(TempAssetsToDelete, false);
-	}
-}
-
-AActor* FCognitiveEditorTools::PrepareSkeletalMeshForExport(AActor* SkeletalMeshActor, TArray<AActor*>& ConvertedActorsToDelete, TArray<FAssetData>& TempAssetsToDelete)
-{
-	//convert to static mesh
-	//include converted static mesh in data structure to delete later for cleanup
-	//also add it to actors being exported, since we want to export the converted static mesh
-
-	TArray<UActorComponent*> actorSkeletalComponents;
-	SkeletalMeshActor->GetComponents(USkeletalMeshComponent::StaticClass(), actorSkeletalComponents);
-	TArray<UMeshComponent*> meshComponentsFromSkel;
-	for (int32 j = 0; j < actorSkeletalComponents.Num(); j++)
-	{
-		USkeletalMeshComponent* mesh = Cast<USkeletalMeshComponent>(actorSkeletalComponents[j]);
-		if (mesh == NULL)
-		{
-			continue;
-		}
-
-		ULevel* componentLevel = actorSkeletalComponents[j]->GetComponentLevel();
-		if (componentLevel->bIsVisible == 0)
-		{
-			continue;
-			//not visible! possibly on a disabled sublevel
-		}
-		meshComponentsFromSkel.Add(mesh);
-	}
-
-	/*
-	check if skeletal mesh, if so:
-	duplicate the actor with the skeletal mesh
-	newly duplicated actor will be selected only
-	convert new actor skeletal mesh to static mesh
-	*/
-	TArray<AActor*> ActorObjs;
-	GEditor->SelectNone(false, true, false);
-	//we found skeletal mesh components
-	if (meshComponentsFromSkel.Num() > 0)
-	{
-		//select the actor we determined to have a skeletal mesh
-		GEditor->SelectActor(SkeletalMeshActor, true, false, true);
-
-		//duplicate the selected actor
-		GEditor->edactDuplicateSelected(SkeletalMeshActor->GetLevel(), false);
-
-		//UE selects only the duplicated actor after duplication
-		USelection* SelectedActors = GEditor->GetSelectedActors();
-		SelectedActors->GetSelectedObjects(ActorObjs);
 
 
-		//setup temp meshes package
-		UPackage* NewPackageName = CreatePackage(TEXT("/Game/TempMesh"));
-
-		//take the skeletal meshes that we set up earlier and use them to create a static mesh
-		UStaticMesh* tmpStatMesh = MeshUtilities.ConvertMeshesToStaticMesh(meshComponentsFromSkel, ActorObjs[0]->GetTransform(), NewPackageName->GetName());
-
-
-		//create a new static mesh component for the currently selected actor
-		FName NewCompName = TEXT("StaticMeshComponent");
-		UStaticMeshComponent* NewComp = NewObject<UStaticMeshComponent>(ActorObjs[0], NewCompName);
-		//register the component, attach it to the root component of the actor, and set the static mesh
-		NewComp->RegisterComponent();
-		NewComp->AttachToComponent(ActorObjs[0]->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-		NewComp->SetStaticMesh(tmpStatMesh);
-		//get the children of the skeletal mesh component and prepare to move them over to the new static mesh component
-		TArray<USceneComponent*> childrenToBeMoved;
-		USkeletalMeshComponent* skelToBeRemoved = ActorObjs[0]->FindComponentByClass<USkeletalMeshComponent>();
-		skelToBeRemoved->GetChildrenComponents(true, childrenToBeMoved);
-		for (int k = 0; k < childrenToBeMoved.Num(); k++)
-		{
-			//make sure we do not move our newly created static mesh component
-			if (childrenToBeMoved[k]->GetName() != NewCompName.ToString())
-			{
-				childrenToBeMoved[k]->AttachToComponent(NewComp, FAttachmentTransformRules::KeepRelativeTransform);
-			}
-		}
-		//delete the skeletal mesh component
-		skelToBeRemoved->DestroyComponent(false);
-		//save the meshe and duplicated object for deletion later
-		TempAssetsToDelete.Add(tmpStatMesh);
-		ConvertedActorsToDelete.Add(ActorObjs[0]);
-	}
-
-	return ActorObjs[0];
-}
-
-TArray<AActor*> FCognitiveEditorTools::PrepareSceneForExport(bool OnlyExportSelected, TArray<AActor*>& ConvertedActorsToDelete, TArray<FAssetData>& TempAssetsToDelete)
+TArray<AActor*> FCognitiveEditorTools::PrepareSceneForExport(bool OnlyExportSelected)
 {
 	TArray<AActor*> ToBeExported;
 	if (OnlyExportSelected) //only export selected
@@ -2950,15 +2774,6 @@ TArray<AActor*> FCognitiveEditorTools::PrepareSceneForExport(bool OnlyExportSele
 		UActorComponent* actorComponent = ToBeExported[i]->GetComponentByClass(UDynamicObject::StaticClass());
 		if (actorComponent != NULL)
 		{
-			continue;
-		}
-
-		UActorComponent* skeletalMesh = ToBeExported[i]->GetComponentByClass(USkeletalMeshComponent::StaticClass());
-		if (skeletalMesh != NULL)
-		{  
-
-			AActor* ActorToExport = PrepareSkeletalMeshForExport(ToBeExported[i], ConvertedActorsToDelete, TempAssetsToDelete);
-			ToBeExportedFinal.Add(ActorToExport);
 			continue;
 		}
 		ToBeExportedFinal.Add(ToBeExported[i]);
