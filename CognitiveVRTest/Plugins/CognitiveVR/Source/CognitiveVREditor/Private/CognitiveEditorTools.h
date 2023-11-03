@@ -159,12 +159,6 @@ public:
 
 		FReply UploadScene();
 
-	//bakes textures from translucent and masked materials
-	void WizardExportStaticMaterials(FString directory, TArray<UStaticMeshComponent*> meshes, FString mtlFileName);
-	//returns array of strings describing materials being exported - the material type (opaque, translucent, masked) and the paths for each texture
-	//does the actual file writing for saving textures from material to bmps
-	TArray<FString> WizardExportMaterials(FString directory, TArray<FString> ExportedMaterialNames, TArray<UMaterialInterface*> materials);
-
 	TArray<AActor*> PrepareSceneForExport(bool OnlyExportSelected);
 	
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
