@@ -181,7 +181,7 @@ public:
 	
 
 	//this is the important function for exporting dynamics. all other other dynamic export functions lead to this
-		//sets position to origin, export as fbx, generate screenshot, bake materials to textures (not necessary), calls ConvertDynamicsToGLTF
+		//sets position to origin, export as fbx, generate screenshot, bake materials to textures (not necessary)
 	FProcHandle ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
 
 
