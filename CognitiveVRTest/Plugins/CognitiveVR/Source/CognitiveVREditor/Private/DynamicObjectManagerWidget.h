@@ -46,9 +46,8 @@ public:
 
 	FReply ValidateAndRefresh();
 
-	//TODO make export path and blender path configurable here
+	//TODO make export path configurable here
 	void OnExportPathChanged(const FText& Text);
-	void OnBlenderPathChanged(const FText& Text);
 
 	FReply UploadSelectedDynamicObjects();
 	FReply UploadAllDynamicObjects();

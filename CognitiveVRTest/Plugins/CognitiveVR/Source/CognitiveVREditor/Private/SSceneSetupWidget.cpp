@@ -1442,11 +1442,6 @@ void SSceneSetupWidget::OnExportPathChanged(const FText& Text)
 	FCognitiveEditorTools::GetInstance()->BaseExportDirectory = Text.ToString();
 }
 
-void SSceneSetupWidget::OnBlenderPathChanged(const FText& Text)
-{
-	FCognitiveEditorTools::GetInstance()->BlenderPath = Text.ToString();
-}
-
 void SSceneSetupWidget::SpawnCognitiveVRActor()
 {
 	//get the level editor world

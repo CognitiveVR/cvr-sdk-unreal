@@ -424,11 +424,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicData(TArray< TSharedPtr<FDynamic
 FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects)
 {
 	FProcHandle fph;
-	if (!HasFoundBlender())
-	{
-		UE_LOG(CognitiveVR_Log, Error, TEXT("Could not complete Export - Must have Blender installed to convert images"));
-		return fph;
-	}
 
 	FVector originalLocation;
 	FRotator originalRotation;
@@ -437,7 +432,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 	TArray<FString> DynamicMeshNames;
 
-	//used to check that export popup was confirmed, rather than canceled, and there are exported files for blender to work on
+	//used to check that export popup was confirmed, rather than canceled
 	int32 RawExportFilesFound = 0;
 
 	for (int32 i = 0; i < exportObjects.Num(); i++)
@@ -581,81 +576,6 @@ void FCognitiveEditorTools::DelayScreenshot(FString filePath, FLevelEditorViewpo
 	perspectiveView->SetViewRotation(startRot);
 	perspectiveView->bNeedsRedraw = true;
 	perspectiveView->RedrawRequested(perspectiveView->Viewport);
-}
-
-FProcHandle FCognitiveEditorTools::ConvertDynamicsToGLTF(TArray<FString> meshnames)
-{
-	FProcHandle fph;
-	//open blender
-	//pass in array of meshnames comma separated
-
-	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("ConvertDynamicToGLTF.py");
-	const TCHAR* charPath = *pythonscriptpath;
-
-	//found something
-	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::ConvertToGLTF Python script path: %s"), charPath);
-
-
-	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
-	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
-
-
-	TArray<FAssetData> ScriptList;
-	if (!AssetRegistry.GetAssetsByPath(FName(*pythonscriptpath), ScriptList))
-	{
-		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ConvertToGLTF Could not find python script at path. Canceling"));
-		return fph;
-	}
-
-	FString stringurl = BlenderPath;
-
-	if (BlenderPath.Len() == 0)
-	{
-		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ConvertToGLTF No path set for Blender.exe. Canceling"));
-		return fph;
-	}
-
-	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
-	if (!tempworld)
-	{
-		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ConvertToGLTF World is null. canceling"));
-		return fph;
-	}
-
-	FString ObjPath = GetDynamicsExportDirectory();
-
-	if (ObjPath.Len() == 0)
-	{
-		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ConvertToGLTF No know export directory. Canceling"));
-		return fph;
-	}
-
-	FString escapedMeshNameList = "'";
-	for (int32 i = 0; i < meshnames.Num(); i++)
-	{
-		if (i != 0)
-			escapedMeshNameList += ",";
-		escapedMeshNameList += meshnames[i];
-	}
-	escapedMeshNameList += "'";
-
-
-	//FString resizeFactor = FString::FromInt(TextureRefactor);
-
-	FString escapedPythonPath = pythonscriptpath.Replace(TEXT(" "), TEXT("\" \""));
-	FString escapedTargetPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
-
-	FString stringparams = " -P " + escapedPythonPath + " " + escapedTargetPath + " " + escapedMeshNameList;// +" " + MaxPolyCount + " " + SceneName;
-
-	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
-
-	const TCHAR* params = *stringParamSlashed;
-	int32 priorityMod = 0;
-	fph = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
-	//this sleep and close is needed so unreal gets control after blender finishes
-	FPlatformProcess::Sleep(1);
-	FPlatformProcess::CloseProc(fph);
-	return fph;
 }
 
 FReply FCognitiveEditorTools::SetUniqueDynamicIds()
@@ -1211,22 +1131,6 @@ void FCognitiveEditorTools::CreateExportFolderStructure()
 	VerifyOrCreateDirectory(temp);
 }
 
-FReply FCognitiveEditorTools::Select_Blender()
-{
-	FString title = "Select Blender.exe";
-	FString fileTypes = ".exe";
-	FString lastPath = FEditorDirectories::Get().GetLastDirectory(ELastDirectory::UNR);
-	FString defaultfile = FString();
-	FString outFilename = FString();
-	if (PickFile(title, fileTypes, lastPath, defaultfile, outFilename))
-	{
-		BlenderPath = outFilename;
-		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
-		GConfig->SetString(TEXT("Analytics"), TEXT("BlenderPath"), *FCognitiveEditorTools::GetInstance()->BlenderPath, EditorIni);
-	}
-	return FReply::Handled();
-}
-
 FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 {
 	FString title = "Select Export Directory";
@@ -1249,41 +1153,6 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 	return FReply::Handled();
 }
 
-
-//used to select blender
-bool FCognitiveEditorTools::PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename)
-{
-	OutFilename = FString();
-
-	IDesktopPlatform* DesktopPlatform = FDesktopPlatformModule::Get();
-	bool bFileChosen = false;
-	TArray<FString> OutFilenames;
-	if (DesktopPlatform)
-	{
-		void* ParentWindowWindowHandle = ChooseParentWindowHandle();
-
-		bFileChosen = DesktopPlatform->OpenFileDialog(
-			ParentWindowWindowHandle,
-			Title,
-			InOutLastPath,
-			DefaultFile,
-			FileTypes,
-			EFileDialogFlags::None,
-			OutFilenames
-		);
-	}
-
-	bFileChosen = (OutFilenames.Num() > 0);
-
-	if (bFileChosen)
-	{
-		// User successfully chose a file; remember the path for the next time the dialog opens.
-		InOutLastPath = OutFilenames[0];
-		OutFilename = OutFilenames[0];
-	}
-
-	return bFileChosen;
-}
 
 FReply FCognitiveEditorTools::SaveScreenshotToFile()
 {
@@ -1762,28 +1631,6 @@ TArray<FString> FCognitiveEditorTools::GetAllFilesInDirectory(const FString dire
 	return files;
 }
 
-bool FCognitiveEditorTools::HasFoundBlender() const
-{
-	if (BlenderPath.IsEmpty())
-	{
-		return false;
-	}
-	if (!BlenderPath.Contains("blender.exe"))
-	{
-		return false;
-	}
-	if (!IFileManager::Get().FileExists(*BlenderPath))
-	{
-		return false;
-	}
-	return true;
-}
-
-bool FCognitiveEditorTools::HasFoundBlenderAndHasSelection() const
-{
-	return HasFoundBlender() && GEditor->GetSelectedActorCount() > 0;
-}
-
 //checks for json and no bmps files in export directory
 bool FCognitiveEditorTools::HasConvertedFilesInDirectory() const
 {
@@ -1804,30 +1651,6 @@ bool FCognitiveEditorTools::HasConvertedFilesInDirectory() const
 bool FCognitiveEditorTools::CanUploadSceneFiles() const
 {
 	return HasConvertedFilesInDirectory() && HasDeveloperKey();
-}
-
-bool FCognitiveEditorTools::LoginAndCustonerIdAndBlenderExportDir() const
-{
-	return HasDeveloperKey() && HasFoundBlenderAndExportDir();
-}
-
-bool FCognitiveEditorTools::HasFoundBlenderAndExportDir() const
-{
-	if (GetBaseExportDirectory().Len() == 0) { return false; }
-	return HasFoundBlender();
-}
-
-bool FCognitiveEditorTools::HasFoundBlenderAndDynamicExportDir() const
-{
-	if (GetBaseExportDirectory().Len() == 0) { return false; }
-	return HasFoundBlender();
-}
-
-bool FCognitiveEditorTools::HasFoundBlenderDynamicExportDirSelection() const
-{
-	if (GetBaseExportDirectory().Len() == 0) { return false; }
-	if (GEditor->GetSelectedActorCount() == 0) { return false; }
-	return HasFoundBlender();
 }
 
 bool FCognitiveEditorTools::CurrentSceneHasSceneId() const
@@ -1911,17 +1734,6 @@ bool FCognitiveEditorTools::HasSetDynamicExportDirectoryHasSceneId() const
 	if (!scenedata.IsValid()) { return false; }
 	if (GetBaseExportDirectory().Len() == 0) { return false; }
 	return true;
-}
-
-bool FCognitiveEditorTools::HasFoundBlenderHasSelection() const
-{
-	if (GEditor->GetSelectedActorCount() == 0) { return false; }
-	return HasFoundBlender();
-}
-
-FText FCognitiveEditorTools::GetBlenderPath() const
-{
-	return FText::FromString(BlenderPath);
 }
 
 int32 FCognitiveEditorTools::CountDynamicObjectsInScene() const
@@ -2107,20 +1919,10 @@ void FCognitiveEditorTools::OnAttributionKeyChanged(const FText& Text)
 	AttributionKey = Text.ToString();
 }
 
-void FCognitiveEditorTools::OnBlenderPathChanged(const FText& Text)
-{
-	BlenderPath = Text.ToString();
-}
+
 void FCognitiveEditorTools::OnExportPathChanged(const FText& Text)
 {
 	BaseExportDirectory = Text.ToString();
-}
-
-void FCognitiveEditorTools::SaveBlenderPathAndExportPath()
-{
-	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
-	GConfig->SetString(TEXT("Analytics"), TEXT("BlenderPath"), *FCognitiveEditorTools::GetInstance()->BlenderPath, EditorIni);
-	GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
 }
 
 FText FCognitiveEditorTools::UploadSceneNameFiles() const
@@ -2430,13 +2232,6 @@ TArray<TSharedPtr<FEditorSceneData>> FCognitiveEditorTools::GetSceneData() const
 	return SceneData;
 }
 
-ECheckBoxState FCognitiveEditorTools::HasFoundBlenderCheckbox() const
-{
-	return (HasFoundBlender())
-		? ECheckBoxState::Checked
-		: ECheckBoxState::Unchecked;
-}
-
 FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 {
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
@@ -2444,8 +2239,6 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, EditorIni);
-
-	SaveBlenderPathAndExportPath();
 
 	GConfig->Flush(false, GEngineIni);
 	GConfig->Flush(false, GEditorIni);
@@ -2861,7 +2654,7 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	}
 
 	//write debug.log including unreal data, scene contents, folder contents
-	//should happen after blender finishes/next button is pressed
+	//should happen after next button is pressed
 	FString fullPath = escapedOutPath + "/debug.log";
 	FString fileContents = BuildDebugFileContents();
 	FFileHelper::SaveStringToFile(fileContents, *fullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
@@ -3037,70 +2830,6 @@ bool FCognitiveEditorTools::HasSettingsJsonFile() const
 	return PlatformFile.FileExists(*settingsFullPath);
 }
 
-FProcHandle FCognitiveEditorTools::ConvertSceneToGLTF()
-{
-	FProcHandle BlenderReduceAllWizardProc;
-
-	FString pythonscriptpath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("ConvertSceneToGLTF.py");
-	const TCHAR* charPath = *pythonscriptpath;
-	FString fullScriptPath = FPaths::ConvertRelativePathToFull(pythonscriptpath);
-	GLog->Log("full " + fullScriptPath);
-
-
-	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
-	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
-
-	TArray<FAssetData> ScriptList;
-	if (!AssetRegistry.GetAssetsByPath(FName(*pythonscriptpath), ScriptList))
-	{
-		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures - Could not find script at path. Canceling"));
-		return BlenderReduceAllWizardProc;
-	}
-
-	FString stringurl = BlenderPath;
-
-	if (BlenderPath.Len() == 0)
-	{
-		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures - No path set for Blender.exe. Canceling"));
-		return BlenderReduceAllWizardProc;
-	}
-
-	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
-	if (!tempworld)
-	{
-		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures - World is null. canceling"));
-		return BlenderReduceAllWizardProc;
-	}
-
-	FString SceneName = tempworld->GetMapName();
-	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
-
-	if (ObjPath.Len() == 0)
-	{
-		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::Reduce_Meshes_And_Textures No know export directory. Canceling"));
-		return BlenderReduceAllWizardProc;
-	}
-
-	FString escapedPythonPath = fullScriptPath.Replace(TEXT(" "), TEXT("\" \""));
-	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
-
-	//export path
-	//scene/dynamic type
-	//targetNames comma separated
-
-	FString stringparams = " -P " + escapedPythonPath + " " + escapedOutPath + " scene " + SceneName;
-
-	FString stringParamSlashed = stringparams.Replace(TEXT("\\"), TEXT("/"));
-
-	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::ConvertSceneToGLTF Params: %s"), *stringParamSlashed);
-
-	const TCHAR* params = *stringParamSlashed;
-	int32 priorityMod = 0;
-	BlenderReduceAllWizardProc = FPlatformProcess::CreateProc(*BlenderPath, params, false, false, false, NULL, priorityMod, 0, nullptr);
-
-	return BlenderReduceAllWizardProc;
-}
-
 void FCognitiveEditorTools::WizardUpload()
 {
 	WizardUploading = true;
@@ -3137,20 +2866,6 @@ FText FCognitiveEditorTools::GetCurrentSceneExportDirectoryDisplay() const
 FText FCognitiveEditorTools::GetDynamicsExportDirectoryDisplay() const
 {
 	return FText::FromString(FPaths::Combine(BaseExportDirectory, "dynamics"));
-}
-
-EVisibility FCognitiveEditorTools::BlenderValidVisibility() const
-{
-	if (HasFoundBlender())
-		return EVisibility::Visible;
-	return EVisibility::Collapsed;
-}
-
-EVisibility FCognitiveEditorTools::BlenderInvalidVisibility() const
-{
-	if (HasFoundBlender())
-		return EVisibility::Collapsed;
-	return EVisibility::Visible;
 }
 
 FString FCognitiveEditorTools::BuildDebugFileContents() const

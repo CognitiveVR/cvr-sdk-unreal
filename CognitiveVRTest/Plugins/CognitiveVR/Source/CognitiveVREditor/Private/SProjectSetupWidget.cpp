@@ -350,7 +350,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 			]
 
 
-#pragma region "blender"
+#pragma region "directory"
 
 			+ SVerticalBox::Slot()
 			.AutoHeight()
@@ -657,33 +657,17 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 #pragma endregion
 		];
 
-		FString texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("blender_logo_socket_small.png");
+		FString texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("getting_started_video.png");
 		FName BrushName = FName(*texturepath);
-		BlenderLogoTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 78));
-
-		texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("getting_started_video.png");
-		BrushName = FName(*texturepath);
 		VideoImage = new FSlateDynamicImageBrush(BrushName, FVector2D(270, 150));
 }
 
-const FSlateBrush* SProjectSetupWidget::GetBlenderLogo() const
-{
-	return BlenderLogoTexture;
-}
 
 const FSlateBrush* SProjectSetupWidget::GetVideoImage() const
 {
 	return VideoImage;
 }
 
-const FSlateBrush* SProjectSetupWidget::GetBlenderPathStateIcon() const
-{
-	if (FCognitiveEditorTools::GetInstance()->HasFoundBlender())
-	{
-		return FCognitiveEditorTools::GetInstance()->BoxCheckIcon;
-	}
-	return FCognitiveEditorTools::GetInstance()->BoxEmptyIcon;
-}
 
 const FSlateBrush* SProjectSetupWidget::GetExportPathStateIcon() const
 {
@@ -694,14 +678,6 @@ const FSlateBrush* SProjectSetupWidget::GetExportPathStateIcon() const
 	return FCognitiveEditorTools::GetInstance()->BoxEmptyIcon;
 }
 
-FText SProjectSetupWidget::GetBlenderPathTooltipText() const
-{
-	if (FCognitiveEditorTools::GetInstance()->HasFoundBlender())
-	{
-		return FText::FromString("");
-	}
-	return FText::FromString("Blender path is not set or invalid");
-}
 
 FText SProjectSetupWidget::GetExportPathTooltipText() const
 {
@@ -785,7 +761,6 @@ FReply SProjectSetupWidget::NextPage()
 	{
 		GLog->Log("set dynamic and scene export directories. create if needed");
 		FCognitiveEditorTools::GetInstance()->CreateExportFolderStructure();
-		FCognitiveEditorTools::GetInstance()->SaveBlenderPathAndExportPath();
 	}
 
 	CurrentPageEnum = (EProjectSetupPage)(((uint8)CurrentPageEnum) + 1);
@@ -828,7 +803,7 @@ bool SProjectSetupWidget::NextButtonEnabled() const
 
 	if (CurrentPageEnum == EProjectSetupPage::ExportPath)
 	{
-		if (FCognitiveEditorTools::GetInstance()->HasFoundBlender() && FCognitiveEditorTools::GetInstance()->BaseExportDirectory.Len() > 0)
+		if (FCognitiveEditorTools::GetInstance()->BaseExportDirectory.Len() > 0)
 		{
 			return true;
 		}
@@ -875,10 +850,6 @@ FText SProjectSetupWidget::GetHeaderTitle() const
 	}
 }
 
-void SProjectSetupWidget::OnBlenderPathChanged(const FText& Text)
-{
-	FCognitiveEditorTools::GetInstance()->BlenderPath = Text.ToString();
-}
 
 void SProjectSetupWidget::OnExportPathChanged(const FText& Text)
 {
