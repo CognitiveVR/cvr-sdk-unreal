@@ -9,7 +9,6 @@
 #include "PropertyCustomizationHelpers.h"
 #include "Json.h"
 #include "JsonObjectConverter.h"
-
 #include "UnrealEd.h"
 #include "Misc/FileHelper.h"
 #include "Misc/ScopedSlowTask.h"
@@ -66,7 +65,6 @@ public:
 	void OnApplicationKeyChanged(const FText& Text);
 	void OnDeveloperKeyChanged(const FText& Text);
 	void OnAttributionKeyChanged(const FText& Text);
-	void OnBlenderPathChanged(const FText& Text);
 	void OnExportPathChanged(const FText& Text);
 
 	FText GetApplicationKey() const;
@@ -102,15 +100,12 @@ public:
 
 	TSharedPtr<IImageWrapper> ImageWrapper;
 
-	bool HasSearchedForBlender = false; //to limit the searching directories. possibly not required
 
-	bool HasFoundBlender() const;
-	bool HasFoundBlenderAndHasSelection() const;
 	bool CurrentSceneHasSceneId() const;
 
-	bool HasFoundBlenderAndExportDir() const;
+
 	bool HasSetExportDirectory() const;
-	bool HasFoundBlenderAndDynamicExportDir() const;
+
 	bool HasSetDynamicExportDirectory() const;
 
 	int32 CountDynamicObjectsInScene() const;
@@ -162,24 +157,9 @@ public:
 	int32 GetTextureRefactor() const { return TextureRefactor; }
 	FText GetExcludeMeshes() const { return FText::FromString(ExcludeMeshes); }
 
-	FText GetBlenderPath() const;
-
-	//Select Blender.exe. Used to reduce polygon count of the exported scene
-		FReply Select_Blender();
-
 		FReply UploadScene();
 
-	//bakes textures from translucent and masked materials
-	void WizardExportStaticMaterials(FString directory, TArray<UStaticMeshComponent*> meshes, FString mtlFileName);
-	//returns array of strings describing materials being exported - the material type (opaque, translucent, masked) and the paths for each texture
-	//does the actual file writing for saving textures from material to bmps
-	TArray<FString> WizardExportMaterials(FString directory, TArray<FString> ExportedMaterialNames, TArray<UMaterialInterface*> materials);
-
-	void CleanUpDuplicatesAndTempAssets(TArray<AActor*>& ConvertedActorsToDelete, TArray<FAssetData>& TempAssetsToDelete);
-
-	AActor* PrepareSkeletalMeshForExport(AActor* SkeletalMeshActor, TArray<AActor*>& ConvertedActorsToDelete, TArray<FAssetData>& TempAssetsToDelete);
-
-	TArray<AActor*> PrepareSceneForExport(bool OnlyExportSelected, TArray<AActor*>& ConvertedActorsToDelete, TArray<FAssetData>& TempAssetsToDelete);
+	TArray<AActor*> PrepareSceneForExport(bool OnlyExportSelected);
 	
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
 
@@ -195,11 +175,9 @@ public:
 	
 
 	//this is the important function for exporting dynamics. all other other dynamic export functions lead to this
-		//sets position to origin, export as fbx, generate screenshot, bake materials to textures (not necessary), calls ConvertDynamicsToGLTF
+		//sets position to origin, export as fbx, generate screenshot, bake materials to textures (not necessary)
 	FProcHandle ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
 
-	//used after dynamic object exporting. opens blender with a python script for specified dynamic objects. rebuilds materials (not necessary?), exports and cleans up files
-	FProcHandle ConvertDynamicsToGLTF(TArray<FString> meshNames);
 
 	//uploads each dynamic object using its directory to the current scene
 	UFUNCTION(Exec, Category = "Dynamics")
@@ -233,9 +211,9 @@ public:
 	bool PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
 	void* ChooseParentWindowHandle();
 
-	FString BlenderPath;
+
 	FString BaseExportDirectory;
-	void SaveBlenderPathAndExportPath();
+
 
 	//c:/users/me/desktop/export/
 	FText GetBaseExportDirectoryDisplay() const;
@@ -365,10 +343,6 @@ public:
 	//has json file and no bmp files in export directory
 	bool HasConvertedFilesInDirectory() const;
 	bool CanUploadSceneFiles() const;
-	bool LoginAndCustonerIdAndBlenderExportDir() const;
-	bool HasFoundBlenderDynamicExportDirSelection() const;
-
-	ECheckBoxState HasFoundBlenderCheckbox() const;
 
 	void SceneVersionRequest(FEditorSceneData data);
 	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
@@ -404,11 +378,6 @@ public:
 	bool ConfigFileHasChanged = false;
 	EVisibility ConfigFileChangedVisibility() const;
 
-	//returns visible if blender path found and valid
-	EVisibility BlenderValidVisibility() const;
-	EVisibility BlenderInvalidVisibility() const;
-
-	bool HasFoundBlenderHasSelection() const;
 	bool HasSetDynamicExportDirectoryHasSceneId() const;
 	FReply SaveAPIDeveloperKeysToFile();
 
@@ -440,11 +409,12 @@ public:
 
 	void ValidateGeneratedFiles();
 
+	bool RenameFile(FString oldPath, FString newPath);
+
+	void ModifyGLTFContent(FString FilePath);
+
 	void GenerateSettingsJsonFile();
 	bool HasSettingsJsonFile() const;
-
-	//opens blender and run python script. returns process to do stuff after blender has finished
-	FProcHandle ConvertSceneToGLTF();
 
 	const FSlateBrush* GetBoxEmptyIcon() const;
 	FSlateBrush* BoxEmptyIcon;

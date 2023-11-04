@@ -240,12 +240,6 @@ FReply UDynamicObjectComponentDetails::Export()
 
 	GEditor->SelectActor(SelectedDynamicObject->GetOwner(), true, false, true);
 
-	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender())
-	{
-		UE_LOG(CognitiveVR_Log, Error, TEXT("Could not complete Dynamic Export - Must have Blender installed to convert images"));
-		return FReply::Handled();
-	}
-
 	FCognitiveEditorTools::GetInstance()->ExportSelectedDynamics();
 
 	return FReply::Handled();
