@@ -11,6 +11,8 @@ def replaceline(file, linesrc, linedst):
 	mo = open(file, "r")
 	readString = mo.read()
 
+	foundLine = False
+
 	#replace mtl with references to pngs
 	finalstrings=[]
 	#print("=============================================file loop start")
@@ -18,11 +20,19 @@ def replaceline(file, linesrc, linedst):
 		if line == linesrc:
 			finalstrings.append(linedst+"\n")
 			print("replaced line " + linedst)
+			foundLine = True
 		else:
 			#print("-------- line " + line)
 			finalstrings.append(line+"\n")
 
 	mo.close()
+
+	if foundLine == False:
+		print("couldnt find line to replace " + linesrc)
+		#delete the temp plugin directory
+		shutil.rmtree(cwd+"/Plugins/")
+		print("delete " + cwd+"/Plugins/")
+		input("Press Enter to continue...")
 
 	#remove the original file
 	os.remove(file)
@@ -40,6 +50,8 @@ def insertline(file, targetline, insertline):
 	mo = open(file, "r")
 	readString = mo.read()
 
+	foundLine = False
+
 	#replace mtl with references to pngs
 	finalstrings=[]
 	#print("=============================================file loop start")
@@ -48,11 +60,19 @@ def insertline(file, targetline, insertline):
 			finalstrings.append(line+"\n")
 			finalstrings.append(insertline+"\n")
 			print("insert line " + insertline)
+			foundLine = True
 		else:
 			#print("-------- line " + line)
 			finalstrings.append(line+"\n")
 
 	mo.close()
+
+	if foundLine == False:
+		print("couldnt find line to insert " + targetline)
+		#delete the temp plugin directory
+		shutil.rmtree(cwd+"/Plugins/")
+		print("delete " + cwd+"/Plugins/")
+		input("Press Enter to continue...")
 
 	#remove the original file
 	os.remove(file)
@@ -111,3 +131,4 @@ print("delete " + cwd+"/Plugins/")
 print("complete!")
 
 time.sleep(1)
+input("Press Enter to continue...")

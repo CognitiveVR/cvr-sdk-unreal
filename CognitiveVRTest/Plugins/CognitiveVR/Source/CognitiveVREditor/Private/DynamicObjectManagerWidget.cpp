@@ -398,11 +398,6 @@ FReply SDynamicObjectManagerWidget::ValidateAndRefresh()
 	return FReply::Handled();
 }
 
-void SDynamicObjectManagerWidget::OnBlenderPathChanged(const FText& Text)
-{
-	FCognitiveEditorTools::GetInstance()->BlenderPath = Text.ToString();
-}
-
 void SDynamicObjectManagerWidget::OnExportPathChanged(const FText& Text)
 {
 	FCognitiveEditorTools::GetInstance()->BaseExportDirectory = Text.ToString();
@@ -503,7 +498,6 @@ FText SDynamicObjectManagerWidget::UploadAllMeshesTooltip() const
 bool SDynamicObjectManagerWidget::IsUploadAllEnabled() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
-	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
 	return true;
@@ -512,7 +506,6 @@ bool SDynamicObjectManagerWidget::IsUploadAllEnabled() const
 FText SDynamicObjectManagerWidget::GetUploadInvalidCause() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return FText::FromString("Developer Key is not set"); }
-	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return FText::FromString("Blender path is invalid"); }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return FText::FromString("Export Path is invalid"); }
 	return FText::GetEmpty();
 }
@@ -520,7 +513,6 @@ FText SDynamicObjectManagerWidget::GetUploadInvalidCause() const
 EVisibility SDynamicObjectManagerWidget::GetSceneWarningVisibility() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return EVisibility::Visible; }
-	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return EVisibility::Visible; }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return EVisibility::Visible; }
 	return EVisibility::Collapsed;
 }
@@ -528,7 +520,6 @@ EVisibility SDynamicObjectManagerWidget::GetSceneWarningVisibility() const
 bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
-	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlenderAndExportDir()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
 	
 	//use the selection in the table, not in the scene
@@ -540,7 +531,7 @@ FText SDynamicObjectManagerWidget::UploadSelectedText() const
 {
 	auto selected = SceneDynamicObjectTable->TableViewWidget->GetSelectedItems();
 
-	//should export all dynamic objects that need it, then wait for blender to fix them all
+	//should export all dynamic objects that need it
 
 	TArray<FString> dynamicMeshNames;
 

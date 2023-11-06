@@ -106,50 +106,6 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 		.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SaveAPIDeveloperKeysToFile)
 	];
 
-	LoginCategory.AddCustomRow(FText::FromString("Blender Path"))
-		.ValueContent()
-		.HAlign(HAlign_Fill)
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-		.MaxWidth(96)
-		[
-			SNew(STextBlock)
-			.Text(FText::FromString("Blender Path"))
-		]
-
-	+ SHorizontalBox::Slot()
-		//.MaxWidth(128)
-		[
-			SNew(SEditableTextBox)
-			.MinDesiredWidth(128)
-		.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBlenderPath)
-		.OnTextChanged_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OnBlenderPathChanged)
-		]
-	+SHorizontalBox::Slot()
-		.MaxWidth(17)
-		[
-			SNew(SBox)
-			.HeightOverride(17)
-			.WidthOverride(17)
-			[
-				SNew(SButton)
-				//PickerWidget = SAssignNew(BrowseButton, SButton)
-				.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
-				.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
-				.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Blender)
-				.ContentPadding(2.0f)
-				.ForegroundColor(FSlateColor::UseForeground())
-				.IsFocusable(false)
-				[
-					SNew(SImage)
-					.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
-					.ColorAndOpacity(FSlateColor::UseForeground())
-				]
-			]
-		]
-	];
-
 	LoginCategory.AddCustomRow(FText::FromString("Export Path"))
 		.ValueContent()
 		.HAlign(HAlign_Fill)
@@ -378,11 +334,6 @@ void FCognitiveSettingsCustomization::OnChangedExportTextureRefactor(int32 InNew
 void FCognitiveSettingsCustomization::OnCommitedExportTextureRefactor(int32 InNewValue, ETextCommit::Type CommitType)
 {
 	FCognitiveEditorTools::GetInstance()->TextureRefactor = InNewValue;
-}
-
-void FCognitiveSettingsCustomization::OnBlenderPathChanged(const FText& Text)
-{
-	FCognitiveEditorTools::GetInstance()->BlenderPath = Text.ToString();
 }
 
 void FCognitiveSettingsCustomization::OnExportPathChanged(const FText& Text)

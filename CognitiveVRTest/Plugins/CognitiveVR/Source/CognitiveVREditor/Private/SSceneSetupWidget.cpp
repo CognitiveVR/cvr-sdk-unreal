@@ -312,75 +312,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Text(FText::FromString("The current level geometry will be exported and uploaded to our dashboard. This will provide context for the spatial data points we automatically collect."))
 			]
 
-			//path to blender
-			+ SVerticalBox::Slot()
-			.MaxHeight(32)
-			//.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-				+SHorizontalBox::Slot()
-				.MaxWidth(200)
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-					.HeightOverride(32)
-					[
-						SNew(STextBlock)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-						.Text(FText::FromString("Path to Blender.exe"))
-					]
-				]
-				+ SHorizontalBox::Slot()
-				.Padding(1)
-				.FillWidth(3)
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-					.HeightOverride(32)
-					.MaxDesiredHeight(32)
-					[
-						SNew(SEditableTextBox)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBlenderPath)
-						.OnTextChanged(this, &SSceneSetupWidget::OnBlenderPathChanged)
-					]
-				]
-				+SHorizontalBox::Slot()
-				.MaxWidth(17)
-				[
-					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
-					.VAlign(VAlign_Center)
-					[
-						SNew(SBox)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.HeightOverride(17)
-						.WidthOverride(17)
-						[
-							SNew(SButton)
-							.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-							//PickerWidget = SAssignNew(BrowseButton, SButton)
-							.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
-							.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
-							.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Blender)
-							.ContentPadding(2.0f)
-							.ForegroundColor(FSlateColor::UseForeground())
-							.IsFocusable(false)
-							[
-								SNew(SImage)
-								.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
-								.ColorAndOpacity(FSlateColor::UseForeground())
-							]
-						]
-					]
-				]
-			]
-
 			//path to export directory
 			+ SVerticalBox::Slot()
 			.MaxHeight(32)
@@ -777,7 +708,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("That's it!\n\nAfter saving your project, you will be recording user position, gaze and basic device information. Simply press play in the Unreal Editor or make a build for your target platform.\n\nPlease note that sessions run in the editor won't count towards aggregate metrics.\n\nYou can view sessions from the Dashboard."))
+				.Text(FText::FromString("That's it!\n\nAfter saving your project, we recommend restarting the Unreal Editor. You will be recording user position, gaze and basic device information. Simply press play in the Unreal Editor or make a build for your target platform.\n\nPlease note that sessions run in the editor won't count towards aggregate metrics.\n\nYou can view sessions from the Dashboard."))
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
@@ -1019,18 +950,13 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 		return FReply::Handled();
 	}
 
-	TArray<AActor*> ConvertedActorsToBeDeleted;
-	TArray<FAssetData> TempAssetsToBeDeleted;
-
 	//prepare actors in the scene to be exported
 	//if actor has a skeletal mesh component, convert to static mesh and export the static mesh version of the actor
 	//clean up after to maintain original level
 
-	TArray<AActor*> ToBeExportedFinal = FCognitiveEditorTools::GetInstance()->PrepareSceneForExport(OnlyExportSelected, ConvertedActorsToBeDeleted, TempAssetsToBeDeleted);
+	TArray<AActor*> ToBeExportedFinal = FCognitiveEditorTools::GetInstance()->PrepareSceneForExport(OnlyExportSelected);
 
 	FCognitiveEditorTools::GetInstance()->ExportScene(ToBeExportedFinal);
-
-	FCognitiveEditorTools::GetInstance()->CleanUpDuplicatesAndTempAssets(ConvertedActorsToBeDeleted, TempAssetsToBeDeleted);
 	
 
 	SceneWasExported = true;
@@ -1514,11 +1440,6 @@ FText SSceneSetupWidget::GetHeaderTitle() const
 void SSceneSetupWidget::OnExportPathChanged(const FText& Text)
 {
 	FCognitiveEditorTools::GetInstance()->BaseExportDirectory = Text.ToString();
-}
-
-void SSceneSetupWidget::OnBlenderPathChanged(const FText& Text)
-{
-	FCognitiveEditorTools::GetInstance()->BlenderPath = Text.ToString();
 }
 
 void SSceneSetupWidget::SpawnCognitiveVRActor()

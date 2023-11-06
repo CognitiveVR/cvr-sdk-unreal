@@ -49,7 +49,6 @@ public:
 
 	void OnCheckStateChangedStaticOnly(const bool& InNewValue);
 
-	void OnBlenderPathChanged(const FText& Text);
 	void OnExportPathChanged(const FText& Text);
 
 	TSharedPtr<SWidget> PickerWidget;

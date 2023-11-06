@@ -28,7 +28,7 @@ class FCognitiveVREditorModule;
 //intro
 //developer key
 //application key result
-//blender + export path
+//export path
 //complete
 
 class SProjectSetupWidget : public SCompoundWidget
@@ -88,19 +88,17 @@ public:
 	EVisibility BackButtonVisibility() const;
 	FReply LastPage();
 
-	const FSlateBrush* GetBlenderLogo() const;
-	FSlateBrush* BlenderLogoTexture;
 	const FSlateBrush* GetVideoImage() const;
 	FSlateBrush* VideoImage;
 
 
-	const FSlateBrush* GetBlenderPathStateIcon() const;
+
 	const FSlateBrush* GetExportPathStateIcon() const;
-	FText GetBlenderPathTooltipText() const;
+
 	FText GetExportPathTooltipText() const;
 
 	void OnExportPathChanged(const FText& Text);
-	void OnBlenderPathChanged(const FText& Text);
+
 
 	void FetchApplicationKey(FString developerKey);
 	void GetApplicationKeyResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
