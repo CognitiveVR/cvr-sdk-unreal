@@ -494,9 +494,31 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		ActorsExported++;
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
 
-
-		//exports the currently selected actor(s)
-		GUnrealEd->ExportMap(GWorld, *tempObject, true);
+		//check if export object is a pawn
+		//if so, we need to export the associated mesh directly instead of the object in the level
+		if (exportObjects[i]->GetOwner()->IsA(APawn::StaticClass()))
+		{
+			//get mesh component and cast it to find if its skeletal or static
+			UMeshComponent* pawnMesh = Cast<UMeshComponent>(exportObjects[i]->GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
+			USkeletalMeshComponent* skelPawn = Cast<USkeletalMeshComponent>(pawnMesh);
+			UStaticMeshComponent* staticPawn = Cast<UStaticMeshComponent>(pawnMesh);
+			//check if mesh is skeletal
+			if (skelPawn != nullptr)
+			{
+				USkeletalMesh* skelMesh = skelPawn->SkeletalMesh;
+				UExporter::ExportToFile(skelMesh, NULL, *tempObject, true);
+			}
+			else if (staticPawn != nullptr) //check if mesh is static
+			{
+				UStaticMesh* staticMesh = staticPawn->GetStaticMesh();
+				UExporter::ExportToFile(staticMesh, NULL, *tempObject, true);
+			}
+		}
+		else //if not a pawn, export the object in the scene normally
+		{
+			//exports the currently selected actor(s)
+			GUnrealEd->ExportMap(GWorld, *tempObject, true);
+		}
 
 
 		//reset dynamic back to original transform
