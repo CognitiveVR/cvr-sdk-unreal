@@ -605,7 +605,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 					//take the skeletal meshes that we set up earlier and use them to create a static mesh
 					UStaticMesh* tmpStatMesh = MeshUtilities.ConvertMeshesToStaticMesh(meshes, exportObjects[i]->GetOwner()->GetTransform(), NewPackageName->GetName());
 					UExporter::ExportToFile(tmpStatMesh, NULL, *tempObject, true);
-					
+					TempAssetsToDelete.Add(tmpStatMesh);
 				}
 			}
 			else
@@ -682,6 +682,9 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
 		FindAllSubDirectoryNames();
 	}
+
+	ObjectTools::DeleteAssets(TempAssetsToDelete, false);
+	TempAssetsToDelete.Empty();
 	return fph;
 }
 

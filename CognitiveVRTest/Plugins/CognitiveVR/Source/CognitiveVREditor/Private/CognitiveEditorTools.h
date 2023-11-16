@@ -178,6 +178,7 @@ public:
 		//sets position to origin, export as gltf, generate screenshot
 	FProcHandle ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
 
+	TArray<FAssetData> TempAssetsToDelete;
 
 	//uploads each dynamic object using its directory to the current scene
 	UFUNCTION(Exec, Category = "Dynamics")
