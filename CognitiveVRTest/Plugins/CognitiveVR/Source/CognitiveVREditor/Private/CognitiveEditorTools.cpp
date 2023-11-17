@@ -511,7 +511,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			UE_LOG(LogTemp, Warning, TEXT("FOUND MULTIPLE DYNAMIC OBJECTS"));
 
 			//if so, we check that each D.O. has a mesh parents
-			//we go through and check each D.O. (either make a list then iterate on it or check parent while seeing the D.O.s
 			UMeshComponent* ParentMesh = Cast<UMeshComponent>(exportObjects[i]->GetAttachParent());
 
 			if (ParentMesh)
