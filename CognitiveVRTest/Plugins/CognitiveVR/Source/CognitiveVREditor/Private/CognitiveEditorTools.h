@@ -164,20 +164,21 @@ public:
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
 
 	//dynamic objects
-	//Runs the built-in fbx exporter with all meshes
+	//Runs the built-in gltf exporter with all meshes
 	FProcHandle ExportAllDynamics();
-	//Runs the built-in fbx exporter with all meshes that don't have an exported .gltf
+	//Runs the built-in gltf exporter with all meshes that don't have an exported .gltf
 		FProcHandle ExportNewDynamics();
 
-	//Runs the built-in fbx exporter with selected meshes
+	//Runs the built-in gltf exporter with selected meshes
 		FReply ExportSelectedDynamics();
 		FProcHandle ExportDynamicData(TArray< TSharedPtr<FDynamicData>> dynamicData);
 	
 
 	//this is the important function for exporting dynamics. all other other dynamic export functions lead to this
-		//sets position to origin, export as fbx, generate screenshot, bake materials to textures (not necessary)
+		//sets position to origin, export as gltf, generate screenshot
 	FProcHandle ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects);
 
+	TArray<FAssetData> TempAssetsToDelete;
 
 	//uploads each dynamic object using its directory to the current scene
 	UFUNCTION(Exec, Category = "Dynamics")

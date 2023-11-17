@@ -256,28 +256,28 @@ FProcHandle FCognitiveEditorTools::ExportNewDynamics()
 	//get all dynamic object components in scene. add names/pointers to array
 	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 	{
-		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
-		if (actorComponent == NULL)
+		for (UActorComponent* actorComponent : ActorItr->GetComponents())
 		{
-			continue;
-		}
-		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
-		if (dynamic == NULL)
-		{
-			continue;
-		}
-
-		FString path = GetDynamicsExportDirectory() + "/" + dynamic->MeshName + "/" + dynamic->MeshName;
-		FString gltfpath = path + ".gltf";
-		if (FPaths::FileExists(*gltfpath))
-		{
-			//already exported
-			continue;
-		}
-		if (!meshNames.Contains(dynamic->MeshName))
-		{
-			exportObjects.Add(dynamic);
-			meshNames.Add(dynamic->MeshName);
+			if (actorComponent->IsA(UDynamicObject::StaticClass()))
+			{
+				UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+				if (dynamicComponent == NULL)
+				{
+					continue;
+				}
+				FString path = GetDynamicsExportDirectory() + "/" + dynamicComponent->MeshName + "/" + dynamicComponent->MeshName;
+				FString gltfpath = path + ".gltf";
+				if (FPaths::FileExists(*gltfpath))
+				{
+					//already exported
+					continue;
+				}
+				if (!meshNames.Contains(dynamicComponent->MeshName))
+				{
+					exportObjects.Add(dynamicComponent);
+					meshNames.Add(dynamicComponent->MeshName);
+				}
+			}
 		}
 	}
 
@@ -314,20 +314,21 @@ FProcHandle FCognitiveEditorTools::ExportAllDynamics()
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		//AStaticMeshActor *Mesh = *ActorItr;
 
-		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
-		if (actorComponent == NULL)
+		for (UActorComponent* actorComponent : ActorItr->GetComponents())
 		{
-			continue;
-		}
-		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
-		if (dynamic == NULL)
-		{
-			continue;
-		}
-		if (!meshNames.Contains(dynamic->MeshName))
-		{
-			exportObjects.Add(dynamic);
-			meshNames.Add(dynamic->MeshName);
+			if (actorComponent->IsA(UDynamicObject::StaticClass()))
+			{
+				UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+				if (dynamicComponent == NULL)
+				{
+					continue;
+				}
+				if (!meshNames.Contains(dynamicComponent->MeshName))
+				{
+					exportObjects.Add(dynamicComponent);
+					meshNames.Add(dynamicComponent->MeshName);
+				}
+			}
 		}
 	}
 
@@ -347,22 +348,23 @@ FReply FCognitiveEditorTools::ExportSelectedDynamics()
 	{
 		if (AActor* Actor = Cast<AActor>(*It))
 		{
-			//SelectionSetCache.Add(Actor);
-			UActorComponent* actorComponent = Actor->GetComponentByClass(UDynamicObject::StaticClass());
-			if (actorComponent == NULL)
+			for (UActorComponent* actorComponent : Actor->GetComponents())
 			{
-				continue;
+				if (actorComponent->IsA(UDynamicObject::StaticClass()))
+				{
+					UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+					if (dynamicComponent == NULL)
+					{
+						continue;
+					}
+					if (!meshNames.Contains(dynamicComponent->MeshName))
+					{
+						SelectionSetCache.Add(dynamicComponent);
+						meshNames.Add(dynamicComponent->MeshName);
+					}
+				}
 			}
-			UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
-			if (dynamicComponent == NULL)
-			{
-				continue;
-			}
-			if (!meshNames.Contains(dynamicComponent->MeshName))
-			{
-				SelectionSetCache.Add(dynamicComponent);
-				meshNames.Add(dynamicComponent->MeshName);
-			}
+
 		}
 	}
 
@@ -381,37 +383,34 @@ FProcHandle FCognitiveEditorTools::ExportDynamicData(TArray< TSharedPtr<FDynamic
 	{
 		if (AActor* Actor = Cast<AActor>(*It))
 		{
-			//SelectionSetCache.Add(Actor);
-			UActorComponent* actorComponent = Actor->GetComponentByClass(UDynamicObject::StaticClass());
-			if (actorComponent == NULL)
+			for (UActorComponent* actorComponent : Actor->GetComponents())
 			{
-				continue;
-			}
-			UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
-			if (dynamicComponent == NULL)
-			{
-				continue;
-			}
-
-			if (meshNames.Contains(dynamicComponent->MeshName))
-			{
-				//mesh will already be exported
-				continue;
-			}
-
-			bool exportActor = false;
-			for (auto& elem : dynamicData)
-			{
-				if (elem->MeshName == dynamicComponent->MeshName)
+				if (actorComponent->IsA(UDynamicObject::StaticClass()))
 				{
-					exportActor = true;
-					break;
+					UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+					if (dynamicComponent == NULL)
+					{
+						continue;
+					}
+					if (meshNames.Contains(dynamicComponent->MeshName))
+					{
+						continue;
+					}
+					bool exportActor = false;
+					for (auto& elem : dynamicData)
+					{
+						if (elem->MeshName == dynamicComponent->MeshName)
+						{
+							exportActor = true;
+							break;
+						}
+					}
+					if (exportActor)
+					{
+						SelectionSetCache.Add(dynamicComponent);
+						meshNames.Add(dynamicComponent->MeshName);
+					}
 				}
-			}
-			if (exportActor)
-			{
-				SelectionSetCache.Add(dynamicComponent);
-				meshNames.Add(dynamicComponent->MeshName);
 			}
 		}
 	}
@@ -495,8 +494,126 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
 
 
-		//exports the currently selected actor(s)
-		GUnrealEd->ExportMap(GWorld, *tempObject, true);
+
+		int DynamicObjectCount = 0;
+		//check if this D.O. is on an object with another D.O.
+		for (UActorComponent* Component : exportObjects[i]->GetOwner()->GetComponents())
+		{
+			if (Component->IsA(UDynamicObject::StaticClass()))
+			{
+				DynamicObjectCount++;
+			}
+		}
+
+		if (DynamicObjectCount > 1) //multiple D.O.s
+		{
+
+			UE_LOG(LogTemp, Warning, TEXT("FOUND MULTIPLE DYNAMIC OBJECTS"));
+
+			//if so, we check that each D.O. has a mesh parents
+			UMeshComponent* ParentMesh = Cast<UMeshComponent>(exportObjects[i]->GetAttachParent());
+
+			if (ParentMesh)
+			{
+				// Check for Static Mesh Component
+				UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(ParentMesh);
+				if (StaticMeshComp && StaticMeshComp->GetStaticMesh())
+				{
+					UStaticMesh* StaticMeshAsset = StaticMeshComp->GetStaticMesh();
+					// Do something with StaticMeshAsset
+					UExporter::ExportToFile(StaticMeshAsset, NULL, *tempObject, true);
+				}
+
+				// Check for Skeletal Mesh Component
+				USkeletalMeshComponent* SkeletalMeshComp = Cast<USkeletalMeshComponent>(ParentMesh);
+				if (SkeletalMeshComp && SkeletalMeshComp->SkeletalMesh)
+				{
+					USkeletalMesh* SkeletalMeshAsset = SkeletalMeshComp->SkeletalMesh;
+					// Do something with SkeletalMeshAsset
+					UExporter::ExportToFile(SkeletalMeshAsset, NULL, *tempObject, true);
+				}
+
+			}
+			else //incorrect configuration of multiple D.O.s
+			{
+				FSuppressableWarningDialog::FSetupInfo DOExportSettingsInfo(LOCTEXT("DynamicObjectExportSettingsBody", "You are exporting a dynamic object on an actor with multiple dynamic objects, but they are not configured correctly. If you want to track multiple meshes on an actor with multiple dynamic objects, make sure each dynamic object is a child of its respective mesh"), LOCTEXT("DynamicObjectExportSettingsTitle", "Incorrect Dynamic Object Export Configuration"), "ExportSelectedDynamicsObjectsBody");
+				DOExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
+				DOExportSettingsInfo.CheckBoxText = FText::FromString("Don't show again");
+				FSuppressableWarningDialog DOExportSelectedDynamicMeshes(DOExportSettingsInfo);
+				DOExportSelectedDynamicMeshes.ShowModal();
+
+				continue;
+			}
+		}
+		else //only 1 D.O. proceed as normal
+		{
+			//if theres only 1 D.O. on the object, continue normally
+
+			//pawn export process needs to be able to group meshes somehow on D.O.s with 1 D.O. and multiple meshes
+			if (exportObjects[i]->GetOwner()->IsA(APawn::StaticClass()))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("FOUND PAWN CLASS, EXPORTING MESH"));
+				UMeshComponent* pawnMesh = Cast<UMeshComponent>(exportObjects[i]->GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
+				TArray<UActorComponent*> pawnMeshes;
+				exportObjects[i]->GetOwner()->GetComponents(UMeshComponent::StaticClass(), pawnMeshes);
+
+				TArray< UMeshComponent*> meshes;
+				for (int32 j = 0; j < pawnMeshes.Num(); j++)
+				{
+					UStaticMeshComponent* mesh = Cast<UStaticMeshComponent>(pawnMeshes[j]);
+					if (mesh == NULL)
+					{
+						continue;
+					}
+
+					ULevel* componentLevel = pawnMeshes[j]->GetComponentLevel();
+					if (componentLevel->bIsVisible == 0)
+					{
+						continue;
+						//not visible! possibly on a disabled sublevel
+					}
+
+					meshes.Add(mesh);
+				}
+
+				TArray<UActorComponent*> actorSkeletalComponents;
+				exportObjects[i]->GetOwner()->GetComponents(USkeletalMeshComponent::StaticClass(), actorSkeletalComponents);
+				for (int32 j = 0; j < actorSkeletalComponents.Num(); j++)
+				{
+					USkeletalMeshComponent* mesh = Cast<USkeletalMeshComponent>(actorSkeletalComponents[j]);
+					if (mesh == NULL)
+					{
+						continue;
+					}
+
+					ULevel* componentLevel = actorSkeletalComponents[j]->GetComponentLevel();
+					if (componentLevel->bIsVisible == 0)
+					{
+						continue;
+						//not visible! possibly on a disabled sublevel
+					}
+
+					meshes.Add(mesh);
+				}
+
+				//setup temp meshes package
+				UPackage* NewPackageName = CreatePackage(TEXT("/Game/TempMesh"));
+
+				if (meshes.Num() > 0)
+				{
+					//take the skeletal meshes that we set up earlier and use them to create a static mesh
+					UStaticMesh* tmpStatMesh = MeshUtilities.ConvertMeshesToStaticMesh(meshes, exportObjects[i]->GetOwner()->GetTransform(), NewPackageName->GetName());
+					UExporter::ExportToFile(tmpStatMesh, NULL, *tempObject, true);
+					TempAssetsToDelete.Add(tmpStatMesh);
+				}
+			}
+			else
+			{
+				//exports the currently selected actor(s)
+				UE_LOG(LogTemp, Warning, TEXT("DOING REGULAR MAP EXPORT"));
+				GUnrealEd->ExportMap(GWorld, *tempObject, true);
+			}
+		}
 
 
 		//reset dynamic back to original transform
@@ -564,6 +681,9 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
 		FindAllSubDirectoryNames();
 	}
+
+	ObjectTools::DeleteAssets(TempAssetsToDelete, false);
+	TempAssetsToDelete.Empty();
 	return fph;
 }
 
