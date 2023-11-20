@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "0.27.0",
+	"VersionName": "0.27.1",
 	"FriendlyName": "Cognitive3D Analytics",
 	"Description": "Cognitive3D Analytics for Unreal",
 	"Category": "Analytics",
