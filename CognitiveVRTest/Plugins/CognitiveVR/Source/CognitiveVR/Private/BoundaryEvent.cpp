@@ -3,6 +3,7 @@
 #include "CognitiveVR/Private/BoundaryEvent.h"
 #include "DrawDebugHelpers.h"
 #include "Interfaces/IPluginManager.h"
+#include "HeadMountedDisplayFunctionLibrary.h"
 
 // Sets default values
 UBoundaryEvent::UBoundaryEvent()

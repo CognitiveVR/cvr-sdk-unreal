@@ -16,6 +16,7 @@
 #if WITH_EDITOR
 #include "Misc/MessageDialog.h"
 #endif
+#include "HeadMountedDisplayFunctionLibrary.h"
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
 bool FAnalyticsProviderCognitiveVR::bHasSessionStarted = false;
