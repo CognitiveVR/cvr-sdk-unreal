@@ -1,4 +1,5 @@
 #include "CognitiveVR/Private/TrackingEvent.h"
+#include "HeadMountedDisplayFunctionLibrary.h"
 
 UTrackingEvent::UTrackingEvent()
 {

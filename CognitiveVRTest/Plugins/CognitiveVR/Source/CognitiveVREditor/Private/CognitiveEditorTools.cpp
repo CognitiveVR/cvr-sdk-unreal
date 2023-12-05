@@ -899,7 +899,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FSt
 			objectManifest += "{";
 			objectManifest += "\"id\":\"" + ids[i] + "\",";
 			objectManifest += "\"mesh\":\"" + meshName + "\",";
-			objectManifest += "\"name\":\"" + prefabName + "\"";
+			objectManifest += "\"name\":\"" + prefabName + "\",";
 
 			objectManifest += "\"scaleCustom\":[1,1,1],";
 			objectManifest += "\"initialPosition\":[0,0,0],";

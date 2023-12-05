@@ -10259,7 +10259,34 @@ void CRtApi::byteSwapBuffer(char *buffer, unsigned int samples, CRtAudioFormat f
 	}
 }
 
-#include "Core/Public/Windows/HideWindowsPlatformTypes.h"
+//#include "Core/Public/Windows/HideWindowsPlatformTypes.h"
+#include "HAL/Platform.h"
+#if !PLATFORM_WINDOWS
+#include "Microsoft/HideMicrosoftPlatformTypes.h"
+#else
+
+#ifdef WINDOWS_PLATFORM_TYPES_GUARD
+#undef WINDOWS_PLATFORM_TYPES_GUARD
+#else
+#error Mismatched HideWindowsPlatformTypes.h detected.
+#endif
+
+#undef INT
+#undef UINT
+#undef DWORD
+#undef FLOAT
+
+#ifdef TRUE
+#undef TRUE
+#endif
+
+#ifdef FALSE
+#undef FALSE
+#endif
+
+#pragma warning( pop )
+
+#endif //PLATFORM_*
 
 // Indentation settings for Vim and Emacs
 //
