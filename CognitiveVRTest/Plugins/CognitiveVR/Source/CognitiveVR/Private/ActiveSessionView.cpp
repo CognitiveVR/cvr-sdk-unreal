@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ActiveSessionView.h"
+#include "HeadMountedDisplayFunctionLibrary.h"
 
 float AActiveSessionView::Remap(float num, float low1, float high1, float low2, float high2)
 {
