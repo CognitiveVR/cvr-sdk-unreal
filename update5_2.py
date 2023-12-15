@@ -126,7 +126,7 @@ print (version)
 replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","			|| Target.Platform == UnrealTargetPlatform.Win32","//			|| Target.Platform == UnrealTargetPlatform.Win32")
 
 #change definitions and oculus plugin include in build.cs
-replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","			//PublicDependencyModuleNames.AddRange(new string[] { \"OnlineSubsystem\", \"OnlineSubsystemOculus\", \"OculusHMD\" });","			//PublicDependencyModuleNames.AddRange(new string[] { \"OnlineSubsystem\", \"OnlineSubsystemOculus\", \"OculusXRHMD\" });")
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","			//PublicDependencyModuleNames.AddRange(new string[] { \"OculusHMD\" });","			//PublicDependencyModuleNames.AddRange(new string[] { \"OculusXRHMD\" });")
 
 
 # save to zip archive

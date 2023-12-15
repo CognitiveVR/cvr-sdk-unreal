@@ -51,7 +51,6 @@ namespace UnrealBuildTool.Rules
                     "JsonUtilities",
 					"UMG",
 					"EngineSettings",
-					"EyeTracker"
 				}
 				);
 
@@ -63,6 +62,7 @@ namespace UnrealBuildTool.Rules
 			//PublicDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem", "OnlineSubsystemOculus", "OculusHMD" });
 			
 			
+			//PublicDependencyModuleNames.AddRange(new string[] {"OculusHMD" });
 			//uncomment this to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
 			//PublicDefinitions.Add("OPENXR_EYETRACKING");
 
