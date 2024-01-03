@@ -74,11 +74,66 @@ TSharedRef<ITableRow> SDynamicObjectTableWidget::OnGenerateRowForTable(TSharedPt
 	//find matching InItem by id
 	bool hasUploadedId;
 	FString searchId = InItem->Id;
-	auto FoundId = SDynamicObjectManagerWidget::dashboardObjects.FindByPredicate([searchId](const FDashboardObject& InItem2)
+	if (searchId.Contains("ID Pool"))
 	{
-		return InItem2.sdkId == searchId;
-	});
-	hasUploadedId = FoundId != NULL;
+		//look through all id pool assets, 
+		//find the one with the matching prefab name,
+		//use that list of ids and match each with the dashboard object ids for that prefab name
+
+
+		//
+		//find the corresponding asset
+		FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+		IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+
+		FARFilter Filter;
+		Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
+		Filter.bRecursiveClasses = true; // Set to true if you want to include subclasses
+
+		TArray<FAssetData> AssetData;
+		AssetRegistry.GetAssets(Filter, AssetData);
+
+		for (const FAssetData& Asset : AssetData)
+		{
+			//get the actual asset from the asset data
+			UObject* IdPoolObject = Asset.GetAsset();
+			//cast it to a dynamic id pool asset
+			UDynamicIdPoolAsset* IdPoolAsset = Cast<UDynamicIdPoolAsset>(IdPoolObject);
+			
+			
+			if (IdPoolAsset->PrefabName == InItem->Name && IdPoolAsset->MeshName == InItem->MeshName)
+			{
+				int32 idsFound = 0;
+				for (auto ids : IdPoolAsset->Ids)
+				{
+					auto FoundId2 = SDynamicObjectManagerWidget::dashboardObjects.FindByPredicate([ids](const FDashboardObject& InItem3)
+						{
+							return InItem3.sdkId == ids;
+						}
+					);
+					if (FoundId2 == nullptr)
+					{
+						continue;
+					}
+					idsFound++;
+
+					if (idsFound == IdPoolAsset->Ids.Num())
+					{
+						hasUploadedId = FoundId2 != NULL;
+					}
+				}
+				
+			}
+		}
+	}
+	else
+	{
+		auto FoundId = SDynamicObjectManagerWidget::dashboardObjects.FindByPredicate([searchId](const FDashboardObject& InItem2)
+			{
+				return InItem2.sdkId == searchId;
+			});
+		hasUploadedId = FoundId != NULL;
+	}
 
 	//check if the export folder has files for this dynamic object
 	bool hasExportedMesh = !InItem->MeshName.IsEmpty() && FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(InItem->MeshName);
