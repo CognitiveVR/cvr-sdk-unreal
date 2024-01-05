@@ -82,6 +82,7 @@ void Network::NetworkCall(FString suburl, FString contents, bool copyDataToCache
 	}
 	if (CognitiveLog::DevLogEnabled())
 		CognitiveLog::DevLog(url + "\n" + contents);
+	
 	//this section is only for writing requests to the cache when the app is closing and we dont know what the response will be
 	if (!copyDataToCache) { return; }
 	if (!cog.IsValid()) { return; }
@@ -115,11 +116,14 @@ inline FString Network::TArrayToString(const TArray<uint8> In, int32 Count)
 
 void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
+	if (!cog.IsValid()) { GLog->Log("Network::OnCallReceivedAsync response while cognitive providor is invalid"); return; }
 	if (!cog->HasStartedSession()) { GLog->Log("Network::OnCallReceivedAsync response while session not started"); return; }
 	if (Response.IsValid())
 	{
 		int32 responseCode = Response.Get()->GetResponseCode();
+		if (responseCode == 200) 
 		{
+			if (!cog->localCache.IsValid()) { GLog->Log("Network::OnCallReceivedAsync response while local cache is invalid"); return; }
 			if (localCacheRequest == NULL)
 			{
 				ResetVariableTimer();
@@ -144,7 +148,7 @@ void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Resp
 				}
 			}
 		}
-		else //when we get here, we start the variable delay, 60 seconds each time, and just let the rest of the block happen
+		else 
 		{
 			if (responseCode < 500 && responseCode != 0) {return;}
 
