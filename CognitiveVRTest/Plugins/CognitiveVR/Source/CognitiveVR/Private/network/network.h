@@ -27,6 +27,11 @@ struct FExitPollResponse;
 		FHttpRequestPtr localCacheRequest;
 		FString TArrayToString(const TArray<uint8> data, int32 count);
 
+		//
+		int32 VariableDelayMultiplier = 0;
+		bool IsServerUnreachable = false;
+		FTimerHandle TimerHandle;
+		FTimerHandle TimerHandleShortDelay;
 	public:
 		Network();
 
@@ -38,4 +43,9 @@ struct FExitPollResponse;
 		void OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 		void NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response);
 		void NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSetName, FExitPollResponse Responses);
+
+
+		void SessionEnd();
+		void RequestLocalCache();
+		void ResetVariableTimer();
 	};

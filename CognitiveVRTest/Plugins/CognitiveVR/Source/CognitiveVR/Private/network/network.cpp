@@ -48,13 +48,41 @@ void Network::NetworkCall(FString suburl, FString contents, bool copyDataToCache
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->SetHeader("Authorization", AuthValue);
-	
 	HttpRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnCallReceivedAsync);
 	HttpRequest->ProcessRequest();
 
+	if (IsServerUnreachable)
+	{
+		//
+		if (!cog.IsValid()) { return; }
+		if (!cog->HasStartedSession()) { return; }
+
+		if (!cog->localCache.IsValid()) { return; }
+		if (cog->localCache->IsEnabled())
+		{
+			TArray<uint8> contentArray = HttpRequest->GetContent();
+			if (cog->localCache->CanWrite(contentArray.Num()))
+			{
+				FString contentString = TArrayToString(contentArray, HttpRequest->GetContent().Num());
+				cog->localCache->WriteData(HttpRequest->GetURL(), contentString);
+			}
+		}
+		//
+		auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+		if (!TimerHandle.IsValid() && world != nullptr)
+		{
+			float VariableDelay = 60 * VariableDelayMultiplier;
+
+
+			world->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateRaw(this, &Network::ResetVariableTimer), VariableDelay, true, VariableDelay);
+
+		}
+	
+		return;	
+	}
 	if (CognitiveLog::DevLogEnabled())
 		CognitiveLog::DevLog(url + "\n" + contents);
-
+	//this section is only for writing requests to the cache when the app is closing and we dont know what the response will be
 	if (!copyDataToCache) { return; }
 	if (!cog.IsValid()) { return; }
 	if (!cog->HasStartedSession()) { return; }
@@ -87,16 +115,14 @@ inline FString Network::TArrayToString(const TArray<uint8> In, int32 Count)
 
 void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	if (!cog.IsValid()) { return; }
 	if (!cog->HasStartedSession()) { GLog->Log("Network::OnCallReceivedAsync response while session not started"); return; }
 	if (Response.IsValid())
 	{
 		int32 responseCode = Response.Get()->GetResponseCode();
-		if (responseCode == 200)
 		{
-			if (!cog->localCache.IsValid()) { return; }
 			if (localCacheRequest == NULL)
 			{
+				ResetVariableTimer();
 				//start uploading data
 				FString contents;
 				FString url;
@@ -110,20 +136,29 @@ void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Resp
 					localCacheRequest->SetHeader("Content-Type", TEXT("application/json"));
 					localCacheRequest->SetHeader("Authorization", AuthValue);
 
-					localCacheRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnLocalCacheCallReceivedAsync);
-					localCacheRequest->ProcessRequest();
+					auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
+					
+					world->GetTimerManager().SetTimer(TimerHandleShortDelay, FTimerDelegate::CreateRaw(this, &Network::RequestLocalCache), 10.0f, true, 10.0f);
+					
+					VariableDelayMultiplier = 0;
 				}
 			}
 		}
-		else
+		else //when we get here, we start the variable delay, 60 seconds each time, and just let the rest of the block happen
 		{
-			if (responseCode < 500) {return;}
+			if (responseCode < 500 && responseCode != 0) {return;}
 
 			if (Request == nullptr) { return; }
 
 			//hold a pointer to a request specifically for uploading cached data
 			//if request exist, cancel it
+			if (!IsServerUnreachable)
+			{
+				IsServerUnreachable = true;
+				++VariableDelayMultiplier;
+			}
 			
+
 			if (cog->localCache == nullptr) { return; } //not set to null on session end
 			//isUploadingFromCache = false;
 			if (cog->localCache->IsEnabled())
@@ -143,6 +178,28 @@ void Network::OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Resp
 	{
 		//CognitiveLog::DevLog("Network::OnCallReceivedAsync Response Invalid!");
 	}
+}
+
+void Network::SessionEnd()
+{
+	VariableDelayMultiplier = 0;
+	localCacheRequest = NULL;
+	GWorld.GetReference()->GetTimerManager().ClearTimer(TimerHandle);
+	GWorld.GetReference()->GetTimerManager().ClearTimer(TimerHandleShortDelay);;
+}
+
+void Network::RequestLocalCache()
+{
+	localCacheRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnLocalCacheCallReceivedAsync);
+	localCacheRequest->ProcessRequest();
+	GWorld.GetReference()->GetTimerManager().ClearTimer(TimerHandleShortDelay);
+}
+
+void Network::ResetVariableTimer()
+{
+	IsServerUnreachable = false;
+	VariableDelayMultiplier = 0;
+	GWorld.GetReference()->GetTimerManager().ClearTimer(TimerHandle);
 }
 
 void Network::OnLocalCacheCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -348,3 +405,5 @@ void Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSe
 	//then flush transactions
 	cog->FlushEvents();
 }
+
+
