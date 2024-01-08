@@ -29,6 +29,7 @@ struct FExitPollResponse;
 
 		//
 		int32 VariableDelayMultiplier = 0;
+		float LocalCacheLoopDelay = 2.0f;
 		bool IsServerUnreachable = false;
 		FTimerHandle TimerHandle;
 		FTimerHandle TimerHandleShortDelay;
@@ -36,8 +37,8 @@ struct FExitPollResponse;
 		Network();
 
 		void NetworkCall(FString suburl, FString contents, bool copyDataToCache);
-		void OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-		void OnLocalCacheCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+		void OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+		void OnLocalCacheResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 		bool HasErrorResponse();
 
 		void OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
