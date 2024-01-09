@@ -29,6 +29,7 @@ struct FExitPollResponse;
 
 		//
 		int32 VariableDelayMultiplier = 0;
+		int32 VariableDelayTime = 60;
 		float LocalCacheLoopDelay = 2.0f;
 		bool IsServerUnreachable = false;
 		FTimerHandle TimerHandle;

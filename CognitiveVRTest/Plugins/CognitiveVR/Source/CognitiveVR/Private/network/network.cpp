@@ -172,7 +172,7 @@ void Network::OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Re
 				
 				if (world != nullptr && !world->GetTimerManager().IsTimerActive(TimerHandle))
 				{
-					float VariableDelay = 60 * VariableDelayMultiplier;
+					float VariableDelay = VariableDelayTime * VariableDelayMultiplier;
 					world->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateRaw(this, &Network::ResetVariableTimer), VariableDelay, false, VariableDelay);
 				}
 			}
@@ -284,7 +284,10 @@ void Network::OnLocalCacheResponse(FHttpRequestPtr Request, FHttpResponsePtr Res
 			if (!IsServerUnreachable)
 			{
 				IsServerUnreachable = true;
-				VariableDelayMultiplier++;
+				if (VariableDelayMultiplier < 10)
+				{
+					VariableDelayMultiplier++;
+				}
 				world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
 				localCacheRequest = NULL;
 				
