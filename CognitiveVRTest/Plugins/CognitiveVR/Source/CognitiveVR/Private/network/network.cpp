@@ -127,7 +127,6 @@ void Network::OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Re
 				auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
 				if (world->GetTimerManager().IsTimerActive(TimerHandleShortDelay))
 				{
-					GLog->Log("Network::OnCallReceivedAsync response while short delay timer is in progress");
 					return;
 				}
 				else
