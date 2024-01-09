@@ -175,10 +175,6 @@ void Network::OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Re
 					world->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateRaw(this, &Network::ResetVariableTimer), VariableDelay, false, VariableDelay);
 				}
 			}
-			else
-			{
-				float remainingTime = world->GetTimerManager().GetTimerRemaining(TimerHandle);
-			}
 			
 
 			if (cog->localCache == nullptr) { return; } //not set to null on session end
