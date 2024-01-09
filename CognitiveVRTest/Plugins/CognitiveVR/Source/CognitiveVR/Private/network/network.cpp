@@ -293,7 +293,7 @@ void Network::OnLocalCacheResponse(FHttpRequestPtr Request, FHttpResponsePtr Res
 				
 				if (world != nullptr && !world->GetTimerManager().IsTimerActive(TimerHandle))
 				{
-					float VariableDelay = 60 * VariableDelayMultiplier;
+					float VariableDelay = VariableDelayTime * VariableDelayMultiplier;
 					world->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateRaw(this, &Network::ResetVariableTimer), VariableDelay, false, VariableDelay);
 				}
 			}
