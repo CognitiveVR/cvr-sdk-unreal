@@ -359,6 +359,43 @@ EVisibility SDynamicObjectManagerWidget::GetDuplicateDyanmicObjectVisibility() c
 
 FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 {
+	FSuppressableWarningDialog::FSetupInfo Info1(LOCTEXT("UploadIdsForAggregation", "Do you want to Upload all Dynamic Object Id Pool's Ids for Aggregation?"), LOCTEXT("UploadIdsForAggregationTitle", "Upload Ids For Aggregation"), "UploadIdsForAggregationBody");
+	Info1.ConfirmText = LOCTEXT("Yes", "Yes");
+	Info1.CancelText = LOCTEXT("No", "No");
+	Info1.CheckBoxText = FText();
+	FSuppressableWarningDialog UploadSelectedIdPools(Info1);
+	FSuppressableWarningDialog::EResult result1 = UploadSelectedIdPools.ShowModal();
+
+	if (result1 == FSuppressableWarningDialog::EResult::Confirm)
+	{
+		//find the corresponding asset
+		FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+		IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+
+		FARFilter Filter;
+		Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
+		Filter.bRecursiveClasses = true; // Set to true if you want to include subclasses
+
+		TArray<FAssetData> AssetData;
+		AssetRegistry.GetAssets(Filter, AssetData);
+
+		for (const FAssetData& Asset : AssetData)
+		{
+			//get the actual asset from the asset data
+			UObject* IdPoolObject = Asset.GetAsset();
+			//cast it to a dynamic id pool asset
+			UDynamicIdPoolAsset* IdPoolAsset = Cast<UDynamicIdPoolAsset>(IdPoolObject);
+
+			UE_LOG(LogTemp, Warning, TEXT("Found dynamic id pool asset %s, uploading ids"), *IdPoolAsset->PrefabName);
+			FReply uploadReply = FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(IdPoolAsset->Ids, IdPoolAsset->MeshName, IdPoolAsset->PrefabName);
+			if (uploadReply.IsEventHandled())
+			{
+
+			}
+
+		}
+	}
+
 	//popup asking if meshes should be exported too
 	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export all Dynamic Object meshes before uploading to Scene Explorer?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
 	Info.ConfirmText = LOCTEXT("Yes", "Yes");
