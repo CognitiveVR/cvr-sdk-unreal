@@ -415,7 +415,7 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 		FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportAllDynamics();
 	}
 
-	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload all Dynamic Object to Scene Explorer?"), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
+	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload all Dynamic Object to Scene Explorer? Note: This will only upload meshes that have been exported."), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
 	Info2.ConfirmText = LOCTEXT("Yes", "Yes");
 	Info2.CancelText = LOCTEXT("No", "No");
 	Info2.CheckBoxText = FText();
@@ -524,7 +524,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 	}
 
 	//then perform upload
-	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload the selected Dynamic Object to Scene Explorer?"), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
+	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload the selected Dynamics to Scene Explorer? Note: This will only upload meshes that have been exported."), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
 	Info2.ConfirmText = LOCTEXT("Yes", "Yes");
 	Info2.CancelText = LOCTEXT("No", "No");
 	Info2.CheckBoxText = FText();
