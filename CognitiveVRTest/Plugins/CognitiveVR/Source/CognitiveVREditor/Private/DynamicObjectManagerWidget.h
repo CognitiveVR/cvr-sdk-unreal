@@ -13,6 +13,8 @@
 #include "STextComboBox.h"
 #include "SListView.h"
 #include "SThrobber.h"
+#include "AssetRegistryModule.h"
+#include "IAssetRegistry.h"
 #include "Runtime/SlateCore/Public/Layout/Visibility.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
