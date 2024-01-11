@@ -49,7 +49,6 @@ void Network::NetworkCall(FString suburl, FString contents, bool copyDataToCache
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnSessionDataResponse);
-	HttpRequest->ProcessRequest();
 
 	if (IsServerUnreachable)
 	{
@@ -72,6 +71,11 @@ void Network::NetworkCall(FString suburl, FString contents, bool copyDataToCache
 	
 		return;	
 	}
+	else
+	{
+		HttpRequest->ProcessRequest();
+	}
+
 	if (CognitiveLog::DevLogEnabled())
 		CognitiveLog::DevLog(url + "\n" + contents);
 	
