@@ -31,7 +31,9 @@ public class CognitiveVREditor : ModuleRules
                 "AssetTools",
                 "SceneOutliner",
                 "EditorScriptingUtilities",
-                "MeshUtilities"
+                "MeshUtilities",
+                "GLTFExporter",
+                "AssetRegistry"
             });
 
         PrivateDependencyModuleNames.AddRange(

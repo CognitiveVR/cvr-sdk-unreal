@@ -1916,7 +1916,17 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 		{
 			continue;
 		}
-		SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, dynamic->CustomId)));
+		//populate id based on id type
+		if (dynamic->IdSourceType == EIdSourceType::CustomId)
+		{
+			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, dynamic->CustomId)));
+		}
+		else if (dynamic->IdSourceType == EIdSourceType::GeneratedId)
+		{
+			FString idMessage = TEXT("Id generated during runtime");
+			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, *idMessage)));
+			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, idMessage)));
+		}
 		//dynamics.Add(dynamic);
 	}
 
@@ -1928,6 +1938,35 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 	{
 		DuplicateDyanmicObjectVisibility = EVisibility::Collapsed;
 	}
+
+	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+
+	FARFilter Filter;
+	Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
+	Filter.bRecursiveClasses = true; // Set to true if you want to include subclasses
+
+	TArray<FAssetData> AssetData;
+	AssetRegistry.GetAssets(Filter, AssetData);
+
+	for (const FAssetData& Asset : AssetData)
+	{
+		// Do something with each asset, e.g., log its name
+		UE_LOG(LogTemp, Log, TEXT("Found Asset: %s"), *Asset.AssetName.ToString());
+
+		//get the actual asset from the asset data
+		UObject* IdPoolObject = Asset.GetAsset();
+		//cast it to a dynamic id pool asset
+		UDynamicIdPoolAsset* IdPoolAsset = Cast<UDynamicIdPoolAsset>(IdPoolObject);
+
+		//construct a string for the number of ids in the pool
+		FString IdString = FString::Printf(TEXT("ID Pool(%d)"), IdPoolAsset->Ids.Num());
+
+		//add it as TSharedPtr<FDynamicData> to the SceneDynamics
+		SceneDynamics.Add(MakeShareable(new FDynamicData(IdPoolAsset->PrefabName, IdPoolAsset->MeshName, IdString)));
+	}
+
+
 
 	return FReply::Handled();
 }

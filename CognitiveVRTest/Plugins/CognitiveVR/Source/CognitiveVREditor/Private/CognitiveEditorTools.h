@@ -23,6 +23,7 @@
 #include "MainFrame.h"
 #include "IPluginManager.h"
 #include "AssetRegistryModule.h"
+#include "IAssetRegistry.h"
 #include "MaterialUtilities.h"
 #include "MaterialBakingStructures.h"
 #include "IMaterialBakingModule.h"
@@ -402,10 +403,7 @@ public:
 
 	//exporting scene.
 	//create directory
-	//export scene as obj
-	//export materials
-	//build materiallist.txt
-	//run python script
+	//export scene as gltf
 	void ExportScene(TArray<AActor*> actorsToExport);
 
 	void ValidateGeneratedFiles();
