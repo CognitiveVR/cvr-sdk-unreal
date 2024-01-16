@@ -1943,7 +1943,15 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
 
 	FARFilter Filter;
+
+#if ENGINE_MAJOR_VERSION == 4
 	Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 0 || ENGINE_MINOR_VERSION == 1)
+	Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+	Filter.ClassPaths.Add(UDynamicIdPoolAsset::StaticClass()->GetClassPathName());
+#endif
+
 	Filter.bRecursiveClasses = true; // Set to true if you want to include subclasses
 
 	TArray<FAssetData> AssetData;
