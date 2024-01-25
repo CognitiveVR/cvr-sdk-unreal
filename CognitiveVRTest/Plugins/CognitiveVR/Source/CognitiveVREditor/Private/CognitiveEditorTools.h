@@ -40,6 +40,8 @@
 #include "Classes/Engine/Level.h"
 #include "CoreMisc.h"
 #include "C3DCommonEditorTypes.h"
+#include "Framework/Notifications/NotificationManager.h"
+#include "Widgets/Notifications/SNotificationList.h"
 
 //all sorts of functionality for Cognitive SDK
 

@@ -18,6 +18,14 @@
 		}
 	};
 
+	enum class EDynamicTypes : uint8
+	{
+		CustomId UMETA(DisplayName = "CustomId"),
+		GeneratedId UMETA(DisplayName = "GeneratedId"),
+		DynamicIdPool UMETA(DisplayName = "DynamicIdPool"),
+		DynamicIdPoolAsset UMETA(DisplayName = "DynamicIdPoolAsset")
+	};
+
 	class FDynamicData
 	{
 	public:
@@ -25,10 +33,27 @@
 		FString MeshName = "";
 		FString Id = "";
 
-		FDynamicData(FString name, FString meshname, FString id)
+		//array for ids in id pool
+		TArray<FString> DynamicPoolIds;
+
+		//enum of dynamic type
+		EDynamicTypes DynamicType = EDynamicTypes::CustomId;
+
+		FDynamicData(FString name, FString meshname, FString id, EDynamicTypes type = EDynamicTypes::CustomId)
 		{
 			Name = name;
 			MeshName = meshname;
 			Id = id;
+			DynamicType = type;
 		}
+
+		FDynamicData(FString name, FString meshname, FString id, TArray<FString> idArray, EDynamicTypes type)
+		{
+			Name = name;
+			MeshName = meshname;
+			Id = id;
+			DynamicPoolIds = idArray;
+			DynamicType = type;
+		}
+		
 	};

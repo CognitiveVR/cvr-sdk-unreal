@@ -971,6 +971,12 @@ void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, F
 		GetDynamicsManifest();
 		WizardUploadError = FString::FromInt(Response->GetResponseCode());
 		WizardUploadResponseCode = Response->GetResponseCode();
+
+		FNotificationInfo NotifyInfo(FText::FromString(TEXT("Successfully Uploaded Ids for Aggregation")));
+		NotifyInfo.bUseLargeFont = true;
+		NotifyInfo.FadeOutDuration = 7.f;
+
+		FSlateNotificationManager::Get().AddNotification(NotifyInfo);
 	}
 	else //upload failed
 	{
@@ -1015,7 +1021,15 @@ FReply FCognitiveEditorTools::GetDynamicsManifest()
 void FCognitiveEditorTools::OnDynamicManifestResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful)
+	{
 		GLog->Log("FCognitiveEditorTools::OnDynamicManifestResponse response code " + FString::FromInt(Response->GetResponseCode()));
+		
+		FNotificationInfo NotifyInfo(FText::FromString(TEXT("FCognitiveEditorTools::OnDynamicManifestResponse response code " + FString::FromInt(Response->GetResponseCode()))));
+		NotifyInfo.bUseLargeFont = true;
+		NotifyInfo.FadeOutDuration = 7.f;
+
+		FSlateNotificationManager::Get().AddNotification(NotifyInfo);
+	}
 	else
 	{
 		GLog->Log("FCognitiveEditorTools::OnDynamicManifestResponse failed to connect");
@@ -1209,6 +1223,11 @@ FReply FCognitiveEditorTools::UploadDynamic(FString directory)
 	}
 	else
 	{
+		FNotificationInfo NotifyInfo(FText::FromString(TEXT("Mesh Uploaded")));
+		NotifyInfo.bUseLargeFont = true;
+		NotifyInfo.FadeOutDuration = 7.f;
+
+		FSlateNotificationManager::Get().AddNotification(NotifyInfo);
 		GLog->Log("FCognitiveEditorTools::UploadDynamics uploaded a Mesh");
 	}
 
@@ -1653,7 +1672,15 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 	OutstandingDynamicUploadRequests--;
 
 	if (bWasSuccessful)
+	{
 		GLog->Log("FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode()));
+
+		FNotificationInfo NotifyInfo(FText::FromString(TEXT("FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode()))));
+		NotifyInfo.bUseLargeFont = true;
+		NotifyInfo.FadeOutDuration = 7.f;
+
+		FSlateNotificationManager::Get().AddNotification(NotifyInfo);
+	}
 	else
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadObjectCompleted failed to connect");
@@ -1919,13 +1946,22 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 		//populate id based on id type
 		if (dynamic->IdSourceType == EIdSourceType::CustomId)
 		{
-			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, dynamic->CustomId)));
+			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, dynamic->CustomId, EDynamicTypes::CustomId)));
 		}
 		else if (dynamic->IdSourceType == EIdSourceType::GeneratedId)
 		{
 			FString idMessage = TEXT("Id generated during runtime");
-			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, *idMessage)));
-			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, idMessage)));
+			//SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, *idMessage)));
+			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, idMessage, EDynamicTypes::GeneratedId)));
+		}
+		else if (dynamic->IdSourceType == EIdSourceType::PoolId)
+		{
+			
+			//construct a string for the number of ids in the pool
+			FString IdString = FString::Printf(TEXT("Id Pool(%d)"), dynamic->IDPool->Ids.Num());
+
+			//add it as TSharedPtr<FDynamicData> to the SceneDynamics
+			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, IdString, dynamic->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
 		}
 		//dynamics.Add(dynamic);
 	}
@@ -1968,10 +2004,10 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 		UDynamicIdPoolAsset* IdPoolAsset = Cast<UDynamicIdPoolAsset>(IdPoolObject);
 
 		//construct a string for the number of ids in the pool
-		FString IdString = FString::Printf(TEXT("ID Pool(%d)"), IdPoolAsset->Ids.Num());
+		FString IdString = FString::Printf(TEXT("Id Pool Asset(%d)"), IdPoolAsset->Ids.Num());
 
 		//add it as TSharedPtr<FDynamicData> to the SceneDynamics
-		SceneDynamics.Add(MakeShareable(new FDynamicData(IdPoolAsset->PrefabName, IdPoolAsset->MeshName, IdString)));
+		SceneDynamics.Add(MakeShareable(new FDynamicData(IdPoolAsset->PrefabName, IdPoolAsset->MeshName, IdString, IdPoolAsset->Ids, EDynamicTypes::DynamicIdPoolAsset)));
 	}
 
 

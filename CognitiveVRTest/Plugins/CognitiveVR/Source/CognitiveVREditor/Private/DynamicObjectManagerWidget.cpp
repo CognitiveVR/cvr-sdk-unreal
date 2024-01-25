@@ -462,59 +462,9 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 
 	for (auto& dynamic : selected)
 	{
-		//found a selected ID Pool item
-		if (dynamic->Id.Contains("ID Pool"))
+		//dynamic with id pool, export mesh and upload ids for aggregation
+		if (dynamic->DynamicType == EDynamicTypes::DynamicIdPool)
 		{
-			FSuppressableWarningDialog::FSetupInfo Info1(LOCTEXT("UploadIdsForAggregation", "Do you want to Upload the selected Dynamic Object Id Pool's Ids for Aggregation?"), LOCTEXT("UploadIdsForAggregationTitle", "Upload Ids For Aggregation"), "UploadIdsForAggregationBody");
-			Info1.ConfirmText = LOCTEXT("Yes", "Yes");
-			Info1.CancelText = LOCTEXT("No", "No");
-			Info1.CheckBoxText = FText();
-			FSuppressableWarningDialog UploadSelectedIdPools(Info1);
-			FSuppressableWarningDialog::EResult result1 = UploadSelectedIdPools.ShowModal();
-
-			if (result1 == FSuppressableWarningDialog::EResult::Confirm)
-			{
-				//find the corresponding asset
-				FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-				IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
-
-				FARFilter Filter;
-#if ENGINE_MAJOR_VERSION == 4
-				Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
-#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 0 || ENGINE_MINOR_VERSION == 1)
-				Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
-#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
-				Filter.ClassPaths.Add(UDynamicIdPoolAsset::StaticClass()->GetClassPathName());
-#endif
-				Filter.bRecursiveClasses = true; // Set to true if you want to include subclasses
-
-				TArray<FAssetData> AssetData;
-				AssetRegistry.GetAssets(Filter, AssetData);
-
-				for (const FAssetData& Asset : AssetData)
-				{
-					//get the actual asset from the asset data
-					UObject* IdPoolObject = Asset.GetAsset();
-					//cast it to a dynamic id pool asset
-					UDynamicIdPoolAsset* IdPoolAsset = Cast<UDynamicIdPoolAsset>(IdPoolObject);
-
-					if (IdPoolAsset->PrefabName == dynamic->Name && IdPoolAsset->MeshName == dynamic->MeshName)
-					{
-						UE_LOG(LogTemp, Warning, TEXT("Found dynamic id pool asset %s, uploading ids"), *IdPoolAsset->PrefabName);
-						FReply uploadReply = FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(IdPoolAsset->Ids, IdPoolAsset->MeshName, IdPoolAsset->PrefabName);
-						if (uploadReply.IsEventHandled())
-						{
-
-						}
-
-					}
-				}
-			}
-			
-		}//end of if dynamic is id pool
-		else //otherwise handle export for meshes
-		{
-
 			//popup asking if meshes should be exported too
 			FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export the selected Dynamic Object meshes before uploading to Scene Explorer?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
 			Info.ConfirmText = LOCTEXT("Yes", "Yes");
@@ -533,10 +483,65 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 				}
 			}
 
-		}
-		
-	}
+			FSuppressableWarningDialog::FSetupInfo Info1(LOCTEXT("UploadIdsForAggregation", "Do you want to Upload the selected Dynamic Object Id Pool's Ids for Aggregation?"), LOCTEXT("UploadIdsForAggregationTitle", "Upload Ids For Aggregation"), "UploadIdsForAggregationBody");
+			Info1.ConfirmText = LOCTEXT("Yes", "Yes");
+			Info1.CancelText = LOCTEXT("No", "No");
+			Info1.CheckBoxText = FText();
+			FSuppressableWarningDialog UploadSelectedIdPools(Info1);
+			FSuppressableWarningDialog::EResult result1 = UploadSelectedIdPools.ShowModal();
 
+			if (result1 == FSuppressableWarningDialog::EResult::Confirm)
+			{
+				FReply uploadReply = FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(dynamic->DynamicPoolIds, dynamic->MeshName, dynamic->Name);
+				if (uploadReply.IsEventHandled())
+				{
+
+				}
+			}
+		}
+		//id pool asset, upload ids for aggregation
+		else if (dynamic->DynamicType == EDynamicTypes::DynamicIdPoolAsset)
+		{
+			FSuppressableWarningDialog::FSetupInfo Info1(LOCTEXT("UploadIdsForAggregation", "Do you want to Upload the selected Dynamic Object Id Pool's Ids for Aggregation?"), LOCTEXT("UploadIdsForAggregationTitle", "Upload Ids For Aggregation"), "UploadIdsForAggregationBody");
+			Info1.ConfirmText = LOCTEXT("Yes", "Yes");
+			Info1.CancelText = LOCTEXT("No", "No");
+			Info1.CheckBoxText = FText();
+			FSuppressableWarningDialog UploadSelectedIdPools(Info1);
+			FSuppressableWarningDialog::EResult result1 = UploadSelectedIdPools.ShowModal();
+
+			if (result1 == FSuppressableWarningDialog::EResult::Confirm)
+			{
+				FReply uploadReply = FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(dynamic->DynamicPoolIds, dynamic->MeshName, dynamic->Name);
+				if (uploadReply.IsEventHandled())
+				{
+
+				}
+			}
+		}
+		//else its a normal dynamic object, we export
+		else
+		{
+			//popup asking if meshes should be exported too
+			FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export the selected Dynamic Object meshes before uploading to Scene Explorer?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
+			Info.ConfirmText = LOCTEXT("Yes", "Yes");
+			Info.CancelText = LOCTEXT("No", "No");
+			Info.CheckBoxText = FText();
+			FSuppressableWarningDialog ExportSelectedDynamicMeshes(Info);
+			FSuppressableWarningDialog::EResult result = ExportSelectedDynamicMeshes.ShowModal();
+			TArray<TSharedPtr<FDynamicData>> meshOnly;
+			meshOnly.Add(dynamic);
+			if (result == FSuppressableWarningDialog::EResult::Confirm)
+			{
+				FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportDynamicData(meshOnly);
+				if (fph.IsValid())
+				{
+					FPlatformProcess::WaitForProc(fph);
+				}
+			}
+		}
+
+	}
+	
 	//then perform upload
 	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload the selected Dynamics to Scene Explorer? Note: This will only upload meshes that have been exported."), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
 	Info2.ConfirmText = LOCTEXT("Yes", "Yes");
