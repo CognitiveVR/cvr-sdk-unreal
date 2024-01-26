@@ -466,7 +466,9 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 		if (dynamic->DynamicType == EDynamicTypes::DynamicIdPool)
 		{
 			//popup asking if meshes should be exported too
-			FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export the selected Dynamic Object meshes before uploading to Scene Explorer?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
+			FText ExportText = LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export the selected Dynamic Object meshes ({0}) before uploading to Scene Explorer?");
+			FText dynMeshName = FText::FromString(dynamic->MeshName);
+			FSuppressableWarningDialog::FSetupInfo Info(FText::Format(ExportText, dynMeshName), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
 			Info.ConfirmText = LOCTEXT("Yes", "Yes");
 			Info.CancelText = LOCTEXT("No", "No");
 			Info.CheckBoxText = FText();
@@ -483,7 +485,9 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 				}
 			}
 
-			FSuppressableWarningDialog::FSetupInfo Info1(LOCTEXT("UploadIdsForAggregation", "Do you want to Upload the selected Dynamic Object Id Pool's Ids for Aggregation?"), LOCTEXT("UploadIdsForAggregationTitle", "Upload Ids For Aggregation"), "UploadIdsForAggregationBody");
+			FText UploadText = LOCTEXT("UploadIdsForAggregation", "Do you want to Upload the selected Dynamic Object Id Pool's Ids ({0}) for Aggregation?");
+			FText dynName = FText::FromString(dynamic->Name);
+			FSuppressableWarningDialog::FSetupInfo Info1(FText::Format(UploadText, dynName), LOCTEXT("UploadIdsForAggregationTitle", "Upload Ids For Aggregation"), "UploadIdsForAggregationBody");
 			Info1.ConfirmText = LOCTEXT("Yes", "Yes");
 			Info1.CancelText = LOCTEXT("No", "No");
 			Info1.CheckBoxText = FText();
@@ -502,7 +506,9 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 		//id pool asset, upload ids for aggregation
 		else if (dynamic->DynamicType == EDynamicTypes::DynamicIdPoolAsset)
 		{
-			FSuppressableWarningDialog::FSetupInfo Info1(LOCTEXT("UploadIdsForAggregation", "Do you want to Upload the selected Dynamic Object Id Pool's Ids for Aggregation?"), LOCTEXT("UploadIdsForAggregationTitle", "Upload Ids For Aggregation"), "UploadIdsForAggregationBody");
+			FText UploadText = LOCTEXT("UploadIdsForAggregation", "Do you want to Upload the selected Dynamic Object Id Pool's Ids ({0}) for Aggregation?");
+			FText dynName = FText::FromString(dynamic->Name);
+			FSuppressableWarningDialog::FSetupInfo Info1(FText::Format(UploadText, dynName), LOCTEXT("UploadIdsForAggregationTitle", "Upload Ids For Aggregation"), "UploadIdsForAggregationBody");
 			Info1.ConfirmText = LOCTEXT("Yes", "Yes");
 			Info1.CancelText = LOCTEXT("No", "No");
 			Info1.CheckBoxText = FText();
@@ -522,7 +528,9 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 		else
 		{
 			//popup asking if meshes should be exported too
-			FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export the selected Dynamic Object meshes before uploading to Scene Explorer?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
+			FText ExportText = LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export the selected Dynamic Object meshes ({0}) before uploading to Scene Explorer?");
+			FText dynMeshName = FText::FromString(dynamic->MeshName);
+			FSuppressableWarningDialog::FSetupInfo Info(FText::Format(ExportText, dynMeshName), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
 			Info.ConfirmText = LOCTEXT("Yes", "Yes");
 			Info.CancelText = LOCTEXT("No", "No");
 			Info.CheckBoxText = FText();
