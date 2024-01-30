@@ -634,6 +634,10 @@ FText SDynamicObjectManagerWidget::UploadSelectedMeshesTooltip() const
 	{
 		return FText::FromString("");
 	}
+	else if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
+	{
+		return FText::FromString("Use the Open Scene Setup Window above to export these meshes and continue the guided setup to the Scene Setup Window");
+	}
 	return FText::FromString("Must export meshes first to upload");
 }
 
@@ -642,6 +646,10 @@ FText SDynamicObjectManagerWidget::UploadAllMeshesTooltip() const
 	if (IsUploadAllEnabled())
 	{
 		return FText::FromString("");
+	}
+	else if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
+	{
+		return FText::FromString("Use the Open Scene Setup Window above to export these meshes and continue the guided setup to the Scene Setup Window");
 	}
 	return FText::FromString("Must export meshes first to upload");
 }
