@@ -679,6 +679,15 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 	if (ActorsExported > 0)
 	{
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
+		if (ActorsExported > 1)
+		{
+			ShowNotification(TEXT("All Meshes Exported"));
+		}
+		else
+		{
+			ShowNotification(TEXT("Mesh Exported"));
+		}
+		
 		FindAllSubDirectoryNames();
 	}
 
@@ -971,12 +980,6 @@ void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, F
 		GetDynamicsManifest();
 		WizardUploadError = FString::FromInt(Response->GetResponseCode());
 		WizardUploadResponseCode = Response->GetResponseCode();
-
-		FNotificationInfo NotifyInfo(FText::FromString(TEXT("Successfully Uploaded Ids for Aggregation")));
-		NotifyInfo.bUseLargeFont = true;
-		NotifyInfo.FadeOutDuration = 7.f;
-
-		FSlateNotificationManager::Get().AddNotification(NotifyInfo);
 	}
 	else //upload failed
 	{
@@ -1023,12 +1026,6 @@ void FCognitiveEditorTools::OnDynamicManifestResponse(FHttpRequestPtr Request, F
 	if (bWasSuccessful)
 	{
 		GLog->Log("FCognitiveEditorTools::OnDynamicManifestResponse response code " + FString::FromInt(Response->GetResponseCode()));
-		
-		FNotificationInfo NotifyInfo(FText::FromString(TEXT("FCognitiveEditorTools::OnDynamicManifestResponse response code " + FString::FromInt(Response->GetResponseCode()))));
-		NotifyInfo.bUseLargeFont = true;
-		NotifyInfo.FadeOutDuration = 7.f;
-
-		FSlateNotificationManager::Get().AddNotification(NotifyInfo);
 	}
 	else
 	{
@@ -1223,11 +1220,6 @@ FReply FCognitiveEditorTools::UploadDynamic(FString directory)
 	}
 	else
 	{
-		FNotificationInfo NotifyInfo(FText::FromString(TEXT("Mesh Uploaded")));
-		NotifyInfo.bUseLargeFont = true;
-		NotifyInfo.FadeOutDuration = 7.f;
-
-		FSlateNotificationManager::Get().AddNotification(NotifyInfo);
 		GLog->Log("FCognitiveEditorTools::UploadDynamics uploaded a Mesh");
 	}
 
@@ -1674,12 +1666,6 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 	if (bWasSuccessful)
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode()));
-
-		FNotificationInfo NotifyInfo(FText::FromString(TEXT("FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode()))));
-		NotifyInfo.bUseLargeFont = true;
-		NotifyInfo.FadeOutDuration = 7.f;
-
-		FSlateNotificationManager::Get().AddNotification(NotifyInfo);
 	}
 	else
 	{
@@ -2851,6 +2837,17 @@ bool FCognitiveEditorTools::HasSettingsJsonFile() const
 
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 	return PlatformFile.FileExists(*settingsFullPath);
+}
+
+void FCognitiveEditorTools::ShowNotification(FString Message)
+{
+	FNotificationInfo NotifyInfo(FText::FromString(Message));
+	NotifyInfo.bUseLargeFont = false;
+	NotifyInfo.FadeOutDuration = 7.f;
+	const FSlateBrush* NotifIcon = FEditorStyle::GetBrush("SettingsEditor.GoodIcon");
+	NotifyInfo.Image = NotifIcon;
+
+	FSlateNotificationManager::Get().AddNotification(NotifyInfo);
 }
 
 void FCognitiveEditorTools::WizardUpload()

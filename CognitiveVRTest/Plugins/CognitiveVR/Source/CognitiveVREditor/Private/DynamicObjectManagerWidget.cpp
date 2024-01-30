@@ -389,6 +389,7 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 
 		if (result1 == FSuppressableWarningDialog::EResult::Confirm)
 		{
+			int32 UploadCount = 0;
 			for (const FAssetData& Asset : AssetData)
 			{
 				//get the actual asset from the asset data
@@ -400,9 +401,13 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 				FReply uploadReply = FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(IdPoolAsset->Ids, IdPoolAsset->MeshName, IdPoolAsset->PrefabName);
 				if (uploadReply.IsEventHandled())
 				{
-
+					UploadCount++;
 				}
 
+			}
+			if (UploadCount == AssetData.Num())
+			{
+				FCognitiveEditorTools::GetInstance()->ShowNotification(TEXT("All Dynamic Id Pool Ids uploaded for aggregation"));
 			}
 		}
 	}
@@ -433,10 +438,18 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 	if (result2 == FSuppressableWarningDialog::EResult::Confirm)
 	{
 		//then upload all
-		FCognitiveEditorTools::GetInstance()->UploadDynamics();
+		FReply uploadReply = FCognitiveEditorTools::GetInstance()->UploadDynamics();
+		if (uploadReply.IsEventHandled())
+		{
+			FCognitiveEditorTools::GetInstance()->ShowNotification(TEXT("All Dynamics Uploaded"));
+		}
 
 		//upload aggregation manifest data
-		FCognitiveEditorTools::GetInstance()->UploadDynamicsManifest();
+		FReply manifestUploadReply = FCognitiveEditorTools::GetInstance()->UploadDynamicsManifest();
+		if (manifestUploadReply.IsEventHandled())
+		{
+			FCognitiveEditorTools::GetInstance()->ShowNotification(TEXT("All Dynamics Aggregation Manifest Data Uploaded"));
+		}
 	}
 
 	return FReply::Handled();
@@ -482,10 +495,11 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 				if (fph.IsValid())
 				{
 					FPlatformProcess::WaitForProc(fph);
+					FCognitiveEditorTools::GetInstance()->ShowNotification(TEXT("Mesh Exported"));
 				}
 			}
 
-			FText UploadText = LOCTEXT("UploadIdsForAggregation", "Do you want to Upload the selected Dynamic Object Id Pool's Ids ({0}) for Aggregation?");
+			FText UploadText = LOCTEXT("UploadIdsForAggregation", "Do you want to Upload the selected Dynamic Object ({0}) Id Pool's Ids for Aggregation?");
 			FText dynName = FText::FromString(dynamic->Name);
 			FSuppressableWarningDialog::FSetupInfo Info1(FText::Format(UploadText, dynName), LOCTEXT("UploadIdsForAggregationTitle", "Upload Ids For Aggregation"), "UploadIdsForAggregationBody");
 			Info1.ConfirmText = LOCTEXT("Yes", "Yes");
@@ -499,14 +513,14 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 				FReply uploadReply = FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(dynamic->DynamicPoolIds, dynamic->MeshName, dynamic->Name);
 				if (uploadReply.IsEventHandled())
 				{
-
+					FCognitiveEditorTools::GetInstance()->ShowNotification(TEXT("Dynamic Id Pool Ids uploaded for aggregation"));
 				}
 			}
 		}
 		//id pool asset, upload ids for aggregation
 		else if (dynamic->DynamicType == EDynamicTypes::DynamicIdPoolAsset)
 		{
-			FText UploadText = LOCTEXT("UploadIdsForAggregation", "Do you want to Upload the selected Dynamic Object Id Pool's Ids ({0}) for Aggregation?");
+			FText UploadText = LOCTEXT("UploadIdsForAggregation", "Do you want to Upload the selected Dynamic Object ({0}) Id Pool's Ids for Aggregation?");
 			FText dynName = FText::FromString(dynamic->Name);
 			FSuppressableWarningDialog::FSetupInfo Info1(FText::Format(UploadText, dynName), LOCTEXT("UploadIdsForAggregationTitle", "Upload Ids For Aggregation"), "UploadIdsForAggregationBody");
 			Info1.ConfirmText = LOCTEXT("Yes", "Yes");
@@ -520,7 +534,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 				FReply uploadReply = FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(dynamic->DynamicPoolIds, dynamic->MeshName, dynamic->Name);
 				if (uploadReply.IsEventHandled())
 				{
-
+					FCognitiveEditorTools::GetInstance()->ShowNotification(TEXT("Dynamic Id Pool Ids uploaded for aggregation"));
 				}
 			}
 		}
@@ -544,6 +558,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 				if (fph.IsValid())
 				{
 					FPlatformProcess::WaitForProc(fph);
+					FCognitiveEditorTools::GetInstance()->ShowNotification(TEXT("Mesh Exported"));
 				}
 			}
 		}
@@ -561,9 +576,19 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 	if (result2 == FSuppressableWarningDialog::EResult::Confirm)
 	{
 		//then upload
+		int32 uploadCount = 0;
 		for (auto& elem : selected)
 		{
-			FCognitiveEditorTools::GetInstance()->UploadDynamic(elem->MeshName);
+			FReply uploadReply = FCognitiveEditorTools::GetInstance()->UploadDynamic(elem->MeshName);
+			if (uploadReply.IsEventHandled())
+			{
+				uploadCount++;
+			}
+		}
+
+		if (uploadCount == selected.Num())
+		{
+			FCognitiveEditorTools::GetInstance()->ShowNotification(TEXT("All Dynamics Uploaded"));
 		}
 
 		//upload aggregation manifest data of selected objects

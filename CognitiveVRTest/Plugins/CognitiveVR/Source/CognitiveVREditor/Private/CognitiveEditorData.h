@@ -39,6 +39,10 @@
 		//enum of dynamic type
 		EDynamicTypes DynamicType = EDynamicTypes::CustomId;
 
+		/*
+			Default constructor, designed to be used for Custom Id and Generated Id
+			Custom Id is the default
+		*/
 		FDynamicData(FString name, FString meshname, FString id, EDynamicTypes type = EDynamicTypes::CustomId)
 		{
 			Name = name;
@@ -46,7 +50,10 @@
 			Id = id;
 			DynamicType = type;
 		}
-
+		/*
+			Different constructor for dynamics with Dynamic Id Pool Assets
+			Allows saving all the ids in a FString array for easy look-up later for upload
+		*/
 		FDynamicData(FString name, FString meshname, FString id, TArray<FString> idArray, EDynamicTypes type)
 		{
 			Name = name;
