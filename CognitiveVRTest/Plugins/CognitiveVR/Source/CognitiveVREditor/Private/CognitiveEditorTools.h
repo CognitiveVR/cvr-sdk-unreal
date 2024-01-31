@@ -424,7 +424,7 @@ public:
 	IMeshUtilities& MeshUtilities = FModuleManager::Get().LoadModuleChecked<IMeshUtilities>("MeshUtilities");
 
 	//notifications
-	void ShowNotification(FString Message);
+	void ShowNotification(FString Message, bool bSuccessful = true);
 };
 
 //used for uploading multiple dynamics at once

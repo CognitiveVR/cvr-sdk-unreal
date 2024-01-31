@@ -980,6 +980,7 @@ void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, F
 		GetDynamicsManifest();
 		WizardUploadError = FString::FromInt(Response->GetResponseCode());
 		WizardUploadResponseCode = Response->GetResponseCode();
+		ShowNotification(TEXT("Dynamic Id Pool Ids Uploaded Successfully"));
 	}
 	else //upload failed
 	{
@@ -1026,6 +1027,7 @@ void FCognitiveEditorTools::OnDynamicManifestResponse(FHttpRequestPtr Request, F
 	if (bWasSuccessful)
 	{
 		GLog->Log("FCognitiveEditorTools::OnDynamicManifestResponse response code " + FString::FromInt(Response->GetResponseCode()));
+		ShowNotification(TEXT("Dynamic Manifest Uploaded Successfully"));
 	}
 	else
 	{
@@ -1217,6 +1219,7 @@ FReply FCognitiveEditorTools::UploadDynamic(FString directory)
 	if (OutstandingDynamicUploadRequests == 0)
 	{
 		GLog->Log("FCognitiveEditorTools::UploadDynamics has no dynamics to upload!");
+		ShowNotification(TEXT("Dynamic Object Mesh not exported, please put the spawned blueprint in the scene and upload that"), false);
 	}
 	else
 	{
@@ -1608,7 +1611,10 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful)
+	{
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted response code " + FString::FromInt(Response->GetResponseCode()));
+		ShowNotification(TEXT("Scene Uploaded Successfully"));
+	}
 	else
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted failed to connect");
@@ -1666,10 +1672,12 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 	if (bWasSuccessful)
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode()));
+		ShowNotification(TEXT("Dynamic Uploaded Successfully"));
 	}
 	else
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadObjectCompleted failed to connect");
+		ShowNotification(TEXT("Dynamic Object Mesh not exported, please put the spawned blueprint in the scene and upload that"));
 		WizardUploading = false;
 		WizardUploadError = "FCognitiveEditorTools::OnUploadObjectCompleted failed to connect";
 		WizardUploadResponseCode = 0;
@@ -2839,14 +2847,17 @@ bool FCognitiveEditorTools::HasSettingsJsonFile() const
 	return PlatformFile.FileExists(*settingsFullPath);
 }
 
-void FCognitiveEditorTools::ShowNotification(FString Message)
+void FCognitiveEditorTools::ShowNotification(FString Message, bool bSuccessful)
 {
 	FNotificationInfo NotifyInfo(FText::FromString(Message));
 	NotifyInfo.bUseLargeFont = false;
 	NotifyInfo.FadeOutDuration = 7.f;
-	const FSlateBrush* NotifIcon = FEditorStyle::GetBrush("SettingsEditor.GoodIcon");
-	NotifyInfo.Image = NotifIcon;
-
+	if (bSuccessful)
+	{
+		const FSlateBrush* NotifIcon = FEditorStyle::GetBrush("SettingsEditor.GoodIcon");
+		NotifyInfo.Image = NotifIcon;
+	}
+	
 	FSlateNotificationManager::Get().AddNotification(NotifyInfo);
 }
 
