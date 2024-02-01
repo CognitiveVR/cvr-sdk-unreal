@@ -75,6 +75,20 @@ TSharedRef<ITableRow> SDynamicObjectTableWidget::OnGenerateRowForTable(TSharedPt
 	bool hasUploadedId;
 	FString searchId = InItem->Id;
 
+	//check if the current scene is set up correctly with a SceneId and return the table row
+	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
+	{
+		//check if the export folder has files for this dynamic object
+		bool hasExportedMesh = !InItem->MeshName.IsEmpty() && FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(InItem->MeshName);
+
+		return SNew(SDynamicTableItem, OwnerTable)
+			.Name(FText::FromString(InItem->Name))
+			.MeshName(FText::FromString(InItem->MeshName))
+			.Id(FText::FromString(InItem->Id))
+			.Exported(hasExportedMesh)
+			.Uploaded(false);
+	}
+
 	if (InItem->DynamicType == EDynamicTypes::DynamicIdPoolAsset || InItem->DynamicType == EDynamicTypes::DynamicIdPool)
 	{
 		int32 idsFound = 0;
