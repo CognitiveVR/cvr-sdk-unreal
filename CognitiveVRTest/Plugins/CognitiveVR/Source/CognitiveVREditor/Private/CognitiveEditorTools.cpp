@@ -679,6 +679,15 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 	if (ActorsExported > 0)
 	{
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray Found " + FString::FromInt(ActorsExported) + " meshes for export");
+		if (ActorsExported > 1)
+		{
+			ShowNotification(TEXT("All Meshes Exported"));
+		}
+		else
+		{
+			ShowNotification(TEXT("Mesh Exported"));
+		}
+		
 		FindAllSubDirectoryNames();
 	}
 
@@ -971,6 +980,7 @@ void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, F
 		GetDynamicsManifest();
 		WizardUploadError = FString::FromInt(Response->GetResponseCode());
 		WizardUploadResponseCode = Response->GetResponseCode();
+		ShowNotification(TEXT("Dynamic Id Pool Ids Uploaded Successfully"));
 	}
 	else //upload failed
 	{
@@ -1015,7 +1025,10 @@ FReply FCognitiveEditorTools::GetDynamicsManifest()
 void FCognitiveEditorTools::OnDynamicManifestResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful)
+	{
 		GLog->Log("FCognitiveEditorTools::OnDynamicManifestResponse response code " + FString::FromInt(Response->GetResponseCode()));
+		ShowNotification(TEXT("Dynamic Manifest Uploaded Successfully"));
+	}
 	else
 	{
 		GLog->Log("FCognitiveEditorTools::OnDynamicManifestResponse failed to connect");
@@ -1206,6 +1219,7 @@ FReply FCognitiveEditorTools::UploadDynamic(FString directory)
 	if (OutstandingDynamicUploadRequests == 0)
 	{
 		GLog->Log("FCognitiveEditorTools::UploadDynamics has no dynamics to upload!");
+		ShowNotification(TEXT("Dynamic Object Mesh not exported, please put the spawned blueprint in the scene and upload that"), false);
 	}
 	else
 	{
@@ -1597,7 +1611,10 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful)
+	{
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted response code " + FString::FromInt(Response->GetResponseCode()));
+		ShowNotification(TEXT("Scene Uploaded Successfully"));
+	}
 	else
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted failed to connect");
@@ -1653,10 +1670,14 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 	OutstandingDynamicUploadRequests--;
 
 	if (bWasSuccessful)
+	{
 		GLog->Log("FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode()));
+		ShowNotification(TEXT("Dynamic Uploaded Successfully"));
+	}
 	else
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadObjectCompleted failed to connect");
+		ShowNotification(TEXT("Dynamic Object Mesh not exported, please put the spawned blueprint in the scene and upload that"));
 		WizardUploading = false;
 		WizardUploadError = "FCognitiveEditorTools::OnUploadObjectCompleted failed to connect";
 		WizardUploadResponseCode = 0;
@@ -1919,13 +1940,22 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 		//populate id based on id type
 		if (dynamic->IdSourceType == EIdSourceType::CustomId)
 		{
-			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, dynamic->CustomId)));
+			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, dynamic->CustomId, EDynamicTypes::CustomId)));
 		}
 		else if (dynamic->IdSourceType == EIdSourceType::GeneratedId)
 		{
 			FString idMessage = TEXT("Id generated during runtime");
-			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, *idMessage)));
-			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, idMessage)));
+			//SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, *idMessage)));
+			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, idMessage, EDynamicTypes::GeneratedId)));
+		}
+		else if (dynamic->IdSourceType == EIdSourceType::PoolId)
+		{
+			
+			//construct a string for the number of ids in the pool
+			FString IdString = FString::Printf(TEXT("Id Pool(%d)"), dynamic->IDPool->Ids.Num());
+
+			//add it as TSharedPtr<FDynamicData> to the SceneDynamics
+			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, IdString, dynamic->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
 		}
 		//dynamics.Add(dynamic);
 	}
@@ -1968,10 +1998,10 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 		UDynamicIdPoolAsset* IdPoolAsset = Cast<UDynamicIdPoolAsset>(IdPoolObject);
 
 		//construct a string for the number of ids in the pool
-		FString IdString = FString::Printf(TEXT("ID Pool(%d)"), IdPoolAsset->Ids.Num());
+		FString IdString = FString::Printf(TEXT("Id Pool Asset(%d)"), IdPoolAsset->Ids.Num());
 
 		//add it as TSharedPtr<FDynamicData> to the SceneDynamics
-		SceneDynamics.Add(MakeShareable(new FDynamicData(IdPoolAsset->PrefabName, IdPoolAsset->MeshName, IdString)));
+		SceneDynamics.Add(MakeShareable(new FDynamicData(IdPoolAsset->PrefabName, IdPoolAsset->MeshName, IdString, IdPoolAsset->Ids, EDynamicTypes::DynamicIdPoolAsset)));
 	}
 
 
@@ -2815,6 +2845,24 @@ bool FCognitiveEditorTools::HasSettingsJsonFile() const
 
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 	return PlatformFile.FileExists(*settingsFullPath);
+}
+
+void FCognitiveEditorTools::ShowNotification(FString Message, bool bSuccessful)
+{
+	FNotificationInfo NotifyInfo(FText::FromString(Message));
+	NotifyInfo.bUseLargeFont = false;
+	NotifyInfo.FadeOutDuration = 7.f;
+	if (bSuccessful)
+	{
+#if ENGINE_MAJOR_VERSION == 4 
+		const FSlateBrush* NotifIcon = FEditorStyle::GetBrush("SettingsEditor.GoodIcon");
+#elif ENGINE_MAJOR_VERSION == 5
+		const FSlateBrush* NotifIcon = FAppStyle::GetBrush("SettingsEditor.GoodIcon");
+#endif
+		NotifyInfo.Image = NotifIcon;
+	}
+	
+	FSlateNotificationManager::Get().AddNotification(NotifyInfo);
 }
 
 void FCognitiveEditorTools::WizardUpload()

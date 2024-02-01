@@ -74,61 +74,40 @@ TSharedRef<ITableRow> SDynamicObjectTableWidget::OnGenerateRowForTable(TSharedPt
 	//find matching InItem by id
 	bool hasUploadedId;
 	FString searchId = InItem->Id;
-	if (searchId.Contains("ID Pool"))
+
+	//check if the current scene is set up correctly with a SceneId and return the table row
+	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
 	{
-		//look through all id pool assets, 
-		//find the one with the matching prefab name,
-		//use that list of ids and match each with the dashboard object ids for that prefab name
+		//check if the export folder has files for this dynamic object
+		bool hasExportedMesh = !InItem->MeshName.IsEmpty() && FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(InItem->MeshName);
 
+		return SNew(SDynamicTableItem, OwnerTable)
+			.Name(FText::FromString(InItem->Name))
+			.MeshName(FText::FromString(InItem->MeshName))
+			.Id(FText::FromString(InItem->Id))
+			.Exported(hasExportedMesh)
+			.Uploaded(false);
+	}
 
-		//
-		//find the corresponding asset
-		FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-		IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
-
-		FARFilter Filter;
-#if ENGINE_MAJOR_VERSION == 4
-		Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
-#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 0 || ENGINE_MINOR_VERSION == 1)
-		Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
-#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
-		Filter.ClassPaths.Add(UDynamicIdPoolAsset::StaticClass()->GetClassPathName());
-#endif
-		Filter.bRecursiveClasses = true; // Set to true if you want to include subclasses
-
-		TArray<FAssetData> AssetData;
-		AssetRegistry.GetAssets(Filter, AssetData);
-
-		for (const FAssetData& Asset : AssetData)
+	if (InItem->DynamicType == EDynamicTypes::DynamicIdPoolAsset || InItem->DynamicType == EDynamicTypes::DynamicIdPool)
+	{
+		int32 idsFound = 0;
+		for (auto ids : InItem->DynamicPoolIds)
 		{
-			//get the actual asset from the asset data
-			UObject* IdPoolObject = Asset.GetAsset();
-			//cast it to a dynamic id pool asset
-			UDynamicIdPoolAsset* IdPoolAsset = Cast<UDynamicIdPoolAsset>(IdPoolObject);
-			
-			
-			if (IdPoolAsset->PrefabName == InItem->Name && IdPoolAsset->MeshName == InItem->MeshName)
-			{
-				int32 idsFound = 0;
-				for (auto ids : IdPoolAsset->Ids)
+			auto FoundId2 = SDynamicObjectManagerWidget::dashboardObjects.FindByPredicate([ids](const FDashboardObject& InItem3)
 				{
-					auto FoundId2 = SDynamicObjectManagerWidget::dashboardObjects.FindByPredicate([ids](const FDashboardObject& InItem3)
-						{
-							return InItem3.sdkId == ids;
-						}
-					);
-					if (FoundId2 == nullptr)
-					{
-						continue;
-					}
-					idsFound++;
-
-					if (idsFound == IdPoolAsset->Ids.Num())
-					{
-						hasUploadedId = FoundId2 != NULL;
-					}
+					return InItem3.sdkId == ids;
 				}
-				
+			);
+			if (FoundId2 == nullptr)
+			{
+				continue;
+			}
+			idsFound++;
+
+			if (idsFound == InItem->DynamicPoolIds.Num())
+			{
+				hasUploadedId = FoundId2 != NULL;
 			}
 		}
 	}
@@ -310,6 +289,14 @@ const FSlateBrush* SDynamicTableItem::GetUploadedStateIcon() const
 
 FText SDynamicTableItem::GetExportedTooltip() const
 {
+	if (Id.ToString().Contains("Id Pool Asset"))
+	{
+		if (Exported)
+		{
+			return FText::FromString("Associated Mesh has been exported to temrporary directory");
+		}
+		return FText::FromString("Associated Mesh has NOT been exported to temrporary directory");
+	}
 	if (Exported)
 	{
 		return FText::FromString("Mesh has been exported to temrporary directory");
@@ -319,6 +306,26 @@ FText SDynamicTableItem::GetExportedTooltip() const
 
 FText SDynamicTableItem::GetUploadedTooltip() const
 {
+	if (Id.ToString().Contains("Id Pool Asset"))
+	{
+		if (Uploaded)
+		{
+			return FText::FromString("Id Pool Ids have been uploaded to the dashboard");
+		}
+		return FText::FromString("Id Pool Ids have NOT been uploaded to the dashboard");
+	}
+	else if (Id.ToString().Contains("Id Pool"))
+	{
+		if (Uploaded)
+		{
+			return FText::FromString("Mesh and Id Pool Ids have been uploaded to the dashboard");
+		}
+		return FText::FromString("Mesh and Id Pool Ids have NOT been uploaded to the dashboard");
+	}
+	else if (Id.ToString().Contains("generated"))
+	{
+		return FText::FromString("Id generated at runtime");
+	}
 	if (Uploaded)
 	{
 		return FText::FromString("Mesh and Id have been uploaded to the dashboard");

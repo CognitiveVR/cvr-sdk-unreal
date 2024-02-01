@@ -40,6 +40,8 @@
 #include "Classes/Engine/Level.h"
 #include "CoreMisc.h"
 #include "C3DCommonEditorTypes.h"
+#include "Framework/Notifications/NotificationManager.h"
+#include "Widgets/Notifications/SNotificationList.h"
 
 //all sorts of functionality for Cognitive SDK
 
@@ -420,6 +422,9 @@ public:
 	const FSlateBrush* GetBoxCheckIcon() const;
 	FSlateBrush* BoxCheckIcon;
 	IMeshUtilities& MeshUtilities = FModuleManager::Get().LoadModuleChecked<IMeshUtilities>("MeshUtilities");
+
+	//notifications
+	void ShowNotification(FString Message, bool bSuccessful = true);
 };
 
 //used for uploading multiple dynamics at once
