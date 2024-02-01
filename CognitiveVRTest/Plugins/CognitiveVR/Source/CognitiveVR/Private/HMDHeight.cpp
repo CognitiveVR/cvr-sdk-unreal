@@ -1,4 +1,5 @@
 #include "CognitiveVR/Private/HMDHeight.h"
+#include "HeadMountedDisplayTypes.h"
 
 UHMDHeight::UHMDHeight()
 {
@@ -56,6 +57,45 @@ void UHMDHeight::EndInterval()
 				auto world = ACognitiveVRActor::GetCognitiveSessionWorld();
 				if (world == nullptr) { return; }
 				world->GetTimerManager().ClearTimer(IntervalHandle);
+			}
+		}
+
+
+		EHMDWornState::Type ThisWornState;
+		if (cognitive->TryGetHMDWornState(ThisWornState))
+		{
+			if (WornState == EHMDWornState::NotWorn)
+			{
+				TWeakPtr<FAnalyticsProviderCognitiveVR> provider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+				if (provider.IsValid())
+				{
+					//send an event with a name
+					provider.Pin()->customEventRecorder->Send("c3d.User equipped headset");
+				}
+				WornState = ThisWornState;
+			}
+		}
+		else if (!cognitive->TryGetHMDWornState(ThisWornState))
+		{
+			if (WornState == EHMDWornState::Worn)
+			{
+				TWeakPtr<FAnalyticsProviderCognitiveVR> provider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+				if (provider.IsValid())
+				{
+					//send an event with a name
+					provider.Pin()->customEventRecorder->Send("c3d.User removed headset");
+				}
+				WornState = ThisWornState;
+			}
+		}
+
+		if (UGameplayStatics::IsGamePaused(GWorld))
+		{
+			TWeakPtr<FAnalyticsProviderCognitiveVR> provider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider();
+			if (provider.IsValid())
+			{
+				//send an event with a name
+				provider.Pin()->customEventRecorder->Send("c3d.pause");
 			}
 		}
 	}

@@ -20,6 +20,19 @@ void UBoundaryEvent::BeginPlay()
 	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (cognitive.IsValid())
 	{
+		//set boundary type session property
+		if (cognitive->TryGetRoomSize(RoomSize))
+		{
+			if (RoomSize.X > 0 && RoomSize.Y > 0) //room scale boundary
+			{
+				cognitive->SetSessionProperty(TEXT("c3d.boundaryType"), "Room Scale");
+			}
+			else //stationary boundary
+			{
+				cognitive->SetSessionProperty(TEXT("c3d.boundaryType"), "Stationary");
+			}
+		}
+
 		cognitive->OnSessionBegin.AddDynamic(this, &UBoundaryEvent::OnSessionBegin);
 		cognitive->OnPreSessionEnd.AddDynamic(this, &UBoundaryEvent::OnSessionEnd);
 		if (cognitive->HasStartedSession())

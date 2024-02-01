@@ -18,7 +18,7 @@
 #include "CognitiveVR/Public/DynamicObject.h"
 #include "CognitiveVR/Private/FixationRecorder.h"
 #include "CognitiveVR/Public/CognitiveVRActor.h"
-
+#include "HeadMountedDisplayTypes.h"
 #include "CognitiveVR/Private/util/util.h"
 #include "CognitiveVR/Private/util/cognitive_log.h"
 #include "CognitiveVR/Private/network/network.h"
@@ -181,6 +181,7 @@
 		bool TryGetRoomSize(FVector& roomsize);
 		bool TryGetHMDGuardianPoints(TArray<FVector>& GuardianPoints);
 		bool TryGetHMDPose(FRotator& HMDRotation, FVector& HMDPosition, FVector& HMDNeckPos);
+		bool TryGetHMDWornState(EHMDWornState::Type& WornState);
 		bool IsPointInPolygon4(TArray<FVector> polygon, FVector testPoint);
 		bool IsPluginEnabled(const FString& PluginName);
 		TWeakObjectPtr<UDynamicObject> GetControllerDynamic(const bool right);

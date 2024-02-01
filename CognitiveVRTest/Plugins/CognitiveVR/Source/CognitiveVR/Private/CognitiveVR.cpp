@@ -17,6 +17,7 @@
 #include "Misc/MessageDialog.h"
 #endif
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "HeadMountedDisplayTypes.h"
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
 bool FAnalyticsProviderCognitiveVR::bHasSessionStarted = false;
@@ -1059,6 +1060,19 @@ bool FAnalyticsProviderCognitiveVR::TryGetHMDPose(FRotator& HMDRotation, FVector
 #endif
 
 }
+
+bool FAnalyticsProviderCognitiveVR::TryGetHMDWornState(EHMDWornState::Type& WornState)
+{
+	WornState = UHeadMountedDisplayFunctionLibrary::GetHMDWornState();
+
+	if (WornState == EHMDWornState::Worn)
+	{
+		return true;
+	}
+	return false;
+}
+
+
 
 bool FAnalyticsProviderCognitiveVR::IsPointInPolygon4(TArray<FVector> polygon, FVector testPoint)
 {
