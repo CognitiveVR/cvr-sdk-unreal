@@ -2854,7 +2854,11 @@ void FCognitiveEditorTools::ShowNotification(FString Message, bool bSuccessful)
 	NotifyInfo.FadeOutDuration = 7.f;
 	if (bSuccessful)
 	{
+#if ENGINE_MAJOR_VERSION == 4 
 		const FSlateBrush* NotifIcon = FEditorStyle::GetBrush("SettingsEditor.GoodIcon");
+#elif ENGINE_MAJOR_VERSION == 5
+		const FSlateBrush* NotifIcon = FAppStyle::GetBrush("SettingsEditor.GoodIcon");
+#endif
 		NotifyInfo.Image = NotifIcon;
 	}
 	
