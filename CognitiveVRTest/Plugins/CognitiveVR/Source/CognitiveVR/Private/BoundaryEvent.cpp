@@ -23,7 +23,11 @@ void UBoundaryEvent::BeginPlay()
 		//set boundary type session property
 		if (cognitive->TryGetRoomSize(RoomSize))
 		{
-			if (RoomSize.X > 0 && RoomSize.Y > 0) //room scale boundary
+			if (RoomSize.X == RoomSize.Y) //stationary, both dimensions exactly the same. UE5 shows 1.21
+			{
+				cognitive->SetSessionProperty(TEXT("c3d.boundaryType"), "Stationary");
+			}
+			else if (RoomSize.X > 0 && RoomSize.Y > 0) //room scale boundary
 			{
 				cognitive->SetSessionProperty(TEXT("c3d.boundaryType"), "Room Scale");
 			}
