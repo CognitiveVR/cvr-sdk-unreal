@@ -21,6 +21,7 @@ void SSceneSetupWidget::CheckForExpiredDeveloperKey()
 {
 	if (FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
 	{
+		GConfig->Flush(true, GEngineIni);
 		auto Request = FHttpModule::Get().CreateRequest();
 		Request->OnProcessRequestComplete().BindRaw(this, &SSceneSetupWidget::OnDeveloperKeyResponseReceived);
 		FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
@@ -67,7 +68,7 @@ void SSceneSetupWidget::OnSceneUploaded(FHttpRequestPtr Request, FHttpResponsePt
 void SSceneSetupWidget::Construct(const FArguments& Args)
 {
 	float padding = 10;
-
+	FCognitiveEditorTools::CheckIniConfigured();
 	CheckForExpiredDeveloperKey();
 
 	ChildSlot
@@ -311,75 +312,6 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Text(FText::FromString("The current level geometry will be exported and uploaded to our dashboard. This will provide context for the spatial data points we automatically collect."))
 			]
 
-			//path to blender
-			+ SVerticalBox::Slot()
-			.MaxHeight(32)
-			//.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-				+SHorizontalBox::Slot()
-				.MaxWidth(200)
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-					.HeightOverride(32)
-					[
-						SNew(STextBlock)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-						.Text(FText::FromString("Path to Blender.exe"))
-					]
-				]
-				+ SHorizontalBox::Slot()
-				.Padding(1)
-				.FillWidth(3)
-				[
-					SNew(SBox)
-					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-					.HeightOverride(32)
-					.MaxDesiredHeight(32)
-					[
-						SNew(SEditableTextBox)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBlenderPath)
-						.OnTextChanged(this, &SSceneSetupWidget::OnBlenderPathChanged)
-					]
-				]
-				+SHorizontalBox::Slot()
-				.MaxWidth(17)
-				[
-					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
-					.VAlign(VAlign_Center)
-					[
-						SNew(SBox)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.HeightOverride(17)
-						.WidthOverride(17)
-						[
-							SNew(SButton)
-							.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-							//PickerWidget = SAssignNew(BrowseButton, SButton)
-							.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
-							.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
-							.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectBaseExportDirectory)
-							.ContentPadding(2.0f)
-							.ForegroundColor(FSlateColor::UseForeground())
-							.IsFocusable(false)
-							[
-								SNew(SImage)
-								.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
-								.ColorAndOpacity(FSlateColor::UseForeground())
-							]
-						]
-					]
-				]
-			]
-
 			//path to export directory
 			+ SVerticalBox::Slot()
 			.MaxHeight(32)
@@ -463,6 +395,52 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsNotOnlyExportSelected)
+				+SHorizontalBox::Slot()
+				.AutoWidth()
+				.HAlign(HAlign_Left)
+				[
+					SNew(SImage)
+					.Image(FEditorStyle::GetBrush("SettingsEditor.GoodIcon"))
+				]
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Left)
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsNotOnlyExportSelected)
+					.Text(FText::FromString("All geometry in the scene will be exported"))
+				]
+			]
+
+			+ SVerticalBox::Slot()
+				.HAlign(HAlign_Center)
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsOnlyExportSelected)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.HAlign(HAlign_Left)
+				[
+					SNew(SImage)
+					.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
+				]
+				+ SHorizontalBox::Slot()
+				.HAlign(HAlign_Left)
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsOnlyExportSelected)
+					.Text(FText::FromString("Only selected items will be exported. This might cause loss of context when viewing in Scene Explorer"))
+				]
+			]
+
+			+SVerticalBox::Slot()
+			.HAlign(HAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SHorizontalBox)
 				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 				+SHorizontalBox::Slot()
 				.AutoWidth()
@@ -489,44 +467,36 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.AutoHeight()
 			[
 				SNew(SBox)
-				.WidthOverride(128)
-				.HeightOverride(32)
+				.WidthOverride(256)
 				[
-					SNew(SButton)
-					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-					.Text(FText::FromString("Select All"))
-					.OnClicked(this,&SSceneSetupWidget::SelectAll)
-				]
-			]
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			[
-				SNew(SSeparator)
-				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-			]
-
-			+ SVerticalBox::Slot()
-			.Padding(0, 0, 0, padding)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.AutoHeight()
-			[
-				SNew(SHorizontalBox)
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.WidthOverride(128)
-					.HeightOverride(32)
+					SNew(SHorizontalBox)
+					+SHorizontalBox::Slot()
 					[
-						SNew(SButton)
-						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-						.Text(FText::FromString("Export"))
-						.OnClicked(this,&SSceneSetupWidget::EvaluateSceneExport)
+						SNew(SBox)
+						.WidthOverride(128)
+						.HeightOverride(32)
+						[
+							SNew(SButton)
+							.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+							.Text(FText::FromString("Select All"))
+							.OnClicked(this,&SSceneSetupWidget::SelectAll)
+						]
+					]
+
+					+SHorizontalBox::Slot()
+					[
+						SNew(SBox)
+						.WidthOverride(128)
+						.HeightOverride(32)
+						[
+							SNew(SButton)
+							.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+							.Text(this, &SSceneSetupWidget::ExportButtonText)
+							.OnClicked(this, &SSceneSetupWidget::EvaluateSceneExport)
+						]
 					]
 				]
 			]
-
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
@@ -537,6 +507,14 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Justification(ETextJustify::Center)
 				.Text(this, &SSceneSetupWidget::ExportedSceneText)
 			]
+
+			+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
+				[
+					SNew(SSeparator)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				]
 
 #pragma endregion
 
@@ -730,7 +708,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("That's it!\n\nAfter saving your project, you will be recording user position, gaze and basic device information. Simply press play in the Unreal Editor or make a build for your target platform.\n\nPlease note that sessions run in the editor won't count towards aggregate metrics.\n\nYou can view sessions from the Dashboard."))
+				.Text(FText::FromString("That's it!\n\nAfter saving your project, we recommend restarting the Unreal Editor. You will be recording user position, gaze and basic device information. Simply press play in the Unreal Editor or make a build for your target platform.\n\nPlease note that sessions run in the editor won't count towards aggregate metrics.\n\nYou can view sessions from the Dashboard."))
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
@@ -748,7 +726,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						SNew(SButton)
 						.HAlign(HAlign_Center)
 						.Text(FText::FromString("Open Dashboard"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://app.cognitive3d.com"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, ConstructDashboardURL())
 					]
 				]
 			]
@@ -766,8 +744,97 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("You can continue your integration to get more insights including:\n\nCustom Events\n\nExitPoll surveys\n\nDynamic Objects\n\nMultiplayer"))
+				.Text(FText::FromString("You can continue your integration to get more insights including:"))//\n\nCustom Events\n\nExitPoll surveys\n\nDynamic Objects\n\nMultiplayer
 			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Center)
+				.Padding(0,5,0,5)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("Custom Events"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/customevents/"))
+					]
+				]
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Center)
+				.Padding(0,5,0,5)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("ExitPoll surveys"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/exitpoll/"))
+					]
+				]
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Center)
+				.Padding(0,5,0,5)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("Dynamic Objects"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/dynamic-objects/"))
+					]
+				]
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Center)
+				.Padding(0,5,0,5)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+						.HAlign(HAlign_Center)
+						.Text(FText::FromString("Multiplayer"))
+						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenURL, FString("https://docs.cognitive3d.com/unreal/multiplayer/"))
+					]
+				]
+			]
+			+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsUploadComplete)
+				.AutoWrapText(true)
+				.Justification(ETextJustify::Center)
+				.Text(FText::FromString("Or check out the getting started guide:"))
+				]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
@@ -883,56 +950,14 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 		return FReply::Handled();
 	}
 
+	//prepare actors in the scene to be exported
+	//if actor has a skeletal mesh component, convert to static mesh and export the static mesh version of the actor
+	//clean up after to maintain original level
 
-	//should put this all in a CognitiveEditorTools export function
-	//take array of actors to be exported
-	TArray<AActor*> ToBeExported;
-	if (OnlyExportSelected) //only export selected
-	{
-		for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
-		{
-			if (AActor* Actor = Cast<AActor>(*It))
-			{
-				ToBeExported.Add(Actor);
-			}
-		}
-	}
-	else //select all
-	{
-		UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();
-		GEditor->Exec(World, TEXT("actor select all"));
-		for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
-		{
-			if (AActor* Actor = Cast<AActor>(*It))
-			{
-				ULevel* level = Actor->GetLevel();
-				if (level->bIsVisible == 0) { continue; } //sublevel probably. invisible
-				ToBeExported.Add(Actor);
-			}
-		}
-	}
+	TArray<AActor*> ToBeExportedFinal = FCognitiveEditorTools::GetInstance()->PrepareSceneForExport(OnlyExportSelected);
 
-	TArray<AActor*> ToBeExportedFinal;
-	for (int32 i = 0; i < ToBeExported.Num(); i++)
-	{
-		if (ToBeExported[i]->GetName().StartsWith("SkySphereBlueprint"))
-		{
-			continue;
-		}
-		UActorComponent* cameraComponent = ToBeExported[i]->GetComponentByClass(UCameraComponent::StaticClass());
-		if (cameraComponent != NULL)
-		{
-			continue;
-		}
-
-		UActorComponent* actorComponent = ToBeExported[i]->GetComponentByClass(UDynamicObject::StaticClass());
-		if (actorComponent != NULL)
-		{
-			continue;
-		}
-		ToBeExportedFinal.Add(ToBeExported[i]);
-	}
 	FCognitiveEditorTools::GetInstance()->ExportScene(ToBeExportedFinal);
+	
 
 	SceneWasExported = true;
 	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
@@ -1051,6 +1076,64 @@ EVisibility SSceneSetupWidget::IsUploadComplete() const
 		return EVisibility::Collapsed;
 	}
 	return EVisibility::Visible;
+}
+EVisibility SSceneSetupWidget::IsOnlyExportSelected() const
+{
+	if (CurrentPageEnum == ESceneSetupPage::Export)
+	{
+
+		if (OnlyExportSelected)
+		{
+			return EVisibility::Visible;
+		}
+		return EVisibility::Collapsed;
+	}
+	return EVisibility::Collapsed;
+}
+
+EVisibility SSceneSetupWidget::IsNotOnlyExportSelected() const
+{
+	if (CurrentPageEnum == ESceneSetupPage::Export)
+	{
+		if (!OnlyExportSelected)
+		{
+			return EVisibility::Visible;
+		}
+		return EVisibility::Collapsed;
+	}
+	return EVisibility::Collapsed;
+}
+
+FText SSceneSetupWidget::ExportButtonText()const
+{
+	if (CurrentPageEnum == ESceneSetupPage::Export)
+	{
+		if (OnlyExportSelected)
+		{
+			return FText::FromString(TEXT("Export Selected"));
+		}
+		return FText::FromString(TEXT("Export All"));
+	}
+	return FText::FromString(TEXT("Export All"));
+}
+
+
+FString SSceneSetupWidget::ConstructDashboardURL()
+{
+	FString outputString = "";
+	//scene settings (name, id, version)
+	for (auto& elem : FCognitiveEditorTools::GetInstance()->SceneData)
+	{
+		if (elem->Name == UGameplayStatics::GetCurrentLevelName(GWorld))
+		{
+			outputString += FString("https://app.cognitive3d.com/scenes/") + elem->Id;
+			outputString += FString("/v/") + elem->Id;
+			outputString += FString::FromInt(elem->VersionNumber);
+			outputString += FString("/insights");
+		}
+	}
+
+	return outputString;
 }
 
 FReply SSceneSetupWidget::TakeScreenshot()
@@ -1357,11 +1440,6 @@ FText SSceneSetupWidget::GetHeaderTitle() const
 void SSceneSetupWidget::OnExportPathChanged(const FText& Text)
 {
 	FCognitiveEditorTools::GetInstance()->BaseExportDirectory = Text.ToString();
-}
-
-void SSceneSetupWidget::OnBlenderPathChanged(const FText& Text)
-{
-	FCognitiveEditorTools::GetInstance()->BlenderPath = Text.ToString();
 }
 
 void SSceneSetupWidget::SpawnCognitiveVRActor()

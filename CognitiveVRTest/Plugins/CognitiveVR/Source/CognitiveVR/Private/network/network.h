@@ -27,15 +27,27 @@ struct FExitPollResponse;
 		FHttpRequestPtr localCacheRequest;
 		FString TArrayToString(const TArray<uint8> data, int32 count);
 
+		//
+		int32 VariableDelayMultiplier = 0;
+		int32 VariableDelayTime = 60;
+		float LocalCacheLoopDelay = 2.0f;
+		bool IsServerUnreachable = false;
+		FTimerHandle TimerHandle;
+		FTimerHandle TimerHandleShortDelay;
 	public:
 		Network();
 
 		void NetworkCall(FString suburl, FString contents, bool copyDataToCache);
-		void OnCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-		void OnLocalCacheCallReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+		void OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+		void OnLocalCacheResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 		bool HasErrorResponse();
 
 		void OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 		void NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response);
 		void NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSetName, FExitPollResponse Responses);
+
+
+		void SessionEnd();
+		void RequestLocalCache();
+		void ResetVariableTimer();
 	};

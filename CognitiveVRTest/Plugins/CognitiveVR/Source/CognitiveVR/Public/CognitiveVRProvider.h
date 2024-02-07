@@ -31,7 +31,6 @@
 #include "CognitiveVR/Private/api/FixationDataRecorder.h"
 #include "CognitiveVR/Private/api/GazeDataRecorder.h"
 #include "Misc/PackageName.h"//to get friendly name of streaming levels
-#include "HeadMountedDisplayFunctionLibrary.h"
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
@@ -180,6 +179,10 @@
 		bool HasEyeTrackingSDK();
 		void SetTrackingScene(FString levelName);
 		bool TryGetRoomSize(FVector& roomsize);
+		bool TryGetHMDGuardianPoints(TArray<FVector>& GuardianPoints);
+		bool TryGetHMDPose(FRotator& HMDRotation, FVector& HMDPosition, FVector& HMDNeckPos);
+		bool IsPointInPolygon4(TArray<FVector> polygon, FVector testPoint);
+		bool IsPluginEnabled(const FString& PluginName);
 		TWeakObjectPtr<UDynamicObject> GetControllerDynamic(const bool right);
 		FString GetRuntime();
 

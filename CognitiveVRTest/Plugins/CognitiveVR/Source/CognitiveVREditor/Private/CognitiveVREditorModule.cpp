@@ -53,62 +53,22 @@ void FCognitiveVREditorModule::StartupModule()
 #if WITH_EDITOR
 	// Create the Extender that will add content to the menu
 	FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
+
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 
-	FString tempGateway;
-	GConfig->GetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), tempGateway, EngineIni);
-
-	if (tempGateway.IsEmpty())
-	{
-		GLog->Log("CognitiveVRModule::StartupModule write defaults to ini");
-		FString defaultgateway = "data.cognitive3d.com";
-		FString defaultsessionviewer = "viewer.cognitive3d.com/scene/";
-		FString defaultdashboard = "app.cognitive3d.com";
-		FString trueString = "True";
-		GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Gateway"), *defaultgateway, EngineIni);
-		GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SessionViewer"), *defaultsessionviewer, EngineIni);
-		GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("Dashboard"), *defaultdashboard, EngineIni);
-
-		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("GazeBatchSize"), 64, EngineIni);
-
-		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("CustomEventBatchSize"), 64, EngineIni);
-		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("CustomEventAutoTimer"), 30, EngineIni);
-
-		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("DynamicDataLimit"), 64, EngineIni);
-		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("DynamicAutoTimer"), 30, EngineIni);
-
-		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SensorDataLimit"), 64, EngineIni);
-		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("SensorAutoTimer"), 30, EngineIni);
-
-		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-
-		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("CognitiveVR"), EngineIni);
-
-		GConfig->SetString(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("EnableLocalCache"), *trueString, EngineIni);
-		GConfig->SetInt(TEXT("/Script/CognitiveVR.CognitiveVRSettings"), TEXT("LocalCacheSize"), 100, EngineIni);
-	}
-
-	FCognitiveEditorTools::Initialize();
-
-	//do i need to unregister this dynamic object pool action?
-	IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
-	TSharedPtr< FDynamicIdPoolAssetActions> action = MakeShared<FDynamicIdPoolAssetActions>();
-	AssetTools.RegisterAssetTypeActions(action.ToSharedRef());
-	
+	FCognitiveEditorTools::Initialize();	
 	GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, EngineIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, EngineIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, EditorIni);
-	GConfig->GetString(TEXT("Analytics"), TEXT("BlenderPath"), FCognitiveEditorTools::GetInstance()->BlenderPath, EditorIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("ExportPath"), FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
 
+	//add actions for the dynamic object id pool asset
+	IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
+	TSharedPtr< FDynamicIdPoolAssetActions> action = MakeShared<FDynamicIdPoolAssetActions>();
+	AssetTools.RegisterAssetTypeActions(action.ToSharedRef());
 
+	//register window spawning
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveSceneSetup"), FOnSpawnTab::CreateStatic(&CreateCognitiveSceneSetupTabArgs)).SetMenuType(ETabSpawnerMenuType::Hidden);
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveProjectSetup"), FOnSpawnTab::CreateStatic(&CreateCognitiveProjectSetupTabArgs)).SetMenuType(ETabSpawnerMenuType::Hidden);
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveDynamicObjectManager"), FOnSpawnTab::CreateStatic(&CreateCognitiveDynamicObjectTabArgs)).SetMenuType(ETabSpawnerMenuType::Hidden);
@@ -136,6 +96,12 @@ void FCognitiveVREditorModule::StartupModule()
 		FCognitive3DCommands::Get().OpenOnlineDocumentation,
 		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::OpenOnlineDocumentation)
 	);
+
+	PluginCommands->MapAction(
+		FCognitive3DCommands::Get().OpenCognitiveDashboard,
+		FExecuteAction::CreateStatic(&FCognitiveVREditorModule::OpenCognitiveDashboard)
+	);
+
 
 	//append the menu after help
 	TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
@@ -169,10 +135,11 @@ void FCognitiveVREditorModule::StartupModule()
 
 	void FCognitiveVREditorModule::FillMenu(FMenuBuilder& MenuBuilder)
 	{
-		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenDynamicObjectWindow);
-		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenSceneSetupWindow);
 		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenProjectSetupWindow);
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenSceneSetupWindow);
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenDynamicObjectWindow);
 		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenOnlineDocumentation);
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenCognitiveDashboard);
 	}
 
 void FCognitiveVREditorModule::ShutdownModule()
@@ -233,6 +200,12 @@ void FCognitiveVREditorModule::SpawnCognitiveProjectSetupTab()
 void FCognitiveVREditorModule::OpenOnlineDocumentation()
 {
 	FString url = "https://docs.cognitive3d.com/unreal/get-started/";
+	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);
+}
+
+void FCognitiveVREditorModule::OpenCognitiveDashboard()
+{
+	FString url = "https://app.cognitive3d.com";
 	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);
 }
 

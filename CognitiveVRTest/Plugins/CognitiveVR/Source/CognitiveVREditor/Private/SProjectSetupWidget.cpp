@@ -5,6 +5,7 @@
 
 void SProjectSetupWidget::CheckForExpiredDeveloperKey(FString developerKey)
 {
+	GConfig->Flush(true, GEngineIni);
 	auto Request = FHttpModule::Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindRaw(this, &SProjectSetupWidget::OnDeveloperKeyResponseReceived);
 	FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
@@ -62,10 +63,10 @@ void SProjectSetupWidget::GetApplicationKeyResponse(FHttpRequestPtr Request, FHt
 		GLog->Log("Developer Key Response Code is not 200. Developer key may be invalid or expired");
 		return;
 	}
-
-	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("UpdateApplicationKeyBody", "We recommend using the Application Key available from the Dashboard."), LOCTEXT("UpdateApplicationKeyTitle", "Found Application Key"), "Cognitive3dApplicationKey");
-	Info.ConfirmText = LOCTEXT("Yes", "Yes");
-	Info.CancelText = LOCTEXT("No", "No");
+	
+	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("UpdateApplicationKeyBody", "Found Application Key on the Dashboard, we recommend using this key."), LOCTEXT("UpdateApplicationKeyTitle", "Found Application Key"), "Cognitive3dApplicationKey");
+	Info.ConfirmText = LOCTEXT("Yes", "Ok");
+	//Info.CancelText = LOCTEXT("No", "No");
 	Info.CheckBoxText = FText();
 	FSuppressableWarningDialog WarnAboutCoordinatesSystem(Info);
 	FSuppressableWarningDialog::EResult result = WarnAboutCoordinatesSystem.ShowModal();
@@ -145,6 +146,7 @@ void SProjectSetupWidget::GetOrganizationDetailsResponse(FHttpRequestPtr Request
 
 void SProjectSetupWidget::Construct(const FArguments& Args)
 {
+	FCognitiveEditorTools::CheckIniConfigured();
 	DisplayAPIKey = FCognitiveEditorTools::GetInstance()->GetApplicationKey().ToString();
 	DisplayDeveloperKey = FCognitiveEditorTools::GetInstance()->GetDeveloperKey().ToString();
 
@@ -193,7 +195,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				.Justification(ETextJustify::Center)
 				.Visibility(this, &SProjectSetupWidget::IsIntroVisible)
 				.DecoratorStyleSet(&FEditorStyle::Get())
-				.Text(FText::FromString("Welcome to the <RichTextBlock.BoldHighlight>Cognitive3D Scene Setup</>"))
+				.Text(FText::FromString("Welcome to the <RichTextBlock.BoldHighlight>Cognitive3D Project Setup</>"))
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
@@ -203,7 +205,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SProjectSetupWidget::IsIntroVisible)
 				.Justification(ETextJustify::Center)
 				.AutoWrapText(true)
-				.Text(FText::FromString("This will guide you through the initial setup of your scene and will have production ready analytics at the end of this setup."))
+				.Text(FText::FromString("This will guide you through the initial setup of your project and will have production ready analytics at the end of this setup."))
 			]
 			+SVerticalBox::Slot()
 			.AutoHeight()
@@ -348,24 +350,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 			]
 
 
-#pragma region "blender"
-			+SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			[
-				SNew(SBox)
-				.HAlign(HAlign_Center)
-				.VAlign(VAlign_Center)
-				.WidthOverride(256)
-				.HeightOverride(78)
-				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
-				[
-					SNew(SImage)
-					.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
-					.Image(this, &SProjectSetupWidget::GetBlenderLogo)
-				]
-			]
-
+#pragma region "directory"
 
 			+ SVerticalBox::Slot()
 			.AutoHeight()
@@ -375,44 +360,11 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
 				.Justification(ETextJustify::Center)
 				.AutoWrapText(true)
-				.Text(FText::FromString("When uploading your level to the dashboard, we use Blender to automatically prepare the scene.\nThis includes converting exported images to .pngs\n\nWe also need a temporary Export Directory to save Unreal files to while we process them."))
+				.Text(FText::FromString("When uploading your level to the dashboard, we use Unreal's GLTF exporter to automatically prepare the scene.\nThis includes exporting images as .pngs\n\nWe also need a temporary Export Directory to save Unreal files to while we process them."))
 			]
 
-			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
-			.MaxHeight(30)
-				.AutoHeight()
-				.Padding(0, 0, 0, padding)
-			[
-				SNew(STextBlock)
-				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
-				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("First, download Blender using the link below. Blender is free and open source."))
-			]
 
-			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
-			.MaxHeight(30)
-			.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
-				+SHorizontalBox::Slot()
-				.HAlign(HAlign_Center)
-				[
-					SNew(SBox)
-					.WidthOverride(128)
-					.HeightOverride(32)
-					[
-						SNew(SButton)
-						.HAlign(HAlign_Center)
-						.ContentPadding(2.0f)
-						.Text(FText::FromString("www.blender.org"))
-						.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenURL,FString("https://www.blender.org"))
-					]
-				]
-			]
+			
 			+ SVerticalBox::Slot()
 			.VAlign(VAlign_Center)
 			.AutoHeight()
@@ -421,7 +373,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 				SNew(STextBlock)
 				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
 				.Justification(ETextJustify::Center)
-				.Text(FText::FromString("Second, you will need to create a temporary directory to store the exported files."))
+				.Text(FText::FromString("You will need to create a temporary directory to store the exported files."))
 			]
 
 			+ SVerticalBox::Slot()
@@ -430,96 +382,6 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 			[
 				SNew(SSeparator)
 				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
-			]
-
-			//path to blender
-			+ SVerticalBox::Slot()
-			.MaxHeight(32)
-			.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			[
-				SNew(SHorizontalBox)
-				.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
-				+SHorizontalBox::Slot()
-				.MaxWidth(200)
-				[
-					SNew(SBox)
-					.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
-					.HeightOverride(32)
-					[
-						SNew(STextBlock)
-						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-						.Text(FText::FromString("Path to Blender.exe"))
-					]
-				]
-				+ SHorizontalBox::Slot()
-				.FillWidth(3)
-				.Padding(1)
-				[
-					SNew(SBox)
-					.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
-					.HeightOverride(32)
-					.MaxDesiredHeight(32)
-					[
-						SNew(SEditableTextBox)
-						.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBlenderPath)
-						.OnTextChanged(this, &SProjectSetupWidget::OnBlenderPathChanged)
-					]
-				]
-				+SHorizontalBox::Slot()
-				.MaxWidth(17)
-				[
-					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
-					.VAlign(VAlign_Center)
-					[
-						SNew(SBox)
-						.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
-						.HeightOverride(17)
-						.WidthOverride(17)
-						[
-							SNew(SButton)
-							.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
-							//PickerWidget = SAssignNew(BrowseButton, SButton)
-							.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
-							.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
-							.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::Select_Blender)
-							.ContentPadding(2.0f)
-							.ForegroundColor(FSlateColor::UseForeground())
-							.IsFocusable(false)
-							[
-								SNew(SImage)
-								.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
-								.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
-								.ColorAndOpacity(FSlateColor::UseForeground())
-							]
-						]
-					]
-				]
-				+SHorizontalBox::Slot()
-				.MaxWidth(17)
-				[
-					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
-					.VAlign(VAlign_Center)
-					[
-						SNew(SBox)
-						.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
-						.HeightOverride(17)
-						.WidthOverride(17)
-						[
-							SNew(SImage)
-							.Visibility(this, &SProjectSetupWidget::IsExportPathVisible)
-							.Image(this, &SProjectSetupWidget::GetBlenderPathStateIcon)
-							.ToolTipText(this, &SProjectSetupWidget::GetBlenderPathTooltipText)
-							.ColorAndOpacity(FSlateColor::UseForeground())
-						]
-					]
-				]
 			]
 
 			//path to export directory
@@ -614,7 +476,7 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
-			
+
 #pragma endregion
 
 #pragma region complete
@@ -795,33 +657,17 @@ void SProjectSetupWidget::Construct(const FArguments& Args)
 #pragma endregion
 		];
 
-		FString texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("blender_logo_socket_small.png");
+		FString texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("getting_started_video.png");
 		FName BrushName = FName(*texturepath);
-		BlenderLogoTexture = new FSlateDynamicImageBrush(BrushName, FVector2D(256, 78));
-
-		texturepath = IPluginManager::Get().FindPlugin(TEXT("CognitiveVR"))->GetBaseDir() / TEXT("Resources") / TEXT("getting_started_video.png");
-		BrushName = FName(*texturepath);
 		VideoImage = new FSlateDynamicImageBrush(BrushName, FVector2D(270, 150));
 }
 
-const FSlateBrush* SProjectSetupWidget::GetBlenderLogo() const
-{
-	return BlenderLogoTexture;
-}
 
 const FSlateBrush* SProjectSetupWidget::GetVideoImage() const
 {
 	return VideoImage;
 }
 
-const FSlateBrush* SProjectSetupWidget::GetBlenderPathStateIcon() const
-{
-	if (FCognitiveEditorTools::GetInstance()->HasFoundBlender())
-	{
-		return FCognitiveEditorTools::GetInstance()->BoxCheckIcon;
-	}
-	return FCognitiveEditorTools::GetInstance()->BoxEmptyIcon;
-}
 
 const FSlateBrush* SProjectSetupWidget::GetExportPathStateIcon() const
 {
@@ -832,14 +678,6 @@ const FSlateBrush* SProjectSetupWidget::GetExportPathStateIcon() const
 	return FCognitiveEditorTools::GetInstance()->BoxEmptyIcon;
 }
 
-FText SProjectSetupWidget::GetBlenderPathTooltipText() const
-{
-	if (FCognitiveEditorTools::GetInstance()->HasFoundBlender())
-	{
-		return FText::FromString("");
-	}
-	return FText::FromString("Blender path is not set or invalid");
-}
 
 FText SProjectSetupWidget::GetExportPathTooltipText() const
 {
@@ -923,7 +761,6 @@ FReply SProjectSetupWidget::NextPage()
 	{
 		GLog->Log("set dynamic and scene export directories. create if needed");
 		FCognitiveEditorTools::GetInstance()->CreateExportFolderStructure();
-		FCognitiveEditorTools::GetInstance()->SaveBlenderPathAndExportPath();
 	}
 
 	CurrentPageEnum = (EProjectSetupPage)(((uint8)CurrentPageEnum) + 1);
@@ -966,7 +803,7 @@ bool SProjectSetupWidget::NextButtonEnabled() const
 
 	if (CurrentPageEnum == EProjectSetupPage::ExportPath)
 	{
-		if (FCognitiveEditorTools::GetInstance()->HasFoundBlender() && FCognitiveEditorTools::GetInstance()->BaseExportDirectory.Len() > 0)
+		if (FCognitiveEditorTools::GetInstance()->BaseExportDirectory.Len() > 0)
 		{
 			return true;
 		}
@@ -1013,10 +850,6 @@ FText SProjectSetupWidget::GetHeaderTitle() const
 	}
 }
 
-void SProjectSetupWidget::OnBlenderPathChanged(const FText& Text)
-{
-	FCognitiveEditorTools::GetInstance()->BlenderPath = Text.ToString();
-}
 
 void SProjectSetupWidget::OnExportPathChanged(const FText& Text)
 {

@@ -12,7 +12,6 @@
 #include "SceneView.h"
 //#include "Engine/TextureRenderTarget2D.h"
 #include "CognitiveVR/Public/DynamicObject.h"
-#include "HeadMountedDisplayFunctionLibrary.h"
 #include "Runtime/HeadMountedDisplay/Public/IXRTrackingSystem.h"
 #include "Widgets/Text/STextBlock.h"
 #if defined TOBII_EYETRACKING_ACTIVE

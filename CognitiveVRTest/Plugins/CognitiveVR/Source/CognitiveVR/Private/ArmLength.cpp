@@ -1,4 +1,5 @@
 #include "CognitiveVR/Private/ArmLength.h"
+#include "HeadMountedDisplayFunctionLibrary.h"
 
 UArmLength::UArmLength()
 {

@@ -74,11 +74,51 @@ TSharedRef<ITableRow> SDynamicObjectTableWidget::OnGenerateRowForTable(TSharedPt
 	//find matching InItem by id
 	bool hasUploadedId;
 	FString searchId = InItem->Id;
-	auto FoundId = SDynamicObjectManagerWidget::dashboardObjects.FindByPredicate([searchId](const FDashboardObject& InItem2)
+
+	//check if the current scene is set up correctly with a SceneId and return the table row
+	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
 	{
-		return InItem2.sdkId == searchId;
-	});
-	hasUploadedId = FoundId != NULL;
+		//check if the export folder has files for this dynamic object
+		bool hasExportedMesh = !InItem->MeshName.IsEmpty() && FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(InItem->MeshName);
+
+		return SNew(SDynamicTableItem, OwnerTable)
+			.Name(FText::FromString(InItem->Name))
+			.MeshName(FText::FromString(InItem->MeshName))
+			.Id(FText::FromString(InItem->Id))
+			.Exported(hasExportedMesh)
+			.Uploaded(false);
+	}
+
+	if (InItem->DynamicType == EDynamicTypes::DynamicIdPoolAsset || InItem->DynamicType == EDynamicTypes::DynamicIdPool)
+	{
+		int32 idsFound = 0;
+		for (auto ids : InItem->DynamicPoolIds)
+		{
+			auto FoundId2 = SDynamicObjectManagerWidget::dashboardObjects.FindByPredicate([ids](const FDashboardObject& InItem3)
+				{
+					return InItem3.sdkId == ids;
+				}
+			);
+			if (FoundId2 == nullptr)
+			{
+				continue;
+			}
+			idsFound++;
+
+			if (idsFound == InItem->DynamicPoolIds.Num())
+			{
+				hasUploadedId = FoundId2 != NULL;
+			}
+		}
+	}
+	else
+	{
+		auto FoundId = SDynamicObjectManagerWidget::dashboardObjects.FindByPredicate([searchId](const FDashboardObject& InItem2)
+			{
+				return InItem2.sdkId == searchId;
+			});
+		hasUploadedId = FoundId != NULL;
+	}
 
 	//check if the export folder has files for this dynamic object
 	bool hasExportedMesh = !InItem->MeshName.IsEmpty() && FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(InItem->MeshName);
@@ -249,6 +289,14 @@ const FSlateBrush* SDynamicTableItem::GetUploadedStateIcon() const
 
 FText SDynamicTableItem::GetExportedTooltip() const
 {
+	if (Id.ToString().Contains("Id Pool Asset"))
+	{
+		if (Exported)
+		{
+			return FText::FromString("Associated Mesh has been exported to temrporary directory");
+		}
+		return FText::FromString("Associated Mesh has NOT been exported to temrporary directory");
+	}
 	if (Exported)
 	{
 		return FText::FromString("Mesh has been exported to temrporary directory");
@@ -258,6 +306,26 @@ FText SDynamicTableItem::GetExportedTooltip() const
 
 FText SDynamicTableItem::GetUploadedTooltip() const
 {
+	if (Id.ToString().Contains("Id Pool Asset"))
+	{
+		if (Uploaded)
+		{
+			return FText::FromString("Id Pool Ids have been uploaded to the dashboard");
+		}
+		return FText::FromString("Id Pool Ids have NOT been uploaded to the dashboard");
+	}
+	else if (Id.ToString().Contains("Id Pool"))
+	{
+		if (Uploaded)
+		{
+			return FText::FromString("Mesh and Id Pool Ids have been uploaded to the dashboard");
+		}
+		return FText::FromString("Mesh and Id Pool Ids have NOT been uploaded to the dashboard");
+	}
+	else if (Id.ToString().Contains("generated"))
+	{
+		return FText::FromString("Id generated at runtime");
+	}
 	if (Uploaded)
 	{
 		return FText::FromString("Mesh and Id have been uploaded to the dashboard");

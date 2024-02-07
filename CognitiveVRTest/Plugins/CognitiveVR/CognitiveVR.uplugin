@@ -1,11 +1,11 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "0.24.1",
-	"FriendlyName": "cognitive3D Analytics",
-	"Description": "cognitive3D Analytics for Unreal",
+	"VersionName": "0.28.2",
+	"FriendlyName": "Cognitive3D Analytics",
+	"Description": "Cognitive3D Analytics for Unreal",
 	"Category": "Analytics",
-	"CreatedBy": "cognitive3D",
+	"CreatedBy": "Cognitive3D",
 	"CreatedByURL": "cognitive3d.com",
 	"DocsURL": "docs.cognitive3d.com",
 	"EnabledByDefault": true,
@@ -22,9 +22,14 @@
 		}
 	],
     "Plugins": [
-        {
-            "Name": "AnalyticsBlueprintLibrary",
-            "Enabled": true
-        }
+			{
+				"Name": "AnalyticsBlueprintLibrary",
+				"Enabled": true
+			},
+			{
+				"Name": "GLTFExporter",
+				"Enabled": true,
+				"MarketplaceURL": "https://www.unrealengine.com/marketplace/en-US/product/3c2c81b4b44542e8867263707f518480"
+			}
     ] 
 }

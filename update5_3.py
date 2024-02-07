@@ -4,7 +4,8 @@ import time
 
 cwd = os.getcwd()
 version = "0"
-enginesubversion = "27"
+engineversion = "5"
+enginesubversion = "3"
 
 def replaceline(file, linesrc, linedst):
 
@@ -64,6 +65,7 @@ def insertline(file, targetline, insertline):
 		else:
 			#print("-------- line " + line)
 			finalstrings.append(line+"\n")
+			
 
 	mo.close()
 
@@ -120,8 +122,17 @@ print (version)
 
 #do all the update stuff
 
+#1 comment out unsupport platform in build.cs
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","			|| Target.Platform == UnrealTargetPlatform.Win32","//			|| Target.Platform == UnrealTargetPlatform.Win32")
+
+#change definitions and oculus plugin include in build.cs
+replaceline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","			//PublicDependencyModuleNames.AddRange(new string[] { \"OculusHMD\" });","			//PublicDependencyModuleNames.AddRange(new string[] { \"OculusXRHMD\" });")
+
+insertline(cwd+"/Plugins\CognitiveVR\Source\CognitiveVR\CognitiveVR.Build.cs","					\"Slate\",","					\"XRBase\",",)
+
+
 # save to zip archive
-output_filename = cwd+"/C3D_Plugin"+version+"_ue4_"+enginesubversion
+output_filename = cwd+"/C3D_Plugin"+version+"_ue"+engineversion+"_"+enginesubversion
 shutil.make_archive(output_filename, 'zip', cwd+"/Plugins/")
 
 #delete the temp plugin directory

@@ -14,6 +14,7 @@ void SDynamicObjectManagerWidget::CheckForExpiredDeveloperKey()
 {
 	if (FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
 	{
+		GConfig->Flush(true, GEngineIni);
 		auto Request = FHttpModule::Get().CreateRequest();
 		Request->OnProcessRequestComplete().BindRaw(this, &SDynamicObjectManagerWidget::OnDeveloperKeyResponseReceived);
 		FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/CognitiveVR.CognitiveVRSettings", "Gateway", false);
@@ -108,6 +109,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 {
 	float padding = 10;
 
+	FCognitiveEditorTools::CheckIniConfigured();
 	CheckForExpiredDeveloperKey();
 
 	ChildSlot
@@ -287,7 +289,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					[
 						SNew(SButton)
 						.IsEnabled(this, &SDynamicObjectManagerWidget::IsUploadAllEnabled)
-						.Text(FText::FromString("Upload All Meshes"))
+						.Text(FText::FromString("Upload All Dynamics"))
 						.ToolTipText(this, &SDynamicObjectManagerWidget::UploadAllMeshesTooltip)
 						.OnClicked_Raw(this, &SDynamicObjectManagerWidget::UploadAllDynamicObjects)
 					]
@@ -357,6 +359,52 @@ EVisibility SDynamicObjectManagerWidget::GetDuplicateDyanmicObjectVisibility() c
 
 FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 {
+	//find the corresponding asset
+	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+
+	FARFilter Filter;
+
+#if ENGINE_MAJOR_VERSION == 4
+	Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 0 || ENGINE_MINOR_VERSION == 1)
+	Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+	Filter.ClassPaths.Add(UDynamicIdPoolAsset::StaticClass()->GetClassPathName());
+#endif
+
+	Filter.bRecursiveClasses = true; // Set to true if you want to include subclasses
+
+	TArray<FAssetData> AssetData;
+	AssetRegistry.GetAssets(Filter, AssetData);
+
+	if (AssetData.Num() > 0)
+	{
+		FSuppressableWarningDialog::FSetupInfo Info1(LOCTEXT("UploadIdsForAggregation", "Do you want to Upload all Dynamic Object Id Pool's Ids for Aggregation?"), LOCTEXT("UploadIdsForAggregationTitle", "Upload Ids For Aggregation"), "UploadIdsForAggregationBody");
+		Info1.ConfirmText = LOCTEXT("Yes", "Yes");
+		Info1.CancelText = LOCTEXT("No", "No");
+		Info1.CheckBoxText = FText();
+		FSuppressableWarningDialog UploadSelectedIdPools(Info1);
+		FSuppressableWarningDialog::EResult result1 = UploadSelectedIdPools.ShowModal();
+
+		if (result1 == FSuppressableWarningDialog::EResult::Confirm)
+		{
+			for (const FAssetData& Asset : AssetData)
+			{
+				//get the actual asset from the asset data
+				UObject* IdPoolObject = Asset.GetAsset();
+				//cast it to a dynamic id pool asset
+				UDynamicIdPoolAsset* IdPoolAsset = Cast<UDynamicIdPoolAsset>(IdPoolObject);
+
+				UE_LOG(LogTemp, Warning, TEXT("Found dynamic id pool asset %s, uploading ids"), *IdPoolAsset->PrefabName);
+				FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(IdPoolAsset->Ids, IdPoolAsset->MeshName, IdPoolAsset->PrefabName);
+			}
+		}
+	}
+
+		
+	
+
 	//popup asking if meshes should be exported too
 	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export all Dynamic Object meshes before uploading to Scene Explorer?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
 	Info.ConfirmText = LOCTEXT("Yes", "Yes");
@@ -370,7 +418,7 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 		FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportAllDynamics();
 	}
 
-	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload all Dynamic Object to Scene Explorer?"), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
+	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload all Dynamic Object to Scene Explorer? Note: This will only upload meshes that have been exported."), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
 	Info2.ConfirmText = LOCTEXT("Yes", "Yes");
 	Info2.CancelText = LOCTEXT("No", "No");
 	Info2.CheckBoxText = FText();
@@ -396,11 +444,6 @@ FReply SDynamicObjectManagerWidget::ValidateAndRefresh()
 	return FReply::Handled();
 }
 
-void SDynamicObjectManagerWidget::OnBlenderPathChanged(const FText& Text)
-{
-	FCognitiveEditorTools::GetInstance()->BlenderPath = Text.ToString();
-}
-
 void SDynamicObjectManagerWidget::OnExportPathChanged(const FText& Text)
 {
 	FCognitiveEditorTools::GetInstance()->BaseExportDirectory = Text.ToString();
@@ -411,24 +454,93 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 {
 	auto selected = SceneDynamicObjectTable->TableViewWidget->GetSelectedItems();
 
-	//popup asking if meshes should be exported too
-	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export the selected Dynamic Object meshes before uploading to Scene Explorer?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
-	Info.ConfirmText = LOCTEXT("Yes", "Yes");
-	Info.CancelText = LOCTEXT("No", "No");
-	Info.CheckBoxText = FText();
-	FSuppressableWarningDialog ExportSelectedDynamicMeshes(Info);
-	FSuppressableWarningDialog::EResult result = ExportSelectedDynamicMeshes.ShowModal();
 
-	if (result == FSuppressableWarningDialog::EResult::Confirm)
+	for (auto& dynamic : selected)
 	{
-		FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportDynamicData(selected);
-		if (fph.IsValid())
+		//dynamic with id pool, export mesh and upload ids for aggregation
+		if (dynamic->DynamicType == EDynamicTypes::DynamicIdPool)
 		{
-			FPlatformProcess::WaitForProc(fph);
-		}
-	}	
+			//popup asking if meshes should be exported too
+			FText ExportText = LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export the selected Dynamic Object meshes ({0}) before uploading to Scene Explorer?");
+			FText dynMeshName = FText::FromString(dynamic->MeshName);
+			FSuppressableWarningDialog::FSetupInfo Info(FText::Format(ExportText, dynMeshName), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
+			Info.ConfirmText = LOCTEXT("Yes", "Yes");
+			Info.CancelText = LOCTEXT("No", "No");
+			Info.CheckBoxText = FText();
+			FSuppressableWarningDialog ExportSelectedDynamicMeshes(Info);
+			FSuppressableWarningDialog::EResult result = ExportSelectedDynamicMeshes.ShowModal();
+			TArray<TSharedPtr<FDynamicData>> meshOnly;
+			meshOnly.Add(dynamic);
+			if (result == FSuppressableWarningDialog::EResult::Confirm)
+			{
+				FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportDynamicData(meshOnly);
+				if (fph.IsValid())
+				{
+					FPlatformProcess::WaitForProc(fph);
+					FCognitiveEditorTools::GetInstance()->ShowNotification(TEXT("Mesh Exported"));
+				}
+			}
 
-	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload the selected Dynamic Object to Scene Explorer?"), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
+			FText UploadText = LOCTEXT("UploadIdsForAggregation", "Do you want to Upload the selected Dynamic Object ({0}) Id Pool's Ids for Aggregation?");
+			FText dynName = FText::FromString(dynamic->Name);
+			FSuppressableWarningDialog::FSetupInfo Info1(FText::Format(UploadText, dynName), LOCTEXT("UploadIdsForAggregationTitle", "Upload Ids For Aggregation"), "UploadIdsForAggregationBody");
+			Info1.ConfirmText = LOCTEXT("Yes", "Yes");
+			Info1.CancelText = LOCTEXT("No", "No");
+			Info1.CheckBoxText = FText();
+			FSuppressableWarningDialog UploadSelectedIdPools(Info1);
+			FSuppressableWarningDialog::EResult result1 = UploadSelectedIdPools.ShowModal();
+
+			if (result1 == FSuppressableWarningDialog::EResult::Confirm)
+			{
+				FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(dynamic->DynamicPoolIds, dynamic->MeshName, dynamic->Name);
+			}
+		}
+		//id pool asset, upload ids for aggregation
+		else if (dynamic->DynamicType == EDynamicTypes::DynamicIdPoolAsset)
+		{
+			FText UploadText = LOCTEXT("UploadIdsForAggregation", "Do you want to Upload the selected Dynamic Object ({0}) Id Pool's Ids for Aggregation?");
+			FText dynName = FText::FromString(dynamic->Name);
+			FSuppressableWarningDialog::FSetupInfo Info1(FText::Format(UploadText, dynName), LOCTEXT("UploadIdsForAggregationTitle", "Upload Ids For Aggregation"), "UploadIdsForAggregationBody");
+			Info1.ConfirmText = LOCTEXT("Yes", "Yes");
+			Info1.CancelText = LOCTEXT("No", "No");
+			Info1.CheckBoxText = FText();
+			FSuppressableWarningDialog UploadSelectedIdPools(Info1);
+			FSuppressableWarningDialog::EResult result1 = UploadSelectedIdPools.ShowModal();
+
+			if (result1 == FSuppressableWarningDialog::EResult::Confirm)
+			{
+				FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(dynamic->DynamicPoolIds, dynamic->MeshName, dynamic->Name);
+			}
+		}
+		//else its a normal dynamic object, we export
+		else
+		{
+			//popup asking if meshes should be exported too
+			FText ExportText = LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export the selected Dynamic Object meshes ({0}) before uploading to Scene Explorer?");
+			FText dynMeshName = FText::FromString(dynamic->MeshName);
+			FSuppressableWarningDialog::FSetupInfo Info(FText::Format(ExportText, dynMeshName), LOCTEXT("ExportSelectedDynamicsTitle", "Export Selected Dynamic Objects"), "ExportSelectedDynamicsBody");
+			Info.ConfirmText = LOCTEXT("Yes", "Yes");
+			Info.CancelText = LOCTEXT("No", "No");
+			Info.CheckBoxText = FText();
+			FSuppressableWarningDialog ExportSelectedDynamicMeshes(Info);
+			FSuppressableWarningDialog::EResult result = ExportSelectedDynamicMeshes.ShowModal();
+			TArray<TSharedPtr<FDynamicData>> meshOnly;
+			meshOnly.Add(dynamic);
+			if (result == FSuppressableWarningDialog::EResult::Confirm)
+			{
+				FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportDynamicData(meshOnly);
+				if (fph.IsValid())
+				{
+					FPlatformProcess::WaitForProc(fph);
+					FCognitiveEditorTools::GetInstance()->ShowNotification(TEXT("Mesh Exported"));
+				}
+			}
+		}
+
+	}
+	
+	//then perform upload
+	FSuppressableWarningDialog::FSetupInfo Info2(LOCTEXT("UploadSelectedDynamicsBody", "Do you want to upload the selected Dynamics to Scene Explorer? Note: This will only upload meshes that have been exported."), LOCTEXT("UploadSelectedDynamicsTitle", "Upload Selected Dynamic Objects"), "UploadSelectedDynamicsBody");
 	Info2.ConfirmText = LOCTEXT("Yes", "Yes");
 	Info2.CancelText = LOCTEXT("No", "No");
 	Info2.CheckBoxText = FText();
@@ -438,6 +550,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 	if (result2 == FSuppressableWarningDialog::EResult::Confirm)
 	{
 		//then upload
+		int32 uploadCount = 0;
 		for (auto& elem : selected)
 		{
 			FCognitiveEditorTools::GetInstance()->UploadDynamic(elem->MeshName);
@@ -486,6 +599,10 @@ FText SDynamicObjectManagerWidget::UploadSelectedMeshesTooltip() const
 	{
 		return FText::FromString("");
 	}
+	else if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
+	{
+		return FText::FromString("Use the Open Scene Setup Window above to export these meshes and continue the guided setup to the Scene Setup Window");
+	}
 	return FText::FromString("Must export meshes first to upload");
 }
 
@@ -495,13 +612,16 @@ FText SDynamicObjectManagerWidget::UploadAllMeshesTooltip() const
 	{
 		return FText::FromString("");
 	}
+	else if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
+	{
+		return FText::FromString("Use the Open Scene Setup Window above to export these meshes and continue the guided setup to the Scene Setup Window");
+	}
 	return FText::FromString("Must export meshes first to upload");
 }
 
 bool SDynamicObjectManagerWidget::IsUploadAllEnabled() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
-	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
 	return true;
@@ -510,7 +630,6 @@ bool SDynamicObjectManagerWidget::IsUploadAllEnabled() const
 FText SDynamicObjectManagerWidget::GetUploadInvalidCause() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return FText::FromString("Developer Key is not set"); }
-	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return FText::FromString("Blender path is invalid"); }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return FText::FromString("Export Path is invalid"); }
 	return FText::GetEmpty();
 }
@@ -518,7 +637,6 @@ FText SDynamicObjectManagerWidget::GetUploadInvalidCause() const
 EVisibility SDynamicObjectManagerWidget::GetSceneWarningVisibility() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return EVisibility::Visible; }
-	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlender()) { return EVisibility::Visible; }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return EVisibility::Visible; }
 	return EVisibility::Collapsed;
 }
@@ -526,7 +644,6 @@ EVisibility SDynamicObjectManagerWidget::GetSceneWarningVisibility() const
 bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
-	if (!FCognitiveEditorTools::GetInstance()->HasFoundBlenderAndExportDir()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
 	
 	//use the selection in the table, not in the scene
@@ -538,7 +655,7 @@ FText SDynamicObjectManagerWidget::UploadSelectedText() const
 {
 	auto selected = SceneDynamicObjectTable->TableViewWidget->GetSelectedItems();
 
-	//should export all dynamic objects that need it, then wait for blender to fix them all
+	//should export all dynamic objects that need it
 
 	TArray<FString> dynamicMeshNames;
 
@@ -554,7 +671,8 @@ FText SDynamicObjectManagerWidget::UploadSelectedText() const
 	//get selected dynamic data
 	//for each unique mesh name
 
-	return FText::FromString("Upload " + FString::FromInt(dynamicMeshNames.Num()) + " Selected Meshes");
+	//return FText::FromString("Upload " + FString::FromInt(dynamicMeshNames.Num()) + " Selected Dynamics");
+	return FText::FromString("Upload " + FString::FromInt(selected.Num()) + " Selected Dynamics");
 }
 
 //if the scene has not been exported, the window displays the onboarding text instead of this scene text

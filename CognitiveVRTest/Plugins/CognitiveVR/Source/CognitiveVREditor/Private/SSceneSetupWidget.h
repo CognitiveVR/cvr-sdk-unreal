@@ -86,6 +86,11 @@ public:
 	EVisibility IsCompleteVisible() const;
 	EVisibility IsUploadComplete() const;
 
+	EVisibility IsOnlyExportSelected() const;
+	EVisibility IsNotOnlyExportSelected() const;
+
+	FText ExportButtonText() const;
+
 	EVisibility IsNewSceneUpload() const;
 	EVisibility IsSceneVersionUpload() const;
 	EVisibility IsIntroNewVersionVisible() const;
@@ -116,6 +121,7 @@ public:
 	void GenerateScreenshotBrush();
 	FSlateBrush* ScreenshotTexture;
 	const FSlateBrush* GetScreenshotBrushTexture() const;
+	FString ConstructDashboardURL();
 	FReply TakeScreenshot();
 	int32 ScreenshotWidth = 256;
 	int32 ScreenshotHeight = 256;
@@ -138,7 +144,6 @@ public:
 	}
 
 	void OnExportPathChanged(const FText& Text);
-	void OnBlenderPathChanged(const FText& Text);
 
 	/// <summary>
 	/// checks if there's a BP_CognitiveVRActor in the world. spawns one if not

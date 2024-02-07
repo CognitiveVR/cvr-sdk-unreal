@@ -13,6 +13,8 @@
 #include "STextComboBox.h"
 #include "SListView.h"
 #include "SThrobber.h"
+#include "AssetRegistryModule.h"
+#include "IAssetRegistry.h"
 #include "Runtime/SlateCore/Public/Layout/Visibility.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
@@ -46,9 +48,8 @@ public:
 
 	FReply ValidateAndRefresh();
 
-	//TODO make export path and blender path configurable here
+	//TODO make export path configurable here
 	void OnExportPathChanged(const FText& Text);
-	void OnBlenderPathChanged(const FText& Text);
 
 	FReply UploadSelectedDynamicObjects();
 	FReply UploadAllDynamicObjects();
