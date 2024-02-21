@@ -57,10 +57,13 @@ namespace UnrealBuildTool.Rules
 
 			PublicDependencyModuleNames.Add("DeveloperSettings");
 
-		
+
 			//uncomment these lines to enable Oculus/Meta platform functionality. Uses OculusVR for UE4 and OculusXR (MetaXR) for UE5.
 			//PublicDefinitions.Add("INCLUDE_OCULUS_PLUGIN");
 			//PublicDependencyModuleNames.AddRange(new string[] { "OculusHMD" });
+
+			//PublicDefinitions.Add("INCLUDE_PICO_PLUGIN");
+			//PublicDependencyModuleNames.AddRange(new string[] { "PICOXRHMD" });
 			//uncomment this to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
 			//PublicDefinitions.Add("OPENXR_EYETRACKING");
 

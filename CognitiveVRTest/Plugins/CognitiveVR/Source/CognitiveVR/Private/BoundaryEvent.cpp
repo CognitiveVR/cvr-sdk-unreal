@@ -4,6 +4,9 @@
 #include "DrawDebugHelpers.h"
 #include "Interfaces/IPluginManager.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#ifdef INCLUDE_PICO_PLUGIN
+#include "PXR_HMDFunctionLibrary.h"
+#endif
 
 // Sets default values
 UBoundaryEvent::UBoundaryEvent()
@@ -53,6 +56,7 @@ void UBoundaryEvent::OnSessionBegin()
 	if (world == nullptr) { return; }
 	BoundaryCrossed = false;
 	StillOutsideBoundary = false;
+	PicoCheckBoundary = false;
 	StationaryPoints.Add(FVector(75, 50, 0));
 	StationaryPoints.Add(FVector(75, -70, 0));
 	StationaryPoints.Add(FVector(-65, -70, 0));
@@ -65,11 +69,28 @@ void UBoundaryEvent::EndInterval()
 {
 	auto cognitive = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 
+#ifdef INCLUDE_PICO_PLUGIN
+	bool isPicoTriggered = false;
+	float PicoClosestDistance = 0;
+	FVector PicoClosestPoint;
+	FVector PicoClosestPointNormal;
+	UPICOXRHMDFunctionLibrary::PXR_BoundaryTestNode(EPICOXRNodeType::Head, EPICOXRBoundaryType::PlayArea, isPicoTriggered, PicoClosestDistance, PicoClosestPoint, PicoClosestPointNormal);
+	if (!PicoCheckBoundary && isPicoTriggered)
+	{
+		PicoCheckBoundary = true;
+		cognitive->customEventRecorder->Send("c3d.user.exited.boundary");
+	}
+	else if (PicoCheckBoundary && !isPicoTriggered)
+	{
+		PicoCheckBoundary = false;
+	}
+#else
 	if (BoundaryCrossed && !StillOutsideBoundary)
 	{
 		cognitive->customEventRecorder->Send("c3d.user.exited.boundary");
 		StillOutsideBoundary = true;
 	}
+#endif
 }
 
 void UBoundaryEvent::OnSessionEnd()
