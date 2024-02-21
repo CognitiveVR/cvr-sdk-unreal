@@ -1063,6 +1063,19 @@ bool FAnalyticsProviderCognitiveVR::TryGetHMDPose(FRotator& HMDRotation, FVector
 
 bool FAnalyticsProviderCognitiveVR::TryGetHMDWornState(EHMDWornState::Type& WornState)
 {
+#ifdef INCLUDE_PICO_PLUGIN
+	WornState = UPICOXRHMDFunctionLibrary::PXR_GetHMDWornState();
+	if (WornState == EHMDWornState::Worn)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+
+#endif
+
 	WornState = UHeadMountedDisplayFunctionLibrary::GetHMDWornState();
 
 	if (WornState == EHMDWornState::Worn)
