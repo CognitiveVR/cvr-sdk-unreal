@@ -1,4 +1,5 @@
 #include "CognitiveVR/Private/HMDHeight.h"
+#include "HeadMountedDisplayTypes.h"
 
 UHMDHeight::UHMDHeight()
 {

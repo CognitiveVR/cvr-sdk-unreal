@@ -17,6 +17,7 @@
 #include "Misc/MessageDialog.h"
 #endif
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "HeadMountedDisplayTypes.h"
 IMPLEMENT_MODULE(FAnalyticsCognitiveVR, CognitiveVR);
 
 bool FAnalyticsProviderCognitiveVR::bHasSessionStarted = false;
@@ -270,8 +271,8 @@ bool FAnalyticsProviderCognitiveVR::StartSession(const TArray<FAnalyticsEventAtt
 		CognitiveLog::Error("FAnalyticsProviderCognitiveVR::StartSession World not set. Are you missing a Cognitive Actor in your level?");
 		return false;
 	}
-
-	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
+	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "Analytics", "ApiKey", false);
 	AttributionKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "AttributionKey", false);
 
 	FString ValueReceived;
@@ -1059,6 +1060,32 @@ bool FAnalyticsProviderCognitiveVR::TryGetHMDPose(FRotator& HMDRotation, FVector
 #endif
 
 }
+
+bool FAnalyticsProviderCognitiveVR::TryGetHMDWornState(EHMDWornState::Type& WornState)
+{
+#ifdef INCLUDE_PICO_PLUGIN
+	WornState = UPICOXRHMDFunctionLibrary::PXR_GetHMDWornState();
+	if (WornState == EHMDWornState::Worn)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+
+#endif
+
+	WornState = UHeadMountedDisplayFunctionLibrary::GetHMDWornState();
+
+	if (WornState == EHMDWornState::Worn)
+	{
+		return true;
+	}
+	return false;
+}
+
+
 
 bool FAnalyticsProviderCognitiveVR::IsPointInPolygon4(TArray<FVector> polygon, FVector testPoint)
 {
