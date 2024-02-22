@@ -188,6 +188,9 @@ void UDynamicObject::BeginPlay()
 	cogProvider->OnSessionBegin.AddDynamic(this, &UDynamicObject::Initialize);
 	cogProvider->OnPostSessionEnd.AddDynamic(this, &UDynamicObject::OnPostSessionEnd);
 	cogProvider->OnPreSessionEnd.AddDynamic(this, &UDynamicObject::OnPreSessionEnd);
+
+
+	PreviousRotation = GetOwner()->GetActorRotation();
 }
 
 void UDynamicObject::OnPreSessionEnd()
@@ -221,7 +224,7 @@ void UDynamicObject::Initialize()
 
 	//scene component
 	LastPosition = GetAttachParent()->GetComponentLocation();
-	LastForward = GetAttachParent()->GetComponentTransform().TransformVector(FVector::ForwardVector);
+	LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
 	LastScale = FVector(1, 1, 1);
 
 	if (IsController)
@@ -355,12 +358,12 @@ void UDynamicObject::UpdateSyncWithPlayer()
 	TSharedPtr<FAnalyticsProviderCognitiveVR> cogProvider = FAnalyticsCognitiveVR::Get().GetCognitiveVRProvider().Pin();
 	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
-	FVector currentForward = GetForwardVector();
-
-	float dotRot = FVector::DotProduct(LastForward, currentForward);
-
-	float actualDegrees = FMath::Acos(FMath::Clamp<float>(dotRot, -1.0, 1.0)) * 57.29578;
-
+	//rotation angle to degrees
+	auto parentRotator = GetAttachParent()->GetComponentRotation();
+	float quatDot = parentRotator.Quaternion() | LastRotation;
+	quatDot = FMath::Abs(quatDot);
+	quatDot = FMath::Min(quatDot, 1.0f);
+	float quatDegrees = FMath::RadiansToDegrees(FMath::Acos(quatDot)) * 2;
 	bool hasScaleChanged = false;
 
 	if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
@@ -374,7 +377,7 @@ void UDynamicObject::UpdateSyncWithPlayer()
 		{
 			//moved
 		}
-		else if (actualDegrees > RotationThreshold) //rotator stuff
+		else if (quatDegrees > RotationThreshold) //rotator stuff
 		{
 			//rotated
 		}
@@ -387,7 +390,7 @@ void UDynamicObject::UpdateSyncWithPlayer()
 
 	//scene component
 	LastPosition = GetAttachParent()->GetComponentLocation();
-	LastForward = currentForward;
+	LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
 	if (hasScaleChanged)
 	{
 		LastScale = GetAttachParent()->GetComponentScale();
@@ -413,12 +416,12 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 	{
 		currentTime -= UpdateInterval;
 
-		FVector currentForward = GetForwardVector();
-		
-		float dotRot = FVector::DotProduct(LastForward, currentForward);
-
-		float actualDegrees = FMath::Acos(FMath::Clamp<float>(dotRot, -1.0, 1.0)) * 57.29578;
-
+		//rotation angle to degrees
+		auto parentRotator = GetAttachParent()->GetComponentRotation();
+		float quatDot = parentRotator.Quaternion() | LastRotation;
+		quatDot = FMath::Abs(quatDot);
+		quatDot = FMath::Min(quatDot,1.0f);
+		float quatDegrees = FMath::RadiansToDegrees(FMath::Acos(quatDot)) * 2;
 		bool hasScaleChanged = false;
 
 		if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
@@ -432,7 +435,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 			{
 				//moved
 			}
-			else if (actualDegrees > RotationThreshold) //rotator stuff
+			else if (quatDegrees > RotationThreshold) //rotator stuff
 			{
 				//rotated
 			}
@@ -445,7 +448,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 		//scene component
 		LastPosition = GetAttachParent()->GetComponentLocation();
-		LastForward = currentForward;
+		LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
 		if (hasScaleChanged)
 		{
 			LastScale = GetAttachParent()->GetComponentScale();
