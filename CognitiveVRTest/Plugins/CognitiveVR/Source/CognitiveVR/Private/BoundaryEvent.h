@@ -40,4 +40,6 @@ private:
 
 	bool BoundaryCrossed;
 	bool StillOutsideBoundary;
+
+	bool PicoCheckBoundary;
 };

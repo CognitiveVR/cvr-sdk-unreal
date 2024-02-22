@@ -959,7 +959,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FSt
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetContentAsString(objectManifest);
 
-	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestCompleted);
+	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestIdsCompleted);
 
 	HttpRequest->ProcessRequest();
 
@@ -967,6 +967,30 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FSt
 }
 
 void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	WizardUploading = false;
+	if (Response.Get() == NULL) //likely no aggregation manifest to upload. no request, no response
+	{
+		GetDynamicsManifest();
+		return;
+	}
+
+	if (bWasSuccessful && Response->GetResponseCode() < 300) //successfully uploaded
+	{
+		GetDynamicsManifest();
+		WizardUploadError = FString::FromInt(Response->GetResponseCode());
+		WizardUploadResponseCode = Response->GetResponseCode();
+		ShowNotification(TEXT("Dynamic Manifest Uploaded Successfully"));
+	}
+	else //upload failed
+	{
+		WizardUploadError = FString("FCognitiveEditorTools::OnUploadManifestCompleted response code ") + FString::FromInt(Response->GetResponseCode());
+		WizardUploadResponseCode = Response->GetResponseCode();
+		GLog->Log("FCognitiveEditorTools::OnUploadManifestCompleted response code " + FString::FromInt(Response->GetResponseCode()));
+	}
+}
+
+void FCognitiveEditorTools::OnUploadManifestIdsCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	WizardUploading = false;
 	if (Response.Get() == NULL) //likely no aggregation manifest to upload. no request, no response
@@ -1293,7 +1317,8 @@ FReply FCognitiveEditorTools::SaveScreenshotToFile()
 	FString dir = BaseExportDirectory + "/" + GetCurrentSceneName() + "/screenshot/";
 	if (VerifyOrCreateDirectory(dir))
 	{
-		FScreenshotRequest::RequestScreenshot(dir + "screenshot", false, false);
+		FString cmd = "HighResShot filename=" + dir + "screenshot 1920x1080";
+		GEngine->Exec(nullptr, *cmd);
 	}
 	else
 	{
@@ -1976,9 +2001,9 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 
 #if ENGINE_MAJOR_VERSION == 4
 	Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
-#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 0 || ENGINE_MINOR_VERSION == 1)
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 0 
 	Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
-#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3 || ENGINE_MINOR_VERSION == 1)
 	Filter.ClassPaths.Add(UDynamicIdPoolAsset::StaticClass()->GetClassPathName());
 #endif
 
@@ -2854,11 +2879,13 @@ void FCognitiveEditorTools::ShowNotification(FString Message, bool bSuccessful)
 	NotifyInfo.FadeOutDuration = 7.f;
 	if (bSuccessful)
 	{
-#if ENGINE_MAJOR_VERSION == 4 
+
+#if ENGINE_MAJOR_VERSION == 4
 		const FSlateBrush* NotifIcon = FEditorStyle::GetBrush("SettingsEditor.GoodIcon");
 #elif ENGINE_MAJOR_VERSION == 5
 		const FSlateBrush* NotifIcon = FAppStyle::GetBrush("SettingsEditor.GoodIcon");
 #endif
+
 		NotifyInfo.Image = NotifIcon;
 	}
 	

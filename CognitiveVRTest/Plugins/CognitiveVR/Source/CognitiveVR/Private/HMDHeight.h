@@ -29,4 +29,6 @@ class UHMDHeight : public UActorComponent
 		int32 NumberOfSamples = 60;
 		int32 IntermediateSampleCount = 10;
 		float GetMedianHeight();
+		//
+		EHMDWornState::Type WornState = EHMDWornState::NotWorn;
 };
