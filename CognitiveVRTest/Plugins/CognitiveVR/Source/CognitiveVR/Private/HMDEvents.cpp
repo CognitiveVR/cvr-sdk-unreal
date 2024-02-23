@@ -63,11 +63,6 @@ void UHMDEvents::EndInterval()
 			}
 			WornState = currentWornState;
 		}
-
-		if (UGameplayStatics::IsGamePaused(GWorld))
-		{
-			cognitive->customEventRecorder->Send("c3d.pause");
-		}
 	}
 }
 
