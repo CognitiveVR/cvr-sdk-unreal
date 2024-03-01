@@ -6,7 +6,9 @@
 
 Network::Network()
 {
-	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+	//Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	Http = &FHttpModule::Get();
 	hasErrorResponse = false;
@@ -39,7 +41,7 @@ void Network::NetworkCall(FString suburl, FString contents, bool copyDataToCache
 
 	//json to scene endpoint
 	FString url = "https://"+ Gateway +"/v"+FString::FromInt(0)+"/"+suburl+"/"+cog->GetCurrentSceneId() + "?version=" + cog->GetCurrentSceneVersionNumber();
-
+	//UE_LOG(LogTemp, Warning, TEXT("network url: %s"), *url);
 	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
 
 	auto HttpRequest = Http->CreateRequest();

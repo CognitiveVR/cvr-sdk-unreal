@@ -286,11 +286,11 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 
 	if (ApplicationKey.Len() == 0)
 	{
-//#if WITH_EDITOR
+#if WITH_EDITOR
 		//FMessageDialog::Open(EAppMsgType::Ok, FText::FromString("The Application Key is Invalid, this session will not be recorded on the dashboard. Please restart the editor."));
-//#endif
+#endif
 		CognitiveLog::Error("FAnalyticsProviderCognitive3D::StartSession ApplicationKey is invalid");
-		UE_LOG(LogTemp, Warning, TEXT("App key is %s"), *ApplicationKey);
+		//UE_LOG(LogTemp, Warning, TEXT("App key is %s"), *ApplicationKey);
 		return false;
 	}
 
