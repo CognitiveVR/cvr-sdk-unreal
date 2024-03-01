@@ -85,7 +85,7 @@ def insertline(file, targetline, insertline):
 	return;
 
 def getpluginversion():
-	plugin = open(cwd+"/Plugins/CognitiveVR/CognitiveVR.uplugin","r")
+	plugin = open(cwd+"/Plugins/Cognitive3D/Cognitive3D.uplugin","r")
 	pluginreadstring = plugin.read()
 	print("=============================================get plugin version")
 	for line in pluginreadstring.splitlines():
@@ -96,23 +96,23 @@ def getpluginversion():
 
 
 #copy plugin folder to temp directory
-print(cwd+"/CognitiveVRTest/Plugins/")
-print(cwd+"/cognitiveVR_UnrealSDK_Dist/")
+print(cwd+"/Cognitive3DTest/Plugins/")
+print(cwd+"/cognitive3D_UnrealSDK_Dist/")
 
 if os.path.exists(cwd+"/Plugins/"):
 	shutil.rmtree(cwd+"/Plugins/")
 	print("delete " + cwd+"/Plugins/")
 
-shutil.copytree(cwd+"/CognitiveVRTest/Plugins/",cwd+"/Plugins/")
+shutil.copytree(cwd+"/Cognitive3DTest/Plugins/",cwd+"/Plugins/")
 
 #delete binaries and intermediate if present
-if os.path.exists(cwd+"/Plugins/CognitiveVR/Binaries/"):
-	shutil.rmtree(cwd+"/Plugins/CognitiveVR/Binaries/")
-	print("delete " + cwd+"/Plugins/CognitiveVR/Binaries/")
+if os.path.exists(cwd+"/Plugins/Cognitive3D/Binaries/"):
+	shutil.rmtree(cwd+"/Plugins/Cognitive3D/Binaries/")
+	print("delete " + cwd+"/Plugins/Cognitive3D/Binaries/")
 	
-if os.path.exists(cwd+"/Plugins/CognitiveVR/Intermediate/"):
-	shutil.rmtree(cwd+"/Plugins/CognitiveVR/Intermediate/")
-	print("delete " + cwd+"/Plugins/CognitiveVR/Intermediate/")
+if os.path.exists(cwd+"/Plugins/Cognitive3D/Intermediate/"):
+	shutil.rmtree(cwd+"/Plugins/Cognitive3D/Intermediate/")
+	print("delete " + cwd+"/Plugins/Cognitive3D/Intermediate/")
 
 #get the version
 version = getpluginversion()
