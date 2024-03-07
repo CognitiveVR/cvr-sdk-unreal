@@ -6,20 +6,20 @@
 
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "TimerManager.h"
-#include "Cognitive3D/Private/util/util.h"
+#include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "CoreMinimal.h"
 
-class FAnalyticsProviderCognitive3D;
+class IAnalyticsProviderCognitive3D;
 class UCognitive3DBlueprints;
 
 
-	class COGNITIVE3D_API USensors
+	class COGNITIVE3D_API FSensors
 	{
-		friend class FAnalyticsProviderCognitive3D;
-		friend class FAnalyticsCognitive3D;
+		friend class IAnalyticsProviderCognitive3D;
+		friend class IAnalyticsCognitive3D;
 
 	private:
-		TSharedPtr<FAnalyticsProviderCognitive3D> cog;
+		TSharedPtr<IAnalyticsProviderCognitive3D> cog;
 
 		//TODO merge these maps
 		//Q: why is a map of string values instead of floats? A: format immediately to "[time,value]" instead of holding the 2 values
@@ -43,7 +43,7 @@ class UCognitive3DBlueprints;
 		UFUNCTION()
 		void PostSessionEnd();
 
-		USensors();
+		FSensors();
 
 	public:
 		

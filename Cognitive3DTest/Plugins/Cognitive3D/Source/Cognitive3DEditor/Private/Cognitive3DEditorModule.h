@@ -8,17 +8,17 @@
 #include "SDockTab.h"
 #include "Editor/WorkspaceMenuStructure/Public/WorkspaceMenuStructureModule.h"
 #include "Editor/EditorStyle/Public/EditorStyleSet.h"
-#include "SSceneSetupWidget.h"
-#include "SProjectSetupWidget.h"
+#include "SceneSetupWidget.h"
+#include "ProjectSetupWidget.h"
 #include "DynamicObjectManagerWidget.h"
 #include "WorkspaceMenuStructure.h"
-#include "FCognitiveSettingsCustomization.h"
+#include "CognitiveSettingsCustomization.h"
 #include "Containers/Ticker.h"
 #include "DynamicComponentDetails.h"
 #include "DynamicIdPoolAssetDetails.h"
 #include "DynamicIdPoolAssetActions.h"
 
-class FCognitive3DEditorModule : public IModuleInterface, IHasMenuExtensibility, IHasToolBarExtensibility
+class ICognitive3DEditorModule : public IModuleInterface, IHasMenuExtensibility, IHasToolBarExtensibility
 {
 public:
 	static void SpawnCognitiveSceneSetupTab();
@@ -30,9 +30,9 @@ public:
 	static void CloseSceneSetupWindow();
 	static void CloseDynamicObjectWindow();
 
-	static inline FCognitive3DEditorModule& Get()
+	static inline ICognitive3DEditorModule& Get()
 	{
-		return FModuleManager::LoadModuleChecked< FCognitive3DEditorModule >("Cognitive3DEditor");
+		return FModuleManager::LoadModuleChecked< ICognitive3DEditorModule >("Cognitive3DEditor");
 	}
 
 private:

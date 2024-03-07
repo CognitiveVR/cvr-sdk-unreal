@@ -19,32 +19,32 @@
 #include "Cognitive3D/Private/FixationRecorder.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "HeadMountedDisplayTypes.h"
-#include "Cognitive3D/Private/util/util.h"
-#include "Cognitive3D/Private/util/cognitive_log.h"
-#include "Cognitive3D/Private/network/network.h"
-#include "Cognitive3D/Private/api/customeventrecorder.h"
+#include "Cognitive3D/Private/C3DUtil/Util.h"
+#include "Cognitive3D/Private/C3DUtil/Cognitive_Log.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
+#include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
 #include "Cognitive3D/Public/CustomEvent.h"
-#include "Cognitive3D/Private/api/sensor.h"
+#include "Cognitive3D/Private/C3DApi/Sensor.h"
 #include "Cognitive3D/Private/LocalCache.h"
 #include "Engine/Engine.h"
 #include "Misc/Base64.h"
-#include "Cognitive3D/Private/api/FixationDataRecorder.h"
-#include "Cognitive3D/Private/api/GazeDataRecorder.h"
+#include "Cognitive3D/Private/C3DApi/FixationDataRecorder.h"
+#include "Cognitive3D/Private/C3DApi/GazeDataRecorder.h"
 #include "Misc/PackageName.h"//to get friendly name of streaming levels
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 	//everything here is referenced from headers. why is this being forward declared?
-	class Network;
-	class UCustomEventRecorder;
+	class FNetwork;
+	class FCustomEventRecorder;
 	class Cognitive3DResponse;
-	class USensors;
+	class FSensors;
 	class ExitPoll;
 	class LocalCache;
 	class UDynamicObject;
-	class UGazeDataRecorder;
-	class UFixationDataRecorder;
+	class FGazeDataRecorder;
+	class FFixationDataRecorder;
 
-	class COGNITIVE3D_API FAnalyticsProviderCognitive3D : public IAnalyticsProvider
+	class COGNITIVE3D_API IAnalyticsProviderCognitive3D : public IAnalyticsProvider
 	{
 		/** Unique Id representing the session the analytics are recording for */
 		FString SessionId = "";
@@ -66,8 +66,8 @@
 		double SceneStartTime = 0;
 
 	public:
-		FAnalyticsProviderCognitive3D();
-		virtual ~FAnalyticsProviderCognitive3D();
+		IAnalyticsProviderCognitive3D();
+		virtual ~IAnalyticsProviderCognitive3D();
 
 		UPROPERTY(BlueprintAssignable, Category = "Cognitive3D Analytics")
 			FOnCognitiveSessionBegin OnSessionBegin;
@@ -117,12 +117,12 @@
 		virtual void RecordProgress(const FString& ProgressType, const FString& ProgressHierarchy, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		
 		//consider making these TSharedPtr
-		UCustomEventRecorder* customEventRecorder = nullptr;
-		USensors* sensors = nullptr;
-		UDynamicObjectManager* dynamicObjectManager = nullptr;
-		UGazeDataRecorder* gazeDataRecorder = nullptr;
-		UFixationDataRecorder* fixationDataRecorder = nullptr;
-		TSharedPtr<Network> network;
+		FCustomEventRecorder* customEventRecorder = nullptr;
+		FSensors* sensors = nullptr;
+		FDynamicObjectManager* dynamicObjectManager = nullptr;
+		FGazeDataRecorder* gazeDataRecorder = nullptr;
+		FFixationDataRecorder* fixationDataRecorder = nullptr;
+		TSharedPtr<FNetwork> network;
 		TSharedPtr<ExitPoll> exitpoll;
 		TSharedPtr<LocalCache> localCache;
 

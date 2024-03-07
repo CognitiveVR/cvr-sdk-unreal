@@ -14,10 +14,10 @@ ExitPoll::ExitPoll()
 
 void ExitPoll::MakeQuestionSetRequest(const FString Hook, FCognitiveExitPollResponse& response)
 {
-	auto cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();
+	auto cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider();
 	if (!cogProvider.IsValid() || !cogProvider.Pin()->HasStartedSession())
 	{
-		CognitiveLog::Error("ExitPoll::MakeQuestionSetRequest could not get provider!");
+		FCognitiveLog::Error("ExitPoll::MakeQuestionSetRequest could not get provider!");
 		return;
 	}
 	lastResponse = response;
@@ -41,7 +41,7 @@ void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
 	currentQuestionSet = FExitPollQuestionSet();
 
 	//FString UE4Str = Response->GetContentAsString();
-	CognitiveLog::Info("ExitPoll::OnResponseReceived - Response: " + ResponseContent);
+	FCognitiveLog::Info("ExitPoll::OnResponseReceived - Response: " + ResponseContent);
 
 	//Cognitive3DResponse response = Network::ParseResponse(content);
 
@@ -52,7 +52,7 @@ void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
 	{
 		if (!jobject->HasField(TEXT("customerId")))
 		{
-			CognitiveLog::Info("ExitPoll::OnResponseReceivedAsync - no customerId in response - fail");
+			FCognitiveLog::Info("ExitPoll::OnResponseReceivedAsync - no customerId in response - fail");
 			if (lastResponse.IsBound())
 			{
 				lastResponse.Execute(FExitPollQuestionSet());
@@ -147,10 +147,10 @@ FExitPollQuestionSet ExitPoll::GetCurrentQuestionSet()
 
 void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 {
-	auto cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();
+	auto cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider();
 	if (!cogProvider.IsValid() || !cogProvider.Pin()->HasStartedSession())
 	{
-		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		FCognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	cogProvider.Pin()->network->NetworkExitPollPostResponse(currentQuestionSet, Responses);
@@ -159,7 +159,7 @@ void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 
 void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 {
-	auto provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();
+	auto provider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider();
 	if (!provider.IsValid())
 	{
 		return;

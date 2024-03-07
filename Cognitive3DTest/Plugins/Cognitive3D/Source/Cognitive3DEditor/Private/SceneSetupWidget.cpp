@@ -1,5 +1,5 @@
 
-#include "SSceneSetupWidget.h"
+#include "SceneSetupWidget.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
@@ -1138,7 +1138,11 @@ FString SSceneSetupWidget::ConstructDashboardURL()
 
 FReply SSceneSetupWidget::TakeScreenshot()
 {
+
+	UE_LOG(LogTemp, Warning, TEXT("taking screenshot"));
+
 	FCognitiveEditorTools::GetInstance()->SaveScreenshotToFile();
+
 
 	FViewport* CurrentViewport = GEditor->GetActiveViewport();
 	auto size = CurrentViewport->GetSizeXY();
@@ -1162,6 +1166,8 @@ FReply SSceneSetupWidget::TakeScreenshot()
 		ScreenshotHeight = maxPixelSize;
 		ScreenshotWidth = maxPixelSize;
 	}
+
+	//where its loaded
 	GenerateScreenshotBrush();
 	return FReply::Handled();
 }
@@ -1205,6 +1211,7 @@ FReply SSceneSetupWidget::NextPage()
 		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
 		TakeScreenshot();
+		FCognitiveEditorTools::GetInstance()->SaveScreenshotToFile();
 	}
 	else if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
 	{
@@ -1223,7 +1230,7 @@ FReply SSceneSetupWidget::NextPage()
 	}
 	if (CurrentPageEnum == ESceneSetupPage::Complete)
 	{
-		FCognitive3DEditorModule::CloseSceneSetupWindow();
+		ICognitive3DEditorModule::CloseSceneSetupWindow();
 	}
 
 	return FReply::Handled();
@@ -1488,7 +1495,7 @@ void SSceneSetupWidget::SpawnCognitive3DActor()
 
 FReply SSceneSetupWidget::OpenProjectSetupWindow()
 {
-	FCognitive3DEditorModule::SpawnCognitiveProjectSetupTab();
+	ICognitive3DEditorModule::SpawnCognitiveProjectSetupTab();
 	return FReply::Handled();
 }
 

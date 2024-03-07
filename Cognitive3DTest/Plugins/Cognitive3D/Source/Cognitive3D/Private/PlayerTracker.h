@@ -5,7 +5,7 @@
 #include "C3DCommonTypes.h"
 #include "Components/SceneComponent.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
-#include "Cognitive3D/Private/util/util.h"
+#include "Cognitive3D/Private/C3DUtil/Util.h"
 //#include "Engine/SceneCapture2D.h"
 //#include "Engine/Texture.h"
 //#include "Engine/Texture2D.h"
@@ -46,10 +46,10 @@
 #include "Public/Eye/WaveVREyeManager.h"
 #endif
 #include "DrawDebugHelpers.h"
-#include "Cognitive3D/Private/api/GazeDataRecorder.h"
+#include "Cognitive3D/Private/C3DApi/GazeDataRecorder.h"
 #include "PlayerTracker.generated.h"
 
-class FAnalyticsProviderCognitive3D;
+class IAnalyticsProviderCognitive3D;
 class UCognitive3DBlueprints;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -59,7 +59,7 @@ class COGNITIVE3D_API UPlayerTracker : public UActorComponent
 
 private:
 	float currentTime = 0;
-	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
+	TSharedPtr<IAnalyticsProviderCognitive3D> cog;
 
 	FVector GetWorldGazeEnd(FVector start);
 	FVector LastDirection;

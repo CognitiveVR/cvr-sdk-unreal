@@ -11,7 +11,7 @@ void UArmLength::BeginPlay()
 	if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
 
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		cognitive->OnSessionBegin.AddDynamic(this, &UArmLength::OnSessionBegin);
@@ -34,7 +34,7 @@ void UArmLength::OnSessionBegin()
 
 void UArmLength::EndInterval()
 {
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		FVector hmdpos;
@@ -102,7 +102,7 @@ void UArmLength::OnSessionEnd()
 
 void UArmLength::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		cognitive->OnSessionBegin.RemoveDynamic(this, &UArmLength::OnSessionBegin);

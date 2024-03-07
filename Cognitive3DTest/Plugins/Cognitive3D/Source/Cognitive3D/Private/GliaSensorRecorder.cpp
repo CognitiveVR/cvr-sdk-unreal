@@ -17,7 +17,7 @@ void UGliaSensorRecorder::BeginPlay()
 	Super::BeginPlay();
 
 	//listen for event or find controller immediately if session already started
-	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cog->HasStartedSession())
 	{
 		StartListenForTimers();
@@ -44,7 +44,7 @@ void UGliaSensorRecorder::StopListenForTimers()
 
 void UGliaSensorRecorder::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	cogProvider->OnSessionBegin.RemoveDynamic(this, &UGliaSensorRecorder::StartListenForTimers);
 	cogProvider->OnPreSessionEnd.RemoveDynamic(this, &UGliaSensorRecorder::StopListenForTimers);
 	StopListenForTimers();

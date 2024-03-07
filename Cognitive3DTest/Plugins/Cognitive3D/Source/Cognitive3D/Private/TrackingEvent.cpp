@@ -11,7 +11,7 @@ void UTrackingEvent::BeginPlay()
 	if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
 
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		cognitive->OnSessionBegin.AddDynamic(this, &UTrackingEvent::OnSessionBegin);
@@ -44,7 +44,7 @@ void UTrackingEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	{
 		return;
 	}
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cognitive.IsValid())
 	{
 		return;
@@ -61,7 +61,7 @@ void UTrackingEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		if (IsTrackingRightController && data.TrackingStatus == ETrackingStatus::NotTracked)
 		{
 			//send an event
-			TWeakPtr<FAnalyticsProviderCognitive3D> provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();
+			TWeakPtr<IAnalyticsProviderCognitive3D> provider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider();
 			if (provider.IsValid())
 			{
 				TWeakObjectPtr<UDynamicObject> object = cognitive->GetControllerDynamic(false);
@@ -90,7 +90,7 @@ void UTrackingEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		if (IsTrackingLeftController && data.TrackingStatus == ETrackingStatus::NotTracked)
 		{
 			//send an event
-			TWeakPtr<FAnalyticsProviderCognitive3D> provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();
+			TWeakPtr<IAnalyticsProviderCognitive3D> provider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider();
 			if (provider.IsValid())
 			{
 				TWeakObjectPtr<UDynamicObject> object = cognitive->GetControllerDynamic(false);

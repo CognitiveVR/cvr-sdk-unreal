@@ -5,7 +5,7 @@
 #include "C3DCommonTypes.h"
 #include "Components/SceneComponent.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
-#include "Cognitive3D/Private/util/util.h"
+#include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "Cognitive3D/Public/DynamicObject.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Runtime/HeadMountedDisplay/Public/IXRTrackingSystem.h"
@@ -17,7 +17,7 @@
 #include "DrawDebugHelpers.h"
 #include "GliaSensorRecorder.generated.h"
 
-class FAnalyticsProviderCognitive3D;
+class IAnalyticsProviderCognitive3D;
 class UCognitive3DBlueprints;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -38,7 +38,7 @@ private:
 	void TickSensors100MS();
 #endif
 
-	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
+	TSharedPtr<IAnalyticsProviderCognitive3D> cog;
 	UFUNCTION()
 	void StartListenForTimers();
 	UFUNCTION()

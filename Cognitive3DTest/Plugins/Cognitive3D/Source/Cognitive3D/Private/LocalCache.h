@@ -6,7 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "Interfaces/IAnalyticsProviderModule.h"
-#include "Cognitive3D/Private/util/cognitive_log.h"
+#include "Cognitive3D/Private/C3DUtil/Cognitive_Log.h"
 //#include "Cognitive3D/Public/Cognitive3D.h"
 #include "Json.h"
 #include "Misc/FileHelper.h"

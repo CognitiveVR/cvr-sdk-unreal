@@ -2114,7 +2114,7 @@ bool FCognitiveEditorTools::DuplicateDynamicIdsInScene() const
 void FCognitiveEditorTools::OnApplicationKeyChanged(const FText& Text)
 {
 	ApplicationKey = Text.ToString();
-	//FAnalyticsCognitive3D::GetCognitive3DProvider()->APIKey = APIKey;
+	//IAnalyticsCognitive3D::GetCognitive3DProvider()->APIKey = APIKey;
 	//FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
 }
 
@@ -2298,7 +2298,7 @@ void FCognitiveEditorTools::SceneVersionRequest(FEditorSceneData data)
 	HttpRequest->SetURL(GetSceneVersion(data.Id));
 
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
-	//HttpRequest->SetHeader("Authorization", TEXT("Data " + FAnalyticsCognitive3D::Get().EditorAuthToken));
+	//HttpRequest->SetHeader("Authorization", TEXT("Data " + IAnalyticsCognitive3D::Get().EditorAuthToken));
 	FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetHeader("Content-Type", "application/json");

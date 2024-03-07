@@ -20,7 +20,7 @@
 
 //custom details inspector for dynamic object component
 
-class UDynamicIdPoolAssetDetails : public IDetailCustomization
+class IDynamicIdPoolAssetDetails : public IDetailCustomization
 {
 public:
 	static TSharedRef<IDetailCustomization> MakeInstance();

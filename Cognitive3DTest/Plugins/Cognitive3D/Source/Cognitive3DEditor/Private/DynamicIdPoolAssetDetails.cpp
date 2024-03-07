@@ -4,13 +4,13 @@
 
 #include "DynamicIdPoolAssetDetails.h"
 
-TSharedRef<IDetailCustomization> UDynamicIdPoolAssetDetails::MakeInstance()
+TSharedRef<IDetailCustomization> IDynamicIdPoolAssetDetails::MakeInstance()
 {
 	FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
-	return MakeShareable( new UDynamicIdPoolAssetDetails);
+	return MakeShareable( new IDynamicIdPoolAssetDetails);
 }
 
-void UDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLayout)
+void IDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLayout)
 {
 	if (SelectedTextAsset == NULL)
 	{
@@ -40,7 +40,7 @@ void UDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLa
 	[
 		SNew(SBorder)
 		.BorderImage(FEditorStyle::GetBrush("ToolPanel.LightGroupBorder"))
-		.Visibility_Raw(this, &UDynamicIdPoolAssetDetails::HasMeshBeenExported)
+		.Visibility_Raw(this, &IDynamicIdPoolAssetDetails::HasMeshBeenExported)
 		.Padding(8.0f)
 		[
 			SNew(SHorizontalBox)
@@ -49,7 +49,7 @@ void UDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLa
 			.VAlign(VAlign_Center)
 			[
 				SNew(SImage)
-				.Visibility_Raw(this, &UDynamicIdPoolAssetDetails::HasMeshBeenExported)
+				.Visibility_Raw(this, &IDynamicIdPoolAssetDetails::HasMeshBeenExported)
 				.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
 			]
 				// Notice
@@ -59,7 +59,7 @@ void UDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLa
 			[
 				SNew(STextBlock)
 				.ColorAndOpacity(FLinearColor::Black)
-				.Visibility_Raw(this, &UDynamicIdPoolAssetDetails::HasMeshBeenExported)
+				.Visibility_Raw(this, &IDynamicIdPoolAssetDetails::HasMeshBeenExported)
 				.AutoWrapText(true)
 				.Text(FText::FromString("Check that the Mesh has been exported.\nThis window will only upload Ids for objects for aggregation.\nA mesh should already by uploaded to visualize these objects on the dashboard."))
 			]
@@ -74,10 +74,10 @@ void UDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLa
 	[
 		SNew(SButton)
 		.ContentPadding(1)
-		.IsEnabled_Raw(this, &UDynamicIdPoolAssetDetails::CanUploadIds)
+		.IsEnabled_Raw(this, &IDynamicIdPoolAssetDetails::CanUploadIds)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
-		.OnClicked(this, &UDynamicIdPoolAssetDetails::Upload)
+		.OnClicked(this, &IDynamicIdPoolAssetDetails::Upload)
 		[
 			SNew( STextBlock )
 			.Font( IDetailLayoutBuilder::GetDetailFont() )
@@ -95,7 +95,7 @@ void UDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLa
 		.ContentPadding(1)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
-		.OnClicked(this, &UDynamicIdPoolAssetDetails::GenerateId)
+		.OnClicked(this, &IDynamicIdPoolAssetDetails::GenerateId)
 		[
 			SNew( STextBlock )
 			.Font( IDetailLayoutBuilder::GetDetailFont() )
@@ -104,19 +104,19 @@ void UDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLa
 	];
 }
 
-FReply UDynamicIdPoolAssetDetails::Upload()
+FReply IDynamicIdPoolAssetDetails::Upload()
 {
 	FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(SelectedTextAsset->Ids, SelectedTextAsset->MeshName, SelectedTextAsset->PrefabName);
 	return FReply::Handled();
 }
 
-FReply UDynamicIdPoolAssetDetails::GenerateId()
+FReply IDynamicIdPoolAssetDetails::GenerateId()
 {
 	SelectedTextAsset->GenerateNewId();
 	return FReply::Handled();
 }
 
-bool UDynamicIdPoolAssetDetails::CanUploadIds() const
+bool IDynamicIdPoolAssetDetails::CanUploadIds() const
 {
 	//has ids
 	if (SelectedTextAsset->Ids.Num() == 0) { return false; }
@@ -130,7 +130,7 @@ bool UDynamicIdPoolAssetDetails::CanUploadIds() const
 	return data.IsValid();
 }
 
-EVisibility UDynamicIdPoolAssetDetails::HasMeshBeenExported() const
+EVisibility IDynamicIdPoolAssetDetails::HasMeshBeenExported() const
 {
 	if (SelectedTextAsset->MeshName.IsEmpty()) { return EVisibility::Visible; }
 	if (!FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(SelectedTextAsset->MeshName))

@@ -14,11 +14,11 @@
 
 class UCognitive3DSettings;
 
-class FCognitiveSettingsCustomization : public IDetailCustomization
+class ICognitiveSettingsCustomization : public IDetailCustomization
 {
 public:
 
-	static FCognitiveSettingsCustomization* CognitiveSettingsCustomizationInstance;
+	static ICognitiveSettingsCustomization* CognitiveSettingsCustomizationInstance;
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
 
 	static TSharedRef<IDetailCustomization> MakeInstance();

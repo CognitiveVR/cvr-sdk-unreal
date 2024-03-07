@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
-#include "IActiveSessionViewRequired.generated.h"
+#include "ActiveSessionViewRequired.generated.h"
 
 class AActiveSessionView;
 

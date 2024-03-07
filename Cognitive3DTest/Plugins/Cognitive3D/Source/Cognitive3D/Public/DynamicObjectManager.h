@@ -18,10 +18,10 @@
 class UCustomEvent;
 class UCognitive3DBlueprints;
 
-class COGNITIVE3D_API UDynamicObjectManager
+class COGNITIVE3D_API FDynamicObjectManager
 {
-	friend class FAnalyticsProviderCognitive3D;
-	friend class FAnalyticsCognitive3D;
+	friend class IAnalyticsProviderCognitive3D;
+	friend class IAnalyticsCognitive3D;
 
 private:
 	TArray<FDynamicObjectSnapshot> snapshots;
@@ -36,9 +36,9 @@ private:
 	FTimerHandle AutoSendHandle;
 	FString DynamicObjectFileType;
 
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider;
+	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider;
 
-	UDynamicObjectManager();
+	FDynamicObjectManager();
 	UFUNCTION()
 	void OnSessionBegin();
 	UFUNCTION()

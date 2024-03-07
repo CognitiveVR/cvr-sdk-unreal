@@ -5,10 +5,10 @@
 
 #include "Cognitive3D/Public/C3DCommonTypes.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
-#include "Cognitive3D/Private/util/util.h"
+#include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
-#include "Cognitive3D/Private/api/customeventrecorder.h"
-#include "Cognitive3D/Private/api/sensor.h"
+#include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
+#include "Cognitive3D/Private/C3DApi/Sensor.h"
 #include "CustomEvent.generated.h"
 
 class UDynamicObject;
@@ -17,8 +17,8 @@ class UCognitive3DBlueprints;
 UCLASS(BlueprintType)
 class COGNITIVE3D_API UCustomEvent : public UObject
 {
-	friend class UCustomEventRecorder;
-	friend class FAnalyticsProviderCognitive3D;
+	friend class FCustomEventRecorder;
+	friend class IAnalyticsProviderCognitive3D;
 
 	GENERATED_BODY()
 
@@ -32,7 +32,7 @@ private:
 	TMap<FString, float> FloatProperties;
 	TMap<FString, bool> BoolProperties;
 
-	static TSharedPtr<FAnalyticsProviderCognitive3D> cog;
+	static TSharedPtr<IAnalyticsProviderCognitive3D> cog;
 
 public:
 

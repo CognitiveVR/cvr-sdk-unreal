@@ -178,7 +178,7 @@ void UDynamicObject::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cogProvider->HasStartedSession())
 	{
 		Initialize();
@@ -198,7 +198,7 @@ void UDynamicObject::BeginPlay()
 void UDynamicObject::OnPreSessionEnd()
 {
 	CleanupDynamicObject();
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	cogProvider->OnCognitiveInterval.RemoveDynamic(this, &UDynamicObject::UpdateSyncWithPlayer);
 }
 
@@ -215,7 +215,7 @@ void UDynamicObject::Initialize()
 		return;
 	}
 
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	dynamicObjectManager = cogProvider->dynamicObjectManager;
 
 	if (dynamicObjectManager == nullptr) { return; }
@@ -356,7 +356,7 @@ TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
 void UDynamicObject::UpdateSyncWithPlayer()
 {
 	if (dynamicObjectManager == nullptr) { return; }
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	//rotation angle to degrees
@@ -407,7 +407,7 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 	if (!HasInitialized) { return; }
 	if (dynamicObjectManager == nullptr) { return; }
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	if (SyncUpdateWithPlayer){return;}
@@ -677,7 +677,7 @@ void UDynamicObject::CleanupDynamicObject()
 		}
 	}
 
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	cogProvider->OnSessionBegin.RemoveDynamic(this, &UDynamicObject::Initialize);
 	cogProvider->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPostSessionEnd);
 	cogProvider->OnPreSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPreSessionEnd);
@@ -718,7 +718,7 @@ void UDynamicObject::FlushButtons(FControllerInputStateCollection& target)
 	{
 		return;
 	}
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	FDynamicObjectSnapshot snap = MakeSnapshot(false);

@@ -19,7 +19,7 @@ void UHMDEvents::BeginPlay()
 	if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
 
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		cognitive->OnSessionBegin.AddDynamic(this, &UHMDEvents::OnSessionBegin);
@@ -41,7 +41,7 @@ void UHMDEvents::OnSessionBegin()
 
 void UHMDEvents::EndInterval()
 {
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		EHMDWornState::Type currentWornState;

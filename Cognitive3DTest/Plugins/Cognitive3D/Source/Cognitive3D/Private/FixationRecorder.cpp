@@ -18,7 +18,7 @@ void UFixationRecorder::BeginPlay()
 {
 	Super::BeginPlay();
 
-	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 	auto cognitiveActor = ACognitive3DActor::GetCognitive3DActor();
 	if (cognitiveActor != GetOwner())
@@ -585,7 +585,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	{
 		if (controllers.Num() == 0)
 		{
-			CognitiveLog::Info("FixationRecorder::TickComponent - no controllers");
+			FCognitiveLog::Info("FixationRecorder::TickComponent - no controllers");
 			return;
 		}
 
@@ -611,7 +611,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	{
 		if (controllers.Num() == 0)
 		{
-			CognitiveLog::Info("FixationRecorder::TickComponent - no controllers");
+			FCognitiveLog::Info("FixationRecorder::TickComponent - no controllers");
 			return;
 		}
 
@@ -930,7 +930,7 @@ bool UFixationRecorder::TryBeginLocalFixation()
 	if (mostUsedId.IsEmpty())
 	{
 		//most used dynamic object id is none! something is wrong somehow
-		CognitiveLog::Error("UFixationRecorder::TryBeginLocalFixation most used dynamic object is null! should be impossible");
+		FCognitiveLog::Error("UFixationRecorder::TryBeginLocalFixation most used dynamic object is null! should be impossible");
 		return false;
 	}
 

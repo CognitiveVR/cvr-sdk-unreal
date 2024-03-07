@@ -4,7 +4,7 @@
 #include "Cognitive3DBlueprints.h"
 //#include "Private/Cognitive3DPrivatePCH.h"
 
-TSharedPtr<FAnalyticsProviderCognitive3D> UCognitive3DBlueprints::cog;
+TSharedPtr<IAnalyticsProviderCognitive3D> UCognitive3DBlueprints::cog;
 
 void UCognitive3DBlueprints::SendCustomEvent(FString Category, const TArray<FAnalyticsEventAttr>& Attributes)
 {
@@ -30,11 +30,11 @@ void UCognitive3DBlueprints::SendCustomEventDynamic(FString Category, const TArr
 void UCognitive3DBlueprints::SendCustomEventToCore(FString Category, const TArray<FAnalyticsEventAttr>& Attributes, FVector Position, UDynamicObject* dynamic)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::SendCustomEventToCore could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::SendCustomEventToCore could not get provider!");
 		return;
 	}
 	if (!HasSessionStarted()) { return; }
@@ -65,10 +65,10 @@ void UCognitive3DBlueprints::SendCustomEventPosition(FString Category, const TAr
 void UCognitive3DBlueprints::UpdateSessionInt(const FString name, const int32 value)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::UpdateSessionInt could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::UpdateSessionInt could not get provider!");
 		return;
 	}
 	cog->SetSessionProperty(name, value);
@@ -77,10 +77,10 @@ void UCognitive3DBlueprints::UpdateSessionInt(const FString name, const int32 va
 void UCognitive3DBlueprints::UpdateSessionFloat(const FString name, const float value)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::UpdateSessionFloat could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::UpdateSessionFloat could not get provider!");
 		return;
 	}
 	cog->SetSessionProperty(name, value);
@@ -89,10 +89,10 @@ void UCognitive3DBlueprints::UpdateSessionFloat(const FString name, const float 
 void UCognitive3DBlueprints::UpdateSessionString(const FString name, const FString value)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::UpdateSessionString could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::UpdateSessionString could not get provider!");
 		return;
 	}
 	cog->SetSessionProperty(name, value);
@@ -101,10 +101,10 @@ void UCognitive3DBlueprints::UpdateSessionString(const FString name, const FStri
 void UCognitive3DBlueprints::SetParticipantPropertyInt(const FString name, const int32 value)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::SetParticipantPropertyInt could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::SetParticipantPropertyInt could not get provider!");
 		return;
 	}
 	cog->SetParticipantProperty(name, value);
@@ -113,10 +113,10 @@ void UCognitive3DBlueprints::SetParticipantPropertyInt(const FString name, const
 void UCognitive3DBlueprints::SetParticipantPropertyFloat(const FString name, const float value)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::SetParticipantPropertyFloat could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::SetParticipantPropertyFloat could not get provider!");
 		return;
 	}
 	cog->SetParticipantProperty(name, value);
@@ -125,10 +125,10 @@ void UCognitive3DBlueprints::SetParticipantPropertyFloat(const FString name, con
 void UCognitive3DBlueprints::SetParticipantPropertyString(const FString name, const FString value)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::SetParticipantPropertyString could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::SetParticipantPropertyString could not get provider!");
 		return;
 	}
 	cog->SetParticipantProperty(name, value);
@@ -137,10 +137,10 @@ void UCognitive3DBlueprints::SetParticipantPropertyString(const FString name, co
 void UCognitive3DBlueprints::SetSessionName(const FString name)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::SetSessionName could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::SetSessionName could not get provider!");
 		return;
 	}
 	cog->SetSessionName(name);
@@ -149,10 +149,10 @@ void UCognitive3DBlueprints::SetSessionName(const FString name)
 void UCognitive3DBlueprints::SetLobbyId(const FString lobbyId)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::SetLobbyId could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::SetLobbyId could not get provider!");
 		return;
 	}
 	cog->SetLobbyId(lobbyId);
@@ -161,10 +161,10 @@ void UCognitive3DBlueprints::SetLobbyId(const FString lobbyId)
 void UCognitive3DBlueprints::InitializeSensor(const FString Name, const float HzRate, const float InitialValue)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::RecordSensor could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::RecordSensor could not get provider!");
 		return;
 	}
 	if (!HasSessionStarted()) { return; }
@@ -174,10 +174,10 @@ void UCognitive3DBlueprints::InitializeSensor(const FString Name, const float Hz
 void UCognitive3DBlueprints::RecordSensor(const FString Name, const float Value)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::RecordSensor could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::RecordSensor could not get provider!");
 		return;
 	}
 	if (!HasSessionStarted()) { return; }
@@ -187,7 +187,7 @@ void UCognitive3DBlueprints::RecordSensor(const FString Name, const float Value)
 void UCognitive3DBlueprints::GetQuestionSet(const FString Hook, FCognitiveExitPollResponse response)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return; }
 	if (!cog->exitpoll.IsValid()) { return; }
 	if (!HasSessionStarted()) {return;}
@@ -197,7 +197,7 @@ void UCognitive3DBlueprints::GetQuestionSet(const FString Hook, FCognitiveExitPo
 bool UCognitive3DBlueprints::HasSessionStarted()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
 		return false;
@@ -214,7 +214,7 @@ FExitPollQuestionSet UCognitive3DBlueprints::GetCurrentExitPollQuestionSet()
 void UCognitive3DBlueprints::SendExitPollAnswers(const TArray<FExitPollAnswer>& Answers)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return; }
 	if (!cog->exitpoll.IsValid()) { return; }
 	cog->exitpoll->SendQuestionAnswers(Answers);
@@ -223,10 +223,10 @@ void UCognitive3DBlueprints::SendExitPollAnswers(const TArray<FExitPollAnswer>& 
 void UCognitive3DBlueprints::FlushEvents()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::FlushEvents could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::FlushEvents could not get provider!");
 		return;
 	}
 	cog->FlushEvents();
@@ -235,10 +235,10 @@ void UCognitive3DBlueprints::FlushEvents()
 bool UCognitive3DBlueprints::StartSession()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::StartSession could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::StartSession could not get provider!");
 		return false;
 	}
 	return cog->StartSession(TArray<FAnalyticsEventAttribute>());
@@ -247,10 +247,10 @@ bool UCognitive3DBlueprints::StartSession()
 void UCognitive3DBlueprints::EndSession()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::EndSession could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::EndSession could not get provider!");
 		return;
 	}
 	cog->EndSession();
@@ -259,10 +259,10 @@ void UCognitive3DBlueprints::EndSession()
 void UCognitive3DBlueprints::SetParticipantFullName(const FString Name)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::SetParticipantFullName could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::SetParticipantFullName could not get provider!");
 		return;
 	}
 	cog->SetParticipantFullName(Name);
@@ -270,10 +270,10 @@ void UCognitive3DBlueprints::SetParticipantFullName(const FString Name)
 void UCognitive3DBlueprints::SetParticipantId(const FString Id)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::SetParticipantId could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::SetParticipantId could not get provider!");
 		return;
 	}
 	cog->SetParticipantId(Id);
@@ -281,10 +281,10 @@ void UCognitive3DBlueprints::SetParticipantId(const FString Id)
 void UCognitive3DBlueprints::SetSessionTag(const FString Tag)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("UCognitive3DBlueprints::SetParticipantId could not get provider!");
+		FCognitiveLog::Error("UCognitive3DBlueprints::SetParticipantId could not get provider!");
 		return;
 	}
 	cog->SetSessionTag(Tag);
@@ -371,7 +371,7 @@ UCustomEvent* UCognitive3DBlueprints::AppendSensor(UCustomEvent* target, FString
 FString UCognitive3DBlueprints::GetSessionName()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return ""; }
 	return cog->GetSessionID();
 }
@@ -379,7 +379,7 @@ FString UCognitive3DBlueprints::GetSessionName()
 float UCognitive3DBlueprints::GetSessionDuration()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return -1; }
 	if (!cog->HasStartedSession()) { return 0; }
 
@@ -390,7 +390,7 @@ float UCognitive3DBlueprints::GetSessionDuration()
 FString UCognitive3DBlueprints::GetSceneName()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return ""; }
 	if (!cog->HasStartedSession()){ return ""; }
 
@@ -406,7 +406,7 @@ FString UCognitive3DBlueprints::GetSceneName()
 FString UCognitive3DBlueprints::GetSceneId()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return ""; }
 	if (!cog->HasStartedSession()) { return ""; }
 
@@ -423,7 +423,7 @@ FString UCognitive3DBlueprints::GetSceneId()
 float UCognitive3DBlueprints::GetLastEventSendTime()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return -1; }
 	if (!HasSessionStarted()) { return -1; }
 	return cog->customEventRecorder->GetLastSendTime();
@@ -432,7 +432,7 @@ float UCognitive3DBlueprints::GetLastEventSendTime()
 float UCognitive3DBlueprints::GetLastGazeSendTime()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return -1; }
 	if (!HasSessionStarted()) { return -1; }
 
@@ -451,11 +451,11 @@ float UCognitive3DBlueprints::GetLastGazeSendTime()
 float UCognitive3DBlueprints::GetLastDynamicSendTime()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return -1; }
 	if (!HasSessionStarted()) { return -1; }
 
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	auto dynamicObjectManager = cogProvider->dynamicObjectManager;
 	if (dynamicObjectManager == nullptr) { return -1; }
 	return dynamicObjectManager->GetLastSendTime();
@@ -464,7 +464,7 @@ float UCognitive3DBlueprints::GetLastDynamicSendTime()
 float UCognitive3DBlueprints::GetLastSensorSendTime()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return -1; }
 	if (!HasSessionStarted()) { return -1; }
 	return cog->sensors->GetLastSendTime();
@@ -473,7 +473,7 @@ float UCognitive3DBlueprints::GetLastSensorSendTime()
 float UCognitive3DBlueprints::GetLastFixationSendTime()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return -1; }
 	if (!HasSessionStarted()) { return -1; }
 
@@ -506,7 +506,7 @@ TArray<FString> UCognitive3DBlueprints::GetDebugQuestionSet()
 TArray<FString> UCognitive3DBlueprints::GetSensorKeys()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return TArray<FString>(); }
 	if (!HasSessionStarted()) { return TArray<FString>(); }
 
@@ -522,7 +522,7 @@ TArray<FString> UCognitive3DBlueprints::GetSensorKeys()
 TArray<FString> UCognitive3DBlueprints::GetSensorValues()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return TArray<FString>(); }
 	if (!HasSessionStarted()) { return TArray<FString>(); }
 
@@ -547,7 +547,7 @@ bool UCognitive3DBlueprints::IsFixating()
 int32 UCognitive3DBlueprints::GetEventPartNumber()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	return cog->customEventRecorder->GetPartNumber();
@@ -556,7 +556,7 @@ int32 UCognitive3DBlueprints::GetEventPartNumber()
 int32 UCognitive3DBlueprints::GetGazePartNumber()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 
@@ -570,10 +570,10 @@ int32 UCognitive3DBlueprints::GetGazePartNumber()
 int32 UCognitive3DBlueprints::GetDynamicPartNumber()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	auto dynamicObjectManager = cogProvider->dynamicObjectManager;
 	if (dynamicObjectManager == nullptr) { return 0; }
 	return dynamicObjectManager->GetPartNumber();
@@ -582,7 +582,7 @@ int32 UCognitive3DBlueprints::GetDynamicPartNumber()
 int32 UCognitive3DBlueprints::GetSensorPartNumber()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	return cog->sensors->GetPartNumber();
@@ -591,7 +591,7 @@ int32 UCognitive3DBlueprints::GetSensorPartNumber()
 int32 UCognitive3DBlueprints::GetFixationPartNumber()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	
@@ -606,7 +606,7 @@ int32 UCognitive3DBlueprints::GetFixationPartNumber()
 int32 UCognitive3DBlueprints::GetEventDataPointCount()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	return cog->customEventRecorder->GetDataPoints();
@@ -615,7 +615,7 @@ int32 UCognitive3DBlueprints::GetEventDataPointCount()
 int32 UCognitive3DBlueprints::GetGazePointCount()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 
@@ -629,11 +629,11 @@ int32 UCognitive3DBlueprints::GetGazePointCount()
 int32 UCognitive3DBlueprints::GetDynamicDataCount()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	auto dynamicObjectManager = cogProvider->dynamicObjectManager;
 	if (dynamicObjectManager == nullptr) { return 0; }
 	return dynamicObjectManager->GetDataPoints();
@@ -642,11 +642,11 @@ int32 UCognitive3DBlueprints::GetDynamicDataCount()
 int32 UCognitive3DBlueprints::GetDynamicObjectCount()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	auto dynamicObjectManager = cogProvider->dynamicObjectManager;
 	if (dynamicObjectManager == nullptr) { return 0; }
 	return dynamicObjectManager->GetDynamicObjectCount();
@@ -655,7 +655,7 @@ int32 UCognitive3DBlueprints::GetDynamicObjectCount()
 int32 UCognitive3DBlueprints::GetFixationPointCount()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	
@@ -673,7 +673,7 @@ int32 UCognitive3DBlueprints::GetFixationPointCount()
 int32 UCognitive3DBlueprints::GetSensorDataPointCount()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return 0; }
 	if (!HasSessionStarted()) { return 0; }
 	return cog->sensors->GetDataPoints();
@@ -682,7 +682,7 @@ int32 UCognitive3DBlueprints::GetSensorDataPointCount()
 bool UCognitive3DBlueprints::HasNetworkError()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return false; }
 	if (!HasSessionStarted()) { return false; }
 	return cog->network->HasErrorResponse();
@@ -691,7 +691,7 @@ bool UCognitive3DBlueprints::HasNetworkError()
 FString UCognitive3DBlueprints::GetAttributionParameters()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return FString(""); }
 	return cog->GetAttributionParameters();
 }
@@ -719,6 +719,6 @@ UPlayerTracker* UCognitive3DBlueprints::GetPlayerTracker()
 void UCognitive3DBlueprints::SetTrackingScene(FString SceneName)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	cog->SetTrackingScene(SceneName);
 }

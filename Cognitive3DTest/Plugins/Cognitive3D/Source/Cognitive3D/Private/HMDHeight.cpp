@@ -11,7 +11,7 @@ void UHMDHeight::BeginPlay()
 	if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
 
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		cognitive->OnSessionBegin.AddDynamic(this, &UHMDHeight::OnSessionBegin);
@@ -33,7 +33,7 @@ void UHMDHeight::OnSessionBegin()
 
 void UHMDHeight::EndInterval()
 {
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		//get hmd height
@@ -78,7 +78,7 @@ void UHMDHeight::OnSessionEnd()
 
 void UHMDHeight::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		cognitive->OnSessionBegin.RemoveDynamic(this, &UHMDHeight::OnSessionBegin);

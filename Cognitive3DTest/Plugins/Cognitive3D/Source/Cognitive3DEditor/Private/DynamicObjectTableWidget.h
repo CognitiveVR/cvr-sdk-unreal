@@ -12,7 +12,7 @@
 #include "STextComboBox.h"
 #include "STreeView.h"
 #include "SListView.h"
-#include "SActorListView.h"
+#include "ActorListView.h"
 #include "DynamicObjectManagerWidget.h"
 
 class SDynamicTableItem;

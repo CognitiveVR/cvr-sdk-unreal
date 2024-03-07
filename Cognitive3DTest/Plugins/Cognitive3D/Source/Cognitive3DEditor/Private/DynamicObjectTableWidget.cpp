@@ -1,5 +1,5 @@
 
-#include "SDynamicObjectTableWidget.h"
+#include "DynamicObjectTableWidget.h"
 
 void SDynamicObjectTableWidget::Construct(const FArguments& Args)
 {

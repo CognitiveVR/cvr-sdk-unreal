@@ -9,18 +9,18 @@
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 #include "Cognitive3D/Private/Fixations.h"
 
-class FAnalyticsCognitive3D;
-class FAnalyticsProviderCognitive3D;
+class IAnalyticsCognitive3D;
+class IAnalyticsProviderCognitive3D;
 class UCognitive3DBlueprints;
 
-	class COGNITIVE3D_API UGazeDataRecorder
+	class COGNITIVE3D_API FGazeDataRecorder
 	{
-		friend class FAnalyticsProviderCognitive3D;
-		friend class FAnalyticsCognitive3D;		
+		friend class IAnalyticsProviderCognitive3D;
+		friend class IAnalyticsCognitive3D;		
 
 	private:
 
-		TSharedPtr<FAnalyticsProviderCognitive3D> cog;
+		TSharedPtr<IAnalyticsProviderCognitive3D> cog;
 		int32 jsonPart = 1;
 
 		UFUNCTION()
@@ -38,7 +38,7 @@ class UCognitive3DBlueprints;
 		UFUNCTION()
 			void SendData(bool copyDataToCache);
 
-		UGazeDataRecorder();
+		FGazeDataRecorder();
 
 	public:
 		

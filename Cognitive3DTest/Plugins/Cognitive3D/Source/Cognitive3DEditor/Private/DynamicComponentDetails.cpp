@@ -4,12 +4,12 @@
 
 #include "DynamicComponentDetails.h"
 
-TSharedRef<IDetailCustomization> UDynamicObjectComponentDetails::MakeInstance()
+TSharedRef<IDetailCustomization> IDynamicObjectComponentDetails::MakeInstance()
 {
-	return MakeShareable( new UDynamicObjectComponentDetails);
+	return MakeShareable( new IDynamicObjectComponentDetails);
 }
 
-void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& DetailLayout )
+void IDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& DetailLayout )
 {
 	TArray< TWeakObjectPtr<UObject> > SelectedObjects; //= DetailLayout.GetSelectedObjects();
 	DetailLayout.GetObjectsBeingCustomized(SelectedObjects);
@@ -36,11 +36,11 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 	[
 		SNew(SButton)
 		.ContentPadding(1)
-		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasOwnerAndExportDirAndName)
+		.IsEnabled_Raw(this, &IDynamicObjectComponentDetails::HasOwnerAndExportDirAndName)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
-		.ToolTipText(this, &UDynamicObjectComponentDetails::GetExportTooltip)
-		.OnClicked(this, &UDynamicObjectComponentDetails::Export)
+		.ToolTipText(this, &IDynamicObjectComponentDetails::GetExportTooltip)
+		.OnClicked(this, &IDynamicObjectComponentDetails::Export)
 		[
 			SNew( STextBlock )
 			.Font( IDetailLayoutBuilder::GetDetailFont() )
@@ -55,11 +55,11 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 	[
 		SNew(SButton)
 		.ContentPadding(1)
-		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasOwnerAndMeshExportDirAndName)
+		.IsEnabled_Raw(this, &IDynamicObjectComponentDetails::HasOwnerAndMeshExportDirAndName)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
-		.ToolTipText(this, &UDynamicObjectComponentDetails::GetScreenshotTooltip)
-		.OnClicked(this, &UDynamicObjectComponentDetails::TakeScreenshot)
+		.ToolTipText(this, &IDynamicObjectComponentDetails::GetScreenshotTooltip)
+		.OnClicked(this, &IDynamicObjectComponentDetails::TakeScreenshot)
 		[
 			SNew( STextBlock )
 			.Font( IDetailLayoutBuilder::GetDetailFont() )
@@ -74,11 +74,11 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 	[
 		SNew(SButton)
 		.ContentPadding(1)
-		.IsEnabled_Raw(this, &UDynamicObjectComponentDetails::HasExportAndValidSceneData)
+		.IsEnabled_Raw(this, &IDynamicObjectComponentDetails::HasExportAndValidSceneData)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
-		.ToolTipText(this,&UDynamicObjectComponentDetails::GetUploadTooltip)
-		.OnClicked(this, &UDynamicObjectComponentDetails::Upload)
+		.ToolTipText(this,&IDynamicObjectComponentDetails::GetUploadTooltip)
+		.OnClicked(this, &IDynamicObjectComponentDetails::Upload)
 		[
 			SNew( STextBlock )
 			.Font( IDetailLayoutBuilder::GetDetailFont() )
@@ -98,8 +98,8 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 			.ContentPadding(1)
 			.VAlign(VAlign_Center)
 			.HAlign(HAlign_Center)
-			.ToolTipText(this, &UDynamicObjectComponentDetails::HandSetupText)
-			.OnClicked(this, &UDynamicObjectComponentDetails::SetLeftHand)
+			.ToolTipText(this, &IDynamicObjectComponentDetails::HandSetupText)
+			.OnClicked(this, &IDynamicObjectComponentDetails::SetLeftHand)
 			[
 				SNew(STextBlock)
 				.Font(IDetailLayoutBuilder::GetDetailFont())
@@ -112,8 +112,8 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 			.ContentPadding(1)
 			.VAlign(VAlign_Center)
 			.HAlign(HAlign_Center)
-			.ToolTipText(this, &UDynamicObjectComponentDetails::HandSetupText)
-			.OnClicked(this, &UDynamicObjectComponentDetails::SetRightHand)
+			.ToolTipText(this, &IDynamicObjectComponentDetails::HandSetupText)
+			.OnClicked(this, &IDynamicObjectComponentDetails::SetRightHand)
 			[
 				SNew(STextBlock)
 				.Font(IDetailLayoutBuilder::GetDetailFont())
@@ -123,12 +123,12 @@ void UDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 	];
 }
 
-bool UDynamicObjectComponentDetails::HasOwner() const
+bool IDynamicObjectComponentDetails::HasOwner() const
 {
 	return SelectedDynamicObject.Get() != NULL && (SelectedDynamicObject.Get()->GetAttachParent() != NULL);
 }
 
-bool UDynamicObjectComponentDetails::HasOwnerAndExportDirAndName() const
+bool IDynamicObjectComponentDetails::HasOwnerAndExportDirAndName() const
 {
 	if (!HasOwner()) { UE_LOG(LogTemp, Warning, TEXT("NO OWNER FOUND!")); return false; }
 	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { UE_LOG(LogTemp, Warning, TEXT("NO EXPORT DIRECTORY FOUND!")); return false; }
@@ -136,7 +136,7 @@ bool UDynamicObjectComponentDetails::HasOwnerAndExportDirAndName() const
 	return true;
 }
 
-bool UDynamicObjectComponentDetails::HasOwnerAndMeshExportDirAndName() const
+bool IDynamicObjectComponentDetails::HasOwnerAndMeshExportDirAndName() const
 {
 	if (!HasOwner()) { return false; }
 	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return false; }
@@ -145,7 +145,7 @@ bool UDynamicObjectComponentDetails::HasOwnerAndMeshExportDirAndName() const
 	return true;
 }
 
-bool UDynamicObjectComponentDetails::HasExportAndValidSceneData() const
+bool IDynamicObjectComponentDetails::HasExportAndValidSceneData() const
 {
 	if (!HasOwner()) { return false; }
 	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return false; } //base export directory exists
@@ -155,7 +155,7 @@ bool UDynamicObjectComponentDetails::HasExportAndValidSceneData() const
 	return true;
 }
 
-FText UDynamicObjectComponentDetails::GetUploadTooltip() const
+FText IDynamicObjectComponentDetails::GetUploadTooltip() const
 {
 	if (!HasOwner()) { return FText::FromString(""); }
 	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return FText::FromString("Export Directory doesn't exist"); }
@@ -164,12 +164,12 @@ FText UDynamicObjectComponentDetails::GetUploadTooltip() const
 	return FText::FromString("Upload the Dynamic Object Mesh to the current scene");
 }
 
-FText UDynamicObjectComponentDetails::HandSetupText() const
+FText IDynamicObjectComponentDetails::HandSetupText() const
 {
 	return FText::FromString("This will configure the Dynamic Object for a specific hand. Make sure to select the Controller Type!");
 }
 
-FText UDynamicObjectComponentDetails::GetExportTooltip() const
+FText IDynamicObjectComponentDetails::GetExportTooltip() const
 {
 	if (!HasOwner()) { return FText::FromString(""); }
 	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return FText::FromString("Export Directory doesn't exist"); } //base export directory exists
@@ -178,7 +178,7 @@ FText UDynamicObjectComponentDetails::GetExportTooltip() const
 	return FText::FromString("Exports the Dynamic Object Mesh to a temporary folder");
 }
 
-FText UDynamicObjectComponentDetails::GetScreenshotTooltip() const
+FText IDynamicObjectComponentDetails::GetScreenshotTooltip() const
 {
 	if (!HasOwner()) { return FText::FromString(""); }
 	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return FText::FromString("Export Directory doesn't exist"); } //base export directory exists
@@ -187,7 +187,7 @@ FText UDynamicObjectComponentDetails::GetScreenshotTooltip() const
 	return FText::FromString("Saves a screenshot of this Dynamic Object Mesh from the level viewport to a temporary folder");
 }
 
-FReply UDynamicObjectComponentDetails::SetRightHand()
+FReply IDynamicObjectComponentDetails::SetRightHand()
 {
 	SelectedDynamicObject.Get()->IsController = true;
 	SelectedDynamicObject.Get()->IsRightController = true;
@@ -208,7 +208,7 @@ FReply UDynamicObjectComponentDetails::SetRightHand()
 	return FReply::Handled();
 }
 
-FReply UDynamicObjectComponentDetails::SetLeftHand()
+FReply IDynamicObjectComponentDetails::SetLeftHand()
 {
 	SelectedDynamicObject.Get()->IsController = true;
 	SelectedDynamicObject.Get()->IsRightController = false;
@@ -229,13 +229,13 @@ FReply UDynamicObjectComponentDetails::SetLeftHand()
 	return FReply::Handled();
 }
 
-FReply UDynamicObjectComponentDetails::TakeScreenshot()
+FReply IDynamicObjectComponentDetails::TakeScreenshot()
 {
 	FCognitiveEditorTools::GetInstance()->TakeDynamicScreenshot(SelectedDynamicObject->MeshName);
 	return FReply::Handled();
 }
 
-FReply UDynamicObjectComponentDetails::Export()
+FReply IDynamicObjectComponentDetails::Export()
 {
 	GEditor->SelectNone(false, true, false);
 
@@ -246,7 +246,7 @@ FReply UDynamicObjectComponentDetails::Export()
 	return FReply::Handled();
 }
 
-FReply UDynamicObjectComponentDetails::Upload()
+FReply IDynamicObjectComponentDetails::Upload()
 {
 	FCognitiveEditorTools::GetInstance()->UploadDynamic(SelectedDynamicObject->MeshName);
 

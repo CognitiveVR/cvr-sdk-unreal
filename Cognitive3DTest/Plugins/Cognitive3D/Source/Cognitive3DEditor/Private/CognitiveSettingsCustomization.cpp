@@ -1,5 +1,5 @@
 
-#include "FCognitiveSettingsCustomization.h"
+#include "CognitiveSettingsCustomization.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
@@ -7,11 +7,11 @@
 //includes any details needed to make the ui work
 
 //TSharedRef<FCognitiveTools> ToolsInstance;
-FCognitiveSettingsCustomization* FCognitiveSettingsCustomization::CognitiveSettingsCustomizationInstance;
+ICognitiveSettingsCustomization* ICognitiveSettingsCustomization::CognitiveSettingsCustomizationInstance;
 
-TSharedRef<IDetailCustomization> FCognitiveSettingsCustomization::MakeInstance()
+TSharedRef<IDetailCustomization> ICognitiveSettingsCustomization::MakeInstance()
 {
-	CognitiveSettingsCustomizationInstance = new FCognitiveSettingsCustomization;
+	CognitiveSettingsCustomizationInstance = new ICognitiveSettingsCustomization;
 	return MakeShareable(CognitiveSettingsCustomizationInstance);
 }
 
@@ -20,12 +20,12 @@ TArray<TSharedPtr<FEditorSceneData>> GetSceneData()
 	return FCognitiveEditorTools::GetInstance()->GetSceneData();
 }
 
-TArray<TSharedPtr<FDynamicData>> FCognitiveSettingsCustomization::GetSceneDynamics()
+TArray<TSharedPtr<FDynamicData>> ICognitiveSettingsCustomization::GetSceneDynamics()
 {
 	return FCognitiveEditorTools::GetInstance()->GetSceneDynamics();
 }
 
-void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
+void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {
 	// Create a commands category
 	IDetailCategoryBuilder& LoginCategory = DetailBuilder.EditCategory(TEXT("Account"),FText::GetEmpty(),ECategoryPriority::Important);
@@ -176,7 +176,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 			SNew(SListView<TSharedPtr<FEditorSceneData>>)
 			.ItemHeight(24)
 			.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneData) //BIND
-			.OnGenerateRow(this, &FCognitiveSettingsCustomization::OnGenerateWorkspaceRow)
+			.OnGenerateRow(this, &ICognitiveSettingsCustomization::OnGenerateWorkspaceRow)
 			.HeaderRow(
 				SNew(SHeaderRow)
 				+ SHeaderRow::Column("name")
@@ -234,7 +234,7 @@ void FCognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, EditorIni);
 }
 
-TSharedRef<ITableRow> FCognitiveSettingsCustomization::OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
+TSharedRef<ITableRow> ICognitiveSettingsCustomization::OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	return
 		SNew(SComboRow< TSharedPtr<FEditorSceneData> >, OwnerTable)
@@ -279,64 +279,64 @@ TSharedRef<ITableRow> FCognitiveSettingsCustomization::OnGenerateWorkspaceRow(TS
 		];
 }
 
-void FCognitiveSettingsCustomization::OnCommitedExportMinimumSize(float InNewValue, ETextCommit::Type CommitType)
+void ICognitiveSettingsCustomization::OnCommitedExportMinimumSize(float InNewValue, ETextCommit::Type CommitType)
 {
 	FCognitiveEditorTools::GetInstance()->MinimumSize = InNewValue;
 }
 
-void FCognitiveSettingsCustomization::OnChangedExportMinimumSize(float InNewValue)
+void ICognitiveSettingsCustomization::OnChangedExportMinimumSize(float InNewValue)
 {
 	FCognitiveEditorTools::GetInstance()->MinimumSize = InNewValue;
 }
 
-void FCognitiveSettingsCustomization::OnCommitedExportMaximumSize(float InNewValue, ETextCommit::Type CommitType)
+void ICognitiveSettingsCustomization::OnCommitedExportMaximumSize(float InNewValue, ETextCommit::Type CommitType)
 {
 	FCognitiveEditorTools::GetInstance()->MaximumSize = InNewValue;
 }
 
-void FCognitiveSettingsCustomization::OnChangedExportMaximumSize(float InNewValue)
+void ICognitiveSettingsCustomization::OnChangedExportMaximumSize(float InNewValue)
 {
 	FCognitiveEditorTools::GetInstance()->MaximumSize = InNewValue;
 }
 
-void FCognitiveSettingsCustomization::OnChangedExcludeMesh(const FText& InNewValue)
+void ICognitiveSettingsCustomization::OnChangedExcludeMesh(const FText& InNewValue)
 {
 	FCognitiveEditorTools::GetInstance()->ExcludeMeshes = InNewValue.ToString();
 }
 
-void FCognitiveSettingsCustomization::OnCheckStateChangedStaticOnly(const bool& InNewValue)
+void ICognitiveSettingsCustomization::OnCheckStateChangedStaticOnly(const bool& InNewValue)
 {
 	FCognitiveEditorTools::GetInstance()->StaticOnly = InNewValue;
 }
 
-void FCognitiveSettingsCustomization::OnChangedExportMinPolygon(int32 InNewValue)
+void ICognitiveSettingsCustomization::OnChangedExportMinPolygon(int32 InNewValue)
 {
 	FCognitiveEditorTools::GetInstance()->MinPolygon = InNewValue;
 }
-void FCognitiveSettingsCustomization::OnCommitedExportMinPolygon(int32 InNewValue, ETextCommit::Type CommitType)
+void ICognitiveSettingsCustomization::OnCommitedExportMinPolygon(int32 InNewValue, ETextCommit::Type CommitType)
 {
 	FCognitiveEditorTools::GetInstance()->MinPolygon = InNewValue;
 }
 
-void FCognitiveSettingsCustomization::OnChangedExportMaxPolygon(int32 InNewValue)
+void ICognitiveSettingsCustomization::OnChangedExportMaxPolygon(int32 InNewValue)
 {
 	FCognitiveEditorTools::GetInstance()->MaxPolygon = InNewValue;
 }
-void FCognitiveSettingsCustomization::OnCommitedExportMaxPolygon(int32 InNewValue, ETextCommit::Type CommitType)
+void ICognitiveSettingsCustomization::OnCommitedExportMaxPolygon(int32 InNewValue, ETextCommit::Type CommitType)
 {
 	FCognitiveEditorTools::GetInstance()->MaxPolygon = InNewValue;
 }
 
-void FCognitiveSettingsCustomization::OnChangedExportTextureRefactor(int32 InNewValue)
+void ICognitiveSettingsCustomization::OnChangedExportTextureRefactor(int32 InNewValue)
 {
 	FCognitiveEditorTools::GetInstance()->TextureRefactor = InNewValue;
 }
-void FCognitiveSettingsCustomization::OnCommitedExportTextureRefactor(int32 InNewValue, ETextCommit::Type CommitType)
+void ICognitiveSettingsCustomization::OnCommitedExportTextureRefactor(int32 InNewValue, ETextCommit::Type CommitType)
 {
 	FCognitiveEditorTools::GetInstance()->TextureRefactor = InNewValue;
 }
 
-void FCognitiveSettingsCustomization::OnExportPathChanged(const FText& Text)
+void ICognitiveSettingsCustomization::OnExportPathChanged(const FText& Text)
 {
 	FCognitiveEditorTools::GetInstance()->BaseExportDirectory = Text.ToString();
 }

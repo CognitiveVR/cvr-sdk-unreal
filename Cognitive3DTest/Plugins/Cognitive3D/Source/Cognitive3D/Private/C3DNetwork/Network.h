@@ -8,7 +8,7 @@
 #include "Cognitive3D/Private/LocalCache.h"
 #include "Http.h"
 
-class FAnalyticsProviderCognitive3D;
+class IAnalyticsProviderCognitive3D;
 class HttpInterface;
 class FCognitiveExitPollResponse;
 class LocalCache;
@@ -16,12 +16,12 @@ struct FExitPollQuestionSet;
 struct FExitPollResponse;
 
 
-	class Network
+	class FNetwork
 	{
 	private:
 		FHttpModule* Http;
 		FString Gateway;
-		TSharedPtr<FAnalyticsProviderCognitive3D> cog;
+		TSharedPtr<IAnalyticsProviderCognitive3D> cog;
 		bool hasErrorResponse;
 		bool isUploadingFromCache = false;
 		FHttpRequestPtr localCacheRequest;
@@ -35,7 +35,7 @@ struct FExitPollResponse;
 		FTimerHandle TimerHandle;
 		FTimerHandle TimerHandleShortDelay;
 	public:
-		Network();
+		FNetwork();
 
 		void NetworkCall(FString suburl, FString contents, bool copyDataToCache);
 		void OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);

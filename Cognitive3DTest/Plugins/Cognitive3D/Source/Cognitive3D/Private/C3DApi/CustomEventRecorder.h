@@ -6,27 +6,27 @@
 //#include "TimerManager.h"
 #include "Analytics.h"
 #include "Cognitive3D/Public/Cognitive3DProvider.h"
-//#include "Cognitive3D/Private/util/util.h"
+//#include "Cognitive3D/Private/Util/util.h"
 //#include "Cognitive3D/Private/PlayerTracker.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 
-class FAnalyticsCognitive3D;
-class FAnalyticsProviderCognitive3D;
+class IAnalyticsCognitive3D;
+class IAnalyticsProviderCognitive3D;
 class UCustomEvent;
 class UCognitive3DBlueprints;
 
 
-	class COGNITIVE3D_API UCustomEventRecorder
+	class COGNITIVE3D_API FCustomEventRecorder
 	{
-		friend class FAnalyticsProviderCognitive3D;
-		friend class FAnalyticsCognitive3D;
+		friend class IAnalyticsProviderCognitive3D;
+		friend class IAnalyticsCognitive3D;
 
 	private:
 
 		uint64 lastFrameCount = 0;
 		int32 consecutiveFrame = 0;
 		
-		TSharedPtr<FAnalyticsProviderCognitive3D> cog;
+		TSharedPtr<IAnalyticsProviderCognitive3D> cog;
 		int32 jsonEventPart = 1;
 		int32 CustomEventBatchSize = 64;
 		int32 AutoTimer = 2;
@@ -43,7 +43,7 @@ class UCognitive3DBlueprints;
 		void PostSessionEnd();
 
 		bool HasInitialized = false;
-		UCustomEventRecorder();
+		FCustomEventRecorder();
 
 	public:
 		

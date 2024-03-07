@@ -7,7 +7,7 @@
 #include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "CoreMinimal.h"
 #if PLATFORM_ANDROID == 0
-#include "Cognitive3D/Private/rtaudio/CRtAudio.h"
+#include "Cognitive3D/Private/C3DRtaudio/CRtAudio.h"
 #endif
 #include "Misc/Base64.h"
 #include "MicrophoneCaptureActor.generated.h"

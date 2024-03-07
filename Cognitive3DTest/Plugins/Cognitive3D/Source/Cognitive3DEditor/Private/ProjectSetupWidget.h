@@ -22,7 +22,7 @@
 #include "Cognitive3DEditorModule.h"
 
 class FCognitiveTools;
-class FCognitive3DEditorModule;
+class ICognitive3DEditorModule;
 
 //screens:
 //intro

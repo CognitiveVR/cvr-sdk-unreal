@@ -2,12 +2,12 @@
 
 #include "DynamicObjectManager.h"
 
-UDynamicObjectManager::UDynamicObjectManager()
+FDynamicObjectManager::FDynamicObjectManager()
 {
-	cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 }
 
-void UDynamicObjectManager::OnSessionBegin()
+void FDynamicObjectManager::OnSessionBegin()
 {
 	//should all these be reset? will dynamic object components correctly re-add themselves?
 	//do they manage their registration outside of sessions?
@@ -44,14 +44,14 @@ void UDynamicObjectManager::OnSessionBegin()
 	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
 	if (world == nullptr)
 	{
-		GLog->Log("UDynamicObjectManager::StartSession world from ACognitive3DActor is null!");
+		GLog->Log("FDynamicObjectManager::StartSession world from ACognitive3DActor is null!");
 		return;
 	}
-	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &UDynamicObjectManager::SendData, false), AutoTimer, true);
+	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &FDynamicObjectManager::SendData, false), AutoTimer, true);
 }
 
 //this is used when generating a simple unique id at runtime
-TSharedPtr<FDynamicObjectId> UDynamicObjectManager::GetUniqueId(FString meshName)
+TSharedPtr<FDynamicObjectId> FDynamicObjectManager::GetUniqueId(FString meshName)
 {
 	TSharedPtr<FDynamicObjectId> freeId;
 	static int32 originalId = 1000;
@@ -61,7 +61,7 @@ TSharedPtr<FDynamicObjectId> UDynamicObjectManager::GetUniqueId(FString meshName
 	return freeId;
 }
 
-bool UDynamicObjectManager::HasRegisteredObjectId(FString id)
+bool FDynamicObjectManager::HasRegisteredObjectId(FString id)
 {
 	FDynamicObjectManifestEntry entry;
 	bool foundEntry = false;
@@ -77,7 +77,7 @@ bool UDynamicObjectManager::HasRegisteredObjectId(FString id)
 }
 
 //should be rewritten to return an objectid and take some arguments
-void UDynamicObjectManager::RegisterObjectId(FString MeshName, FString Id, FString ActorName, bool IsController, bool IsRightController, FString ControllerType)
+void FDynamicObjectManager::RegisterObjectId(FString MeshName, FString Id, FString ActorName, bool IsController, bool IsRightController, FString ControllerType)
 {
 	if (Id.IsEmpty())
 	{
@@ -95,7 +95,7 @@ void UDynamicObjectManager::RegisterObjectId(FString MeshName, FString Id, FStri
 	newManifest.Add(entry);
 }
 
-void UDynamicObjectManager::CacheControllerPointer(UDynamicObject* object, bool isRight)
+void FDynamicObjectManager::CacheControllerPointer(UDynamicObject* object, bool isRight)
 {
 	if (isRight)
 	{
@@ -107,7 +107,7 @@ void UDynamicObjectManager::CacheControllerPointer(UDynamicObject* object, bool 
 	}
 }
 
-TSharedPtr<FJsonValueObject> UDynamicObjectManager::WriteSnapshotToJson(FDynamicObjectSnapshot snapshot)
+TSharedPtr<FJsonValueObject> FDynamicObjectManager::WriteSnapshotToJson(FDynamicObjectSnapshot snapshot)
 {
 	TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
 
@@ -231,7 +231,7 @@ TSharedPtr<FJsonValueObject> UDynamicObjectManager::WriteSnapshotToJson(FDynamic
 	return MakeShareable(new FJsonValueObject(snapObj));
 }
 
-void UDynamicObjectManager::SendData(bool copyDataToCache)
+void FDynamicObjectManager::SendData(bool copyDataToCache)
 {
 	if (!cogProvider.IsValid() || !cogProvider->HasStartedSession())
 	{
@@ -251,7 +251,7 @@ void UDynamicObjectManager::SendData(bool copyDataToCache)
 
 	LastSendTime = UCognitive3DBlueprints::GetSessionDuration();
 
-	TArray<TSharedPtr<FJsonValueObject>> EventArray = UDynamicObjectManager::DynamicSnapshotsToString();
+	TArray<TSharedPtr<FJsonValueObject>> EventArray = FDynamicObjectManager::DynamicSnapshotsToString();
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 
@@ -268,7 +268,7 @@ void UDynamicObjectManager::SendData(bool copyDataToCache)
 
 	if (newManifest.Num() > 0)
 	{
-		TSharedPtr<FJsonObject> ManifestObject = UDynamicObjectManager::DynamicObjectManifestToString();
+		TSharedPtr<FJsonObject> ManifestObject = FDynamicObjectManager::DynamicObjectManifestToString();
 		wholeObj->SetObjectField("manifest", ManifestObject);
 		newManifest.Empty();
 	}
@@ -288,12 +288,13 @@ void UDynamicObjectManager::SendData(bool copyDataToCache)
 	FString OutputString;
 	auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
+	UE_LOG(LogTemp, Warning, TEXT("calling dynamics network call"));
 	cogProvider->network->NetworkCall("dynamics", OutputString, copyDataToCache);
 
 	snapshots.Empty();
 }
 
-TSharedPtr<FJsonObject> UDynamicObjectManager::DynamicObjectManifestToString()
+TSharedPtr<FJsonObject> FDynamicObjectManager::DynamicObjectManifestToString()
 {
 	TSharedPtr<FJsonObject> manifestObject = MakeShareable(new FJsonObject);
 
@@ -317,18 +318,18 @@ TSharedPtr<FJsonObject> UDynamicObjectManager::DynamicObjectManifestToString()
 	return manifestObject;
 }
 
-TArray<TSharedPtr<FJsonValueObject>> UDynamicObjectManager::DynamicSnapshotsToString()
+TArray<TSharedPtr<FJsonValueObject>> FDynamicObjectManager::DynamicSnapshotsToString()
 {
 	TArray<TSharedPtr<FJsonValueObject>> dataArray;
 
 	for (int32 i = 0; i != snapshots.Num(); ++i)
 	{
-		dataArray.Add(UDynamicObjectManager::WriteSnapshotToJson(snapshots[i]));
+		dataArray.Add(FDynamicObjectManager::WriteSnapshotToJson(snapshots[i]));
 	}
 	return dataArray;
 }
 
-void UDynamicObjectManager::OnPreSessionEnd()
+void FDynamicObjectManager::OnPreSessionEnd()
 {
 	//Q: should this delete the session manifest of dynamic objects? or just the outstanding snapshots?
 	//A: clean up everything. this uobject will be destroyed as part of the Cognitive3Dprovider sessionEnd process
@@ -345,7 +346,7 @@ void UDynamicObjectManager::OnPreSessionEnd()
 	world->GetTimerManager().ClearTimer(AutoSendHandle);
 }
 
-void UDynamicObjectManager::OnPostSessionEnd()
+void FDynamicObjectManager::OnPostSessionEnd()
 {
 	//clean up variables
 	allObjectIds.Empty();
@@ -354,7 +355,7 @@ void UDynamicObjectManager::OnPostSessionEnd()
 	jsonPart = 1;
 }
 
-void UDynamicObjectManager::AddSnapshot(FDynamicObjectSnapshot snapshot)
+void FDynamicObjectManager::AddSnapshot(FDynamicObjectSnapshot snapshot)
 {
 	snapshots.Add(snapshot);
 	if (snapshots.Num() + newManifest.Num() > MaxSnapshots)

@@ -109,7 +109,7 @@ bool LocalCache::PeekContent(FString& url, FString& content)
 			}
 			else //merge resulted in no new data in read file
 			{
-				CognitiveLog::Error("Merging Local Cache files failed?");
+				FCognitiveLog::Error("Merging Local Cache files failed?");
 				return false;
 			}
 		}
@@ -138,7 +138,7 @@ void LocalCache::MergeDataFiles()
 {
 	if (readContent.Num() > 0)
 	{
-		CognitiveLog::Error("LocalCache::MergeDataFiles ERROR readContent not empty");
+		FCognitiveLog::Error("LocalCache::MergeDataFiles ERROR readContent not empty");
 		return;
 	}
 
@@ -159,7 +159,7 @@ void LocalCache::MergeDataFiles()
 	}
 	else
 	{
-		CognitiveLog::Error("LocalCache::MergeDataFiles write file error");
+		FCognitiveLog::Error("LocalCache::MergeDataFiles write file error");
 	}
 
 	//read data from 'read' file
@@ -169,7 +169,7 @@ void LocalCache::MergeDataFiles()
 	}
 	else
 	{
-		CognitiveLog::Error("LocalCache::MergeDataFiles read file error");
+		FCognitiveLog::Error("LocalCache::MergeDataFiles read file error");
 	}
 
 	//combine
@@ -182,7 +182,7 @@ void LocalCache::MergeDataFiles()
 	}
 	else
 	{
-		CognitiveLog::Error("LocalCache::MergeDataFiles Error serialize readContents to file");
+		FCognitiveLog::Error("LocalCache::MergeDataFiles Error serialize readContents to file");
 	}
 
 	//clear write file
@@ -203,6 +203,6 @@ void LocalCache::SerializeToFile()
 	}
 	else
 	{
-		CognitiveLog::Error("LocalCache::SerializeToFile ERROR ReadArchive failed");
+		FCognitiveLog::Error("LocalCache::SerializeToFile ERROR ReadArchive failed");
 	}
 }

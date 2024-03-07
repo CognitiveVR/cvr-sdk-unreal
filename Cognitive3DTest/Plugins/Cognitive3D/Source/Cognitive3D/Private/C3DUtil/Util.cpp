@@ -2,7 +2,8 @@
 ** Copyright (c) 2016 Cognitive3D, Inc. All rights reserved.
 */
 
-#include "util/util.h"
+#include "C3DUtil/Util.h"
+#include "HeadMountedDisplayFunctionLibrary.h"
 
 double Util::GetTimestamp()
 {
@@ -42,7 +43,7 @@ FString Util::GetDeviceName(FString DeviceName)
 
 void Util::SetSessionProperties()
 {
-	auto cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 	FString HMDDeviceName = UHeadMountedDisplayFunctionLibrary::GetHMDDeviceName().ToString();
 	cog->SetSessionProperty("c3d.device.hmd.type", HMDDeviceName);

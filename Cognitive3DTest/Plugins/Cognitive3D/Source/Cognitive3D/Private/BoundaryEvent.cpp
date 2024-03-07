@@ -20,7 +20,7 @@ void UBoundaryEvent::BeginPlay()
 	if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
 
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		//set boundary type session property
@@ -67,7 +67,7 @@ void UBoundaryEvent::OnSessionBegin()
 
 void UBoundaryEvent::EndInterval()
 {
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 #ifdef INCLUDE_PICO_PLUGIN
 	bool isPicoTriggered = false;
@@ -103,7 +103,7 @@ void UBoundaryEvent::OnSessionEnd()
 
 void UBoundaryEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cognitive.IsValid())
 	{
 		return;

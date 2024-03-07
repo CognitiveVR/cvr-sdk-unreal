@@ -10,7 +10,7 @@ void UHMDOrientation::BeginPlay()
 	if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
 
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		cognitive->OnSessionBegin.AddDynamic(this, &UHMDOrientation::OnSessionBegin);
@@ -37,7 +37,7 @@ void UHMDOrientation::EndInterval()
 
 void UHMDOrientation::RecordYaw()
 {
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		FRotator rot;
@@ -51,7 +51,7 @@ void UHMDOrientation::RecordYaw()
 
 void UHMDOrientation::RecordPitch()
 {
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		FRotator rot;
@@ -72,7 +72,7 @@ void UHMDOrientation::OnSessionEnd()
 
 void UHMDOrientation::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		cognitive->OnSessionBegin.RemoveDynamic(this, &UHMDOrientation::OnSessionBegin);

@@ -5,7 +5,7 @@
 #include "Cognitive3DSettings.h"
 #include "IDetailCustomization.h"
 #include "PropertyEditing.h"
-#include "SDynamicObjectTableWidget.h"
+#include "DynamicObjectTableWidget.h"
 #include "PropertyCustomizationHelpers.h"
 #include "Json.h"
 #include "SCheckBox.h"
@@ -24,7 +24,7 @@
 
 class FCognitiveTools;
 class SDynamicObjectTableWidget;
-class FCognitive3DEditorModule;
+class ICognitive3DEditorModule;
 
 class SDynamicObjectManagerWidget : public SCompoundWidget
 {

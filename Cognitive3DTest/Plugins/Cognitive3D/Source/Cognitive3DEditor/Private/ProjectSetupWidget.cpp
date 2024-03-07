@@ -1,5 +1,5 @@
 
-#include "SProjectSetupWidget.h"
+#include "ProjectSetupWidget.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
@@ -858,14 +858,14 @@ void SProjectSetupWidget::OnExportPathChanged(const FText& Text)
 
 FReply SProjectSetupWidget::OpenSceneSetupWindow()
 {
-	FCognitive3DEditorModule::CloseProjectSetupWindow();
-	FCognitive3DEditorModule::SpawnCognitiveSceneSetupTab();
+	ICognitive3DEditorModule::CloseProjectSetupWindow();
+	ICognitive3DEditorModule::SpawnCognitiveSceneSetupTab();
 	return FReply::Handled();
 }
 
 FReply SProjectSetupWidget::OpenDynamicObjectWindow()
 {
-	FCognitive3DEditorModule::CloseProjectSetupWindow();
-	FCognitive3DEditorModule::SpawnCognitiveDynamicTab();
+	ICognitive3DEditorModule::CloseProjectSetupWindow();
+	ICognitive3DEditorModule::SpawnCognitiveDynamicTab();
 	return FReply::Handled();
 }

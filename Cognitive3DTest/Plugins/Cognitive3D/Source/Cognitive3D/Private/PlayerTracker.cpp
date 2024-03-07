@@ -12,7 +12,7 @@ void UPlayerTracker::BeginPlay()
 {
 	Super::BeginPlay();
 
-	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 	auto cognitiveActor = ACognitive3DActor::GetCognitive3DActor();
 	if (cognitiveActor != GetOwner())
@@ -169,7 +169,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 	if (controllers.Num() == 0)
 	{
-		CognitiveLog::Info("UPlayerTracker::TickComponent--------------------------no controllers. skip");
+		FCognitiveLog::Info("UPlayerTracker::TickComponent--------------------------no controllers. skip");
 		return;
 	}
 

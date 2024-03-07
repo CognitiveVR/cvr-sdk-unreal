@@ -20,7 +20,7 @@ class UDynamicObject;
 
 //custom details inspector for dynamic object component
 
-class UDynamicObjectComponentDetails : public IDetailCustomization
+class IDynamicObjectComponentDetails : public IDetailCustomization
 {
 public:
 	static TSharedRef<IDetailCustomization> MakeInstance();

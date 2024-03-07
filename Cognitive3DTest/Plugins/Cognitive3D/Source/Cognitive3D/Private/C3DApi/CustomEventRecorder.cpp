@@ -1,14 +1,14 @@
 /*
 ** Copyright (c) 2016 Cognitive3D, Inc. All rights reserved.
 */
-#include "Cognitive3D/Private/api/customeventrecorder.h"
+#include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
 
-UCustomEventRecorder::UCustomEventRecorder()
+FCustomEventRecorder::FCustomEventRecorder()
 {
-	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 }
 
-void UCustomEventRecorder::StartSession()
+void FCustomEventRecorder::StartSession()
 {
 	lastFrameCount = 0;
 	consecutiveFrame = 0;
@@ -48,10 +48,10 @@ void UCustomEventRecorder::StartSession()
 
 	lastFrameCount = GFrameCounter;
 	Send(FString("c3d.sessionStart"));
-	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &UCustomEventRecorder::SendData, false), AutoTimer, true);
+	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &FCustomEventRecorder::SendData, false), AutoTimer, true);
 }
 
-void UCustomEventRecorder::Send(FString category)
+void FCustomEventRecorder::Send(FString category)
 {
 	if (!HasInitialized) { return; }
 
@@ -63,10 +63,10 @@ void UCustomEventRecorder::Send(FString category)
 
 	FVector position;
 	cog->TryGetPlayerHMDPosition(position);
-	UCustomEventRecorder::Send(category, position, NULL, "");
+	FCustomEventRecorder::Send(category, position, NULL, "");
 }
 
-void UCustomEventRecorder::Send(FString category, TSharedPtr<FJsonObject> properties)
+void FCustomEventRecorder::Send(FString category, TSharedPtr<FJsonObject> properties)
 {
 	if (!HasInitialized) { return; }
 	if (!cog.IsValid())
@@ -77,41 +77,41 @@ void UCustomEventRecorder::Send(FString category, TSharedPtr<FJsonObject> proper
 
 	FVector position;
 	cog->TryGetPlayerHMDPosition(position);
-	UCustomEventRecorder::Send(category, position, properties, "");
+	FCustomEventRecorder::Send(category, position, properties, "");
 }
 
-void UCustomEventRecorder::Send(FString category, FVector Position)
+void FCustomEventRecorder::Send(FString category, FVector Position)
 {
-	UCustomEventRecorder::Send(category, Position, NULL, "");
+	FCustomEventRecorder::Send(category, Position, NULL, "");
 }
 
-void UCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties)
+void FCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties)
 {
-	UCustomEventRecorder::Send(category, Position, properties, "");
+	FCustomEventRecorder::Send(category, Position, properties, "");
 }
 
-void UCustomEventRecorder::Send(FString category, FString dynamicObjectId)
-{
-	if (!HasInitialized) { return; }
-	FVector position;
-	cog->TryGetPlayerHMDPosition(position);
-	UCustomEventRecorder::Send(category, position, NULL, dynamicObjectId);
-}
-
-void UCustomEventRecorder::Send(FString category, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
+void FCustomEventRecorder::Send(FString category, FString dynamicObjectId)
 {
 	if (!HasInitialized) { return; }
 	FVector position;
 	cog->TryGetPlayerHMDPosition(position);
-	UCustomEventRecorder::Send(category, position, properties, dynamicObjectId);
+	FCustomEventRecorder::Send(category, position, NULL, dynamicObjectId);
 }
 
-void UCustomEventRecorder::Send(FString category, FVector Position, FString dynamicObjectId)
+void FCustomEventRecorder::Send(FString category, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
 {
-	UCustomEventRecorder::Send(category, Position, NULL, dynamicObjectId);
+	if (!HasInitialized) { return; }
+	FVector position;
+	cog->TryGetPlayerHMDPosition(position);
+	FCustomEventRecorder::Send(category, position, properties, dynamicObjectId);
 }
 
-void UCustomEventRecorder::Send(UCustomEvent* customEvent)
+void FCustomEventRecorder::Send(FString category, FVector Position, FString dynamicObjectId)
+{
+	FCustomEventRecorder::Send(category, Position, NULL, dynamicObjectId);
+}
+
+void FCustomEventRecorder::Send(UCustomEvent* customEvent)
 {
 	if (!HasInitialized) { return; }
 	if (customEvent == NULL) { return; }
@@ -129,10 +129,10 @@ void UCustomEventRecorder::Send(UCustomEvent* customEvent)
 			jsonObject->SetStringField(Elem.Key, Elem.Value);
 	}
 
-	UCustomEventRecorder::Send(customEvent->Category, customEvent->Position, jsonObject, customEvent->DynamicId);
+	FCustomEventRecorder::Send(customEvent->Category, customEvent->Position, jsonObject, customEvent->DynamicId);
 }
 
-void UCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
+void FCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<FJsonObject> properties, FString dynamicObjectId)
 {
 	if (!HasInitialized) { return; }
 	if (lastFrameCount >= GFrameCounter - 1)
@@ -143,7 +143,7 @@ void UCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<F
 			consecutiveFrame++;
 			if (consecutiveFrame > 200)
 			{
-				CognitiveLog::Warning("Cognitive3D receiving Custom Events every frame. This is not a recommended method for implementation!\nPlease see docs.cognitive3d.com/unreal/customevents");
+				FCognitiveLog::Warning("Cognitive3D receiving Custom Events every frame. This is not a recommended method for implementation!\nPlease see docs.cognitive3d.com/unreal/customevents");
 			}
 		}
 	}
@@ -155,7 +155,7 @@ void UCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<F
 
 	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
-		CognitiveLog::Warning("CustomEvent::Send - FAnalyticsProviderCognitive3D is null!");
+		FCognitiveLog::Warning("CustomEvent::Send - IAnalyticsProviderCognitive3D is null!");
 		return;
 	}
 	if (cog->CurrentTrackingSceneId.IsEmpty()) { return; }
@@ -193,11 +193,11 @@ void UCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<F
 	}
 }
 
-void UCustomEventRecorder::SendData(bool copyDataToCache)
+void FCustomEventRecorder::SendData(bool copyDataToCache)
 {
 	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
-		CognitiveLog::Warning("CustomEvent::SendData - FAnalyticsProviderCognitive3D is null!");
+		FCognitiveLog::Warning("CustomEvent::SendData - IAnalyticsProviderCognitive3D is null!");
 		return;
 	}
 
@@ -237,7 +237,7 @@ void UCustomEventRecorder::SendData(bool copyDataToCache)
 	events.Empty();
 }
 
-void UCustomEventRecorder::PreSessionEnd()
+void FCustomEventRecorder::PreSessionEnd()
 {
 	if (!cog.IsValid())
 	{
@@ -254,7 +254,7 @@ void UCustomEventRecorder::PreSessionEnd()
 	world->GetTimerManager().ClearTimer(AutoSendHandle);
 }
 
-void UCustomEventRecorder::PostSessionEnd()
+void FCustomEventRecorder::PostSessionEnd()
 {
 	HasInitialized = false;
 }

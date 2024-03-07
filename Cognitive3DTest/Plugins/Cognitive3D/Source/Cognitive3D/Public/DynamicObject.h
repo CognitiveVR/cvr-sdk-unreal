@@ -18,7 +18,7 @@
 
 class UCustomEvent;
 class UCognitive3DBlueprints;
-class UDynamicObjectManager;
+class FDynamicObjectManager;
 class FDynamicObjectId;
 class UDynamicIdPoolAsset;
 
@@ -33,13 +33,13 @@ enum class EIdSourceType : uint8
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class COGNITIVE3D_API UDynamicObject : public USceneComponent
 {
-	friend class FAnalyticsProviderCognitive3D;
+	friend class IAnalyticsProviderCognitive3D;
 
 	GENERATED_BODY()
 
 private:
 
-	UDynamicObjectManager* dynamicObjectManager;
+	FDynamicObjectManager* dynamicObjectManager;
 	float currentTime = 0;
 	TSharedPtr<FDynamicObjectId> ObjectID;
 	FVector LastPosition;

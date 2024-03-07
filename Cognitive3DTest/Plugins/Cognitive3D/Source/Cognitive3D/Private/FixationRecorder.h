@@ -61,7 +61,7 @@ private:
 	int32 CachedEyeCaptureCount = 100;
 	int32 GetIndex(int32 offset);
 
-	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
+	TSharedPtr<IAnalyticsProviderCognitive3D> cog;
 
 	bool WasCaptureDiscardedLastFrame = false;
 	bool WasOutOfDispersionLastFrame = false;

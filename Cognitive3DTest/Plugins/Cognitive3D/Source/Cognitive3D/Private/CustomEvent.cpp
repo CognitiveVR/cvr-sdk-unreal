@@ -4,7 +4,7 @@
 
 #include "CustomEvent.h"
 
-TSharedPtr<FAnalyticsProviderCognitive3D> UCustomEvent::cog;
+TSharedPtr<IAnalyticsProviderCognitive3D> UCustomEvent::cog;
 
 UCustomEvent::UCustomEvent()
 {
@@ -19,16 +19,16 @@ void UCustomEvent::SetCategory(FString category)
 void UCustomEvent::Send()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		FCognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	if (!cog->HasStartedSession())
 	{
-		CognitiveLog::Error("UCustomEvent::Send Session not started");
+		FCognitiveLog::Error("UCustomEvent::Send Session not started");
 		return;
 	}
 
@@ -40,16 +40,16 @@ void UCustomEvent::Send()
 void UCustomEvent::SendAtHMDPosition()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		FCognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	if (!cog->HasStartedSession())
 	{
-		CognitiveLog::Error("UCustomEvent::Send Session not started");
+		FCognitiveLog::Error("UCustomEvent::Send Session not started");
 		return;
 	}
 	cog->TryGetPlayerHMDPosition(Position);
@@ -61,16 +61,16 @@ void UCustomEvent::SendAtHMDPosition()
 void UCustomEvent::AppendAllSensors()
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		FCognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	if (!cog->HasStartedSession())
 	{
-		CognitiveLog::Error("UCustomEvent::AppendAllSensors Session not started");
+		FCognitiveLog::Error("UCustomEvent::AppendAllSensors Session not started");
 		return;
 	}
 	auto sensorValues = cog->sensors->GetLastSensorValues();
@@ -82,16 +82,16 @@ void UCustomEvent::AppendAllSensors()
 void UCustomEvent::AppendSensors(TArray<FString> sensorNames)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		FCognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	if (!cog->HasStartedSession())
 	{
-		CognitiveLog::Error("UCustomEvent::AppendSensors Session not started");
+		FCognitiveLog::Error("UCustomEvent::AppendSensors Session not started");
 		return;
 	}
 	auto sensorValues = cog->sensors->GetLastSensorValues();
@@ -107,16 +107,16 @@ void UCustomEvent::AppendSensors(TArray<FString> sensorNames)
 void UCustomEvent::AppendSensor(FString sensorName)
 {
 	if (!cog.IsValid())
-		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		FCognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	if (!cog->HasStartedSession())
 	{
-		CognitiveLog::Error("UCustomEvent::AppendSensor Session not started");
+		FCognitiveLog::Error("UCustomEvent::AppendSensor Session not started");
 		return;
 	}
 	auto sensorValues = cog->sensors->GetLastSensorValues();

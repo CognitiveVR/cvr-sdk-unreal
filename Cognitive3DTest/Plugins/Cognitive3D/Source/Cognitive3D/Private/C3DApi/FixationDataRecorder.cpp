@@ -1,14 +1,14 @@
 /*
 ** Copyright (c) 2016 Cognitive3D, Inc. All rights reserved.
 */
-#include "Cognitive3D/Private/api/FixationDataRecorder.h"
+#include "Cognitive3D/Private/C3DApi/FixationDataRecorder.h"
 
-UFixationDataRecorder::UFixationDataRecorder()
+FFixationDataRecorder::FFixationDataRecorder()
 {
-	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 }
 
-void UFixationDataRecorder::StartSession()
+void FFixationDataRecorder::StartSession()
 {
 	jsonPart = 1;
 	Fixations.Empty();
@@ -41,10 +41,10 @@ void UFixationDataRecorder::StartSession()
 		GLog->Log("UFixationDataRecorder::StartSession world from ACognitive3DActor is null!");
 		return;
 	}
-	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &UFixationDataRecorder::SendData, false), AutoTimer, true);
+	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &FFixationDataRecorder::SendData, false), AutoTimer, true);
 }
 
-void UFixationDataRecorder::RecordFixationEnd(const FFixation& fixation)
+void FFixationDataRecorder::RecordFixationEnd(const FFixation& fixation)
 {
 	Fixations.Add(fixation);
 	if (Fixations.Num() > FixationBatchSize)
@@ -53,7 +53,7 @@ void UFixationDataRecorder::RecordFixationEnd(const FFixation& fixation)
 	}
 }
 
-void UFixationDataRecorder::SendData(bool copyDataToCache)
+void FFixationDataRecorder::SendData(bool copyDataToCache)
 {
 	if (!cog.IsValid() || !cog->HasStartedSession()) { return; }
 	if (cog->GetCurrentSceneVersionNumber().Len() == 0) { return; }
@@ -130,14 +130,14 @@ void UFixationDataRecorder::SendData(bool copyDataToCache)
 	LastSendTime = UCognitive3DBlueprints::GetSessionDuration();
 }
 
-void UFixationDataRecorder::PreSessionEnd()
+void FFixationDataRecorder::PreSessionEnd()
 {
 	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
 	if (world == nullptr) { return; }
 	world->GetTimerManager().ClearTimer(AutoSendHandle);
 }
 
-void UFixationDataRecorder::PostSessionEnd()
+void FFixationDataRecorder::PostSessionEnd()
 {
 	
 }

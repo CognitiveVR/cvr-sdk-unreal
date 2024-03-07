@@ -1,15 +1,15 @@
 /*
 ** Copyright (c) 2016 Cognitive3D, Inc. All rights reserved.
 */
-#include "Cognitive3D/Private/api/GazeDataRecorder.h"
+#include "Cognitive3D/Private/C3DApi/GazeDataRecorder.h"
 
 //called at module startup to create a default uobject of this type
-UGazeDataRecorder::UGazeDataRecorder()
+FGazeDataRecorder::FGazeDataRecorder()
 {
-	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 }
 
-void UGazeDataRecorder::StartSession()
+void FGazeDataRecorder::StartSession()
 {
 	snapshots.Empty();
 	jsonPart = 1;
@@ -36,7 +36,7 @@ void UGazeDataRecorder::StartSession()
 	//world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &UGazeDataRecorder::SendData, false), AutoTimer, true);
 }
 
-void UGazeDataRecorder::BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos, FString objectId)
+void FGazeDataRecorder::BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos, FString objectId)
 {
 	FGazeData data;
 	data.Time = timestamp;
@@ -59,7 +59,7 @@ void UGazeDataRecorder::BuildSnapshot(FVector position, FVector gaze, FRotator r
 	}
 }
 
-void UGazeDataRecorder::BuildSnapshot(FVector position, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos)
+void FGazeDataRecorder::BuildSnapshot(FVector position, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos)
 {
 	FGazeData data;
 	data.Time = timestamp;
@@ -77,7 +77,7 @@ void UGazeDataRecorder::BuildSnapshot(FVector position, FRotator rotation, doubl
 	}
 }
 
-void UGazeDataRecorder::SendData(bool copyDataToCache)
+void FGazeDataRecorder::SendData(bool copyDataToCache)
 {
 	if (!cog.IsValid() || !cog->HasStartedSession()) { return; }
 	if (cog->GetCurrentSceneVersionNumber().Len() == 0) { return; }
@@ -223,14 +223,14 @@ void UGazeDataRecorder::SendData(bool copyDataToCache)
 	LastSendTime = UCognitive3DBlueprints::GetSessionDuration();
 }
 
-void UGazeDataRecorder::PreSessionEnd()
+void FGazeDataRecorder::PreSessionEnd()
 {
 	//auto world = ACognitive3DActor::GetCognitiveSessionWorld();
 	//if (world == nullptr) { return; }
 	//world->GetTimerManager().ClearTimer(AutoSendHandle);
 }
 
-void UGazeDataRecorder::PostSessionEnd()
+void FGazeDataRecorder::PostSessionEnd()
 {
 	
 }

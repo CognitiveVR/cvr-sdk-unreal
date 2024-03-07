@@ -1,13 +1,13 @@
 /*
 ** Copyright (c) 2016 Cognitive3D, Inc. All rights reserved.
 */
-#include "util/cognitive_log.h"
+#include "C3DUtil/Cognitive_Log.h"
 
-bool CognitiveLog::ShowDebugLogs; //basic info/warning/errors
-bool CognitiveLog::ShowDevLogs; //development specific logs
-bool CognitiveLog::HasInitialized = false;
+bool FCognitiveLog::ShowDebugLogs; //basic info/warning/errors
+bool FCognitiveLog::ShowDevLogs; //development specific logs
+bool FCognitiveLog::HasInitialized = false;
 
-void CognitiveLog::Init()
+void FCognitiveLog::Init()
 {
 	ShowDebugLogs = true;
 	ShowDevLogs = false;
@@ -35,30 +35,30 @@ void CognitiveLog::Init()
 	}
 }
 
-bool CognitiveLog::DevLogEnabled()
+bool FCognitiveLog::DevLogEnabled()
 {
 	return ShowDevLogs;
 }
 
-void CognitiveLog::DevLog(FString s)
+void FCognitiveLog::DevLog(FString s)
 {
 	if (!ShowDevLogs) { return; }
 	UE_LOG(Cognitive3D_Log, Log, TEXT("%s"), *s);
 }
 
-void CognitiveLog::Info(FString s)
+void FCognitiveLog::Info(FString s)
 {
 	if (!ShowDebugLogs) { return; }
 	UE_LOG(Cognitive3D_Log, Log, TEXT("%s"), *s);
 }
 
-void CognitiveLog::Warning(FString s)
+void FCognitiveLog::Warning(FString s)
 {
 	if (!ShowDebugLogs) { return; }
 	UE_LOG(Cognitive3D_Log, Warning, TEXT("%s"), *s);
 }
 
-void CognitiveLog::Error(FString s)
+void FCognitiveLog::Error(FString s)
 {
 	if (!ShowDebugLogs) { return; }
 	UE_LOG(Cognitive3D_Log, Error, TEXT("%s"), *s);

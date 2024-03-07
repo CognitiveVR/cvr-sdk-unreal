@@ -22,12 +22,12 @@ class Cognitive3DResponse;
 UCLASS()
 class COGNITIVE3D_API UCognitive3DBlueprints : public UBlueprintFunctionLibrary
 {
-	friend class FAnalyticsProviderCognitive3D;
+	friend class IAnalyticsProviderCognitive3D;
 
 	GENERATED_BODY()
 
 		static void SendCustomEventToCore(FString Name, const TArray<FAnalyticsEventAttr>& Attributes, FVector Position, UDynamicObject* dynamic);
-		static TSharedPtr<FAnalyticsProviderCognitive3D> cog;
+		static TSharedPtr<IAnalyticsProviderCognitive3D> cog;
 public:
 
 	//record an event with attributes at a position associated to a dynamic object

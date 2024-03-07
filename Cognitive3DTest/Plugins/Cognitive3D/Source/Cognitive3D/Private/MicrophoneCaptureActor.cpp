@@ -69,13 +69,13 @@ bool AMicrophoneCaptureActor::BeginRecording(float RecordingDurationSec)
 
 	if (!ADC.getDeviceInfo((int32)ADC.getDefaultInputDevice()).isDefaultInput)
 	{
-		CognitiveLog::Warning("MicrophoneCaptureActor BeginRecording no default input source!");
+		FCognitiveLog::Warning("MicrophoneCaptureActor BeginRecording no default input source!");
 		return false;
 	}
 
 	if (RecordingDurationSec == 0)
 	{
-		CognitiveLog::Warning("MicrophoneCaptureActor BeginRecording duration is 0 seconds!");
+		FCognitiveLog::Warning("MicrophoneCaptureActor BeginRecording duration is 0 seconds!");
 		return false;
 	}
 

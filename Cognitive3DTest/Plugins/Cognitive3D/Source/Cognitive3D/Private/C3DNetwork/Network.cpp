@@ -2,46 +2,44 @@
 ** Copyright (c) 2016 Cognitive3D, Inc. All rights reserved.
 */
 
-#include "network.h"
+#include "Network.h"
 
-Network::Network()
+FNetwork::FNetwork()
 {
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-	//Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
-	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	Http = &FHttpModule::Get();
 	hasErrorResponse = false;
 }
 
-void Network::NetworkCall(FString suburl, FString contents, bool copyDataToCache)
+void FNetwork::NetworkCall(FString suburl, FString contents, bool copyDataToCache)
 {
 	if (!cog.IsValid())
 	{
-		CognitiveLog::Warning("Network::NetworkCall Cognitive3DProvider is invalid!");
+		FCognitiveLog::Warning("Network::NetworkCall Cognitive3DProvider is invalid!");
 		return;
 	}
 
 	if (cog->GetCurrentSceneId().Len() == 0)
 	{
-		CognitiveLog::Warning("Network::NetworkCall Cognitive3DProvider scene id is invalid!");
+		FCognitiveLog::Warning("Network::NetworkCall Cognitive3DProvider scene id is invalid!");
 		return;
 	}
 	if (cog->GetCurrentSceneVersionNumber().Len() == 0)
 	{
-		CognitiveLog::Warning("Network::NetworkCall Cognitive3DProvider scene version is invalid!");
+		FCognitiveLog::Warning("Network::NetworkCall Cognitive3DProvider scene version is invalid!");
 		return;
 	}
 
 	if (Http == NULL)
 	{
-		CognitiveLog::Warning("Network::NetworkCall Http module not initialized! possibly hasn't started session");
+		FCognitiveLog::Warning("Network::NetworkCall Http module not initialized! possibly hasn't started session");
 		return;
 	}
 
 	//json to scene endpoint
 	FString url = "https://"+ Gateway +"/v"+FString::FromInt(0)+"/"+suburl+"/"+cog->GetCurrentSceneId() + "?version=" + cog->GetCurrentSceneVersionNumber();
-	//UE_LOG(LogTemp, Warning, TEXT("network url: %s"), *url);
 	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
 
 	auto HttpRequest = Http->CreateRequest();
@@ -50,7 +48,7 @@ void Network::NetworkCall(FString suburl, FString contents, bool copyDataToCache
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
 	HttpRequest->SetHeader("Authorization", AuthValue);
-	HttpRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnSessionDataResponse);
+	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FNetwork::OnSessionDataResponse);
 
 	if (IsServerUnreachable)
 	{
@@ -78,8 +76,8 @@ void Network::NetworkCall(FString suburl, FString contents, bool copyDataToCache
 		HttpRequest->ProcessRequest();
 	}
 
-	if (CognitiveLog::DevLogEnabled())
-		CognitiveLog::DevLog(url + "\n" + contents);
+	if (FCognitiveLog::DevLogEnabled())
+		FCognitiveLog::DevLog(url + "\n" + contents);
 	
 	//this section is only for writing requests to the cache when the app is closing and we dont know what the response will be
 	if (!copyDataToCache) { return; }
@@ -99,7 +97,7 @@ void Network::NetworkCall(FString suburl, FString contents, bool copyDataToCache
 	
 }
 
-inline FString Network::TArrayToString(const TArray<uint8> In, int32 Count)
+inline FString FNetwork::TArrayToString(const TArray<uint8> In, int32 Count)
 {
 	FString Result;
 	Result.Empty(Count);
@@ -112,7 +110,7 @@ inline FString Network::TArrayToString(const TArray<uint8> In, int32 Count)
 	return Result;
 }
 
-void Network::OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FNetwork::OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (!cog.IsValid()) { GLog->Log("Network::OnCallReceivedAsync response while cognitive providor is invalid"); return; }
 	if (!cog->HasStartedSession()) { GLog->Log("Network::OnCallReceivedAsync response while session not started"); return; }
@@ -149,7 +147,7 @@ void Network::OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Re
 					localCacheRequest->SetHeader("Authorization", AuthValue);
 
 					
-					world->GetTimerManager().SetTimer(TimerHandleShortDelay, FTimerDelegate::CreateRaw(this, &Network::RequestLocalCache), LocalCacheLoopDelay, false);
+					world->GetTimerManager().SetTimer(TimerHandleShortDelay, FTimerDelegate::CreateRaw(this, &FNetwork::RequestLocalCache), LocalCacheLoopDelay, false);
 					
 					VariableDelayMultiplier = 0;
 				}
@@ -178,7 +176,7 @@ void Network::OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Re
 				if (world != nullptr && !world->GetTimerManager().IsTimerActive(TimerHandle))
 				{
 					float VariableDelay = VariableDelayTime * VariableDelayMultiplier;
-					world->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateRaw(this, &Network::ResetVariableTimer), VariableDelay, false, VariableDelay);
+					world->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateRaw(this, &FNetwork::ResetVariableTimer), VariableDelay, false, VariableDelay);
 				}
 			}
 			
@@ -200,11 +198,11 @@ void Network::OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Re
 	}
 	else
 	{
-		//CognitiveLog::DevLog("Network::OnCallReceivedAsync Response Invalid!");
+		//FCognitiveLog::DevLog("Network::OnCallReceivedAsync Response Invalid!");
 	}
 }
 
-void Network::SessionEnd()
+void FNetwork::SessionEnd()
 {
 	VariableDelayMultiplier = 0;
 	localCacheRequest = NULL;
@@ -213,7 +211,7 @@ void Network::SessionEnd()
 	world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
 }
 
-void Network::RequestLocalCache()
+void FNetwork::RequestLocalCache()
 {
 	if (IsServerUnreachable)
 	{
@@ -222,22 +220,22 @@ void Network::RequestLocalCache()
 		localCacheRequest = NULL;
 		return;
 	}
-	localCacheRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnLocalCacheResponse);
+	localCacheRequest->OnProcessRequestComplete().BindRaw(this, &FNetwork::OnLocalCacheResponse);
 	localCacheRequest->ProcessRequest();
 	
 }
 
-void Network::ResetVariableTimer()
+void FNetwork::ResetVariableTimer()
 {
 	IsServerUnreachable = false;
 	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
 	world->GetTimerManager().ClearTimer(TimerHandle);
 }
 
-void Network::OnLocalCacheResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FNetwork::OnLocalCacheResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (!cog.IsValid()) { return; }
-	if (!cog->HasStartedSession()) { CognitiveLog::Info("Network::OnLocalCacheCallReceivedAsync get response while session not started"); return; }
+	if (!cog->HasStartedSession()) { FCognitiveLog::Info("Network::OnLocalCacheCallReceivedAsync get response while session not started"); return; }
 	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
 	if (Response.IsValid())
 	{
@@ -261,7 +259,7 @@ void Network::OnLocalCacheResponse(FHttpRequestPtr Request, FHttpResponsePtr Res
 				localCacheRequest->SetHeader("Authorization", AuthValue);
 
 				world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
-				world->GetTimerManager().SetTimer(TimerHandleShortDelay, FTimerDelegate::CreateRaw(this, &Network::RequestLocalCache), LocalCacheLoopDelay, false);
+				world->GetTimerManager().SetTimer(TimerHandleShortDelay, FTimerDelegate::CreateRaw(this, &FNetwork::RequestLocalCache), LocalCacheLoopDelay, false);
 
 			}
 			else
@@ -295,7 +293,7 @@ void Network::OnLocalCacheResponse(FHttpRequestPtr Request, FHttpResponsePtr Res
 				if (world != nullptr && !world->GetTimerManager().IsTimerActive(TimerHandle))
 				{
 					float VariableDelay = VariableDelayTime * VariableDelayMultiplier;
-					world->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateRaw(this, &Network::ResetVariableTimer), VariableDelay, false, VariableDelay);
+					world->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateRaw(this, &FNetwork::ResetVariableTimer), VariableDelay, false, VariableDelay);
 				}
 			}
 
@@ -316,17 +314,17 @@ void Network::OnLocalCacheResponse(FHttpRequestPtr Request, FHttpResponsePtr Res
 	}
 	else
 	{
-		CognitiveLog::Error("Network::OnLocalCacheCallReceivedAsync Response Invalid");
+		FCognitiveLog::Error("Network::OnLocalCacheCallReceivedAsync Response Invalid");
 		localCacheRequest = NULL;
 	}
 }
 
-bool Network::HasErrorResponse()
+bool FNetwork::HasErrorResponse()
 {
 	return hasErrorResponse;
 }
 
-void Network::NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response)
+void FNetwork::NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResponse& response)
 {
 	auto HttpRequest = Http->CreateRequest();
 	
@@ -337,26 +335,26 @@ void Network::NetworkExitPollGetQuestionSet(FString hook, FCognitiveExitPollResp
 	HttpRequest->SetURL(url);
 	HttpRequest->SetVerb("GET");
 	HttpRequest->SetHeader("Authorization", AuthValue);
-	HttpRequest->OnProcessRequestComplete().BindRaw(this, &Network::OnExitPollResponseReceivedAsync);
+	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FNetwork::OnExitPollResponseReceivedAsync);
 	HttpRequest->ProcessRequest();
 }
 
-void Network::OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FNetwork::OnExitPollResponseReceivedAsync(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (!Response.IsValid() || !bWasSuccessful)
 	{
-		CognitiveLog::Error("Network::OnExitPollResponseReceivedAsync - No valid Response. Check internet connection");
+		FCognitiveLog::Error("Network::OnExitPollResponseReceivedAsync - No valid Response. Check internet connection");
 		cog->exitpoll->OnResponseReceived("", false);
 		return;
 	}
 	cog->exitpoll->OnResponseReceived(Response->GetContentAsString(), true);
 }
 
-void Network::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSet, FExitPollResponse Responses)
+void FNetwork::NetworkExitPollPostResponse(FExitPollQuestionSet currentQuestionSet, FExitPollResponse Responses)
 {
 	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
-		CognitiveLog::Error("Network::NetworkExitPollPostResponse could not get provider!");
+		FCognitiveLog::Error("Network::NetworkExitPollPostResponse could not get provider!");
 		return;
 	}
 

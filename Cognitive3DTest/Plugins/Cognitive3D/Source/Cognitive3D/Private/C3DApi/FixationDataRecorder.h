@@ -8,14 +8,14 @@
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 #include "Cognitive3D/Private/Fixations.h"
 
-class FAnalyticsCognitive3D;
-class FAnalyticsProviderCognitive3D;
+class IAnalyticsCognitive3D;
+class IAnalyticsProviderCognitive3D;
 class UCognitive3DBlueprints;
 
-	class COGNITIVE3D_API UFixationDataRecorder
+	class COGNITIVE3D_API FFixationDataRecorder
 	{
-		friend class FAnalyticsProviderCognitive3D;
-		friend class FAnalyticsCognitive3D;
+		friend class IAnalyticsProviderCognitive3D;
+		friend class IAnalyticsCognitive3D;
 
 	private:
 
@@ -24,7 +24,7 @@ class UCognitive3DBlueprints;
 		float LastSendTime = -60;
 		FTimerHandle AutoSendHandle;
 		
-		TSharedPtr<FAnalyticsProviderCognitive3D> cog;
+		TSharedPtr<IAnalyticsProviderCognitive3D> cog;
 		int32 jsonPart = 1;
 
 		UPROPERTY()
@@ -38,7 +38,7 @@ class UCognitive3DBlueprints;
 		void PostSessionEnd();
 
 	public:
-		UFixationDataRecorder();
+		FFixationDataRecorder();
 		void RecordFixationEnd(const FFixation& data);
 
 		//send all outstanding fixations to Cognitive dashboard

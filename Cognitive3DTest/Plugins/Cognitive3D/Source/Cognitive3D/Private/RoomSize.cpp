@@ -10,7 +10,7 @@ void URoomSize::BeginPlay()
 	if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
 
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		cognitive->OnSessionBegin.AddDynamic(this, &URoomSize::OnSessionBegin);
@@ -23,7 +23,7 @@ void URoomSize::BeginPlay()
 
 void URoomSize::OnSessionBegin()
 {
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		FVector size;
@@ -55,7 +55,7 @@ void URoomSize::OnSessionBegin()
 
 void URoomSize::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
-	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		cognitive->OnSessionBegin.RemoveDynamic(this, &URoomSize::OnSessionBegin);

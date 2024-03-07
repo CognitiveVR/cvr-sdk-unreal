@@ -2,14 +2,14 @@
 ** Copyright (c) 2016 Cognitive3D, Inc. All rights reserved.
 */
 
-#include "Cognitive3D/Private/api/sensor.h"
+#include "Cognitive3D/Private/C3DApi/Sensor.h"
 
-USensors::USensors()
+FSensors::FSensors()
 {
-	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 }
 
-void USensors::StartSession()
+void FSensors::StartSession()
 {
 	LastSensorValues.Empty();
 	SensorDataPoints.Empty();
@@ -44,10 +44,10 @@ void USensors::StartSession()
 		GLog->Log("USensors::StartSession world from ACognitive3DActor is null!");
 		return;
 	}
-	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &USensors::SendData, false), AutoTimer, true);
+	world->GetTimerManager().SetTimer(AutoSendHandle, FTimerDelegate::CreateRaw(this, &FSensors::SendData, false), AutoTimer, true);
 }
 
-void USensors::InitializeSensor(FString sensorName, float hzRate, float initialValue)
+void FSensors::InitializeSensor(FString sensorName, float hzRate, float initialValue)
 {
 	if (sensorData.Contains(sensorName))
 	{
@@ -58,7 +58,7 @@ void USensors::InitializeSensor(FString sensorName, float hzRate, float initialV
 	LastSensorValues.Add(sensorName, initialValue);
 }
 
-void USensors::RecordSensor(FString Name, float value)
+void FSensors::RecordSensor(FString Name, float value)
 {
 	if (FMath::IsNaN(value)) { return; }
 
@@ -90,7 +90,7 @@ void USensors::RecordSensor(FString Name, float value)
 	}
 }
 
-void USensors::RecordSensor(FString Name, double value)
+void FSensors::RecordSensor(FString Name, double value)
 {
 	if (FMath::IsNaN(value)) { return; }
 
@@ -122,7 +122,7 @@ void USensors::RecordSensor(FString Name, double value)
 	}
 }
 
-void USensors::SendData(bool copyDataToCache)
+void FSensors::SendData(bool copyDataToCache)
 {
 	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
@@ -213,12 +213,12 @@ void USensors::SendData(bool copyDataToCache)
 	}
 }
 
-TMap<FString, float> USensors::GetLastSensorValues()
+TMap<FString, float> FSensors::GetLastSensorValues()
 {
 	return LastSensorValues;
 }
 
-void USensors::PreSessionEnd()
+void FSensors::PreSessionEnd()
 {
 	//clean up auto send timer
 	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
@@ -226,7 +226,7 @@ void USensors::PreSessionEnd()
 	world->GetTimerManager().ClearTimer(AutoSendHandle);
 }
 
-void USensors::PostSessionEnd()
+void FSensors::PostSessionEnd()
 {
 	
 }

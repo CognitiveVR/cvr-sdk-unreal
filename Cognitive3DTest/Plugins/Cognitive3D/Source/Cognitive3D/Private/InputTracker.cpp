@@ -12,7 +12,7 @@ UInputTracker::UInputTracker()
 
 void UInputTracker::BeginPlay()
 {
-	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	Super::BeginPlay();
 
 	//get player controller 0 and enable input
@@ -77,7 +77,7 @@ void UInputTracker::BeginPlay()
 	InputComponent->BindAxis(TEXT("C3D_RightGripAxis")).bConsumeInput = 0;
 
 	//listen for event or find controller immediately if session already started
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cogProvider->HasStartedSession())
 	{
 		FindControllers();
@@ -1691,6 +1691,6 @@ void UInputTracker::RightTriggerReleased()
 
 void UInputTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	cogProvider->OnSessionBegin.RemoveDynamic(this, &UInputTracker::FindControllers);
 }

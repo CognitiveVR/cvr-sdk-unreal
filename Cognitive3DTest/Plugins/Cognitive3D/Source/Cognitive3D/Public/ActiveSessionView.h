@@ -9,7 +9,7 @@
 #include "Blueprint/WidgetBlueprintGeneratedClass.h"
 #include "Components/Widget.h"
 #include "Components/WidgetComponent.h"
-#include "IActiveSessionViewRequired.h"
+#include "ActiveSessionViewRequired.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "ActiveSessionView.generated.h"
 
