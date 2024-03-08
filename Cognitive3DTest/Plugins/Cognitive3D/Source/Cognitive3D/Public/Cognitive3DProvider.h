@@ -1,4 +1,6 @@
-// Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
+/*
+** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
+*/
 
 #pragma once
 

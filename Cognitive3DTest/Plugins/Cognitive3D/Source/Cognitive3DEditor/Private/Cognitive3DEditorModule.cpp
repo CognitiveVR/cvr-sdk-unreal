@@ -1,4 +1,6 @@
-
+/*
+** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
+*/
 
 #include "Cognitive3DEditorModule.h"
 #include "C3DCommands.h"

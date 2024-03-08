@@ -1,6 +1,8 @@
 #pragma once
 
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+/*
+** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
+*/
 
 #include "DynamicComponentDetails.h"
 

@@ -1,3 +1,7 @@
+/*
+** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
+*/
+
 #include "Cognitive3D/Private/C3DComponents/BatteryLevel.h"
 
 UBatteryLevel::UBatteryLevel()

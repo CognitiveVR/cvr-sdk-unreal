@@ -1,4 +1,6 @@
-
+/*
+** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
+*/
 
 #include "CognitiveEditorTools.h"
 

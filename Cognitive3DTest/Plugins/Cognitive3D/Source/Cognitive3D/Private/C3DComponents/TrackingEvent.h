@@ -1,3 +1,7 @@
+/*
+** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
+*/
+
 #pragma once
 
 #include "Cognitive3D/Private/C3DUtil/Util.h"

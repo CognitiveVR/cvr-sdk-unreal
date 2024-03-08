@@ -1,4 +1,6 @@
-// Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
+/*
+** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
+*/
 
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "Cognitive3D/Public/Cognitive3DProvider.h"

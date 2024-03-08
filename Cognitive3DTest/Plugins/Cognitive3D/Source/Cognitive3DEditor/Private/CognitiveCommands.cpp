@@ -1,3 +1,7 @@
+/*
+** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
+*/
+
 #include "C3DCommands.h"
 
 #define LOCTEXT_NAMESPACE "FCognitive3DEdtiorModule"

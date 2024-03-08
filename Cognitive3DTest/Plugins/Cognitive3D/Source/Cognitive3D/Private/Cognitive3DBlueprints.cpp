@@ -1,5 +1,5 @@
 /*
-	
+** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
 */
 #include "Cognitive3DBlueprints.h"
 //#include "Private/Cognitive3DPrivatePCH.h"

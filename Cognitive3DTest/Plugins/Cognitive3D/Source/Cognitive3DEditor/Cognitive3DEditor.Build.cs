@@ -1,3 +1,7 @@
+/*
+** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
+*/
+
 using UnrealBuildTool;
 
 public class Cognitive3DEditor : ModuleRules
