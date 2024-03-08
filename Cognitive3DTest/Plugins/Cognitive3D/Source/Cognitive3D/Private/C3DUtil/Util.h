@@ -18,7 +18,7 @@
 #endif
 
 
-    class Util
+    class FUtil
     {
         public:
             static double GetTimestamp();

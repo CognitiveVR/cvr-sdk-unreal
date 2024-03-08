@@ -332,7 +332,7 @@ bool UFixationRecorder::AreEyesClosed()
 }
 int64 UFixationRecorder::GetEyeCaptureTimestamp()
 {
-	int64 ts = (int64)(Util::GetTimestamp() * 1000);
+	int64 ts = (int64)(FUtil::GetTimestamp() * 1000);
 	return ts;
 }
 #elif defined SRANIPAL_1_3_API
@@ -352,7 +352,7 @@ bool UFixationRecorder::AreEyesClosed()
 
 int64 UFixationRecorder::GetEyeCaptureTimestamp()
 {
-	int64 ts = (int64)(Util::GetTimestamp() * 1000);
+	int64 ts = (int64)(FUtil::GetTimestamp() * 1000);
 	return ts;
 }
 #elif defined VARJOEYETRACKER_API
@@ -373,7 +373,7 @@ bool UFixationRecorder::AreEyesClosed()
 
 int64 UFixationRecorder::GetEyeCaptureTimestamp()
 {
-	int64 ts = (int64)(Util::GetTimestamp() * 1000);
+	int64 ts = (int64)(FUtil::GetTimestamp() * 1000);
 	return ts;
 }
 #elif defined PICOMOBILE_API
@@ -386,7 +386,7 @@ bool UFixationRecorder::AreEyesClosed()
 
 int64 UFixationRecorder::GetEyeCaptureTimestamp()
 {
-	int64 ts = (int64)(Util::GetTimestamp() * 1000);
+	int64 ts = (int64)(FUtil::GetTimestamp() * 1000);
 	return ts;
 }
 #elif defined HPGLIA_API
@@ -403,7 +403,7 @@ bool UFixationRecorder::AreEyesClosed()
 
 int64 UFixationRecorder::GetEyeCaptureTimestamp()
 {
-	int64 ts = (int64)(Util::GetTimestamp() * 1000);
+	int64 ts = (int64)(FUtil::GetTimestamp() * 1000);
 	return ts;
 }
 #elif defined OPENXR_EYETRACKING
@@ -421,7 +421,7 @@ bool UFixationRecorder::AreEyesClosed()
 }
 int64 UFixationRecorder::GetEyeCaptureTimestamp()
 {
-	int64 ts = (int64)(Util::GetTimestamp() * 1000);
+	int64 ts = (int64)(FUtil::GetTimestamp() * 1000);
 	return ts;
 }
 #elif defined WAVEVR_EYETRACKING
@@ -445,7 +445,7 @@ bool UFixationRecorder::AreEyesClosed()
 }
 int64 UFixationRecorder::GetEyeCaptureTimestamp()
 {
-	int64 ts = (int64)(Util::GetTimestamp() * 1000);
+	int64 ts = (int64)(FUtil::GetTimestamp() * 1000);
 	return ts;
 }
 #else
@@ -457,7 +457,7 @@ bool UFixationRecorder::AreEyesClosed()
 
 int64 UFixationRecorder::GetEyeCaptureTimestamp()
 {
-	int64 ts = (int64)(Util::GetTimestamp() * 1000);
+	int64 ts = (int64)(FUtil::GetTimestamp() * 1000);
 	return ts;
 }
 

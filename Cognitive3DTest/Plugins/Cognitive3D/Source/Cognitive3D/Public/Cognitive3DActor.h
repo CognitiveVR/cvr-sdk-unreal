@@ -15,6 +15,8 @@
 //this class basically only exists to send EndPlay to the CognitiveProvider
 //and as a simple way of getting the right UWorld
 
+class IAnalyticsProviderCognitive3D;
+
 UCLASS()
 class COGNITIVE3D_API ACognitive3DActor : public AActor
 {

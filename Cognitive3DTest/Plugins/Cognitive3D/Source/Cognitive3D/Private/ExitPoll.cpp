@@ -2,22 +2,22 @@
 
 #include "ExitPoll.h"
 
-//FCognitiveExitPollResponse ExitPoll::lastResponse;
-//FExitPollQuestionSet ExitPoll::currentQuestionSet;
-//FString ExitPoll::lastHook;
-//double ExitPoll::lastStartTime;
+//FCognitiveExitPollResponse FExitPoll::lastResponse;
+//FExitPollQuestionSet FExitPoll::currentQuestionSet;
+//FString FExitPoll::lastHook;
+//double FExitPoll::lastStartTime;
 
-ExitPoll::ExitPoll()
+FExitPoll::FExitPoll()
 {
 
 }
 
-void ExitPoll::MakeQuestionSetRequest(const FString Hook, FCognitiveExitPollResponse& response)
+void FExitPoll::MakeQuestionSetRequest(const FString Hook, FCognitiveExitPollResponse& response)
 {
 	auto cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider();
 	if (!cogProvider.IsValid() || !cogProvider.Pin()->HasStartedSession())
 	{
-		FCognitiveLog::Error("ExitPoll::MakeQuestionSetRequest could not get provider!");
+		FCognitiveLog::Error("FExitPoll::MakeQuestionSetRequest could not get provider!");
 		return;
 	}
 	lastResponse = response;
@@ -25,9 +25,9 @@ void ExitPoll::MakeQuestionSetRequest(const FString Hook, FCognitiveExitPollResp
 	cogProvider.Pin()->network->NetworkExitPollGetQuestionSet(Hook,response);
 }
 
-void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
+void FExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
 {
-	lastStartTime = Util::GetTimestamp();
+	lastStartTime = FUtil::GetTimestamp();
 	if (!successful)
 	{
 		if (lastResponse.IsBound())
@@ -41,7 +41,7 @@ void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
 	currentQuestionSet = FExitPollQuestionSet();
 
 	//FString UE4Str = Response->GetContentAsString();
-	FCognitiveLog::Info("ExitPoll::OnResponseReceived - Response: " + ResponseContent);
+	FCognitiveLog::Info("FExitPoll::OnResponseReceived - Response: " + ResponseContent);
 
 	//Cognitive3DResponse response = Network::ParseResponse(content);
 
@@ -52,7 +52,7 @@ void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
 	{
 		if (!jobject->HasField(TEXT("customerId")))
 		{
-			FCognitiveLog::Info("ExitPoll::OnResponseReceivedAsync - no customerId in response - fail");
+			FCognitiveLog::Info("FExitPoll::OnResponseReceivedAsync - no customerId in response - fail");
 			if (lastResponse.IsBound())
 			{
 				lastResponse.Execute(FExitPollQuestionSet());
@@ -140,24 +140,24 @@ void ExitPoll::OnResponseReceived(FString ResponseContent, bool successful)
 	}
 }
 
-FExitPollQuestionSet ExitPoll::GetCurrentQuestionSet()
+FExitPollQuestionSet FExitPoll::GetCurrentQuestionSet()
 {
 	return currentQuestionSet;
 }
 
-void ExitPoll::SendQuestionResponse(FExitPollResponse Responses)
+void FExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 {
 	auto cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider();
 	if (!cogProvider.IsValid() || !cogProvider.Pin()->HasStartedSession())
 	{
-		FCognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		FCognitiveLog::Error("FExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	cogProvider.Pin()->network->NetworkExitPollPostResponse(currentQuestionSet, Responses);
 	currentQuestionSet = FExitPollQuestionSet();
 }
 
-void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
+void FExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 {
 	auto provider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider();
 	if (!provider.IsValid())
@@ -168,7 +168,7 @@ void ExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 	auto cog = provider.Pin();
 	auto questionSet = GetCurrentQuestionSet();
 	FExitPollResponse responses = FExitPollResponse();
-	responses.duration = Util::GetTimestamp() - lastStartTime;
+	responses.duration = FUtil::GetTimestamp() - lastStartTime;
 	responses.hook = lastHook;
 	responses.userId = cog->GetDeviceID();
 	responses.participantId = cog->GetUserID();

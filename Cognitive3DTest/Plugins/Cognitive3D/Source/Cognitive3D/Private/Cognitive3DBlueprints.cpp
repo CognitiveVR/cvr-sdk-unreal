@@ -383,7 +383,7 @@ float UCognitive3DBlueprints::GetSessionDuration()
 	if (!cog.IsValid()) { return -1; }
 	if (!cog->HasStartedSession()) { return 0; }
 
-	float dur = Util::GetTimestamp() - cog->GetSessionTimestamp();
+	float dur = FUtil::GetTimestamp() - cog->GetSessionTimestamp();
 	return dur;
 }
 

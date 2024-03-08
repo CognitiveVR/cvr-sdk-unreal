@@ -1,4 +1,4 @@
-#include "Cognitive3D/Private/FramerateSensor.h"
+#include "Cognitive3D/Private/C3DComponents/FramerateSensor.h"
 
 UFramerateSensor::UFramerateSensor()
 {

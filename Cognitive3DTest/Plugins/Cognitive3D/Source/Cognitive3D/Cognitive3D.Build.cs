@@ -22,7 +22,7 @@ namespace UnrealBuildTool.Rules
 				new string[] {
 					"Cognitive3D/Private",
                     "Cognitive3D/Public",
-					"Cognitive3D/Private/util"
+					"Cognitive3D/Private/C3DUtil"
 					// ... add other private include paths required here ...
 				}
 				);

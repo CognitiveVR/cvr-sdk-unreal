@@ -1,4 +1,4 @@
-#include "Cognitive3D/Private/RoomSize.h"
+#include "Cognitive3D/Private/C3DComponents/RoomSize.h"
 
 URoomSize::URoomSize()
 {

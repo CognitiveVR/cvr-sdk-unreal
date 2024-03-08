@@ -518,7 +518,7 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 
 	FDynamicObjectSnapshot snapshot = FDynamicObjectSnapshot();
 
-	double ts = Util::GetTimestamp();
+	double ts = FUtil::GetTimestamp();
 
 	snapshot.timestamp = ts;
 	snapshot.id = ObjectID->Id;

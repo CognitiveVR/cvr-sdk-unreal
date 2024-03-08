@@ -1,4 +1,4 @@
-#include "Cognitive3D/Private/TrackingEvent.h"
+#include "Cognitive3D/Private/C3DComponents/TrackingEvent.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 
 UTrackingEvent::UTrackingEvent()

@@ -1,4 +1,4 @@
-#include "Cognitive3D/Private/HMDOrientation.h"
+#include "Cognitive3D/Private/C3DComponents/HMDOrientation.h"
 
 UHMDOrientation::UHMDOrientation()
 {

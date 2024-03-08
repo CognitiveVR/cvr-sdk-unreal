@@ -4,7 +4,7 @@
 
 #include "LocalCache.h"
 
-LocalCache::LocalCache(FString path)
+FLocalCache::FLocalCache(FString path)
 {
 	FString ValueReceived;
 	localCacheEnabled = false;
@@ -41,17 +41,17 @@ LocalCache::LocalCache(FString path)
 	MergeDataFiles();
 }
 
-int32 LocalCache::NumberOfBatches()
+int32 FLocalCache::NumberOfBatches()
 {
 	return readContent.Num() / 2;
 }
-bool LocalCache::HasContent()
+bool FLocalCache::HasContent()
 {
 	return readContent.Num() > 0;
 }
 
 //called on session end. close filestream, serialize any outstanding data batches to disk
-void LocalCache::Close()
+void FLocalCache::Close()
 {
 	if (!localCacheEnabled) { return; }
 	SerializeToFile();
@@ -63,12 +63,12 @@ void LocalCache::Close()
 	}
 }
 
-bool LocalCache::IsEnabled()
+bool FLocalCache::IsEnabled()
 {
 	return localCacheEnabled;
 }
 
-bool LocalCache::CanWrite(int32 byteCount)
+bool FLocalCache::CanWrite(int32 byteCount)
 {
 	if (!localCacheEnabled) { return false; }
 
@@ -80,7 +80,7 @@ bool LocalCache::CanWrite(int32 byteCount)
 	return false;
 }
 
-void LocalCache::WriteData(FString destination, FString body)
+void FLocalCache::WriteData(FString destination, FString body)
 {
 	if (WriterArchive == nullptr) { return; }
 	if (!localCacheEnabled) { return; }
@@ -92,7 +92,7 @@ void LocalCache::WriteData(FString destination, FString body)
 	numberWriteBatches++;
 }
 
-bool LocalCache::PeekContent(FString& url, FString& content)
+bool FLocalCache::PeekContent(FString& url, FString& content)
 {
 	if (NumberOfBatches() < 1) //nothing in 'read' file
 	{
@@ -127,18 +127,18 @@ bool LocalCache::PeekContent(FString& url, FString& content)
 	}
 }
 
-void LocalCache::PopContent()
+void FLocalCache::PopContent()
 {
 	readContent.RemoveAt(readContent.Num() - 1);
 	readContent.RemoveAt(readContent.Num() - 1);
 }
 
 
-void LocalCache::MergeDataFiles()
+void FLocalCache::MergeDataFiles()
 {
 	if (readContent.Num() > 0)
 	{
-		FCognitiveLog::Error("LocalCache::MergeDataFiles ERROR readContent not empty");
+		FCognitiveLog::Error("FLocalCache::MergeDataFiles ERROR readContent not empty");
 		return;
 	}
 
@@ -159,7 +159,7 @@ void LocalCache::MergeDataFiles()
 	}
 	else
 	{
-		FCognitiveLog::Error("LocalCache::MergeDataFiles write file error");
+		FCognitiveLog::Error("FLocalCache::MergeDataFiles write file error");
 	}
 
 	//read data from 'read' file
@@ -169,7 +169,7 @@ void LocalCache::MergeDataFiles()
 	}
 	else
 	{
-		FCognitiveLog::Error("LocalCache::MergeDataFiles read file error");
+		FCognitiveLog::Error("FLocalCache::MergeDataFiles read file error");
 	}
 
 	//combine
@@ -182,7 +182,7 @@ void LocalCache::MergeDataFiles()
 	}
 	else
 	{
-		FCognitiveLog::Error("LocalCache::MergeDataFiles Error serialize readContents to file");
+		FCognitiveLog::Error("FLocalCache::MergeDataFiles Error serialize readContents to file");
 	}
 
 	//clear write file
@@ -190,7 +190,7 @@ void LocalCache::MergeDataFiles()
 	numberWriteBatches = 0;
 }
 
-void LocalCache::SerializeToFile()
+void FLocalCache::SerializeToFile()
 {
 	if (WriterArchive != nullptr)
 	{
@@ -203,6 +203,6 @@ void LocalCache::SerializeToFile()
 	}
 	else
 	{
-		FCognitiveLog::Error("LocalCache::SerializeToFile ERROR ReadArchive failed");
+		FCognitiveLog::Error("FLocalCache::SerializeToFile ERROR ReadArchive failed");
 	}
 }

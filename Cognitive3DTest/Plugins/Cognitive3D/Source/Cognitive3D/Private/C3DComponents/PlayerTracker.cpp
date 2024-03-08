@@ -164,7 +164,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	currentTime -= PlayerSnapshotInterval;
 
 	
-	double timestamp = Util::GetTimestamp();
+	double timestamp = FUtil::GetTimestamp();
 	FString objectid = "";
 
 	if (controllers.Num() == 0)

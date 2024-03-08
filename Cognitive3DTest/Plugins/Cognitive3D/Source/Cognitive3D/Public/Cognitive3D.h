@@ -5,9 +5,9 @@
 #include "Cognitive3D/Public/C3DCommonTypes.h"
 #include "UObject/UObjectIterator.h"
 #include "CoreMinimal.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Interfaces/IAnalyticsProviderModule.h"
 #include "Modules/ModuleManager.h"
-#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Runtime/Engine/Classes/Engine/LevelStreaming.h"
 
 DEFINE_LOG_CATEGORY_STATIC(Cognitive3D_Log, Log, All);

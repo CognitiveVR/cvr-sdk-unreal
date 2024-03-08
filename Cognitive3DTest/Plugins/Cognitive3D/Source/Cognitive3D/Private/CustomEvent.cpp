@@ -8,7 +8,7 @@ TSharedPtr<IAnalyticsProviderCognitive3D> UCustomEvent::cog;
 
 UCustomEvent::UCustomEvent()
 {
-	StartTime = Util::GetTimestamp();
+	StartTime = FUtil::GetTimestamp();
 }
 
 void UCustomEvent::SetCategory(FString category)
@@ -23,7 +23,7 @@ void UCustomEvent::Send()
 
 	if (!cog.IsValid())
 	{
-		FCognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		FCognitiveLog::Error("FExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	if (!cog->HasStartedSession())
@@ -32,7 +32,7 @@ void UCustomEvent::Send()
 		return;
 	}
 
-	float duration = Util::GetTimestamp() - StartTime;
+	float duration = FUtil::GetTimestamp() - StartTime;
 	FloatProperties.Add("duration", duration);
 	cog->customEventRecorder->Send(this);
 }
@@ -44,7 +44,7 @@ void UCustomEvent::SendAtHMDPosition()
 
 	if (!cog.IsValid())
 	{
-		FCognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		FCognitiveLog::Error("FExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	if (!cog->HasStartedSession())
@@ -53,7 +53,7 @@ void UCustomEvent::SendAtHMDPosition()
 		return;
 	}
 	cog->TryGetPlayerHMDPosition(Position);
-	float duration = Util::GetTimestamp() - StartTime;
+	float duration = FUtil::GetTimestamp() - StartTime;
 	FloatProperties.Add("duration", duration);
 	cog->customEventRecorder->Send(this);
 }
@@ -65,7 +65,7 @@ void UCustomEvent::AppendAllSensors()
 	
 	if (!cog.IsValid())
 	{
-		FCognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		FCognitiveLog::Error("FExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	if (!cog->HasStartedSession())
@@ -86,7 +86,7 @@ void UCustomEvent::AppendSensors(TArray<FString> sensorNames)
 
 	if (!cog.IsValid())
 	{
-		FCognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		FCognitiveLog::Error("FExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	if (!cog->HasStartedSession())
@@ -111,7 +111,7 @@ void UCustomEvent::AppendSensor(FString sensorName)
 
 	if (!cog.IsValid())
 	{
-		FCognitiveLog::Error("ExitPoll::SendQuestionResponse could not get provider!");
+		FCognitiveLog::Error("FExitPoll::SendQuestionResponse could not get provider!");
 		return;
 	}
 	if (!cog->HasStartedSession())

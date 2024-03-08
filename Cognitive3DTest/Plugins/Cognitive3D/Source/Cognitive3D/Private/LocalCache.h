@@ -6,7 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "Interfaces/IAnalyticsProviderModule.h"
-#include "Cognitive3D/Private/C3DUtil/Cognitive_Log.h"
+#include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
 //#include "Cognitive3D/Public/Cognitive3D.h"
 #include "Json.h"
 #include "Misc/FileHelper.h"
@@ -17,11 +17,11 @@
 #include "Windows/WindowsPlatformMisc.h"
 #endif
 
-class LocalCache
+class FLocalCache
 {
 	public:
 
-		LocalCache(FString path);
+		FLocalCache(FString path);
 
 		void WriteData(FString destination, FString body);
 

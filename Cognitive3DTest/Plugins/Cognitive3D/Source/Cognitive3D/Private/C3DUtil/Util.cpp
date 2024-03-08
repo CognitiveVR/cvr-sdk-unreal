@@ -5,7 +5,7 @@
 #include "C3DUtil/Util.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 
-double Util::GetTimestamp()
+double FUtil::GetTimestamp()
 {
 	//#pragma warning(push)
 	//#pragma warning(disable:4244) //Disable warning regarding loss of accuracy, no concern.
@@ -20,7 +20,7 @@ double Util::GetTimestamp()
 	//#pragma warning(pop)
 }
 
-FString Util::GetDeviceName(FString DeviceName)
+FString FUtil::GetDeviceName(FString DeviceName)
 {
 	if (DeviceName == "OculusRift")
 	{
@@ -41,7 +41,7 @@ FString Util::GetDeviceName(FString DeviceName)
 	return FString("unknown");
 }
 
-void Util::SetSessionProperties()
+void FUtil::SetSessionProperties()
 {
 	auto cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 

@@ -1,4 +1,4 @@
-#include "Cognitive3D/Private/ArmLength.h"
+#include "Cognitive3D/Private/C3DComponents/ArmLength.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 
 UArmLength::UArmLength()

@@ -12,7 +12,7 @@
 #endif
 #include "Interfaces/IPluginManager.h"
 //IMPROVEMENT this should be in the header, but can't find ControllerType enum
-#include "Cognitive3D/Private/InputTracker.h"
+#include "Cognitive3D/Private/C3DComponents/InputTracker.h"
 #if WITH_EDITOR
 #include "Misc/MessageDialog.h"
 #endif
@@ -31,12 +31,12 @@ void IAnalyticsCognitive3D::StartupModule()
 	Cognitive3DProvider = TWeakPtr<IAnalyticsProviderCognitive3D>(cog);
 
 	//create non-initialized data collectors and other internal stuff
-	Cognitive3DProvider.Pin()->exitpoll = MakeShareable(new ExitPoll());
+	Cognitive3DProvider.Pin()->exitpoll = MakeShareable(new FExitPoll());
 	Cognitive3DProvider.Pin()->customEventRecorder = new FCustomEventRecorder();
 	Cognitive3DProvider.Pin()->sensors = new FSensors();
 	Cognitive3DProvider.Pin()->fixationDataRecorder = new FFixationDataRecorder();
 	Cognitive3DProvider.Pin()->gazeDataRecorder = new FGazeDataRecorder();
-	Cognitive3DProvider.Pin()->localCache = MakeShareable(new LocalCache(FPaths::GeneratedConfigDir()));
+	Cognitive3DProvider.Pin()->localCache = MakeShareable(new FLocalCache(FPaths::GeneratedConfigDir()));
 	Cognitive3DProvider.Pin()->network = MakeShareable(new FNetwork());
 	Cognitive3DProvider.Pin()->dynamicObjectManager = new FDynamicObjectManager();
 }
@@ -64,7 +64,7 @@ void IAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 		{
 			properties->SetStringField("Scene Name", FString(data->Name));
 			properties->SetStringField("Scene Id", FString(data->Id));
-			float duration = Util::GetTimestamp() - SceneStartTime;
+			float duration = FUtil::GetTimestamp() - SceneStartTime;
 			properties->SetNumberField("Duration", duration);
 			customEventRecorder->Send("c3d.SceneChange", properties);
 		}
@@ -82,7 +82,7 @@ void IAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 		ForceWriteSessionMetadata = true;
 		CurrentTrackingSceneId = data->Id;
 		LastSceneData = data;
-		SceneStartTime = Util::GetTimestamp();
+		SceneStartTime = FUtil::GetTimestamp();
 	}
 	else //additively loading to scene without data
 	{
@@ -124,7 +124,7 @@ void IAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 		{
 			properties->SetStringField("Scene Name", FString(stackNewTop->Name));
 			properties->SetStringField("Scene Id", FString(stackNewTop->Id));
-			float duration = Util::GetTimestamp() - SceneStartTime;
+			float duration = FUtil::GetTimestamp() - SceneStartTime;
 			properties->SetNumberField("Duration", duration);
 			customEventRecorder->Send("c3d.SceneChange", properties);
 		}
@@ -142,7 +142,7 @@ void IAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 			CurrentTrackingSceneId = "";
 			LastSceneData = nullptr;
 		}
-		SceneStartTime = Util::GetTimestamp();
+		SceneStartTime = FUtil::GetTimestamp();
 	}
 	else
 	{
@@ -186,7 +186,7 @@ void IAnalyticsProviderCognitive3D::HandlePostLevelLoad(UWorld* world)
 			properties->SetStringField("Scene Name", FString(data->Name));
 			properties->SetStringField("Scene Id", FString(data->Id));
 		}
-		float duration = Util::GetTimestamp() - SceneStartTime;
+		float duration = FUtil::GetTimestamp() - SceneStartTime;
 		properties->SetNumberField("Duration", duration);
 		customEventRecorder->Send("c3d.SceneChange", properties);
 		FlushAndCacheEvents();
@@ -205,7 +205,7 @@ void IAnalyticsProviderCognitive3D::HandlePostLevelLoad(UWorld* world)
 		CurrentTrackingSceneId = "";
 		LastSceneData = data;
 	}
-	SceneStartTime = Util::GetTimestamp();
+	SceneStartTime = FUtil::GetTimestamp();
 }
 
 void IAnalyticsCognitive3D::ShutdownModule()
@@ -296,7 +296,7 @@ bool IAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 
 	//pre session startup
 	CacheSceneData();
-	SessionTimestamp = Util::GetTimestamp();
+	SessionTimestamp = FUtil::GetTimestamp();
 	if (SessionId.IsEmpty())
 	{
 		SessionId = FString::FromInt(GetSessionTimestamp()) + TEXT("_") + DeviceId;
@@ -319,7 +319,7 @@ bool IAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 				LastSceneData = data;
 			}
 		}
-		SceneStartTime = Util::GetTimestamp();
+		SceneStartTime = FUtil::GetTimestamp();
 	}
 
 	//register delegates
@@ -335,7 +335,7 @@ bool IAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 		SublevelUnloadedHandle = FWorldDelegates::LevelRemovedFromWorld.AddRaw(this, &IAnalyticsProviderCognitive3D::HandleSublevelUnloaded);
 
 	//set session properties
-	Util::SetSessionProperties();
+	FUtil::SetSessionProperties();
 	for (auto Attr : Attributes)
 	{
 		SetSessionProperty(Attr.GetName(), Attr.GetValue());
@@ -1164,14 +1164,14 @@ void IAnalyticsProviderCognitive3D::SetTrackingScene(FString levelName)
 		ForceWriteSessionMetadata = true;
 		CurrentTrackingSceneId = data->Id;
 		LastSceneData = data;
-		SceneStartTime = Util::GetTimestamp();
+		SceneStartTime = FUtil::GetTimestamp();
 	}
 	else
 	{
 		ForceWriteSessionMetadata = true;
 		CurrentTrackingSceneId = FString();
 		LastSceneData = data;
-		SceneStartTime = Util::GetTimestamp();
+		SceneStartTime = FUtil::GetTimestamp();
 	}
 	//todo consider events for arrival/departure from scenes here
 }

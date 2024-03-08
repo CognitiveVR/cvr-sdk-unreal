@@ -2,7 +2,7 @@
 ** Copyright (c) 2016 Cognitive3D, Inc. All rights reserved.
 */
 
-#include "Cognitive3D/Private/C3DApi/Sensor.h"
+#include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
 
 FSensors::FSensors()
 {
@@ -74,7 +74,7 @@ void FSensors::RecordSensor(FString Name, float value)
 		{
 			return; //recording above rate!
 		}
-		SensorDataPoints[Name].Add("[" + FString::SanitizeFloat(Util::GetTimestamp()) + "," + FString::SanitizeFloat(value) + "]");
+		SensorDataPoints[Name].Add("[" + FString::SanitizeFloat(FUtil::GetTimestamp()) + "," + FString::SanitizeFloat(value) + "]");
 	}
 	else
 	{
@@ -106,7 +106,7 @@ void FSensors::RecordSensor(FString Name, double value)
 		{
 			return; //recording above rate!
 		}
-		SensorDataPoints[Name].Add("[" + FString::SanitizeFloat(Util::GetTimestamp()) + "," + FString::SanitizeFloat(value) + "]");
+		SensorDataPoints[Name].Add("[" + FString::SanitizeFloat(FUtil::GetTimestamp()) + "," + FString::SanitizeFloat(value) + "]");
 	}
 	else
 	{
@@ -205,6 +205,7 @@ void FSensors::SendData(bool copyDataToCache)
 	const TCHAR* charcomplete = *complete;
 	OutputString = OutputString.Replace(TEXT("\"SENSORDATAHERE\""), charcomplete);
 
+	UE_LOG(LogTemp, Warning, TEXT("calling sensors network call"));
 	cog->network->NetworkCall("sensors", OutputString, copyDataToCache);
 
 	for (auto& entry : SensorDataPoints)

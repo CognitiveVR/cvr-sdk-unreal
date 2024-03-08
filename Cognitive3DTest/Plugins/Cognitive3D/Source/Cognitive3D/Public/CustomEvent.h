@@ -8,7 +8,7 @@
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 #include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
-#include "Cognitive3D/Private/C3DApi/Sensor.h"
+#include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
 #include "CustomEvent.generated.h"
 
 class UDynamicObject;

@@ -10,9 +10,9 @@ public class Cognitive3DEditor : ModuleRules
         PrivateIncludePaths.AddRange(
             new string[] {
                 "Cognitive3D/Private",
-                "Cognitive3D/Private/api",
-                "Cognitive3D/Private/network",
-                "Cognitive3D/Private/util",
+                "Cognitive3D/Private/C3DApi",
+                "Cognitive3D/Private/C3DNetwork",
+                "Cognitive3D/Private/C3DUtil",
                 System.IO.Path.GetFullPath(Target.RelativeEnginePath) + "/Source/Editor/Blutility/Private",
                 System.IO.Path.GetFullPath(Target.RelativeEnginePath) + "/Source/Developer/MeshUtilities/Private"
             });

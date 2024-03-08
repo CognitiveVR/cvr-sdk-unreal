@@ -1,4 +1,4 @@
-#include "Cognitive3D/Private/BatteryLevel.h"
+#include "Cognitive3D/Private/C3DComponents/BatteryLevel.h"
 
 UBatteryLevel::UBatteryLevel()
 {

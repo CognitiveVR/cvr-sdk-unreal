@@ -1,4 +1,4 @@
-#include "Cognitive3D/Private/HandElevation.h"
+#include "Cognitive3D/Private/C3DComponents/HandElevation.h"
 
 UHandElevation::UHandElevation()
 {

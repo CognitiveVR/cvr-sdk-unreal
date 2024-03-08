@@ -11,7 +11,7 @@
 class IAnalyticsProviderCognitive3D;
 class HttpInterface;
 class FCognitiveExitPollResponse;
-class LocalCache;
+class FLocalCache;
 struct FExitPollQuestionSet;
 struct FExitPollResponse;
 

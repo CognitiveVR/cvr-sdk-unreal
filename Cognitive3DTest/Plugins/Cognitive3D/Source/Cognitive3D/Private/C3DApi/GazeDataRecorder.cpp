@@ -109,7 +109,7 @@ void FGazeDataRecorder::SendData(bool copyDataToCache)
 	if (GEngine->XRSystem.IsValid())
 	{
 		DeviceName = GEngine->XRSystem->GetSystemName();
-		DeviceNameString = Util::GetDeviceName(DeviceName.ToString());
+		DeviceNameString = FUtil::GetDeviceName(DeviceName.ToString());
 	}
 
 	wholeObj->SetStringField("formatversion", "1.0");

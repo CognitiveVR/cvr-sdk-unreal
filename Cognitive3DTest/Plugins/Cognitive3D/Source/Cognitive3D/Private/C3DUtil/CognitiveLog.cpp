@@ -1,7 +1,7 @@
 /*
 ** Copyright (c) 2016 Cognitive3D, Inc. All rights reserved.
 */
-#include "C3DUtil/Cognitive_Log.h"
+#include "C3DUtil/CognitiveLog.h"
 
 bool FCognitiveLog::ShowDebugLogs; //basic info/warning/errors
 bool FCognitiveLog::ShowDevLogs; //development specific logs

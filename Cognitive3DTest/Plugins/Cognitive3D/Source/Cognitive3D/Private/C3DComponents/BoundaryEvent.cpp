@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Cognitive3D/Private/BoundaryEvent.h"
+#include "Cognitive3D/Private/C3DComponents/BoundaryEvent.h"
 #include "DrawDebugHelpers.h"
 #include "Interfaces/IPluginManager.h"
 #include "HeadMountedDisplayFunctionLibrary.h"

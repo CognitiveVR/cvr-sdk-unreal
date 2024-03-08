@@ -6,8 +6,8 @@
 //#include "TimerManager.h"
 #include "Analytics.h"
 #include "Cognitive3D/Public/Cognitive3DProvider.h"
-//#include "Cognitive3D/Private/Util/util.h"
-//#include "Cognitive3D/Private/PlayerTracker.h"
+//#include "Cognitive3D/Private/C3DUtil/Util.h"
+//#include "Cognitive3D/Private/C3DComponents/PlayerTracker.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 
 class IAnalyticsCognitive3D;

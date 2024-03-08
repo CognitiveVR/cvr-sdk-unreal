@@ -168,7 +168,7 @@ void FCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<F
 	TArray< TSharedPtr<FJsonValue> > ObjArray;
 	TSharedPtr<FJsonValueArray> jsonArray = MakeShareable(new FJsonValueArray(ObjArray));
 
-	double ts = Util::GetTimestamp();
+	double ts = FUtil::GetTimestamp();
 	TArray< TSharedPtr<FJsonValue> > pos;
 	pos.Add(MakeShareable(new FJsonValueNumber(-Position.X)));
 	pos.Add(MakeShareable(new FJsonValueNumber(Position.Z)));
@@ -246,7 +246,7 @@ void FCustomEventRecorder::PreSessionEnd()
 	}
 
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject);
-	properties->SetNumberField("sessionlength", Util::GetTimestamp() - cog->GetSessionTimestamp());
+	properties->SetNumberField("sessionlength", FUtil::GetTimestamp() - cog->GetSessionTimestamp());
 	Send(FString("c3d.sessionEnd"), properties);
 
 	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
