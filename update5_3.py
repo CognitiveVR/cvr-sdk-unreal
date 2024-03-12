@@ -130,6 +130,7 @@ replaceline(cwd+"/Plugins\Cognitive3D\Source\Cognitive3D\Cognitive3D.Build.cs","
 
 insertline(cwd+"/Plugins\Cognitive3D\Source\Cognitive3D\Cognitive3D.Build.cs","					\"Slate\",","					\"XRBase\",",)
 
+insertline(cwd+"/Plugins\Cognitive3D\Cognitive3D.uplugin", "	\"Plugins\": [", "		{\n			\"Name\": \"XRBase\",\n			\"Enabled\": true\n		}," )
 
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue"+engineversion+"_"+enginesubversion
