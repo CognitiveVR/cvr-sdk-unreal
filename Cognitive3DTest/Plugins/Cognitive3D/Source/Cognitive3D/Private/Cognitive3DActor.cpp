@@ -22,7 +22,7 @@ void ACognitive3DActor::BeginPlay()
 	if (world == NULL) { FCognitiveLog::Error("ACognitiveActor::BeginPlay world is null!"); return; }
 	if (world->WorldType != EWorldType::PIE && world->WorldType != EWorldType::Game) { return; } //editor world. skip
 
-	cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	cog->OnSessionBegin.AddDynamic(this, &ACognitive3DActor::ReceiveBeginSession);
 	cog->OnPreSessionEnd.AddDynamic(this, &ACognitive3DActor::ReceivePreEndSession);
 	cog->OnPostSessionEnd.AddDynamic(this, &ACognitive3DActor::ReceivePostEndSession);

@@ -35,7 +35,7 @@ enum class EIdSourceType : uint8
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class COGNITIVE3D_API UDynamicObject : public USceneComponent
 {
-	friend class IAnalyticsProviderCognitive3D;
+	friend class FAnalyticsProviderCognitive3D;
 
 	GENERATED_BODY()
 

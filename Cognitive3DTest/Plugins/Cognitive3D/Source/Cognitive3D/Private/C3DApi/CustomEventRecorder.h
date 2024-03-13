@@ -10,23 +10,23 @@
 //#include "Cognitive3D/Private/C3DComponents/PlayerTracker.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 
-class IAnalyticsCognitive3D;
-class IAnalyticsProviderCognitive3D;
+class FAnalyticsCognitive3D;
+class FAnalyticsProviderCognitive3D;
 class UCustomEvent;
 class UCognitive3DBlueprints;
 
 
 	class COGNITIVE3D_API FCustomEventRecorder
 	{
-		friend class IAnalyticsProviderCognitive3D;
-		friend class IAnalyticsCognitive3D;
+		friend class FAnalyticsProviderCognitive3D;
+		friend class FAnalyticsCognitive3D;
 
 	private:
 
 		uint64 lastFrameCount = 0;
 		int32 consecutiveFrame = 0;
 		
-		TSharedPtr<IAnalyticsProviderCognitive3D> cog;
+		TSharedPtr<FAnalyticsProviderCognitive3D> cog;
 		int32 jsonEventPart = 1;
 		int32 CustomEventBatchSize = 64;
 		int32 AutoTimer = 2;

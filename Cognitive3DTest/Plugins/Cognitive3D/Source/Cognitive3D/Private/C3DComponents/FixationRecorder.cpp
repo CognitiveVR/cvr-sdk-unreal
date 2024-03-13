@@ -20,7 +20,7 @@ void UFixationRecorder::BeginPlay()
 {
 	Super::BeginPlay();
 
-	cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 	auto cognitiveActor = ACognitive3DActor::GetCognitive3DActor();
 	if (cognitiveActor != GetOwner())

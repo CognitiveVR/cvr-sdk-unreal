@@ -51,7 +51,7 @@
 #include "Cognitive3D/Private/C3DApi/GazeDataRecorder.h"
 #include "PlayerTracker.generated.h"
 
-class IAnalyticsProviderCognitive3D;
+class FAnalyticsProviderCognitive3D;
 class UCognitive3DBlueprints;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -61,7 +61,7 @@ class COGNITIVE3D_API UPlayerTracker : public UActorComponent
 
 private:
 	float currentTime = 0;
-	TSharedPtr<IAnalyticsProviderCognitive3D> cog;
+	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
 
 	FVector GetWorldGazeEnd(FVector start);
 	FVector LastDirection;

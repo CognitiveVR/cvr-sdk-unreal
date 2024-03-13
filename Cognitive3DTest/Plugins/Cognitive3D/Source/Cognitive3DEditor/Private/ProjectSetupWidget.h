@@ -26,7 +26,7 @@
 #include "Cognitive3DEditorModule.h"
 
 class FCognitiveTools;
-class ICognitive3DEditorModule;
+class FCognitive3DEditorModule;
 
 //screens:
 //intro

@@ -18,7 +18,7 @@ UCLASS(BlueprintType)
 class COGNITIVE3D_API UCustomEvent : public UObject
 {
 	friend class FCustomEventRecorder;
-	friend class IAnalyticsProviderCognitive3D;
+	friend class FAnalyticsProviderCognitive3D;
 
 	GENERATED_BODY()
 
@@ -32,7 +32,7 @@ private:
 	TMap<FString, float> FloatProperties;
 	TMap<FString, bool> BoolProperties;
 
-	static TSharedPtr<IAnalyticsProviderCognitive3D> cog;
+	static TSharedPtr<FAnalyticsProviderCognitive3D> cog;
 
 public:
 

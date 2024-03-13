@@ -43,7 +43,7 @@ FString FUtil::GetDeviceName(FString DeviceName)
 
 void FUtil::SetSessionProperties()
 {
-	auto cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 	FString HMDDeviceName = UHeadMountedDisplayFunctionLibrary::GetHMDDeviceName().ToString();
 	cog->SetSessionProperty("c3d.device.hmd.type", HMDDeviceName);

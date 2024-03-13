@@ -18,16 +18,16 @@ DEFINE_LOG_CATEGORY_STATIC(Cognitive3D_Log, Log, All);
 #define Cognitive3D_SDK_VERSION "0.29.0"
 
 class IAnalyticsProvider;
-class IAnalyticsProviderCognitive3D;
+class FAnalyticsProviderCognitive3D;
 
 /**
 	* The public interface to this module
 	*/
-class IAnalyticsCognitive3D : public IAnalyticsProviderModule
+class FAnalyticsCognitive3D : public IAnalyticsProviderModule
 {
 	/** Singleton for analytics */
 	TSharedPtr<IAnalyticsProvider> AnalyticsProvider;
-	TWeakPtr<IAnalyticsProviderCognitive3D> Cognitive3DProvider;
+	TWeakPtr<FAnalyticsProviderCognitive3D> Cognitive3DProvider;
 
 	//--------------------------------------------------------------------------
 	// Module functionality
@@ -40,9 +40,9 @@ public:
 		*
 		* @return Returns singleton instance, loading the module on demand if needed
 		*/
-	static inline IAnalyticsCognitive3D& Get()
+	static inline FAnalyticsCognitive3D& Get()
 	{
-		return FModuleManager::LoadModuleChecked< IAnalyticsCognitive3D >( "Cognitive3D" );
+		return FModuleManager::LoadModuleChecked< FAnalyticsCognitive3D >( "Cognitive3D" );
 	}
 
 	//--------------------------------------------------------------------------
@@ -55,7 +55,7 @@ public:
 		* The keys required exactly match the field names in the Config object. 
 		*/
 	virtual TSharedPtr<IAnalyticsProvider> CreateAnalyticsProvider(const FAnalyticsProviderConfigurationDelegate& GetConfigValue) const override;
-	virtual TWeakPtr<IAnalyticsProviderCognitive3D> GetCognitive3DProvider() const;
+	virtual TWeakPtr<FAnalyticsProviderCognitive3D> GetCognitive3DProvider() const;
 
 private:
 	//mutable TMap<FString, TSharedPtr<IAnalyticsProvider>> Analytics;

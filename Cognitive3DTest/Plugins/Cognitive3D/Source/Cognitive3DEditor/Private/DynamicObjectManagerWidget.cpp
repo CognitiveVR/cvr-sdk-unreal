@@ -729,8 +729,8 @@ FReply SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow()
 	}
 
 	//close this window and open the scene setup window
-	ICognitive3DEditorModule::CloseDynamicObjectWindow();
-	ICognitive3DEditorModule::SpawnCognitiveSceneSetupTab();
+	FCognitive3DEditorModule::CloseDynamicObjectWindow();
+	FCognitive3DEditorModule::SpawnCognitiveSceneSetupTab();
 
 	return FReply::Handled();
 }

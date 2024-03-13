@@ -8,7 +8,7 @@
 #include "Cognitive3D/Private/LocalCache.h"
 #include "Http.h"
 
-class IAnalyticsProviderCognitive3D;
+class FAnalyticsProviderCognitive3D;
 class HttpInterface;
 class FCognitiveExitPollResponse;
 class FLocalCache;
@@ -21,7 +21,7 @@ struct FExitPollResponse;
 	private:
 		FHttpModule* Http;
 		FString Gateway;
-		TSharedPtr<IAnalyticsProviderCognitive3D> cog;
+		TSharedPtr<FAnalyticsProviderCognitive3D> cog;
 		bool hasErrorResponse;
 		bool isUploadingFromCache = false;
 		FHttpRequestPtr localCacheRequest;

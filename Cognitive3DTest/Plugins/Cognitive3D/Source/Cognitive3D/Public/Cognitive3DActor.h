@@ -17,7 +17,7 @@
 //this class basically only exists to send EndPlay to the CognitiveProvider
 //and as a simple way of getting the right UWorld
 
-class IAnalyticsProviderCognitive3D;
+class FAnalyticsProviderCognitive3D;
 
 UCLASS()
 class COGNITIVE3D_API ACognitive3DActor : public AActor
@@ -42,7 +42,7 @@ public:
 private:
 
 	static ACognitive3DActor* instance;
-	TSharedPtr<IAnalyticsProviderCognitive3D> cog;
+	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 };

@@ -4,7 +4,7 @@
 
 #include "CustomEvent.h"
 
-TSharedPtr<IAnalyticsProviderCognitive3D> UCustomEvent::cog;
+TSharedPtr<FAnalyticsProviderCognitive3D> UCustomEvent::cog;
 
 UCustomEvent::UCustomEvent()
 {
@@ -19,7 +19,7 @@ void UCustomEvent::SetCategory(FString category)
 void UCustomEvent::Send()
 {
 	if (!cog.IsValid())
-		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 	if (!cog.IsValid())
 	{
@@ -40,7 +40,7 @@ void UCustomEvent::Send()
 void UCustomEvent::SendAtHMDPosition()
 {
 	if (!cog.IsValid())
-		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 	if (!cog.IsValid())
 	{
@@ -61,7 +61,7 @@ void UCustomEvent::SendAtHMDPosition()
 void UCustomEvent::AppendAllSensors()
 {
 	if (!cog.IsValid())
-		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	
 	if (!cog.IsValid())
 	{
@@ -82,7 +82,7 @@ void UCustomEvent::AppendAllSensors()
 void UCustomEvent::AppendSensors(TArray<FString> sensorNames)
 {
 	if (!cog.IsValid())
-		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 	if (!cog.IsValid())
 	{
@@ -107,7 +107,7 @@ void UCustomEvent::AppendSensors(TArray<FString> sensorNames)
 void UCustomEvent::AppendSensor(FString sensorName)
 {
 	if (!cog.IsValid())
-		cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 	if (!cog.IsValid())
 	{

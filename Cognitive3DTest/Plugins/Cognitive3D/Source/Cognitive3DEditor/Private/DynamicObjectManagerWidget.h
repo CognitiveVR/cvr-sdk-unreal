@@ -28,7 +28,7 @@
 
 class FCognitiveTools;
 class SDynamicObjectTableWidget;
-class ICognitive3DEditorModule;
+class FCognitive3DEditorModule;
 
 class SDynamicObjectManagerWidget : public SCompoundWidget
 {

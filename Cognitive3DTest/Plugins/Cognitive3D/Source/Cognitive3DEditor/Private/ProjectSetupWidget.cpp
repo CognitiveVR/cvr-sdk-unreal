@@ -861,14 +861,14 @@ void SProjectSetupWidget::OnExportPathChanged(const FText& Text)
 
 FReply SProjectSetupWidget::OpenSceneSetupWindow()
 {
-	ICognitive3DEditorModule::CloseProjectSetupWindow();
-	ICognitive3DEditorModule::SpawnCognitiveSceneSetupTab();
+	FCognitive3DEditorModule::CloseProjectSetupWindow();
+	FCognitive3DEditorModule::SpawnCognitiveSceneSetupTab();
 	return FReply::Handled();
 }
 
 FReply SProjectSetupWidget::OpenDynamicObjectWindow()
 {
-	ICognitive3DEditorModule::CloseProjectSetupWindow();
-	ICognitive3DEditorModule::SpawnCognitiveDynamicTab();
+	FCognitive3DEditorModule::CloseProjectSetupWindow();
+	FCognitive3DEditorModule::SpawnCognitiveDynamicTab();
 	return FReply::Handled();
 }

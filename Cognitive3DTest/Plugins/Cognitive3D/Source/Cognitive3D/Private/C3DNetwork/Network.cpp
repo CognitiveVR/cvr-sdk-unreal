@@ -8,7 +8,7 @@ FNetwork::FNetwork()
 {
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
-	cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	Http = &FHttpModule::Get();
 	hasErrorResponse = false;
 }

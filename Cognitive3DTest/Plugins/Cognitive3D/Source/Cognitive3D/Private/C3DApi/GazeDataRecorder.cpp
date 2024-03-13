@@ -6,7 +6,7 @@
 //called at module startup to create a default uobject of this type
 FGazeDataRecorder::FGazeDataRecorder()
 {
-	cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 }
 
 void FGazeDataRecorder::StartSession()

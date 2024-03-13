@@ -16,7 +16,7 @@ FExitPoll::FExitPoll()
 
 void FExitPoll::MakeQuestionSetRequest(const FString Hook, FCognitiveExitPollResponse& response)
 {
-	auto cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider();
+	auto cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();
 	if (!cogProvider.IsValid() || !cogProvider.Pin()->HasStartedSession())
 	{
 		FCognitiveLog::Error("FExitPoll::MakeQuestionSetRequest could not get provider!");
@@ -149,7 +149,7 @@ FExitPollQuestionSet FExitPoll::GetCurrentQuestionSet()
 
 void FExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 {
-	auto cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider();
+	auto cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();
 	if (!cogProvider.IsValid() || !cogProvider.Pin()->HasStartedSession())
 	{
 		FCognitiveLog::Error("FExitPoll::SendQuestionResponse could not get provider!");
@@ -161,7 +161,7 @@ void FExitPoll::SendQuestionResponse(FExitPollResponse Responses)
 
 void FExitPoll::SendQuestionAnswers(const TArray<FExitPollAnswer>& answers)
 {
-	auto provider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider();
+	auto provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();
 	if (!provider.IsValid())
 	{
 		return;

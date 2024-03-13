@@ -19,7 +19,7 @@
 #include "DrawDebugHelpers.h"
 #include "GliaSensorRecorder.generated.h"
 
-class IAnalyticsProviderCognitive3D;
+class FAnalyticsProviderCognitive3D;
 class UCognitive3DBlueprints;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -40,7 +40,7 @@ private:
 	void TickSensors100MS();
 #endif
 
-	TSharedPtr<IAnalyticsProviderCognitive3D> cog;
+	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
 	UFUNCTION()
 	void StartListenForTimers();
 	UFUNCTION()

@@ -6,7 +6,7 @@
 
 FSensors::FSensors()
 {
-	cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 }
 
 void FSensors::StartSession()

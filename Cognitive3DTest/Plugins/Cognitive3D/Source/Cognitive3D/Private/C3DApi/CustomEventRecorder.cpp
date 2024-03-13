@@ -5,7 +5,7 @@
 
 FCustomEventRecorder::FCustomEventRecorder()
 {
-	cog = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 }
 
 void FCustomEventRecorder::StartSession()
@@ -155,7 +155,7 @@ void FCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<F
 
 	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
-		FCognitiveLog::Warning("CustomEvent::Send - IAnalyticsProviderCognitive3D is null!");
+		FCognitiveLog::Warning("CustomEvent::Send - FAnalyticsProviderCognitive3D is null!");
 		return;
 	}
 	if (cog->CurrentTrackingSceneId.IsEmpty()) { return; }
@@ -197,7 +197,7 @@ void FCustomEventRecorder::SendData(bool copyDataToCache)
 {
 	if (!cog.IsValid() || !cog->HasStartedSession())
 	{
-		FCognitiveLog::Warning("CustomEvent::SendData - IAnalyticsProviderCognitive3D is null!");
+		FCognitiveLog::Warning("CustomEvent::SendData - FAnalyticsProviderCognitive3D is null!");
 		return;
 	}
 

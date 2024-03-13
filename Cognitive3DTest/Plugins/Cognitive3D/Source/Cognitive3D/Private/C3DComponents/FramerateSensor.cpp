@@ -14,7 +14,7 @@ void UFramerateSensor::BeginPlay()
 	if (HasBegunPlay()) { return; }
 	Super::BeginPlay();
 
-	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{
 		cognitive->OnSessionBegin.AddDynamic(this, &UFramerateSensor::OnSessionBegin);
@@ -32,7 +32,7 @@ void UFramerateSensor::OnSessionBegin()
 
 void UFramerateSensor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cognitive.IsValid())
 	{
 		return;
@@ -77,7 +77,7 @@ void UFramerateSensor::EndInterval()
 	float finalLow5Percent = 1.0f / min5Percent;
 	float finalLow1Percent = 1.0f / min1Percent;
 	
-	auto cognitive = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid() && cognitive->HasStartedSession())
 	{
 		cognitive->sensors->RecordSensor("c3d.fps.avg", framesPerSecond);

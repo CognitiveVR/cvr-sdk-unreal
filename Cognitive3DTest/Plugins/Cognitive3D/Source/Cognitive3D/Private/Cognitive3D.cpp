@@ -20,17 +20,17 @@
 #endif
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "HeadMountedDisplayTypes.h"
-IMPLEMENT_MODULE(IAnalyticsCognitive3D, Cognitive3D);
+IMPLEMENT_MODULE(FAnalyticsCognitive3D, Cognitive3D);
 
-bool IAnalyticsProviderCognitive3D::bHasSessionStarted = false;
+bool FAnalyticsProviderCognitive3D::bHasSessionStarted = false;
 
-void IAnalyticsCognitive3D::StartupModule()
+void FAnalyticsCognitive3D::StartupModule()
 {
 	GLog->Log("AnalyticsCognitive3D::StartupModule");
 
-	TSharedPtr<IAnalyticsProviderCognitive3D> cog = MakeShareable(new IAnalyticsProviderCognitive3D());
+	TSharedPtr<FAnalyticsProviderCognitive3D> cog = MakeShareable(new FAnalyticsProviderCognitive3D());
 	AnalyticsProvider = cog;
-	Cognitive3DProvider = TWeakPtr<IAnalyticsProviderCognitive3D>(cog);
+	Cognitive3DProvider = TWeakPtr<FAnalyticsProviderCognitive3D>(cog);
 
 	//create non-initialized data collectors and other internal stuff
 	Cognitive3DProvider.Pin()->exitpoll = MakeShareable(new FExitPoll());
@@ -43,7 +43,7 @@ void IAnalyticsCognitive3D::StartupModule()
 	Cognitive3DProvider.Pin()->dynamicObjectManager = new FDynamicObjectManager();
 }
 
-void IAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* world)
+void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* world)
 {
 	if (level == nullptr)
 	{
@@ -54,7 +54,7 @@ void IAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 	if (!AutomaticallySetTrackingScene) { return; }
 
 	FString levelName = level->GetFullGroupName(true);
-	//GLog->Log("IAnalyticsProviderCognitive3D::HandleSublevelUnloaded Loaded sublevel: " + levelName);
+	//GLog->Log("FAnalyticsProviderCognitive3D::HandleSublevelUnloaded Loaded sublevel: " + levelName);
 	auto currentSceneData = GetCurrentSceneData();
 
 	//lookup scenedata and if valid, push to the stack
@@ -92,7 +92,7 @@ void IAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 	}
 }
 
-void IAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld* world)
+void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld* world)
 {
 	if (level == nullptr)
 	{
@@ -103,7 +103,7 @@ void IAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 	if (!AutomaticallySetTrackingScene) { return; }
 
 	FString levelName = level->GetFullGroupName(true);
-	//GLog->Log("IAnalyticsProviderCognitive3D::HandleSublevelUnloaded Unloaded sublevel: " + levelName);
+	//GLog->Log("FAnalyticsProviderCognitive3D::HandleSublevelUnloaded Unloaded sublevel: " + levelName);
 	auto currentSceneData = GetCurrentSceneData();
 	if (LoadedSceneDataStack.Num() == 0)
 	{
@@ -156,7 +156,7 @@ void IAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 	}
 }
 
-void IAnalyticsProviderCognitive3D::HandlePostLevelLoad(UWorld* world)
+void FAnalyticsProviderCognitive3D::HandlePostLevelLoad(UWorld* world)
 {
 	auto level = world->GetCurrentLevel();
 	if (level == nullptr)
@@ -167,7 +167,7 @@ void IAnalyticsProviderCognitive3D::HandlePostLevelLoad(UWorld* world)
 	if (!AutomaticallySetTrackingScene) { return; }
 
 	FString levelName = level->GetFullGroupName(true);
-	//GLog->Log("IAnalyticsProviderCognitive3D::HandlePostLevelLoad level post load level: " + levelName);
+	//GLog->Log("FAnalyticsProviderCognitive3D::HandlePostLevelLoad level post load level: " + levelName);
 	auto currentSceneData = GetCurrentSceneData();
 
 	//lookup scenedata and if valid, add it to the stack
@@ -210,27 +210,27 @@ void IAnalyticsProviderCognitive3D::HandlePostLevelLoad(UWorld* world)
 	SceneStartTime = FUtil::GetTimestamp();
 }
 
-void IAnalyticsCognitive3D::ShutdownModule()
+void FAnalyticsCognitive3D::ShutdownModule()
 {
 
 }
 
-bool IAnalyticsProviderCognitive3D::HasStartedSession()
+bool FAnalyticsProviderCognitive3D::HasStartedSession()
 {
 	return bHasSessionStarted;
 }
 
-TSharedPtr<IAnalyticsProvider> IAnalyticsCognitive3D::CreateAnalyticsProvider(const FAnalyticsProviderConfigurationDelegate& GetConfigValue) const
+TSharedPtr<IAnalyticsProvider> FAnalyticsCognitive3D::CreateAnalyticsProvider(const FAnalyticsProviderConfigurationDelegate& GetConfigValue) const
 {
 	return AnalyticsProvider;
 }
 
-TWeakPtr<IAnalyticsProviderCognitive3D> IAnalyticsCognitive3D::GetCognitive3DProvider() const
+TWeakPtr<FAnalyticsProviderCognitive3D> FAnalyticsCognitive3D::GetCognitive3DProvider() const
 {
 	return Cognitive3DProvider;
 }
 
-IAnalyticsProviderCognitive3D::IAnalyticsProviderCognitive3D()
+FAnalyticsProviderCognitive3D::FAnalyticsProviderCognitive3D()
 {
 #if PLATFORM_ANDROID
 	DeviceId = FPlatformMisc::GetDeviceId();
@@ -239,38 +239,38 @@ IAnalyticsProviderCognitive3D::IAnalyticsProviderCognitive3D()
 #endif
 }
 
-IAnalyticsProviderCognitive3D::~IAnalyticsProviderCognitive3D()
+FAnalyticsProviderCognitive3D::~FAnalyticsProviderCognitive3D()
 {
-	UE_LOG(LogTemp, Warning, TEXT("IAnalyticsProviderCognitive3D Shutdown Module"));
+	UE_LOG(LogTemp, Warning, TEXT("FAnalyticsProviderCognitive3D Shutdown Module"));
 }
 
-bool IAnalyticsProviderCognitive3D::StartSession()
+bool FAnalyticsProviderCognitive3D::StartSession()
 {
 	return StartSession(TArray<FAnalyticsEventAttribute>());
 }
 
-bool IAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAttribute>& Attributes)
+bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	//initialize log
 	FCognitiveLog::Init();
 
 	if (bHasSessionStarted)
 	{
-		FCognitiveLog::Warning("IAnalyticsProviderCognitive3D::StartSession already started");
+		FCognitiveLog::Warning("FAnalyticsProviderCognitive3D::StartSession already started");
 		return false;
 	}
 
 	auto cognitiveActor = ACognitive3DActor::GetCognitive3DActor();
 	if (cognitiveActor == nullptr || !cognitiveActor->IsValidLowLevel())
 	{
-		FCognitiveLog::Error("IAnalyticsProviderCognitive3D::StartSession could not find Cognitive Actor in your level");
+		FCognitiveLog::Error("FAnalyticsProviderCognitive3D::StartSession could not find Cognitive Actor in your level");
 		return false;
 	}
 
 	auto currentWorld = cognitiveActor->GetWorld();
 	if (currentWorld == nullptr)
 	{
-		FCognitiveLog::Error("IAnalyticsProviderCognitive3D::StartSession World not set. Are you missing a Cognitive Actor in your level?");
+		FCognitiveLog::Error("FAnalyticsProviderCognitive3D::StartSession World not set. Are you missing a Cognitive Actor in your level?");
 		return false;
 	}
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
@@ -291,7 +291,7 @@ bool IAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 #if WITH_EDITOR
 		//FMessageDialog::Open(EAppMsgType::Ok, FText::FromString("The Application Key is Invalid, this session will not be recorded on the dashboard. Please restart the editor."));
 #endif
-		FCognitiveLog::Error("IAnalyticsProviderCognitive3D::StartSession ApplicationKey is invalid");
+		FCognitiveLog::Error("FAnalyticsProviderCognitive3D::StartSession ApplicationKey is invalid");
 		//UE_LOG(LogTemp, Warning, TEXT("App key is %s"), *ApplicationKey);
 		return false;
 	}
@@ -327,14 +327,14 @@ bool IAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	//register delegates
 	if (!PauseHandle.IsValid())
 	{
-		PauseHandle = FCoreDelegates::ApplicationWillEnterBackgroundDelegate.AddRaw(this, &IAnalyticsProviderCognitive3D::HandleApplicationWillEnterBackground);	
+		PauseHandle = FCoreDelegates::ApplicationWillEnterBackgroundDelegate.AddRaw(this, &FAnalyticsProviderCognitive3D::HandleApplicationWillEnterBackground);	
 	}
 	if (!LevelLoadHandle.IsValid())
-		LevelLoadHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddRaw(this, &IAnalyticsProviderCognitive3D::HandlePostLevelLoad);
+		LevelLoadHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddRaw(this, &FAnalyticsProviderCognitive3D::HandlePostLevelLoad);
 	if (!SublevelLoadedHandle.IsValid())
-		SublevelLoadedHandle = FWorldDelegates::LevelAddedToWorld.AddRaw(this, &IAnalyticsProviderCognitive3D::HandleSublevelLoaded);
+		SublevelLoadedHandle = FWorldDelegates::LevelAddedToWorld.AddRaw(this, &FAnalyticsProviderCognitive3D::HandleSublevelLoaded);
 	if (!SublevelUnloadedHandle.IsValid())
-		SublevelUnloadedHandle = FWorldDelegates::LevelRemovedFromWorld.AddRaw(this, &IAnalyticsProviderCognitive3D::HandleSublevelUnloaded);
+		SublevelUnloadedHandle = FWorldDelegates::LevelRemovedFromWorld.AddRaw(this, &FAnalyticsProviderCognitive3D::HandleSublevelUnloaded);
 
 	//set session properties
 	FUtil::SetSessionProperties();
@@ -362,23 +362,23 @@ bool IAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	sensors->StartSession();
 	OnSessionBegin.Broadcast();
 
-	FCognitiveLog::Info("IAnalyticsProviderCognitive3D::StartSession");
+	FCognitiveLog::Info("FAnalyticsProviderCognitive3D::StartSession");
 
 	return bHasSessionStarted;
 }
 
-void IAnalyticsProviderCognitive3D::SetLobbyId(FString lobbyId)
+void FAnalyticsProviderCognitive3D::SetLobbyId(FString lobbyId)
 {
 	LobbyId = lobbyId;
 }
 
-void IAnalyticsProviderCognitive3D::SetSessionName(FString sessionName)
+void FAnalyticsProviderCognitive3D::SetSessionName(FString sessionName)
 {
 	bHasCustomSessionName = true;
 	SetSessionProperty("c3d.sessionname", sessionName);
 }
 
-void IAnalyticsProviderCognitive3D::EndSession()
+void FAnalyticsProviderCognitive3D::EndSession()
 {
 	if (bHasSessionStarted == false)
 	{
@@ -389,7 +389,7 @@ void IAnalyticsProviderCognitive3D::EndSession()
 	auto cognitiveActor = ACognitive3DActor::GetCognitive3DActor();
 	if (cognitiveActor == nullptr)
 	{
-		FCognitiveLog::Error("IAnalyticsProviderCognitive3D::EndSession cognitiveActor is null");
+		FCognitiveLog::Error("FAnalyticsProviderCognitive3D::EndSession cognitiveActor is null");
 		return;
 	}
 	gazeDataRecorder->PreSessionEnd();
@@ -434,7 +434,7 @@ void IAnalyticsProviderCognitive3D::EndSession()
 
 //broadcast to all listeners that outstanding data should be sent + written to cache as a backup
 //should be used when it's unclear if the session will continue - a sudden pause event might indicate a loss of wifi connection
-void IAnalyticsProviderCognitive3D::FlushAndCacheEvents()
+void FAnalyticsProviderCognitive3D::FlushAndCacheEvents()
 {
 	if (!bHasSessionStarted) { FCognitiveLog::Warning("Cognitive3D Flush Events, but Session has not started!"); return; }
 
@@ -448,7 +448,7 @@ void IAnalyticsProviderCognitive3D::FlushAndCacheEvents()
 
 //broadcast to all listeners that outstanding data should be sent. this won't immediately write all data to the cache
 //should be prefered when the session will likely continue, but at a point when sending data won't be noticed (eg, win screen popup, etc)
-void IAnalyticsProviderCognitive3D::FlushEvents()
+void FAnalyticsProviderCognitive3D::FlushEvents()
 {
 	if (!bHasSessionStarted) { FCognitiveLog::Warning("Cognitive3D Flush Events, but Session has not started!"); return; }
 	gazeDataRecorder->SendData(false);
@@ -459,86 +459,86 @@ void IAnalyticsProviderCognitive3D::FlushEvents()
 	OnRequestSend.Broadcast(false);
 }
 
-void IAnalyticsProviderCognitive3D::SetUserID(const FString& InUserID)
+void FAnalyticsProviderCognitive3D::SetUserID(const FString& InUserID)
 {
 	FString userId = InUserID;
 	if (userId.Len() > 64)
 	{
-		FCognitiveLog::Error("IAnalyticsProviderCognitive3D::SetUserID exceeds maximum character limit. clipping to 64");
+		FCognitiveLog::Error("FAnalyticsProviderCognitive3D::SetUserID exceeds maximum character limit. clipping to 64");
 		int32 chopcount = userId.Len() - 64;
 		userId = userId.LeftChop(chopcount);
 	}
 
 	ParticipantId = userId;
 	SetParticipantProperty("id", userId);
-	FCognitiveLog::Info("IAnalyticsProviderCognitive3D::SetUserID set user id: " + userId);
+	FCognitiveLog::Info("FAnalyticsProviderCognitive3D::SetUserID set user id: " + userId);
 }
 
-void IAnalyticsProviderCognitive3D::SetParticipantId(FString participantId)
+void FAnalyticsProviderCognitive3D::SetParticipantId(FString participantId)
 {
 	if (participantId.Len() > 64)
 	{
-		FCognitiveLog::Error("IAnalyticsProviderCognitive3D::SetParticipantId exceeds maximum character limit. clipping to 64");
+		FCognitiveLog::Error("FAnalyticsProviderCognitive3D::SetParticipantId exceeds maximum character limit. clipping to 64");
 		int32 chopcount = participantId.Len() - 64;
 		participantId = participantId.LeftChop(chopcount);
 	}
 
 	ParticipantId = participantId;
 	SetParticipantProperty("id", participantId);
-	FCognitiveLog::Info("IAnalyticsProviderCognitive3D::SetParticipantId set user id: " + participantId);
+	FCognitiveLog::Info("FAnalyticsProviderCognitive3D::SetParticipantId set user id: " + participantId);
 }
 
-void IAnalyticsProviderCognitive3D::SetParticipantFullName(FString participantName)
+void FAnalyticsProviderCognitive3D::SetParticipantFullName(FString participantName)
 {
 	ParticipantName = participantName;
 	SetParticipantProperty("name", participantName);
-	FCognitiveLog::Info("IAnalyticsProviderCognitive3D::SetParticipantData set user id");
+	FCognitiveLog::Info("FAnalyticsProviderCognitive3D::SetParticipantData set user id");
 	if (!bHasCustomSessionName)
 		SetSessionProperty("c3d.sessionname", participantName);
 }
 
-void IAnalyticsProviderCognitive3D::SetSessionTag(FString Tag)
+void FAnalyticsProviderCognitive3D::SetSessionTag(FString Tag)
 {
 	if (Tag.Len() == 0)
 	{
-		FCognitiveLog::Error("IAnalyticsProviderCognitive3D::SetSessionTag must contain > 0 characters");
+		FCognitiveLog::Error("FAnalyticsProviderCognitive3D::SetSessionTag must contain > 0 characters");
 		return;
 	}
 	if (Tag.Len() > 12)
 	{
-		FCognitiveLog::Error("IAnalyticsProviderCognitive3D::SetSessionTag must contain <= 12 characters");
+		FCognitiveLog::Error("FAnalyticsProviderCognitive3D::SetSessionTag must contain <= 12 characters");
 		return;
 	}
 
 	SetSessionProperty("c3d.session_tag."+Tag, "true");
 }
 
-FString IAnalyticsProviderCognitive3D::GetUserID() const
+FString FAnalyticsProviderCognitive3D::GetUserID() const
 {
 	return ParticipantId;
 }
 
-FString IAnalyticsProviderCognitive3D::GetCognitiveUserName() const
+FString FAnalyticsProviderCognitive3D::GetCognitiveUserName() const
 {
 	return ParticipantName;
 }
 
-FString IAnalyticsProviderCognitive3D::GetDeviceID() const
+FString FAnalyticsProviderCognitive3D::GetDeviceID() const
 {
 	return DeviceId;
 }
 
-FString IAnalyticsProviderCognitive3D::GetSessionID() const
+FString FAnalyticsProviderCognitive3D::GetSessionID() const
 {
 	return SessionId;
 }
 
-double IAnalyticsProviderCognitive3D::GetSessionTimestamp() const
+double FAnalyticsProviderCognitive3D::GetSessionTimestamp() const
 {
 	return SessionTimestamp;
 }
 
-bool IAnalyticsProviderCognitive3D::SetSessionID(const FString& InSessionID)
+bool FAnalyticsProviderCognitive3D::SetSessionID(const FString& InSessionID)
 {
 	if (!bHasSessionStarted)
 	{
@@ -553,7 +553,7 @@ bool IAnalyticsProviderCognitive3D::SetSessionID(const FString& InSessionID)
 }
 
 //built in analytics stuff
-void IAnalyticsProviderCognitive3D::RecordEvent(const FString& EventName, const TArray<FAnalyticsEventAttribute>& Attributes)
+void FAnalyticsProviderCognitive3D::RecordEvent(const FString& EventName, const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	if (bHasSessionStarted)
 	{
@@ -572,7 +572,7 @@ void IAnalyticsProviderCognitive3D::RecordEvent(const FString& EventName, const 
 	}
 }
 
-void IAnalyticsProviderCognitive3D::RecordItemPurchase(const FString& ItemId, const FString& Currency, int32 PerItemCost, int32 ItemQuantity)
+void FAnalyticsProviderCognitive3D::RecordItemPurchase(const FString& ItemId, const FString& Currency, int32 PerItemCost, int32 ItemQuantity)
 {
 	if (bHasSessionStarted)
 	{
@@ -590,7 +590,7 @@ void IAnalyticsProviderCognitive3D::RecordItemPurchase(const FString& ItemId, co
 	}
 }
 
-void IAnalyticsProviderCognitive3D::RecordCurrencyPurchase(const FString& GameCurrencyType, int32 GameCurrencyAmount, const FString& RealCurrencyType, float RealMoneyCost, const FString& PaymentProvider)
+void FAnalyticsProviderCognitive3D::RecordCurrencyPurchase(const FString& GameCurrencyType, int32 GameCurrencyAmount, const FString& RealCurrencyType, float RealMoneyCost, const FString& PaymentProvider)
 {
 	if (bHasSessionStarted)
 	{
@@ -609,7 +609,7 @@ void IAnalyticsProviderCognitive3D::RecordCurrencyPurchase(const FString& GameCu
 	}
 }
 
-void IAnalyticsProviderCognitive3D::RecordCurrencyGiven(const FString& GameCurrencyType, int32 GameCurrencyAmount)
+void FAnalyticsProviderCognitive3D::RecordCurrencyGiven(const FString& GameCurrencyType, int32 GameCurrencyAmount)
 {
 	if (bHasSessionStarted)
 	{
@@ -625,27 +625,27 @@ void IAnalyticsProviderCognitive3D::RecordCurrencyGiven(const FString& GameCurre
 	}
 }
 
-void IAnalyticsProviderCognitive3D::SetAge(const int32 InAge)
+void FAnalyticsProviderCognitive3D::SetAge(const int32 InAge)
 {
 	SetParticipantProperty("age", InAge);
 }
 
-void IAnalyticsProviderCognitive3D::SetLocation(const FString& InLocation)
+void FAnalyticsProviderCognitive3D::SetLocation(const FString& InLocation)
 {
 	SetSessionProperty("location", InLocation);
 }
 
-void IAnalyticsProviderCognitive3D::SetGender(const FString& InGender)
+void FAnalyticsProviderCognitive3D::SetGender(const FString& InGender)
 {
 	SetParticipantProperty("gender", InGender);
 }
 
-void IAnalyticsProviderCognitive3D::SetBuildInfo(const FString& InBuildInfo)
+void FAnalyticsProviderCognitive3D::SetBuildInfo(const FString& InBuildInfo)
 {
 	BuildInfo = InBuildInfo;
 }
 
-void IAnalyticsProviderCognitive3D::RecordError(const FString& Error, const TArray<FAnalyticsEventAttribute>& Attributes)
+void FAnalyticsProviderCognitive3D::RecordError(const FString& Error, const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	if (bHasSessionStarted)
 	{
@@ -667,7 +667,7 @@ void IAnalyticsProviderCognitive3D::RecordError(const FString& Error, const TArr
 	}
 }
 
-void IAnalyticsProviderCognitive3D::RecordProgress(const FString& ProgressType, const FString& ProgressName, const TArray<FAnalyticsEventAttribute>& Attributes)
+void FAnalyticsProviderCognitive3D::RecordProgress(const FString& ProgressType, const FString& ProgressName, const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	if (bHasSessionStarted)
 	{
@@ -688,7 +688,7 @@ void IAnalyticsProviderCognitive3D::RecordProgress(const FString& ProgressType, 
 	}
 }
 
-void IAnalyticsProviderCognitive3D::RecordItemPurchase(const FString& ItemId, int32 ItemQuantity, const TArray<FAnalyticsEventAttribute>& Attributes)
+void FAnalyticsProviderCognitive3D::RecordItemPurchase(const FString& ItemId, int32 ItemQuantity, const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	if (bHasSessionStarted)
 	{
@@ -709,7 +709,7 @@ void IAnalyticsProviderCognitive3D::RecordItemPurchase(const FString& ItemId, in
 	}
 }
 
-void IAnalyticsProviderCognitive3D::RecordCurrencyPurchase(const FString& GameCurrencyType, int32 GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& Attributes)
+void FAnalyticsProviderCognitive3D::RecordCurrencyPurchase(const FString& GameCurrencyType, int32 GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	if (bHasSessionStarted)
 	{
@@ -730,7 +730,7 @@ void IAnalyticsProviderCognitive3D::RecordCurrencyPurchase(const FString& GameCu
 	}
 }
 
-void IAnalyticsProviderCognitive3D::RecordCurrencyGiven(const FString& GameCurrencyType, int32 GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& Attributes)
+void FAnalyticsProviderCognitive3D::RecordCurrencyGiven(const FString& GameCurrencyType, int32 GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	if (bHasSessionStarted)
 	{
@@ -751,12 +751,12 @@ void IAnalyticsProviderCognitive3D::RecordCurrencyGiven(const FString& GameCurre
 	}
 }
 
-TSharedPtr<FSceneData> IAnalyticsProviderCognitive3D::GetCurrentSceneData()
+TSharedPtr<FSceneData> FAnalyticsProviderCognitive3D::GetCurrentSceneData()
 {
 	return LastSceneData;
 }
 
-TSharedPtr<FSceneData> IAnalyticsProviderCognitive3D::GetSceneData(FString scenename)
+TSharedPtr<FSceneData> FAnalyticsProviderCognitive3D::GetSceneData(FString scenename)
 {
 	for (int i = 0; i < SceneData.Num(); i++)
 	{
@@ -766,11 +766,11 @@ TSharedPtr<FSceneData> IAnalyticsProviderCognitive3D::GetSceneData(FString scene
 			return SceneData[i];
 		}
 	}
-	//FCognitiveLog::Warning("IAnalyticsProviderCognitive3D::GetSceneData couldn't find SceneData for scene " + scenename);
+	//FCognitiveLog::Warning("FAnalyticsProviderCognitive3D::GetSceneData couldn't find SceneData for scene " + scenename);
 	return NULL;
 }
 
-FString IAnalyticsProviderCognitive3D::GetCurrentSceneId()
+FString FAnalyticsProviderCognitive3D::GetCurrentSceneId()
 {
 	auto currentData = GetCurrentSceneData();
 	if (!currentData.IsValid()) { return ""; }
@@ -778,7 +778,7 @@ FString IAnalyticsProviderCognitive3D::GetCurrentSceneId()
 	return currentData->Id;
 }
 
-FString IAnalyticsProviderCognitive3D::GetCurrentSceneVersionNumber()
+FString FAnalyticsProviderCognitive3D::GetCurrentSceneVersionNumber()
 {
 	auto currentData = GetCurrentSceneData();
 	if (!currentData.IsValid()) { return ""; }
@@ -786,7 +786,7 @@ FString IAnalyticsProviderCognitive3D::GetCurrentSceneVersionNumber()
 	return FString::FromInt(currentData->VersionNumber);
 }
 
-void IAnalyticsProviderCognitive3D::CacheSceneData()
+void FAnalyticsProviderCognitive3D::CacheSceneData()
 {
 	TArray<FString>scenstrings;
 	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
@@ -807,7 +807,7 @@ void IAnalyticsProviderCognitive3D::CacheSceneData()
 
 		if (Array.Num() != 4)
 		{
-			FCognitiveLog::Error("IAnalyticsProviderCognitive3D::CacheSceneData failed to parse " + scenstrings[i]);
+			FCognitiveLog::Error("FAnalyticsProviderCognitive3D::CacheSceneData failed to parse " + scenstrings[i]);
 			continue;
 		}
 
@@ -815,7 +815,7 @@ void IAnalyticsProviderCognitive3D::CacheSceneData()
 	}
 }
 
-bool IAnalyticsProviderCognitive3D::TryGetPlayerHMDPosition(FVector& vector)
+bool FAnalyticsProviderCognitive3D::TryGetPlayerHMDPosition(FVector& vector)
 {
 	//IMPROVEMENT cache this and check for null. playercontrollers DO NOT persist across level changes
 
@@ -823,7 +823,7 @@ bool IAnalyticsProviderCognitive3D::TryGetPlayerHMDPosition(FVector& vector)
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
 	{
-		FCognitiveLog::Warning("IAnalyticsProviderCognitive3D::GetPlayerHMDPosition no controllers skip");
+		FCognitiveLog::Warning("FAnalyticsProviderCognitive3D::GetPlayerHMDPosition no controllers skip");
 		return false;
 	}
 
@@ -831,7 +831,7 @@ bool IAnalyticsProviderCognitive3D::TryGetPlayerHMDPosition(FVector& vector)
 	return true;
 }
 
- bool IAnalyticsProviderCognitive3D::TryGetPlayerHMDRotation(FRotator& rotator)
+ bool FAnalyticsProviderCognitive3D::TryGetPlayerHMDRotation(FRotator& rotator)
 {
 	//IMPROVEMENT cache this and check for null. playercontrollers DO NOT persist across level changes
 
@@ -839,7 +839,7 @@ bool IAnalyticsProviderCognitive3D::TryGetPlayerHMDPosition(FVector& vector)
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
 	{
-		FCognitiveLog::Warning("IAnalyticsProviderCognitive3D::GetPlayerHMDPosition no controllers skip");
+		FCognitiveLog::Warning("FAnalyticsProviderCognitive3D::GetPlayerHMDPosition no controllers skip");
 		return false;
 	}
 
@@ -847,7 +847,7 @@ bool IAnalyticsProviderCognitive3D::TryGetPlayerHMDPosition(FVector& vector)
 	return true;
 }
 
-bool IAnalyticsProviderCognitive3D::TryGetPlayerHMDLocalRotation(FRotator& rotator)
+bool FAnalyticsProviderCognitive3D::TryGetPlayerHMDLocalRotation(FRotator& rotator)
 {
 	//IMPROVEMENT cache this and check for null. playercontrollers DO NOT persist across level changes
 
@@ -855,7 +855,7 @@ bool IAnalyticsProviderCognitive3D::TryGetPlayerHMDLocalRotation(FRotator& rotat
 	GEngine->GetAllLocalPlayerControllers(controllers);
 	if (controllers.Num() == 0)
 	{
-		FCognitiveLog::Warning("IAnalyticsProviderCognitive3D::GetPlayerHMDPosition no controllers skip");
+		FCognitiveLog::Warning("FAnalyticsProviderCognitive3D::GetPlayerHMDPosition no controllers skip");
 		return false;
 	}
 
@@ -870,7 +870,7 @@ bool IAnalyticsProviderCognitive3D::TryGetPlayerHMDLocalRotation(FRotator& rotat
 	return true;
 }
 
-void IAnalyticsProviderCognitive3D::SetSessionProperty(FString name, int32 value)
+void FAnalyticsProviderCognitive3D::SetSessionProperty(FString name, int32 value)
 {
 	if (NewSessionProperties.HasField(name))
 		NewSessionProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
@@ -881,7 +881,7 @@ void IAnalyticsProviderCognitive3D::SetSessionProperty(FString name, int32 value
 	else
 		AllSessionProperties.SetNumberField(name, (int32)value);
 }
-void IAnalyticsProviderCognitive3D::SetSessionProperty(FString name, float value)
+void FAnalyticsProviderCognitive3D::SetSessionProperty(FString name, float value)
 {
 	if (NewSessionProperties.HasField(name))
 		NewSessionProperties.Values[name] = MakeShareable(new FJsonValueNumber(value));
@@ -892,7 +892,7 @@ void IAnalyticsProviderCognitive3D::SetSessionProperty(FString name, float value
 	else
 		AllSessionProperties.SetNumberField(name, (float)value);
 }
-void IAnalyticsProviderCognitive3D::SetSessionProperty(FString name, FString value)
+void FAnalyticsProviderCognitive3D::SetSessionProperty(FString name, FString value)
 {
 	if (NewSessionProperties.HasField(name))
 		NewSessionProperties.Values[name] = MakeShareable(new FJsonValueString(value));
@@ -904,7 +904,7 @@ void IAnalyticsProviderCognitive3D::SetSessionProperty(FString name, FString val
 		AllSessionProperties.SetStringField(name, value);
 }
 
-void IAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, int32 value)
+void FAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, int32 value)
 {
 	FString completeName = "c3d.participant." + name;
 	if (NewSessionProperties.HasField(completeName))
@@ -916,7 +916,7 @@ void IAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, int32 v
 	else
 		AllSessionProperties.SetNumberField(completeName, (int32)value);
 }
-void IAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, float value)
+void FAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, float value)
 {
 	FString completeName = "c3d.participant." + name;
 	if (NewSessionProperties.HasField(completeName))
@@ -928,7 +928,7 @@ void IAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, float v
 	else
 		AllSessionProperties.SetNumberField(completeName, (float)value);
 }
-void IAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, FString value)
+void FAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, FString value)
 {
 	FString completeName = "c3d.participant." + name;
 	if (NewSessionProperties.HasField(completeName))
@@ -941,20 +941,20 @@ void IAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, FString
 		AllSessionProperties.SetStringField(completeName, value);
 }
 
-FJsonObject IAnalyticsProviderCognitive3D::GetNewSessionProperties()
+FJsonObject FAnalyticsProviderCognitive3D::GetNewSessionProperties()
 {
 	FJsonObject returnobject = FJsonObject(NewSessionProperties);
 	NewSessionProperties = FJsonObject();
 	return returnobject;
 }
 
-FJsonObject IAnalyticsProviderCognitive3D::GetAllSessionProperties()
+FJsonObject FAnalyticsProviderCognitive3D::GetAllSessionProperties()
 {
 	FJsonObject returnobject = FJsonObject(AllSessionProperties);
 	return returnobject;
 }
 
-FString IAnalyticsProviderCognitive3D::GetAttributionParameters()
+FString FAnalyticsProviderCognitive3D::GetAttributionParameters()
 {
 	TSharedPtr<FJsonObject> parameters = MakeShareable(new FJsonObject);
 
@@ -978,7 +978,7 @@ FString IAnalyticsProviderCognitive3D::GetAttributionParameters()
 	return FString("?c3dAtkd=AK-"+ baseString);
 }
 
-bool IAnalyticsProviderCognitive3D::HasEyeTrackingSDK()
+bool FAnalyticsProviderCognitive3D::HasEyeTrackingSDK()
 {
 #if defined TOBII_EYETRACKING_ACTIVE
 	return true;
@@ -1001,7 +1001,7 @@ bool IAnalyticsProviderCognitive3D::HasEyeTrackingSDK()
 #endif
 }
 
-bool IAnalyticsProviderCognitive3D::TryGetRoomSize(FVector& roomsize)
+bool FAnalyticsProviderCognitive3D::TryGetRoomSize(FVector& roomsize)
 {
 #ifdef INCLUDE_OCULUS_PLUGIN
 #if ENGINE_MAJOR_VERSION == 5
@@ -1030,7 +1030,7 @@ bool IAnalyticsProviderCognitive3D::TryGetRoomSize(FVector& roomsize)
 #endif
 }
 
-bool IAnalyticsProviderCognitive3D::TryGetHMDGuardianPoints(TArray<FVector>& GuardianPoints)
+bool FAnalyticsProviderCognitive3D::TryGetHMDGuardianPoints(TArray<FVector>& GuardianPoints)
 {
 #ifdef INCLUDE_OCULUS_PLUGIN
 #if ENGINE_MAJOR_VERSION == 4 
@@ -1048,7 +1048,7 @@ bool IAnalyticsProviderCognitive3D::TryGetHMDGuardianPoints(TArray<FVector>& Gua
 
 //this function tries to get the pose of an HMD inside the pre-set boundaries
 //primarily used for stationary guardian intersection
-bool IAnalyticsProviderCognitive3D::TryGetHMDPose(FRotator& HMDRotation, FVector& HMDPosition, FVector& HMDNeckPos)
+bool FAnalyticsProviderCognitive3D::TryGetHMDPose(FRotator& HMDRotation, FVector& HMDPosition, FVector& HMDNeckPos)
 {
 
 #ifdef INCLUDE_OCULUS_PLUGIN
@@ -1065,7 +1065,7 @@ bool IAnalyticsProviderCognitive3D::TryGetHMDPose(FRotator& HMDRotation, FVector
 
 }
 
-bool IAnalyticsProviderCognitive3D::TryGetHMDWornState(EHMDWornState::Type& WornState)
+bool FAnalyticsProviderCognitive3D::TryGetHMDWornState(EHMDWornState::Type& WornState)
 {
 #ifdef INCLUDE_PICO_PLUGIN
 	WornState = UPICOXRHMDFunctionLibrary::PXR_GetHMDWornState();
@@ -1091,7 +1091,7 @@ bool IAnalyticsProviderCognitive3D::TryGetHMDWornState(EHMDWornState::Type& Worn
 
 
 
-bool IAnalyticsProviderCognitive3D::IsPointInPolygon4(TArray<FVector> polygon, FVector testPoint)
+bool FAnalyticsProviderCognitive3D::IsPointInPolygon4(TArray<FVector> polygon, FVector testPoint)
 {
 	bool result = false;
 	int j = polygon.Num() - 1;
@@ -1110,7 +1110,7 @@ bool IAnalyticsProviderCognitive3D::IsPointInPolygon4(TArray<FVector> polygon, F
 }
 
 
-bool IAnalyticsProviderCognitive3D::IsPluginEnabled(const FString& PluginName)
+bool FAnalyticsProviderCognitive3D::IsPluginEnabled(const FString& PluginName)
 {
 	IPluginManager& PluginManager = IPluginManager::Get();
 	TSharedPtr<IPlugin> Plugin = PluginManager.FindPlugin(PluginName);
@@ -1123,7 +1123,7 @@ bool IAnalyticsProviderCognitive3D::IsPluginEnabled(const FString& PluginName)
 	return false;
 }
 
-TWeakObjectPtr<UDynamicObject> IAnalyticsProviderCognitive3D::GetControllerDynamic(bool right)
+TWeakObjectPtr<UDynamicObject> FAnalyticsProviderCognitive3D::GetControllerDynamic(bool right)
 {
 	if (right)
 	{
@@ -1142,12 +1142,12 @@ TWeakObjectPtr<UDynamicObject> IAnalyticsProviderCognitive3D::GetControllerDynam
 	return nullptr;
 }
 
-FString IAnalyticsProviderCognitive3D::GetRuntime()
+FString FAnalyticsProviderCognitive3D::GetRuntime()
 {
 	return FString();
 }
 
-void IAnalyticsProviderCognitive3D::HandleApplicationWillEnterBackground()
+void FAnalyticsProviderCognitive3D::HandleApplicationWillEnterBackground()
 {
 	FlushAndCacheEvents();
 	if (!localCache.IsValid())
@@ -1157,7 +1157,7 @@ void IAnalyticsProviderCognitive3D::HandleApplicationWillEnterBackground()
 	localCache->SerializeToFile();
 }
 
-void IAnalyticsProviderCognitive3D::SetTrackingScene(FString levelName)
+void FAnalyticsProviderCognitive3D::SetTrackingScene(FString levelName)
 {
 	FlushEvents();
 	TSharedPtr<FSceneData> data = GetSceneData(levelName);

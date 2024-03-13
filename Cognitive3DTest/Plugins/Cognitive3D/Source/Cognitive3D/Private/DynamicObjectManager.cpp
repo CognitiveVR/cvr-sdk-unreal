@@ -6,7 +6,7 @@
 
 FDynamicObjectManager::FDynamicObjectManager()
 {
-	cogProvider = IAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 }
 
 void FDynamicObjectManager::OnSessionBegin()

@@ -5,7 +5,7 @@
 #include "Cognitive3DEditorModule.h"
 #include "C3DCommands.h"
 
-IMPLEMENT_MODULE(ICognitive3DEditorModule, Cognitive3DEditor);
+IMPLEMENT_MODULE(FCognitive3DEditorModule, Cognitive3DEditor);
 
 //sets up customization for settings
 //adds scene setup window
@@ -13,12 +13,12 @@ IMPLEMENT_MODULE(ICognitive3DEditorModule, Cognitive3DEditor);
 
 #define LOCTEXT_NAMESPACE "DemoTools"
 
-TSharedPtr<FExtensibilityManager> ICognitive3DEditorModule::GetMenuExtensibilityManager()
+TSharedPtr<FExtensibilityManager> FCognitive3DEditorModule::GetMenuExtensibilityManager()
 {
 	return MenuExtensibilityManager;
 }
 
-TSharedPtr<FExtensibilityManager> ICognitive3DEditorModule::GetToolBarExtensibilityManager()
+TSharedPtr<FExtensibilityManager> FCognitive3DEditorModule::GetToolBarExtensibilityManager()
 {
 	return ToolBarExtensibilityManager;
 }
@@ -50,7 +50,7 @@ TSharedRef<SDockTab> CreateCognitiveDynamicObjectTabArgs(const FSpawnTabArgs& Sp
 		];
 }
 
-void ICognitive3DEditorModule::StartupModule()
+void FCognitive3DEditorModule::StartupModule()
 {
 #if WITH_EDITOR
 	// Create the Extender that will add content to the menu
@@ -81,27 +81,27 @@ void ICognitive3DEditorModule::StartupModule()
 	//map all the menu items to functions
 	PluginCommands->MapAction(
 		FCognitive3DCommands::Get().OpenProjectSetupWindow,
-		FExecuteAction::CreateStatic(&ICognitive3DEditorModule::SpawnCognitiveProjectSetupTab)
+		FExecuteAction::CreateStatic(&FCognitive3DEditorModule::SpawnCognitiveProjectSetupTab)
 	);
 
 	PluginCommands->MapAction(
 		FCognitive3DCommands::Get().OpenSceneSetupWindow,
-		FExecuteAction::CreateStatic(&ICognitive3DEditorModule::SpawnCognitiveSceneSetupTab)
+		FExecuteAction::CreateStatic(&FCognitive3DEditorModule::SpawnCognitiveSceneSetupTab)
 	);
 
 	PluginCommands->MapAction(
 		FCognitive3DCommands::Get().OpenDynamicObjectWindow,
-		FExecuteAction::CreateStatic(&ICognitive3DEditorModule::SpawnCognitiveDynamicTab)
+		FExecuteAction::CreateStatic(&FCognitive3DEditorModule::SpawnCognitiveDynamicTab)
 	);
 
 	PluginCommands->MapAction(
 		FCognitive3DCommands::Get().OpenOnlineDocumentation,
-		FExecuteAction::CreateStatic(&ICognitive3DEditorModule::OpenOnlineDocumentation)
+		FExecuteAction::CreateStatic(&FCognitive3DEditorModule::OpenOnlineDocumentation)
 	);
 
 	PluginCommands->MapAction(
 		FCognitive3DCommands::Get().OpenCognitiveDashboard,
-		FExecuteAction::CreateStatic(&ICognitive3DEditorModule::OpenCognitiveDashboard)
+		FExecuteAction::CreateStatic(&FCognitive3DEditorModule::OpenCognitiveDashboard)
 	);
 
 
@@ -111,7 +111,7 @@ void ICognitive3DEditorModule::StartupModule()
 		"Help",
 		EExtensionHook::After,
 		PluginCommands,
-		FMenuBarExtensionDelegate::CreateStatic(&ICognitive3DEditorModule::AddMenu)
+		FMenuBarExtensionDelegate::CreateStatic(&FCognitive3DEditorModule::AddMenu)
 	);
 	LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
 
@@ -125,17 +125,17 @@ void ICognitive3DEditorModule::StartupModule()
 }
 
 	//defines the menu to add the contents of the menu
-	void ICognitive3DEditorModule::AddMenu(FMenuBarBuilder& MenuBuilder)
+	void FCognitive3DEditorModule::AddMenu(FMenuBarBuilder& MenuBuilder)
 	{
 		MenuBuilder.AddPullDownMenu(
 			LOCTEXT("MenuLocKey", "Cognitive3D"),
 			LOCTEXT("MenuTooltipKey", "Open Cognitive3D menu"),
-			FNewMenuDelegate::CreateStatic(&ICognitive3DEditorModule::FillMenu),
+			FNewMenuDelegate::CreateStatic(&FCognitive3DEditorModule::FillMenu),
 			FName(TEXT("Cognitive3D")),
 			FName(TEXT("Cognitive3DName")));
 	}
 
-	void ICognitive3DEditorModule::FillMenu(FMenuBuilder& MenuBuilder)
+	void FCognitive3DEditorModule::FillMenu(FMenuBuilder& MenuBuilder)
 	{
 		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenProjectSetupWindow);
 		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenSceneSetupWindow);
@@ -144,17 +144,17 @@ void ICognitive3DEditorModule::StartupModule()
 		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenCognitiveDashboard);
 	}
 
-void ICognitive3DEditorModule::ShutdownModule()
+void FCognitive3DEditorModule::ShutdownModule()
 {
 	FCognitive3DCommands::Unregister();
 }
 
-bool ICognitive3DEditorModule::SupportsDynamicReloading()
+bool FCognitive3DEditorModule::SupportsDynamicReloading()
 {
 	return true;
 }
 
-void ICognitive3DEditorModule::SpawnCognitiveDynamicTab()
+void FCognitive3DEditorModule::SpawnCognitiveDynamicTab()
 {
 	FTabId tabId = FTabId(FName("CognitiveDynamicObjectManager"));
 	auto foundTab = FGlobalTabmanager::Get()->FindExistingLiveTab(tabId);
@@ -169,7 +169,7 @@ void ICognitive3DEditorModule::SpawnCognitiveDynamicTab()
 	}
 }
 
-void ICognitive3DEditorModule::SpawnCognitiveSceneSetupTab()
+void FCognitive3DEditorModule::SpawnCognitiveSceneSetupTab()
 {
 	FTabId tabId = FTabId(FName("CognitiveSceneSetup"));
 	auto foundTab = FGlobalTabmanager::Get()->FindExistingLiveTab(tabId);
@@ -184,7 +184,7 @@ void ICognitive3DEditorModule::SpawnCognitiveSceneSetupTab()
 	}
 }
 
-void ICognitive3DEditorModule::SpawnCognitiveProjectSetupTab()
+void FCognitive3DEditorModule::SpawnCognitiveProjectSetupTab()
 {
 	FTabId tabId = FTabId(FName("CognitiveProjectSetup"));
 	auto foundTab = FGlobalTabmanager::Get()->FindExistingLiveTab(tabId);
@@ -199,19 +199,19 @@ void ICognitive3DEditorModule::SpawnCognitiveProjectSetupTab()
 	}
 }
 
-void ICognitive3DEditorModule::OpenOnlineDocumentation()
+void FCognitive3DEditorModule::OpenOnlineDocumentation()
 {
 	FString url = "https://docs.cognitive3d.com/unreal/get-started/";
 	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);
 }
 
-void ICognitive3DEditorModule::OpenCognitiveDashboard()
+void FCognitive3DEditorModule::OpenCognitiveDashboard()
 {
 	FString url = "https://app.cognitive3d.com";
 	FPlatformProcess::LaunchURL(*url, nullptr, nullptr);
 }
 
-void ICognitive3DEditorModule::CloseProjectSetupWindow()
+void FCognitive3DEditorModule::CloseProjectSetupWindow()
 {
 	FTabId projectTabId = FTabId(FName("CognitiveProjectSetup"));
 	auto projectTab = FGlobalTabmanager::Get()->FindExistingLiveTab(projectTabId);
@@ -221,7 +221,7 @@ void ICognitive3DEditorModule::CloseProjectSetupWindow()
 	}
 }
 
-void ICognitive3DEditorModule::CloseSceneSetupWindow()
+void FCognitive3DEditorModule::CloseSceneSetupWindow()
 {
 	FTabId projectTabId = FTabId(FName("CognitiveSceneSetup"));
 	auto projectTab = FGlobalTabmanager::Get()->FindExistingLiveTab(projectTabId);
@@ -231,7 +231,7 @@ void ICognitive3DEditorModule::CloseSceneSetupWindow()
 	}
 }
 
-void ICognitive3DEditorModule::CloseDynamicObjectWindow()
+void FCognitive3DEditorModule::CloseDynamicObjectWindow()
 {
 	FTabId projectTabId = FTabId(FName("CognitiveDynamicObjectManager"));
 	auto projectTab = FGlobalTabmanager::Get()->FindExistingLiveTab(projectTabId);

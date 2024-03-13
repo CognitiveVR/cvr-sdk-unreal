@@ -26,7 +26,7 @@
 #include "Editor/EditorEngine.h"
 
 class FCognitiveTools;
-class ICognitive3DEditorModule;
+class FCognitive3DEditorModule;
 
 //screens:
 //intro + dev key check

@@ -46,7 +46,7 @@
 	class FGazeDataRecorder;
 	class FFixationDataRecorder;
 
-	class COGNITIVE3D_API IAnalyticsProviderCognitive3D : public IAnalyticsProvider
+	class COGNITIVE3D_API FAnalyticsProviderCognitive3D : public IAnalyticsProvider
 	{
 		/** Unique Id representing the session the analytics are recording for */
 		FString SessionId = "";
@@ -68,8 +68,8 @@
 		double SceneStartTime = 0;
 
 	public:
-		IAnalyticsProviderCognitive3D();
-		virtual ~IAnalyticsProviderCognitive3D();
+		FAnalyticsProviderCognitive3D();
+		virtual ~FAnalyticsProviderCognitive3D();
 
 		UPROPERTY(BlueprintAssignable, Category = "Cognitive3D Analytics")
 			FOnCognitiveSessionBegin OnSessionBegin;

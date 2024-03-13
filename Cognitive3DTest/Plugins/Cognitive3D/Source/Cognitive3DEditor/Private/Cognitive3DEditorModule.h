@@ -22,7 +22,7 @@
 #include "DynamicIdPoolAssetDetails.h"
 #include "DynamicIdPoolAssetActions.h"
 
-class ICognitive3DEditorModule : public IModuleInterface, IHasMenuExtensibility, IHasToolBarExtensibility
+class FCognitive3DEditorModule : public IModuleInterface, IHasMenuExtensibility, IHasToolBarExtensibility
 {
 public:
 	static void SpawnCognitiveSceneSetupTab();
@@ -34,9 +34,9 @@ public:
 	static void CloseSceneSetupWindow();
 	static void CloseDynamicObjectWindow();
 
-	static inline ICognitive3DEditorModule& Get()
+	static inline FCognitive3DEditorModule& Get()
 	{
-		return FModuleManager::LoadModuleChecked< ICognitive3DEditorModule >("Cognitive3DEditor");
+		return FModuleManager::LoadModuleChecked< FCognitive3DEditorModule >("Cognitive3DEditor");
 	}
 
 private:

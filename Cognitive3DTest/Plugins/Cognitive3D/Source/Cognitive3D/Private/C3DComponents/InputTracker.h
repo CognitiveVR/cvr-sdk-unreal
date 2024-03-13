@@ -28,7 +28,7 @@ public:
 
 private:
 
-	TSharedPtr<IAnalyticsProviderCognitive3D> cog;
+	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
 	UInputComponent* InputComponent;
 
 	EC3DControllerType ControllerType;

@@ -22,8 +22,8 @@ class UCognitive3DBlueprints;
 
 class COGNITIVE3D_API FDynamicObjectManager
 {
-	friend class IAnalyticsProviderCognitive3D;
-	friend class IAnalyticsCognitive3D;
+	friend class FAnalyticsProviderCognitive3D;
+	friend class FAnalyticsCognitive3D;
 
 private:
 	TArray<FDynamicObjectSnapshot> snapshots;
@@ -38,7 +38,7 @@ private:
 	FTimerHandle AutoSendHandle;
 	FString DynamicObjectFileType;
 
-	TSharedPtr<IAnalyticsProviderCognitive3D> cogProvider;
+	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider;
 
 	FDynamicObjectManager();
 	UFUNCTION()

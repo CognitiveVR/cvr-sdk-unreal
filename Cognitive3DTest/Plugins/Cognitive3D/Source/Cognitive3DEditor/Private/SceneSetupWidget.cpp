@@ -1233,7 +1233,7 @@ FReply SSceneSetupWidget::NextPage()
 	}
 	if (CurrentPageEnum == ESceneSetupPage::Complete)
 	{
-		ICognitive3DEditorModule::CloseSceneSetupWindow();
+		FCognitive3DEditorModule::CloseSceneSetupWindow();
 	}
 
 	return FReply::Handled();
@@ -1498,7 +1498,7 @@ void SSceneSetupWidget::SpawnCognitive3DActor()
 
 FReply SSceneSetupWidget::OpenProjectSetupWindow()
 {
-	ICognitive3DEditorModule::SpawnCognitiveProjectSetupTab();
+	FCognitive3DEditorModule::SpawnCognitiveProjectSetupTab();
 	return FReply::Handled();
 }
 
