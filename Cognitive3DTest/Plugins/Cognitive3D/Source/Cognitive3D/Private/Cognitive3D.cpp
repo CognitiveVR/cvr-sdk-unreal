@@ -13,6 +13,9 @@
 #endif
 #endif
 #include "Interfaces/IPluginManager.h"
+#ifdef INCLUDE_PICO_PLUGIN
+#include "PXR_HMDFunctionLibrary.h"
+#endif
 //IMPROVEMENT this should be in the header, but can't find ControllerType enum
 #include "Cognitive3D/Private/C3DComponents/InputTracker.h"
 #if WITH_EDITOR
