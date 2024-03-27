@@ -40,19 +40,37 @@ void URoomSize::OnSessionBegin()
 				size.X = 141.0f;
 				size.Y = 141.0f;
 			}
+			//pico roomscale
+			if (size.X >= 1000 && size.Y >= 1000)
+			{
+				//convert room size to meters
+				float floorsize = (size.X / 100000.0f) * (size.Y / 100000.0f);
+				floorsize = FMath::CeilToInt(floorsize * 100000.0f) / 100000.0f;
 
-			//convert room size to meters
-			float floorsize = (size.X / 100.0f) * (size.Y / 100.0f);
-			floorsize = FMath::CeilToInt(floorsize * 100.0f) / 100.0f;
+				//format description
+				float sizeX = FMath::CeilToInt(size.X) / 100000.0f;
+				float sizeY = FMath::CeilToInt(size.Y) / 100000.0f;
+				FString description = FString::SanitizeFloat(sizeX) + " x " + FString::SanitizeFloat(sizeY);
 
-			//format description
-			float sizeX = FMath::CeilToInt(size.X) / 100.0f;
-			float sizeY = FMath::CeilToInt(size.Y) / 100.0f;
-			FString description = FString::SanitizeFloat(sizeX) + " x " + FString::SanitizeFloat(sizeY);
+				//write session properties
+				cognitive->SetSessionProperty("c3d.roomsizeMeters", floorsize);
+				cognitive->SetSessionProperty("c3d.roomsizeDescriptionMeters", description);
+			}
+			else //oculus and others
+			{
+				//convert room size to meters
+				float floorsize = (size.X / 100.0f) * (size.Y / 100.0f);
+				floorsize = FMath::CeilToInt(floorsize * 100.0f) / 100.0f;
 
-			//write session properties
-			cognitive->SetSessionProperty("c3d.roomsizeMeters", floorsize);
-			cognitive->SetSessionProperty("c3d.roomsizeDescriptionMeters", description);
+				//format description
+				float sizeX = FMath::CeilToInt(size.X) / 100.0f;
+				float sizeY = FMath::CeilToInt(size.Y) / 100.0f;
+				FString description = FString::SanitizeFloat(sizeX) + " x " + FString::SanitizeFloat(sizeY);
+
+				//write session properties
+				cognitive->SetSessionProperty("c3d.roomsizeMeters", floorsize);
+				cognitive->SetSessionProperty("c3d.roomsizeDescriptionMeters", description);
+			}
 		}
 	}
 }
