@@ -1027,6 +1027,13 @@ bool FAnalyticsProviderCognitive3D::TryGetRoomSize(FVector& roomsize)
 	roomsize.Y = BoundaryPoints.Y;
 	return true;
 #endif
+	//pico
+#elif INCLUDE_PICO_PLUGIN
+	FVector BoundaryDimensions = UPICOXRHMDFunctionLibrary::PXR_GetBoundaryDimensions(EPICOXRBoundaryType::PlayArea);
+	roomsize.X = FMath::Abs(BoundaryDimensions.X);
+	roomsize.Y = FMath::Abs(BoundaryDimensions.Y);
+	return true;
+	//crossplatform
 #elif ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION == 27 
 	FVector2D areaBounds = UHeadMountedDisplayFunctionLibrary::GetPlayAreaBounds();
 	roomsize.X = areaBounds.X;
