@@ -1320,7 +1320,12 @@ FReply FCognitiveEditorTools::SaveScreenshotToFile()
 	if (VerifyOrCreateDirectory(dir))
 	{
 		FString cmd = "HighResShot filename=" + dir + "screenshot 1920x1080";
-		GEngine->Exec(nullptr, *cmd);
+		bool screenshotSaved = GEngine->Exec(nullptr, *cmd);
+		if (!screenshotSaved)
+		{
+			ShowNotification(TEXT("Failed to save screenshot"), false);
+		}
+		
 	}
 	else
 	{
@@ -2694,6 +2699,7 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	bool writeSettingsJsonSuccess = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	if (writeSettingsJsonSuccess == false)
 	{
+		ShowNotification(TEXT("Unable to save settings.json"), false);
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene unable to save settings.json"));
 	}
 
