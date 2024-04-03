@@ -120,7 +120,6 @@ void FNetwork::OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr R
 		//during the wait time for the 500 error code, skip this part and only do the "else" block
 		if (responseCode == 200) 
 		{
-			ResetVariableTimer();
 			VariableDelayMultiplier = 0;
 			if (!cog->localCache.IsValid()) { GLog->Log("Network::OnCallReceivedAsync response while local cache is invalid"); return; }
 			if (localCacheRequest == NULL)
@@ -146,9 +145,11 @@ void FNetwork::OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr R
 					localCacheRequest->SetHeader("Content-Type", TEXT("application/json"));
 					localCacheRequest->SetHeader("Authorization", AuthValue);
 
-					
-					world->GetTimerManager().SetTimer(TimerHandleShortDelay, FTimerDelegate::CreateRaw(this, &FNetwork::RequestLocalCache), LocalCacheLoopDelay, false);
-					
+					if (world != nullptr && !world->GetTimerManager().IsTimerActive(TimerHandleShortDelay))
+					{
+						ResetVariableTimer();
+						world->GetTimerManager().SetTimer(TimerHandleShortDelay, FTimerDelegate::CreateRaw(this, &FNetwork::RequestLocalCache), LocalCacheLoopDelay, false);
+					}
 					VariableDelayMultiplier = 0;
 				}
 			}
@@ -213,23 +214,28 @@ void FNetwork::SessionEnd()
 
 void FNetwork::RequestLocalCache()
 {
-	if (IsServerUnreachable)
+	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
+	if (world != nullptr && !world->GetTimerManager().IsTimerActive(TimerHandleShortDelay))
 	{
-		auto world = ACognitive3DActor::GetCognitiveSessionWorld();
-		world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
-		localCacheRequest = NULL;
-		return;
+		if (IsServerUnreachable)
+		{
+			world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
+			localCacheRequest = NULL;
+			return;
+		}
+		localCacheRequest->OnProcessRequestComplete().BindRaw(this, &FNetwork::OnLocalCacheResponse);
+		localCacheRequest->ProcessRequest();
 	}
-	localCacheRequest->OnProcessRequestComplete().BindRaw(this, &FNetwork::OnLocalCacheResponse);
-	localCacheRequest->ProcessRequest();
-	
 }
 
 void FNetwork::ResetVariableTimer()
 {
 	IsServerUnreachable = false;
 	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
-	world->GetTimerManager().ClearTimer(TimerHandle);
+	if (world != nullptr && !world->GetTimerManager().IsTimerActive(TimerHandle))
+	{
+		world->GetTimerManager().ClearTimer(TimerHandle);
+	}
 }
 
 void FNetwork::OnLocalCacheResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -258,9 +264,11 @@ void FNetwork::OnLocalCacheResponse(FHttpRequestPtr Request, FHttpResponsePtr Re
 				localCacheRequest->SetHeader("Content-Type", TEXT("application/json"));
 				localCacheRequest->SetHeader("Authorization", AuthValue);
 
-				world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
-				world->GetTimerManager().SetTimer(TimerHandleShortDelay, FTimerDelegate::CreateRaw(this, &FNetwork::RequestLocalCache), LocalCacheLoopDelay, false);
-
+				if (world != nullptr && !world->GetTimerManager().IsTimerActive(TimerHandle))
+				{
+					world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
+					world->GetTimerManager().SetTimer(TimerHandleShortDelay, FTimerDelegate::CreateRaw(this, &FNetwork::RequestLocalCache), LocalCacheLoopDelay, false);
+				}
 			}
 			else
 			{

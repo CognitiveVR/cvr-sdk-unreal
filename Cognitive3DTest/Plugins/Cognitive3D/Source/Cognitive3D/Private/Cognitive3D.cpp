@@ -71,7 +71,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 			properties->SetStringField("Scene Id", FString(data->Id));
 			float duration = FUtil::GetTimestamp() - SceneStartTime;
 			properties->SetNumberField("Duration", duration);
-			customEventRecorder->Send("c3d.SceneChange", properties);
+			customEventRecorder->Send("c3d.SceneLoaded", properties);
 		}
 		else
 		{
@@ -131,7 +131,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 			properties->SetStringField("Scene Id", FString(stackNewTop->Id));
 			float duration = FUtil::GetTimestamp() - SceneStartTime;
 			properties->SetNumberField("Duration", duration);
-			customEventRecorder->Send("c3d.SceneChange", properties);
+			customEventRecorder->Send("c3d.SceneUnloaded", properties);
 		}
 		FlushAndCacheEvents();
 
@@ -183,6 +183,15 @@ void FAnalyticsProviderCognitive3D::HandlePostLevelLoad(UWorld* world)
 		return;
 	}
 
+	if (LastSceneData.IsValid())
+	{
+		//send event for unloading LastSceneData before loading current scene
+		TSharedPtr<FJsonObject> lastsceneproperties = MakeShareable(new FJsonObject());
+		lastsceneproperties->SetStringField("Scene Name", FString(LastSceneData->Name));
+		lastsceneproperties->SetStringField("Scene Id", FString(LastSceneData->Id));
+		customEventRecorder->Send("c3d.SceneUnloaded", lastsceneproperties);
+	}
+
 	if (currentSceneData.IsValid()) //currently has valid scene data
 	{
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
@@ -193,7 +202,7 @@ void FAnalyticsProviderCognitive3D::HandlePostLevelLoad(UWorld* world)
 		}
 		float duration = FUtil::GetTimestamp() - SceneStartTime;
 		properties->SetNumberField("Duration", duration);
-		customEventRecorder->Send("c3d.SceneChange", properties);
+		customEventRecorder->Send("c3d.SceneLoaded", properties);
 		FlushAndCacheEvents();
 	}
 
@@ -1018,6 +1027,13 @@ bool FAnalyticsProviderCognitive3D::TryGetRoomSize(FVector& roomsize)
 	roomsize.Y = BoundaryPoints.Y;
 	return true;
 #endif
+	//pico
+#elifdef INCLUDE_PICO_PLUGIN
+	FVector BoundaryDimensions = UPICOXRHMDFunctionLibrary::PXR_GetBoundaryDimensions(EPICOXRBoundaryType::PlayArea);
+	roomsize.X = FMath::Abs(BoundaryDimensions.X);
+	roomsize.Y = FMath::Abs(BoundaryDimensions.Y);
+	return true;
+	//crossplatform
 #elif ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION == 27 
 	FVector2D areaBounds = UHeadMountedDisplayFunctionLibrary::GetPlayAreaBounds();
 	roomsize.X = areaBounds.X;
