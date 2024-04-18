@@ -7,11 +7,6 @@
 #include "C3DCommonTypes.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "CoreMinimal.h"
-#include "PlatformMisc.h"
-
-//#include "OnlineSubsystem.h"
-//#include "OnlineSubsystemOculus.h"
-//#include "OculusIdentityCallbackProxy.h"
 #include "Cognitive3DActor.generated.h"
 
 //this class basically only exists to send EndPlay to the CognitiveProvider

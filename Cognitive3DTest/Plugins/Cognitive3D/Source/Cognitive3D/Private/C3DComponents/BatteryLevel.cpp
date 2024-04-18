@@ -39,10 +39,43 @@ void UBatteryLevel::EndInterval()
 	if (cognitive.IsValid())
 	{
 		int32 batteryLevel = 0;
+		int32 batteryState = 1;
+		FString batteryStateString = "";
+		bool isRunningOnBattery = false;
 #if PLATFORM_ANDROID
 		batteryLevel = FAndroidMisc::GetBatteryState().Level;
+		batteryState = FAndroidMisc::GetBatteryState().State;
+		isRunningOnBattery = FAndroidMisc::IsRunningOnBattery();
+		switch (batteryState) {
+		case 1:
+			batteryStateString = "Unknown";
+			break;
+		case 2:
+			batteryStateString = "Charging";
+			break;
+		case 3:
+			batteryStateString = "Discharging";
+			break;
+		case 4:
+			batteryStateString = "Not Charging";
+			break;
+		case 5:
+			batteryStateString = "Full";
+			break;
+		}
 #endif
 		cognitive->sensors->RecordSensor("HMD Battery Level", (float)batteryLevel);
+		cognitive->SetSessionProperty("HMD Battery Status Name", batteryStateString);
+		batteryState -= 1; //to remove +1 offset from constructor in AndroidPlatformMisc.h
+		cognitive->sensors->RecordSensor("HMD Battery Status", (float)batteryState);
+		if (isRunningOnBattery)
+		{
+			cognitive->SetSessionProperty("c3d.hmd.RunningOnBattery", "Yes");
+		}
+		else
+		{
+			cognitive->SetSessionProperty("c3d.hmd.RunningOnBattery", "No");
+		}
 	}
 }
 void UBatteryLevel::OnSessionEnd()
