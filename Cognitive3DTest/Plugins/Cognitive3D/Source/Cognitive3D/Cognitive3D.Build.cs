@@ -65,6 +65,11 @@ namespace UnrealBuildTool.Rules
 			//PublicDefinitions.Add("INCLUDE_OCULUS_PLUGIN");
 			//PublicDependencyModuleNames.AddRange(new string[] { "OculusHMD" });
 
+			//Oculus Platform features
+			//PublicDefinitions.Add("INCLUDE_OCULUS_PLATFORM");
+			//PublicDependencyModuleNames.AddRange(new string[] { "OVRPlatform", "OVRPlatformSDK" });
+			//PublicIncludePathModuleNames.AddRange(new string[] { "OVRPlatformSDK" });
+			//PublicIncludePaths.Add(System.IO.Path.GetFullPath(Target.RelativeEnginePath) + "/Plugins/Marketplace/MetaXRPlatform/Source/OVRPlatformSDK/LibOVRPlatform/include/Windows");
 			//PublicDefinitions.Add("INCLUDE_PICO_PLUGIN");
 			//PublicDependencyModuleNames.AddRange(new string[] { "PICOXRHMD" });
 
