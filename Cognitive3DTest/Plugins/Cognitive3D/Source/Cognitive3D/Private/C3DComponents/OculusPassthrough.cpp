@@ -49,7 +49,14 @@ void UOculusPassthrough::TickComponent(float DeltaTime, ELevelTick TickType, FAc
             if (IsPassthroughVisible != PassthroughLayer->IsVisible())
             {
                 TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
-                properties->SetBoolField("New State", PassthroughLayer->IsVisible());
+                if (IsVisible())
+                {
+                    properties->SetStringField("New State", "True");
+                }
+                else
+                {
+                    properties->SetStringField("New State", "False");
+                }
                 float duration = GetWorld()->GetTimeSeconds() - lastEventTime;
                 properties->SetNumberField("Duration", duration);
                 cognitive->customEventRecorder->Send("Passthrough Layer Changed", properties);
