@@ -114,19 +114,10 @@ void UOculusPlatform::ProcessOculusMessages()
 				ovrErrorHandle Error = ovr_Message_GetError(Message);
 				const char* ErrorMessage = ovr_Error_GetMessage(Error);
 				UE_LOG(LogTemp, Error, TEXT("User is not entitled: %s"), *FString(ErrorMessage));
-				FString errorStr = FString::Printf(TEXT("User is not entitled: %s"), *FString(ErrorMessage));
-				if (MyTextRenderActor2)
-				{
-					MyTextRenderActor2->GetTextRender()->SetText(FText::FromString(errorStr));
-				}
 			}
 			else //user is entitled
 			{
-				FString errorStr = FString::Printf(TEXT("User is Entitled"));
-				if (MyTextRenderActor2)
-				{
-					MyTextRenderActor2->GetTextRender()->SetText(FText::FromString(errorStr));
-				}
+
 			}
 		}
 
@@ -138,11 +129,6 @@ void UOculusPlatform::ProcessOculusMessages()
 				ovrErrorHandle Error = ovr_Message_GetError(Message);
 				const char* ErrorMessage = ovr_Error_GetMessage(Error);
 				UE_LOG(LogTemp, Error, TEXT("Failed to retrieve user: %s"), *FString(ErrorMessage));
-				FString errorStr = FString::Printf(TEXT("Failed to retrieve user: %s"), *FString(ErrorMessage));
-				if (MyTextRenderActor2)
-				{
-					MyTextRenderActor2->GetTextRender()->SetText(FText::FromString(errorStr));
-				}
 			}
 			else
 			{
@@ -159,11 +145,6 @@ void UOculusPlatform::ProcessOculusMessages()
 				ovrErrorHandle Error = ovr_Message_GetError(Message);
 				const char* ErrorMessage = ovr_Error_GetMessage(Error);
 				UE_LOG(LogTemp, Error, TEXT("Failed to retrieve access token: %s"), *FString(ErrorMessage));
-				FString errorStr = FString::Printf(TEXT("Failed to retrieve access token: %s"), *FString(ErrorMessage));
-				if (MyTextRenderActor2)
-				{
-					MyTextRenderActor2->GetTextRender()->SetText(FText::FromString(errorStr));
-				}
 			}
 			else
 			{
@@ -185,10 +166,7 @@ void UOculusPlatform::HandleUserRetrieved(const ovrMessageHandle Message)
 	UE_LOG(LogTemp, Log, TEXT("User retrieved: %s"), *FString(UserName));
 	FString propertyStr = FString::Printf(TEXT("%s"), *FString(UserName));
 	cog->SetSessionProperty("Oculus Username", propertyStr);
-	if (MyTextRenderActor3)
-	{
-		MyTextRenderActor3->GetTextRender()->SetText(FText::FromString(propertyStr));
-	}
+
 	if (gotAccessToken == false)
 	{
 		ovr_User_GetAccessToken();
@@ -198,11 +176,6 @@ void UOculusPlatform::HandleUserRetrieved(const ovrMessageHandle Message)
 void UOculusPlatform::HandleAccessToekenRetrieved(const ovrMessageHandle Message)
 {
 	const char* AccessToken = ovr_Message_GetString(Message);
-	FString accessTokenString = FString::Printf(TEXT("Access Token: %s"), *FString(AccessToken));
-	if (MyTextRenderActor4)
-	{
-		MyTextRenderActor4->GetTextRender()->SetText(FText::FromString(accessTokenString));
-	}
 
 	//make GET request for subscription context
 
