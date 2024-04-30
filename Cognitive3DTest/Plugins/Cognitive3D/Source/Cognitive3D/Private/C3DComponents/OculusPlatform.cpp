@@ -200,7 +200,12 @@ void UOculusPlatform::HandleUserRetrieved(const ovrMessageHandle Message)
 	const char* UserName = ovr_User_GetDisplayName(User);
 	UE_LOG(LogTemp, Log, TEXT("User retrieved: %s"), *FString(UserName));
 	FString propertyStr = FString::Printf(TEXT("%s"), *FString(UserName));
-	cog->SetSessionProperty("Oculus Username", propertyStr);
+	//cog->SetSessionProperty("Oculus Username", propertyStr);
+	ovrID oculusID = ovr_User_GetID(User);
+	char* idString = new char[256];
+	ovrID_ToString(idString, 256, oculusID);
+	cog->SetParticipantProperty("oculusId", idString);
+	cog->SetParticipantProperty("oculusUsername", propertyStr);
 
 	if (gotAccessToken == false)
 	{
