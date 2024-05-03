@@ -10,17 +10,17 @@
 #endif
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
-#include "OculusPassthrough.generated.h"
+#include "Passthrough.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class UOculusPassthrough : public UActorComponent
+class UPassthrough : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	UOculusPassthrough();
+	UPassthrough();
 
 protected:
 	// Called when the game starts

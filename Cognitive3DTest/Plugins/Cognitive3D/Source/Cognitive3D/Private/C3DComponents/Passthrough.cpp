@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "C3DComponents/OculusPassthrough.h"
+#include "C3DComponents/Passthrough.h"
 
 // Sets default values for this component's properties
-UOculusPassthrough::UOculusPassthrough()
+UPassthrough::UPassthrough()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -15,7 +15,7 @@ UOculusPassthrough::UOculusPassthrough()
 
 
 // Called when the game starts
-void UOculusPassthrough::BeginPlay()
+void UPassthrough::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -30,7 +30,7 @@ void UOculusPassthrough::BeginPlay()
 
 
 // Called every frame
-void UOculusPassthrough::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UPassthrough::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
@@ -74,7 +74,7 @@ void UOculusPassthrough::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 }
 
 #ifdef INCLUDE_OCULUS_PASSTHROUGH
-void UOculusPassthrough::FindOculusXRPassthroughLayer(UOculusXRPassthroughLayerComponent*& OculusPassthroughLayer)
+void UPassthrough::FindOculusXRPassthroughLayer(UOculusXRPassthroughLayerComponent*& OculusPassthroughLayer)
 {
     UWorld* World = GetWorld();
     if (!World) return;
