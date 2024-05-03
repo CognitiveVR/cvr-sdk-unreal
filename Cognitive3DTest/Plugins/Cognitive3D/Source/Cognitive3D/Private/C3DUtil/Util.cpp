@@ -115,9 +115,9 @@ void FUtil::SetSessionProperties()
 	}
 
 #if PLATFORM_ANDROID
-	cog->SetSessionProperty("c3d.device.cpu", FPlatformMisc::GetCPUChipset());
-	cog->SetSessionProperty("c3d.device.gpu", FPlatformMisc::GetPrimaryGPUBrand());
-	cog->SetSessionProperty("c3d.device.os", FPlatformMisc::GetOSVersion());
+	cog->SetSessionProperty("c3d.device.cpu", FAndroidMisc::GetCPUChipset());
+	cog->SetSessionProperty("c3d.device.gpu", FAndroidMisc::GetPrimaryGPUBrand());
+	cog->SetSessionProperty("c3d.device.os", "Android OS " + FAndroidMisc::GetOSVersion());
 
 
 #elif PLATFORM_WINDOWS

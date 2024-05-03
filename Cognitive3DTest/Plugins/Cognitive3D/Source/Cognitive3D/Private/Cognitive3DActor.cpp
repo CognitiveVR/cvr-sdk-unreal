@@ -27,8 +27,6 @@ void ACognitive3DActor::BeginPlay()
 	cog->OnPreSessionEnd.AddDynamic(this, &ACognitive3DActor::ReceivePreEndSession);
 	cog->OnPostSessionEnd.AddDynamic(this, &ACognitive3DActor::ReceivePostEndSession);
 
-	FString DeviceModel = FPlatformMisc::GetDeviceMakeAndModel();
-	UE_LOG(LogTemp, Warning, TEXT("device model is: %s"), *DeviceModel);
 
 	Super::BeginPlay();
 }

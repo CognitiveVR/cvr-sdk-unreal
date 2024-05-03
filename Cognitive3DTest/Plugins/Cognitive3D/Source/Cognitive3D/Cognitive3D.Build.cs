@@ -65,6 +65,10 @@ namespace UnrealBuildTool.Rules
 			//PublicDefinitions.Add("INCLUDE_OCULUS_PLUGIN");
 			//PublicDependencyModuleNames.AddRange(new string[] { "OculusHMD" });
 
+			//UNCOMMENT THESE LINES TO ENABLE PASSTHROUGH FEATURES. UE 5.2 onward (MUST ALSO ENABLE OCULUS PLUGIN ABOVE)
+			//PublicDefinitions.Add("INCLUDE_OCULUS_PASSTHROUGH");
+			//PublicDependencyModuleNames.AddRange(new string[] { "OculusXRPassthrough" });
+
 			//PublicDefinitions.Add("INCLUDE_PICO_PLUGIN");
 			//PublicDependencyModuleNames.AddRange(new string[] { "PICOXRHMD" });
 
