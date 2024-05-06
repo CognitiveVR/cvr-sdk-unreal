@@ -220,7 +220,6 @@ void UOculusPlatform::HandleAccessToekenRetrieved(const ovrMessageHandle Message
 	//make GET request for subscription context
 
 	FString AccessTokenStr = FString(AccessToken);
-	//cog->SetSessionProperty("acesstoken test", AccessTokenStr);
 	if (AccessTokenStr.Len() > 0)
 	{
 		gotAccessToken = true;
@@ -274,22 +273,52 @@ void UOculusPlatform::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpRespo
 							FString Sku;
 							bool IsTrial;
 							bool IsActive;
+							FString period_start_time;
+							FString period_end_time;
+							FString next_renewal_time;
 
 							if (DataObject->TryGetStringField(TEXT("sku"), Sku) &&
 								DataObject->TryGetBoolField(TEXT("is_trial"), IsTrial) &&
-								DataObject->TryGetBoolField(TEXT("is_active"), IsActive))
+								DataObject->TryGetBoolField(TEXT("is_active"), IsActive) &&
+								DataObject->TryGetStringField(TEXT("period_start_time"), period_start_time) &&
+								DataObject->TryGetStringField(TEXT("period_end_time"), period_end_time) &&
+								DataObject->TryGetStringField(TEXT("next_renewal_time"), next_renewal_time))
 							{
-								cog->SetSessionProperty("c3d.user.meta.subscription1.sku", Sku);
-								cog->SetSessionProperty("c3d.user.meta.subscription1.is_trial", IsTrial);
-								cog->SetSessionProperty("c3d.user.meta.subscription1.is_active", IsActive);
-
 								UE_LOG(LogTemp, Log, TEXT("SKU: %s, Is Trial: %s, Is Active: %s"),
 									*Sku,
 									IsTrial ? TEXT("true") : TEXT("false"),
 									IsActive ? TEXT("true") : TEXT("false"));
+
+								// Convert date-time strings to Unix timestamps
+								FDateTime StartTime, EndTime, NextRenewalTime;
+								if (FDateTime::ParseIso8601(*period_start_time, StartTime) &&
+									FDateTime::ParseIso8601(*period_end_time, EndTime) &&
+									FDateTime::ParseIso8601(*next_renewal_time, NextRenewalTime))
+								{
+									int64 StartTimestamp = StartTime.ToUnixTimestamp();
+									int64 EndTimestamp = EndTime.ToUnixTimestamp();
+									int64 NextRenewalTimestamp = NextRenewalTime.ToUnixTimestamp();
+
+									//add to json for gaze stream
+									TSharedPtr<FJsonObject> oculusSub = MakeShareable(new FJsonObject);
+									oculusSub->SetStringField(TEXT("sku"), sku);
+									oculusSub->SetBoolField(TEXT("is_active"), isActive);
+									oculusSub->SetBoolField(TEXT("is_trial"), isTrial);
+									oculusSub->SetNumberField(TEXT("period_start_date"), StartTimestamp);
+									oculusSub->SetNumberField(TEXT("period_end_date"), EndTimestamp);
+									oculusSub->SetNumberField(TEXT("next_renewal_date"), NextRenewalTimestamp);
+
+									SubscriptionsJsonObject->SetObjectField(sku, oculusSub);
+
+								}
+								else
+								{
+									// Handle parsing error for date strings
+								}
 							}
 						}
 					}
+					SendSubscriptionData();
 				}
 				else
 				{
@@ -312,4 +341,51 @@ void UOculusPlatform::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpRespo
 		UE_LOG(LogTemp, Error, TEXT("HTTP Request Failed: %s"), *Response->GetContentAsString());
 	}
 }
+
+void UOculusPlatform::SendSubscriptionData()
+{
+	int partNum = cog->gazeDataRecorder->GetPartNumber();
+
+	//construct the rest of the gaze stream, then add SubscriptionsJsonObject to it
+	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
+	TArray<TSharedPtr<FJsonValue>> dataArray;
+
+	wholeObj->SetStringField("userid", cog->GetUserID());
+	if (!cog->LobbyId.IsEmpty())
+	{
+		wholeObj->SetStringField("lobbyId", cog->LobbyId);
+	}
+	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
+	wholeObj->SetStringField("sessionid", cog->GetSessionID());
+	wholeObj->SetNumberField("part", partNum);
+	wholeObj->SetStringField("formatversion", "1.0");
+	cog->gazeDataRecorder->IncrementPartNumber();
+
+	FName DeviceName(NAME_None);
+	FString DeviceNameString = "unknown";
+
+	//get HMDdevice name
+	if (GEngine->XRSystem.IsValid())
+	{
+		DeviceName = GEngine->XRSystem->GetSystemName();
+		DeviceNameString = FUtil::GetDeviceName(DeviceName.ToString());
+	}
+
+	wholeObj->SetStringField("formatversion", "1.0");
+	wholeObj->SetStringField("hmdtype", DeviceNameString);
+
+	wholeObj->SetNumberField("interval", 0.1f);
+
+	wholeObj->SetArrayField("data", dataArray);
+
+	wholeObj->SetObjectField(TEXT("subscriptions"), SubscriptionsJsonObject);
+
+	FString OutputString;
+	auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
+	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
+
+	// Send serialized JSON
+	cog->network->NetworkCall("gaze", OutputString, false);
+}
+
 #endif

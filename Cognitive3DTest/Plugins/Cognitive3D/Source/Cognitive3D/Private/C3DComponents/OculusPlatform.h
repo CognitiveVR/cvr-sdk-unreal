@@ -56,7 +56,10 @@ public:
 	bool gotAccessToken;
 	void SubscriptionStatusQuery(FString AccessToken);
 	void OnHttpResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void SendSubscriptionData();
 
+	// Subscriptions JSON object
+	TSharedPtr<FJsonObject> SubscriptionsJsonObject = MakeShareable(new FJsonObject);
 #endif
 
 };
