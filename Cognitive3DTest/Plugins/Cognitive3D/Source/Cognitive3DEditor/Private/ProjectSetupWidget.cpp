@@ -760,7 +760,12 @@ FReply SProjectSetupWidget::NextPage()
 		GLog->Log("SProjectSetupWidget::NextPage");
 		return FReply::Handled();
 	}
-	if (CurrentPageEnum == EProjectSetupPage::ExportPath)
+	else if (CurrentPageEnum == EProjectSetupPage::OrganizationDetails)
+	{
+		//set default export directory if it isnt set
+		FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
+	}
+	else if (CurrentPageEnum == EProjectSetupPage::ExportPath)
 	{
 		GLog->Log("set dynamic and scene export directories. create if needed");
 		FCognitiveEditorTools::GetInstance()->CreateExportFolderStructure();
@@ -773,7 +778,15 @@ FReply SProjectSetupWidget::NextPage()
 
 FReply SProjectSetupWidget::LastPage()
 {
-	if (CurrentPageEnum == EProjectSetupPage::Intro) { return FReply::Handled(); }
+	if (CurrentPageEnum == EProjectSetupPage::Intro) 
+	{ 
+		return FReply::Handled(); 
+	}
+	else if (CurrentPageEnum == EProjectSetupPage::ExportPath) 
+	{
+		//set default export directory if it isnt set
+		FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
+	}
 	CurrentPageEnum = (EProjectSetupPage)(((uint8)CurrentPageEnum) - 1);
 	return FReply::Handled();
 }

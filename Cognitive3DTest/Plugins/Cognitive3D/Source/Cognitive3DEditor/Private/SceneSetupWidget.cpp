@@ -1207,6 +1207,11 @@ FReply SSceneSetupWidget::NextPage()
 		//save keys to ini
 		SpawnCognitive3DActor();
 	}
+	else if (CurrentPageEnum == ESceneSetupPage::Controller)
+	{
+		//set default export directory if it isnt set
+		FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
+	}
 	else if (CurrentPageEnum == ESceneSetupPage::Export)
 	{
 		GLog->Log("set dynamic and scene export directories. create if needed");
@@ -1241,7 +1246,15 @@ FReply SSceneSetupWidget::NextPage()
 
 FReply SSceneSetupWidget::LastPage()
 {
-	if (CurrentPageEnum == ESceneSetupPage::Complete) { return FReply::Handled(); }
+	if (CurrentPageEnum == ESceneSetupPage::Complete) 
+	{ 
+		return FReply::Handled(); 
+	}
+	else if (CurrentPageEnum == ESceneSetupPage::Export)
+	{
+		//set default export directory if it isnt set
+		FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
+	}
 	CurrentPageEnum = (ESceneSetupPage)(((uint8)CurrentPageEnum) - 1);
 	return FReply::Handled();
 }
@@ -1288,7 +1301,15 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 {
 	if (CurrentPageEnum == ESceneSetupPage::Intro)
 	{
-		return true;
+		//disable if no valid dev key
+		if (FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	if (CurrentPageEnum == ESceneSetupPage::Export)

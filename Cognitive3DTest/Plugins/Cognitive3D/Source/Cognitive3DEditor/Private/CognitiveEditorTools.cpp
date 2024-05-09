@@ -1306,7 +1306,8 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 	}
 	else
 	{
-		BaseExportDirectory = "";
+		//set default export directory if it isnt set
+		SetDefaultIfNoExportDirectory();
 		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
 	}
@@ -2920,6 +2921,14 @@ void FCognitiveEditorTools::WizardUpload()
 FText FCognitiveEditorTools::GetBaseExportDirectoryDisplay() const
 {
 	return FText::FromString(BaseExportDirectory);
+}
+
+void FCognitiveEditorTools::SetDefaultIfNoExportDirectory()
+{
+	if (BaseExportDirectory.Len() == 0)
+	{
+		BaseExportDirectory = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("TEMP_C3D_Export/"));
+	}
 }
 
 //c:/users/me/desktop/export/scenename/
