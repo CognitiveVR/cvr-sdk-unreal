@@ -26,6 +26,14 @@ FString FUtil::GetDeviceName(FString DeviceName)
 	{
 		return "rift";
 	}
+	if (DeviceName == "OculusXRHMD")
+	{
+		return "rift";
+	}
+	if (DeviceName == "OculusHMD")
+	{
+		return "rift";
+	}
 	if (DeviceName == "OSVR")
 	{
 		return "rift";
@@ -75,6 +83,13 @@ void FUtil::SetSessionProperties()
 	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
 	cog->SetSessionProperty("c3d.device.eyetracking.type", "Tobii");
 	cog->SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
+#elif defined INCLUDE_OCULUS_PLUGIN
+	cog->SetSessionProperty("c3d.app.sdktype", "Oculus HMD");
+	cog->SetSessionProperty("c3d.device.hmd.type", FPlatformMisc::GetCPUBrand());
+#elif defined INCLUDE_PICO_PLUGIN
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
+	cog->SetSessionProperty("c3d.app.sdktype", "PICO");
+	cog->SetSessionProperty("c3d.device.hmd.type", FPlatformMisc::GetCPUBrand());
 #else
 	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "false");
 	cog->SetSessionProperty("c3d.device.eyetracking.type", "None");
