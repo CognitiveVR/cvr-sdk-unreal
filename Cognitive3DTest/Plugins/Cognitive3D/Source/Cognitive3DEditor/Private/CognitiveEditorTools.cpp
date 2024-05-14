@@ -469,7 +469,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 		FSuppressableWarningDialog::FSetupInfo ExportSettingsInfo(LOCTEXT("ExportSettingsBody", "Make sure the scale is set to 1.0 to get the correct representation on the Dashboard"), LOCTEXT("ExportSettingsTitle", "Recommended Export Settings"), "ExportSelectedDynamicsBody");
 		ExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
-		ExportSettingsInfo.CheckBoxText = FText::FromString("Don't show again");
+		ExportSettingsInfo.CheckBoxText = FText();
 		FSuppressableWarningDialog ExportSelectedDynamicMeshes(ExportSettingsInfo);
 		ExportSelectedDynamicMeshes.ShowModal();
 		ExportFilename = exportObjects[i]->MeshName + ".gltf";
@@ -540,7 +540,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			{
 				FSuppressableWarningDialog::FSetupInfo DOExportSettingsInfo(LOCTEXT("DynamicObjectExportSettingsBody", "You are exporting a dynamic object on an actor with multiple dynamic objects, but they are not configured correctly. If you want to track multiple meshes on an actor with multiple dynamic objects, make sure each dynamic object is a child of its respective mesh"), LOCTEXT("DynamicObjectExportSettingsTitle", "Incorrect Dynamic Object Export Configuration"), "ExportSelectedDynamicsObjectsBody");
 				DOExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
-				DOExportSettingsInfo.CheckBoxText = FText::FromString("Don't show again");
+				DOExportSettingsInfo.CheckBoxText = FText();
 				FSuppressableWarningDialog DOExportSelectedDynamicMeshes(DOExportSettingsInfo);
 				DOExportSelectedDynamicMeshes.ShowModal();
 
@@ -819,77 +819,95 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObject*> dynamics)
 {
 	bool wroteAnyObjects = false;
-	FString objectManifest = "{\"objects\":[";
-	//write preset customids to manifest
-	for (int32 i = 0; i < dynamics.Num(); i++)
+
+	//split up dynamics and make a web request every 250 items, up to 99 calls
+	int32 requestCount = 1;
+	int32 dynamicsPart = 0;
+	int32 dynamicsCount = 0;
+
+	while (dynamicsCount < dynamics.Num() && requestCount < 100)
 	{
-		//if they have a customid -> add them to the objectmanifest string
-		if (dynamics[i]->IdSourceType == EIdSourceType::CustomId && dynamics[i]->CustomId != "")
+		FString objectManifest = "{\"objects\":[";
+		for (int q = 250 * dynamicsPart; q < 250 * requestCount; q++)
 		{
-			FVector location = dynamics[i]->GetComponentLocation();
-			FQuat rotation = dynamics[i]->GetComponentQuat();
-			FVector scale = dynamics[i]->GetComponentScale();
+			//we have reached the end of the dynamics array before reaching the end of the part size
+			if (q >= dynamics.Num())
+			{
+				continue;
+			}
+			//if they have a customid -> add them to the objectmanifest string
+			if (dynamics[q]->IdSourceType == EIdSourceType::CustomId && dynamics[q]->CustomId != "")
+			{
+				FVector location = dynamics[q]->GetComponentLocation();
+				FQuat rotation = dynamics[q]->GetComponentQuat();
+				FVector scale = dynamics[q]->GetComponentScale();
 
-			wroteAnyObjects = true;
-			objectManifest += "{";
-			objectManifest += "\"id\":\"" + dynamics[i]->CustomId + "\",";
-			objectManifest += "\"mesh\":\"" + dynamics[i]->MeshName + "\",";
-			objectManifest += "\"name\":\"" + dynamics[i]->GetOwner()->GetName() + "\",";
-			objectManifest += "\"scaleCustom\":[" + FString::SanitizeFloat(scale.X) + "," + FString::SanitizeFloat(scale.Z) + "," + FString::SanitizeFloat(scale.Y) + "],";
-			objectManifest += "\"initialPosition\":[" + FString::SanitizeFloat(-location.X) + "," + FString::SanitizeFloat(location.Z) + "," + FString::SanitizeFloat(location.Y) + "],";
-			objectManifest += "\"initialRotation\":[" + FString::SanitizeFloat(-rotation.X) + "," + FString::SanitizeFloat(rotation.Z) + "," + FString::SanitizeFloat(-rotation.Y) + "," + FString::SanitizeFloat(rotation.W) + "]";
-			objectManifest += "},";
+				wroteAnyObjects = true;
+				dynamicsCount++;
+				objectManifest += "{";
+				objectManifest += "\"id\":\"" + dynamics[q]->CustomId + "\",";
+				objectManifest += "\"mesh\":\"" + dynamics[q]->MeshName + "\",";
+				objectManifest += "\"name\":\"" + dynamics[q]->GetOwner()->GetName() + "\",";
+				objectManifest += "\"scaleCustom\":[" + FString::SanitizeFloat(scale.X) + "," + FString::SanitizeFloat(scale.Z) + "," + FString::SanitizeFloat(scale.Y) + "],";
+				objectManifest += "\"initialPosition\":[" + FString::SanitizeFloat(-location.X) + "," + FString::SanitizeFloat(location.Z) + "," + FString::SanitizeFloat(location.Y) + "],";
+				objectManifest += "\"initialRotation\":[" + FString::SanitizeFloat(-rotation.X) + "," + FString::SanitizeFloat(rotation.Z) + "," + FString::SanitizeFloat(-rotation.Y) + "," + FString::SanitizeFloat(rotation.W) + "]";
+				objectManifest += "},";
+			}
 		}
+		if (!wroteAnyObjects)
+		{
+			GLog->Log("Couldn't find any dynamic objects to put into the aggregation manifest!");
+			FCognitiveEditorTools::OnUploadManifestCompleted(NULL, NULL, true);
+			return FReply::Handled();
+		}
+		//remove last comma
+		objectManifest.RemoveFromEnd(",");
+		//add ]}
+		objectManifest += "]}";
+
+		//send request for this dynamics part
+		//get scene id
+		TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
+		if (!currentSceneData.IsValid())
+		{
+			GLog->Log("FCognitiveEditorTools::UploadDynamicObjectManifest could not find current scene id");
+			return FReply::Handled();
+		}
+
+		if (currentSceneData->Id == "")
+		{
+			GLog->Log("CognitiveToolsCustomization::UploadDynamicsManifest couldn't find sceneid for current scene");
+			return FReply::Handled();
+		}
+		if (currentSceneData->VersionNumber == 0)
+		{
+			GLog->Log("CognitiveTools::UploadDynamicsManifest current scene does not have valid version number. GetSceneVersions and try again");
+			return FReply::Handled();
+		}
+
+		FString url = PostDynamicObjectManifest(currentSceneData->Id, currentSceneData->VersionNumber);
+
+		//send manifest to api/objects/sceneid
+
+		GLog->Log("CognitiveTools::UploadDynamicsManifest send dynamic object aggregation manifest");
+		FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
+		auto HttpRequest = FHttpModule::Get().CreateRequest();
+		HttpRequest->SetURL(url);
+		HttpRequest->SetVerb("POST");
+		HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
+		HttpRequest->SetHeader("Authorization", AuthValue);
+		HttpRequest->SetContentAsString(objectManifest);
+		GLog->Log(objectManifest);
+
+		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestCompleted);
+
+		HttpRequest->ProcessRequest();
+
+		//increment to loop through the next part if any dynamics are left
+		dynamicsPart++;
+		requestCount++;
 	}
-	if (!wroteAnyObjects)
-	{
-		GLog->Log("Couldn't find any dynamic objects to put into the aggregation manifest!");
-		FCognitiveEditorTools::OnUploadManifestCompleted(NULL, NULL, true);
-		return FReply::Handled();
-	}
-	//remove last comma
-	objectManifest.RemoveFromEnd(",");
-	//add ]}
-	objectManifest += "]}";
-
-
-	//get scene id
-	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
-	if (!currentSceneData.IsValid())
-	{
-		GLog->Log("FCognitiveEditorTools::UploadDynamicObjectManifest could not find current scene id");
-		return FReply::Handled();
-	}
-
-	if (currentSceneData->Id == "")
-	{
-		GLog->Log("CognitiveToolsCustomization::UploadDynamicsManifest couldn't find sceneid for current scene");
-		return FReply::Handled();
-	}
-	if (currentSceneData->VersionNumber == 0)
-	{
-		GLog->Log("CognitiveTools::UploadDynamicsManifest current scene does not have valid version number. GetSceneVersions and try again");
-		return FReply::Handled();
-	}
-
-	FString url = PostDynamicObjectManifest(currentSceneData->Id, currentSceneData->VersionNumber);
-
-	//send manifest to api/objects/sceneid
-
-	GLog->Log("CognitiveTools::UploadDynamicsManifest send dynamic object aggregation manifest");
-	FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
-	auto HttpRequest = FHttpModule::Get().CreateRequest();
-	HttpRequest->SetURL(url);
-	HttpRequest->SetVerb("POST");
-	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
-	HttpRequest->SetHeader("Authorization", AuthValue);
-	HttpRequest->SetContentAsString(objectManifest);
-	GLog->Log(objectManifest);
-
-	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestCompleted);
-
-	HttpRequest->ProcessRequest();
-
+	
 	return FReply::Handled();
 }
 
@@ -899,71 +917,88 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FSt
 	GLog->Log("Cognitive3D Tools uploading manifest for " + FString::FromInt(ids.Num()) + " objects");
 
 	bool wroteAnyObjects = false;
-	FString objectManifest = "{\"objects\":[";
-	//write preset customids to manifest
-	for (int32 i = 0; i < ids.Num(); i++)
+
+	//split up dynamics and make a web request every 250 items, up to 99 calls
+	int32 requestCount = 1;
+	int32 dynamicsPart = 0;
+	int32 dynamicsCount = 0;
+
+	while (dynamicsCount < ids.Num() && requestCount < 100)
 	{
-		//if they have a customid -> add them to the objectmanifest string
-		if (ids[i] != "")
+		FString objectManifest = "{\"objects\":[";
+		for (int q = 250 * dynamicsPart; q < 250 * requestCount; q++)
 		{
-			wroteAnyObjects = true;
-			objectManifest += "{";
-			objectManifest += "\"id\":\"" + ids[i] + "\",";
-			objectManifest += "\"mesh\":\"" + meshName + "\",";
-			objectManifest += "\"name\":\"" + prefabName + "\",";
+			//we have reached the end of the ids array before reaching the end of the part size
+			if (q >= ids.Num())
+			{
+				continue;
+			}
+			//if they have a customid -> add them to the objectmanifest string
+			if (ids[q] != "")
+			{
+				wroteAnyObjects = true;
+				dynamicsCount++;
+				objectManifest += "{";
+				objectManifest += "\"id\":\"" + ids[q] + "\",";
+				objectManifest += "\"mesh\":\"" + meshName + "\",";
+				objectManifest += "\"name\":\"" + prefabName + "\",";
 
-			objectManifest += "\"scaleCustom\":[1,1,1],";
-			objectManifest += "\"initialPosition\":[0,0,0],";
-			objectManifest += "\"initialRotation\":[0,0,0,1]";
-			objectManifest += "},";
+				objectManifest += "\"scaleCustom\":[1,1,1],";
+				objectManifest += "\"initialPosition\":[0,0,0],";
+				objectManifest += "\"initialRotation\":[0,0,0,1]";
+				objectManifest += "},";
+			}
 		}
+		if (!wroteAnyObjects)
+		{
+			GLog->Log("Couldn't find any dynamic objects to put into the aggregation manifest!");
+			return FReply::Handled();
+		}
+		//remove last comma
+		objectManifest.RemoveFromEnd(",");
+		//add ]}
+		objectManifest += "]}";
+
+		//get scene id
+		TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
+		if (!currentSceneData.IsValid())
+		{
+			GLog->Log("FCognitiveEditorTools::UploadDynamicObjectManifest could not find current scene id");
+			return FReply::Handled();
+		}
+
+		if (currentSceneData->Id == "")
+		{
+			GLog->Log("CognitiveToolsCustomization::UploadDynamicsManifest couldn't find sceneid for current scene");
+			return FReply::Handled();
+		}
+		if (currentSceneData->VersionNumber == 0)
+		{
+			GLog->Log("CognitiveTools::UploadDynamicsManifest current scene does not have valid version number. GetSceneVersions and try again");
+			return FReply::Handled();
+		}
+
+		FString url = PostDynamicObjectManifest(currentSceneData->Id, currentSceneData->VersionNumber);
+
+		//send manifest to api/objects/sceneid
+
+		GLog->Log("CognitiveTools::UploadDynamicsManifest send dynamic object aggregation manifest");
+		FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
+		auto HttpRequest = FHttpModule::Get().CreateRequest();
+		HttpRequest->SetURL(url);
+		HttpRequest->SetVerb("POST");
+		HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
+		HttpRequest->SetHeader("Authorization", AuthValue);
+		HttpRequest->SetContentAsString(objectManifest);
+
+		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestIdsCompleted);
+
+		HttpRequest->ProcessRequest();
+
+		//increment to loop through the next part if any dynamics are left
+		dynamicsPart++;
+		requestCount++;
 	}
-	if (!wroteAnyObjects)
-	{
-		GLog->Log("Couldn't find any dynamic objects to put into the aggregation manifest!");
-		return FReply::Handled();
-	}
-	//remove last comma
-	objectManifest.RemoveFromEnd(",");
-	//add ]}
-	objectManifest += "]}";
-
-
-	//get scene id
-	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
-	if (!currentSceneData.IsValid())
-	{
-		GLog->Log("FCognitiveEditorTools::UploadDynamicObjectManifest could not find current scene id");
-		return FReply::Handled();
-	}
-
-	if (currentSceneData->Id == "")
-	{
-		GLog->Log("CognitiveToolsCustomization::UploadDynamicsManifest couldn't find sceneid for current scene");
-		return FReply::Handled();
-	}
-	if (currentSceneData->VersionNumber == 0)
-	{
-		GLog->Log("CognitiveTools::UploadDynamicsManifest current scene does not have valid version number. GetSceneVersions and try again");
-		return FReply::Handled();
-	}
-
-	FString url = PostDynamicObjectManifest(currentSceneData->Id, currentSceneData->VersionNumber);
-
-	//send manifest to api/objects/sceneid
-
-	GLog->Log("CognitiveTools::UploadDynamicsManifest send dynamic object aggregation manifest");
-	FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
-	auto HttpRequest = FHttpModule::Get().CreateRequest();
-	HttpRequest->SetURL(url);
-	HttpRequest->SetVerb("POST");
-	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
-	HttpRequest->SetHeader("Authorization", AuthValue);
-	HttpRequest->SetContentAsString(objectManifest);
-
-	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestIdsCompleted);
-
-	HttpRequest->ProcessRequest();
 
 	return FReply::Handled();
 }
