@@ -34,6 +34,11 @@ void SSceneSetupWidget::CheckForExpiredDeveloperKey()
 		Request->SetHeader(TEXT("Authorization"), "APIKEY:DEVELOPER " + FCognitiveEditorTools::GetInstance()->DeveloperKey);
 		Request->ProcessRequest();
 	}
+	else //no developer key found
+	{
+		CurrentPageEnum = ESceneSetupPage::Invalid;
+		GLog->Log("Developer Key Response Code is not 200. Developer key may be invalid or expired");
+	}
 }
 
 void SSceneSetupWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
