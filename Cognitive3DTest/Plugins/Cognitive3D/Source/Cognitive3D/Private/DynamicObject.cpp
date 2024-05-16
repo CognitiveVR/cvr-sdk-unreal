@@ -56,7 +56,7 @@ void UDynamicObject::OnRegister()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("DynamicObject component does not have a valid parent. THis could be caused by incorrectly creating and registering the Dynamic Object component before attaching it to the parent actor. Pleasure ensure that you are calling AttachToParent before RegisterComponent when assigning controller Dynamic Objects with C++"));
+		UE_LOG(LogTemp, Error, TEXT("DynamicObject component does not have a valid parent. This could be caused by incorrectly creating and registering the Dynamic Object component before attaching it to the parent actor. Pleasure ensure that you are calling AttachToParent before RegisterComponent when assigning controller Dynamic Objects with C++"));
 	}
 }
 #endif
@@ -240,7 +240,7 @@ void UDynamicObject::Initialize()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("DynamicObject component does not have a valid parent. THis could be caused by incorrectly creating and registering the Dynamic Object component before attaching it to the parent actor. Pleasure ensure that you are calling AttachToParent before RegisterComponent when assigning controller Dynamic Objects with C++"));
+		UE_LOG(LogTemp, Error, TEXT("DynamicObject component does not have a valid parent. This could be caused by incorrectly creating and registering the Dynamic Object component before attaching it to the parent actor. Pleasure ensure that you are calling AttachToParent before RegisterComponent when assigning controller Dynamic Objects with C++"));
 	}
 	LastScale = FVector(1, 1, 1);
 
