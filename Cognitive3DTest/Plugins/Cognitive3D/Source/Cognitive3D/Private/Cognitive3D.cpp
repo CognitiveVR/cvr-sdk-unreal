@@ -121,7 +121,12 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 	{		
 		//remove the scene data
 		LoadedSceneDataStack.Remove(data);
-		auto stackNewTop = LoadedSceneDataStack.Top();
+
+		TSharedPtr<FSceneData> stackNewTop;
+		if (LoadedSceneDataStack.Num() > 0)
+		{
+			stackNewTop = LoadedSceneDataStack.Top();
+		}
 
 		//send scene change event (with destination if valid)
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());

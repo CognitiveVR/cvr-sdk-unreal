@@ -220,9 +220,8 @@ public:
 	bool PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
 	void* ChooseParentWindowHandle();
 
-
+	//default base export directory
 	FString BaseExportDirectory;
-
 
 	//c:/users/me/desktop/export/
 	FText GetBaseExportDirectoryDisplay() const;
@@ -230,6 +229,7 @@ public:
 	{
 		return BaseExportDirectory;
 	}
+	void SetDefaultIfNoExportDirectory();
 	//c:/users/me/desktop/export/scenename/
 	FText GetSceneExportDirectoryDisplay(FString scenename) const;
 	FString GetSceneExportDirectory(FString scenename)
