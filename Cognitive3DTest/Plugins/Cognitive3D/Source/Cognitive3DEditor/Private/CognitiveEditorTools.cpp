@@ -1683,7 +1683,6 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 	if (bWasSuccessful)
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted response code " + FString::FromInt(Response->GetResponseCode()));
-		ShowNotification(TEXT("Scene Uploaded Successfully"));
 	}
 	else
 	{
@@ -1697,6 +1696,7 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 
 	if (bWasSuccessful && Response->GetResponseCode() < 300)
 	{
+		ShowNotification(TEXT("Scene Uploaded Successfully"));
 		//UE_LOG(LogTemp, Warning, TEXT("Upload Scene Response is %s"), *Response->GetContentAsString());
 
 		UWorld* myworld = GWorld->GetWorld();
@@ -1730,6 +1730,7 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 	}
 	else
 	{
+		ShowNotification(TEXT("Failed to upload scene"), false);
 		WizardUploading = false;
 		WizardUploadError = "FCognitiveEditorTools::OnUploadSceneCompleted response code " + FString::FromInt(Response->GetResponseCode());
 	}

@@ -1199,6 +1199,10 @@ FText SSceneSetupWidget::GetNextButtonTooltipText() const
 		{
 			return FText::FromString("You must export the scene geometry to continue");
 		}
+		else if (FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile() == false)
+		{
+			return FText::FromString("settings.json not found in export directory, please try exporting the level again");
+		}
 	}
 	return FText::FromString("");
 }
