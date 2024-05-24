@@ -428,51 +428,103 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 	if (SyncUpdateWithPlayer){return;}
 
 	currentTime += DeltaTime;
-	if (currentTime > UpdateInterval)
+	if (IsController)
 	{
-		currentTime -= UpdateInterval;
-
-		//rotation angle to degrees
-		auto parentRotator = GetAttachParent()->GetComponentRotation();
-		float quatDot = parentRotator.Quaternion() | LastRotation;
-		quatDot = FMath::Abs(quatDot);
-		quatDot = FMath::Min(quatDot,1.0f);
-		float quatDegrees = FMath::RadiansToDegrees(FMath::Acos(quatDot)) * 2;
-		bool hasScaleChanged = false;
-
-		if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+		if (currentTime > ControllerUpdateInterval)
 		{
-			hasScaleChanged = true;
-		}
+			currentTime -= ControllerUpdateInterval;
 
-		if (!hasScaleChanged)
-		{
-			if ((LastPosition - GetAttachParent()->GetComponentLocation()).Size() > PositionThreshold)
-			{
-				//moved
-			}
-			else if (quatDegrees > RotationThreshold) //rotator stuff
-			{
-				//rotated
-			}
-			else
-			{
-				//hasn't moved enough
-				return;
-			}
-		}
+			//rotation angle to degrees
+			auto parentRotator = GetAttachParent()->GetComponentRotation();
+			float quatDot = parentRotator.Quaternion() | LastRotation;
+			quatDot = FMath::Abs(quatDot);
+			quatDot = FMath::Min(quatDot, 1.0f);
+			float quatDegrees = FMath::RadiansToDegrees(FMath::Acos(quatDot)) * 2;
+			bool hasScaleChanged = false;
 
-		//scene component
-		LastPosition = GetAttachParent()->GetComponentLocation();
-		LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
-		if (hasScaleChanged)
-		{
-			LastScale = GetAttachParent()->GetComponentScale();
-		}
+			if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+			{
+				hasScaleChanged = true;
+			}
 
-		FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
-		dynamicObjectManager->AddSnapshot(snapObj);
+			if (!hasScaleChanged)
+			{
+				if ((LastPosition - GetAttachParent()->GetComponentLocation()).Size() > PositionThreshold)
+				{
+					//moved
+				}
+				else if (quatDegrees > RotationThreshold) //rotator stuff
+				{
+					//rotated
+				}
+				else
+				{
+					//hasn't moved enough
+					return;
+				}
+			}
+
+			//scene component
+			LastPosition = GetAttachParent()->GetComponentLocation();
+			LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
+			if (hasScaleChanged)
+			{
+				LastScale = GetAttachParent()->GetComponentScale();
+			}
+
+			FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
+			dynamicObjectManager->AddSnapshot(snapObj);
+		}
 	}
+	else
+	{
+		if (currentTime > DynamicUpdateInterval)
+		{
+			currentTime -= DynamicUpdateInterval;
+
+			//rotation angle to degrees
+			auto parentRotator = GetAttachParent()->GetComponentRotation();
+			float quatDot = parentRotator.Quaternion() | LastRotation;
+			quatDot = FMath::Abs(quatDot);
+			quatDot = FMath::Min(quatDot, 1.0f);
+			float quatDegrees = FMath::RadiansToDegrees(FMath::Acos(quatDot)) * 2;
+			bool hasScaleChanged = false;
+
+			if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+			{
+				hasScaleChanged = true;
+			}
+
+			if (!hasScaleChanged)
+			{
+				if ((LastPosition - GetAttachParent()->GetComponentLocation()).Size() > PositionThreshold)
+				{
+					//moved
+				}
+				else if (quatDegrees > RotationThreshold) //rotator stuff
+				{
+					//rotated
+				}
+				else
+				{
+					//hasn't moved enough
+					return;
+				}
+			}
+
+			//scene component
+			LastPosition = GetAttachParent()->GetComponentLocation();
+			LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
+			if (hasScaleChanged)
+			{
+				LastScale = GetAttachParent()->GetComponentScale();
+			}
+
+			FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
+			dynamicObjectManager->AddSnapshot(snapObj);
+		}
+	}
+	
 }
 
 void UDynamicObject::ValidateObjectId()
