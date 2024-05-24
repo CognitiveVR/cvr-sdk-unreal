@@ -1319,8 +1319,9 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 
 	if (CurrentPageEnum == ESceneSetupPage::Export)
 	{
-		//disable if no scene has been exported
-		if (FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount() == 0)
+		//disable if no scene has been exported or if no settings json file generated
+		if (FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount() == 0 
+			|| FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile() == false)
 		{
 			return false;
 		}
