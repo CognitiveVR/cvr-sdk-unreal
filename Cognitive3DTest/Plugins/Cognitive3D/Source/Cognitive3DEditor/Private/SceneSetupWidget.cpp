@@ -78,6 +78,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 	float padding = 10;
 	FCognitiveEditorTools::CheckIniConfigured();
 	CheckForExpiredDeveloperKey();
+	FCognitiveEditorTools::GetInstance()->WizardUploadError = "";
+	FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode = 0;
 
 	ChildSlot
 		[
@@ -1204,6 +1206,13 @@ FText SSceneSetupWidget::GetNextButtonTooltipText() const
 			return FText::FromString("settings.json not found in export directory, please try exporting the level again");
 		}
 	}
+	if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
+	{
+		if (FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile() == false)
+		{
+			return FText::FromString("settings.json not found in export directory, please try exporting the level again");
+		}
+	}
 	return FText::FromString("");
 }
 
@@ -1324,9 +1333,28 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 	if (CurrentPageEnum == ESceneSetupPage::Export)
 	{
 		//disable if no scene has been exported or if no settings json file generated
-		if (FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount() == 0 
-			|| FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile() == false)
+		if (FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount() == 0)
 		{
+			return false;
+		}
+		else if (FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount() > 0)
+		{
+			if (FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile() == false)
+			{
+				FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode = 0;
+				FCognitiveEditorTools::GetInstance()->WizardUploadError = "settings.json not found in export directory, please try exporting the level again";
+				return false;
+			}
+		}
+		return true;
+	}
+
+	if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
+	{
+		if (FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile() == false)
+		{
+			FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode = 0;
+			FCognitiveEditorTools::GetInstance()->WizardUploadError = "settings.json not found in export directory, please try exporting the level again";
 			return false;
 		}
 		return true;
@@ -1481,6 +1509,10 @@ FText SSceneSetupWidget::GetHeaderTitle() const
 void SSceneSetupWidget::OnExportPathChanged(const FText& Text)
 {
 	FCognitiveEditorTools::GetInstance()->BaseExportDirectory = Text.ToString();
+	if (Text.IsEmpty())
+	{
+		FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
+	}
 }
 
 void SSceneSetupWidget::SpawnCognitive3DActor()

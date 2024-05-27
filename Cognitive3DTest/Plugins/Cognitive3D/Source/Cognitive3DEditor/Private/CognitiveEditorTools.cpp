@@ -2795,6 +2795,7 @@ void FCognitiveEditorTools::ValidateGeneratedFiles()
 		if (!FoundErrorFile)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportScene verified generated files"));
+			WizardUploadError = "";
 		}
 		
 	}
@@ -2905,6 +2906,8 @@ void FCognitiveEditorTools::GenerateSettingsJsonFile()
 	bool writeSettingsJsonSuccess = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	if (writeSettingsJsonSuccess == false)
 	{
+		WizardUploadResponseCode = 0;
+		WizardUploadError = "FCognitiveEditorTools::ExportScene unable to save settings.json";
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene unable to save settings.json"));
 	}
 }
@@ -2947,6 +2950,8 @@ void FCognitiveEditorTools::WizardUpload()
 
 	if (!HasSettingsJsonFile())
 	{
+		WizardUploadResponseCode = 0;
+		WizardUploadError = "FCognitiveEditorToolsCustomization::WizardUpload settings.json file missing! Creating for current scene";
 		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorToolsCustomization::WizardUpload settings.json file missing! Creating for current scene"));
 		GenerateSettingsJsonFile();
 	}
@@ -2963,6 +2968,7 @@ void FCognitiveEditorTools::SetDefaultIfNoExportDirectory()
 {
 	if (BaseExportDirectory.Len() == 0)
 	{
+		WizardUploadError = "";
 		BaseExportDirectory = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("TEMP_C3D_Export/"));
 	}
 }
