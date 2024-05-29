@@ -714,8 +714,14 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 			if (gazeData.ConfidenceValue < 0.4f) { EyeCaptures[index].Discard = true; }
 			else
 			{
-				WorldDirection = gazeData.GazeDirection;
-				Start = gazeData.GazeOrigin;
+				//previously
+				//WorldDirection = gazeData.GazeDirection;
+				//Start = gazeData.GazeOrigin;
+				//End = Start + WorldDirection * MaxFixationDistance;
+				
+				FVector dir = FVector(-gazeData.GazeDirection.X, -gazeData.GazeDirection.Y, gazeData.GazeDirection.Z);
+				WorldDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(dir);
+				Start = controllers[0]->PlayerCameraManager->GetCameraLocation();
 				End = Start + WorldDirection * MaxFixationDistance;
 			}
 		}

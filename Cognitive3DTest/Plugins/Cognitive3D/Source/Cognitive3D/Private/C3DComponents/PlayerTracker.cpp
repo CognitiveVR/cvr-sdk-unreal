@@ -120,9 +120,41 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 		FEyeTrackerGazeData gazeData;
 		if (ET->GetEyeTrackerGazeData(gazeData))
 		{
-			LastDirection = gazeData.GazeDirection;
-			End = start + LastDirection * 100000.0f;
+			//previously
+			//LastDirection = gazeData.GazeDirection;
+			//End = start + LastDirection * 100000.0f;
+			
+			auto status = ET->GetEyeTrackerStatus();
+			if (status == EEyeTrackerStatus::NotConnected)
+			{
+				//GLog->Log("OPENXR_EYETRACKING eye tracker not connected");
+			}
+			if (status == EEyeTrackerStatus::NotTracking)
+			{
+				//GLog->Log("OPENXR_EYETRACKING eye tracker not tracking");
+			}
+			if (status == EEyeTrackerStatus::Tracking)
+			{
+				//GLog->Log("OPENXR_EYETRACKING eye tracker tracking");
+
+				//GLog->Log("x " + FString::SanitizeFloat(gazeData.GazeDirection.X));
+				//GLog->Log("y " + FString::SanitizeFloat(gazeData.GazeDirection.Y));
+				//GLog->Log("z " + FString::SanitizeFloat(gazeData.GazeDirection.Z));
+
+				//ViveOpenXR requires modifying this direction
+				FVector dir = FVector(-gazeData.GazeDirection.X, -gazeData.GazeDirection.Y, gazeData.GazeDirection.Z);
+				LastDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(dir);
+				End = start + LastDirection * 100000.0f;
+			}
 		}
+		else
+		{
+			//GLog->Log("OPENXR_EYETRACKING eye tracker data is null");
+		}
+	}
+	else
+	{
+		//GLog->Log("OPENXR_EYETRACKING eye tracker is null");
 	}
 	return End;
 #elif defined WAVEVR_EYETRACKING
