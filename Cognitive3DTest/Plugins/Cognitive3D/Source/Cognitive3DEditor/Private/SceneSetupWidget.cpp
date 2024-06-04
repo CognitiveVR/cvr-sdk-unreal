@@ -1585,7 +1585,14 @@ EVisibility SSceneSetupWidget::GetAppendedInputsFoundHidden() const
 	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
 	//TODO IMPROVEMENT instead of hard coding strings here, should append a list from the resources folder
 	TArray<FString> actionMapping;
+
+#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+	const FString NormalizedInputIni = GConfig->NormalizeConfigIniPath(InputIni);
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, NormalizedInputIni);
+#else
 	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, InputIni);
+#endif
+
 	if (actionMapping.Contains("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Left_Grip_Click)"))
 	{
 		return EVisibility::Collapsed;
@@ -1603,7 +1610,14 @@ EVisibility SSceneSetupWidget::GetAppendedInputsFoundVisibility() const
 	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
 	//TODO IMPROVEMENT instead of hard coding strings here, should append a list from the resources folder
 	TArray<FString> actionMapping;
+
+#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+	const FString NormalizedInputIni = GConfig->NormalizeConfigIniPath(InputIni);
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, NormalizedInputIni);
+#else
 	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, InputIni);
+#endif
+
 	if (actionMapping.Contains("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Left_Grip_Click)"))
 	{
 		return EVisibility::Visible;
@@ -1620,8 +1634,14 @@ FReply SSceneSetupWidget::AppendInputs()
 	TArray<FString> actionMapping;
 	TArray<FString> axisMapping;
 
+#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+	const FString NormalizedInputIni = GConfig->NormalizeConfigIniPath(InputIni);
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, NormalizedInputIni);
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+AxisMappings"), axisMapping, NormalizedInputIni);
+#else
 	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, InputIni);
 	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+AxisMappings"), axisMapping, InputIni);
+#endif
 
 	if (actionMapping.Contains("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Left_Grip_Click)"))
 	{
@@ -1743,10 +1763,17 @@ FReply SSceneSetupWidget::AppendInputs()
 	axisMapping.Add("(AxisName=\"C3D_RightTriggerAxis\",Scale=1.000000,Key=MixedReality_Right_Trigger_Axis)");
 	axisMapping.Add("(AxisName=\"C3D_RightTriggerAxis\",Scale=1.000000,Key=Vive_Right_Trigger_Axis)");
 
+#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+	GConfig->SetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, NormalizedInputIni);
+	GConfig->SetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+AxisMappings"), axisMapping, NormalizedInputIni);
+
+	GConfig->Flush(false, NormalizedInputIni);
+#else
 	GConfig->SetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, InputIni);
 	GConfig->SetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+AxisMappings"), axisMapping, InputIni);
 
 	GConfig->Flush(false, InputIni);
+#endif
 
 	GLog->Log("SSceneSetupWidget::AppendInputs complete");
 
