@@ -1586,7 +1586,7 @@ EVisibility SSceneSetupWidget::GetAppendedInputsFoundHidden() const
 	//TODO IMPROVEMENT instead of hard coding strings here, should append a list from the resources folder
 	TArray<FString> actionMapping;
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 	const FString NormalizedInputIni = GConfig->NormalizeConfigIniPath(InputIni);
 	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, NormalizedInputIni);
 #else
@@ -1611,7 +1611,7 @@ EVisibility SSceneSetupWidget::GetAppendedInputsFoundVisibility() const
 	//TODO IMPROVEMENT instead of hard coding strings here, should append a list from the resources folder
 	TArray<FString> actionMapping;
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 	const FString NormalizedInputIni = GConfig->NormalizeConfigIniPath(InputIni);
 	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, NormalizedInputIni);
 #else
@@ -1634,7 +1634,7 @@ FReply SSceneSetupWidget::AppendInputs()
 	TArray<FString> actionMapping;
 	TArray<FString> axisMapping;
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 	const FString NormalizedInputIni = GConfig->NormalizeConfigIniPath(InputIni);
 	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, NormalizedInputIni);
 	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+AxisMappings"), axisMapping, NormalizedInputIni);
@@ -1763,7 +1763,7 @@ FReply SSceneSetupWidget::AppendInputs()
 	axisMapping.Add("(AxisName=\"C3D_RightTriggerAxis\",Scale=1.000000,Key=MixedReality_Right_Trigger_Axis)");
 	axisMapping.Add("(AxisName=\"C3D_RightTriggerAxis\",Scale=1.000000,Key=Vive_Right_Trigger_Axis)");
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 	GConfig->SetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, NormalizedInputIni);
 	GConfig->SetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+AxisMappings"), axisMapping, NormalizedInputIni);
 

@@ -169,7 +169,7 @@ void FCognitiveEditorTools::CheckIniConfigured()
 
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 	const FString NormalizedEngineIni = GConfig->NormalizeConfigIniPath(EngineIni);
 
 	GConfig->Flush(true, NormalizedEngineIni);
@@ -1382,7 +1382,7 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 		BaseExportDirectory = outFilename;
 		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 		
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 		const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
 #else
@@ -1395,7 +1395,7 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 		SetDefaultIfNoExportDirectory();
 		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 		const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
 #else
@@ -2356,9 +2356,8 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 
 	TArray<FString>scenstrings;
 	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 	const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
 	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, NormalizedTestSyncFile);
 #else
@@ -2495,9 +2494,8 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		TArray<FString> iniscenedata;
 
 		FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-		GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, TestSyncFile);
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 		const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
 		GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, NormalizedTestSyncFile);
 #else
@@ -2531,7 +2529,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 
 		GLog->Log("FCognitiveTools::SceneVersionResponse successful. Write scene data to config file");
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 		//set array to config
 		GConfig->RemoveKey(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), NormalizedTestSyncFile);
 		GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, NormalizedTestSyncFile);
@@ -2581,7 +2579,7 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 	const FString NormalizedEngineIni = GConfig->NormalizeConfigIniPath(EngineIni);
 	const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
 
@@ -2608,7 +2606,7 @@ void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 {
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 	const FString NormalizedEngineIni = GConfig->NormalizeConfigIniPath(EngineIni);
 
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, NormalizedEngineIni);
@@ -2627,7 +2625,7 @@ void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
 {
 	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 	const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
 
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, NormalizedEditorIni);
@@ -2678,7 +2676,7 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 
 	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 	const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
 
 	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, NormalizedTestSyncFile);
@@ -2717,7 +2715,7 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 		}
 	}
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 	GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, NormalizedTestSyncFile);
 
 	GConfig->Flush(false, NormalizedTestSyncFile);

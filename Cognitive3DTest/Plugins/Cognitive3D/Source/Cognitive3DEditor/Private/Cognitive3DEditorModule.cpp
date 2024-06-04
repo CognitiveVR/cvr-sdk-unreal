@@ -60,7 +60,7 @@ void FCognitive3DEditorModule::StartupModule()
 	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 	FCognitiveEditorTools::Initialize();
 
-#if ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 	const FString NormalizedEngineIni = GConfig->NormalizeConfigIniPath(EngineIni);
 	const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
 
