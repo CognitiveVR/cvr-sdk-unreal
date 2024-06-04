@@ -428,101 +428,56 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 	if (SyncUpdateWithPlayer){return;}
 
 	currentTime += DeltaTime;
-	if (IsController)
+
+	if (currentTime > ControllerUpdateInterval)
 	{
-		if (currentTime > ControllerUpdateInterval)
-		{
+		
+		if (IsController)
 			currentTime -= ControllerUpdateInterval;
-
-			//rotation angle to degrees
-			auto parentRotator = GetAttachParent()->GetComponentRotation();
-			float quatDot = parentRotator.Quaternion() | LastRotation;
-			quatDot = FMath::Abs(quatDot);
-			quatDot = FMath::Min(quatDot, 1.0f);
-			float quatDegrees = FMath::RadiansToDegrees(FMath::Acos(quatDot)) * 2;
-			bool hasScaleChanged = false;
-
-			if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
-			{
-				hasScaleChanged = true;
-			}
-
-			if (!hasScaleChanged)
-			{
-				if ((LastPosition - GetAttachParent()->GetComponentLocation()).Size() > PositionThreshold)
-				{
-					//moved
-				}
-				else if (quatDegrees > RotationThreshold) //rotator stuff
-				{
-					//rotated
-				}
-				else
-				{
-					//hasn't moved enough
-					return;
-				}
-			}
-
-			//scene component
-			LastPosition = GetAttachParent()->GetComponentLocation();
-			LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
-			if (hasScaleChanged)
-			{
-				LastScale = GetAttachParent()->GetComponentScale();
-			}
-
-			FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
-			dynamicObjectManager->AddSnapshot(snapObj);
-		}
-	}
-	else
-	{
-		if (currentTime > DynamicUpdateInterval)
-		{
+		else
 			currentTime -= DynamicUpdateInterval;
 
-			//rotation angle to degrees
-			auto parentRotator = GetAttachParent()->GetComponentRotation();
-			float quatDot = parentRotator.Quaternion() | LastRotation;
-			quatDot = FMath::Abs(quatDot);
-			quatDot = FMath::Min(quatDot, 1.0f);
-			float quatDegrees = FMath::RadiansToDegrees(FMath::Acos(quatDot)) * 2;
-			bool hasScaleChanged = false;
+		//rotation angle to degrees
+		auto parentRotator = GetAttachParent()->GetComponentRotation();
+		float quatDot = parentRotator.Quaternion() | LastRotation;
+		quatDot = FMath::Abs(quatDot);
+		quatDot = FMath::Min(quatDot, 1.0f);
+		float quatDegrees = FMath::RadiansToDegrees(FMath::Acos(quatDot)) * 2;
+		bool hasScaleChanged = false;
 
-			if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
-			{
-				hasScaleChanged = true;
-			}
-
-			if (!hasScaleChanged)
-			{
-				if ((LastPosition - GetAttachParent()->GetComponentLocation()).Size() > PositionThreshold)
-				{
-					//moved
-				}
-				else if (quatDegrees > RotationThreshold) //rotator stuff
-				{
-					//rotated
-				}
-				else
-				{
-					//hasn't moved enough
-					return;
-				}
-			}
-
-			//scene component
-			LastPosition = GetAttachParent()->GetComponentLocation();
-			LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
-			if (hasScaleChanged)
-			{
-				LastScale = GetAttachParent()->GetComponentScale();
-			}
-
-			FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
-			dynamicObjectManager->AddSnapshot(snapObj);
+		if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+		{
+			hasScaleChanged = true;
 		}
+
+		if (!hasScaleChanged)
+		{
+			if ((LastPosition - GetAttachParent()->GetComponentLocation()).Size() > PositionThreshold)
+			{
+				//moved
+			}
+			else if (quatDegrees > RotationThreshold) //rotator stuff
+			{
+				//rotated
+			}
+			else
+			{
+				//hasn't moved enough
+				return;
+			}
+		}
+
+		//scene component
+		LastPosition = GetAttachParent()->GetComponentLocation();
+		LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
+		if (hasScaleChanged)
+		{
+			LastScale = GetAttachParent()->GetComponentScale();
+		}
+
+		FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
+		dynamicObjectManager->AddSnapshot(snapObj);
+		
 	}
 	
 }

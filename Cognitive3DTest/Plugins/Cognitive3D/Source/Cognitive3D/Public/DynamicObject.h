@@ -102,7 +102,7 @@ public:
 		float ControllerUpdateInterval = 0.1;
 
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "Cognitive3D Analytics")
-		float DynamicUpdateInterval = 1.0;
+		float DynamicUpdateInterval = 0.1;
 
 	//distance in cm the object needs to move before sending an update
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "Cognitive3D Analytics")
