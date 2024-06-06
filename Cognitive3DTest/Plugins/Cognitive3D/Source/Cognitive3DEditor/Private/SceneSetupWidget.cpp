@@ -140,7 +140,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					SNew(SBox)
 					.Visibility(this, &SSceneSetupWidget::IsInvalidVisible)
 					.HeightOverride(32)
-					.WidthOverride(128)
+					.WidthOverride(256)
 					[
 						SNew(SButton)
 						.HAlign(HAlign_Center)
