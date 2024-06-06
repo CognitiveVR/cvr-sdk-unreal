@@ -2680,7 +2680,7 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 	const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
 
 	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, NormalizedTestSyncFile);
-#lese
+#else
 	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, TestSyncFile);
 #endif
 
