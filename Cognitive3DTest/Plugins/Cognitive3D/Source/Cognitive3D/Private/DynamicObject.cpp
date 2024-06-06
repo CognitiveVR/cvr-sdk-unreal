@@ -428,15 +428,20 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 	if (SyncUpdateWithPlayer){return;}
 
 	currentTime += DeltaTime;
-	if (currentTime > UpdateInterval)
+
+	if (currentTime > ControllerUpdateInterval)
 	{
-		currentTime -= UpdateInterval;
+		
+		if (IsController)
+			currentTime -= ControllerUpdateInterval;
+		else
+			currentTime -= DynamicUpdateInterval;
 
 		//rotation angle to degrees
 		auto parentRotator = GetAttachParent()->GetComponentRotation();
 		float quatDot = parentRotator.Quaternion() | LastRotation;
 		quatDot = FMath::Abs(quatDot);
-		quatDot = FMath::Min(quatDot,1.0f);
+		quatDot = FMath::Min(quatDot, 1.0f);
 		float quatDegrees = FMath::RadiansToDegrees(FMath::Acos(quatDot)) * 2;
 		bool hasScaleChanged = false;
 
@@ -472,7 +477,9 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 		FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
 		dynamicObjectManager->AddSnapshot(snapObj);
+		
 	}
+	
 }
 
 void UDynamicObject::ValidateObjectId()

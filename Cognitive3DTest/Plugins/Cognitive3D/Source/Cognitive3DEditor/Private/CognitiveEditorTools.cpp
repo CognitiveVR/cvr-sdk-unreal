@@ -168,6 +168,49 @@ void FCognitiveEditorTools::CheckIniConfigured()
 	}
 
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+	const FString NormalizedEngineIni = GConfig->NormalizeConfigIniPath(EngineIni);
+
+	GConfig->Flush(true, NormalizedEngineIni);
+	FString tempGatewaydefault;
+	GConfig->GetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("Gateway"), tempGatewaydefault, NormalizedEngineIni);
+
+	if (tempGatewaydefault.IsEmpty())
+	{
+		GLog->Log("FCognitiveEditorTools::CheckIniConfigured write defaults to ini");
+		FString defaultgateway = "data.cognitive3d.com";
+		FString trueString = "True";
+		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("Gateway"), *defaultgateway, NormalizedEngineIni);
+
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("GazeBatchSize"), 256, NormalizedEngineIni);
+
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("CustomEventBatchSize"), 256, NormalizedEngineIni);
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("CustomEventAutoTimer"), 10, NormalizedEngineIni);
+
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("DynamicDataLimit"), 512, NormalizedEngineIni);
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("DynamicAutoTimer"), 10, NormalizedEngineIni);
+
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("SensorDataLimit"), 512, NormalizedEngineIni);
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("SensorAutoTimer"), 10, NormalizedEngineIni);
+
+		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
+		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
+		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
+		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
+
+		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
+		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
+		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
+		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
+
+		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("EnableLocalCache"), *trueString, NormalizedEngineIni);
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("LocalCacheSize"), 100, NormalizedEngineIni);
+		GConfig->Flush(false, NormalizedEngineIni);
+	}
+
+#else
+
 	GConfig->Flush(true, EngineIni);
 	FString tempGatewaydefault;
 	GConfig->GetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("Gateway"), tempGatewaydefault, EngineIni);
@@ -204,6 +247,7 @@ void FCognitiveEditorTools::CheckIniConfigured()
 		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("LocalCacheSize"), 100, EngineIni);
 		GConfig->Flush(false, EngineIni);
 	}
+#endif
 }
 
 //at any step in the uploading process
@@ -1337,14 +1381,26 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 	{
 		BaseExportDirectory = outFilename;
 		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+		
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+		const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
+		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
+#else
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
+#endif
 	}
 	else
 	{
 		//set default export directory if it isnt set
 		SetDefaultIfNoExportDirectory();
 		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+		const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
+		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
+#else
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
+#endif
 	}
 	return FReply::Handled();
 }
@@ -1683,7 +1739,6 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 	if (bWasSuccessful)
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted response code " + FString::FromInt(Response->GetResponseCode()));
-		ShowNotification(TEXT("Scene Uploaded Successfully"));
 	}
 	else
 	{
@@ -1697,6 +1752,7 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 
 	if (bWasSuccessful && Response->GetResponseCode() < 300)
 	{
+		ShowNotification(TEXT("Scene Uploaded Successfully"));
 		//UE_LOG(LogTemp, Warning, TEXT("Upload Scene Response is %s"), *Response->GetContentAsString());
 
 		UWorld* myworld = GWorld->GetWorld();
@@ -1730,6 +1786,7 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 	}
 	else
 	{
+		ShowNotification(TEXT("Failed to upload scene"), false);
 		WizardUploading = false;
 		WizardUploadError = "FCognitiveEditorTools::OnUploadSceneCompleted response code " + FString::FromInt(Response->GetResponseCode());
 	}
@@ -2299,8 +2356,13 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 
 	TArray<FString>scenstrings;
 	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+	const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
+	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, NormalizedTestSyncFile);
+#else
+	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
+#endif
 	for (int32 i = 0; i < scenstrings.Num(); i++)
 	{
 		TArray<FString> Array;
@@ -2432,8 +2494,13 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		TArray<FString> iniscenedata;
 
 		FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-		GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, TestSyncFile);
 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+		const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
+		GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, NormalizedTestSyncFile);
+#else
+		GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, TestSyncFile);
+#endif
 		//GLog->Log("found this many scene datas in ini " + FString::FromInt(iniscenedata.Num()));
 		//GLog->Log("looking for scene " + currentSceneData->Name);
 
@@ -2462,6 +2529,13 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 
 		GLog->Log("FCognitiveTools::SceneVersionResponse successful. Write scene data to config file");
 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+		//set array to config
+		GConfig->RemoveKey(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), NormalizedTestSyncFile);
+		GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, NormalizedTestSyncFile);
+
+		GConfig->Flush(false, NormalizedTestSyncFile);
+#else
 		//set array to config
 		GConfig->RemoveKey(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), TestSyncFile);
 		GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, TestSyncFile);
@@ -2474,6 +2548,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 
 		GConfig->Flush(false, TestSyncFile);
 		//GConfig->LoadFile(TestSyncFile);
+#endif
 		ConfigFileHasChanged = true;
 		ReadSceneDataFromFile();
 
@@ -2503,12 +2578,25 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 {
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+	const FString NormalizedEngineIni = GConfig->NormalizeConfigIniPath(EngineIni);
+	const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
+
+	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, NormalizedEngineIni);
+	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, NormalizedEngineIni);
+	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, NormalizedEditorIni);
+
+	GConfig->Flush(false, NormalizedEngineIni);
+	GConfig->Flush(false, NormalizedEditorIni);
+#else
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, EditorIni);
 
 	GConfig->Flush(false, GEngineIni);
 	GConfig->Flush(false, GEditorIni);
+#endif
 	ConfigFileHasChanged = true;
 
 	return FReply::Handled();
@@ -2517,8 +2605,17 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 {
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+	const FString NormalizedEngineIni = GConfig->NormalizeConfigIniPath(EngineIni);
+
+	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, NormalizedEngineIni);
+	GConfig->Flush(false, NormalizedEngineIni);
+#else
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, EngineIni);
 	GConfig->Flush(false, GEngineIni);
+#endif
+
 	ConfigFileHasChanged = true;
 
 	ApplicationKey = key;
@@ -2527,8 +2624,17 @@ void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
 {
 	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+	const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
+
+	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, NormalizedEditorIni);
+	GConfig->Flush(false, NormalizedEditorIni);
+#else
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, EditorIni);
 	GConfig->Flush(false, GEngineIni);
+#endif
+
 	ConfigFileHasChanged = true;
 
 	DeveloperKey = key;
@@ -2569,7 +2675,14 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 	TArray<FString> scenePairs = TArray<FString>();
 
 	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+	const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
+
+	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, NormalizedTestSyncFile);
+#else
 	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, TestSyncFile);
+#endif
 
 	bool didSetKey = false;
 	for (int32 i = 0; i < scenePairs.Num(); i++)
@@ -2602,9 +2715,15 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 		}
 	}
 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+	GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, NormalizedTestSyncFile);
+
+	GConfig->Flush(false, NormalizedTestSyncFile);
+#else
 	GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, TestSyncFile);
 
 	GConfig->Flush(false, GEngineIni);
+#endif
 }
 
 
@@ -2794,6 +2913,7 @@ void FCognitiveEditorTools::ValidateGeneratedFiles()
 		if (!FoundErrorFile)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportScene verified generated files"));
+			WizardUploadError = "";
 		}
 		
 	}
@@ -2904,6 +3024,8 @@ void FCognitiveEditorTools::GenerateSettingsJsonFile()
 	bool writeSettingsJsonSuccess = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	if (writeSettingsJsonSuccess == false)
 	{
+		WizardUploadResponseCode = 0;
+		WizardUploadError = "FCognitiveEditorTools::ExportScene unable to save settings.json";
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene unable to save settings.json"));
 	}
 }
@@ -2946,6 +3068,8 @@ void FCognitiveEditorTools::WizardUpload()
 
 	if (!HasSettingsJsonFile())
 	{
+		WizardUploadResponseCode = 0;
+		WizardUploadError = "FCognitiveEditorToolsCustomization::WizardUpload settings.json file missing! Creating for current scene";
 		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorToolsCustomization::WizardUpload settings.json file missing! Creating for current scene"));
 		GenerateSettingsJsonFile();
 	}
@@ -2962,6 +3086,7 @@ void FCognitiveEditorTools::SetDefaultIfNoExportDirectory()
 {
 	if (BaseExportDirectory.Len() == 0)
 	{
+		WizardUploadError = "";
 		BaseExportDirectory = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("TEMP_C3D_Export/"));
 	}
 }

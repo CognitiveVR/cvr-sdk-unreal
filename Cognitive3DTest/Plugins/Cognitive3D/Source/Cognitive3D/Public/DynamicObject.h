@@ -99,7 +99,10 @@ public:
 
 	//time in seconds between checking if position and rotation updates need to be recorded
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "Cognitive3D Analytics")
-		float UpdateInterval = 0.1;
+		float ControllerUpdateInterval = 0.1;
+
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "Cognitive3D Analytics")
+		float DynamicUpdateInterval = 0.1;
 
 	//distance in cm the object needs to move before sending an update
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "Cognitive3D Analytics")

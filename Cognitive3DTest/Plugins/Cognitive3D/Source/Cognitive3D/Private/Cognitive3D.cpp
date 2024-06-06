@@ -807,7 +807,13 @@ void FAnalyticsProviderCognitive3D::CacheSceneData()
 {
 	TArray<FString>scenstrings;
 	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+	const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
+	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, NormalizedTestSyncFile);
+#else
 	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
+#endif
 	SceneData.Empty();
 
 	for (int i = 0; i < scenstrings.Num(); i++)
