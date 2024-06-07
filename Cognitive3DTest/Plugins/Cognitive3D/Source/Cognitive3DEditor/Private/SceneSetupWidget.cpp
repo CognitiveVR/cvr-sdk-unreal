@@ -1203,14 +1203,14 @@ FText SSceneSetupWidget::GetNextButtonTooltipText() const
 		}
 		else if (FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile() == false)
 		{
-			return FText::FromString("settings.json not found in export directory, please try exporting the level again");
+			return FText::FromString("settings.json not found in export directory, please try exporting the level again. If the issue persists, please try using a different export directory that allows file writing.");
 		}
 	}
 	if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
 	{
 		if (FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile() == false)
 		{
-			return FText::FromString("settings.json not found in export directory, please try exporting the level again");
+			return FText::FromString("settings.json not found in export directory, please try exporting the level again. If the issue persists, please try using a different export directory that allows file writing.");
 		}
 	}
 	return FText::FromString("");
