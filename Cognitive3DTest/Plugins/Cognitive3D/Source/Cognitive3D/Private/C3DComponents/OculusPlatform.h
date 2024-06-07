@@ -32,6 +32,9 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	float currentTime = 0;
+	float maxWaitTime = 60.f;
+
 	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
 
 	UFUNCTION()

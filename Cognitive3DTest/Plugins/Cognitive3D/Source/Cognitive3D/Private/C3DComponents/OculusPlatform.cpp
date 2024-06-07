@@ -82,6 +82,14 @@ void UOculusPlatform::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 	// ...
 #ifdef INCLUDE_OCULUS_PLATFORM
 	ProcessOculusMessages();
+	if (gotAccessToken == false)
+	{
+		currentTime += DeltaTime;
+		if (currentTime < maxWaitTime)
+		{
+			ovr_User_GetAccessToken();
+		}
+	}
 #endif
 }
 
@@ -187,10 +195,6 @@ void UOculusPlatform::ProcessOculusMessages()
 				HandleAccessToekenRetrieved(Message);
 			}
 		}
-	}
-	if (gotAccessToken == false)
-	{
-		ovr_User_GetAccessToken();
 	}
 }
 
