@@ -16,6 +16,7 @@
 #include "UnrealEd.h"
 #include "Misc/FileHelper.h"
 #include "Misc/ScopedSlowTask.h"
+#include "Misc/LocalTimestampDirectoryVisitor.h"
 #include "BusyCursor.h"
 #include "Classes/Components/SceneComponent.h"
 #include "EngineUtils.h"
