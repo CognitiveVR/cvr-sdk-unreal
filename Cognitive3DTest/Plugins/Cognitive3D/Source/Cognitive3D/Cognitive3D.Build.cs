@@ -71,6 +71,7 @@ namespace UnrealBuildTool.Rules
 			//PublicDependencyModuleNames.AddRange(new string[] { "OVRPlatform", "OVRPlatformSDK" });
 			//PublicIncludePathModuleNames.AddRange(new string[] { "OVRPlatformSDK" });
 			//PublicIncludePaths.Add(System.IO.Path.GetFullPath(Target.RelativeEnginePath) + "/Plugins/Marketplace/MetaXRPlatform/Source/OVRPlatformSDK/LibOVRPlatform/include/Windows");
+			//PrivateIncludePaths.Add(System.IO.Path.GetFullPath(Target.RelativeEnginePath) + "/Plugins/Marketplace/MetaXRPlatform/Source/OVRPlatform/Private");
 
 			//UNCOMMENT THESE LINES TO ENABLE PASSTHROUGH FEATURES. UE 5.2 onward (MUST ALSO ENABLE OCULUS PLUGIN ABOVE)
 			//PublicDefinitions.Add("INCLUDE_OCULUS_PASSTHROUGH");

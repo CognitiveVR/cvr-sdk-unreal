@@ -23,7 +23,14 @@ void UPassthrough::BeginPlay()
 #ifdef INCLUDE_OCULUS_PASSTHROUGH
 	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	FindOculusXRPassthroughLayer(PassthroughLayer);
-	IsPassthroughVisible = PassthroughLayer->IsVisible();
+    if (PassthroughLayer != nullptr)
+    {
+        IsPassthroughVisible = PassthroughLayer->IsVisible();
+    }
+    else
+    {
+        IsPassthroughVisible = false;
+    }
 #endif
 	
 }
@@ -42,14 +49,14 @@ void UPassthrough::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
     {
         currentTime = 0;
 
-        if (PassthroughLayer != NULL)
+        if (PassthroughLayer != nullptr)
         {
             auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
             cognitive->sensors->RecordSensor("c3d.app.passthroughEnabled", static_cast<double>(PassthroughLayer->IsVisible()));
             if (IsPassthroughVisible != PassthroughLayer->IsVisible())
             {
                 TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
-                if (IsVisible())
+                if (PassthroughLayer->IsVisible())
                 {
                     properties->SetStringField("New State", "True");
                 }

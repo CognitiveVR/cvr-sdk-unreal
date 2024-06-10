@@ -48,5 +48,6 @@ class UCognitive3DBlueprints;
 
 		float GetLastSendTime() { return LastSendTime; }
 		int32 GetPartNumber() { return jsonPart; }
+		void IncrementPartNumber() { jsonPart++; }
 		int32 GetDataPoints() { return snapshots.Num(); }
 	};
