@@ -49,7 +49,7 @@ void UPassthrough::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
             if (IsPassthroughVisible != PassthroughLayer->IsVisible())
             {
                 TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
-                if (IsVisible())
+                if (PassthroughLayer->IsVisible())
                 {
                     properties->SetStringField("New State", "True");
                 }

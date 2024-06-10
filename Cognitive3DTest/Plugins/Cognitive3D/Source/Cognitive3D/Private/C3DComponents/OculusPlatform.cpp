@@ -243,7 +243,7 @@ void UOculusPlatform::SubscriptionStatusQuery(FString AccessToken)
 	HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 
 	// Handle the response
-	HttpRequest->OnProcessRequestComplete().BindUObject(this, &ACognitive3DActor::OnHttpResponseReceived);
+	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UOculusPlatform::OnHttpResponseReceived);
 	HttpRequest->ProcessRequest();
 }
 
@@ -305,14 +305,14 @@ void UOculusPlatform::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpRespo
 
 									//add to json for gaze stream
 									TSharedPtr<FJsonObject> oculusSub = MakeShareable(new FJsonObject);
-									oculusSub->SetStringField(TEXT("sku"), sku);
-									oculusSub->SetBoolField(TEXT("is_active"), isActive);
-									oculusSub->SetBoolField(TEXT("is_trial"), isTrial);
+									oculusSub->SetStringField(TEXT("sku"), Sku);
+									oculusSub->SetBoolField(TEXT("is_active"), IsActive);
+									oculusSub->SetBoolField(TEXT("is_trial"), IsTrial);
 									oculusSub->SetNumberField(TEXT("period_start_date"), StartTimestamp);
 									oculusSub->SetNumberField(TEXT("period_end_date"), EndTimestamp);
 									oculusSub->SetNumberField(TEXT("next_renewal_date"), NextRenewalTimestamp);
 
-									SubscriptionsJsonObject->SetObjectField(sku, oculusSub);
+									SubscriptionsJsonObject->SetObjectField(Sku, oculusSub);
 
 								}
 								else
