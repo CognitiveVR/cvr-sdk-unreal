@@ -82,12 +82,14 @@ void UOculusPlatform::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 	// ...
 #ifdef INCLUDE_OCULUS_PLATFORM
 	ProcessOculusMessages();
+	//remove if not needed
+	//commented out for now for testing
 	if (gotAccessToken == false)
 	{
 		currentTime += DeltaTime;
 		if (currentTime < maxWaitTime)
 		{
-			ovr_User_GetAccessToken();
+			//ovr_User_GetAccessToken();
 		}
 	}
 #endif
@@ -201,15 +203,29 @@ void UOculusPlatform::ProcessOculusMessages()
 void UOculusPlatform::HandleUserRetrieved(const ovrMessageHandle Message)
 {
 	ovrUserHandle User = ovr_Message_GetUser(Message);
-	const char* UserName = ovr_User_GetDisplayName(User);
+
+	const char* DisplayName = ovr_User_GetDisplayName(User); 
+	const char* UserName = ovr_User_GetOculusID(User); 
+
 	UE_LOG(LogTemp, Log, TEXT("UOculusPlatform::HandleUserRetrieved User retrieved: %s"), *FString(UserName));
-	FString propertyStr = FString::Printf(TEXT("%s"), *FString(UserName));
-	//cog->SetSessionProperty("Oculus Username", propertyStr);
+
+	FString displayNameStr = FString::Printf(TEXT("%s"), *FString(DisplayName));
+	FString usernameStr = FString::Printf(TEXT("%s"), *FString(UserName));
+
 	ovrID oculusID = ovr_User_GetID(User);
 	char* idString = new char[256];
 	ovrID_ToString(idString, 256, oculusID);
+
+	cog->SetParticipantFullName(displayNameStr);
+
+	if (RecordOculusData)
+	{
+		cog->SetParticipantId(idString);
+	}
+
 	cog->SetParticipantProperty("oculusId", idString);
-	cog->SetParticipantProperty("oculusUsername", propertyStr);
+	cog->SetParticipantProperty("oculusDisplayName", displayNameStr);
+	cog->SetParticipantProperty("oculusUsername", usernameStr);
 
 	if (gotAccessToken == false)
 	{

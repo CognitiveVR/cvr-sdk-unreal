@@ -54,6 +54,9 @@ public:
 	//Handles successful access token data retrieval
 	void HandleAccessToekenRetrieved(const ovrMessageHandle Message);
 
+	UPROPERTY(EditAnywhere, Category = "Oculus Platform")
+		bool RecordOculusData = false;
+
 	// User ID to retrieve
 	ovrID CurrentUserID;
 	bool gotAccessToken;
