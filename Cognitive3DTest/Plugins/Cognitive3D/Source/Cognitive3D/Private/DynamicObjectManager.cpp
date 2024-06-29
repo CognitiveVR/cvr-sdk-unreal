@@ -92,6 +92,10 @@ void FDynamicObjectManager::RegisterObjectId(FString MeshName, FString Id, FStri
 	{
 		entry.ControllerType = ControllerType;
 		entry.IsRight = IsRightController;
+		auto level = GWorld->GetCurrentLevel();
+		FString levelName = level->GetFullGroupName(true);
+		TSharedPtr<FSceneData> data = cogProvider->GetSceneData(levelName);
+		entry.SetProperty("SceneID", data->Id);
 	}
 	manifest.Add(entry);
 	newManifest.Add(entry);
@@ -294,6 +298,11 @@ void FDynamicObjectManager::SendData(bool copyDataToCache)
 	cogProvider->network->NetworkCall("dynamics", OutputString, copyDataToCache);
 
 	snapshots.Empty();
+}
+
+TArray<FDynamicObjectManifestEntry> FDynamicObjectManager::GetDynamicsManifest()
+{
+	return manifest;
 }
 
 TSharedPtr<FJsonObject> FDynamicObjectManager::DynamicObjectManifestToString()

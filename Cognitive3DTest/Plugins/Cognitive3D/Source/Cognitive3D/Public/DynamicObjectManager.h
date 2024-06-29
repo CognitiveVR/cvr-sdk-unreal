@@ -55,7 +55,7 @@ public:
 	void CacheControllerPointer(UDynamicObject* object, bool isRight);
 	UFUNCTION()
 	void SendData(bool copyDataToCache);
-
+	TArray<FDynamicObjectManifestEntry> GetDynamicsManifest();
 private:
 	TArray<TSharedPtr<FJsonValueObject>> DynamicSnapshotsToString();
 	TSharedPtr<FJsonObject> DynamicObjectManifestToString();

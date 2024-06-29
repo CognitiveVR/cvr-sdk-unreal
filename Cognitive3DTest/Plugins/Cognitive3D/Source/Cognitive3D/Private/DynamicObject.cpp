@@ -184,7 +184,7 @@ void UDynamicObject::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cogProvider->HasStartedSession())
 	{
 		Initialize();
@@ -204,7 +204,6 @@ void UDynamicObject::BeginPlay()
 void UDynamicObject::OnPreSessionEnd()
 {
 	CleanupDynamicObject();
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	cogProvider->OnCognitiveInterval.RemoveDynamic(this, &UDynamicObject::UpdateSyncWithPlayer);
 }
 
@@ -221,7 +220,6 @@ void UDynamicObject::Initialize()
 		return;
 	}
 
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	dynamicObjectManager = cogProvider->dynamicObjectManager;
 
 	if (dynamicObjectManager == nullptr) { return; }
@@ -371,7 +369,6 @@ TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
 void UDynamicObject::UpdateSyncWithPlayer()
 {
 	if (dynamicObjectManager == nullptr) { return; }
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	//rotation angle to degrees
@@ -422,7 +419,6 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 	if (!HasInitialized) { return; }
 	if (dynamicObjectManager == nullptr) { return; }
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	if (SyncUpdateWithPlayer){return;}
@@ -479,7 +475,6 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		dynamicObjectManager->AddSnapshot(snapObj);
 		
 	}
-	
 }
 
 void UDynamicObject::ValidateObjectId()
@@ -509,9 +504,71 @@ void UDynamicObject::ValidateObjectId()
 	}
 	else if (IdSourceType == EIdSourceType::GeneratedId)
 	{
-		FString generatedId = FGuid::NewGuid().ToString();
-		ObjectID = MakeShareable(new FDynamicObjectId(generatedId, MeshName));
-		CustomId = "";
+		//check if its a controller and if so, check if the manifest already has ids set for controllers
+		//find the right and left one and set those accordingly
+		TArray<FDynamicObjectManifestEntry> dynManifest = dynamicObjectManager->GetDynamicsManifest();
+		if (IsController && dynManifest.Num() > 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Inside isController && dynManifest.Num>0"));
+			FString generatedId = FGuid::NewGuid().ToString();
+			ObjectID = MakeShareable(new FDynamicObjectId(generatedId, MeshName));
+
+			//TArray<FDynamicObjectManifestEntry> dynManifest = dynamicObjectManager->GetDynamicsManifest();
+
+			if (dynManifest.Num() > 0)
+			{
+				for (auto item : dynManifest)
+				{
+					if (!item.ControllerType.IsEmpty())
+					{
+						UE_LOG(LogTemp, Warning, TEXT("found item with controller type"));
+
+						FString* SceneIDStr = item.StringProperties.Find("SceneID");
+
+						//get current loaded level id
+						auto level = GWorld->GetCurrentLevel();
+						if (level != nullptr)
+						{
+							FString levelName = level->GetFullGroupName(true);
+							TSharedPtr<FSceneData> data = cogProvider->GetSceneData(levelName);
+
+							//check if the SceneID saved for the controller matches our current one
+						//that means we have already registered this scenes controllers and should re-use the IDs
+							if (*SceneIDStr == data->Id)
+							{
+								UE_LOG(LogTemp, Warning, TEXT("found item with same SceneID, registered existing IDs"));
+								if (IsRightController && item.IsRight)
+								{
+									ObjectID = MakeShareable(new FDynamicObjectId(item.Id, item.MeshName));
+									UE_LOG(LogTemp, Warning, TEXT("set right controller"));
+								}
+								else if (!IsRightController && !item.IsRight)
+								{
+									ObjectID = MakeShareable(new FDynamicObjectId(item.Id, item.MeshName));
+									UE_LOG(LogTemp, Warning, TEXT("set left controller"));
+								}
+							}
+							else
+							{
+								UE_LOG(LogTemp, Warning, TEXT("did NOT find previously generated IDs, using new ones"));
+							}
+						}
+
+
+
+
+					}
+				}
+			}
+
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Inside else statement, not controller"));
+			FString generatedId = FGuid::NewGuid().ToString();
+			ObjectID = MakeShareable(new FDynamicObjectId(generatedId, MeshName));
+			CustomId = "";
+		}
 	}
 }
 
@@ -616,7 +673,7 @@ void UDynamicObject::BeginEngagementId(FString parentDynamicObjectId, FString en
 	}
 	else
 	{
-		Engagements[UniqueEngagementId]->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));
+		Engagements[UniqueEngagementId]->SetPosition(GetAttachParent()->GetComponentLocation());
 		Engagements[UniqueEngagementId]->Send();
 		Engagements[UniqueEngagementId] = ce;
 	}
@@ -699,7 +756,6 @@ void UDynamicObject::CleanupDynamicObject()
 		}
 	}
 
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	cogProvider->OnSessionBegin.RemoveDynamic(this, &UDynamicObject::Initialize);
 	cogProvider->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPostSessionEnd);
 	cogProvider->OnPreSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPreSessionEnd);
@@ -740,7 +796,7 @@ void UDynamicObject::FlushButtons(FControllerInputStateCollection& target)
 	{
 		return;
 	}
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	
 	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	FDynamicObjectSnapshot snap = MakeSnapshot(false);
