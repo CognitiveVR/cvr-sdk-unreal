@@ -41,7 +41,7 @@ void IDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLa
 	.MinDesiredWidth(400.f)
 	[
 		SNew(SBorder)
-		.BorderImage(FEditorStyle::GetBrush("ToolPanel.LightGroupBorder"))
+		.BorderImage(FCognitiveEditorTools::GetBrush(FName("ToolPanel.LightGroupBorder")))
 		.Visibility_Raw(this, &IDynamicIdPoolAssetDetails::HasMeshBeenExported)
 		.Padding(8.0f)
 		[
@@ -52,7 +52,7 @@ void IDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLa
 			[
 				SNew(SImage)
 				.Visibility_Raw(this, &IDynamicIdPoolAssetDetails::HasMeshBeenExported)
-				.Image(FEditorStyle::GetBrush("SettingsEditor.WarningIcon"))
+				.Image(FCognitiveEditorTools::GetBrush(FName("SettingsEditor.WarningIcon")))
 			]
 				// Notice
 			+SHorizontalBox::Slot()

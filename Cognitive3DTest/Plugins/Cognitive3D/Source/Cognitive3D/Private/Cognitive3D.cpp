@@ -768,6 +768,31 @@ void FAnalyticsProviderCognitive3D::RecordCurrencyGiven(const FString& GameCurre
 	}
 }
 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 4
+
+TArray<FAnalyticsEventAttribute> DefaultEventAttributes;
+
+void FAnalyticsProviderCognitive3D::SetDefaultEventAttributes(TArray<FAnalyticsEventAttribute>&& Attributes)
+{
+	DefaultEventAttributes = Attributes;
+}
+
+TArray<FAnalyticsEventAttribute> FAnalyticsProviderCognitive3D::GetDefaultEventAttributesSafe() const
+{
+	return DefaultEventAttributes;
+}
+
+int32 FAnalyticsProviderCognitive3D::GetDefaultEventAttributeCount() const
+{
+	return DefaultEventAttributes.Num();
+}
+
+FAnalyticsEventAttribute FAnalyticsProviderCognitive3D::GetDefaultEventAttribute(int AttributeIndex) const
+{
+	return DefaultEventAttributes[AttributeIndex];
+}
+#endif
+
 TSharedPtr<FSceneData> FAnalyticsProviderCognitive3D::GetCurrentSceneData()
 {
 	return LastSceneData;

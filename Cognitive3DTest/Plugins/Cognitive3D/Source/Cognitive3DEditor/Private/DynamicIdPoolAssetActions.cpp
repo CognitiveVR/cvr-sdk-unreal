@@ -20,7 +20,6 @@ UClass* FDynamicIdPoolAssetActions::GetSupportedClass() const
 uint32 FDynamicIdPoolAssetActions::GetCategories()
 {
 	return EAssetTypeCategories::Misc;
-	return EAssetTypeCategories::Misc;
 }
 
 FText FDynamicIdPoolAssetActions::GetName() const
