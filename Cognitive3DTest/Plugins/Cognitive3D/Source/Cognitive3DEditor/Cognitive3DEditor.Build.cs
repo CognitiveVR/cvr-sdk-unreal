@@ -62,7 +62,8 @@ public class Cognitive3DEditor : ModuleRules
                 "PluginBrowser",
                 "Projects",
                 "Cognitive3D",
-				"RenderCore"
+				"RenderCore",
+                "GLTFExporter"
             }
 		);
 		PrivateIncludePathModuleNames.AddRange(

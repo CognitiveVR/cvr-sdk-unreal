@@ -1411,7 +1411,7 @@ FReply FCognitiveEditorTools::SaveScreenshotToFile()
 	FString dir = BaseExportDirectory + "/" + GetCurrentSceneName() + "/screenshot/";
 	if (VerifyOrCreateDirectory(dir))
 	{
-		FString cmd = "HighResShot filename=" + dir + "screenshot 1920x1080";
+		FString cmd = "HighResShot filename=\"" + dir + "screenshot\" 1920x1080";
 		bool screenshotSaved = GEngine->Exec(nullptr, *cmd);
 		if (!screenshotSaved)
 		{
@@ -1582,6 +1582,10 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 {
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
+
+	// Convert the path to an absolute path
+	directory = FPaths::ConvertRelativePathToFull(directory);
+
 	TArray<FString> filesInDirectory = GetAllFilesInDirectory(directory, true, filesStartingWith, filesStartingWith, filesStartingWith, true);
 
 	//TArray<FString> imagesInDirectory = GetAllFilesInDirectory(directory, true, filesStartingWith, pngextension, filesStartingWith, true);
@@ -1593,7 +1597,7 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 	TArray<FContentContainer> contentArray;
 
 	//UE_LOG(LogTemp, Log, TEXT("UploadScene image count%d"), imagesInDirectory.Num());
-	UE_LOG(LogTemp, Log, TEXT("UploadScene all file count%d"), filesInDirectory.Num());
+	UE_LOG(LogTemp, Log, TEXT("UploadScene all file count %d"), filesInDirectory.Num());
 
 	for (int32 i = 0; i < filesInDirectory.Num(); i++)
 	{
@@ -1688,7 +1692,6 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 		}
 		else
 		{
-			AllBytes.Append(contentArray[i].BodyBinary);
 		}
 	}
 
@@ -1821,7 +1824,10 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 	else
 	{
 		WizardUploading = false;
-		WizardUploadError = "FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode());
+		if (HasExportedAnyDynamicMeshes())
+		{
+			WizardUploadError = "FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode());
+		}
 	}
 
 	if (WizardUploading && OutstandingDynamicUploadRequests <= 0)
@@ -2782,6 +2788,82 @@ TArray<AActor*> FCognitiveEditorTools::PrepareSceneForExport(bool OnlyExportSele
 	return ToBeExportedFinal;
 }
 
+void FCognitiveEditorTools::CompressTexturesInExportFolder(const FString& ExportFolder, int32 MaxSize)
+{
+	IFileManager& FileManager = IFileManager::Get();
+	TArray<FString> TextureFiles;
+	FileManager.FindFilesRecursive(TextureFiles, *ExportFolder, TEXT("*.png"), true, false);
+
+	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
+
+	for (const FString& TextureFile : TextureFiles)
+	{
+		FString SourcePath = FPaths::Combine(ExportFolder, TextureFile);
+		FString DestinationPath = FPaths::Combine(ExportFolder, TextureFile); // Save in the same location
+		CompressAndSaveTexture(SourcePath, DestinationPath, MaxSize);
+	}
+}
+
+void FCognitiveEditorTools::CompressAndSaveTexture(const FString& SourcePath, const FString& DestinationPath, int32 MaxSize)
+{
+	TArray<uint8> RawFileData;
+	if (!FFileHelper::LoadFileToArray(RawFileData, *SourcePath))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to load texture file: %s"), *SourcePath);
+		return;
+	}
+
+	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
+	TSharedPtr<IImageWrapper> ImageWrapperLocal = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
+	if (ImageWrapperLocal.IsValid() && ImageWrapperLocal->SetCompressed(RawFileData.GetData(), RawFileData.Num()))
+	{
+		int32 Width = ImageWrapperLocal->GetWidth();
+		int32 Height = ImageWrapperLocal->GetHeight();
+		TArray64<uint8> RawData;
+
+#if ENGINE_MAJOR_VERSION == 4
+		if (ImageWrapperLocal->GetRaw(ERGBFormat::BGRA, 8,RawData))
+#elif ENGINE_MAJOR_VERSION == 5 
+		if (ImageWrapperLocal->GetRaw(RawData))
+#endif
+		{
+			TArray<FColor> SrcData;
+			SrcData.SetNumUninitialized(Width * Height);
+			FMemory::Memcpy(SrcData.GetData(), RawData.GetData(), RawData.Num());
+
+			TArray<FColor> DstData;
+			int32 DstWidth = Width;
+			int32 DstHeight = Height;
+			if (Width > MaxSize || Height > MaxSize)
+			{
+				DstWidth = FMath::Min(Width, MaxSize);
+				DstHeight = FMath::Min(Height, MaxSize);
+				DstData.SetNumUninitialized(DstWidth * DstHeight);
+				FImageUtils::ImageResize(Width, Height, SrcData, DstWidth, DstHeight, DstData, false);
+			}
+			else
+			{
+				DstData = SrcData;
+			}
+
+			ImageWrapper->SetRaw(DstData.GetData(), DstData.Num() * sizeof(FColor), DstWidth, DstHeight, ERGBFormat::BGRA, 8);
+			const TArray64<uint8>& CompressedData = ImageWrapper->GetCompressed();
+			if (FFileHelper::SaveArrayToFile(CompressedData, *DestinationPath))
+			{
+				UE_LOG(LogTemp, Log, TEXT("Saved compressed texture: %s"), *DestinationPath);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Failed to save compressed texture: %s"), *DestinationPath);
+			}
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to create image wrapper or set compressed data for: %s"), *SourcePath);
+	}
+}
+
 void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
@@ -2807,16 +2889,39 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	FString dir = BaseExportDirectory + "/" + GetCurrentSceneName() + "/screenshot/";
 	FCognitiveEditorTools::VerifyOrCreateDirectory(dir);
 	
-	FSuppressableWarningDialog::FSetupInfo ExportSettingsInfo(LOCTEXT("ExportSettingsBody", "Make sure the scale is set to 1.0 to get the correct representation on the Dashboard"), LOCTEXT("ExportSettingsTitle", "Recommended Export Settings"), "ExportSelectedDynamicsBody");
-	ExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
-	ExportSettingsInfo.CheckBoxText = FText::FromString("Don't show again");
-	FSuppressableWarningDialog ExportSelectedDynamicMeshes(ExportSettingsInfo);
-	ExportSelectedDynamicMeshes.ShowModal();
 	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".gltf";
 
+	//use GLTFExporter Plugin
 
+	// Create export options
+	UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+	// Set custom export settings
+	ExportOptions->ExportUniformScale = 1.0f;
+	ExportOptions->bExportPreviewMesh = true;
+
+	// Texture compression settings
+	ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+	// Create export task
+	UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+	ExportTask->Object = tempworld;
+	ExportTask->Exporter = NewObject<UGLTFLevelExporter>();
+	ExportTask->Filename = *ExportedSceneFile2;
+	ExportTask->bSelected = false;
+	ExportTask->bReplaceIdentical = true;
+	ExportTask->bPrompt = false;
+	ExportTask->bAutomated = true;
+	ExportTask->Options = ExportOptions;
+
+	// Perform export
+	ExportTask->Exporter->RunAssetExportTask(ExportTask);
+
+	// Compress and save textures after export
+	int32 MaxSize = 1024; // Adjust the size as needed
+
+	CompressTexturesInExportFolder(FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory(), MaxSize);
 	
-	GEditor->ExportMap(tempworld, *ExportedSceneFile2, true);
 
 	//check that the map was actually exported and generated temporary files
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
@@ -2850,14 +2955,13 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 
 	//create settings.json
 	FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(Cognitive3D_SDK_VERSION) + "\",\"sceneName\":\"" + GetCurrentSceneName() + "\"}";
-	FString settingsFullPath = escapedOutPath + "/settings.json";
+	FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/settings.json";
 	bool writeSettingsJsonSuccess = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	if (writeSettingsJsonSuccess == false)
 	{
 		ShowNotification(TEXT("Unable to save settings.json"), false);
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene unable to save settings.json"));
 	}
-
 	//write debug.log including unreal data, scene contents, folder contents
 	//should happen after next button is pressed
 	FString fullPath = escapedOutPath + "/debug.log";
@@ -3020,7 +3124,7 @@ void FCognitiveEditorTools::GenerateSettingsJsonFile()
 
 	//create settings.json
 	FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(Cognitive3D_SDK_VERSION) + "\",\"sceneName\":\"" + GetCurrentSceneName() + "\"}";
-	FString settingsFullPath = escapedOutPath + "/settings.json";
+	FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/settings.json";
 	bool writeSettingsJsonSuccess = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	if (writeSettingsJsonSuccess == false)
 	{
@@ -3034,7 +3138,7 @@ bool FCognitiveEditorTools::HasSettingsJsonFile() const
 {
 	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
-	FString settingsFullPath = escapedOutPath + "/settings.json";
+	FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/settings.json";
 
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 	return PlatformFile.FileExists(*settingsFullPath);

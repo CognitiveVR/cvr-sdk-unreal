@@ -1465,7 +1465,25 @@ EVisibility SSceneSetupWidget::UploadErrorVisibility() const
 {
 	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 200) { return EVisibility::Collapsed; }
 	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 201) { return EVisibility::Collapsed; }
-	return FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() == 0 ? EVisibility::Collapsed : EVisibility::Visible;
+	if (FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() > 0)
+	{
+		if (FCognitiveEditorTools::GetInstance()->WizardUploadError.Contains("OnUploadObjectCompleted"))
+		{
+			if (FCognitiveEditorTools::GetInstance()->HasExportedAnyDynamicMeshes())
+			{
+				return EVisibility::Visible;
+			}
+			else
+			{
+				return EVisibility::Collapsed;
+			}
+		}
+		else
+		{
+			return EVisibility::Visible;
+		}
+	}
+	return EVisibility::Collapsed;
 }
 
 FText SSceneSetupWidget::UploadErrorText() const
@@ -1512,7 +1530,9 @@ void SSceneSetupWidget::OnExportPathChanged(const FText& Text)
 	if (Text.IsEmpty())
 	{
 		FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
+		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 	}
+	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 }
 
 void SSceneSetupWidget::SpawnCognitive3DActor()

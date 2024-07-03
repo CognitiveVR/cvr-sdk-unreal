@@ -14,6 +14,13 @@
 #include "Json.h"
 #include "JsonObjectConverter.h"
 #include "UnrealEd.h"
+#include "GLTFExportOptions.h"
+#include "GLTFExporter.h"
+#include "Exporters/GLTFLevelExporter.h" 
+#include "AssetExportTask.h"
+#include "Engine/Texture.h"
+#include "Engine/Texture2D.h"
+#include "ImageUtils.h"
 #include "Misc/FileHelper.h"
 #include "Misc/ScopedSlowTask.h"
 #include "Misc/LocalTimestampDirectoryVisitor.h"
@@ -49,7 +56,6 @@
 #include "Widgets/Notifications/SNotificationList.h"
 
 //all sorts of functionality for Cognitive SDK
-
 
 class FCognitiveEditorTools
 {
@@ -169,6 +175,9 @@ public:
 
 	TArray<AActor*> PrepareSceneForExport(bool OnlyExportSelected);
 	
+	void CompressTexturesInExportFolder(const FString& ExportFolder, int32 MaxSize);
+	void CompressAndSaveTexture(const FString& SourcePath, const FString& DestinationPath, int32 MaxSize);
+
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
 
 	//dynamic objects
