@@ -1692,6 +1692,7 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 		}
 		else
 		{
+			AllBytes.Append(contentArray[i].BodyBinary);
 		}
 	}
 
