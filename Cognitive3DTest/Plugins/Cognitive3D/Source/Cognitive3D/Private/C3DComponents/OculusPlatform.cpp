@@ -82,16 +82,6 @@ void UOculusPlatform::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 	// ...
 #ifdef INCLUDE_OCULUS_PLATFORM
 	ProcessOculusMessages();
-	//remove if not needed
-	//commented out for now for testing
-	if (gotAccessToken == false)
-	{
-		currentTime += DeltaTime;
-		if (currentTime < maxWaitTime)
-		{
-			//ovr_User_GetAccessToken();
-		}
-	}
 #endif
 }
 
@@ -218,7 +208,7 @@ void UOculusPlatform::HandleUserRetrieved(const ovrMessageHandle Message)
 
 	cog->SetParticipantFullName(displayNameStr);
 
-	if (RecordOculusData)
+	if (UseOculusIdAsParticipant)
 	{
 		cog->SetParticipantId(idString);
 	}

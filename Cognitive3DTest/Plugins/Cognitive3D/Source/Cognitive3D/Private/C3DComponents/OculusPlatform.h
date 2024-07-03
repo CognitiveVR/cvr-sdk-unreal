@@ -55,7 +55,7 @@ public:
 	void HandleAccessToekenRetrieved(const ovrMessageHandle Message);
 
 	UPROPERTY(EditAnywhere, Category = "Oculus Platform")
-		bool RecordOculusData = false;
+		bool UseOculusIdAsParticipant = true;
 
 	// User ID to retrieve
 	ovrID CurrentUserID;
