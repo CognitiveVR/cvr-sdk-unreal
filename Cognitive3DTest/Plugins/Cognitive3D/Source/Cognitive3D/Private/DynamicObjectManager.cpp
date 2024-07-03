@@ -95,7 +95,10 @@ void FDynamicObjectManager::RegisterObjectId(FString MeshName, FString Id, FStri
 		auto level = GWorld->GetCurrentLevel();
 		FString levelName = level->GetFullGroupName(true);
 		TSharedPtr<FSceneData> data = cogProvider->GetSceneData(levelName);
-		entry.SetProperty("SceneID", data->Id);
+		if (data != nullptr)
+		{
+			entry.SetProperty("SceneID", data->Id);
+		}
 	}
 	manifest.Add(entry);
 	newManifest.Add(entry);
