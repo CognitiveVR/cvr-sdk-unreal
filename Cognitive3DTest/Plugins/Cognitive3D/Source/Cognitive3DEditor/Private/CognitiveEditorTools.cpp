@@ -2918,10 +2918,11 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	ExportTask->Exporter->RunAssetExportTask(ExportTask);
 
 	// Compress and save textures after export
-	int32 MaxSize = 1024; // Adjust the size as needed
-
-	CompressTexturesInExportFolder(FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory(), MaxSize);
-	
+	if (CompressExportedFiles)
+	{
+		int32 MaxSize = 1024; // Adjust the size as needed
+		CompressTexturesInExportFolder(FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory(), MaxSize);
+	}
 
 	//check that the map was actually exported and generated temporary files
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();

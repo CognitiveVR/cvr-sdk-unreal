@@ -471,6 +471,31 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 
 			+ SVerticalBox::Slot()
+			.HAlign(HAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.HAlign(HAlign_Left)
+				[
+					SNew(SCheckBox) ////
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				.IsChecked(this, &SSceneSetupWidget::GetCompressFilesCheckbox)
+				.OnCheckStateChanged(this, &SSceneSetupWidget::OnChangeCompressFilesCheckbox)
+				]
+				+ SHorizontalBox::Slot()
+				.HAlign(HAlign_Left)
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				.Text(FText::FromString("Compress exported files. Note: this will not affect project files. Recommended for very large and detailed scenes."))
+				]
+			]
+
+			+ SVerticalBox::Slot()
 			.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			.MaxHeight(40)
@@ -984,6 +1009,12 @@ FReply SSceneSetupWidget::SelectAll()
 ECheckBoxState SSceneSetupWidget::GetOnlyExportSelectedCheckbox() const
 {
 	if (OnlyExportSelected)return ECheckBoxState::Checked;
+	return ECheckBoxState::Unchecked;
+}
+
+ECheckBoxState SSceneSetupWidget::GetCompressFilesCheckbox() const
+{
+	if (FCognitiveEditorTools::GetInstance()->CompressExportedFiles)return ECheckBoxState::Checked;
 	return ECheckBoxState::Unchecked;
 }
 

@@ -175,6 +175,7 @@ public:
 
 	TArray<AActor*> PrepareSceneForExport(bool OnlyExportSelected);
 	
+	bool CompressExportedFiles = false;
 	void CompressTexturesInExportFolder(const FString& ExportFolder, int32 MaxSize);
 	void CompressAndSaveTexture(const FString& SourcePath, const FString& DestinationPath, int32 MaxSize);
 
