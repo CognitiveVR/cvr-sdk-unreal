@@ -128,7 +128,7 @@ void FDynamicObjectManager::RegisterObjectId(FString MeshName, FString Id, FStri
 	}
 
 	//check if object with Id already existst in allObjectIds. if so, don't add it to the list again
-	bool containsId;
+	bool containsId = false;
 	for (int32 i = 0; i < allObjectIds.Num(); i++)
 	{
 		if (allObjectIds[i]->Id == Id)
