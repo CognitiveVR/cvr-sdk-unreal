@@ -15,10 +15,10 @@
 #include "Cognitive3D/Public/CustomEvent.h"
 #include "Cognitive3D/Public/DynamicIdPoolAsset.h"
 #include "MotionControllerComponent.h"
-#include "Cognitive3D/Public/DynamicObject.h"
 
 class UCustomEvent;
 class UCognitive3DBlueprints;
+class UDynamicObject;
 
 class COGNITIVE3D_API FDynamicObjectManager
 {
@@ -56,6 +56,10 @@ public:
 	UFUNCTION()
 	void SendData(bool copyDataToCache);
 	TArray<FDynamicObjectManifestEntry> GetDynamicsManifest();
+
+	///returns a DynamicObjectId instance. Generates a new instance (can reuse an unused instance if id source is generated)
+	TSharedPtr<FDynamicObjectId> GetUniqueObjectId(const FString meshName);
+	void UnregisterId(const FString id);
 private:
 	TArray<TSharedPtr<FJsonValueObject>> DynamicSnapshotsToString();
 	TSharedPtr<FJsonObject> DynamicObjectManifestToString();

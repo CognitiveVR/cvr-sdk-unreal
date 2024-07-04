@@ -504,71 +504,8 @@ void UDynamicObject::ValidateObjectId()
 	}
 	else if (IdSourceType == EIdSourceType::GeneratedId)
 	{
-		//check if its a controller and if so, check if the manifest already has ids set for controllers
-		//find the right and left one and set those accordingly
-		TArray<FDynamicObjectManifestEntry> dynManifest = dynamicObjectManager->GetDynamicsManifest();
-		if (IsController && dynManifest.Num() > 0)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Inside isController && dynManifest.Num>0"));
-			FString generatedId = FGuid::NewGuid().ToString();
-			ObjectID = MakeShareable(new FDynamicObjectId(generatedId, MeshName));
-
-			//TArray<FDynamicObjectManifestEntry> dynManifest = dynamicObjectManager->GetDynamicsManifest();
-
-			if (dynManifest.Num() > 0)
-			{
-				for (auto item : dynManifest)
-				{
-					if (!item.ControllerType.IsEmpty())
-					{
-						UE_LOG(LogTemp, Warning, TEXT("found item with controller type"));
-
-						FString* SceneIDStr = item.StringProperties.Find("SceneID");
-
-						//get current loaded level id
-						auto level = GWorld->GetCurrentLevel();
-						if (level != nullptr)
-						{
-							FString levelName = level->GetFullGroupName(true);
-							TSharedPtr<FSceneData> data = cogProvider->GetSceneData(levelName);
-
-							//check if the SceneID saved for the controller matches our current one
-						//that means we have already registered this scenes controllers and should re-use the IDs
-							if (*SceneIDStr == data->Id)
-							{
-								UE_LOG(LogTemp, Warning, TEXT("found item with same SceneID, registered existing IDs"));
-								if (IsRightController && item.IsRight)
-								{
-									ObjectID = MakeShareable(new FDynamicObjectId(item.Id, item.MeshName));
-									UE_LOG(LogTemp, Warning, TEXT("set right controller"));
-								}
-								else if (!IsRightController && !item.IsRight)
-								{
-									ObjectID = MakeShareable(new FDynamicObjectId(item.Id, item.MeshName));
-									UE_LOG(LogTemp, Warning, TEXT("set left controller"));
-								}
-							}
-							else
-							{
-								UE_LOG(LogTemp, Warning, TEXT("did NOT find previously generated IDs, using new ones"));
-							}
-						}
-
-
-
-
-					}
-				}
-			}
-
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Inside else statement, not controller"));
-			FString generatedId = FGuid::NewGuid().ToString();
-			ObjectID = MakeShareable(new FDynamicObjectId(generatedId, MeshName));
-			CustomId = "";
-		}
+		//see if there's a free id instance in dynamic manager. otherwise generate a new unique id
+		ObjectID = dynamicObjectManager->GetUniqueObjectId(MeshName);
 	}
 }
 
@@ -740,6 +677,8 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		break;
 	}
 
+	GLog->Log(" UDynamicObject::EndPlay " + MeshName);
+
 	if (!shouldWriteEndSnapshot) { return; }
 	CleanupDynamicObject();
 }
@@ -767,7 +706,14 @@ void UDynamicObject::CleanupDynamicObject()
 	FDynamicObjectSnapshot initSnapshot = MakeSnapshot(false);
 	SnapshotBoolProperty(initSnapshot, "enabled", false);
 	dynamicObjectManager->AddSnapshot(initSnapshot);
-	ObjectID->Used = false;
+
+	//allow reusing generated dynamic ids (controllers, transient objects for SE only)
+	if (IdSourceType == EIdSourceType::GeneratedId)
+	{
+		GLog->Log(" UDynamicObject::CleanupDynamicObject marking objectid as unused for mesh " + MeshName);
+		ObjectID->Used = false;
+		dynamicObjectManager->UnregisterId(ObjectID->Id);
+	}
 
 	//go through all engagements and send any that match this objectid
 	for (auto& Elem : Engagements)

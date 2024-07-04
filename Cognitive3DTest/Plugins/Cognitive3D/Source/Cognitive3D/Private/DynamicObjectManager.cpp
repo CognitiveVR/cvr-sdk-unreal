@@ -63,6 +63,47 @@ TSharedPtr<FDynamicObjectId> FDynamicObjectManager::GetUniqueId(FString meshName
 	return freeId;
 }
 
+void FDynamicObjectManager::UnregisterId(const FString id)
+{
+	for (int32 i = 0; i < allObjectIds.Num(); i++)
+	{
+		if (allObjectIds[i].IsValid() == false) { GLog->Log("invalid"); continue; }
+		if (allObjectIds[i]->Id != id) { GLog->Log("id mismatch"); continue; }
+
+		allObjectIds[i]->Used = false;
+		GLog->Log(" FDynamicObjectManager::GetUniqueObjectId freed ObjectId for id " + id);
+		break;
+	}
+}
+
+TSharedPtr<FDynamicObjectId> FDynamicObjectManager::GetUniqueObjectId(const FString meshName)
+{
+	GLog->Log(" FDynamicObjectManager::GetUniqueObjectId looking through this many items " + FString::FromInt(allObjectIds.Num()));
+
+	//ObjectId from DynamicObject and ObjectId in allObjectIds aren't pointing to the same object
+
+	//look for an unused dynamic object id instance
+	for (int32 i = 0; i < allObjectIds.Num(); i++)
+	{
+		if (allObjectIds[i].IsValid() == false) { GLog->Log("invalid"); continue; }
+		if (allObjectIds[i]->Used == true) { GLog->Log("still used"); continue; }
+		if (allObjectIds[i]->MeshName != meshName) { GLog->Log("mesh name mismatch" + allObjectIds[i]->MeshName + "     " + meshName); continue; }
+
+		allObjectIds[i]->Used = true;
+		GLog->Log(" FDynamicObjectManager::GetUniqueObjectId recycling ObjectId for mesh " + meshName);
+		return allObjectIds[i];
+	}
+
+	//create a new dynamic object id instance. it will be registered into allObjectIds when the dynamic calls RegisterObjectId
+	TSharedPtr<FDynamicObjectId> freeId;
+	static int32 originalId = 1000;
+	originalId++;
+	freeId = MakeShareable(new FDynamicObjectId(FString::FromInt(originalId), meshName));
+	GLog->Log(" FDynamicObjectManager::GetUniqueObjectId creating new ObjectId for mesh " + meshName);
+	return freeId;
+}
+
+
 bool FDynamicObjectManager::HasRegisteredObjectId(FString id)
 {
 	FDynamicObjectManifestEntry entry;
@@ -85,20 +126,28 @@ void FDynamicObjectManager::RegisterObjectId(FString MeshName, FString Id, FStri
 	{
 		return;
 	}
-	TSharedPtr<FDynamicObjectId> ObjectID = MakeShareable(new FDynamicObjectId(Id, MeshName));
-	allObjectIds.Add(ObjectID);
+
+	//check if object with Id already existst in allObjectIds. if so, don't add it to the list again
+	bool containsId;
+	for (int32 i = 0; i < allObjectIds.Num(); i++)
+	{
+		if (allObjectIds[i]->Id == Id)
+		{
+			containsId = true;
+			break;
+		}
+	}
+	if (containsId == false)
+	{
+		TSharedPtr<FDynamicObjectId> ObjectID = MakeShareable(new FDynamicObjectId(Id, MeshName));
+		allObjectIds.Add(ObjectID);
+	}
+
 	FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(Id, ActorName, MeshName);
 	if (IsController)
 	{
 		entry.ControllerType = ControllerType;
 		entry.IsRight = IsRightController;
-		auto level = GWorld->GetCurrentLevel();
-		FString levelName = level->GetFullGroupName(true);
-		TSharedPtr<FSceneData> data = cogProvider->GetSceneData(levelName);
-		if (data != nullptr)
-		{
-			entry.SetProperty("SceneID", data->Id);
-		}
 	}
 	manifest.Add(entry);
 	newManifest.Add(entry);

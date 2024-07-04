@@ -4,9 +4,6 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "Cognitive3D/Public/DynamicObject.h"
-
-class UDynamicObject;
 
 //a collection of these are kept to record current and recent gaze data and the state of the eye
 
