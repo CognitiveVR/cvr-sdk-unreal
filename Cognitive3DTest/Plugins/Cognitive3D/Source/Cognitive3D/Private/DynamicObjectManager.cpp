@@ -67,30 +67,25 @@ void FDynamicObjectManager::UnregisterId(const FString id)
 {
 	for (int32 i = 0; i < allObjectIds.Num(); i++)
 	{
-		if (allObjectIds[i].IsValid() == false) { GLog->Log("invalid"); continue; }
-		if (allObjectIds[i]->Id != id) { GLog->Log("id mismatch"); continue; }
+		if (allObjectIds[i].IsValid() == false) { continue; }
+		if (allObjectIds[i]->Id != id) { continue; }
 
 		allObjectIds[i]->Used = false;
-		GLog->Log(" FDynamicObjectManager::GetUniqueObjectId freed ObjectId for id " + id);
 		break;
 	}
 }
 
 TSharedPtr<FDynamicObjectId> FDynamicObjectManager::GetUniqueObjectId(const FString meshName)
 {
-	GLog->Log(" FDynamicObjectManager::GetUniqueObjectId looking through this many items " + FString::FromInt(allObjectIds.Num()));
-
 	//ObjectId from DynamicObject and ObjectId in allObjectIds aren't pointing to the same object
-
 	//look for an unused dynamic object id instance
 	for (int32 i = 0; i < allObjectIds.Num(); i++)
 	{
-		if (allObjectIds[i].IsValid() == false) { GLog->Log("invalid"); continue; }
-		if (allObjectIds[i]->Used == true) { GLog->Log("still used"); continue; }
-		if (allObjectIds[i]->MeshName != meshName) { GLog->Log("mesh name mismatch" + allObjectIds[i]->MeshName + "     " + meshName); continue; }
+		if (allObjectIds[i].IsValid() == false) { continue; }
+		if (allObjectIds[i]->Used == true) { continue; }
+		if (allObjectIds[i]->MeshName != meshName) { continue; }
 
 		allObjectIds[i]->Used = true;
-		GLog->Log(" FDynamicObjectManager::GetUniqueObjectId recycling ObjectId for mesh " + meshName);
 		return allObjectIds[i];
 	}
 
@@ -99,7 +94,6 @@ TSharedPtr<FDynamicObjectId> FDynamicObjectManager::GetUniqueObjectId(const FStr
 	static int32 originalId = 1000;
 	originalId++;
 	freeId = MakeShareable(new FDynamicObjectId(FString::FromInt(originalId), meshName));
-	GLog->Log(" FDynamicObjectManager::GetUniqueObjectId creating new ObjectId for mesh " + meshName);
 	return freeId;
 }
 

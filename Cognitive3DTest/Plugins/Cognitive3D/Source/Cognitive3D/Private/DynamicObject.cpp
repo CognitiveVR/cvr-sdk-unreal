@@ -677,8 +677,6 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		break;
 	}
 
-	GLog->Log(" UDynamicObject::EndPlay " + MeshName);
-
 	if (!shouldWriteEndSnapshot) { return; }
 	CleanupDynamicObject();
 }
@@ -710,7 +708,6 @@ void UDynamicObject::CleanupDynamicObject()
 	//allow reusing generated dynamic ids (controllers, transient objects for SE only)
 	if (IdSourceType == EIdSourceType::GeneratedId)
 	{
-		GLog->Log(" UDynamicObject::CleanupDynamicObject marking objectid as unused for mesh " + MeshName);
 		ObjectID->Used = false;
 		dynamicObjectManager->UnregisterId(ObjectID->Id);
 	}
