@@ -147,6 +147,19 @@ public:
 		}
 	}
 
+	ECheckBoxState GetCompressFilesCheckbox() const;
+	void OnChangeCompressFilesCheckbox(ECheckBoxState newstate)
+	{
+		if (newstate == ECheckBoxState::Checked)
+		{
+			FCognitiveEditorTools::GetInstance()->CompressExportedFiles = true;
+		}
+		else
+		{
+			FCognitiveEditorTools::GetInstance()->CompressExportedFiles = false;
+		}
+	}
+
 	void OnExportPathChanged(const FText& Text);
 
 	/// <summary>

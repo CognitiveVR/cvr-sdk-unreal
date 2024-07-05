@@ -471,6 +471,31 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 
 			+ SVerticalBox::Slot()
+			.HAlign(HAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.HAlign(HAlign_Left)
+				[
+					SNew(SCheckBox) ////
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				.IsChecked(this, &SSceneSetupWidget::GetCompressFilesCheckbox)
+				.OnCheckStateChanged(this, &SSceneSetupWidget::OnChangeCompressFilesCheckbox)
+				]
+				+ SHorizontalBox::Slot()
+				.HAlign(HAlign_Left)
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				.Text(FText::FromString("Compress exported files. Note: this will not affect project files. Recommended for very large and detailed scenes."))
+				]
+			]
+
+			+ SVerticalBox::Slot()
 			.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			.MaxHeight(40)
@@ -987,6 +1012,12 @@ ECheckBoxState SSceneSetupWidget::GetOnlyExportSelectedCheckbox() const
 	return ECheckBoxState::Unchecked;
 }
 
+ECheckBoxState SSceneSetupWidget::GetCompressFilesCheckbox() const
+{
+	if (FCognitiveEditorTools::GetInstance()->CompressExportedFiles)return ECheckBoxState::Checked;
+	return ECheckBoxState::Unchecked;
+}
+
 void SSceneSetupWidget::GenerateScreenshotBrush()
 {
 	FString ScreenshotPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/screenshot/screenshot.png";
@@ -1465,7 +1496,25 @@ EVisibility SSceneSetupWidget::UploadErrorVisibility() const
 {
 	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 200) { return EVisibility::Collapsed; }
 	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 201) { return EVisibility::Collapsed; }
-	return FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() == 0 ? EVisibility::Collapsed : EVisibility::Visible;
+	if (FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() > 0)
+	{
+		if (FCognitiveEditorTools::GetInstance()->WizardUploadError.Contains("OnUploadObjectCompleted"))
+		{
+			if (FCognitiveEditorTools::GetInstance()->HasExportedAnyDynamicMeshes())
+			{
+				return EVisibility::Visible;
+			}
+			else
+			{
+				return EVisibility::Collapsed;
+			}
+		}
+		else
+		{
+			return EVisibility::Visible;
+		}
+	}
+	return EVisibility::Collapsed;
 }
 
 FText SSceneSetupWidget::UploadErrorText() const
@@ -1512,7 +1561,9 @@ void SSceneSetupWidget::OnExportPathChanged(const FText& Text)
 	if (Text.IsEmpty())
 	{
 		FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
+		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 	}
+	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 }
 
 void SSceneSetupWidget::SpawnCognitive3DActor()
