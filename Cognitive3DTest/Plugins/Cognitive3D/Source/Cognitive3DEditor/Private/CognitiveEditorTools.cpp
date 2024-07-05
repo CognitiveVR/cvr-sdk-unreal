@@ -509,14 +509,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 		FString justDirectory = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName;
 		FString tempObject;
-		FString ExportFilename;
 
-		FSuppressableWarningDialog::FSetupInfo ExportSettingsInfo(LOCTEXT("ExportSettingsBody", "Make sure the scale is set to 1.0 to get the correct representation on the Dashboard"), LOCTEXT("ExportSettingsTitle", "Recommended Export Settings"), "ExportSelectedDynamicsBody");
-		ExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
-		ExportSettingsInfo.CheckBoxText = FText();
-		FSuppressableWarningDialog ExportSelectedDynamicMeshes(ExportSettingsInfo);
-		ExportSelectedDynamicMeshes.ShowModal();
-		ExportFilename = exportObjects[i]->MeshName + ".gltf";
 		tempObject = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName + "/" + exportObjects[i]->MeshName + ".gltf";
 		
 		//create directory before export
@@ -657,7 +650,32 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			{
 				//exports the currently selected actor(s)
 				UE_LOG(LogTemp, Warning, TEXT("DOING REGULAR MAP EXPORT"));
-				GUnrealEd->ExportMap(GWorld, *tempObject, true);
+
+				//use GLTFExporter Plugin
+
+				// Create export options
+				UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+				// Set custom export settings
+				ExportOptions->ExportUniformScale = 1.0f;
+				ExportOptions->bExportPreviewMesh = true;
+
+				// Texture compression settings
+				ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+				// Create export task
+				UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+				ExportTask->Object = GWorld;
+				ExportTask->Exporter = NewObject<UGLTFLevelExporter>();
+				ExportTask->Filename = *tempObject;
+				ExportTask->bSelected = true;
+				ExportTask->bReplaceIdentical = true;
+				ExportTask->bPrompt = false;
+				ExportTask->bAutomated = true;
+				ExportTask->Options = ExportOptions;
+
+				// Perform export
+				ExportTask->Exporter->RunAssetExportTask(ExportTask);
 			}
 		}
 
@@ -2905,7 +2923,7 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	ExportTask->Object = tempworld;
 	ExportTask->Exporter = NewObject<UGLTFLevelExporter>();
 	ExportTask->Filename = *ExportedSceneFile2;
-	ExportTask->bSelected = false;
+	ExportTask->bSelected = true;
 	ExportTask->bReplaceIdentical = true;
 	ExportTask->bPrompt = false;
 	ExportTask->bAutomated = true;
