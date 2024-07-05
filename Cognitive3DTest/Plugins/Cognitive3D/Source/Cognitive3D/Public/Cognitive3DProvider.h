@@ -118,6 +118,13 @@
 		virtual void RecordError(const FString& Error, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		virtual void RecordProgress(const FString& ProgressType, const FString& ProgressHierarchy, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 		
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 4
+		virtual void SetDefaultEventAttributes(TArray<FAnalyticsEventAttribute>&& Attributes) override;
+		virtual TArray<FAnalyticsEventAttribute> GetDefaultEventAttributesSafe() const override;
+		virtual int32 GetDefaultEventAttributeCount() const override;
+		virtual FAnalyticsEventAttribute GetDefaultEventAttribute(int AttributeIndex) const override;
+#endif
+
 		//consider making these TSharedPtr
 		FCustomEventRecorder* customEventRecorder = nullptr;
 		FSensors* sensors = nullptr;

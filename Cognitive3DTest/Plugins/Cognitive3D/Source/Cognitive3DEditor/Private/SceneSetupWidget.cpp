@@ -97,7 +97,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					[
 						SNew(SRichTextBlock)
 						.Justification(ETextJustify::Left)
-						.DecoratorStyleSet(&FEditorStyle::Get())
+						.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 						.Text(this, &SSceneSetupWidget::GetHeaderTitle)
 					]
 				]
@@ -122,7 +122,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				SNew(SRichTextBlock)
 				.Justification(ETextJustify::Center)
 				.Visibility(this, &SSceneSetupWidget::IsInvalidVisible)
-				.DecoratorStyleSet(&FEditorStyle::Get())
+				.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 				.Text(FText::FromString("The developer key is invalid. Please set the developer key in the Project Setup Window"))
 			]
 
@@ -161,7 +161,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				SNew(SRichTextBlock)
 				.Justification(ETextJustify::Center)
 				.Visibility(this, &SSceneSetupWidget::IsIntroVisible)
-				.DecoratorStyleSet(&FEditorStyle::Get())
+				.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 				.AutoWrapText(true)
 				.Text(FText::FromString("Welcome to the <RichTextBlock.BoldHighlight>Cognitive3D Level Setup</>. This window will guide you through a basic configuration to ensure your level is ready to record data."))
 			]
@@ -192,7 +192,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
 					.AutoWrapText(true)
 					.Justification(ETextJustify::Center)
-					.DecoratorStyleSet(&FEditorStyle::Get())
+					.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 					.Text(FText::FromString("Open the VR Pawn blueprint that is spawned for your player.\n\n\n\nAttach Dynamic Object components as children of each MotionController actor component."))
 				]
 				+SHorizontalBox::Slot()
@@ -230,7 +230,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
 					.AutoWrapText(true)
 					.Justification(ETextJustify::Center)
-					.DecoratorStyleSet(&FEditorStyle::Get())
+					.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 					.Text(FText::FromString("Press the Setup Left Controller and Setup Right Controller buttons on the appropriate actors.\n\n\n\nSave your changes."))
 				]
 				+SHorizontalBox::Slot()
@@ -265,7 +265,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::GetAppendedInputsFoundHidden)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.DecoratorStyleSet(&FEditorStyle::Get())
+				.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 				.Text(FText::FromString("You can append inputs to your DefaultInput.ini file. This will allow you to visualize the button presses of the player."))
 			]
 
@@ -278,7 +278,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::GetAppendedInputsFoundVisibility)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.DecoratorStyleSet(&FEditorStyle::Get())
+				.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 				.Text(FText::FromString("The Cognitive3D action maps have been added to DefaultInputs.ini"))
 			]
 
@@ -471,6 +471,31 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 
 			+ SVerticalBox::Slot()
+			.HAlign(HAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.HAlign(HAlign_Left)
+				[
+					SNew(SCheckBox) ////
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				.IsChecked(this, &SSceneSetupWidget::GetCompressFilesCheckbox)
+				.OnCheckStateChanged(this, &SSceneSetupWidget::OnChangeCompressFilesCheckbox)
+				]
+				+ SHorizontalBox::Slot()
+				.HAlign(HAlign_Left)
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				.Text(FText::FromString("Compress exported files. Note: this will not affect project files. Recommended for very large and detailed scenes."))
+				]
+			]
+
+			+ SVerticalBox::Slot()
 			.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			.MaxHeight(40)
@@ -538,7 +563,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsNewSceneUpload)
 				.AutoWrapText(true)
-				.DecoratorStyleSet(&FEditorStyle::Get())
+				.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 				.Justification(ETextJustify::Center)
 				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Upload a New Level to the Dashboard</>"))
 			]
@@ -550,7 +575,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			[
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsSceneVersionUpload)
-				.DecoratorStyleSet(&FEditorStyle::Get())
+				.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
 				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Upload a New Version of this Level to the Dashboard</>. This will archive the previous version of this level."))
@@ -599,7 +624,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 				.AutoWrapText(true)
-				.DecoratorStyleSet(&FEditorStyle::Get())
+				.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 				.Justification(ETextJustify::Center)
 				.Text(FText::FromString("<RichTextBlock.BoldHighlight>The Scene Geometry</>"))
 			]
@@ -623,7 +648,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::IsUploadChecklistVisible)
 				.AutoWrapText(true)
-				.DecoratorStyleSet(&FEditorStyle::Get())
+				.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 				.Justification(ETextJustify::Center)
 				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Dynamic Object Meshes</>"))
 			]
@@ -647,7 +672,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				SNew(SRichTextBlock)
 				.Visibility(this, &SSceneSetupWidget::UploadThumbnailTextVisibility)
 				.AutoWrapText(true)
-				.DecoratorStyleSet(&FEditorStyle::Get())
+				.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 				.Justification(ETextJustify::Center)
 				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Screenshot</>"))
 			]
@@ -696,7 +721,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.Visibility(this, &SSceneSetupWidget::UploadErrorVisibility)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
-				.DecoratorStyleSet(&FEditorStyle::Get())
+				.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 				.Text(FText::FromString("There was an error while uploading. Check the <RichTextBlock.BoldHighlight>Output Log</> for details"))
 			]
 
@@ -984,6 +1009,12 @@ FReply SSceneSetupWidget::SelectAll()
 ECheckBoxState SSceneSetupWidget::GetOnlyExportSelectedCheckbox() const
 {
 	if (OnlyExportSelected)return ECheckBoxState::Checked;
+	return ECheckBoxState::Unchecked;
+}
+
+ECheckBoxState SSceneSetupWidget::GetCompressFilesCheckbox() const
+{
+	if (FCognitiveEditorTools::GetInstance()->CompressExportedFiles)return ECheckBoxState::Checked;
 	return ECheckBoxState::Unchecked;
 }
 
@@ -1465,7 +1496,25 @@ EVisibility SSceneSetupWidget::UploadErrorVisibility() const
 {
 	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 200) { return EVisibility::Collapsed; }
 	if (FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode == 201) { return EVisibility::Collapsed; }
-	return FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() == 0 ? EVisibility::Collapsed : EVisibility::Visible;
+	if (FCognitiveEditorTools::GetInstance()->WizardUploadError.Len() > 0)
+	{
+		if (FCognitiveEditorTools::GetInstance()->WizardUploadError.Contains("OnUploadObjectCompleted"))
+		{
+			if (FCognitiveEditorTools::GetInstance()->HasExportedAnyDynamicMeshes())
+			{
+				return EVisibility::Visible;
+			}
+			else
+			{
+				return EVisibility::Collapsed;
+			}
+		}
+		else
+		{
+			return EVisibility::Visible;
+		}
+	}
+	return EVisibility::Collapsed;
 }
 
 FText SSceneSetupWidget::UploadErrorText() const
@@ -1512,7 +1561,9 @@ void SSceneSetupWidget::OnExportPathChanged(const FText& Text)
 	if (Text.IsEmpty())
 	{
 		FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
+		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 	}
+	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
 }
 
 void SSceneSetupWidget::SpawnCognitive3DActor()
@@ -1533,7 +1584,7 @@ void SSceneSetupWidget::SpawnCognitive3DActor()
 	//check if there's a Cognitive3DActor already in the world
 	for (TObjectIterator<ACognitive3DActor> Itr; Itr; ++Itr)
 	{
-		if (Itr->IsPendingKill())
+		if (Itr->IsPendingKillPending())
 		{
 			//if a ACognitive3DActor was deleted from the world, it sticks around but is pending a kill. possibly in some undo buffer?
 			continue;

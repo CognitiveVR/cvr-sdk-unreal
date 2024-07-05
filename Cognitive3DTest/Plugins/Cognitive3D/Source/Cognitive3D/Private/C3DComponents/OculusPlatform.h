@@ -37,6 +37,9 @@ public:
 
 	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
 
+	UPROPERTY(EditAnywhere, Category = "Oculus Platform")
+		bool UseOculusIdAsParticipant = true;
+
 	UFUNCTION()
 		void OnSessionBegin();
 	UFUNCTION()

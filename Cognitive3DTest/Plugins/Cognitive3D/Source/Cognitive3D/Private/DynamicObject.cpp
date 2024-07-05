@@ -184,7 +184,7 @@ void UDynamicObject::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cogProvider->HasStartedSession())
 	{
 		Initialize();
@@ -204,7 +204,6 @@ void UDynamicObject::BeginPlay()
 void UDynamicObject::OnPreSessionEnd()
 {
 	CleanupDynamicObject();
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	cogProvider->OnCognitiveInterval.RemoveDynamic(this, &UDynamicObject::UpdateSyncWithPlayer);
 }
 
@@ -221,7 +220,6 @@ void UDynamicObject::Initialize()
 		return;
 	}
 
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	dynamicObjectManager = cogProvider->dynamicObjectManager;
 
 	if (dynamicObjectManager == nullptr) { return; }
@@ -371,7 +369,6 @@ TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
 void UDynamicObject::UpdateSyncWithPlayer()
 {
 	if (dynamicObjectManager == nullptr) { return; }
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	//rotation angle to degrees
@@ -422,7 +419,6 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 
 	if (!HasInitialized) { return; }
 	if (dynamicObjectManager == nullptr) { return; }
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	if (SyncUpdateWithPlayer){return;}
@@ -479,7 +475,6 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		dynamicObjectManager->AddSnapshot(snapObj);
 		
 	}
-	
 }
 
 void UDynamicObject::ValidateObjectId()
@@ -509,9 +504,8 @@ void UDynamicObject::ValidateObjectId()
 	}
 	else if (IdSourceType == EIdSourceType::GeneratedId)
 	{
-		FString generatedId = FGuid::NewGuid().ToString();
-		ObjectID = MakeShareable(new FDynamicObjectId(generatedId, MeshName));
-		CustomId = "";
+		//see if there's a free id instance in dynamic manager. otherwise generate a new unique id
+		ObjectID = dynamicObjectManager->GetUniqueObjectId(MeshName);
 	}
 }
 
@@ -616,7 +610,7 @@ void UDynamicObject::BeginEngagementId(FString parentDynamicObjectId, FString en
 	}
 	else
 	{
-		Engagements[UniqueEngagementId]->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));
+		Engagements[UniqueEngagementId]->SetPosition(GetAttachParent()->GetComponentLocation());
 		Engagements[UniqueEngagementId]->Send();
 		Engagements[UniqueEngagementId] = ce;
 	}
@@ -699,7 +693,6 @@ void UDynamicObject::CleanupDynamicObject()
 		}
 	}
 
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	cogProvider->OnSessionBegin.RemoveDynamic(this, &UDynamicObject::Initialize);
 	cogProvider->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPostSessionEnd);
 	cogProvider->OnPreSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPreSessionEnd);
@@ -711,7 +704,13 @@ void UDynamicObject::CleanupDynamicObject()
 	FDynamicObjectSnapshot initSnapshot = MakeSnapshot(false);
 	SnapshotBoolProperty(initSnapshot, "enabled", false);
 	dynamicObjectManager->AddSnapshot(initSnapshot);
-	ObjectID->Used = false;
+
+	//allow reusing generated dynamic ids (controllers, transient objects for SE only)
+	if (IdSourceType == EIdSourceType::GeneratedId)
+	{
+		ObjectID->Used = false;
+		dynamicObjectManager->UnregisterId(ObjectID->Id);
+	}
 
 	//go through all engagements and send any that match this objectid
 	for (auto& Elem : Engagements)
@@ -740,7 +739,7 @@ void UDynamicObject::FlushButtons(FControllerInputStateCollection& target)
 	{
 		return;
 	}
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	
 	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	FDynamicObjectSnapshot snap = MakeSnapshot(false);

@@ -9,7 +9,6 @@
 #include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "AnalyticsBlueprintLibrary.h"
 #include "Runtime/Analytics/Analytics/Public/AnalyticsEventAttribute.h"
-#include "Cognitive3D/Public/DynamicObject.h"
 #include "Cognitive3D/Private/C3DComponents/PlayerTracker.h"
 #include "Cognitive3D/Private/ExitPoll.h"
 #include "Cognitive3D/Private/C3DComponents/FixationRecorder.h"
@@ -18,6 +17,7 @@
 #include "Cognitive3DBlueprints.generated.h"
 
 class Cognitive3DResponse;
+class UDynamicObject;
 
 UCLASS()
 class COGNITIVE3D_API UCognitive3DBlueprints : public UBlueprintFunctionLibrary

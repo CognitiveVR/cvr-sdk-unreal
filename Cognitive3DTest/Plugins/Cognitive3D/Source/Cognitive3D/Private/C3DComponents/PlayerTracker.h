@@ -13,7 +13,6 @@
 //#include "Engine/Texture2D.h"
 #include "SceneView.h"
 //#include "Engine/TextureRenderTarget2D.h"
-#include "Cognitive3D/Public/DynamicObject.h"
 #include "Runtime/HeadMountedDisplay/Public/IXRTrackingSystem.h"
 #include "Widgets/Text/STextBlock.h"
 #if defined TOBII_EYETRACKING_ACTIVE
@@ -53,6 +52,7 @@
 
 class FAnalyticsProviderCognitive3D;
 class UCognitive3DBlueprints;
+class UDynamicObject;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class COGNITIVE3D_API UPlayerTracker : public UActorComponent

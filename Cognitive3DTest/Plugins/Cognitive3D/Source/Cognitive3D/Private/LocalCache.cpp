@@ -47,6 +47,15 @@ int32 FLocalCache::NumberOfBatches()
 }
 bool FLocalCache::HasContent()
 {
+	if (readContent.Num() > 0)
+	{
+		return true;
+	}
+
+	if (numberWriteBatches > 0)
+	{
+		MergeDataFiles();
+	}
 	return readContent.Num() > 0;
 }
 

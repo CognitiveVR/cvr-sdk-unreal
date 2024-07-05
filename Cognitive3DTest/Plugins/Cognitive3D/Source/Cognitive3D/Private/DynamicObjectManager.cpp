@@ -63,6 +63,41 @@ TSharedPtr<FDynamicObjectId> FDynamicObjectManager::GetUniqueId(FString meshName
 	return freeId;
 }
 
+void FDynamicObjectManager::UnregisterId(const FString id)
+{
+	for (int32 i = 0; i < allObjectIds.Num(); i++)
+	{
+		if (allObjectIds[i].IsValid() == false) { continue; }
+		if (allObjectIds[i]->Id != id) { continue; }
+
+		allObjectIds[i]->Used = false;
+		break;
+	}
+}
+
+TSharedPtr<FDynamicObjectId> FDynamicObjectManager::GetUniqueObjectId(const FString meshName)
+{
+	//ObjectId from DynamicObject and ObjectId in allObjectIds aren't pointing to the same object
+	//look for an unused dynamic object id instance
+	for (int32 i = 0; i < allObjectIds.Num(); i++)
+	{
+		if (allObjectIds[i].IsValid() == false) { continue; }
+		if (allObjectIds[i]->Used == true) { continue; }
+		if (allObjectIds[i]->MeshName != meshName) { continue; }
+
+		allObjectIds[i]->Used = true;
+		return allObjectIds[i];
+	}
+
+	//create a new dynamic object id instance. it will be registered into allObjectIds when the dynamic calls RegisterObjectId
+	TSharedPtr<FDynamicObjectId> freeId;
+	static int32 originalId = 1000;
+	originalId++;
+	freeId = MakeShareable(new FDynamicObjectId(FString::FromInt(originalId), meshName));
+	return freeId;
+}
+
+
 bool FDynamicObjectManager::HasRegisteredObjectId(FString id)
 {
 	FDynamicObjectManifestEntry entry;
@@ -85,8 +120,23 @@ void FDynamicObjectManager::RegisterObjectId(FString MeshName, FString Id, FStri
 	{
 		return;
 	}
-	TSharedPtr<FDynamicObjectId> ObjectID = MakeShareable(new FDynamicObjectId(Id, MeshName));
-	allObjectIds.Add(ObjectID);
+
+	//check if object with Id already existst in allObjectIds. if so, don't add it to the list again
+	bool containsId = false;
+	for (int32 i = 0; i < allObjectIds.Num(); i++)
+	{
+		if (allObjectIds[i]->Id == Id)
+		{
+			containsId = true;
+			break;
+		}
+	}
+	if (containsId == false)
+	{
+		TSharedPtr<FDynamicObjectId> ObjectID = MakeShareable(new FDynamicObjectId(Id, MeshName));
+		allObjectIds.Add(ObjectID);
+	}
+
 	FDynamicObjectManifestEntry entry = FDynamicObjectManifestEntry(Id, ActorName, MeshName);
 	if (IsController)
 	{
@@ -294,6 +344,11 @@ void FDynamicObjectManager::SendData(bool copyDataToCache)
 	cogProvider->network->NetworkCall("dynamics", OutputString, copyDataToCache);
 
 	snapshots.Empty();
+}
+
+TArray<FDynamicObjectManifestEntry> FDynamicObjectManager::GetDynamicsManifest()
+{
+	return manifest;
 }
 
 TSharedPtr<FJsonObject> FDynamicObjectManager::DynamicObjectManifestToString()

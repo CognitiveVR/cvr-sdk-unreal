@@ -132,9 +132,9 @@ bool IDynamicObjectComponentDetails::HasOwner() const
 
 bool IDynamicObjectComponentDetails::HasOwnerAndExportDirAndName() const
 {
-	if (!HasOwner()) { UE_LOG(LogTemp, Warning, TEXT("NO OWNER FOUND!")); return false; }
-	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { UE_LOG(LogTemp, Warning, TEXT("NO EXPORT DIRECTORY FOUND!")); return false; }
-	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { UE_LOG(LogTemp, Warning, TEXT("NO MESH NAME FOUND!")); return false; }
+	if (!HasOwner()) { return false; }
+	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return false; }
+	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return false; }
 	return true;
 }
 

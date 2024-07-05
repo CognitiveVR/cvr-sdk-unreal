@@ -194,7 +194,7 @@ void FAnalyticsProviderCognitive3D::HandlePostLevelLoad(UWorld* world)
 		TSharedPtr<FJsonObject> lastsceneproperties = MakeShareable(new FJsonObject());
 		lastsceneproperties->SetStringField("Scene Name", FString(LastSceneData->Name));
 		lastsceneproperties->SetStringField("Scene Id", FString(LastSceneData->Id));
-		customEventRecorder->Send("c3d.SceneUnloaded", lastsceneproperties);
+		customEventRecorder->Send("c3d.SceneUnload", lastsceneproperties);
 	}
 
 	if (currentSceneData.IsValid()) //currently has valid scene data
@@ -207,9 +207,12 @@ void FAnalyticsProviderCognitive3D::HandlePostLevelLoad(UWorld* world)
 		}
 		float duration = FUtil::GetTimestamp() - SceneStartTime;
 		properties->SetNumberField("Duration", duration);
-		customEventRecorder->Send("c3d.SceneLoaded", properties);
-		FlushAndCacheEvents();
+		customEventRecorder->Send("c3d.SceneLoad", properties);
 	}
+
+	//will send events to the unloaded level before changing tracking scene id
+	//this is done instead of a full flush of all streams so that dynamics from the loaded scene are not written to the unloaded level data
+	customEventRecorder->SendData(true);
 
 	if (data.IsValid())
 	{
@@ -767,6 +770,31 @@ void FAnalyticsProviderCognitive3D::RecordCurrencyGiven(const FString& GameCurre
 		FCognitiveLog::Warning("FAnalyticsProvideCognitive3D::RecordCurrencyGiven called before StartSession. Ignoring");
 	}
 }
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 4
+
+TArray<FAnalyticsEventAttribute> DefaultEventAttributes;
+
+void FAnalyticsProviderCognitive3D::SetDefaultEventAttributes(TArray<FAnalyticsEventAttribute>&& Attributes)
+{
+	DefaultEventAttributes = Attributes;
+}
+
+TArray<FAnalyticsEventAttribute> FAnalyticsProviderCognitive3D::GetDefaultEventAttributesSafe() const
+{
+	return DefaultEventAttributes;
+}
+
+int32 FAnalyticsProviderCognitive3D::GetDefaultEventAttributeCount() const
+{
+	return DefaultEventAttributes.Num();
+}
+
+FAnalyticsEventAttribute FAnalyticsProviderCognitive3D::GetDefaultEventAttribute(int AttributeIndex) const
+{
+	return DefaultEventAttributes[AttributeIndex];
+}
+#endif
 
 TSharedPtr<FSceneData> FAnalyticsProviderCognitive3D::GetCurrentSceneData()
 {
