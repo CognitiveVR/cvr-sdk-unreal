@@ -45,18 +45,15 @@ void UOculusPlatform::BeginPlay()
 		if (result != ovrPlatformInitialize_Success)
 		{
 			// Handle initialization failure
-			UE_LOG(LogTemp, Error, TEXT("UOculusPlatform::BeginPlay Failed to initialize Oculus Platform, Error code: %d"), result);
 		}
 		else
 		{
 			// Initialization successful
-			UE_LOG(LogTemp, Log, TEXT("UOculusPlatform::BeginPlay Oculus Platform initialized successfully"));
 		}
 	}
 	else
 	{
 		// Failed to obtain JNI Environment or Activity
-		UE_LOG(LogTemp, Error, TEXT("UOculusPlatform::BeginPlay Failed to obtain JNI Environment or Android Activity"));
 	}
 #endif
 #endif
@@ -82,14 +79,6 @@ void UOculusPlatform::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 	// ...
 #ifdef INCLUDE_OCULUS_PLATFORM
 	ProcessOculusMessages();
-	if (gotAccessToken == false)
-	{
-		currentTime += DeltaTime;
-		if (currentTime < maxWaitTime)
-		{
-			ovr_User_GetAccessToken();
-		}
-	}
 #endif
 }
 
@@ -156,7 +145,6 @@ void UOculusPlatform::ProcessOculusMessages()
 			{
 				ovrErrorHandle Error = ovr_Message_GetError(Message);
 				const char* ErrorMessage = ovr_Error_GetMessage(Error);
-				UE_LOG(LogTemp, Error, TEXT("UOculusPlatform::ProcessOculusMessages User is not entitled: %s"), *FString(ErrorMessage));
 			}
 			else //user is entitled
 			{
@@ -171,7 +159,6 @@ void UOculusPlatform::ProcessOculusMessages()
 				// Error handling
 				ovrErrorHandle Error = ovr_Message_GetError(Message);
 				const char* ErrorMessage = ovr_Error_GetMessage(Error);
-				UE_LOG(LogTemp, Error, TEXT("UOculusPlatform::ProcessOculusMessages Failed to retrieve user: %s"), *FString(ErrorMessage));
 			}
 			else
 			{
@@ -187,7 +174,6 @@ void UOculusPlatform::ProcessOculusMessages()
 				//error handling
 				ovrErrorHandle Error = ovr_Message_GetError(Message);
 				const char* ErrorMessage = ovr_Error_GetMessage(Error);
-				UE_LOG(LogTemp, Error, TEXT("UOculusPlatform::ProcessOculusMessages Failed to retrieve access token: %s"), *FString(ErrorMessage));
 			}
 			else
 			{
@@ -201,15 +187,27 @@ void UOculusPlatform::ProcessOculusMessages()
 void UOculusPlatform::HandleUserRetrieved(const ovrMessageHandle Message)
 {
 	ovrUserHandle User = ovr_Message_GetUser(Message);
-	const char* UserName = ovr_User_GetDisplayName(User);
-	UE_LOG(LogTemp, Log, TEXT("UOculusPlatform::HandleUserRetrieved User retrieved: %s"), *FString(UserName));
-	FString propertyStr = FString::Printf(TEXT("%s"), *FString(UserName));
-	//cog->SetSessionProperty("Oculus Username", propertyStr);
+
+	const char* DisplayName = ovr_User_GetDisplayName(User); 
+	const char* UserName = ovr_User_GetOculusID(User); 
+
+	FString displayNameStr = FString::Printf(TEXT("%s"), *FString(DisplayName));
+	FString usernameStr = FString::Printf(TEXT("%s"), *FString(UserName));
+
 	ovrID oculusID = ovr_User_GetID(User);
 	char* idString = new char[256];
 	ovrID_ToString(idString, 256, oculusID);
+
+	cog->SetParticipantFullName(displayNameStr);
+
+	if (UseOculusIdAsParticipant)
+	{
+		cog->SetParticipantId(idString);
+	}
+
 	cog->SetParticipantProperty("oculusId", idString);
-	cog->SetParticipantProperty("oculusUsername", propertyStr);
+	cog->SetParticipantProperty("oculusDisplayName", displayNameStr);
+	cog->SetParticipantProperty("oculusUsername", usernameStr);
 
 	if (gotAccessToken == false)
 	{
@@ -259,8 +257,6 @@ void UOculusPlatform::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpRespo
 		if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
 		{
 			// Handle your data
-			UE_LOG(LogTemp, Warning, TEXT("UOculusPlatform::OnHttpResponseReceived Successfully retrieved data: %s"), *Response->GetContentAsString());
-
 			// Access the data array
 			const TArray<TSharedPtr<FJsonValue>>* DataArray;
 			if (JsonObject->TryGetArrayField(TEXT("data"), DataArray))
@@ -288,11 +284,7 @@ void UOculusPlatform::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpRespo
 								DataObject->TryGetStringField(TEXT("period_end_time"), period_end_time) &&
 								DataObject->TryGetStringField(TEXT("next_renewal_time"), next_renewal_time))
 							{
-								UE_LOG(LogTemp, Log, TEXT("UOculusPlatform::OnHttpResponseReceived SKU: %s, Is Trial: %s, Is Active: %s"),
-									*Sku,
-									IsTrial ? TEXT("true") : TEXT("false"),
-									IsActive ? TEXT("true") : TEXT("false"));
-
+								
 								// Convert date-time strings to Unix timestamps
 								FDateTime StartTime, EndTime, NextRenewalTime;
 								if (FDateTime::ParseIso8601(*period_start_time, StartTime) &&
@@ -326,23 +318,22 @@ void UOculusPlatform::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpRespo
 				}
 				else
 				{
-					UE_LOG(LogTemp, Error, TEXT("UOculusPlatform::OnHttpResponseReceived DataArray is null."));
+					//DataArray is null
 				}
 			}
 			else
 			{
-				UE_LOG(LogTemp, Error, TEXT("UOculusPlatform::OnHttpResponseReceived Failed to access 'data' field in JSON."));
+				//Failed to access data field in JSON
 			}
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("UOculusPlatform::OnHttpResponseReceived Failed to parse JSON."));
+			//Failed to parse JSON
 		}
 	}
 	else
 	{
-		// Handle errors
-		UE_LOG(LogTemp, Error, TEXT("UOculusPlatform::OnHttpResponseReceived HTTP Request Failed: %s"), *Response->GetContentAsString());
+		// HTTP Request Failed
 	}
 }
 
