@@ -138,7 +138,7 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 			[
 				SNew(SButton)
 				//PickerWidget = SAssignNew(BrowseButton, SButton)
-				.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
+				.ButtonStyle(FCognitiveEditorTools::GetSlateStyle(), "HoverHintOnly")
 				.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
 				.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectBaseExportDirectory)
 				.ContentPadding(2.0f)
@@ -146,7 +146,7 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 				.IsFocusable(false)
 				[
 					SNew(SImage)
-					.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
+					.Image(FCognitiveEditorTools::GetBrush(FName("PropertyWindow.Button_Ellipsis")))
 					.ColorAndOpacity(FSlateColor::UseForeground())
 				]
 			]
@@ -186,7 +186,7 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 				.FillWidth(1)
 				[
 					SNew(SRichTextBlock)
-					.DecoratorStyleSet(&FEditorStyle::Get())
+					.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Name</>"))
 				]
 
@@ -194,7 +194,7 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 				.FillWidth(1)
 				[
 					SNew(SRichTextBlock)
-					.DecoratorStyleSet(&FEditorStyle::Get())
+					.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 					.Text(FText::FromString("<RichTextBlock.BoldHighlight>Id</>"))
 				]
 
@@ -202,7 +202,7 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 				.FillWidth(0.3)
 				[
 					SNew(SRichTextBlock)
-					.DecoratorStyleSet(&FEditorStyle::Get())
+					.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 					.Text(FText::FromString("<RichTextBlock.BoldHighlight>Version Number</>"))
 				]
 
@@ -210,14 +210,14 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 				.FillWidth(0.3)
 				[
 					SNew(SRichTextBlock)
-					.DecoratorStyleSet(&FEditorStyle::Get())
+					.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 					.Text(FText::FromString("<RichTextBlock.BoldHighlight>Version Id</>"))
 				]
 
 				+ SHeaderRow::Column("open")
 				[
 					SNew(SRichTextBlock)
-					.DecoratorStyleSet(&FEditorStyle::Get())
+					.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 					.Text(FText::FromString("<RichTextBlock.BoldHighlight>Scene Explorer</>"))
 				]
 			)

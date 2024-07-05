@@ -439,6 +439,9 @@ public:
 	FSlateBrush* BoxCheckIcon;
 	IMeshUtilities& MeshUtilities = FModuleManager::Get().LoadModuleChecked<IMeshUtilities>("MeshUtilities");
 
+	static const FSlateBrush* GetBrush(FName brushName);
+	static const ISlateStyle& GetSlateStyle();
+
 	//notifications
 	void ShowNotification(FString Message, bool bSuccessful = true);
 };

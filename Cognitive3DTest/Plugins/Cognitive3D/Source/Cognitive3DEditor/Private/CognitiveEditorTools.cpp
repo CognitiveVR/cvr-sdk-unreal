@@ -1995,11 +1995,7 @@ bool FCognitiveEditorTools::HasExportedAnyDynamicMeshes() const
 
 	FString filesStartingWith = TEXT("");
 	TArray<FString> filesInDirectory = GetAllFilesInDirectory(BaseExportDirectory + "/dynamics", true, filesStartingWith, filesStartingWith, "", false);
-	for (int32 i = 0; i < filesInDirectory.Num(); i++)
-	{
-		return true;
-	}
-	return false;
+	return filesInDirectory.Num() > 0;
 }
 
 bool FCognitiveEditorTools::HasSetDynamicExportDirectoryHasSceneId() const
@@ -3154,16 +3150,29 @@ void FCognitiveEditorTools::ShowNotification(FString Message, bool bSuccessful)
 	if (bSuccessful)
 	{
 
-#if ENGINE_MAJOR_VERSION == 4
-		const FSlateBrush* NotifIcon = FEditorStyle::GetBrush("SettingsEditor.GoodIcon");
-#elif ENGINE_MAJOR_VERSION == 5
-		const FSlateBrush* NotifIcon = FAppStyle::GetBrush("SettingsEditor.GoodIcon");
-#endif
-
+		const FSlateBrush* NotifIcon = GetBrush(FName("SettingsEditor.GoodIcon"));
 		NotifyInfo.Image = NotifIcon;
 	}
 	
 	FSlateNotificationManager::Get().AddNotification(NotifyInfo);
+}
+
+const FSlateBrush* FCognitiveEditorTools::GetBrush(FName brushName)
+{
+#if ENGINE_MAJOR_VERSION == 4
+	return FEditorStyle::GetBrush(brushName);
+#elif ENGINE_MAJOR_VERSION == 5
+	return FAppStyle::GetBrush(brushName);
+#endif
+}
+
+const ISlateStyle& FCognitiveEditorTools::GetSlateStyle()
+{
+#if ENGINE_MAJOR_VERSION == 4
+	return FEditorStyle::Get();
+#elif ENGINE_MAJOR_VERSION == 5
+	return FAppStyle::Get();
+#endif
 }
 
 void FCognitiveEditorTools::WizardUpload()
