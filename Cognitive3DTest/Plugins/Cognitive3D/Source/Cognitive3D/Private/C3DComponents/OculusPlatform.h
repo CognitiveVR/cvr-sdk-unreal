@@ -37,6 +37,9 @@ public:
 
 	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
 
+	UPROPERTY(EditAnywhere, Category = "Oculus Platform")
+		bool UseOculusIdAsParticipant = true;
+
 	UFUNCTION()
 		void OnSessionBegin();
 	UFUNCTION()
@@ -53,9 +56,6 @@ public:
 
 	//Handles successful access token data retrieval
 	void HandleAccessToekenRetrieved(const ovrMessageHandle Message);
-
-	UPROPERTY(EditAnywhere, Category = "Oculus Platform")
-		bool UseOculusIdAsParticipant = true;
 
 	// User ID to retrieve
 	ovrID CurrentUserID;
