@@ -41,6 +41,7 @@ class COGNITIVE3D_API UDynamicObject : public USceneComponent
 
 private:
 
+	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider;
 	FDynamicObjectManager* dynamicObjectManager;
 	float currentTime = 0;
 	TSharedPtr<FDynamicObjectId> ObjectID;
