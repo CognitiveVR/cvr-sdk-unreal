@@ -2439,7 +2439,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		GLog->Log("FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode()));
 	else
 	{
-		GLog->Log("FCognitiveEditorTools::SceneVersionResponse failed to connect");
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::SceneVersionResponse failed to connect"));
 		WizardUploading = false;
 		WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse failed to connect";
 		WizardUploadResponseCode = 0;
@@ -2451,7 +2451,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 	if (WizardUploadResponseCode >= 500)
 	{
 		//internal server error
-		GLog->Log("FCognitiveTools::SceneVersionResponse 500-ish internal server error");
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::SceneVersionResponse %d, internal server error"), Response->GetResponseCode());
 		WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode());
 		return;
 	}
@@ -2461,14 +2461,14 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		if (WizardUploadResponseCode == 401)
 		{
 			//not authorized or scene id does not exist
-			GLog->Log("FCognitiveTools::SceneVersionResponse not authorized or scene doesn't exist!");
+			UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::SceneVersionResponse error code %d, not authorized or scene doesn't exist!"), Response->GetResponseCode());
 			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode()) + "\nThe Developer Key: " + DeveloperKey + " does not have access to the scene";
 			return;
 		}
 		else
 		{
 			//maybe no scene?
-			GLog->Log("FCognitiveTools::SceneVersionResponse some error. Maybe no scene?");
+			UE_LOG(LogTemp, Error, TEXT("FCognitiveTools::SceneVersionResponse error code %d. Maybe no scene?"), Response->GetResponseCode());
 			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode());
 			return;
 		}
