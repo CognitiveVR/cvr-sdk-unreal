@@ -344,6 +344,11 @@ public:
 	//returns SceneData array
 	TArray<TSharedPtr<FEditorSceneData>> GetSceneData() const;
 
+	//Third Party SDKs
+	TArray<TSharedPtr<FString>> ThirdPartySDKData;
+	TArray<TSharedPtr<FString>> GetThirdPartySDKData() const;
+	void ReadThirdPartySDKData();
+
 	FReply OpenSceneInBrowser(FString sceneid);
 	FReply OpenCurrentSceneInBrowser();
 	bool HasDeveloperKey() const;

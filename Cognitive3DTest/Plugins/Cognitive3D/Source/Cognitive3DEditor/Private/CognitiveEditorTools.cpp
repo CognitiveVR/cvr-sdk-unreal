@@ -2348,6 +2348,50 @@ FReply FCognitiveEditorTools::OpenURL(FString url)
 	return FReply::Handled();
 }
 
+TArray<TSharedPtr<FString>> FCognitiveEditorTools::GetThirdPartySDKData() const
+{
+	return ThirdPartySDKData;
+}
+
+void FCognitiveEditorTools::ReadThirdPartySDKData()
+{
+	//check definitions that are active in the runtime build.cs file then fill ThirdPartySDKData array accordingly
+	ThirdPartySDKData.Empty();
+
+#ifdef INCLUDE_OCULUS_PLUGIN
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("MetaXR/OculusVR Enabled"))));
+#endif // INCLUDE_OCULUS_PLUGIN
+
+#ifdef INCLUDE_OCULUS_PLATFORM
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("MetaXR Platform Enabled"))));
+#endif // INCLUDE_OCULUS_PLATFORM
+
+#ifdef INCLUDE_OCULUS_PASSTHROUGH
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("MetaXR Passthrough Enabled"))));
+#endif // INCLUDE_OCULUS_PASSTHROUGH
+
+#ifdef INCLUDE_PICO_PLUGIN
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("PICOXR Enabled"))));
+#endif // INCLUDE_PICO_PLUGIN
+
+#ifdef OPENXR_EYETRACKING
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("OpenXR Eye Tracking Enabled"))));
+#endif // OPENXR_EYETRACKING
+
+#ifdef WAVEVR_EYETRACKING
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("WaveVR Eye Tracking Enabled"))));
+#endif // WAVEVR_EYETRACKING
+
+#ifdef SRANIPAL_1_2_API
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("SRanipal Enabled"))));
+#endif // SRANIPAL_1_2_API || SRANIPAL_1_3_API
+
+#ifdef SRANIPAL_1_3_API
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("SRanipal Enabled"))));
+#endif // SRANIPAL_1_3_API
+
+}
+
 FReply FCognitiveEditorTools::OpenSceneInBrowser(FString sceneid)
 {
 	FString url = SceneExplorerOpen(sceneid);

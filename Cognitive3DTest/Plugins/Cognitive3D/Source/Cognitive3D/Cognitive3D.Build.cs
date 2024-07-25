@@ -60,33 +60,24 @@ namespace UnrealBuildTool.Rules
 
 			PublicDependencyModuleNames.Add("DeveloperSettings");
 
+			//uncomment the following line to enable Oculus/Meta platform functionality. Uses OculusVR for UE4 and OculusXR (MetaXR) for UE5.
+			//MetaXRPlugin();
 
-			//uncomment these lines to enable Oculus/Meta platform functionality. Uses OculusVR for UE4 and OculusXR (MetaXR) for UE5.
-			//PublicDefinitions.Add("INCLUDE_OCULUS_PLUGIN");
-			//PublicDependencyModuleNames.AddRange(new string[] { "OculusHMD" });
+			//Uncomment the following line to enable Oculus Passthrough features. UE 5.2 onward (MUST ALSO ENABLE OCULUS PLUGIN ABOVE)
+			//MetaXRPassthrough();
 
+			//Uncomment the following line to enable Oculus Platform features
+			//MetaXRPlatform();
 
-			//Oculus Platform features
-			//PublicDefinitions.Add("INCLUDE_OCULUS_PLATFORM");
-			//PublicDependencyModuleNames.AddRange(new string[] { "OVRPlatform", "OVRPlatformSDK" });
-			//PublicIncludePathModuleNames.AddRange(new string[] { "OVRPlatformSDK" });
-			//PublicIncludePaths.Add(System.IO.Path.GetFullPath(Target.RelativeEnginePath) + "/Plugins/Marketplace/MetaXRPlatform/Source/OVRPlatformSDK/LibOVRPlatform/include/Windows");
-			//PrivateIncludePaths.Add(System.IO.Path.GetFullPath(Target.RelativeEnginePath) + "/Plugins/Marketplace/MetaXRPlatform/Source/OVRPlatform/Private");
+			//Uncomment the following line to enable PICOXR SDK features
+			//PICOXR();
 
-			//UNCOMMENT THESE LINES TO ENABLE PASSTHROUGH FEATURES. UE 5.2 onward (MUST ALSO ENABLE OCULUS PLUGIN ABOVE)
-			//PublicDefinitions.Add("INCLUDE_OCULUS_PASSTHROUGH");
-			//PublicDependencyModuleNames.AddRange(new string[] { "OculusXRPassthrough" });
-
-			//PublicDefinitions.Add("INCLUDE_PICO_PLUGIN");
-			//PublicDependencyModuleNames.AddRange(new string[] { "PICOXRHMD" });
-
-			//uncomment this to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
-			//PublicDefinitions.Add("OPENXR_EYETRACKING");
+			//Uncomment the following line to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
+			//OpenXREyeTracking();
 
 
-			//uncomment these lines to enable Vive WaveVR eye tracking support
-			//PublicDefinitions.Add("WAVEVR_EYETRACKING");
-			//PublicDependencyModuleNames.Add("WaveVR");
+			//Uncomment the following line to enable Vive WaveVR eye tracking support
+			//WaveVREyeTracking();
 
 			var pluginsDirectory = System.IO.Path.Combine(Target.ProjectFile.Directory.ToString(),"Plugins");
 		
@@ -196,6 +187,44 @@ namespace UnrealBuildTool.Rules
 					}
 				);
 			}
+		}
+
+		void MetaXRPlugin()
+        {
+			PublicDefinitions.Add("INCLUDE_OCULUS_PLUGIN");
+			PublicDependencyModuleNames.AddRange(new string[] { "OculusHMD" });
+		}
+
+		void MetaXRPassthrough()
+		{
+			PublicDefinitions.Add("INCLUDE_OCULUS_PASSTHROUGH");
+			PublicDependencyModuleNames.AddRange(new string[] { "OculusXRPassthrough" });
+		}
+
+		void MetaXRPlatform()
+        {
+			PublicDefinitions.Add("INCLUDE_OCULUS_PLATFORM");
+			PublicDependencyModuleNames.AddRange(new string[] { "OVRPlatform", "OVRPlatformSDK" });
+			PublicIncludePathModuleNames.AddRange(new string[] { "OVRPlatformSDK" });
+			PublicIncludePaths.Add(System.IO.Path.GetFullPath(Target.RelativeEnginePath) + "/Plugins/Marketplace/MetaXRPlatform/Source/OVRPlatformSDK/LibOVRPlatform/include/Windows");
+			PrivateIncludePaths.Add(System.IO.Path.GetFullPath(Target.RelativeEnginePath) + "/Plugins/Marketplace/MetaXRPlatform/Source/OVRPlatform/Private");
+		}
+
+		void PICOXR()
+        {
+			PublicDefinitions.Add("INCLUDE_PICO_PLUGIN");
+			PublicDependencyModuleNames.AddRange(new string[] { "PICOXRHMD" });
+		}
+
+		void OpenXREyeTracking()
+        {
+			PublicDefinitions.Add("OPENXR_EYETRACKING");
+		}
+
+		void WaveVREyeTracking()
+        {
+			PublicDefinitions.Add("WAVEVR_EYETRACKING");
+			PublicDependencyModuleNames.Add("WaveVR");
 		}
 	}
 }
