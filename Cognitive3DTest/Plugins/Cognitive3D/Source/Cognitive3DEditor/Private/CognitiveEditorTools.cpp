@@ -103,7 +103,7 @@ FString FCognitiveEditorTools::SceneExplorerOpen(FString sceneid)
 		Gateway = "data.cognitive3d.com";
 	}
 	FString split = Gateway.RightChop(5);
-	FString url = "https://viewer." + split + "/scene/" + sceneid;
+	FString url = "https://viewer2." + split + "/scene/" + sceneid;
 	return url;
 }
 
