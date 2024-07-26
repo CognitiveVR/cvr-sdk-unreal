@@ -160,6 +160,19 @@ public:
 		}
 	}
 
+	ECheckBoxState GetExportDynamicsCheckbox() const;
+	void OnChangeExportDynamicsCheckbox(ECheckBoxState newstate)
+	{
+		if (newstate == ECheckBoxState::Checked)
+		{
+			FCognitiveEditorTools::GetInstance()->ExportDynamicsWithScene = true;
+		}
+		else
+		{
+			FCognitiveEditorTools::GetInstance()->ExportDynamicsWithScene = false;
+		}
+	}
+
 	void OnExportPathChanged(const FText& Text);
 
 	/// <summary>

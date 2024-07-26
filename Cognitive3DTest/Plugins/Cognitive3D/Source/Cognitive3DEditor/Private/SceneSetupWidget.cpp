@@ -495,6 +495,31 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 
+			+ SVerticalBox::Slot() ////
+			.HAlign(HAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.HAlign(HAlign_Left)
+				[
+					SNew(SCheckBox) ////
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				.IsChecked(this, &SSceneSetupWidget::GetExportDynamicsCheckbox)
+				.OnCheckStateChanged(this, &SSceneSetupWidget::OnChangeExportDynamicsCheckbox)
+				]
+				+ SHorizontalBox::Slot()
+				.HAlign(HAlign_Left)
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				.Text(FText::FromString("Export Dynamic Objects alongside Scene Geometry."))
+				]
+			]
+
 			+ SVerticalBox::Slot()
 			.Padding(0, 0, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
@@ -1015,6 +1040,12 @@ ECheckBoxState SSceneSetupWidget::GetOnlyExportSelectedCheckbox() const
 ECheckBoxState SSceneSetupWidget::GetCompressFilesCheckbox() const
 {
 	if (FCognitiveEditorTools::GetInstance()->CompressExportedFiles)return ECheckBoxState::Checked;
+	return ECheckBoxState::Unchecked;
+}
+
+ECheckBoxState SSceneSetupWidget::GetExportDynamicsCheckbox() const
+{
+	if (FCognitiveEditorTools::GetInstance()->ExportDynamicsWithScene)return ECheckBoxState::Checked;
 	return ECheckBoxState::Unchecked;
 }
 

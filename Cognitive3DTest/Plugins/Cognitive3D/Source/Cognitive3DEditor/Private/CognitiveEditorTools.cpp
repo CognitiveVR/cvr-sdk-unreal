@@ -2939,6 +2939,12 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 		CompressTexturesInExportFolder(FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory(), MaxSize);
 	}
 
+	if (ExportDynamicsWithScene)
+	{
+		//ExportNewDynamics(); //maybe this for unexported dynamics? use its logic to count unexported dynamics?
+		ExportAllDynamics();
+	}
+
 	//check that the map was actually exported and generated temporary files
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 	if (!PlatformFile.FileExists(*ExportedSceneFile2))
