@@ -1596,6 +1596,61 @@ int32 FCognitiveEditorTools::GetDynamicObjectExportedCount()
 	return folders.Num();
 }
 
+int32 FCognitiveEditorTools::CountUnexportedDynamics()
+{
+	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
+
+	if (!tempworld)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorToolsCustomization::ExportDynamics world is null"));
+		return -1;
+	}
+
+	if (BaseExportDirectory.Len() == 0)
+	{
+		GLog->Log("base directory not selected");
+		return -1;
+	}
+
+	TArray<FString> meshNames;
+	TArray<UDynamicObject*> exportObjects;
+
+	//get all dynamic object components in scene. add names/pointers to array
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		for (UActorComponent* actorComponent : ActorItr->GetComponents())
+		{
+			if (actorComponent->IsA(UDynamicObject::StaticClass()))
+			{
+				UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+				if (dynamicComponent == NULL)
+				{
+					continue;
+				}
+				FString path = GetDynamicsExportDirectory() + "/" + dynamicComponent->MeshName + "/" + dynamicComponent->MeshName;
+				FString gltfpath = path + ".gltf";
+				if (FPaths::FileExists(*gltfpath))
+				{
+					//already exported
+					continue;
+				}
+				if (!meshNames.Contains(dynamicComponent->MeshName))
+				{
+					exportObjects.Add(dynamicComponent);
+					meshNames.Add(dynamicComponent->MeshName);
+				}
+			}
+		}
+	}
+
+	if (meshNames.Num() == 0)
+	{
+		return 0;
+	}
+
+	return meshNames.Num();
+}
+
 void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, FString expectedResponseType)
 {
 	FString filesStartingWith = TEXT("");

@@ -507,16 +507,16 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.HAlign(HAlign_Left)
 				[
 					SNew(SCheckBox) ////
-					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-				.IsChecked(this, &SSceneSetupWidget::GetExportDynamicsCheckbox)
-				.OnCheckStateChanged(this, &SSceneSetupWidget::OnChangeExportDynamicsCheckbox)
+					.Visibility(this, &SSceneSetupWidget::IsExportDynamicsVisible)
+					.IsChecked(this, &SSceneSetupWidget::GetExportDynamicsCheckbox)
+					.OnCheckStateChanged(this, &SSceneSetupWidget::OnChangeExportDynamicsCheckbox)
 				]
-				+ SHorizontalBox::Slot()
-				.HAlign(HAlign_Left)
+					+ SHorizontalBox::Slot()
+					.HAlign(HAlign_Left)
 				[
 					SNew(STextBlock)
-					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-				.Text(FText::FromString("Export Dynamic Objects alongside Scene Geometry."))
+					.Visibility(this, &SSceneSetupWidget::IsExportDynamicsVisible)
+					.Text(this, &SSceneSetupWidget::ExportDynamicsText)
 				]
 			]
 
@@ -1137,6 +1137,10 @@ EVisibility SSceneSetupWidget::IsUploadChecklistVisible() const
 {
 	return CurrentPageEnum == ESceneSetupPage::UploadChecklist ? EVisibility::Visible : EVisibility::Collapsed;
 }
+EVisibility SSceneSetupWidget::IsExportDynamicsVisible() const
+{
+	return FCognitiveEditorTools::GetInstance()->CountUnexportedDynamics() > 0 ? EVisibility::Visible : EVisibility::Collapsed;
+}
 EVisibility SSceneSetupWidget::IsCompleteVisible() const
 {
 	return CurrentPageEnum == ESceneSetupPage::Complete ? EVisibility::Visible : EVisibility::Collapsed;
@@ -1187,6 +1191,12 @@ FText SSceneSetupWidget::ExportButtonText()const
 		return FText::FromString(TEXT("Export All"));
 	}
 	return FText::FromString(TEXT("Export All"));
+}
+
+FText SSceneSetupWidget::ExportDynamicsText() const
+{
+	FString DynamicsText = FString::Printf(TEXT("Export %d unexported dynamics alongside the scene geometry"), FCognitiveEditorTools::GetInstance()->CountUnexportedDynamics());
+	return FText::FromString(DynamicsText);
 }
 
 

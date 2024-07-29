@@ -86,6 +86,7 @@ public:
 	EVisibility IsControllerVisible() const;
 	EVisibility IsExportVisible() const;
 	EVisibility IsUploadChecklistVisible() const;
+	EVisibility IsExportDynamicsVisible() const;
 	EVisibility IsUploadProgressVisible() const;
 	EVisibility IsCompleteVisible() const;
 	EVisibility IsUploadComplete() const;
@@ -94,6 +95,7 @@ public:
 	EVisibility IsNotOnlyExportSelected() const;
 
 	FText ExportButtonText() const;
+	FText ExportDynamicsText() const;
 
 	EVisibility IsNewSceneUpload() const;
 	EVisibility IsSceneVersionUpload() const;
