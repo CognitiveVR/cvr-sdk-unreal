@@ -95,6 +95,7 @@ public:
 	EVisibility IsNotOnlyExportSelected() const;
 
 	FText ExportButtonText() const;
+	FText DynamicsStatusTest() const;
 	FText ExportDynamicsText() const;
 
 	EVisibility IsNewSceneUpload() const;

@@ -481,7 +481,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				.AutoWidth()
 				.HAlign(HAlign_Left)
 				[
-					SNew(SCheckBox) ////
+					SNew(SCheckBox)
 					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 				.IsChecked(this, &SSceneSetupWidget::GetCompressFilesCheckbox)
 				.OnCheckStateChanged(this, &SSceneSetupWidget::OnChangeCompressFilesCheckbox)
@@ -495,18 +495,35 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 
-			+ SVerticalBox::Slot() ////
+			+ SVerticalBox::Slot()
 			.HAlign(HAlign_Center)
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
 			[
 				SNew(SHorizontalBox)
 				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				+SHorizontalBox::Slot()
+				.HAlign(HAlign_Left)
+				[
+					SNew(STextBlock)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+					.Text(this, &SSceneSetupWidget::DynamicsStatusTest)
+				]
+			]
+
+			+ SVerticalBox::Slot()
+			.HAlign(HAlign_Center)
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				.HAlign(HAlign_Left)
 				[
-					SNew(SCheckBox) ////
+					SNew(SCheckBox)
 					.Visibility(this, &SSceneSetupWidget::IsExportDynamicsVisible)
 					.IsChecked(this, &SSceneSetupWidget::GetExportDynamicsCheckbox)
 					.OnCheckStateChanged(this, &SSceneSetupWidget::OnChangeExportDynamicsCheckbox)
@@ -1193,9 +1210,15 @@ FText SSceneSetupWidget::ExportButtonText()const
 	return FText::FromString(TEXT("Export All"));
 }
 
+FText SSceneSetupWidget::DynamicsStatusTest() const
+{
+	FString DynamicsText = FString::Printf(TEXT("%d out of %d dynamic objects in this scene have been exported."), FCognitiveEditorTools::GetInstance()->CountDynamicObjectsInScene() - FCognitiveEditorTools::GetInstance()->CountUnexportedDynamics(), FCognitiveEditorTools::GetInstance()->CountDynamicObjectsInScene());
+	return FText::FromString(DynamicsText);
+}
+
 FText SSceneSetupWidget::ExportDynamicsText() const
 {
-	FString DynamicsText = FString::Printf(TEXT("Export %d unexported dynamics alongside the scene geometry"), FCognitiveEditorTools::GetInstance()->CountUnexportedDynamics());
+	FString DynamicsText = FString::Printf(TEXT("Export %d un-exported dynamic objects alongside the scene geometry."), FCognitiveEditorTools::GetInstance()->CountUnexportedDynamics());
 	return FText::FromString(DynamicsText);
 }
 
