@@ -16,39 +16,6 @@ namespace UnrealBuildTool.Rules
 			PublicDependencyModuleNames.Add("DeveloperSettings");
 			pluginsDirectory = System.IO.Path.Combine(Target.ProjectFile.Directory.ToString(), "Plugins");
 
-			//uncomment the following line to enable Oculus/Meta platform functionality. Uses OculusVR for UE4 and OculusXR (MetaXR) for UE5.
-			//MetaXRPlugin();
-
-			//Uncomment the following line to enable Oculus Passthrough features. UE 5.2 onward (MUST ALSO ENABLE OCULUS PLUGIN ABOVE)
-			//MetaXRPassthrough();
-
-			//Uncomment the following line to enable Oculus Platform features
-			//MetaXRPlatform();
-
-			//Uncomment the following line to enable PICOXR SDK features
-			//PICOXR();
-
-			//Uncomment the following line to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
-			//OpenXREyeTracking();
-
-			//Uncomment the following line to enable Vive WaveVR eye tracking support
-			//WaveVREyeTracking();
-
-			//Varjo (up to and including version 3.0.0)
-			//void Varjo();
-
-			//TobiiEyeTracking
-			//void TobiiEyeTracking();
-
-			//Vive Pro Eye (SRanipal)
-			//void SRapnipalVivePro();
-
-			//Pico Neo 2 Eye
-			//void PicoMobile();
-
-			//HP Omnicept
-			//void HPGlia();
-
 			PublicIncludePathModuleNames.AddRange(
                 new string[] {
                     "Core",
@@ -95,6 +62,39 @@ namespace UnrealBuildTool.Rules
 					"EyeTracker"
 				}
 				);
+
+			//uncomment the following line to enable Oculus/Meta platform functionality. Uses OculusVR for UE4 and OculusXR (MetaXR) for UE5.
+			//MetaXRPlugin();
+
+			//Uncomment the following line to enable Oculus Passthrough features. UE 5.2 onward (MUST ALSO ENABLE OCULUS PLUGIN ABOVE)
+			//MetaXRPassthrough();
+
+			//Uncomment the following line to enable Oculus Platform features
+			//MetaXRPlatform();
+
+			//Uncomment the following line to enable PICOXR SDK features
+			//PICOXR();
+
+			//Uncomment the following line to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
+			//OpenXREyeTracking();
+
+			//Uncomment the following line to enable Vive WaveVR eye tracking support
+			//WaveVREyeTracking();
+
+			//Varjo (up to and including version 3.0.0)
+			//Varjo();
+
+			//TobiiEyeTracking
+			//TobiiEyeTracking();
+
+			//Vive Pro Eye (SRanipal)
+			//SRapnipalVivePro();
+
+			//Pico Neo 2 Eye
+			//PicoMobile();
+
+			//HP Omnicept
+			//HPGlia();
 
 			//this is all for runtime audio capture support
 			if (Target.Platform == UnrealTargetPlatform.Win64
