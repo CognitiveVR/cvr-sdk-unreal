@@ -86,6 +86,7 @@ public:
 	EVisibility IsControllerVisible() const;
 	EVisibility IsExportVisible() const;
 	EVisibility IsUploadChecklistVisible() const;
+	EVisibility IsExportDynamicsVisible() const;
 	EVisibility IsUploadProgressVisible() const;
 	EVisibility IsCompleteVisible() const;
 	EVisibility IsUploadComplete() const;
@@ -94,6 +95,8 @@ public:
 	EVisibility IsNotOnlyExportSelected() const;
 
 	FText ExportButtonText() const;
+	FText DynamicsStatusTest() const;
+	FText ExportDynamicsText() const;
 
 	EVisibility IsNewSceneUpload() const;
 	EVisibility IsSceneVersionUpload() const;
@@ -157,6 +160,19 @@ public:
 		else
 		{
 			FCognitiveEditorTools::GetInstance()->CompressExportedFiles = false;
+		}
+	}
+
+	ECheckBoxState GetExportDynamicsCheckbox() const;
+	void OnChangeExportDynamicsCheckbox(ECheckBoxState newstate)
+	{
+		if (newstate == ECheckBoxState::Checked)
+		{
+			FCognitiveEditorTools::GetInstance()->ExportDynamicsWithScene = true;
+		}
+		else
+		{
+			FCognitiveEditorTools::GetInstance()->ExportDynamicsWithScene = false;
 		}
 	}
 

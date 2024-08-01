@@ -179,6 +179,9 @@ public:
 	void CompressTexturesInExportFolder(const FString& ExportFolder, int32 MaxSize);
 	void CompressAndSaveTexture(const FString& SourcePath, const FString& DestinationPath, int32 MaxSize);
 
+	bool ExportDynamicsWithScene = false;
+	int32 CountUnexportedDynamics();
+
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
 
 	//dynamic objects
