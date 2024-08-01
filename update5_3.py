@@ -123,7 +123,7 @@ print (version)
 #do all the update stuff
 
 #1 comment out unsupport platform in build.cs
-replaceline(cwd+"/Plugins\Cognitive3D\Source\Cognitive3D\Cognitive3D.Build.cs","			|| Target.Platform == UnrealTargetPlatform.Win32","//			|| Target.Platform == UnrealTargetPlatform.Win32")
+replaceline(cwd+"/Plugins\Cognitive3D\Source\Cognitive3D\Cognitive3D.Build.cs","				|| Target.Platform == UnrealTargetPlatform.Win32","//				|| Target.Platform == UnrealTargetPlatform.Win32")
 
 #change definitions and oculus plugin include in build.cs
 replaceline(cwd+"/Plugins\Cognitive3D\Source\Cognitive3D\Cognitive3D.Build.cs","			PublicDependencyModuleNames.AddRange(new string[] { \"OculusHMD\" });","			PublicDependencyModuleNames.AddRange(new string[] { \"OculusXRHMD\" });")
