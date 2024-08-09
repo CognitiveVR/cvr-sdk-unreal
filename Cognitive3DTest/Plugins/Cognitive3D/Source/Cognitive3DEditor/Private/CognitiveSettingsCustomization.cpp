@@ -224,7 +224,7 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 		]
 	];
 
-
+	//gets data to autofill Account section
 	FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
 	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 	FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
@@ -244,6 +244,25 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 	GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, EngineIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, EditorIni);
 #endif
+
+
+	//section to check third party SDKs active in the runtime build.cs file
+	IDetailCategoryBuilder& ThirdPartyData = DetailBuilder.EditCategory(TEXT("Active third party SDKs"));
+
+	//populate ThirdPartySDKData array using this function call to use later in the list
+	FCognitiveEditorTools::GetInstance()->ReadThirdPartySDKData();
+
+	ThirdPartyData.AddCustomRow(FText::FromString("Currently active third party SDKs"))
+	[
+		SNew(SBox)
+		.HAlign(EHorizontalAlignment::HAlign_Center)
+		[
+			SNew(SListView<TSharedPtr<FString>>)
+			.ItemHeight(24)
+			.ListItemsSource(&FCognitiveEditorTools::GetInstance()->ThirdPartySDKData)
+			.OnGenerateRow(this, &ICognitiveSettingsCustomization::OnGenerateSDKListRow)
+		]
+	];
 }
 
 TSharedRef<ITableRow> ICognitiveSettingsCustomization::OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
@@ -288,6 +307,24 @@ TSharedRef<ITableRow> ICognitiveSettingsCustomization::OnGenerateWorkspaceRow(TS
 				.Text(FText::FromString("Open in Browser..."))
 				.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenSceneInBrowser,InItem->Id)
 			]
+		];
+}
+
+TSharedRef<ITableRow> ICognitiveSettingsCustomization::OnGenerateSDKListRow(TSharedPtr<FString> InItem, const TSharedRef<STableViewBase>& OwnerTable)
+{
+	return
+		SNew(SComboRow< TSharedPtr<FString> >, OwnerTable)
+		[
+			SNew(SBox)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			.VAlign(EVerticalAlignment::VAlign_Center)
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString(*InItem))
+			.Font(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Bold.ttf"), 12))
+			.Justification(ETextJustify::Center)
+		]
+	
 		];
 }
 

@@ -103,7 +103,7 @@ FString FCognitiveEditorTools::SceneExplorerOpen(FString sceneid)
 		Gateway = "data.cognitive3d.com";
 	}
 	FString split = Gateway.RightChop(5);
-	FString url = "https://viewer." + split + "/scene/" + sceneid;
+	FString url = "https://viewer2." + split + "/scene/" + sceneid;
 	return url;
 }
 
@@ -1596,6 +1596,61 @@ int32 FCognitiveEditorTools::GetDynamicObjectExportedCount()
 	return folders.Num();
 }
 
+int32 FCognitiveEditorTools::CountUnexportedDynamics()
+{
+	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
+
+	if (!tempworld)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorToolsCustomization::ExportDynamics world is null"));
+		return -1;
+	}
+
+	if (BaseExportDirectory.Len() == 0)
+	{
+		GLog->Log("base directory not selected");
+		return -1;
+	}
+
+	TArray<FString> meshNames;
+	TArray<UDynamicObject*> exportObjects;
+
+	//get all dynamic object components in scene. add names/pointers to array
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		for (UActorComponent* actorComponent : ActorItr->GetComponents())
+		{
+			if (actorComponent->IsA(UDynamicObject::StaticClass()))
+			{
+				UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+				if (dynamicComponent == NULL)
+				{
+					continue;
+				}
+				FString path = GetDynamicsExportDirectory() + "/" + dynamicComponent->MeshName + "/" + dynamicComponent->MeshName;
+				FString gltfpath = path + ".gltf";
+				if (FPaths::FileExists(*gltfpath))
+				{
+					//already exported
+					continue;
+				}
+				if (!meshNames.Contains(dynamicComponent->MeshName))
+				{
+					exportObjects.Add(dynamicComponent);
+					meshNames.Add(dynamicComponent->MeshName);
+				}
+			}
+		}
+	}
+
+	if (meshNames.Num() == 0)
+	{
+		return 0;
+	}
+
+	return meshNames.Num();
+}
+
 void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, FString expectedResponseType)
 {
 	FString filesStartingWith = TEXT("");
@@ -2348,6 +2403,67 @@ FReply FCognitiveEditorTools::OpenURL(FString url)
 	return FReply::Handled();
 }
 
+TArray<TSharedPtr<FString>> FCognitiveEditorTools::GetThirdPartySDKData() const
+{
+	return ThirdPartySDKData;
+}
+
+void FCognitiveEditorTools::ReadThirdPartySDKData()
+{
+	//check definitions that are active in the runtime build.cs file then fill ThirdPartySDKData array accordingly
+	ThirdPartySDKData.Empty();
+
+#ifdef INCLUDE_OCULUS_PLUGIN
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("MetaXR/OculusVR Enabled"))));
+#endif // INCLUDE_OCULUS_PLUGIN
+
+#ifdef INCLUDE_OCULUS_PLATFORM
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("MetaXR Platform Enabled"))));
+#endif // INCLUDE_OCULUS_PLATFORM
+
+#ifdef INCLUDE_OCULUS_PASSTHROUGH
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("MetaXR Passthrough Enabled"))));
+#endif // INCLUDE_OCULUS_PASSTHROUGH
+
+#ifdef INCLUDE_PICO_PLUGIN
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("PICOXR Enabled"))));
+#endif // INCLUDE_PICO_PLUGIN
+
+#ifdef OPENXR_EYETRACKING
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("OpenXR Eye Tracking Enabled"))));
+#endif // OPENXR_EYETRACKING
+
+#ifdef WAVEVR_EYETRACKING
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("WaveVR Eye Tracking Enabled"))));
+#endif // WAVEVR_EYETRACKING
+
+#ifdef SRANIPAL_1_2_API
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("SRanipal 1.2 Enabled"))));
+#endif // SRANIPAL_1_2_API || SRANIPAL_1_3_API
+
+#ifdef SRANIPAL_1_3_API
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("SRanipal 1.3 Enabled"))));
+#endif // SRANIPAL_1_3_API
+
+#ifdef TOBII_EYETRACKING_ACTIVE
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("Tobii VR Enabled"))));
+#endif // TOBII_EYETRACKING_ACTIVE
+
+#ifdef PICOMOBILE_API
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("Pico VR Enabled"))));
+#endif // PICOMOBILE_API
+
+#ifdef HPGLIA_API
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("HP Glia Enabled"))));
+#endif // HPGLIA_API
+
+#ifdef VARJOEYETRACKER_API
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("Varjo Enabled"))));
+#endif // VARJOEYETRACKER_API
+
+
+}
+
 FReply FCognitiveEditorTools::OpenSceneInBrowser(FString sceneid)
 {
 	FString url = SceneExplorerOpen(sceneid);
@@ -2439,7 +2555,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		GLog->Log("FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode()));
 	else
 	{
-		GLog->Log("FCognitiveEditorTools::SceneVersionResponse failed to connect");
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::SceneVersionResponse failed to connect"));
 		WizardUploading = false;
 		WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse failed to connect";
 		WizardUploadResponseCode = 0;
@@ -2451,7 +2567,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 	if (WizardUploadResponseCode >= 500)
 	{
 		//internal server error
-		GLog->Log("FCognitiveTools::SceneVersionResponse 500-ish internal server error");
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::SceneVersionResponse %d, internal server error"), Response->GetResponseCode());
 		WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode());
 		return;
 	}
@@ -2461,14 +2577,14 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		if (WizardUploadResponseCode == 401)
 		{
 			//not authorized or scene id does not exist
-			GLog->Log("FCognitiveTools::SceneVersionResponse not authorized or scene doesn't exist!");
+			UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::SceneVersionResponse error code %d, not authorized or scene doesn't exist!"), Response->GetResponseCode());
 			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode()) + "\nThe Developer Key: " + DeveloperKey + " does not have access to the scene";
 			return;
 		}
 		else
 		{
 			//maybe no scene?
-			GLog->Log("FCognitiveTools::SceneVersionResponse some error. Maybe no scene?");
+			UE_LOG(LogTemp, Error, TEXT("FCognitiveTools::SceneVersionResponse error code %d. Maybe no scene?"), Response->GetResponseCode());
 			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode());
 			return;
 		}
@@ -2937,6 +3053,12 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	{
 		int32 MaxSize = 1024; // Adjust the size as needed
 		CompressTexturesInExportFolder(FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory(), MaxSize);
+	}
+
+	if (ExportDynamicsWithScene)
+	{
+		//ExportNewDynamics(); //maybe this for unexported dynamics? use its logic to count unexported dynamics?
+		ExportAllDynamics();
 	}
 
 	//check that the map was actually exported and generated temporary files
