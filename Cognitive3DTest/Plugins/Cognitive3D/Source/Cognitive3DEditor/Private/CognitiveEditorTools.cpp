@@ -2383,12 +2383,29 @@ void FCognitiveEditorTools::ReadThirdPartySDKData()
 #endif // WAVEVR_EYETRACKING
 
 #ifdef SRANIPAL_1_2_API
-	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("SRanipal Enabled"))));
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("SRanipal 1.2 Enabled"))));
 #endif // SRANIPAL_1_2_API || SRANIPAL_1_3_API
 
 #ifdef SRANIPAL_1_3_API
-	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("SRanipal Enabled"))));
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("SRanipal 1.3 Enabled"))));
 #endif // SRANIPAL_1_3_API
+
+#ifdef TOBII_EYETRACKING_ACTIVE
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("Tobii VR Enabled"))));
+#endif // TOBII_EYETRACKING_ACTIVE
+
+#ifdef PICOMOBILE_API
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("Pico VR Enabled"))));
+#endif // PICOMOBILE_API
+
+#ifdef HPGLIA_API
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("HP Glia Enabled"))));
+#endif // HPGLIA_API
+
+#ifdef VARJOEYETRACKER_API
+	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("Varjo Enabled"))));
+#endif // VARJOEYETRACKER_API
+
 
 }
 
