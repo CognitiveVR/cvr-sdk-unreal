@@ -32,7 +32,8 @@ public:
 	TArray<TSharedPtr<FDynamicData>> GetSceneDynamics();
 
 	TSharedRef<ITableRow> OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable);
-
+	
+	TSharedRef<ITableRow> OnGenerateSDKListRow(TSharedPtr<FString> InItem, const TSharedRef<STableViewBase>& OwnerTable);
 
 	void OnChangedExcludeMesh(const FText& InNewValue);
 

@@ -35,7 +35,7 @@ void SDynamicObjectManagerWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr
 	{
 		SGenericDialogWidget::OpenDialog(FText::FromString("Your developer key has expired"), SNew(STextBlock).Text(FText::FromString("Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.")));
 
-		GLog->Log("Developer Key Response is invalid. Developer key may be invalid or expired. Check your internet connection");
+		UE_LOG(LogTemp, Error, TEXT("Developer Key Response is invalid. Developer key may be invalid or expired. Check your internet connection"));
 		return;
 	}
 
@@ -47,7 +47,7 @@ void SDynamicObjectManagerWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr
 	else
 	{
 		SGenericDialogWidget::OpenDialog(FText::FromString("Your developer key has expired"), SNew(STextBlock).Text(FText::FromString("Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.")));
-		GLog->Log("Developer Key Response Code is not 200. Developer key may be invalid or expired");
+		UE_LOG(LogTemp, Error, TEXT("Developer Key Response Code: %d. Developer key may be invalid or expired"), responseCode);
 	}
 }
 
@@ -74,7 +74,7 @@ void SDynamicObjectManagerWidget::GetDashboardManifest()
 	}
 	else
 	{
-		GLog->Log("SDynamicObjectManagerWidget::GetDashboardManifest failed. developer key missing");
+		UE_LOG(LogTemp, Error, TEXT("SDynamicObjectManagerWidget::GetDashboardManifest failed. developer key missing"));
 	}
 }
 
@@ -84,7 +84,7 @@ void SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived(FHttpReque
 	{
 		SGenericDialogWidget::OpenDialog(FText::FromString("Your developer key has expired"), SNew(STextBlock).Text(FText::FromString("Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.")));
 
-		GLog->Log("Developer Key Response is invalid. Developer key may be invalid or expired. Check your internet connection");
+		UE_LOG(LogTemp, Error, TEXT("Developer Key Response is invalid. Developer key may be invalid or expired. Check your internet connection"));
 		return;
 	}
 
@@ -98,13 +98,13 @@ void SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived(FHttpReque
 		}
 		else
 		{
-			GLog->Log("SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived failed to deserialize dynamic object list");
+			UE_LOG(LogTemp, Error, TEXT("SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived failed to deserialize dynamic object list"));
 			GLog->Log(content);
 		}
 	}
 	else
 	{
-		GLog->Log("SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived response code " + FString::FromInt(responseCode));
+		UE_LOG(LogTemp, Error, TEXT("SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived response code %d"), responseCode);
 	}
 }
 
@@ -404,8 +404,6 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 			}
 		}
 	}
-
-		
 	
 
 	//popup asking if meshes should be exported too

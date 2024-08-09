@@ -23,8 +23,7 @@ void SProjectSetupWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr Request
 {
 	if (Response.IsValid() == false)
 	{
-		SGenericDialogWidget::OpenDialog(FText::FromString("Your developer key has expired"), SNew(STextBlock).Text(FText::FromString("Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.")));
-		GLog->Log("Developer Key Response is invalid. Developer key may be invalid or expired. Check your internet connection");
+		GLog->Log("SProjectSetupWidget::OnDeveloperKeyResponseReceived invalid response");
 		return;
 	}
 
@@ -37,7 +36,7 @@ void SProjectSetupWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr Request
 	else
 	{
 		SGenericDialogWidget::OpenDialog(FText::FromString("Your developer key has expired"), SNew(STextBlock).Text(FText::FromString("Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.")));
-		GLog->Log("Developer Key Response Code is not 200. Developer key may be invalid or expired");
+		GLog->Log("Developer Key Response Code is "+FString::FromInt(responseCode)+". Developer key may be invalid or expired");
 	}
 }
 
@@ -49,7 +48,7 @@ void SProjectSetupWidget::FetchApplicationKey(FString developerKey)
 
 	FString url = FString("https://" + Gateway + "/v0/applicationKey");
 	HttpRequest->SetURL(url);
-	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
+	HttpRequest->SetVerb("GET");
 	FString AuthValue = "APIKEY:DEVELOPER " + FCognitiveEditorTools::GetInstance()->DeveloperKey;
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetHeader("Content-Type", "application/json");
@@ -59,11 +58,15 @@ void SProjectSetupWidget::FetchApplicationKey(FString developerKey)
 
 void SProjectSetupWidget::GetApplicationKeyResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	GLog->Log("SProjectSetupWidget::GetApplicationKeyResponse");
+	if (Response.IsValid() == false)
+	{
+		GLog->Log("SProjectSetupWidget::GetApplicationKeyResponse invalid response");
+		return;
+	}
 	int32 responseCode = Response->GetResponseCode();
 	if (responseCode != 200)
 	{
-		GLog->Log("Developer Key Response Code is not 200. Developer key may be invalid or expired");
+		GLog->Log("Application Key Response Code is " + FString::FromInt(responseCode));
 		return;
 	}
 	
@@ -93,7 +96,7 @@ void SProjectSetupWidget::FetchOrganizationDetails(FString developerKey)
 
 	FString url = FString("https://" + Gateway + "/v0/subscriptions");
 	HttpRequest->SetURL(url);
-	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
+	HttpRequest->SetVerb("GET");
 	FString AuthValue = "APIKEY:DEVELOPER " + FCognitiveEditorTools::GetInstance()->DeveloperKey;
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetHeader("Content-Type", "application/json");
@@ -103,7 +106,18 @@ void SProjectSetupWidget::FetchOrganizationDetails(FString developerKey)
 
 void SProjectSetupWidget::GetOrganizationDetailsResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	if (Response->GetResponseCode() != 200) { return; }
+	if (Response.IsValid() == false)
+	{
+		GLog->Log("SProjectSetupWidget::GetOrganizationDetailsResponse invalid response");
+		return;
+	}
+
+	int32 responseCode = Response->GetResponseCode();
+	if (responseCode != 200)
+	{
+		GLog->Log("Organization Details Response Code is " + FString::FromInt(responseCode));
+		return;
+	}
 
 	auto content = Response->GetContentAsString();
 	FOrganizationDataResponse responseObject;
@@ -112,7 +126,7 @@ void SProjectSetupWidget::GetOrganizationDetailsResponse(FHttpRequestPtr Request
 
 	if (responseObject.subscriptions.Num() == 0)
 	{
-		GLog->Log("no subscriptions");
+		GLog->Log("No Cognitive3D Subscription");
 	}
 	else
 	{
