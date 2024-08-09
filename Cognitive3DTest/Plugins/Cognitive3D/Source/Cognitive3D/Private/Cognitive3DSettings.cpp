@@ -12,7 +12,7 @@ UCognitive3DSettings::UCognitive3DSettings(const FObjectInitializer& ObjectIniti
 	: Super(ObjectInitializer)
 {
 	SettingsDisplayName = LOCTEXT("SettingsDisplayName", "Cognitive 3D");
-	SettingsTooltip = LOCTEXT("SettingsTooltip", "Cognitive VR analytics configuration settings");
+	SettingsTooltip = LOCTEXT("SettingsTooltip", "Cognitive 3D analytics configuration settings");
 }
 
 void UCognitive3DSettings::ReadConfigSettings()
