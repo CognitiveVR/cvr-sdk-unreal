@@ -193,6 +193,10 @@ public:
 	EVisibility GetAppendedInputsFoundVisibility() const;
 	EVisibility GetAppendedInputsFoundHidden() const;
 
+	//
+	EVisibility GetDefaultInputClassEnhanced() const;
+	FText GetInputClassText() const;
+
 	FText GetDynamicObjectCountToUploadText() const;
 	FText GetSceneVersionToUploadText() const;
 };
