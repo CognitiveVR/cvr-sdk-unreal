@@ -190,8 +190,6 @@ private:
 	void InitializeEnhancedInput(APlayerController* PlayerController);
 
 	//input callbacks
-	void TestCallback(const FInputActionValue& Value);
-
 public:
 
 	void LeftFaceButtonOnePressed();

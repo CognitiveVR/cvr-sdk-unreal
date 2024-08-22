@@ -22,14 +22,11 @@ void UEnhancedInputTracker::BeginPlay()
 
 	GEngine->GetAllLocalPlayerControllers(controllers);
 
-	UE_LOG(LogTemp, Warning, TEXT("BeginPlay called"));
-
 	if (controllers.Num() > 0)
 	{
 		APlayerController* PlayerController = controllers[0];
 		if (PlayerController)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("PlayerController found: %s"), *PlayerController->GetName());
 			InitializeEnhancedInput(PlayerController);
 		}
 		else
@@ -84,7 +81,6 @@ void UEnhancedInputTracker::TickComponent(float DeltaTime, ELevelTick TickType, 
 
 void UEnhancedInputTracker::FindControllers()
 {
-	UE_LOG(LogTemp, Warning, TEXT("EnhancedInputTracker.cpp searching controllers"));
 	for (TObjectIterator<UMotionControllerComponent> Itr; Itr; ++Itr)
 	{
 		UMotionControllerComponent* Component = *Itr;
@@ -94,21 +90,17 @@ void UEnhancedInputTracker::FindControllers()
 
 		if (LeftHand == NULL && Component->GetTrackingSource() == EControllerHand::Left)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("EnhancedInputTracker.cpp found left"));
 			TArray<USceneComponent*> childComponents;
 			Component->GetChildrenComponents(true, childComponents);
 
 			//UDynamicObject* dyn = NULL;
 			for (auto& Elem : childComponents)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("EnhancedInputTracker.cpp searching child components left"));
 				FString elemName = Elem->GetName();
 				FString elemClassName = Elem->GetClass()->GetName();
-				UE_LOG(LogTemp, Warning, TEXT("EnhancedInputTracker.cpp child components name: %s, type: %s"), *elemName, *elemClassName);
 				UDynamicObject* dyn = Cast<UDynamicObject>(Elem);
 				if (dyn != NULL)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("EnhancedInputTracker.cpp found dynamic left"));
 					if (!dyn->IsController) { continue; }
 
 					if (dyn->ControllerInputImageName == "oculustouchleft")
@@ -143,7 +135,6 @@ void UEnhancedInputTracker::FindControllers()
 					}
 					else if (dyn->ControllerInputImageName == "oculusquesttouchleft")
 					{
-						UE_LOG(LogTemp, Warning, TEXT("EnhancedInputTracker.cpp assigned quest controller left"));
 						ControllerType = EC3DControllerType::Quest2;
 						LeftHand = dyn;
 					}
@@ -157,21 +148,17 @@ void UEnhancedInputTracker::FindControllers()
 		}
 		else if (RightHand == NULL && Component->GetTrackingSource() == EControllerHand::Right)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("EnhancedInputTracker.cpp found right"));
 			TArray<USceneComponent*> childComponents;
 			Component->GetChildrenComponents(true, childComponents);
 
 			//UDynamicObject* dyn = NULL;
 			for (auto& Elem : childComponents)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("EnhancedInputTracker.cpp searching child components right"));
 				FString elemName = Elem->GetName();
 				FString elemClassName = Elem->GetClass()->GetName();
-				UE_LOG(LogTemp, Warning, TEXT("EnhancedInputTracker.cpp child components name: %s, type: %s"), *elemName, *elemClassName);
 				UDynamicObject* dyn = Cast<UDynamicObject>(Elem);
 				if (dyn != NULL)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("EnhancedInputTracker.cpp found dynamic right"));
 					if (!dyn->IsController) { continue; }
 
 					if (dyn->ControllerInputImageName == "oculustouchright")
@@ -206,7 +193,6 @@ void UEnhancedInputTracker::FindControllers()
 					}
 					else if (dyn->ControllerInputImageName == "oculusquesttouchright")
 					{
-						UE_LOG(LogTemp, Warning, TEXT("EnhancedInputTracker.cpp assigned quest controller right"));
 						ControllerType = EC3DControllerType::Quest2;
 						RightHand = dyn;
 					}
@@ -518,15 +504,7 @@ void UEnhancedInputTracker::AppendInputState(const bool isRight, FControllerInpu
 
 void UEnhancedInputTracker::InitializeEnhancedInput(APlayerController* PlayerController)
 {
-	UE_LOG(LogTemp, Warning, TEXT("initializing enhanced input"));
 	// Create and configure input actions
-
-	/*
-	MoveRightAction = NewObject<UInputAction>(this);
-	MoveRightAction->ValueType = EInputActionValueType::Axis1D;
-	MoveRightAction->Triggers.Add(NewObject<UInputTriggerPressed>(this));
-	MoveRightAction->Modifiers.Add(NewObject<UInputModifierDeadZone>(this));
-	*/
 
 	C3D_LeftMenuButton = NewObject<UInputAction>(this);
 	C3D_LeftMenuButton->ValueType = EInputActionValueType::Boolean;
@@ -997,12 +975,6 @@ void UEnhancedInputTracker::InitializeEnhancedInput(APlayerController* PlayerCon
 
 }
 
-void UEnhancedInputTracker::TestCallback(const FInputActionValue& Value)
-{
-	bool testStr = Value.Get<bool>();
-	UE_LOG(LogTemp, Warning, TEXT("testing input callback"));
-}
-
 void UEnhancedInputTracker::LeftFaceButtonOnePressed()
 {
 	switch (ControllerType)
@@ -1020,11 +992,6 @@ void UEnhancedInputTracker::LeftFaceButtonOnePressed()
 	{
 		auto b = FControllerInputState("xbtn", 100);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("xbtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::PicoNeo2:
@@ -1033,11 +1000,6 @@ void UEnhancedInputTracker::LeftFaceButtonOnePressed()
 	{
 		auto b = FControllerInputState("pico_xbtn", 100);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("pico_xbtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -1062,11 +1024,6 @@ void UEnhancedInputTracker::LeftFaceButtonOneReleased()
 	{
 		auto b = FControllerInputState("xbtn", 0);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("xbtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
 		break;
 	}
 	case EC3DControllerType::PicoNeo2:
@@ -1075,11 +1032,6 @@ void UEnhancedInputTracker::LeftFaceButtonOneReleased()
 	{
 		auto b = FControllerInputState("pico_xbtn", 0);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("pico_xbtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -1104,11 +1056,6 @@ void UEnhancedInputTracker::LeftFaceButtonTwoPressed()
 	{
 		auto b = FControllerInputState("ybtn", 100);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("ybtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::PicoNeo2:
@@ -1117,11 +1064,6 @@ void UEnhancedInputTracker::LeftFaceButtonTwoPressed()
 	{
 		auto b = FControllerInputState("pico_ybtn", 100);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("pico_ybtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -1146,11 +1088,6 @@ void UEnhancedInputTracker::LeftFaceButtonTwoReleased()
 	{
 		auto b = FControllerInputState("ybtn", 0);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("ybtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
 		break;
 	}
 	case EC3DControllerType::PicoNeo2:
@@ -1159,11 +1096,6 @@ void UEnhancedInputTracker::LeftFaceButtonTwoReleased()
 	{
 		auto b = FControllerInputState("pico_ybtn", 0);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("pico_ybtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -1192,11 +1124,6 @@ void UEnhancedInputTracker::LeftMenuButtonPressed()
 	{
 		auto b = FControllerInputState("menu", 100);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("menu");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::PicoNeo2:
@@ -1205,11 +1132,6 @@ void UEnhancedInputTracker::LeftMenuButtonPressed()
 	{
 		auto b = FControllerInputState("pico_menubtn", 100);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("pico_menubtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -1242,11 +1164,6 @@ void UEnhancedInputTracker::LeftMenuButtonReleased()
 	{
 		auto b = FControllerInputState("menu", 0);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("menu");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
 		break;
 	}
 	case EC3DControllerType::PicoNeo2:
@@ -1255,11 +1172,6 @@ void UEnhancedInputTracker::LeftMenuButtonReleased()
 	{
 		auto b = FControllerInputState("pico_menubtn", 0);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("pico_menubtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -1307,12 +1219,6 @@ void UEnhancedInputTracker::LeftJoystickPressed(const FInputActionValue& Value)
 		auto b = FControllerInputState("joystick", FVector(x, y, 100));
 		LeftJoystickAxis = FVector(x, y, 100);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
-
 		break;
 	}
 	case EC3DControllerType::PicoNeo2:
@@ -1330,11 +1236,6 @@ void UEnhancedInputTracker::LeftJoystickPressed(const FInputActionValue& Value)
 		auto b = FControllerInputState("pico_joystick", FVector(x, y, 100));
 		LeftJoystickAxis = FVector(x, y, 100);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("pico_joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -1392,12 +1293,6 @@ void UEnhancedInputTracker::LeftJoystickReleased(const FInputActionValue& Value)
 		auto b = FControllerInputState("joystick", FVector(x, y, 0));
 		LeftJoystickAxis = FVector(x, y, 0);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
-
 		break;
 	}
 	case EC3DControllerType::PicoNeo2:
@@ -1415,11 +1310,6 @@ void UEnhancedInputTracker::LeftJoystickReleased(const FInputActionValue& Value)
 		auto b = FControllerInputState("pico_joystick", FVector(x, y, 0));
 		LeftJoystickAxis = FVector(x, y, 0);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("pico_joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -1473,12 +1363,6 @@ void UEnhancedInputTracker::LeftJoystickXPressed(const FInputActionValue& Value)
 		auto b = FControllerInputState("joystick", FVector(x, y, 100));
 		LeftJoystickAxis = FVector(x, y, 100);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
-
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -1546,12 +1430,6 @@ void UEnhancedInputTracker::LeftJoystickYPressed(const FInputActionValue& Value)
 		auto b = FControllerInputState("joystick", FVector(x, y, 100));
 		LeftJoystickAxis = FVector(x, y, 100);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
-
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -1619,12 +1497,6 @@ void UEnhancedInputTracker::LeftJoystickXReleased(const FInputActionValue& Value
 		auto b = FControllerInputState("joystick", FVector(x, y, 0));
 		LeftJoystickAxis = FVector(x, y, 0);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
-
 		break;
 	}	
 	case EC3DControllerType::WindowsMixedReality:
@@ -1692,12 +1564,6 @@ void UEnhancedInputTracker::LeftJoystickYReleased(const FInputActionValue& Value
 		auto b = FControllerInputState("joystick", FVector(x, y, 0));
 		LeftJoystickAxis = FVector(x, y, 0);
 		AppendInputState(false, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
-
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -2410,11 +2276,6 @@ void UEnhancedInputTracker::RightFaceButtonOnePressed()
 	{
 		auto b = FControllerInputState("abtn", 100);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("abtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::PicoNeo2:
@@ -2423,11 +2284,6 @@ void UEnhancedInputTracker::RightFaceButtonOnePressed()
 	{
 		auto b = FControllerInputState("pico_abtn", 100);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("pico_abtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -2452,11 +2308,6 @@ void UEnhancedInputTracker::RightFaceButtonOneReleased()
 	{
 		auto b = FControllerInputState("abtn", 0);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("abtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
 		break;
 	}
 	case EC3DControllerType::PicoNeo2:
@@ -2465,11 +2316,6 @@ void UEnhancedInputTracker::RightFaceButtonOneReleased()
 	{
 		auto b = FControllerInputState("pico_abtn", 0);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("pico_abtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -2494,11 +2340,6 @@ void UEnhancedInputTracker::RightFaceButtonTwoPressed()
 	{
 		auto b = FControllerInputState("bbtn", 100);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("bbtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::PicoNeo2:
@@ -2507,11 +2348,6 @@ void UEnhancedInputTracker::RightFaceButtonTwoPressed()
 	{
 		auto b = FControllerInputState("pico_bbtn", 100);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("pico_bbtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -2536,11 +2372,6 @@ void UEnhancedInputTracker::RightFaceButtonTwoReleased()
 	{
 		auto b = FControllerInputState("bbtn", 0);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("bbtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
 		break;
 	}
 	case EC3DControllerType::PicoNeo2:
@@ -2549,11 +2380,6 @@ void UEnhancedInputTracker::RightFaceButtonTwoReleased()
 	{
 		auto b = FControllerInputState("pico_bbtn", 0);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("pico_bbtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -2590,11 +2416,6 @@ void UEnhancedInputTracker::RightMenuButtonPressed()
 	{
 		auto b = FControllerInputState("pico_menubtn", 100);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("pico_menubtn");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -2681,11 +2502,6 @@ void UEnhancedInputTracker::RightJoystickPressed(const FInputActionValue& Value)
 		auto b = FControllerInputState("joystick", FVector(x, y, 100));
 		RightJoystickAxis = FVector(x, y, 100);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::PicoNeo2:
@@ -2703,11 +2519,6 @@ void UEnhancedInputTracker::RightJoystickPressed(const FInputActionValue& Value)
 		auto b = FControllerInputState("pico_joystick", FVector(x, y, 100));
 		RightJoystickAxis = FVector(x, y, 100);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("pico_joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -2763,11 +2574,6 @@ void UEnhancedInputTracker::RightJoystickReleased(const FInputActionValue& Value
 		auto b = FControllerInputState("joystick", FVector(x, y, 0));
 		RightJoystickAxis = FVector(x, y, 0);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
 		break;
 	}
 	case EC3DControllerType::PicoNeo2:
@@ -2785,11 +2591,6 @@ void UEnhancedInputTracker::RightJoystickReleased(const FInputActionValue& Value
 		auto b = FControllerInputState("pico_joystick", FVector(x, y, 0));
 		RightJoystickAxis = FVector(x, y, 0);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("pico_joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -2841,11 +2642,6 @@ void UEnhancedInputTracker::RightJoystickXPressed(const FInputActionValue& Value
 		auto b = FControllerInputState("joystick", FVector(x, y, 100));
 		RightJoystickAxis = FVector(x, y, 100);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -2910,11 +2706,6 @@ void UEnhancedInputTracker::RightJoystickYPressed(const FInputActionValue& Value
 		auto b = FControllerInputState("joystick", FVector(x, y, 100));
 		RightJoystickAxis = FVector(x, y, 100);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 100));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -2979,11 +2770,6 @@ void UEnhancedInputTracker::RightJoystickXReleased(const FInputActionValue& Valu
 		auto b = FControllerInputState("joystick", FVector(x, y, 0));
 		RightJoystickAxis = FVector(x, y, 0);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
@@ -3048,11 +2834,6 @@ void UEnhancedInputTracker::RightJoystickYReleased(const FInputActionValue& Valu
 		auto b = FControllerInputState("joystick", FVector(x, y, 0));
 		RightJoystickAxis = FVector(x, y, 0);
 		AppendInputState(true, b);
-		if (cog.IsValid())
-		{
-			cog->customEventRecorder->Send("joystick");
-			cog->customEventRecorder->Send("Position", FVector(0, 0, 0));
-		}
 		break;
 	}
 	case EC3DControllerType::WindowsMixedReality:
