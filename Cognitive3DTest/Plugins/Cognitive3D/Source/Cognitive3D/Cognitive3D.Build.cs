@@ -59,7 +59,9 @@ namespace UnrealBuildTool.Rules
                     "JsonUtilities",
 					"UMG",
 					"EngineSettings",
-					"EyeTracker"
+					"EyeTracker",
+					"EnhancedInput",
+					"InputCore"
 				}
 				);
 
