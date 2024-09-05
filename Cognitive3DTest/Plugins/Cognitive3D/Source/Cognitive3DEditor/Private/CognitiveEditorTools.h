@@ -181,6 +181,7 @@ public:
 
 	bool ExportDynamicsWithScene = false;
 	int32 CountUnexportedDynamics();
+	int32 CountUnexportedDynamicsNotUnique();
 
 	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
 

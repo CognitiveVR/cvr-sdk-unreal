@@ -1216,13 +1216,13 @@ FText SSceneSetupWidget::ExportButtonText()const
 
 FText SSceneSetupWidget::DynamicsStatusTest() const
 {
-	FString DynamicsText = FString::Printf(TEXT("%d out of %d dynamic objects in this scene have been exported."), FCognitiveEditorTools::GetInstance()->CountDynamicObjectsInScene() - FCognitiveEditorTools::GetInstance()->CountUnexportedDynamics(), FCognitiveEditorTools::GetInstance()->CountDynamicObjectsInScene());
+	FString DynamicsText = FString::Printf(TEXT("%d out of %d dynamic objects in this scene have been exported."), FCognitiveEditorTools::GetInstance()->CountDynamicObjectsInScene() - FCognitiveEditorTools::GetInstance()->CountUnexportedDynamicsNotUnique(), FCognitiveEditorTools::GetInstance()->CountDynamicObjectsInScene());
 	return FText::FromString(DynamicsText);
 }
 
 FText SSceneSetupWidget::ExportDynamicsText() const
 {
-	FString DynamicsText = FString::Printf(TEXT("Export %d un-exported dynamic objects alongside the scene geometry."), FCognitiveEditorTools::GetInstance()->CountUnexportedDynamics());
+	FString DynamicsText = FString::Printf(TEXT("Export %d un-exported dynamic objects alongside the scene geometry."), FCognitiveEditorTools::GetInstance()->CountUnexportedDynamicsNotUnique());
 	return FText::FromString(DynamicsText);
 }
 
