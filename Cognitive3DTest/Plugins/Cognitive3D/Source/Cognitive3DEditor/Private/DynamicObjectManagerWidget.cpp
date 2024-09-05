@@ -604,6 +604,14 @@ FText SDynamicObjectManagerWidget::UploadSelectedMeshesTooltip() const
 	{
 		return FText::FromString("Use the Open Scene Setup Window above to export these meshes and continue the guided setup to the Scene Setup Window");
 	}
+	else if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory())
+	{
+		return FText::FromString("No Export Directory found. Please use the Project Setup Window to set one.");
+	}
+	else if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
+	{
+		return FText::FromString("No Developer Key found. Please use the Project Setup Window to set one.");
+	}
 	return FText::FromString("Must export meshes first to upload");
 }
 
@@ -616,6 +624,14 @@ FText SDynamicObjectManagerWidget::UploadAllMeshesTooltip() const
 	else if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
 	{
 		return FText::FromString("Use the Open Scene Setup Window above to export these meshes and continue the guided setup to the Scene Setup Window");
+	}
+	else if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory())
+	{
+		return FText::FromString("No Export Directory found. Please use the Project Setup Window to set one.");
+	}
+	else if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
+	{
+		return FText::FromString("No Developer Key found. Please use the Project Setup Window to set one.");
 	}
 	return FText::FromString("Must export meshes first to upload");
 }
