@@ -125,6 +125,11 @@ void FDynamicObjectManager::RegisterObjectId(FString MeshName, FString Id, FStri
 	bool containsId = false;
 	for (int32 i = 0; i < allObjectIds.Num(); i++)
 	{
+		if (!allObjectIds[i].IsValid())
+		{
+			//temporary fix. see T-8820 for details
+			continue;
+		}
 		if (allObjectIds[i]->Id == Id)
 		{
 			containsId = true;
