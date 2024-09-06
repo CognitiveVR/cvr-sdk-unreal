@@ -262,24 +262,11 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			[
 				SNew(SRichTextBlock)
-				.Visibility(this, &SSceneSetupWidget::GetAppendedInputsFoundHidden)
+				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
 				.AutoWrapText(true)
 				.Justification(ETextJustify::Center)
 				.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
-				.Text(FText::FromString("You can append inputs to your DefaultInput.ini file. This will allow you to visualize the button presses of the player."))
-			]
-
-			+SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0, 0, 0, padding)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			[
-				SNew(SRichTextBlock)
-				.Visibility(this, &SSceneSetupWidget::GetAppendedInputsFoundVisibility)
-				.AutoWrapText(true)
-				.Justification(ETextJustify::Center)
-				.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
-				.Text(FText::FromString("The Cognitive3D action maps have been added to DefaultInputs.ini"))
+				.Text(this, &SSceneSetupWidget::GetInputClassText)
 			]
 
 			+SVerticalBox::Slot()
@@ -288,7 +275,24 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
 			[
 				SNew(SBox)
-				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
+				.Visibility(this, &SSceneSetupWidget::GetDefaultInputClassEnhanced)
+				[
+					SNew(SRichTextBlock)
+					.Visibility(this, &SSceneSetupWidget::GetAppendedInputsFoundVisibility)
+					.AutoWrapText(true)
+					.Justification(ETextJustify::Center)
+					.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
+					.Text(FText::FromString("The Cognitive3D action maps have been added to DefaultInputs.ini"))
+				]
+			]
+
+			+SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(0, 0, 0, padding)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			[
+				SNew(SBox)
+				.Visibility(this, &SSceneSetupWidget::GetDefaultInputClassEnhanced)
 				[
 					SNew(SHorizontalBox)
 					+SHorizontalBox::Slot()
@@ -1212,13 +1216,13 @@ FText SSceneSetupWidget::ExportButtonText()const
 
 FText SSceneSetupWidget::DynamicsStatusTest() const
 {
-	FString DynamicsText = FString::Printf(TEXT("%d out of %d dynamic objects in this scene have been exported."), FCognitiveEditorTools::GetInstance()->CountDynamicObjectsInScene() - FCognitiveEditorTools::GetInstance()->CountUnexportedDynamics(), FCognitiveEditorTools::GetInstance()->CountDynamicObjectsInScene());
+	FString DynamicsText = FString::Printf(TEXT("%d out of %d dynamic objects in this scene have been exported."), FCognitiveEditorTools::GetInstance()->CountDynamicObjectsInScene() - FCognitiveEditorTools::GetInstance()->CountUnexportedDynamicsNotUnique(), FCognitiveEditorTools::GetInstance()->CountDynamicObjectsInScene());
 	return FText::FromString(DynamicsText);
 }
 
 FText SSceneSetupWidget::ExportDynamicsText() const
 {
-	FString DynamicsText = FString::Printf(TEXT("Export %d un-exported dynamic objects alongside the scene geometry."), FCognitiveEditorTools::GetInstance()->CountUnexportedDynamics());
+	FString DynamicsText = FString::Printf(TEXT("Export %d un-exported dynamic objects alongside the scene geometry."), FCognitiveEditorTools::GetInstance()->CountUnexportedDynamicsNotUnique());
 	return FText::FromString(DynamicsText);
 }
 
@@ -1912,6 +1916,69 @@ EVisibility SSceneSetupWidget::UploadThumbnailTextVisibility() const
 	{
 		return EVisibility::Collapsed;
 	}	
+}
+
+EVisibility SSceneSetupWidget::GetDefaultInputClassEnhanced() const
+{
+	if (CurrentPageEnum != ESceneSetupPage::Controller)
+	{
+		return EVisibility::Collapsed;
+	}
+
+	//show AppendInput button if its not using enhanced input
+	FString DefaultPlayerInputClass;
+	FString DefaultInputComponentClass;
+
+	// Retrieve the settings from DefaultInput.ini
+	bool bFoundPlayerInputClass = GConfig->GetString(
+		TEXT("/Script/Engine.InputSettings"),
+		TEXT("DefaultPlayerInputClass"),
+		DefaultPlayerInputClass,
+		GInputIni
+	);
+
+	bool bFoundInputComponentClass = GConfig->GetString(
+		TEXT("/Script/Engine.InputSettings"),
+		TEXT("DefaultInputComponentClass"),
+		DefaultInputComponentClass,
+		GInputIni
+	);
+
+	// Check if either of the classes are set to Enhanced Input classes
+	//if its using it, collapse the box showing the append input button
+	bool bIsEnhancedInput = false;
+
+	if (bFoundPlayerInputClass && bFoundInputComponentClass)
+	{
+		bIsEnhancedInput = DefaultPlayerInputClass.Contains("EnhancedPlayerInput") ||
+			DefaultInputComponentClass.Contains("EnhancedInputComponent");
+	}
+
+	if (bIsEnhancedInput)
+	{
+		return EVisibility::Collapsed;
+	}
+	else
+	{
+		return EVisibility::Visible;
+	}
+}
+
+FText SSceneSetupWidget::GetInputClassText() const
+{
+	//get text based on whether or not enhanced input is the default input class
+	if (GetDefaultInputClassEnhanced() == EVisibility::Collapsed)
+	{
+		return FText::FromString("Project is using Enhanced Input, C3D will automatically track controller inputs.\nIf you would like us not to track controller inputs, remove the EnhancedInputTracker component from the Cognitive3D blueprint in the level");
+	}
+	else if(GetAppendedInputsFoundHidden() == EVisibility::Visible)
+	{
+		return FText::FromString("You can append inputs to your DefaultInput.ini file. This will allow you to visualize the button presses of the player.");
+	}
+	else
+	{
+		return FText::FromString("");
+	}
 }
 
 FText SSceneSetupWidget::GetDynamicObjectCountToUploadText() const

@@ -196,7 +196,7 @@ enum class EC3DControllerType : uint8
 	Quest2,
 	QuestPro,
 	PicoNeo3,
-	//PicoNeo4
+	PicoNeo4
 	//ViveFocus,
 	//Generic,
 	//Hand
