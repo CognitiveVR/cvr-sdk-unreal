@@ -11,7 +11,11 @@
 #include "InputModifiers.h"
 #include "InputTriggers.h"
 #ifdef INCLUDE_OCULUS_PLUGIN
+#if ENGINE_MAJOR_VERSION == 4 
+#include "OculusInputFunctionLibrary.h"
+#elif ENGINE_MAJOR_VERSION == 5 
 #include "OculusXRInputFunctionLibrary.h"
+#endif
 #endif
 #ifdef INCLUDE_PICO_PLUGIN
 #include "PXR_InputFunctionLibrary.h"
