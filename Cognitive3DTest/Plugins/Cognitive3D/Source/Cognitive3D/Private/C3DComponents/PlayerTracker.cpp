@@ -110,6 +110,21 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	}
 	End = TempStart + LastDirection * 100000.0f;
 	return End;
+#elif defined INCLUDE_OCULUS_PLUGIN
+
+	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
+	FVector End = start + captureRotation.Vector() * 100000.0f;
+	IEyeTracker const* const ET = GEngine ? GEngine->EyeTrackingDevice.Get() : nullptr;
+	if (ET != nullptr)
+	{
+		FEyeTrackerGazeData gazeData;
+		if (ET->GetEyeTrackerGazeData(gazeData))
+		{
+			LastDirection = gazeData.GazeDirection;
+			End = start + LastDirection * 100000.0f;
+		}
+	}
+	return End;
 #elif defined OPENXR_EYETRACKING
 
 	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();

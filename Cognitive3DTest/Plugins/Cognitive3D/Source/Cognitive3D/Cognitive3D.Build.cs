@@ -128,7 +128,7 @@ namespace UnrealBuildTool.Rules
 		void MetaXRPlugin()
         {
 			PublicDefinitions.Add("INCLUDE_OCULUS_PLUGIN");
-			PublicDependencyModuleNames.AddRange(new string[] { "OculusHMD", "OculusInput" });
+			PublicDependencyModuleNames.AddRange(new string[] { "OculusXRHMD", "OculusXRInput", "OculusXREyeTracker" });
 		}
 
 		void MetaXRPassthrough()
