@@ -500,17 +500,40 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				]
 			]
 
+			//sublevel name text field
 			+ SVerticalBox::Slot()
+			.MaxHeight(32)
 			[
-				SNew(SBox)
+				SNew(SHorizontalBox)
 				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-				.WidthOverride(128)
-				.HeightOverride(32)
+				+SHorizontalBox::Slot()
+				.MaxWidth(200)
 				[
-					SNew(SEditableTextBox)
+					SNew(SBox)
 					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
-					.Text(this, &SSceneSetupWidget::GetLevelName)
-					.OnTextChanged(this, &SSceneSetupWidget::OnLevelNameChanged)
+					.HeightOverride(32)
+					[
+						SNew(STextBlock)
+						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
+						.Text(FText::FromString("Level Name"))
+					]
+				]
+				+ SHorizontalBox::Slot()
+				.Padding(1)
+				.FillWidth(3)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					.MaxDesiredHeight(32)
+					[
+						SNew(SEditableTextBox)
+						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+						.Text(this, &SSceneSetupWidget::GetLevelName)
+						.OnTextChanged(this, &SSceneSetupWidget::OnLevelNameChanged)
+					]
 				]
 			]
 
@@ -1357,7 +1380,7 @@ FReply SSceneSetupWidget::NextPage()
 	{
 		FCognitiveEditorTools::GetInstance()->OnUploadSceneGeometry.BindSP(this, &SSceneSetupWidget::OnSceneUploaded);
 
-		FCognitiveEditorTools::GetInstance()->WizardUpload();
+		FCognitiveEditorTools::GetInstance()->WizardUpload(LevelName);
 	}
 	else if (CurrentPageEnum == ESceneSetupPage::UploadProgress)
 	{

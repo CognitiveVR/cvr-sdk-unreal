@@ -171,7 +171,7 @@ public:
 	int32 GetTextureRefactor() const { return TextureRefactor; }
 	FText GetExcludeMeshes() const { return FText::FromString(ExcludeMeshes); }
 
-		FReply UploadScene();
+	FReply UploadScene(const FString& LevelName);
 
 	TArray<AActor*> PrepareSceneForExport(bool OnlyExportSelected);
 	
@@ -290,6 +290,7 @@ public:
 	}
 
 	void CurrentSceneVersionRequest();
+	void SceneNameVersionRequest(const FString& LevelName);
 
 	TArray<FString> GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension, bool skipsubdirectory) const;
 
@@ -413,7 +414,7 @@ public:
 	void SaveApplicationKeyToFile(FString key);
 	void SaveDeveloperKeyToFile(FString key);
 
-	void WizardUpload();
+	void WizardUpload(const FString& LevelName);
 	bool IsWizardUploading();
 
 	//set to 500, 404, 401 if uploading from the wizard encountered and error
@@ -432,6 +433,7 @@ public:
 	//create directory
 	//export scene as gltf
 	void ExportScene(FString LevelName, TArray<AActor*> actorsToExport);
+	FString UploadingLevelName;
 
 	void ValidateGeneratedFiles(const FString LevelName);
 
@@ -439,7 +441,7 @@ public:
 
 	void ModifyGLTFContent(FString FilePath);
 
-	void GenerateSettingsJsonFile();
+	void GenerateSettingsJsonFile(const FString& LevelName);
 	bool HasSettingsJsonFile() const;
 
 	const FSlateBrush* GetBoxEmptyIcon() const;
