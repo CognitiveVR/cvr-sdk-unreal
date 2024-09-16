@@ -1424,9 +1424,9 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 }
 
 
-FReply FCognitiveEditorTools::SaveScreenshotToFile()
+FReply FCognitiveEditorTools::SaveScreenshotToFile(const FString& levelName)
 {
-	FString dir = BaseExportDirectory + "/" + GetCurrentSceneName() + "/screenshot/";
+	FString dir = BaseExportDirectory + "/" + levelName + "/screenshot/";
 	if (VerifyOrCreateDirectory(dir))
 	{
 		FString cmd = "HighResShot filename=\"" + dir + "screenshot\" 1920x1080";
@@ -3176,13 +3176,12 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
 
-	//TODO fix scene settings.json
-	//this should use the GenerateSceneSettings function instead of copying code here
+	bool writeSettingsJsonSuccess = GenerateSettingsJsonFile(LevelName);
 
 	//create settings.json
-	FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(Cognitive3D_SDK_VERSION) + "\",\"sceneName\":\"" + GetCurrentSceneName() + "\"}";
-	FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/settings.json";
-	bool writeSettingsJsonSuccess = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+	//FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(Cognitive3D_SDK_VERSION) + "\",\"sceneName\":\"" + GetCurrentSceneName() + "\"}";
+	//FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/settings.json";
+	//bool writeSettingsJsonSuccess = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	if (writeSettingsJsonSuccess == false)
 	{
 		ShowNotification(TEXT("Unable to save settings.json"), false);
@@ -3266,8 +3265,6 @@ void FCognitiveEditorTools::ValidateGeneratedFiles(const FString LevelName)
 	FString scenemtlPath = ExportDirPath + "/scene.mtl";
 	FString levelmtlPath = ExportDirPath + "/" + LevelName + ".mtl";
 
-
-
 	RenameFile(levelgltfPath, scenegltfPath);
 	RenameFile(levelbinPath, scenebinPath);
 	RenameFile(levelmtlPath, scenemtlPath);
@@ -3343,7 +3340,7 @@ void FCognitiveEditorTools::ModifyGLTFContent(FString FilePath)
 	}
 }
 
-void FCognitiveEditorTools::GenerateSettingsJsonFile(const FString& LevelName)
+bool FCognitiveEditorTools::GenerateSettingsJsonFile(const FString& LevelName)
 {
 	FString ObjPath = FPaths::Combine(BaseExportDirectory, LevelName);
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
@@ -3351,13 +3348,8 @@ void FCognitiveEditorTools::GenerateSettingsJsonFile(const FString& LevelName)
 	//create settings.json
 	FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(Cognitive3D_SDK_VERSION) + "\",\"sceneName\":\"" + LevelName + "\"}";
 	FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/settings.json";
-	bool writeSettingsJsonSuccess = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
-	if (writeSettingsJsonSuccess == false)
-	{
-		WizardUploadResponseCode = 0;
-		WizardUploadError = "FCognitiveEditorTools::ExportScene unable to save settings.json";
-		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene unable to save settings.json"));
-	}
+	return FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+	
 }
 
 bool FCognitiveEditorTools::HasSettingsJsonFile() const
@@ -3414,7 +3406,13 @@ void FCognitiveEditorTools::WizardUpload(const FString& LevelName)
 		WizardUploadResponseCode = 0;
 		WizardUploadError = "FCognitiveEditorToolsCustomization::WizardUpload settings.json file missing! Creating for current scene";
 		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorToolsCustomization::WizardUpload settings.json file missing! Creating for current scene"));
-		GenerateSettingsJsonFile(LevelName);
+		bool writeSettingsJsonSuccess = GenerateSettingsJsonFile(LevelName);
+		if (writeSettingsJsonSuccess == false)
+		{
+			WizardUploadResponseCode = 0;
+			WizardUploadError = "FCognitiveEditorTools::ExportScene unable to save settings.json";
+			UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene unable to save settings.json"));
+		}
 	}
 
 	UploadingLevelName = LevelName;

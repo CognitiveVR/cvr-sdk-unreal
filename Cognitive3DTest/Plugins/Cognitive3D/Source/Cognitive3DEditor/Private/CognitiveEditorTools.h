@@ -397,7 +397,7 @@ public:
 	FReply OpenURL(FString url);
 	void FindAllSubDirectoryNames();
 	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
-	FReply SaveScreenshotToFile();
+	FReply SaveScreenshotToFile(const FString& levelName);
 	FReply TakeDynamicScreenshot(FString dynamicName);
 
 	void DelayScreenshot(FString filePath, FLevelEditorViewportClient* perspectiveView, FVector startPos, FRotator startRot);
@@ -441,7 +441,7 @@ public:
 
 	void ModifyGLTFContent(FString FilePath);
 
-	void GenerateSettingsJsonFile(const FString& LevelName);
+	bool GenerateSettingsJsonFile(const FString& LevelName);
 	bool HasSettingsJsonFile() const;
 
 	const FSlateBrush* GetBoxEmptyIcon() const;

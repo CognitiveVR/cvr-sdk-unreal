@@ -1288,7 +1288,7 @@ FReply SSceneSetupWidget::TakeScreenshot()
 
 	UE_LOG(LogTemp, Warning, TEXT("taking screenshot"));
 
-	FCognitiveEditorTools::GetInstance()->SaveScreenshotToFile();
+	FCognitiveEditorTools::GetInstance()->SaveScreenshotToFile(LevelName);
 
 
 	FViewport* CurrentViewport = GEditor->GetActiveViewport();
@@ -1503,7 +1503,7 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
 		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles(LevelName);
 
-		FString sceneExportDir = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory();
+		FString sceneExportDir = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName);
 		if (!FCognitiveEditorTools::VerifyDirectoryExists(sceneExportDir))
 		{
 			return false;
@@ -1944,7 +1944,7 @@ EVisibility SSceneSetupWidget::UploadThumbnailTextVisibility() const
 		return EVisibility::Collapsed;
 	}
 
-	FString ScreenshotPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/screenshot/screenshot.png";
+	FString ScreenshotPath = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/screenshot/screenshot.png";
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 	if (PlatformFile.FileExists(*ScreenshotPath))
 	{
@@ -2027,7 +2027,7 @@ FText SSceneSetupWidget::GetDynamicObjectCountToUploadText() const
 
 FText SSceneSetupWidget::GetSceneVersionToUploadText() const
 {
-	auto sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
+	auto sceneData = FCognitiveEditorTools::GetInstance()->GetSceneData(LevelName);
 	int32 fileCount = FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount();
 	if (sceneData.IsValid())
 	{
