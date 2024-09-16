@@ -1527,14 +1527,14 @@ FReply FCognitiveEditorTools::UploadScene()
 	return FReply::Handled();
 }
 
-void FCognitiveEditorTools::RefreshSceneUploadFiles()
+void FCognitiveEditorTools::RefreshSceneUploadFiles(const FString& SceneName)
 {
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
-	TArray<FString> filesInDirectory = GetAllFilesInDirectory(GetCurrentSceneExportDirectory(), true, filesStartingWith, filesStartingWith, pngextension, false);
+	TArray<FString> filesInDirectory = GetAllFilesInDirectory(GetSceneExportDirectory(SceneName), true, filesStartingWith, filesStartingWith, pngextension, false);
 
-	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(GetCurrentSceneExportDirectory(), true, filesStartingWith, pngextension, filesStartingWith, false);
-	imagesInDirectory.Remove(GetCurrentSceneExportDirectory() + "/screenshot/screenshot.png");
+	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(GetSceneExportDirectory(SceneName), true, filesStartingWith, pngextension, filesStartingWith, false);
+	imagesInDirectory.Remove(GetSceneExportDirectory(SceneName) + "/screenshot/screenshot.png");
 
 	SceneUploadFiles.Empty();
 	for (int32 i = 0; i < filesInDirectory.Num(); i++)
@@ -2060,6 +2060,21 @@ bool FCognitiveEditorTools::CurrentSceneHasSceneId() const
 {
 	if (!HasDeveloperKey()) { return false; }
 	TSharedPtr<FEditorSceneData> currentscene = GetCurrentSceneData();
+	if (!currentscene.IsValid())
+	{
+		return false;
+	}
+	if (currentscene->Id.Len() > 0)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool FCognitiveEditorTools::SceneHasSceneId(const FString& SceneName) const
+{
+	if (!HasDeveloperKey()) { return false; }
+	TSharedPtr<FEditorSceneData> currentscene = GetSceneData(SceneName);
 	if (!currentscene.IsValid())
 	{
 		return false;
@@ -3050,7 +3065,7 @@ void FCognitiveEditorTools::CompressAndSaveTexture(const FString& SourcePath, co
 	}
 }
 
-void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
+void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actorsToExport)
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
@@ -3068,14 +3083,14 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	}
 
 	//create directory at scene name path
-	FString sceneDirectory = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/";
+	FString sceneDirectory = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/";
 	FCognitiveEditorTools::VerifyOrCreateDirectory(sceneDirectory);
 
 	//create screenshot directory
-	FString dir = BaseExportDirectory + "/" + GetCurrentSceneName() + "/screenshot/";
+	FString dir = BaseExportDirectory + "/" + LevelName + "/screenshot/";
 	FCognitiveEditorTools::VerifyOrCreateDirectory(dir);
 	
-	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".gltf";
+	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName + "/" + LevelName + ".gltf");
 
 	//use GLTFExporter Plugin
 
@@ -3107,7 +3122,7 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	if (CompressExportedFiles)
 	{
 		int32 MaxSize = 1024; // Adjust the size as needed
-		CompressTexturesInExportFolder(FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory(), MaxSize);
+		CompressTexturesInExportFolder(FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName), MaxSize);
 	}
 
 	if (ExportDynamicsWithScene)
@@ -3161,15 +3176,15 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	FString fileContents = BuildDebugFileContents();
 	FFileHelper::SaveStringToFile(fileContents, *fullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 
-	ValidateGeneratedFiles();
+	ValidateGeneratedFiles(LevelName);
 	
 
 }
 
-void FCognitiveEditorTools::ValidateGeneratedFiles()
+void FCognitiveEditorTools::ValidateGeneratedFiles(const FString LevelName)
 {
 	//validate other files:
-	FString ExportDirPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/";
+	FString ExportDirPath = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/";
 	TArray<FString> FoundFiles;
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 

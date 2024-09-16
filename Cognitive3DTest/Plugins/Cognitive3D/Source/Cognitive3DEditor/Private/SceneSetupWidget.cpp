@@ -80,6 +80,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 	CheckForExpiredDeveloperKey();
 	FCognitiveEditorTools::GetInstance()->WizardUploadError = "";
 	FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode = 0;
+	LevelName = UGameplayStatics::GetCurrentLevelName(GWorld); //get current level name as the default
 
 	ChildSlot
 		[
@@ -496,6 +497,20 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					SNew(STextBlock)
 					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 				.Text(FText::FromString("Compress exported files. Note: this will not affect project files. Recommended for very large and detailed scenes."))
+				]
+			]
+
+			+ SVerticalBox::Slot()
+			[
+				SNew(SBox)
+				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				.WidthOverride(128)
+				.HeightOverride(32)
+				[
+					SNew(SEditableTextBox)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+					.Text(this, &SSceneSetupWidget::GetLevelName)
+					.OnTextChanged(this, &SSceneSetupWidget::OnLevelNameChanged)
 				]
 			]
 
@@ -1015,7 +1030,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 		BrushName = FName(*texturepath);
 		ControllerConfigureBrush = new FSlateDynamicImageBrush(BrushName, FVector2D(265, 138));
 
-		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
+		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles(LevelName);
 		FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
 		FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 		SceneUploadStatus = ESceneUploadStatus::NotStarted;
@@ -1037,11 +1052,11 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 
 	TArray<AActor*> ToBeExportedFinal = FCognitiveEditorTools::GetInstance()->PrepareSceneForExport(OnlyExportSelected);
 
-	FCognitiveEditorTools::GetInstance()->ExportScene(ToBeExportedFinal);
+	FCognitiveEditorTools::GetInstance()->ExportScene(LevelName,ToBeExportedFinal);
 	
 
 	SceneWasExported = true;
-	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
+	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles(LevelName);
 	return FReply::Handled();
 }
 
@@ -1333,7 +1348,7 @@ FReply SSceneSetupWidget::NextPage()
 	{
 		GLog->Log("set dynamic and scene export directories. create if needed");
 		FCognitiveEditorTools::GetInstance()->CreateExportFolderStructure();
-		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
+		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles(LevelName);
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
 		TakeScreenshot();
 		FCognitiveEditorTools::GetInstance()->SaveScreenshotToFile();
@@ -1463,7 +1478,7 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 	{
 		//refresh the upload filename lists
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
-		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
+		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles(LevelName);
 
 		FString sceneExportDir = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory();
 		if (!FCognitiveEditorTools::VerifyDirectoryExists(sceneExportDir))
@@ -1629,9 +1644,9 @@ void SSceneSetupWidget::OnExportPathChanged(const FText& Text)
 	if (Text.IsEmpty())
 	{
 		FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
-		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
+		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles(LevelName);
 	}
-	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
+	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles(LevelName);
 }
 
 void SSceneSetupWidget::SpawnCognitive3DActor()
@@ -2000,4 +2015,14 @@ FText SSceneSetupWidget::GetSceneVersionToUploadText() const
 	{
 		return FText::FromString("Upload " + FString::FromInt(fileCount) + " files for Scene Geometry (Version 1)");
 	}
+}
+
+FText SSceneSetupWidget::GetLevelName() const
+{
+	return FText::FromString(LevelName);
+}
+
+void SSceneSetupWidget::OnLevelNameChanged(const FText& Text)
+{
+	LevelName = Text.ToString();
 }

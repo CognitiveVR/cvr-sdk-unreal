@@ -116,7 +116,7 @@ public:
 
 
 	bool CurrentSceneHasSceneId() const;
-
+	bool SceneHasSceneId(const FString& SceneName) const;
 
 	bool HasSetExportDirectory() const;
 
@@ -379,7 +379,7 @@ public:
 	TArray<TSharedPtr<FDynamicData>> SceneExplorerDynamics;
 	TArray<TSharedPtr<FString>> SubDirectoryNames;
 
-	void RefreshSceneUploadFiles();
+	void RefreshSceneUploadFiles(const FString& SceneName);
 	int32 GetSceneExportFileCount();
 	int32 GetDynamicObjectFileExportedCount();
 	int32 GetDynamicObjectExportedCount();
@@ -431,9 +431,9 @@ public:
 	//exporting scene.
 	//create directory
 	//export scene as gltf
-	void ExportScene(TArray<AActor*> actorsToExport);
+	void ExportScene(FString LevelName, TArray<AActor*> actorsToExport);
 
-	void ValidateGeneratedFiles();
+	void ValidateGeneratedFiles(const FString LevelName);
 
 	bool RenameFile(FString oldPath, FString newPath);
 
