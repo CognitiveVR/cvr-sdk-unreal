@@ -878,6 +878,9 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 	return FReply::Handled();
 }
 
+//TODO explicitly define where the dynamic objects manifest should be uploaded to
+//TODO probably add a 'scene' text field to the dynamic object window
+//can this be a generated dropdown, to avoid 
 FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObject*> dynamics)
 {
 	bool wroteAnyObjects = false;
@@ -1230,7 +1233,8 @@ FReply FCognitiveEditorTools::UploadDynamics()
 	ReadSceneDataFromFile();
 
 	GLog->Log("FCognitiveEditorTools::UploadDynamics found " + FString::FromInt(dynamicNames.Num()) + " exported dynamic objects");
-	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
+	//TODO should pass name into the function
+	TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(UploadingLevelName);
 
 	if (!currentSceneData.IsValid())
 	{
@@ -1267,6 +1271,7 @@ FReply FCognitiveEditorTools::UploadDynamics()
 		GLog->Log("FCognitiveEditorTools::UploadDynamics has no dynamics to upload!");
 		WizardUploading = false;
 	}
+
 
 	OnUploadSceneGeometry.ExecuteIfBound(nullptr, nullptr, true);
 
@@ -1307,7 +1312,8 @@ FReply FCognitiveEditorTools::UploadDynamic(FString directory)
 	ReadSceneDataFromFile();
 
 	GLog->Log("FCognitiveEditorTools::UploadDynamics found " + FString::FromInt(dynamicNames.Num()) + " exported dynamic objects");
-	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
+	//TODO should pass level name into the function
+	TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(UploadingLevelName);
 
 	if (!currentSceneData.IsValid())
 	{
@@ -2704,7 +2710,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		}
 
 		//check that there is scene data in ini
-		TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
+		TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(UploadingLevelName);
 		if (!currentSceneData.IsValid())
 		{
 			GLog->Log("FCognitiveTools::SceneVersionResponse can't find current scene data in ini files");

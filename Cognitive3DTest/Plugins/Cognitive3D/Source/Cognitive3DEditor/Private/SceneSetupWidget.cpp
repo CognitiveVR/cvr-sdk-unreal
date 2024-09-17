@@ -1374,7 +1374,7 @@ FReply SSceneSetupWidget::NextPage()
 		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles(LevelName);
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
 		TakeScreenshot();
-		FCognitiveEditorTools::GetInstance()->SaveScreenshotToFile();
+		FCognitiveEditorTools::GetInstance()->SaveScreenshotToFile(LevelName);
 	}
 	else if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
 	{
