@@ -66,6 +66,7 @@ namespace UnrealBuildTool.Rules
 				);
 
 			//uncomment the following line to enable Oculus/Meta functionality. Uses OculusVR for UE4 and OculusXR (MetaXR) for UE5.
+			//Specifically adds eye tracking support for Quest Pro and uses Meta APIs for room size and boundary events
 			//MetaXRPlugin();
 
 			//Uncomment the following line to enable Oculus Passthrough features. UE 5.2 onward
@@ -73,6 +74,7 @@ namespace UnrealBuildTool.Rules
 			//MetaXRPassthrough();
 
 			//Uncomment the following line to enable Oculus Platform features
+			//Uses Meta Platform Plugin to get Oculus Username. Also gets the user's subscription status
 			//MetaXRPlatform();
 
 			//Uncomment the following line to enable PICOXR SDK features
