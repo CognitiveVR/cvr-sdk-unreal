@@ -115,6 +115,17 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 	FCognitiveEditorTools::CheckIniConfigured();
 	CheckForExpiredDeveloperKey();
 
+	SceneNamesComboList.Empty();
+	for (auto sceneData : FCognitiveEditorTools::GetInstance()->GetSceneData())
+	{
+		SceneNamesComboList.Add(MakeShareable(new FString(sceneData->Name)));
+	}
+	TSharedPtr<FEditorSceneData> tempSceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
+	if (tempSceneData.IsValid())
+	{
+		SceneDisplayName = MakeShareable(new FString(tempSceneData->Name));
+	}
+
 	ChildSlot
 		[
 			SNew(SOverlay)
@@ -167,6 +178,30 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					SNew(SButton)
 					.Text(FText::FromString("Open Scene Setup Window"))
 					.OnClicked(this,&SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow)
+				]
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				//TODO labels and tooltips
+				//TODO make this a dedicated c3d scene selection slate widget
+				SNew(SBox)
+				.MaxDesiredHeight(32)
+				.HeightOverride(32)
+				[
+					SAssignNew(SceneNamesComboBox, SComboBox< TSharedPtr<FString> >)
+					.OptionsSource(&SceneNamesComboList)
+					.OnGenerateWidget(this, &SDynamicObjectManagerWidget::MakeSceneNamesComboWidget)
+					.OnSelectionChanged(this, &SDynamicObjectManagerWidget::OnSceneNamesChanged)
+					.OnComboBoxOpening(this, &SDynamicObjectManagerWidget::OnSceneNamesComboOpening)
+					.InitiallySelectedItem(SceneDisplayName)
+					.Content()
+					[
+						SNew(STextBlock)
+						.Text(this, &SDynamicObjectManagerWidget::GetSceneNamesComboBoxContent)
+						.Font(IDetailLayoutBuilder::GetDetailFont())
+						//.ToolTipText(this, &FBodyInstanceCustomization::GetCollisionProfileComboBoxToolTip)
+					]
 				]
 			]
 
@@ -747,4 +782,58 @@ FReply SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow()
 	FCognitive3DEditorModule::SpawnCognitiveSceneSetupTab();
 
 	return FReply::Handled();
+}
+
+TSharedRef<SWidget> SDynamicObjectManagerWidget::MakeSceneNamesComboWidget(TSharedPtr<FString> InItem)
+{
+	FString ProfileMessage = FString("temporary tooltip");
+
+	return
+		SNew(STextBlock)
+		.Text(FText::FromString(*InItem))
+		.ToolTipText(FText::FromString(ProfileMessage))
+		.Font(IDetailLayoutBuilder::GetDetailFont());
+}
+
+void SDynamicObjectManagerWidget::OnSceneNamesChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
+{
+	// if it's set from code, we did that on purpose
+	//if (SelectInfo != ESelectInfo::Direct)
+	{
+		GLog->Log(*NewSelection);
+		SceneDisplayName = NewSelection;
+	}
+}
+
+void SDynamicObjectManagerWidget::OnSceneNamesComboOpening()
+{
+	SceneNamesComboList.Empty();
+	for (auto sceneData : FCognitiveEditorTools::GetInstance()->GetSceneData())
+	{
+		SceneNamesComboList.Add(MakeShareable(new FString(sceneData->Name)));
+	}
+
+	if (SceneNamesComboList.Num() == 0)
+	{
+		//no scenes uploaded
+		return;
+	}
+
+
+	TSharedPtr<FString> ComboStringPtr = SceneNamesComboList[0];
+	if (ComboStringPtr.IsValid())
+	{
+		SceneNamesComboBox->SetSelectedItem(ComboStringPtr);
+		return;
+	}
+}
+
+FText SDynamicObjectManagerWidget::GetSceneNamesComboBoxContent() const
+{
+	if (SceneDisplayName.IsValid())
+	{
+		return FText::FromString(*SceneDisplayName);
+	}
+	
+	return FText::FromString("no scene uploaded");
 }

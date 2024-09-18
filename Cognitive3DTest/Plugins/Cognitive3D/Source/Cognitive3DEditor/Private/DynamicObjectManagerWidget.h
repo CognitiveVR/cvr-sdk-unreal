@@ -15,6 +15,7 @@
 #include "SCheckBox.h"
 #include "STableRow.h"
 #include "STextComboBox.h"
+#include "Widgets/Input/SComboBox.h"
 #include "SListView.h"
 #include "SThrobber.h"
 #include "AssetRegistryModule.h"
@@ -79,4 +80,17 @@ public:
 	void OnDashboardManifestResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	FReply ExportAndOpenSceneSetupWindow();
+
+	
+
+	TSharedPtr<FString> SceneDisplayName;
+
+	TSharedPtr<class SComboBox<TSharedPtr<FString>>> SceneNamesComboBox;
+	TArray<TSharedPtr<FString>> SceneNamesComboList;
+
+	TSharedRef<SWidget> MakeSceneNamesComboWidget(TSharedPtr<FString> InItem);
+	void OnSceneNamesChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
+	void OnSceneNamesComboOpening();
+	FText GetSceneNamesComboBoxContent() const;
+
 };
