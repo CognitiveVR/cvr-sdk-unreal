@@ -560,6 +560,18 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 
 	FQuat quat;
 	FRotator rot = GetAttachParent()->GetComponentRotation();
+	if (IsController)
+	{
+		if (IsRightController)
+		{
+			rot.Yaw -= 45.f;
+		}
+		else
+		{
+			rot.Yaw += 45.f;
+		}
+		rot.Normalize();
+	}
 	quat = rot.Quaternion();
 
 	snapshot.rotation = FQuat(quat.X, quat.Z, quat.Y, quat.W);

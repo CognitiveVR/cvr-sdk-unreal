@@ -1007,9 +1007,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 #pragma endregion
 		];
 
-		FString texturepath = IPluginManager::Get().FindPlugin(TEXT("Cognitive3D"))->GetBaseDir() / TEXT("Resources") / TEXT("controller-components.png");
+		FString texturepath = IPluginManager::Get().FindPlugin(TEXT("Cognitive3D"))->GetBaseDir() / TEXT("Resources") / TEXT("C3D_ControllerDynamics.png");
 		FName BrushName = FName(*texturepath);
-		ControllerComponentBrush = new FSlateDynamicImageBrush(BrushName, FVector2D(265, 215));
+		ControllerComponentBrush = new FSlateDynamicImageBrush(BrushName, FVector2D(215, 306));
 
 		texturepath = IPluginManager::Get().FindPlugin(TEXT("Cognitive3D"))->GetBaseDir() / TEXT("Resources") / TEXT("controller-configure.png");
 		BrushName = FName(*texturepath);
