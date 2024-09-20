@@ -298,6 +298,29 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
+
+			+ SVerticalBox::Slot() //upload buttons
+				.Padding(0, 0, 0, padding)
+				.HAlign(EHorizontalAlignment::HAlign_Center)
+				.VAlign(VAlign_Center)
+				.AutoHeight()
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.HeightOverride(32)
+				.WidthOverride(256)
+				[
+					SNew(SButton)
+					.IsEnabled(this, &SDynamicObjectManagerWidget::IsActorInSceneSelected)
+				.Text(FText::FromString("Add Dynamic Object Components To Selected Actors in Scene"))
+				.ToolTipText(FText::FromString("Add Dynamic Object Components To Selected Actors in Scene"))
+				.OnClicked_Raw(this, &SDynamicObjectManagerWidget::AssignDynamicsToActors)
+				]
+				]
+			]
+
 			]
 		];
 
@@ -649,6 +672,36 @@ FText SDynamicObjectManagerWidget::GetUploadInvalidCause() const
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return FText::FromString("Developer Key is not set"); }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return FText::FromString("Export Path is invalid"); }
 	return FText::GetEmpty();
+}
+
+FReply SDynamicObjectManagerWidget::AssignDynamicsToActors()
+{
+	for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
+	{
+		if (AActor* Actor = Cast<AActor>(*It))
+		{
+			//add dynamic object to actor root
+			//Actor->AddComponentByClass(TSubclassOf<UDynamicObject>
+			// Attach a UDynamicObject component to the actor
+			UDynamicObject* NewComponent = NewObject<UDynamicObject>(Actor);
+			if (NewComponent)
+			{
+				NewComponent->RegisterComponent(); // Make sure the component is registered
+				Actor->AddInstanceComponent(NewComponent); // Add it to the actor's components
+			}
+		}
+	}
+
+	return FReply::Handled();
+}
+
+bool SDynamicObjectManagerWidget::IsActorInSceneSelected() const
+{
+	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
+	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
+
+	USelection* SelectedActors = GEditor->GetSelectedActors();
+	return SelectedActors->Num() > 0;
 }
 
 EVisibility SDynamicObjectManagerWidget::GetSceneWarningVisibility() const

@@ -58,6 +58,10 @@ public:
 	FReply UploadSelectedDynamicObjects();
 	FReply UploadAllDynamicObjects();
 
+	//assign dynamics to objects in the scene
+	FReply AssignDynamicsToActors();
+	bool IsActorInSceneSelected() const;
+
 	EVisibility GetSceneWarningVisibility() const;
 
 	EVisibility SceneNotUploadedVisibility() const;
