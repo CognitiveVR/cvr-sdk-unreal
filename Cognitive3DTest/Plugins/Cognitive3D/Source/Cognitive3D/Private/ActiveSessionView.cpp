@@ -4,7 +4,6 @@
 
 #include "ActiveSessionView.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
-#include "GameFramework/GameUserSettings.h"
 
 // Sets default values
 AActiveSessionView::AActiveSessionView()
@@ -73,6 +72,7 @@ void AActiveSessionView::DelaySetupWidget()
 
 
 	//screen size debugging
+	//add   #include "GameFramework/GameUserSettings.h"
 	/*
 	auto provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();
 
