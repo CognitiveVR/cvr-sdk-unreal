@@ -178,8 +178,7 @@ void FNetwork::OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr R
 					IsServerUnreachable = true;
 					++VariableDelayMultiplier;
 
-
-					if (world != nullptr && !world->GetTimerManager().IsTimerActive(TimerHandle))
+					if (!world->GetTimerManager().IsTimerActive(TimerHandle))
 					{
 						float VariableDelay = VariableDelayTime * VariableDelayMultiplier;
 						world->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateRaw(this, &FNetwork::ResetVariableTimer), VariableDelay, false, VariableDelay);
