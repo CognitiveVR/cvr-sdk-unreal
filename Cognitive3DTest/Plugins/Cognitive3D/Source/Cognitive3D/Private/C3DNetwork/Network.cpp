@@ -147,7 +147,7 @@ void FNetwork::OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr R
 						localCacheRequest->SetHeader("Content-Type", TEXT("application/json"));
 						localCacheRequest->SetHeader("Authorization", AuthValue);
 
-						if (world != nullptr && !world->GetTimerManager().IsTimerActive(TimerHandleShortDelay))
+						if (!world->GetTimerManager().IsTimerActive(TimerHandleShortDelay))
 						{
 							ResetVariableTimer();
 							world->GetTimerManager().SetTimer(TimerHandleShortDelay, FTimerDelegate::CreateRaw(this, &FNetwork::RequestLocalCache), LocalCacheLoopDelay, false);
@@ -228,7 +228,7 @@ void FNetwork::RequestLocalCache()
 	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
 	if (world != nullptr)
 	{
-		if (world != nullptr && !world->GetTimerManager().IsTimerActive(TimerHandleShortDelay))
+		if (!world->GetTimerManager().IsTimerActive(TimerHandleShortDelay))
 		{
 			if (IsServerUnreachable)
 			{
@@ -262,84 +262,87 @@ void FNetwork::OnLocalCacheResponse(FHttpRequestPtr Request, FHttpResponsePtr Re
 	if (!cog->HasStartedSession()) { FCognitiveLog::Info("Network::OnLocalCacheCallReceivedAsync get response while session not started"); return; }
 	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
 	
+	if (world == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ACognitive3DActor::GetCognitiveSessionWorld() returns NULLPTR"));
+		return;
+	}
+
 	if (Response.IsValid())
 	{
-		if (world != nullptr)
+		int32 responseCode = Response.Get()->GetResponseCode();
+		if (responseCode == 200)
 		{
-			int32 responseCode = Response.Get()->GetResponseCode();
-			if (responseCode == 200)
+			if (!cog->localCache.IsValid()) { return; }
+
+			cog->localCache->PopContent();
+			localCacheRequest = NULL;
+			FString contents;
+			FString url;
+			if (cog->localCache->PeekContent(url, contents))
 			{
-				if (!cog->localCache.IsValid()) { return; }
+				localCacheRequest = Http->CreateRequest();
+				localCacheRequest->SetContentAsString(*contents);
+				localCacheRequest->SetURL(*url);
+				localCacheRequest->SetVerb("POST");
+				FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
+				localCacheRequest->SetHeader("Content-Type", TEXT("application/json"));
+				localCacheRequest->SetHeader("Authorization", AuthValue);
 
-				cog->localCache->PopContent();
-				localCacheRequest = NULL;
-				FString contents;
-				FString url;
-				if (cog->localCache->PeekContent(url, contents))
+				if (!world->GetTimerManager().IsTimerActive(TimerHandle))
 				{
-					localCacheRequest = Http->CreateRequest();
-					localCacheRequest->SetContentAsString(*contents);
-					localCacheRequest->SetURL(*url);
-					localCacheRequest->SetVerb("POST");
-					FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
-					localCacheRequest->SetHeader("Content-Type", TEXT("application/json"));
-					localCacheRequest->SetHeader("Authorization", AuthValue);
-
-					if (world != nullptr && !world->GetTimerManager().IsTimerActive(TimerHandle))
-					{
-						world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
-						world->GetTimerManager().SetTimer(TimerHandleShortDelay, FTimerDelegate::CreateRaw(this, &FNetwork::RequestLocalCache), LocalCacheLoopDelay, false);
-					}
-				}
-				else
-				{
-					localCacheRequest = NULL;
 					world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
+					world->GetTimerManager().SetTimer(TimerHandleShortDelay, FTimerDelegate::CreateRaw(this, &FNetwork::RequestLocalCache), LocalCacheLoopDelay, false);
 				}
 			}
 			else
 			{
-				if (responseCode < 500 && responseCode != 0)
-				{
-					cog->localCache->PopContent();
-					world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
-					localCacheRequest = NULL;
-					return;
-				}
-
-
-				//if local cache upload request gets 500 response start variable delay timer
-				if (!IsServerUnreachable)
-				{
-					IsServerUnreachable = true;
-					if (VariableDelayMultiplier < 10)
-					{
-						VariableDelayMultiplier++;
-					}
-					world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
-					localCacheRequest = NULL;
-
-					if (world != nullptr && !world->GetTimerManager().IsTimerActive(TimerHandle))
-					{
-						float VariableDelay = VariableDelayTime * VariableDelayMultiplier;
-						world->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateRaw(this, &FNetwork::ResetVariableTimer), VariableDelay, false, VariableDelay);
-					}
-				}
-
-				world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
-				//TEST should pop content from the read file anyway and write it to the write file
-				if (cog->localCache->IsEnabled())
-				{
-					TArray<uint8> contentArray = Request->GetContent();
-					if (cog->localCache->CanWrite(contentArray.Num()))
-					{
-						FString contentString = TArrayToString(contentArray, Request->GetContent().Num());
-						cog->localCache->WriteData(Request->GetURL(), contentString);
-						cog->localCache->PopContent();
-					}
-				}
 				localCacheRequest = NULL;
+				world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
 			}
+		}
+		else
+		{
+			if (responseCode < 500 && responseCode != 0)
+			{
+				cog->localCache->PopContent();
+				world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
+				localCacheRequest = NULL;
+				return;
+			}
+
+
+			//if local cache upload request gets 500 response start variable delay timer
+			if (!IsServerUnreachable)
+			{
+				IsServerUnreachable = true;
+				if (VariableDelayMultiplier < 10)
+				{
+					VariableDelayMultiplier++;
+				}
+				world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
+				localCacheRequest = NULL;
+
+				if (!world->GetTimerManager().IsTimerActive(TimerHandle))
+				{
+					float VariableDelay = VariableDelayTime * VariableDelayMultiplier;
+					world->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateRaw(this, &FNetwork::ResetVariableTimer), VariableDelay, false, VariableDelay);
+				}
+			}
+
+			world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
+			//TEST should pop content from the read file anyway and write it to the write file
+			if (cog->localCache->IsEnabled())
+			{
+				TArray<uint8> contentArray = Request->GetContent();
+				if (cog->localCache->CanWrite(contentArray.Num()))
+				{
+					FString contentString = TArrayToString(contentArray, Request->GetContent().Num());
+					cog->localCache->WriteData(Request->GetURL(), contentString);
+					cog->localCache->PopContent();
+				}
+			}
+			localCacheRequest = NULL;
 		}
 	}
 	else
