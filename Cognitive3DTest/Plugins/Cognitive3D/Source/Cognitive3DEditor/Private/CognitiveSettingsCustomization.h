@@ -14,6 +14,10 @@
 #include "CognitiveEditorTools.h"
 #include "STextComboBox.h"
 
+//forward declarations
+class FDynamicData;
+class FEditorSceneData;
+
 //customization ui for cognitive settings/preferences. most of this is interface code that calls FCognitiveEditorTools logic
 
 class UCognitive3DSettings;

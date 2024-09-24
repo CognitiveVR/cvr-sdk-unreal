@@ -9,6 +9,8 @@
 #ifdef INCLUDE_PICO_PLUGIN
 #include "PXR_HMDFunctionLibrary.h"
 #endif
+#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
 
 // Sets default values
 UBoundaryEvent::UBoundaryEvent()

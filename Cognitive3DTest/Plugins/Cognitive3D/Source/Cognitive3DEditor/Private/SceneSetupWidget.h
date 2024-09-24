@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CognitiveEditorTools.h"
+
 #include "CognitiveEditorData.h"
 #include "Cognitive3DSettings.h"
 #include "IDetailCustomization.h"
@@ -27,6 +27,7 @@
 
 class FCognitiveTools;
 class FCognitive3DEditorModule;
+class FCognitiveEditorTools;
 
 //screens:
 //intro + dev key check

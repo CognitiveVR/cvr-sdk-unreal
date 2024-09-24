@@ -3,6 +3,7 @@
 */
 
 #include "LocalCache.h"
+#include "Analytics.h"
 
 FLocalCache::FLocalCache(FString path)
 {

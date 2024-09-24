@@ -3,6 +3,8 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/HMDOrientation.h"
+#include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
 
 UHMDOrientation::UHMDOrientation()
 {

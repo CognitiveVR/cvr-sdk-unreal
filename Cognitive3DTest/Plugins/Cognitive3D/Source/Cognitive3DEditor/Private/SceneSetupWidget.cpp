@@ -4,6 +4,10 @@
 
 #include "SceneSetupWidget.h"
 
+#include "CognitiveEditorTools.h"
+#include "IPluginManager.h"
+#include "Analytics.h"
+
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
 TArray<TSharedPtr<FDynamicData>> SSceneSetupWidget::GetSceneDynamics()

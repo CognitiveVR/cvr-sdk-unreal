@@ -4,6 +4,9 @@
 
 #include "PlayerTracker.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Cognitive3D/Public/DynamicObject.h"
+#include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
 
 UPlayerTracker::UPlayerTracker()
 {

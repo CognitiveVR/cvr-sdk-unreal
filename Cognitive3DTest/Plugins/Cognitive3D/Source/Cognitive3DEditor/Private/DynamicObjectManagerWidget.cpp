@@ -3,6 +3,7 @@
 */
 
 #include "DynamicObjectManagerWidget.h"
+#include "Analytics.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 

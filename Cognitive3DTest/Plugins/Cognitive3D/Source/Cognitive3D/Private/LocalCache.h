@@ -4,13 +4,9 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "Interfaces/IAnalyticsProviderModule.h"
 #include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
-//#include "Cognitive3D/Public/Cognitive3D.h"
-#include "Json.h"
-#include "Misc/FileHelper.h"
-#include "HAL/FileManagerGeneric.h"
+
 #if PLATFORM_ANDROID
 #include "Android/AndroidPlatformMisc.h"
 #else

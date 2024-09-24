@@ -3,6 +3,8 @@
 */
 
 #include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
+#include "Cognitive3D/Public/Cognitive3DBlueprints.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
 
 FSensors::FSensors()
 {

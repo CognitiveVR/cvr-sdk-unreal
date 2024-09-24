@@ -4,6 +4,7 @@
 
 #include "C3DUtil/Util.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 double FUtil::GetTimestamp()
 {

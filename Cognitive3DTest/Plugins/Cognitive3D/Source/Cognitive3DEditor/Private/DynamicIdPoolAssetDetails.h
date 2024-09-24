@@ -20,7 +20,6 @@
 #include "Input/Reply.h"
 #include "IDetailCustomization.h"
 #include "DynamicIdPoolAsset.h"
-#include "CognitiveEditorTools.h"
 
 //custom details inspector for dynamic object component
 

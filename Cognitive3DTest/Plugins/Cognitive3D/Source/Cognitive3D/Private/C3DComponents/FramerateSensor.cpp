@@ -3,6 +3,7 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/FramerateSensor.h"
+#include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
 
 UFramerateSensor::UFramerateSensor()
 {

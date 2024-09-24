@@ -3,6 +3,7 @@
 */
 
 #include "InputTracker.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 UInputTracker::UInputTracker()

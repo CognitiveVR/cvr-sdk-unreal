@@ -3,7 +3,7 @@
 */
 
 #include "Cognitive3D/Public/Cognitive3D.h"
-#include "Cognitive3D/Public/Cognitive3DProvider.h"
+//#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Classes/Camera/CameraComponent.h"
 #ifdef INCLUDE_OCULUS_PLUGIN
 #if ENGINE_MAJOR_VERSION == 4
@@ -23,6 +23,32 @@
 #endif
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "HeadMountedDisplayTypes.h"
+
+//
+#include "Cognitive3D/Public/C3DCommonTypes.h"
+#include "Analytics.h"
+#include "TimerManager.h"
+#include "AnalyticsEventAttribute.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
+#include "Cognitive3D/Public/Cognitive3DBlueprints.h"
+#include "HeadMountedDisplay.h"
+#include "Cognitive3D/Public/Cognitive3DSettings.h"
+#include "Cognitive3D/Private/ExitPoll.h"
+#include "Cognitive3D/Private/C3DComponents/PlayerTracker.h"
+#include "Cognitive3D/Public/DynamicObject.h"
+#include "Cognitive3D/Private/C3DComponents/FixationRecorder.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Cognitive3D/Private/C3DUtil/Util.h"
+#include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
+#include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
+#include "Cognitive3D/Public/CustomEvent.h"
+#include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
+#include "Cognitive3D/Private/LocalCache.h"
+#include "Cognitive3D/Private/C3DApi/GazeDataRecorder.h"
+#include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
+#include "Cognitive3D/Private/C3DApi/FixationDataRecorder.h"
+
 IMPLEMENT_MODULE(FAnalyticsCognitive3D, Cognitive3D);
 
 bool FAnalyticsProviderCognitive3D::bHasSessionStarted = false;

@@ -4,6 +4,10 @@
 
 #include "ProjectSetupWidget.h"
 
+#include "CognitiveEditorTools.h"
+#include "IPluginManager.h"
+#include "Analytics.h"
+
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
 void SProjectSetupWidget::CheckForExpiredDeveloperKey(FString developerKey)
