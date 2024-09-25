@@ -83,7 +83,7 @@ public:
 
 	
 
-	TSharedPtr<FString> SceneDisplayName;
+	static TSharedPtr<FString> SceneDisplayName;
 
 	TSharedPtr<class SComboBox<TSharedPtr<FString>>> SceneNamesComboBox;
 	TArray<TSharedPtr<FString>> SceneNamesComboList;

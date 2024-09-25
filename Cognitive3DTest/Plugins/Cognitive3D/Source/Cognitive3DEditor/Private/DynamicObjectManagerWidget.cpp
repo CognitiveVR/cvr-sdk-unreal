@@ -7,6 +7,7 @@
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
 TArray<FDashboardObject> SDynamicObjectManagerWidget::dashboardObjects = TArray<FDashboardObject>();
+TSharedPtr<FString> SDynamicObjectManagerWidget::SceneDisplayName = TSharedPtr<FString>();
 
 TArray<TSharedPtr<FDynamicData>> SDynamicObjectManagerWidget::GetSceneDynamics()
 {
@@ -105,12 +106,14 @@ void SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived(FHttpReque
 		auto content = Response->GetContentAsString();
 		if (FJsonObjectConverter::JsonArrayStringToUStruct(content, &dashboardObjects, 0, 0))
 		{
+			SceneDynamicObjectTable->RefreshTable();
 
 		}
 		else
 		{
 			UE_LOG(LogTemp, Error, TEXT("SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived failed to deserialize dynamic object list"));
 			GLog->Log(content);
+			SceneDynamicObjectTable->RefreshTable();
 		}
 	}
 	else
@@ -144,7 +147,71 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 			SNew(SOverlay)
 			+ SOverlay::Slot()
 			[
-			SNew(SVerticalBox)
+				SNew(SVerticalBox)
+
+				+ SVerticalBox::Slot() //scene selection dropdown and text
+				.Padding(0, 0, 0, padding)
+				//.HAlign(EHorizontalAlignment::HAlign_Center)
+				//.VAlign(VAlign_Center)
+				.AutoHeight()
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.FillWidth(1)
+					[
+						SNew(SBox)
+						.MaxDesiredHeight(32)
+						.HeightOverride(32)
+						[
+							SNew(STextBlock)
+							.AutoWrapText(true)
+							.Justification(ETextJustify::Center)
+							.Text(FText::FromString("Select the Scene Data for uploading:"))
+						]
+					]
+					+ SHorizontalBox::Slot()
+					.FillWidth(1)
+					[
+						SNew(SBox)
+						.MaxDesiredHeight(20)
+						.HeightOverride(20)
+						//.Visibility(this, &SDynamicObjectManagerWidget::SceneUploadedVisibility)
+						[
+							SAssignNew(SceneNamesComboBox, SComboBox< TSharedPtr<FString> >)
+							.OptionsSource(&SceneNamesComboList)
+							.OnGenerateWidget(this, &SDynamicObjectManagerWidget::MakeSceneNamesComboWidget)
+							.OnSelectionChanged(this, &SDynamicObjectManagerWidget::OnSceneNamesChanged)
+							.OnComboBoxOpening(this, &SDynamicObjectManagerWidget::OnSceneNamesComboOpening)
+							.InitiallySelectedItem(SceneDisplayName)
+							.Content()
+							[
+								SNew(STextBlock)
+								.Text(this, &SDynamicObjectManagerWidget::GetSceneNamesComboBoxContent)
+								.Font(IDetailLayoutBuilder::GetDetailFont())
+								//.ToolTipText(this, &FBodyInstanceCustomization::GetCollisionProfileComboBoxToolTip)
+							]
+						]
+					]
+				]
+
+				+ SVerticalBox::Slot() //warning for invalid scenes
+				.Padding(0, 0, 0, padding)
+				.HAlign(EHorizontalAlignment::HAlign_Center)
+				.VAlign(VAlign_Center)
+				.AutoHeight()
+				[
+					SNew(SHorizontalBox)
+					+SHorizontalBox::Slot()
+					[
+						SNew(SBox)
+						.Visibility(this, &SDynamicObjectManagerWidget::SceneUploadedVisibility)
+						[
+							SNew(STextBlock)
+							.Text(this, &SDynamicObjectManagerWidget::GetSceneText)
+						]
+					]
+				]
+
 			+ SVerticalBox::Slot() //if the scene isn't valid, display the onboarding prompt
 			.Padding(0, 10, 0, padding)
 			.HAlign(EHorizontalAlignment::HAlign_Center)
@@ -191,48 +258,6 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					SNew(SButton)
 					.Text(FText::FromString("Open Scene Setup Window"))
 					.OnClicked(this,&SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow)
-				]
-			]
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				//TODO labels and tooltips
-				//TODO make this a dedicated c3d scene selection slate widget
-				SNew(SBox)
-				.MaxDesiredHeight(32)
-				.HeightOverride(32)
-				[
-					SAssignNew(SceneNamesComboBox, SComboBox< TSharedPtr<FString> >)
-					.OptionsSource(&SceneNamesComboList)
-					.OnGenerateWidget(this, &SDynamicObjectManagerWidget::MakeSceneNamesComboWidget)
-					.OnSelectionChanged(this, &SDynamicObjectManagerWidget::OnSceneNamesChanged)
-					.OnComboBoxOpening(this, &SDynamicObjectManagerWidget::OnSceneNamesComboOpening)
-					.InitiallySelectedItem(SceneDisplayName)
-					.Content()
-					[
-						SNew(STextBlock)
-						.Text(this, &SDynamicObjectManagerWidget::GetSceneNamesComboBoxContent)
-						.Font(IDetailLayoutBuilder::GetDetailFont())
-						//.ToolTipText(this, &FBodyInstanceCustomization::GetCollisionProfileComboBoxToolTip)
-					]
-				]
-			]
-
-			+ SVerticalBox::Slot() //warning for invalid scenes
-			.Padding(0, 0, 0, padding)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			.VAlign(VAlign_Center)
-			.AutoHeight()
-			[
-				SNew(SHorizontalBox)
-				+SHorizontalBox::Slot()
-				[
-					SNew(SBox)
-					.Visibility(this, &SDynamicObjectManagerWidget::SceneUploadedVisibility)
-					[
-						SNew(STextBlock)
-						.Text(this, &SDynamicObjectManagerWidget::GetSceneText)
-					]
 				]
 			]
 
@@ -394,10 +419,6 @@ FReply SDynamicObjectManagerWidget::RefreshDisplayDynamicObjectsCountInScene()
 	if (!SceneDynamicObjectTable.IsValid())
 	{
 		GLog->Log("SceneDynamicObjectTable invalid!");
-	}
-	else
-	{
-		SceneDynamicObjectTable->RefreshTable();
 	}
 
 	return FReply::Handled();
@@ -745,7 +766,8 @@ FText SDynamicObjectManagerWidget::GetSceneText() const
 	if (tools->SceneHasSceneId(*SceneDisplayName))
 	{
 		auto data = tools->GetSceneData(*SceneDisplayName);
-		return FText::FromString("Scene: " + data->Name + "   Version: " + FString::FromInt(data->VersionNumber));
+		//return FText::FromString("Scene: " + data->Name + "   Version: " + FString::FromInt(data->VersionNumber));
+		return FText::FromString("Scene Version: " + FString::FromInt(data->VersionNumber));
 	}
 	return FText::FromString("Scene has not been exported!");
 }
@@ -833,9 +855,9 @@ void SDynamicObjectManagerWidget::OnSceneNamesChanged(TSharedPtr<FString> NewSel
 	// if it's set from code, we did that on purpose
 	//if (SelectInfo != ESelectInfo::Direct)
 	{
-		GLog->Log(*NewSelection);
 		SceneDisplayName = NewSelection;
 	}
+	RefreshDisplayDynamicObjectsCountInScene();
 }
 
 void SDynamicObjectManagerWidget::OnSceneNamesComboOpening()

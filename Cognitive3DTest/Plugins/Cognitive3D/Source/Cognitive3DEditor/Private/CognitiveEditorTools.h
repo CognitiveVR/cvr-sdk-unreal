@@ -344,10 +344,16 @@ public:
 		return false;
 	}
 
-
-	TArray<TSharedPtr<FEditorSceneData>> SceneData;
+	//reads scene data from ini
+	void ReadSceneDataFromFile();
+		TArray<TSharedPtr<FEditorSceneData>> SceneData;
 	//returns SceneData array
 	TArray<TSharedPtr<FEditorSceneData>> GetSceneData() const;
+	//returns data about a scene by name
+	TSharedPtr<FEditorSceneData> GetSceneData(FString scenename) const;
+	//returns data about a scene by the currently open scene
+	TSharedPtr<FEditorSceneData> GetCurrentSceneData() const;
+
 
 	//Third Party SDKs
 	TArray<TSharedPtr<FString>> ThirdPartySDKData;
@@ -358,18 +364,12 @@ public:
 	FReply OpenCurrentSceneInBrowser();
 	bool HasDeveloperKey() const;
 	bool HasApplicationKey() const;
-	
-	//reads scene data from ini
-	void ReadSceneDataFromFile();
+
+
 
 	//send a http request to get the scene version data for current scene from sceneexplorer
 	FReply ButtonCurrentSceneVersionRequest();
 	
-	//returns data about a scene by name
-	TSharedPtr<FEditorSceneData> GetSceneData(FString scenename) const;
-	//returns data about a scene by the currently open scene
-	TSharedPtr<FEditorSceneData> GetCurrentSceneData() const;
-
 	//has json file and no bmp files in export directory
 	bool HasConvertedFilesInDirectory() const;
 	bool CanUploadSceneFiles() const;
