@@ -477,7 +477,7 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 	if (result2 == FSuppressableWarningDialog::EResult::Confirm)
 	{
 		//then upload all
-		FCognitiveEditorTools::GetInstance()->UploadDynamics();
+		FCognitiveEditorTools::GetInstance()->UploadDynamics(*SceneDisplayName);
 
 		//upload aggregation manifest data
 		FCognitiveEditorTools::GetInstance()->UploadDynamicsManifest(*SceneDisplayName);
@@ -600,7 +600,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 		int32 uploadCount = 0;
 		for (auto& elem : selected)
 		{
-			FCognitiveEditorTools::GetInstance()->UploadDynamic(elem->MeshName);
+			FCognitiveEditorTools::GetInstance()->UploadDynamic(*SceneDisplayName, elem->MeshName);
 		}
 
 		//upload aggregation manifest data of selected objects

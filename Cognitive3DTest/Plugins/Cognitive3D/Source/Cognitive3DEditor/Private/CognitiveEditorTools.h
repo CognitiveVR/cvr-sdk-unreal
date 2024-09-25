@@ -183,7 +183,7 @@ public:
 	int32 CountUnexportedDynamics();
 	int32 CountUnexportedDynamicsNotUnique();
 
-	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
+	void UploadFromDirectory(FString LevelName, FString url, FString directory, FString expectedResponseType);
 
 	//dynamic objects
 	//Runs the built-in gltf exporter with all meshes
@@ -204,9 +204,9 @@ public:
 
 	//uploads each dynamic object using its directory to the current scene
 	UFUNCTION(Exec, Category = "Dynamics")
-		FReply UploadDynamics();
+		FReply UploadDynamics(FString LevelName);
 	UFUNCTION(Exec, Category = "Dynamics")
-		FReply UploadDynamic(FString directory);
+		FReply UploadDynamic(FString LevelName, FString directory);
 
 	//this is for aggregating dynamic objects
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
@@ -225,14 +225,14 @@ public:
 	FReply GetDynamicsManifest(FString LevelName);
 	void OnDynamicManifestResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	void OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void OnUploadManifestIdsCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName);
+	void OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName);
+	void OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName);
+	void OnUploadManifestIdsCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName);
 	void OnUploadScreenshotCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	bool PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
-	bool PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
+	//bool PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
 	void* ChooseParentWindowHandle();
 
 	//default base export directory
@@ -374,8 +374,8 @@ public:
 	bool HasConvertedFilesInDirectory() const;
 	bool CanUploadSceneFiles() const;
 
-	void SceneVersionRequest(FEditorSceneData data);
-	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void SceneVersionRequest(const FEditorSceneData& data);
+	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName);
 
 	TArray<TSharedPtr<FDynamicData>> SceneExplorerDynamics;
 	TArray<TSharedPtr<FString>> SubDirectoryNames;
@@ -433,9 +433,6 @@ public:
 	//create directory
 	//export scene as gltf
 	void ExportScene(FString LevelName, TArray<AActor*> actorsToExport);
-
-	//set when setting a level name to upload to. Used in scene setup callbacks that don't have reference to which scene to operate on
-	FString UploadingLevelName;
 
 	void ValidateGeneratedFiles(const FString LevelName);
 

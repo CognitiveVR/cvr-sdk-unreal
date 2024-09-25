@@ -922,7 +922,7 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(FString LevelName, 
 		if (!wroteAnyObjects)
 		{
 			GLog->Log("Couldn't find any dynamic objects to put into the aggregation manifest!");
-			FCognitiveEditorTools::OnUploadManifestCompleted(NULL, NULL, true);
+			FCognitiveEditorTools::OnUploadManifestCompleted(NULL, NULL, true,FString(""));
 			return FReply::Handled();
 		}
 		//remove last comma
@@ -964,7 +964,7 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(FString LevelName, 
 		HttpRequest->SetContentAsString(objectManifest);
 		GLog->Log(objectManifest);
 
-		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestCompleted);
+		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestCompleted, LevelName);
 
 		HttpRequest->ProcessRequest();
 
@@ -1056,7 +1056,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(FString LevelName, TArra
 		HttpRequest->SetHeader("Authorization", AuthValue);
 		HttpRequest->SetContentAsString(objectManifest);
 
-		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestIdsCompleted);
+		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestIdsCompleted, LevelName);
 
 		HttpRequest->ProcessRequest();
 
@@ -1068,18 +1068,18 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(FString LevelName, TArra
 	return FReply::Handled();
 }
 
-void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString Level)
 {
 	WizardUploading = false;
 	if (Response.Get() == NULL) //likely no aggregation manifest to upload. no request, no response
 	{
-		GetDynamicsManifest(UploadingLevelName);
+		GetDynamicsManifest(Level);
 		return;
 	}
 
 	if (bWasSuccessful && Response->GetResponseCode() < 300) //successfully uploaded
 	{
-		GetDynamicsManifest(UploadingLevelName);
+		GetDynamicsManifest(Level);
 		WizardUploadError = FString::FromInt(Response->GetResponseCode());
 		WizardUploadResponseCode = Response->GetResponseCode();
 		ShowNotification(TEXT("Dynamic Manifest Uploaded Successfully"));
@@ -1092,18 +1092,18 @@ void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, F
 	}
 }
 
-void FCognitiveEditorTools::OnUploadManifestIdsCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveEditorTools::OnUploadManifestIdsCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
 	WizardUploading = false;
 	if (Response.Get() == NULL) //likely no aggregation manifest to upload. no request, no response
 	{
-		GetDynamicsManifest(UploadingLevelName);
+		GetDynamicsManifest(LevelName);
 		return;
 	}
 
 	if (bWasSuccessful && Response->GetResponseCode() < 300) //successfully uploaded
 	{
-		GetDynamicsManifest(UploadingLevelName);
+		GetDynamicsManifest(LevelName);
 		WizardUploadError = FString::FromInt(Response->GetResponseCode());
 		WizardUploadResponseCode = Response->GetResponseCode();
 		ShowNotification(TEXT("Dynamic Id Pool Ids Uploaded Successfully"));
@@ -1121,7 +1121,7 @@ FReply FCognitiveEditorTools::GetDynamicsManifest(FString LevelName)
 	TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName);
 	if (!sceneData.IsValid())
 	{
-		GLog->Log("CognitiveTools::GetDyanmicManifest could not find current scene data");
+		GLog->Log("CognitiveTools::GetDyanmicManifest could not find current scene data " + LevelName);
 		return FReply::Handled();
 	}
 	if (sceneData->VersionId == 0)
@@ -1201,7 +1201,7 @@ void FCognitiveEditorTools::OnDynamicManifestResponse(FHttpRequestPtr Request, F
 }
 int32 OutstandingDynamicUploadRequests = 0;
 
-FReply FCognitiveEditorTools::UploadDynamics()
+FReply FCognitiveEditorTools::UploadDynamics(FString LevelName)
 {
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
@@ -1234,7 +1234,7 @@ FReply FCognitiveEditorTools::UploadDynamics()
 
 	GLog->Log("FCognitiveEditorTools::UploadDynamics found " + FString::FromInt(dynamicNames.Num()) + " exported dynamic objects");
 	//TODO should pass name into the function
-	TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(UploadingLevelName);
+	TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(LevelName);
 
 	if (!currentSceneData.IsValid())
 	{
@@ -1257,7 +1257,7 @@ FReply FCognitiveEditorTools::UploadDynamics()
 			FString url = PostDynamicObjectMeshData(currentSceneData->Id, currentSceneData->VersionNumber, fileName);
 			GLog->Log("dynamic upload to url " + url);
 
-			UploadFromDirectory(url, filePath, "object");
+			UploadFromDirectory(LevelName, url, filePath, "object");
 			OutstandingDynamicUploadRequests++;
 		}
 		else
@@ -1278,7 +1278,7 @@ FReply FCognitiveEditorTools::UploadDynamics()
 	return FReply::Handled();
 }
 
-FReply FCognitiveEditorTools::UploadDynamic(FString directory)
+FReply FCognitiveEditorTools::UploadDynamic(FString LevelName, FString directory)
 {
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
@@ -1313,7 +1313,7 @@ FReply FCognitiveEditorTools::UploadDynamic(FString directory)
 
 	GLog->Log("FCognitiveEditorTools::UploadDynamics found " + FString::FromInt(dynamicNames.Num()) + " exported dynamic objects");
 	//TODO should pass level name into the function
-	TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(UploadingLevelName);
+	TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(LevelName);
 
 	if (!currentSceneData.IsValid())
 	{
@@ -1336,7 +1336,7 @@ FReply FCognitiveEditorTools::UploadDynamic(FString directory)
 			FString url = PostDynamicObjectMeshData(currentSceneData->Id, currentSceneData->VersionNumber, fileName);
 			GLog->Log("dynamic upload to url " + url);
 
-			UploadFromDirectory(url, filePath, "object");
+			UploadFromDirectory(LevelName, url, filePath, "object");
 			OutstandingDynamicUploadRequests++;
 		}
 		else
@@ -1527,7 +1527,7 @@ FReply FCognitiveEditorTools::UploadScene(const FString& LevelName)
 	}
 
 	GLog->Log("FCognitiveEditorTools::UploadScene upload scene to " + url);
-	UploadFromDirectory(url, GetSceneExportDirectory(LevelName), "scene");
+	UploadFromDirectory(LevelName, url, GetSceneExportDirectory(LevelName), "scene");
 	//IMPROVEMENT listen for response. when the response returns, request the scene version with auth token
 
 	return FReply::Handled();
@@ -1712,7 +1712,7 @@ int32 FCognitiveEditorTools::CountUnexportedDynamicsNotUnique()
 	return meshNames.Num();
 }
 
-void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, FString expectedResponseType)
+void FCognitiveEditorTools::UploadFromDirectory(FString LevelName, FString url, FString directory, FString expectedResponseType)
 {
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
@@ -1862,17 +1862,17 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 
 	if (expectedResponseType == "scene")
 	{
-		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadSceneCompleted);
+		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadSceneCompleted, LevelName);
 	}
 	if (expectedResponseType == "object")
 	{
-		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadObjectCompleted);
+		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadObjectCompleted, LevelName);
 	}
 
 	HttpRequest->ProcessRequest();
 }
 
-void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
 	//TODO disable upload button if settings.json doesn't exist
 	//TODO finish scene setup window - it freezes after upload completes (successfully)
@@ -1906,13 +1906,13 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 
 
 		//FString currentSceneName = myworld->GetMapName();
-		UploadingLevelName.RemoveFromStart(myworld->StreamingLevelsPrefix);
+		LevelName.RemoveFromStart(myworld->StreamingLevelsPrefix);
 
 		FString responseNoQuotes = *Response->GetContentAsString().Replace(TEXT("\""), TEXT(""));
 
 		if (responseNoQuotes.Len() > 0)
 		{
-			SaveSceneData(UploadingLevelName, responseNoQuotes);
+			SaveSceneData(LevelName, responseNoQuotes);
 			ReadSceneDataFromFile();
 		}
 		else
@@ -1923,7 +1923,7 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 		ConfigFileHasChanged = true;
 		if (WizardUploading)
 		{
-			SceneNameVersionRequest(UploadingLevelName);
+			SceneNameVersionRequest(LevelName);
 		}
 	}
 	else
@@ -1935,7 +1935,7 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 	}
 }
 
-void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
 	OutstandingDynamicUploadRequests--;
 
@@ -1973,7 +1973,7 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 	if (WizardUploading && OutstandingDynamicUploadRequests <= 0)
 	{
 		//upload manifest
-		UploadDynamicsManifest(UploadingLevelName);
+		UploadDynamicsManifest(LevelName);
 	}
 }
 
@@ -2616,7 +2616,7 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 	//ConfigFileHasChanged = true;
 }
 
-void FCognitiveEditorTools::SceneVersionRequest(FEditorSceneData data)
+void FCognitiveEditorTools::SceneVersionRequest(const FEditorSceneData& data)
 {
 	if (!HasDeveloperKey())
 	{
@@ -2636,11 +2636,11 @@ void FCognitiveEditorTools::SceneVersionRequest(FEditorSceneData data)
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetHeader("Content-Type", "application/json");
 
-	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::SceneVersionResponse);
+	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::SceneVersionResponse, data.Name);
 	HttpRequest->ProcessRequest();
 }
 
-void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
 	if (bWasSuccessful)
 		GLog->Log("FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode()));
@@ -2710,7 +2710,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		}
 
 		//check that there is scene data in ini
-		TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(UploadingLevelName);
+		TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(LevelName);
 		if (!currentSceneData.IsValid())
 		{
 			GLog->Log("FCognitiveTools::SceneVersionResponse can't find current scene data in ini files");
@@ -2782,7 +2782,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 
 		if (WizardUploading)
 		{
-			UploadDynamics();
+			UploadDynamics(LevelName);
 		}
 	}
 	else
@@ -3421,7 +3421,6 @@ void FCognitiveEditorTools::WizardUpload(const FString& LevelName)
 		}
 	}
 
-	UploadingLevelName = LevelName;
 	UploadScene(LevelName);
 }
 
