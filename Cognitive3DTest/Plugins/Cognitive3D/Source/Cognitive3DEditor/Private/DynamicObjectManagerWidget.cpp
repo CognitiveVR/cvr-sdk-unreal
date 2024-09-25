@@ -126,6 +126,8 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 	FCognitiveEditorTools::CheckIniConfigured();
 	CheckForExpiredDeveloperKey();
 
+	SceneDisplayName = MakeShareable(new FString(""));
+
 	SceneNamesComboList.Empty();
 	for (auto sceneData : FCognitiveEditorTools::GetInstance()->GetSceneData())
 	{
@@ -750,20 +752,42 @@ FText SDynamicObjectManagerWidget::GetSceneText() const
 
 EVisibility SDynamicObjectManagerWidget::SceneNotUploadedVisibility() const
 {
-	if (FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName))
+	if (SceneDisplayName.IsValid())
 	{
-		return EVisibility::Collapsed;
+		if (FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName))
+		{
+			return EVisibility::Collapsed;
+		}
+		return EVisibility::Visible;
 	}
-	return EVisibility::Visible;
+	else
+	{
+		if (FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
+		{
+			return EVisibility::Collapsed;
+		}
+		return EVisibility::Visible;
+	}
 }
 
 EVisibility SDynamicObjectManagerWidget::SceneUploadedVisibility() const
 {
-	if (FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName))
+	if (SceneDisplayName.IsValid())
 	{
-		return EVisibility::Visible;
+		if (FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName))
+		{
+			return EVisibility::Visible;
+		}
+		return EVisibility::Collapsed;
 	}
-	return EVisibility::Collapsed;
+	else
+	{
+		if (FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
+		{
+			return EVisibility::Visible;
+		}
+		return EVisibility::Collapsed;
+	}
 }
 
 FReply SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow()
