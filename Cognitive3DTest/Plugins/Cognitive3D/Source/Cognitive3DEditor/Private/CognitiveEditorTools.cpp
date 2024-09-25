@@ -1403,8 +1403,10 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 		const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
+		GConfig->Flush(false, NormalizedEditorIni);
 #else
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
+		GConfig->Flush(false, EditorIni);
 #endif
 	}
 	else
@@ -1416,8 +1418,10 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 		const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
+		GConfig->Flush(false, NormalizedEditorIni);
 #else
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
+		GConfig->Flush(false, EditorIni);
 #endif
 	}
 	return FReply::Handled();
@@ -2378,6 +2382,16 @@ void FCognitiveEditorTools::OnAttributionKeyChanged(const FText& Text)
 void FCognitiveEditorTools::OnExportPathChanged(const FText& Text)
 {
 	BaseExportDirectory = Text.ToString();
+	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+	const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
+	GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
+	GConfig->Flush(false, NormalizedEditorIni);
+#else
+	GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
+	GConfig->Flush(false, EditorIni);
+#endif
 }
 
 FText FCognitiveEditorTools::UploadSceneNameFiles() const
@@ -2786,8 +2800,8 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, EditorIni);
 
-	GConfig->Flush(false, GEngineIni);
-	GConfig->Flush(false, GEditorIni);
+	GConfig->Flush(false, EngineIni);
+	GConfig->Flush(false, EditorIni);
 #endif
 	ConfigFileHasChanged = true;
 
@@ -2805,7 +2819,7 @@ void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 	GConfig->Flush(false, NormalizedEngineIni);
 #else
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, EngineIni);
-	GConfig->Flush(false, GEngineIni);
+	GConfig->Flush(false, EngineIni);
 #endif
 
 	ConfigFileHasChanged = true;
@@ -2824,7 +2838,7 @@ void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
 	GConfig->Flush(false, NormalizedEditorIni);
 #else
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, EditorIni);
-	GConfig->Flush(false, GEngineIni);
+	GConfig->Flush(false, EditorIni);
 #endif
 
 	ConfigFileHasChanged = true;
@@ -2872,8 +2886,10 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 	const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
 
 	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, NormalizedTestSyncFile);
+	GConfig->Flush(false, NormalizedTestSyncFile);
 #else
 	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, TestSyncFile);
+	GConfig->Flush(false, TestSyncFile);
 #endif
 
 	bool didSetKey = false;
@@ -2914,7 +2930,7 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 #else
 	GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, TestSyncFile);
 
-	GConfig->Flush(false, GEngineIni);
+	GConfig->Flush(false, TestSyncFile);
 #endif
 }
 
