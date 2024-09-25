@@ -848,7 +848,7 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 	return FReply::Handled();
 }
 
-FReply FCognitiveEditorTools::UploadDynamicsManifest()
+FReply FCognitiveEditorTools::UploadDynamicsManifest(FString LevelName)
 {
 	TArray<UDynamicObject*> dynamics;
 
@@ -873,7 +873,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 
 	GLog->Log("Cognitive3D Tools uploading manifest for " + FString::FromInt(dynamics.Num()) + " objects");
 
-	UploadSelectedDynamicsManifest(dynamics);
+	UploadSelectedDynamicsManifest(LevelName, dynamics);
 
 	return FReply::Handled();
 }
@@ -881,7 +881,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 //TODO explicitly define where the dynamic objects manifest should be uploaded to
 //TODO probably add a 'scene' text field to the dynamic object window
 //can this be a generated dropdown, to avoid 
-FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObject*> dynamics)
+FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(FString LevelName, TArray<UDynamicObject*> dynamics)
 {
 	bool wroteAnyObjects = false;
 
@@ -932,25 +932,25 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObje
 
 		//send request for this dynamics part
 		//get scene id
-		TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
-		if (!currentSceneData.IsValid())
+		TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName);
+		if (!sceneData.IsValid())
 		{
 			GLog->Log("FCognitiveEditorTools::UploadDynamicObjectManifest could not find current scene id");
 			return FReply::Handled();
 		}
 
-		if (currentSceneData->Id == "")
+		if (sceneData->Id == "")
 		{
 			GLog->Log("CognitiveToolsCustomization::UploadDynamicsManifest couldn't find sceneid for current scene");
 			return FReply::Handled();
 		}
-		if (currentSceneData->VersionNumber == 0)
+		if (sceneData->VersionNumber == 0)
 		{
 			GLog->Log("CognitiveTools::UploadDynamicsManifest current scene does not have valid version number. GetSceneVersions and try again");
 			return FReply::Handled();
 		}
 
-		FString url = PostDynamicObjectManifest(currentSceneData->Id, currentSceneData->VersionNumber);
+		FString url = PostDynamicObjectManifest(sceneData->Id, sceneData->VersionNumber);
 
 		//send manifest to api/objects/sceneid
 
@@ -976,7 +976,7 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObje
 	return FReply::Handled();
 }
 
-FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FString meshName, FString prefabName)
+FReply FCognitiveEditorTools::UploadDynamicsManifestIds(FString LevelName, TArray<FString> ids, FString meshName, FString prefabName)
 {
 	//this is used by dynamic object id pool. doesn't have initial positions, rotations, scale
 	GLog->Log("Cognitive3D Tools uploading manifest for " + FString::FromInt(ids.Num()) + " objects");
@@ -1025,25 +1025,25 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FSt
 		objectManifest += "]}";
 
 		//get scene id
-		TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
-		if (!currentSceneData.IsValid())
+		TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName);
+		if (!sceneData.IsValid())
 		{
 			GLog->Log("FCognitiveEditorTools::UploadDynamicObjectManifest could not find current scene id");
 			return FReply::Handled();
 		}
 
-		if (currentSceneData->Id == "")
+		if (sceneData->Id == "")
 		{
 			GLog->Log("CognitiveToolsCustomization::UploadDynamicsManifest couldn't find sceneid for current scene");
 			return FReply::Handled();
 		}
-		if (currentSceneData->VersionNumber == 0)
+		if (sceneData->VersionNumber == 0)
 		{
 			GLog->Log("CognitiveTools::UploadDynamicsManifest current scene does not have valid version number. GetSceneVersions and try again");
 			return FReply::Handled();
 		}
 
-		FString url = PostDynamicObjectManifest(currentSceneData->Id, currentSceneData->VersionNumber);
+		FString url = PostDynamicObjectManifest(sceneData->Id, sceneData->VersionNumber);
 
 		//send manifest to api/objects/sceneid
 
@@ -1073,13 +1073,13 @@ void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, F
 	WizardUploading = false;
 	if (Response.Get() == NULL) //likely no aggregation manifest to upload. no request, no response
 	{
-		GetDynamicsManifest();
+		GetDynamicsManifest(UploadingLevelName);
 		return;
 	}
 
 	if (bWasSuccessful && Response->GetResponseCode() < 300) //successfully uploaded
 	{
-		GetDynamicsManifest();
+		GetDynamicsManifest(UploadingLevelName);
 		WizardUploadError = FString::FromInt(Response->GetResponseCode());
 		WizardUploadResponseCode = Response->GetResponseCode();
 		ShowNotification(TEXT("Dynamic Manifest Uploaded Successfully"));
@@ -1097,13 +1097,13 @@ void FCognitiveEditorTools::OnUploadManifestIdsCompleted(FHttpRequestPtr Request
 	WizardUploading = false;
 	if (Response.Get() == NULL) //likely no aggregation manifest to upload. no request, no response
 	{
-		GetDynamicsManifest();
+		GetDynamicsManifest(UploadingLevelName);
 		return;
 	}
 
 	if (bWasSuccessful && Response->GetResponseCode() < 300) //successfully uploaded
 	{
-		GetDynamicsManifest();
+		GetDynamicsManifest(UploadingLevelName);
 		WizardUploadError = FString::FromInt(Response->GetResponseCode());
 		WizardUploadResponseCode = Response->GetResponseCode();
 		ShowNotification(TEXT("Dynamic Id Pool Ids Uploaded Successfully"));
@@ -1116,15 +1116,15 @@ void FCognitiveEditorTools::OnUploadManifestIdsCompleted(FHttpRequestPtr Request
 	}
 }
 
-FReply FCognitiveEditorTools::GetDynamicsManifest()
+FReply FCognitiveEditorTools::GetDynamicsManifest(FString LevelName)
 {
-	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
-	if (!currentSceneData.IsValid())
+	TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName);
+	if (!sceneData.IsValid())
 	{
 		GLog->Log("CognitiveTools::GetDyanmicManifest could not find current scene data");
 		return FReply::Handled();
 	}
-	if (currentSceneData->VersionId == 0)
+	if (sceneData->VersionId == 0)
 	{
 		GLog->Log("CognitiveTools::GetDyanmicManifest version id is not set! Makes sure the scene has updated scene version");
 		return FReply::Handled();
@@ -1137,7 +1137,7 @@ FReply FCognitiveEditorTools::GetDynamicsManifest()
 
 	auto HttpRequest = FHttpModule::Get().CreateRequest();
 
-	HttpRequest->SetURL(GetDynamicObjectManifest(FString::FromInt(currentSceneData->VersionId)));
+	HttpRequest->SetURL(GetDynamicObjectManifest(FString::FromInt(sceneData->VersionId)));
 
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
 	FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
@@ -1973,7 +1973,7 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 	if (WizardUploading && OutstandingDynamicUploadRequests <= 0)
 	{
 		//upload manifest
-		UploadDynamicsManifest();
+		UploadDynamicsManifest(UploadingLevelName);
 	}
 }
 
@@ -2104,13 +2104,13 @@ bool FCognitiveEditorTools::HasSetExportDirectory() const
 }
 
 
-FText FCognitiveEditorTools::GetDynamicsOnSceneExplorerTooltip() const
+FText FCognitiveEditorTools::GetDynamicsOnSceneExplorerTooltip(FString LevelName) const
 {
 	if (!HasDeveloperKey())
 	{
 		return FText::FromString("Must log in to get Dynamic Objects List from SceneExplorer");
 	}
-	auto scene = GetCurrentSceneData();
+	auto scene = GetSceneData(LevelName);
 	if (!scene.IsValid())
 	{
 		return FText::FromString("Scene does not have valid data. Must export your level before uploading dynamics!");
@@ -2152,10 +2152,10 @@ bool FCognitiveEditorTools::HasExportedAnyDynamicMeshes() const
 	return filesInDirectory.Num() > 0;
 }
 
-bool FCognitiveEditorTools::HasSetDynamicExportDirectoryHasSceneId() const
+bool FCognitiveEditorTools::HasSetDynamicExportDirectoryHasSceneId(FString LevelName) const
 {
 	if (!HasDeveloperKey()) { return false; }
-	auto scenedata = GetCurrentSceneData();
+	auto scenedata = GetSceneData(LevelName);
 	if (!scenedata.IsValid()) { return false; }
 	if (GetBaseExportDirectory().Len() == 0) { return false; }
 	return true;
@@ -2406,9 +2406,9 @@ void FCognitiveEditorTools::OnExportPathChanged(const FText& Text)
 	BaseExportDirectory = Text.ToString();
 }
 
-FText FCognitiveEditorTools::UploadSceneNameFiles() const
+FText FCognitiveEditorTools::UploadSceneNameFiles(FString LevelName) const
 {
-	auto currentscenedata = GetCurrentSceneData();
+	auto currentscenedata = GetSceneData(LevelName);
 	if (!currentscenedata.IsValid())
 	{
 		UWorld* myworld = GWorld->GetWorld();
@@ -2423,9 +2423,9 @@ FText FCognitiveEditorTools::UploadSceneNameFiles() const
 	return FText::FromString(outstring);
 }
 
-FText FCognitiveEditorTools::OpenSceneNameInBrowser() const
+FText FCognitiveEditorTools::OpenSceneNameInBrowser(FString LevelName) const
 {
-	auto currentscenedata = GetCurrentSceneData();
+	auto currentscenedata = GetSceneData(LevelName);
 	if (!currentscenedata.IsValid())
 	{
 		UWorld* myworld = GWorld->GetWorld();
@@ -2440,9 +2440,9 @@ FText FCognitiveEditorTools::OpenSceneNameInBrowser() const
 	return FText::FromString(outstring);
 }
 
-FText FCognitiveEditorTools::GetDynamicObjectUploadText() const
+FText FCognitiveEditorTools::GetDynamicObjectUploadText(FString LevelName) const
 {
-	auto data = GetCurrentSceneData();
+	auto data = GetSceneData(LevelName);
 	if (!data.IsValid())
 	{
 		return FText::FromString("No Scene Data found - Have you used Cognitive Scene Setup to export this scene?");
@@ -3358,11 +3358,11 @@ bool FCognitiveEditorTools::GenerateSettingsJsonFile(const FString& LevelName)
 	
 }
 
-bool FCognitiveEditorTools::HasSettingsJsonFile() const
+bool FCognitiveEditorTools::HasSettingsJsonFile(const FString& LevelName) const
 {
-	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
+	FString ObjPath = FPaths::Combine(BaseExportDirectory, LevelName);
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
-	FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/settings.json";
+	FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/settings.json";
 
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 	return PlatformFile.FileExists(*settingsFullPath);
@@ -3407,7 +3407,7 @@ void FCognitiveEditorTools::WizardUpload(const FString& LevelName)
 	WizardUploadError = "";
 	WizardUploadResponseCode = 0;
 
-	if (!HasSettingsJsonFile())
+	if (!HasSettingsJsonFile(LevelName))
 	{
 		WizardUploadResponseCode = 0;
 		WizardUploadError = "FCognitiveEditorToolsCustomization::WizardUpload settings.json file missing! Creating for current scene";

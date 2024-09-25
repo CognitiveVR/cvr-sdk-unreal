@@ -53,9 +53,20 @@ void SDynamicObjectManagerWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr
 
 void SDynamicObjectManagerWidget::GetDashboardManifest()
 {
+	TSharedPtr<FEditorSceneData> currentSceneData;
+
+	if (SceneDisplayName.IsValid())
+	{
+		currentSceneData = FCognitiveEditorTools::GetInstance()->GetSceneData(*SceneDisplayName);
+	}
+	else
+	{
+		currentSceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
+	}
+
 	if (FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
 	{
-		auto currentSceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
+		//auto currentSceneData = FCognitiveEditorTools::GetInstance()->GetSceneData(*SceneDisplayName);
 		if (!currentSceneData.IsValid())
 		{
 			GLog->Log("SDynamicObjectManagerWidget::GetDashboardManifest failed. current scene is null");
@@ -435,7 +446,7 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 				UDynamicIdPoolAsset* IdPoolAsset = Cast<UDynamicIdPoolAsset>(IdPoolObject);
 
 				UE_LOG(LogTemp, Warning, TEXT("Found dynamic id pool asset %s, uploading ids"), *IdPoolAsset->PrefabName);
-				FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(IdPoolAsset->Ids, IdPoolAsset->MeshName, IdPoolAsset->PrefabName);
+				FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(*SceneDisplayName, IdPoolAsset->Ids, IdPoolAsset->MeshName, IdPoolAsset->PrefabName);
 			}
 		}
 	}
@@ -467,7 +478,7 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 		FCognitiveEditorTools::GetInstance()->UploadDynamics();
 
 		//upload aggregation manifest data
-		FCognitiveEditorTools::GetInstance()->UploadDynamicsManifest();
+		FCognitiveEditorTools::GetInstance()->UploadDynamicsManifest(*SceneDisplayName);
 	}
 
 	return FReply::Handled();
@@ -489,8 +500,6 @@ void SDynamicObjectManagerWidget::OnExportPathChanged(const FText& Text)
 FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 {
 	auto selected = SceneDynamicObjectTable->TableViewWidget->GetSelectedItems();
-
-
 	for (auto& dynamic : selected)
 	{
 		//dynamic with id pool, export mesh and upload ids for aggregation
@@ -528,7 +537,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 
 			if (result1 == FSuppressableWarningDialog::EResult::Confirm)
 			{
-				FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(dynamic->DynamicPoolIds, dynamic->MeshName, dynamic->Name);
+				FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(*SceneDisplayName, dynamic->DynamicPoolIds, dynamic->MeshName, dynamic->Name);
 			}
 		}
 		//id pool asset, upload ids for aggregation
@@ -545,7 +554,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 
 			if (result1 == FSuppressableWarningDialog::EResult::Confirm)
 			{
-				FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(dynamic->DynamicPoolIds, dynamic->MeshName, dynamic->Name);
+				FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(*SceneDisplayName, dynamic->DynamicPoolIds, dynamic->MeshName, dynamic->Name);
 			}
 		}
 		//else its a normal dynamic object, we export
@@ -623,7 +632,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 			}
 		}
 
-		FCognitiveEditorTools::GetInstance()->UploadSelectedDynamicsManifest(dynamics);
+		FCognitiveEditorTools::GetInstance()->UploadSelectedDynamicsManifest(*SceneDisplayName, dynamics);
 	}
 
 	return FReply::Handled();
@@ -656,7 +665,7 @@ FText SDynamicObjectManagerWidget::UploadAllMeshesTooltip() const
 	{
 		return FText::FromString("");
 	}
-	else if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
+	else if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName))
 	{
 		return FText::FromString("Use the Open Scene Setup Window above to export these meshes and continue the guided setup to the Scene Setup Window");
 	}
@@ -675,7 +684,7 @@ bool SDynamicObjectManagerWidget::IsUploadAllEnabled() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return false; }
-	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
+	if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName)) { return false; }
 	return true;
 }
 
@@ -696,7 +705,7 @@ EVisibility SDynamicObjectManagerWidget::GetSceneWarningVisibility() const
 bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
-	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
+	if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName)) { return false; }
 	
 	//use the selection in the table, not in the scene
 	auto data = SceneDynamicObjectTable->GetSelectedDataCount();
@@ -731,9 +740,9 @@ FText SDynamicObjectManagerWidget::UploadSelectedText() const
 FText SDynamicObjectManagerWidget::GetSceneText() const
 {
 	auto tools = FCognitiveEditorTools::GetInstance();
-	if (tools->CurrentSceneHasSceneId())
+	if (tools->SceneHasSceneId(*SceneDisplayName))
 	{
-		auto data = tools->GetCurrentSceneData();
+		auto data = tools->GetSceneData(*SceneDisplayName);
 		return FText::FromString("Scene: " + data->Name + "   Version: " + FString::FromInt(data->VersionNumber));
 	}
 	return FText::FromString("Scene has not been exported!");
@@ -741,7 +750,7 @@ FText SDynamicObjectManagerWidget::GetSceneText() const
 
 EVisibility SDynamicObjectManagerWidget::SceneNotUploadedVisibility() const
 {
-	if (FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
+	if (FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName))
 	{
 		return EVisibility::Collapsed;
 	}
@@ -750,7 +759,7 @@ EVisibility SDynamicObjectManagerWidget::SceneNotUploadedVisibility() const
 
 EVisibility SDynamicObjectManagerWidget::SceneUploadedVisibility() const
 {
-	if (FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
+	if (FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName))
 	{
 		return EVisibility::Visible;
 	}

@@ -127,7 +127,7 @@ public:
 	FText DynamicCountInScene;
 	FText DisplayDynamicObjectsCountInScene() const;
 	FText DisplayDynamicObjectsCountOnWeb() const;
-	FText GetDynamicObjectUploadText() const;
+	FText GetDynamicObjectUploadText(FString LevelName) const;
 
 	FReply RefreshDisplayDynamicObjectsCountInScene();
 
@@ -210,19 +210,19 @@ public:
 
 	//this is for aggregating dynamic objects
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
-		FReply UploadDynamicsManifest();
+		FReply UploadDynamicsManifest(FString LevelName);
 
 	//this is for aggregating dynamic objects
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
-		FReply UploadSelectedDynamicsManifest(TArray<UDynamicObject*> selectedData);
+		FReply UploadSelectedDynamicsManifest(FString LevelName, TArray<UDynamicObject*> selectedData);
 
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
-		FReply UploadDynamicsManifestIds(TArray<FString> ids, FString meshName, FString prefabName);
+		FReply UploadDynamicsManifestIds(FString LevelName, TArray<FString> ids, FString meshName, FString prefabName);
 
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
 		FReply SetUniqueDynamicIds();
 
-	FReply GetDynamicsManifest();
+	FReply GetDynamicsManifest(FString LevelName);
 	void OnDynamicManifestResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	void OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
@@ -392,8 +392,8 @@ public:
 	TArray<FString> GetValidDirectories(const FString& Directory);
 	int32 DynamicObjectExportedCount;
 
-	FText UploadSceneNameFiles() const;
-	FText OpenSceneNameInBrowser() const;
+	FText UploadSceneNameFiles(FString LevelName) const;
+	FText OpenSceneNameInBrowser(FString LevelName) const;
 	FReply OpenURL(FString url);
 	void FindAllSubDirectoryNames();
 	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
@@ -402,13 +402,13 @@ public:
 
 	void DelayScreenshot(FString filePath, FLevelEditorViewportClient* perspectiveView, FVector startPos, FRotator startRot);
 	
-	FText GetDynamicsOnSceneExplorerTooltip() const;
+	FText GetDynamicsOnSceneExplorerTooltip(FString LevelName) const;
 	FText SendDynamicsToSceneExplorerTooltip() const;
 	FReply RefreshDynamicSubDirectory();
 	bool ConfigFileHasChanged = false;
 	EVisibility ConfigFileChangedVisibility() const;
 
-	bool HasSetDynamicExportDirectoryHasSceneId() const;
+	bool HasSetDynamicExportDirectoryHasSceneId(FString LevelName) const;
 	FReply SaveAPIDeveloperKeysToFile();
 
 	void SaveApplicationKeyToFile(FString key);
@@ -433,6 +433,8 @@ public:
 	//create directory
 	//export scene as gltf
 	void ExportScene(FString LevelName, TArray<AActor*> actorsToExport);
+
+	//set when setting a level name to upload to. Used in scene setup callbacks that don't have reference to which scene to operate on
 	FString UploadingLevelName;
 
 	void ValidateGeneratedFiles(const FString LevelName);
@@ -442,7 +444,7 @@ public:
 	void ModifyGLTFContent(FString FilePath);
 
 	bool GenerateSettingsJsonFile(const FString& LevelName);
-	bool HasSettingsJsonFile() const;
+	bool HasSettingsJsonFile(const FString& LevelName) const;
 
 	const FSlateBrush* GetBoxEmptyIcon() const;
 	FSlateBrush* BoxEmptyIcon;
