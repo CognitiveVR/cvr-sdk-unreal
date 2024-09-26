@@ -2278,7 +2278,7 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 	for (const FAssetData& Asset : AssetData)
 	{
 		// Do something with each asset, e.g., log its name
-		UE_LOG(LogTemp, Log, TEXT("Found Asset: %s"), *Asset.AssetName.ToString());
+		//UE_LOG(LogTemp, Log, TEXT("Found Asset: %s"), *Asset.AssetName.ToString());
 
 		//get the actual asset from the asset data
 		UObject* IdPoolObject = Asset.GetAsset();

@@ -68,6 +68,11 @@ void SDynamicObjectTableWidget::Construct(const FArguments& Args)
 
 void SDynamicObjectTableWidget::RefreshTable()
 {
+	if (!TableViewWidget.IsValid())
+	{
+		GLog->Log("SDynamicObjectTableWidget::RefreshTable table is invalid");
+		return;
+	}
 	TableViewWidget->RequestListRefresh();
 }
 
@@ -134,7 +139,6 @@ TSharedRef<ITableRow> SDynamicObjectTableWidget::OnGenerateRowForTable(TSharedPt
 		hasUploadedId = FoundId != NULL;
 	}
 
-	//
 	bool hasUploadedMesh = false;
 	auto FoundId = SDynamicObjectManagerWidget::dashboardObjects.FindByPredicate([searchMesh](const FDashboardObject& InItem2)
 	{

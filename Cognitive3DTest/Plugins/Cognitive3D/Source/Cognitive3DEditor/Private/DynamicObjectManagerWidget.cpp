@@ -43,7 +43,6 @@ void SDynamicObjectManagerWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr
 	int32 responseCode = Response->GetResponseCode();
 	if (responseCode == 200)
 	{
-		GLog->Log("Developer Key Response Code is 200");
 	}
 	else
 	{
@@ -70,7 +69,7 @@ void SDynamicObjectManagerWidget::GetDashboardManifest()
 		//auto currentSceneData = FCognitiveEditorTools::GetInstance()->GetSceneData(*SceneDisplayName);
 		if (!currentSceneData.IsValid())
 		{
-			GLog->Log("SDynamicObjectManagerWidget::GetDashboardManifest failed. current scene is null");
+			GLog->Log("SDynamicObjectManagerWidget::GetDashboardManifest failed. Selected Scene isn't uploaded");
 			return;
 		}
 
@@ -107,7 +106,6 @@ void SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived(FHttpReque
 		if (FJsonObjectConverter::JsonArrayStringToUStruct(content, &dashboardObjects, 0, 0))
 		{
 			SceneDynamicObjectTable->RefreshTable();
-
 		}
 		else
 		{
@@ -126,6 +124,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 {
 	float padding = 10;
 
+	FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
 	FCognitiveEditorTools::CheckIniConfigured();
 	CheckForExpiredDeveloperKey();
 
@@ -374,8 +373,8 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 			]
 		];
 
-		FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
-		RefreshDisplayDynamicObjectsCountInScene();
+		//calling refresh immediately when the window opens crashes if the current scene has scene data
+		//RefreshDisplayDynamicObjectsCountInScene();
 }
 
 void SDynamicObjectManagerWidget::RefreshList()
