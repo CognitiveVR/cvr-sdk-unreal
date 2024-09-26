@@ -560,7 +560,33 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 				{
 					UStaticMesh* StaticMeshAsset = StaticMeshComp->GetStaticMesh();
 					// Do something with StaticMeshAsset
-					UExporter::ExportToFile(StaticMeshAsset, NULL, *tempObject, true);
+
+					//use GLTFExporter Plugin
+
+					// Create export options
+					UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+					// Set custom export settings
+					ExportOptions->ExportUniformScale = 1.0f;
+					ExportOptions->bExportPreviewMesh = true;
+
+					// Texture compression settings
+					ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+					// Create export task
+					UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+					ExportTask->Object = GWorld;
+					ExportTask->Exporter = NewObject<UGLTFLevelExporter>();
+					ExportTask->Filename = *tempObject;
+					ExportTask->Object = StaticMeshAsset;
+					ExportTask->bSelected = false;
+					ExportTask->bReplaceIdentical = true;
+					ExportTask->bPrompt = false;
+					ExportTask->bAutomated = true;
+					ExportTask->Options = ExportOptions;
+
+					// Perform export
+					ExportTask->Exporter->RunAssetExportTask(ExportTask);
 				}
 
 				// Check for Skeletal Mesh Component
@@ -569,7 +595,33 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 				{
 					USkeletalMesh* SkeletalMeshAsset = SkeletalMeshComp->SkeletalMesh;
 					// Do something with SkeletalMeshAsset
-					UExporter::ExportToFile(SkeletalMeshAsset, NULL, *tempObject, true);
+
+					//use GLTFExporter Plugin
+
+					// Create export options
+					UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+					// Set custom export settings
+					ExportOptions->ExportUniformScale = 1.0f;
+					ExportOptions->bExportPreviewMesh = true;
+
+					// Texture compression settings
+					ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+					// Create export task
+					UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+					ExportTask->Object = GWorld;
+					ExportTask->Exporter = NewObject<UGLTFLevelExporter>();
+					ExportTask->Filename = *tempObject;
+					ExportTask->Object = SkeletalMeshAsset;
+					ExportTask->bSelected = false;
+					ExportTask->bReplaceIdentical = true;
+					ExportTask->bPrompt = false;
+					ExportTask->bAutomated = true;
+					ExportTask->Options = ExportOptions;
+
+					// Perform export
+					ExportTask->Exporter->RunAssetExportTask(ExportTask);
 				}
 
 			}
@@ -642,7 +694,34 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 				{
 					//take the skeletal meshes that we set up earlier and use them to create a static mesh
 					UStaticMesh* tmpStatMesh = MeshUtilities.ConvertMeshesToStaticMesh(meshes, exportObjects[i]->GetOwner()->GetTransform(), NewPackageName->GetName());
-					UExporter::ExportToFile(tmpStatMesh, NULL, *tempObject, true);
+
+					//use GLTFExporter Plugin
+
+					// Create export options
+					UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+					// Set custom export settings
+					ExportOptions->ExportUniformScale = 1.0f;
+					ExportOptions->bExportPreviewMesh = true;
+
+					// Texture compression settings
+					ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+					// Create export task
+					UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+					ExportTask->Object = GWorld;
+					ExportTask->Exporter = NewObject<UGLTFLevelExporter>();
+					ExportTask->Filename = *tempObject;
+					ExportTask->Object = tmpStatMesh;
+					ExportTask->bSelected = false;
+					ExportTask->bReplaceIdentical = true;
+					ExportTask->bPrompt = false;
+					ExportTask->bAutomated = true;
+					ExportTask->Options = ExportOptions;
+
+					// Perform export
+					ExportTask->Exporter->RunAssetExportTask(ExportTask);
+
 					TempAssetsToDelete.Add(tmpStatMesh);
 				}
 			}
