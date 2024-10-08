@@ -79,6 +79,28 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 			customEventRecorder->Send("c3d.Level Streaming Load", properties);
 		}
 		FlushAndCacheEvents();
+		//empty current dynamics manifest
+		dynamicObjectManager->manifest.Empty();
+		dynamicObjectManager->newManifest.Empty();
+		//register dynamics in new level
+		// Iterate over all actors in the loaded level
+		for (AActor* Actor : level->Actors)
+		{
+			if (Actor)
+			{
+				// Check if the actor has a UDynamicObject component
+				UDynamicObject* DynamicComponent = Actor->FindComponentByClass<UDynamicObject>();
+				if (DynamicComponent)
+				{
+					
+					UE_LOG(LogTemp, Warning, TEXT("Found Dynamic on actor %s, registering component"), *Actor->GetFName().ToString());
+					// Register the component
+					DynamicComponent->RegisterComponent();
+				}
+			}
+		}
+
+
 	}
 
 	if (data.IsValid())
