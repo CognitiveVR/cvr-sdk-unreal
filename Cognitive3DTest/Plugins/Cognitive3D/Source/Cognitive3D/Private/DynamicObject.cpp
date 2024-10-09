@@ -560,6 +560,20 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 
 	FQuat quat;
 	FRotator rot = GetAttachParent()->GetComponentRotation();
+	//we check if the snapshot if that of a controller
+	//that way we can add a small rotational offset to correct how controllers looks on SceneExplorer
+	if (IsController)
+	{
+		if (IsRightController)
+		{
+			rot.Yaw -= 45.f;
+		}
+		else
+		{
+			rot.Yaw += 45.f;
+		}
+		rot.Normalize();
+	}
 	quat = rot.Quaternion();
 
 	snapshot.rotation = FQuat(quat.X, quat.Z, quat.Y, quat.W);
