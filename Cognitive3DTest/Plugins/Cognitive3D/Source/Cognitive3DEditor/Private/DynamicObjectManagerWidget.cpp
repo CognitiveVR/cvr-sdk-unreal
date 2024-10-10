@@ -324,7 +324,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 						[
 							SNew(SButton)
 							.IsEnabled(this, &SDynamicObjectManagerWidget::IsActorInSceneSelected)
-							.Text(FText::FromString("Add Dynamic Object Components To Selected Actors in Scene"))
+							.Text(FText::FromString("Add Dynamic Object(s)"))
 							.ToolTipText(FText::FromString("Add Dynamic Object Components To Selected Actors in Scene"))
 							.OnClicked_Raw(this, &SDynamicObjectManagerWidget::AssignDynamicsToActors)
 						]
@@ -728,7 +728,7 @@ FReply SDynamicObjectManagerWidget::AssignDynamicsToActors()
 							Actor->AddInstanceComponent(NewComponent);
 							bAttachedToMeshComponent = true;
 							bActorHasDynamic = true;
-							break; // Exit the loop since we've attached our component
+							//break; // Exit the loop since we've attached our component
 						}
 					}
 				}
