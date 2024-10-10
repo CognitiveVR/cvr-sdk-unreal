@@ -2268,36 +2268,40 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		//AStaticMeshActor *Mesh = *ActorItr;
 
-		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
-		if (actorComponent == NULL)
-		{
-			continue;
-		}
-		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
-		if (dynamic == NULL)
-		{
-			continue;
-		}
-		//populate id based on id type
-		if (dynamic->IdSourceType == EIdSourceType::CustomId)
-		{
-			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, dynamic->CustomId, EDynamicTypes::CustomId)));
-		}
-		else if (dynamic->IdSourceType == EIdSourceType::GeneratedId)
-		{
-			FString idMessage = TEXT("Id generated during runtime");
-			//SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, *idMessage)));
-			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, idMessage, EDynamicTypes::GeneratedId)));
-		}
-		else if (dynamic->IdSourceType == EIdSourceType::PoolId)
-		{
-			
-			//construct a string for the number of ids in the pool
-			FString IdString = FString::Printf(TEXT("Id Pool(%d)"), dynamic->IDPool->Ids.Num());
+		//try getting all components that are dynamic objects
+		TArray<UActorComponent*> actorComponents = (*ActorItr)->GetComponentsByClass(UDynamicObject::StaticClass());
 
-			//add it as TSharedPtr<FDynamicData> to the SceneDynamics
-			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, IdString, dynamic->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
+		for (UActorComponent* actorComp : actorComponents)
+		{
+			UDynamicObject* dynamic = Cast<UDynamicObject>(actorComp);
+			if (dynamic == NULL)
+			{
+				continue;
+			}
+
+			//populate id based on id type
+			if (dynamic->IdSourceType == EIdSourceType::CustomId)
+			{
+				SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, dynamic->CustomId, EDynamicTypes::CustomId)));
+			}
+			else if (dynamic->IdSourceType == EIdSourceType::GeneratedId)
+			{
+				FString idMessage = TEXT("Id generated during runtime");
+				//SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, *idMessage)));
+				SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, idMessage, EDynamicTypes::GeneratedId)));
+			}
+			else if (dynamic->IdSourceType == EIdSourceType::PoolId)
+			{
+
+				//construct a string for the number of ids in the pool
+				FString IdString = FString::Printf(TEXT("Id Pool(%d)"), dynamic->IDPool->Ids.Num());
+
+				//add it as TSharedPtr<FDynamicData> to the SceneDynamics
+				SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, IdString, dynamic->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
+			}
+
 		}
+
 		//dynamics.Add(dynamic);
 	}
 

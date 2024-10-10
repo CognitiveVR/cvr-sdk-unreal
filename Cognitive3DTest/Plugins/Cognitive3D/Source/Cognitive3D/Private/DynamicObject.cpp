@@ -136,34 +136,41 @@ void UDynamicObject::SetUniqueDynamicIds()
 //utility used in editor
 void UDynamicObject::TryGenerateMeshName()
 {
-	if (GetOwner() == NULL)
+	if (GetOwner() == NULL || GetAttachParent() == NULL)
 	{
 		return;
 	}
 
 	if (MeshName.IsEmpty())
 	{
-		UActorComponent* actorComponent = GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
-		if (actorComponent != NULL)
+		if (GetAttachParent()->IsA<UStaticMeshComponent>())
 		{
-			UStaticMeshComponent* staticmeshComponent = Cast<UStaticMeshComponent>(actorComponent);
-			if (staticmeshComponent != NULL && staticmeshComponent->GetStaticMesh() != NULL)
+			USceneComponent* actorComponent = Cast<USceneComponent>(GetAttachParent());
+			if (actorComponent != NULL)
 			{
-				MeshName = staticmeshComponent->GetStaticMesh()->GetName();
-				return;
+				UStaticMeshComponent* staticmeshComponent = Cast<UStaticMeshComponent>(actorComponent);
+				if (staticmeshComponent != NULL && staticmeshComponent->GetStaticMesh() != NULL)
+				{
+					MeshName = staticmeshComponent->GetStaticMesh()->GetName();
+					return;
+				}
 			}
 		}
-
-		UActorComponent* actorSkeletalComponent = GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass());
-		if (actorSkeletalComponent != NULL)
+		
+		if (GetAttachParent()->IsA<USkeletalMeshComponent>())
 		{
-			USkeletalMeshComponent* skeletalmeshComponent = Cast<USkeletalMeshComponent>(actorSkeletalComponent);
-			if (skeletalmeshComponent != NULL && skeletalmeshComponent->SkeletalMesh != NULL)
+			USceneComponent* actorSkeletalComponent = Cast<USceneComponent>(GetAttachParent());
+			if (actorSkeletalComponent != NULL)
 			{
-				MeshName = skeletalmeshComponent->SkeletalMesh->GetName();
-				return;
+				USkeletalMeshComponent* skeletalmeshComponent = Cast<USkeletalMeshComponent>(actorSkeletalComponent);
+				if (skeletalmeshComponent != NULL && skeletalmeshComponent->SkeletalMesh != NULL)
+				{
+					MeshName = skeletalmeshComponent->SkeletalMesh->GetName();
+					return;
+				}
 			}
 		}
+		
 	}
 }
 
