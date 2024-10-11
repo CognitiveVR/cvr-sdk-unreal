@@ -324,7 +324,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 						[
 							SNew(SButton)
 							.IsEnabled(this, &SDynamicObjectManagerWidget::IsActorInSceneSelected)
-							.Text(FText::FromString("Add Dynamic Object(s)"))
+							.Text(FText::FromString("Add Dynamic Object Component(s)"))
 							.ToolTipText(FText::FromString("Add Dynamic Object Components To Selected Actors in Scene"))
 							.OnClicked_Raw(this, &SDynamicObjectManagerWidget::AssignDynamicsToActors)
 						]
