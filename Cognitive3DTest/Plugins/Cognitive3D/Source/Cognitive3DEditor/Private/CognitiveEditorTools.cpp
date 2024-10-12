@@ -560,7 +560,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 				{
 					UStaticMesh* StaticMeshAsset = StaticMeshComp->GetStaticMesh();
 					// Do something with StaticMeshAsset
-
 					//use GLTFExporter Plugin
 
 					// Create export options
@@ -575,8 +574,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 					// Create export task
 					UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
-					ExportTask->Object = GWorld;
-					ExportTask->Exporter = NewObject<UGLTFLevelExporter>();
 					ExportTask->Filename = *tempObject;
 					ExportTask->Object = StaticMeshAsset;
 					ExportTask->bSelected = false;
@@ -610,8 +607,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 					// Create export task
 					UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
-					ExportTask->Object = GWorld;
-					ExportTask->Exporter = NewObject<UGLTFLevelExporter>();
 					ExportTask->Filename = *tempObject;
 					ExportTask->Object = SkeletalMeshAsset;
 					ExportTask->bSelected = false;
@@ -709,8 +704,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 					// Create export task
 					UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
-					ExportTask->Object = GWorld;
-					ExportTask->Exporter = NewObject<UGLTFLevelExporter>();
 					ExportTask->Filename = *tempObject;
 					ExportTask->Object = tmpStatMesh;
 					ExportTask->bSelected = false;
