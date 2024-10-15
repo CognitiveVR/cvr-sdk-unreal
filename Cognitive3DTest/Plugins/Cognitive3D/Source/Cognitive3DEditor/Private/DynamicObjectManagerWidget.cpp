@@ -298,6 +298,39 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
+
+			+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(0, 0, 0, padding)
+				[
+					SNew(STextBlock)
+					.Justification(ETextJustify::Center)
+					.AutoWrapText(true)
+					.Text(FText::FromString("To easily assign Dynamic Objects to actors in your level, select them then press the button below."))
+				]
+
+			+ SVerticalBox::Slot() //upload buttons //
+				.Padding(0, 0, 0, padding)
+				.HAlign(EHorizontalAlignment::HAlign_Center)
+				.VAlign(VAlign_Center)
+				.AutoHeight()
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					[
+						SNew(SBox)
+						.HeightOverride(32)
+						.WidthOverride(256)
+						[
+							SNew(SButton)
+							.IsEnabled(this, &SDynamicObjectManagerWidget::IsActorInSceneSelected)
+							.Text(FText::FromString("Add Dynamic Object Component(s)"))
+							.ToolTipText(FText::FromString("Add Dynamic Object Components To Selected Actors in Scene"))
+							.OnClicked_Raw(this, &SDynamicObjectManagerWidget::AssignDynamicsToActors)
+						]
+					]
+			]
+
 			]
 		];
 
@@ -649,6 +682,82 @@ FText SDynamicObjectManagerWidget::GetUploadInvalidCause() const
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return FText::FromString("Developer Key is not set"); }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return FText::FromString("Export Path is invalid"); }
 	return FText::GetEmpty();
+}
+
+FReply SDynamicObjectManagerWidget::AssignDynamicsToActors()
+{
+	for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
+	{
+		if (AActor* Actor = Cast<AActor>(*It))
+		{
+			bool bAttachedToMeshComponent = false;
+
+			// Get all components of the actor
+			TArray<UActorComponent*> Components;
+			Actor->GetComponents(Components);
+			bool bActorHasDynamic = false;
+			// Iterate over components to find mesh components
+			for (UActorComponent* Component : Components)
+			{
+				UMeshComponent* MeshComponent = Cast<UMeshComponent>(Component);
+				if (MeshComponent)
+				{
+					// Get direct children of the mesh component
+					TArray<USceneComponent*> MeshChildren;
+					MeshComponent->GetChildrenComponents(false, MeshChildren);
+
+					bool bHasDynamicObjectChild = false;
+					for (USceneComponent* Child : MeshChildren)
+					{
+						if (Child && Child->IsA<UDynamicObject>())
+						{
+							bHasDynamicObjectChild = true;
+							bActorHasDynamic = true;
+							break;
+						}
+					}
+
+					if (!bHasDynamicObjectChild)
+					{
+						// Attach the DynamicObject to this mesh component
+						UDynamicObject* NewComponent = NewObject<UDynamicObject>(Actor);
+						if (NewComponent)
+						{
+							NewComponent->AttachToComponent(MeshComponent, FAttachmentTransformRules::KeepRelativeTransform);
+							NewComponent->RegisterComponent();
+							Actor->AddInstanceComponent(NewComponent);
+							bAttachedToMeshComponent = true;
+							bActorHasDynamic = true;
+							//break; // Exit the loop since we've attached our component
+						}
+					}
+				}
+			}
+
+			if (!bAttachedToMeshComponent && !bActorHasDynamic)
+			{
+				// No suitable mesh component found and actor has no dynamics attach to the root component
+				UDynamicObject* NewComponent = NewObject<UDynamicObject>(Actor);
+				if (NewComponent)
+				{
+					NewComponent->AttachToComponent(Actor->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+					NewComponent->RegisterComponent();
+					Actor->AddInstanceComponent(NewComponent);
+				}
+			}
+		}
+	}
+
+	return FReply::Handled();
+}
+
+bool SDynamicObjectManagerWidget::IsActorInSceneSelected() const
+{
+	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
+	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
+
+	USelection* SelectedActors = GEditor->GetSelectedActors();
+	return SelectedActors->Num() > 0;
 }
 
 EVisibility SDynamicObjectManagerWidget::GetSceneWarningVisibility() const

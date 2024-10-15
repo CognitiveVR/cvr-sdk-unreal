@@ -560,7 +560,30 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 				{
 					UStaticMesh* StaticMeshAsset = StaticMeshComp->GetStaticMesh();
 					// Do something with StaticMeshAsset
-					UExporter::ExportToFile(StaticMeshAsset, NULL, *tempObject, true);
+					//use GLTFExporter Plugin
+
+					// Create export options
+					UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+					// Set custom export settings
+					ExportOptions->ExportUniformScale = 1.0f;
+					ExportOptions->bExportPreviewMesh = true;
+
+					// Texture compression settings
+					ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+					// Create export task
+					UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+					ExportTask->Filename = *tempObject;
+					ExportTask->Object = StaticMeshAsset;
+					ExportTask->bSelected = false;
+					ExportTask->bReplaceIdentical = true;
+					ExportTask->bPrompt = false;
+					ExportTask->bAutomated = true;
+					ExportTask->Options = ExportOptions;
+
+					// Perform export
+					ExportTask->Exporter->RunAssetExportTask(ExportTask);
 				}
 
 				// Check for Skeletal Mesh Component
@@ -569,7 +592,31 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 				{
 					USkeletalMesh* SkeletalMeshAsset = SkeletalMeshComp->SkeletalMesh;
 					// Do something with SkeletalMeshAsset
-					UExporter::ExportToFile(SkeletalMeshAsset, NULL, *tempObject, true);
+
+					//use GLTFExporter Plugin
+
+					// Create export options
+					UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+					// Set custom export settings
+					ExportOptions->ExportUniformScale = 1.0f;
+					ExportOptions->bExportPreviewMesh = true;
+
+					// Texture compression settings
+					ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+					// Create export task
+					UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+					ExportTask->Filename = *tempObject;
+					ExportTask->Object = SkeletalMeshAsset;
+					ExportTask->bSelected = false;
+					ExportTask->bReplaceIdentical = true;
+					ExportTask->bPrompt = false;
+					ExportTask->bAutomated = true;
+					ExportTask->Options = ExportOptions;
+
+					// Perform export
+					ExportTask->Exporter->RunAssetExportTask(ExportTask);
 				}
 
 			}
@@ -642,7 +689,32 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 				{
 					//take the skeletal meshes that we set up earlier and use them to create a static mesh
 					UStaticMesh* tmpStatMesh = MeshUtilities.ConvertMeshesToStaticMesh(meshes, exportObjects[i]->GetOwner()->GetTransform(), NewPackageName->GetName());
-					UExporter::ExportToFile(tmpStatMesh, NULL, *tempObject, true);
+
+					//use GLTFExporter Plugin
+
+					// Create export options
+					UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+					// Set custom export settings
+					ExportOptions->ExportUniformScale = 1.0f;
+					ExportOptions->bExportPreviewMesh = true;
+
+					// Texture compression settings
+					ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+					// Create export task
+					UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+					ExportTask->Filename = *tempObject;
+					ExportTask->Object = tmpStatMesh;
+					ExportTask->bSelected = false;
+					ExportTask->bReplaceIdentical = true;
+					ExportTask->bPrompt = false;
+					ExportTask->bAutomated = true;
+					ExportTask->Options = ExportOptions;
+
+					// Perform export
+					ExportTask->Exporter->RunAssetExportTask(ExportTask);
+
 					TempAssetsToDelete.Add(tmpStatMesh);
 				}
 			}
@@ -1403,8 +1475,10 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 		const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
+		GConfig->Flush(false, NormalizedEditorIni);
 #else
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
+		GConfig->Flush(false, EditorIni);
 #endif
 	}
 	else
@@ -1416,8 +1490,10 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 		const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
+		GConfig->Flush(false, NormalizedEditorIni);
 #else
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
+		GConfig->Flush(false, EditorIni);
 #endif
 	}
 	return FReply::Handled();
@@ -2185,36 +2261,40 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		//AStaticMeshActor *Mesh = *ActorItr;
 
-		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
-		if (actorComponent == NULL)
-		{
-			continue;
-		}
-		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
-		if (dynamic == NULL)
-		{
-			continue;
-		}
-		//populate id based on id type
-		if (dynamic->IdSourceType == EIdSourceType::CustomId)
-		{
-			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, dynamic->CustomId, EDynamicTypes::CustomId)));
-		}
-		else if (dynamic->IdSourceType == EIdSourceType::GeneratedId)
-		{
-			FString idMessage = TEXT("Id generated during runtime");
-			//SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, *idMessage)));
-			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, idMessage, EDynamicTypes::GeneratedId)));
-		}
-		else if (dynamic->IdSourceType == EIdSourceType::PoolId)
-		{
-			
-			//construct a string for the number of ids in the pool
-			FString IdString = FString::Printf(TEXT("Id Pool(%d)"), dynamic->IDPool->Ids.Num());
+		//try getting all components that are dynamic objects
+		TArray<UActorComponent*> actorComponents = (*ActorItr)->GetComponentsByClass(UDynamicObject::StaticClass());
 
-			//add it as TSharedPtr<FDynamicData> to the SceneDynamics
-			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, IdString, dynamic->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
+		for (UActorComponent* actorComp : actorComponents)
+		{
+			UDynamicObject* dynamic = Cast<UDynamicObject>(actorComp);
+			if (dynamic == NULL)
+			{
+				continue;
+			}
+
+			//populate id based on id type
+			if (dynamic->IdSourceType == EIdSourceType::CustomId)
+			{
+				SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, dynamic->CustomId, EDynamicTypes::CustomId)));
+			}
+			else if (dynamic->IdSourceType == EIdSourceType::GeneratedId)
+			{
+				FString idMessage = TEXT("Id generated during runtime");
+				//SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, *idMessage)));
+				SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, idMessage, EDynamicTypes::GeneratedId)));
+			}
+			else if (dynamic->IdSourceType == EIdSourceType::PoolId)
+			{
+
+				//construct a string for the number of ids in the pool
+				FString IdString = FString::Printf(TEXT("Id Pool(%d)"), dynamic->IDPool->Ids.Num());
+
+				//add it as TSharedPtr<FDynamicData> to the SceneDynamics
+				SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, IdString, dynamic->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
+			}
+
 		}
+
 		//dynamics.Add(dynamic);
 	}
 
@@ -2378,6 +2458,16 @@ void FCognitiveEditorTools::OnAttributionKeyChanged(const FText& Text)
 void FCognitiveEditorTools::OnExportPathChanged(const FText& Text)
 {
 	BaseExportDirectory = Text.ToString();
+	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+	const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
+	GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
+	GConfig->Flush(false, NormalizedEditorIni);
+#else
+	GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
+	GConfig->Flush(false, EditorIni);
+#endif
 }
 
 FText FCognitiveEditorTools::UploadSceneNameFiles() const
@@ -2786,8 +2876,8 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, EditorIni);
 
-	GConfig->Flush(false, GEngineIni);
-	GConfig->Flush(false, GEditorIni);
+	GConfig->Flush(false, EngineIni);
+	GConfig->Flush(false, EditorIni);
 #endif
 	ConfigFileHasChanged = true;
 
@@ -2805,7 +2895,7 @@ void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 	GConfig->Flush(false, NormalizedEngineIni);
 #else
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, EngineIni);
-	GConfig->Flush(false, GEngineIni);
+	GConfig->Flush(false, EngineIni);
 #endif
 
 	ConfigFileHasChanged = true;
@@ -2824,7 +2914,7 @@ void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
 	GConfig->Flush(false, NormalizedEditorIni);
 #else
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, EditorIni);
-	GConfig->Flush(false, GEngineIni);
+	GConfig->Flush(false, EditorIni);
 #endif
 
 	ConfigFileHasChanged = true;
@@ -2872,8 +2962,10 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 	const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
 
 	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, NormalizedTestSyncFile);
+	GConfig->Flush(false, NormalizedTestSyncFile);
 #else
 	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, TestSyncFile);
+	GConfig->Flush(false, TestSyncFile);
 #endif
 
 	bool didSetKey = false;
@@ -2914,7 +3006,7 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 #else
 	GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, TestSyncFile);
 
-	GConfig->Flush(false, GEngineIni);
+	GConfig->Flush(false, TestSyncFile);
 #endif
 }
 
