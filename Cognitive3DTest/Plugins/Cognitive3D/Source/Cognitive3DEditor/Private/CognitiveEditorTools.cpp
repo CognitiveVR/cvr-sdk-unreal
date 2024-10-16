@@ -2262,7 +2262,8 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 		//AStaticMeshActor *Mesh = *ActorItr;
 
 		//try getting all components that are dynamic objects
-		TArray<UActorComponent*> actorComponents = (*ActorItr)->GetComponentsByClass(UDynamicObject::StaticClass());
+		TArray<UActorComponent*> actorComponents;
+		(*ActorItr)->GetComponents(UDynamicObject::StaticClass(), actorComponents);
 
 		for (UActorComponent* actorComp : actorComponents)
 		{
