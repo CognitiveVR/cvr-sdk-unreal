@@ -3,6 +3,8 @@
 */
 
 #include "CognitiveEditorTools.h"
+#include "Kismet2/KismetEditorUtilities.h"
+
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
@@ -2343,6 +2345,252 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 		SceneDynamics.Add(MakeShareable(new FDynamicData(IdPoolAsset->PrefabName, IdPoolAsset->MeshName, IdString, IdPoolAsset->Ids, EDynamicTypes::DynamicIdPoolAsset)));
 	}
 
+	//add blueprints with dynamics from project ////
+ 
+		// Create a filter to find all Blueprint assets
+	FARFilter Filter2;
+
+#if ENGINE_MAJOR_VERSION == 4
+	Filter2.ClassNames.Add(UBlueprint::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 0 
+	Filter2.ClassNames.Add(UBlueprint::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1
+	Filter2.ClassPaths.Add(UBlueprint::StaticClass()->GetClassPathName());
+#endif
+
+	Filter2.bRecursiveClasses = true;
+
+	// Get a list of Blueprint assets
+	TArray<FAssetData> AssetDataList;
+	AssetRegistryModule.Get().GetAssets(Filter2, AssetDataList);
+
+
+	UE_LOG(LogTemp, Warning, TEXT("Total Blueprints Found: %d"), AssetDataList.Num());
+
+#if ENGINE_MAJOR_VERSION == 4
+
+	for (const FAssetData& AssetData2 : AssetDataList)
+	{
+		FString AssetName = AssetData2.AssetName.ToString();
+		UE_LOG(LogTemp, Warning, TEXT("Processing Blueprint: %s"), *AssetName);
+
+		// Get the GeneratedClass tag from the asset data (without fully loading the asset)
+		FString GeneratedClassPath;
+		if (AssetData2.GetTagValue(FName("GeneratedClass"), GeneratedClassPath))
+		{
+			// Remove _C suffix to get the real class path
+			GeneratedClassPath = FPackageName::ExportTextPathToObjectPath(GeneratedClassPath);
+			UClass* BlueprintClass = FindObject<UClass>(nullptr, *GeneratedClassPath);
+			
+			if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Found Actor-based Blueprint class: %s"), *BlueprintClass->GetName());
+
+				// Now, get the default object and access its components
+				AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+				if (DefaultActor)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Default actor is valid: %s"), *DefaultActor->GetName());
+
+					// Use Simple Construction Script to inspect the blueprint's components
+					if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+					{
+						if (BPGeneratedClass->SimpleConstructionScript)
+						{
+							const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+							UE_LOG(LogTemp, Warning, TEXT("Found %d SCS nodes in Blueprint: %s"), SCSNodes.Num(), *BlueprintClass->GetName());
+
+							// Iterate over the SCS nodes to find UDynamicObject components
+							for (USCS_Node* SCSNode : SCSNodes)
+							{
+								if (SCSNode && SCSNode->ComponentTemplate)
+								{
+									UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
+									UE_LOG(LogTemp, Warning, TEXT("Found SCS Component: %s in Blueprint: %s"), *ComponentTemplate->GetName(), *BlueprintClass->GetName());
+
+									// Check if the component is a UDynamicObject
+									UDynamicObject* DynamicObjectComponent = Cast<UDynamicObject>(ComponentTemplate);
+									if (DynamicObjectComponent)
+									{
+										UE_LOG(LogTemp, Warning, TEXT("Found UDynamicObject in blueprint SCS for asset: %s"), *AssetData2.AssetName.ToString());
+
+										// Now populate the SceneDynamics based on the ID type
+										if (DynamicObjectComponent->IdSourceType == EIdSourceType::CustomId)
+										{
+											
+											SceneDynamics.Add(MakeShareable(new FDynamicData(AssetName, DynamicObjectComponent->MeshName, DynamicObjectComponent->CustomId, EDynamicTypes::CustomId)));
+											
+										}
+										else if (DynamicObjectComponent->IdSourceType == EIdSourceType::GeneratedId)
+										{
+											FString idMessage = TEXT("Id generated during runtime");
+											
+											SceneDynamics.Add(MakeShareable(new FDynamicData(AssetName, DynamicObjectComponent->MeshName, idMessage, EDynamicTypes::GeneratedId)));
+											
+											
+										}
+										else if (DynamicObjectComponent->IdSourceType == EIdSourceType::PoolId)
+										{
+											// Construct a string for the number of IDs in the pool
+											FString IdString = FString::Printf(TEXT("Id Pool(%d)"), DynamicObjectComponent->IDPool->Ids.Num());
+											// Add it as TSharedPtr<FDynamicData> to the SceneDynamics
+											SceneDynamics.Add(MakeShareable(new FDynamicData(DynamicObjectComponent->GetOwner()->GetName(), DynamicObjectComponent->MeshName, IdString, DynamicObjectComponent->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
+										}
+									}
+									else
+									{
+										UE_LOG(LogTemp, Warning, TEXT("SCS Component %s is not a UDynamicObject in Blueprint: %s"), *ComponentTemplate->GetName(), *BlueprintClass->GetName());
+									}
+								}
+								else
+								{
+									UE_LOG(LogTemp, Warning, TEXT("SCS Node or its ComponentTemplate is null in Blueprint: %s"), *BlueprintClass->GetName());
+								}
+							}
+						}
+						else
+						{
+							UE_LOG(LogTemp, Warning, TEXT("No SimpleConstructionScript found in Blueprint: %s"), *BlueprintClass->GetName());
+						}
+					}
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Default actor is null for Blueprint: %s"), *BlueprintClass->GetName());
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Generated class not found or not an actor-based class for Blueprint: %s"), *AssetData2.AssetName.ToString());
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("GeneratedClass tag not found for Blueprint: %s"), *AssetData2.AssetName.ToString());
+		}
+	}
+
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1
+
+//BLUEPRINTS WITH DYNAMICS
+
+for (const FAssetData& AssetData2 : AssetDataList)
+{
+	FString AssetName = AssetData2.AssetName.ToString();
+	UE_LOG(LogTemp, Warning, TEXT("Processing Blueprint: %s"), *AssetName);
+
+	// Force load the asset to ensure all data is available
+	UBlueprint* Blueprint = Cast<UBlueprint>(AssetData2.GetAsset());
+	if (!Blueprint)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to load Blueprint: %s"), *AssetName);
+		continue;
+	}
+
+	// Get the GeneratedClass tag from the asset data (without fully loading the asset)
+	FString GeneratedClassPath;
+	if (AssetData2.GetTagValue(FName("GeneratedClass"), GeneratedClassPath))
+	{
+		// Remove _C suffix to get the real class path
+		GeneratedClassPath = FPackageName::ExportTextPathToObjectPath(GeneratedClassPath);
+		UClass* BlueprintClass = FindObject<UClass>(nullptr, *GeneratedClassPath);
+
+		// Ensure the blueprint is compiled
+		if (!BlueprintClass)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Compiling Blueprint: %s"), *AssetName);
+			FKismetEditorUtilities::CompileBlueprint(Blueprint);
+
+			// Try to get the GeneratedClass again after compiling
+			BlueprintClass = FindObject<UClass>(nullptr, *GeneratedClassPath);
+		}
+
+		if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Found Actor-based Blueprint class: %s"), *BlueprintClass->GetName());
+
+			// Now, get the default object and access its components
+			AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+			if (DefaultActor)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Default actor is valid: %s"), *DefaultActor->GetName());
+
+				// Use Simple Construction Script to inspect the blueprint's components
+				if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+				{
+					if (BPGeneratedClass->SimpleConstructionScript)
+					{
+						const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+						UE_LOG(LogTemp, Warning, TEXT("Found %d SCS nodes in Blueprint: %s"), SCSNodes.Num(), *BlueprintClass->GetName());
+
+						// Iterate over the SCS nodes to find UDynamicObject components
+						for (USCS_Node* SCSNode : SCSNodes)
+						{
+							if (SCSNode && SCSNode->ComponentTemplate)
+							{
+								UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
+								UE_LOG(LogTemp, Warning, TEXT("Found SCS Component: %s in Blueprint: %s"), *ComponentTemplate->GetName(), *BlueprintClass->GetName());
+
+								// Check if the component is a UDynamicObject
+								UDynamicObject* DynamicObjectComponent = Cast<UDynamicObject>(ComponentTemplate);
+								if (DynamicObjectComponent)
+								{
+									UE_LOG(LogTemp, Warning, TEXT("Found UDynamicObject in blueprint SCS for asset: %s"), *AssetData2.AssetName.ToString());
+
+									// Now populate the SceneDynamics based on the ID type
+									if (DynamicObjectComponent->IdSourceType == EIdSourceType::CustomId)
+									{
+										SceneDynamics.Add(MakeShareable(new FDynamicData(AssetName, DynamicObjectComponent->MeshName, DynamicObjectComponent->CustomId, EDynamicTypes::CustomId)));
+									}
+									else if (DynamicObjectComponent->IdSourceType == EIdSourceType::GeneratedId)
+									{
+										FString idMessage = TEXT("Id generated during runtime");
+										SceneDynamics.Add(MakeShareable(new FDynamicData(AssetName, DynamicObjectComponent->MeshName, idMessage, EDynamicTypes::GeneratedId)));
+									}
+									else if (DynamicObjectComponent->IdSourceType == EIdSourceType::PoolId)
+									{
+										// Construct a string for the number of IDs in the pool
+										FString IdString = FString::Printf(TEXT("Id Pool(%d)"), DynamicObjectComponent->IDPool->Ids.Num());
+										// Add it as TSharedPtr<FDynamicData> to the SceneDynamics
+										SceneDynamics.Add(MakeShareable(new FDynamicData(DynamicObjectComponent->GetOwner()->GetName(), DynamicObjectComponent->MeshName, IdString, DynamicObjectComponent->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
+									}
+								}
+								else
+								{
+									UE_LOG(LogTemp, Warning, TEXT("SCS Component %s is not a UDynamicObject in Blueprint: %s"), *ComponentTemplate->GetName(), *BlueprintClass->GetName());
+								}
+							}
+							else
+							{
+								UE_LOG(LogTemp, Warning, TEXT("SCS Node or its ComponentTemplate is null in Blueprint: %s"), *BlueprintClass->GetName());
+							}
+						}
+					}
+					else
+					{
+						UE_LOG(LogTemp, Warning, TEXT("No SimpleConstructionScript found in Blueprint: %s"), *BlueprintClass->GetName());
+					}
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Default actor is null for Blueprint: %s"), *BlueprintClass->GetName());
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Generated class not found or not an actor-based class for Blueprint: %s"), *AssetData2.AssetName.ToString());
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GeneratedClass tag not found for Blueprint: %s"), *AssetData2.AssetName.ToString());
+	}
+}
+
+//BLUEPRINTS WITH DYNAMICS
+
+#endif
 
 
 	return FReply::Handled();
