@@ -13,7 +13,7 @@ void SDynamicObjectTableWidget::Construct(const FArguments& Args)
 			[
 				SAssignNew(TableViewWidget, SActorListView)
 				.ItemHeight(24)
-				.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneDynamics) //The Items array is the source of this listview
+				.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneDynamics) //The Items array is the source of this listview 
 				.OnGenerateRow(this, &SDynamicObjectTableWidget::OnGenerateRowForTable)
 				.SelectionMode(ESelectionMode::Multi)
 				.OnSelectionChanged(this, &SDynamicObjectTableWidget::OnSelectionChanged)

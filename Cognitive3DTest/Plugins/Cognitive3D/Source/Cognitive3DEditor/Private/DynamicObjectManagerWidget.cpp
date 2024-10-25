@@ -63,7 +63,7 @@ void SDynamicObjectManagerWidget::GetDashboardManifest()
 		}
 
 		auto Request = FHttpModule::Get().CreateRequest();
-		Request->OnProcessRequestComplete().BindRaw(this, &SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived);
+		Request->OnProcessRequestComplete().BindRaw(this, &SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived); ////
 		FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 		FString versionid = FString::FromInt(currentSceneData->VersionId);
 		FString url = "https://" + gateway + "/v0/versions/"+versionid+"/objects";
@@ -405,7 +405,7 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 	Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
 #elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 0 || ENGINE_MINOR_VERSION == 1)
 	Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
-#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2 
 	Filter.ClassPaths.Add(UDynamicIdPoolAsset::StaticClass()->GetClassPathName());
 #endif
 
@@ -462,10 +462,10 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 	if (result2 == FSuppressableWarningDialog::EResult::Confirm)
 	{
 		//then upload all
-		FCognitiveEditorTools::GetInstance()->UploadDynamics();
+		FCognitiveEditorTools::GetInstance()->UploadDynamics(); ////
 
 		//upload aggregation manifest data
-		FCognitiveEditorTools::GetInstance()->UploadDynamicsManifest();
+		FCognitiveEditorTools::GetInstance()->UploadDynamicsManifest(); ////
 	}
 
 	return FReply::Handled();
@@ -562,7 +562,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 			meshOnly.Add(dynamic);
 			if (result == FSuppressableWarningDialog::EResult::Confirm)
 			{
-				FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportDynamicData(meshOnly);
+				FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportDynamicData(meshOnly); ////
 				if (fph.IsValid())
 				{
 					FPlatformProcess::WaitForProc(fph);
@@ -597,31 +597,80 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 		//get all the dynamic objects in the scene
 		for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 		{
-			UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
-			if (actorComponent == NULL)
+			for (UActorComponent* actorComponent : ActorItr->GetComponents())
 			{
-				continue;
-			}
-			UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
-			if (dynamic == NULL)
-			{
-				continue;
-			}
-
-			if (dynamic->IdSourceType == EIdSourceType::CustomId && dynamic->CustomId != "")
-			{
-				FString findId = dynamic->CustomId;
-
-				auto isDynamicSelected = selected.ContainsByPredicate([findId](const TSharedPtr<FDynamicData> InItem) {return InItem->Id == findId;});
-
-				if (isDynamicSelected)
+				//UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadDynamicsManifest found component %s"), *actorComponent->GetName());
+				if (actorComponent->IsA(UDynamicObject::StaticClass()))
 				{
-					dynamics.Add(dynamic);
+					//UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadDynamicsManifest found dynamic object"));
+					UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
+					if (dynamic == NULL)
+					{
+						continue;
+					}
+					//UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadDynamicsManifest found dynamic object %s"), *dynamic->MeshName);
+					//dynamics.Add(dynamic);
+
+					if (dynamic->IdSourceType == EIdSourceType::CustomId && dynamic->CustomId != "")
+					{
+						FString findId = dynamic->CustomId;
+
+						auto isDynamicSelected = selected.ContainsByPredicate([findId](const TSharedPtr<FDynamicData> InItem) {return InItem->Id == findId; });
+
+						if (isDynamicSelected)
+						{
+							dynamics.Add(dynamic);
+						}
+					}
 				}
 			}
 		}
 
-		FCognitiveEditorTools::GetInstance()->UploadSelectedDynamicsManifest(dynamics);
+		//get the blueprint dynamics in the project and add them to the list
+		for (const TSharedPtr<FDynamicData>& data : FCognitiveEditorTools::GetInstance()->SceneDynamics)
+		{
+			// Iterate over all blueprints in the project
+			for (TObjectIterator<UBlueprint> It; It; ++It)
+			{
+				UBlueprint* Blueprint = *It;
+				if (Blueprint->GetName() == data->Name)
+				{
+					// Get the generated class from the blueprint
+					UClass* BlueprintClass = Blueprint->GeneratedClass;
+					if (BlueprintClass)
+					{
+						// Now, get the default object and access its components
+						AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+						if (DefaultActor)
+						{
+							// Use Simple Construction Script to inspect the blueprint's components
+							if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+							{
+								const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+								// Iterate over the SCS nodes to find UDynamicObject components
+								for (USCS_Node* SCSNode : SCSNodes)
+								{
+									if (SCSNode && SCSNode->ComponentTemplate)
+									{
+										// Check if the component is a UDynamicObject
+										UDynamicObject* dynamicComponent = Cast<UDynamicObject>(SCSNode->ComponentTemplate);
+										if (dynamicComponent)
+										{
+											if (dynamicComponent->MeshName == data->MeshName && !dynamics.Contains(dynamicComponent))
+											{
+												dynamics.Add(dynamicComponent);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		FCognitiveEditorTools::GetInstance()->UploadSelectedDynamicsManifest(dynamics); ////
 	}
 
 	return FReply::Handled();
