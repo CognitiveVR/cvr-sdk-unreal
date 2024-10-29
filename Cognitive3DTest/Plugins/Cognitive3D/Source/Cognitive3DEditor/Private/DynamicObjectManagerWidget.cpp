@@ -687,6 +687,10 @@ FText SDynamicObjectManagerWidget::UploadAllMeshesTooltip() const
 	{
 		return FText::FromString("");
 	}
+	else if (!SceneDisplayName.IsValid())
+	{
+		return FText::FromString("Use the Open Scene Setup Window above to export these meshes and continue the guided setup to the Scene Setup Window");
+	}
 	else if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName))
 	{
 		return FText::FromString("Use the Open Scene Setup Window above to export these meshes and continue the guided setup to the Scene Setup Window");
@@ -706,6 +710,7 @@ bool SDynamicObjectManagerWidget::IsUploadAllEnabled() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return false; }
+	if (!SceneDisplayName.IsValid()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName)) { return false; }
 	return true;
 }
@@ -727,6 +732,7 @@ EVisibility SDynamicObjectManagerWidget::GetSceneWarningVisibility() const
 bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
+	if (!SceneDisplayName.IsValid()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName)) { return false; }
 	
 	//use the selection in the table, not in the scene
@@ -762,6 +768,7 @@ FText SDynamicObjectManagerWidget::UploadSelectedText() const
 FText SDynamicObjectManagerWidget::GetSceneText() const
 {
 	auto tools = FCognitiveEditorTools::GetInstance();
+	if (!SceneDisplayName.IsValid()) { return FText::FromString("Scene has not been exported!"); }
 	if (tools->SceneHasSceneId(*SceneDisplayName))
 	{
 		auto data = tools->GetSceneData(*SceneDisplayName);

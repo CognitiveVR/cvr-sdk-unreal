@@ -79,7 +79,12 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 			properties->SetStringField("Sublevel Name", FString(levelName));
 			customEventRecorder->Send("c3d.Level Streaming Load", properties);
 		}
-		FlushAndCacheEvents();
+		gazeDataRecorder->SendData(true);
+		customEventRecorder->SendData(true);
+		fixationDataRecorder->SendData(true);
+		sensors->SendData(true);
+		OnRequestSend.Broadcast(true);
+
 		//empty current dynamics manifest
 		dynamicObjectManager->manifest.Empty();
 		dynamicObjectManager->newManifest.Empty();
@@ -160,7 +165,11 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 			properties->SetNumberField("Duration", duration);
 			customEventRecorder->Send("c3d.SceneUnloaded", properties);
 		}
-		FlushAndCacheEvents();
+		gazeDataRecorder->SendData(true);
+		customEventRecorder->SendData(true);
+		fixationDataRecorder->SendData(true);
+		sensors->SendData(true);
+		OnRequestSend.Broadcast(true);
 
 		//set new current scene
 		if (stackNewTop.IsValid())
