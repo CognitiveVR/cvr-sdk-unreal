@@ -69,6 +69,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 		{
 			properties->SetStringField("Scene Name", FString(data->Name));
 			properties->SetStringField("Scene Id", FString(data->Id));
+			properties->SetStringField("Previous Scene Name", FString(currentSceneData->Name));
 			float duration = FUtil::GetTimestamp() - SceneStartTime;
 			properties->SetNumberField("Duration", duration);
 			customEventRecorder->Send("c3d.SceneLoaded", properties);
@@ -91,9 +92,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 				// Check if the actor has a UDynamicObject component
 				UDynamicObject* DynamicComponent = Actor->FindComponentByClass<UDynamicObject>();
 				if (DynamicComponent)
-				{
-					
-					UE_LOG(LogTemp, Warning, TEXT("Found Dynamic on actor %s, registering component"), *Actor->GetFName().ToString());
+				{					
 					// Register the component
 					DynamicComponent->RegisterComponent();
 				}
@@ -154,8 +153,9 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
 		if (stackNewTop.IsValid())
 		{
-			properties->SetStringField("Scene Name", FString(stackNewTop->Name));
-			properties->SetStringField("Scene Id", FString(stackNewTop->Id));
+			properties->SetStringField("Scene Name", FString(data->Name));
+			properties->SetStringField("Scene Id", FString(data->Id));
+			properties->SetStringField("Destination Scene Name", FString(stackNewTop->Name));
 			float duration = FUtil::GetTimestamp() - SceneStartTime;
 			properties->SetNumberField("Duration", duration);
 			customEventRecorder->Send("c3d.SceneUnloaded", properties);
