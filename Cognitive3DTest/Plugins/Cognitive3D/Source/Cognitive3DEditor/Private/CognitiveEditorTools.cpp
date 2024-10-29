@@ -391,31 +391,25 @@ FProcHandle FCognitiveEditorTools::ExportAllDynamics()
 			UBlueprint* Blueprint = *It;
 			if (Blueprint->GetName() == data->Name)
 			{
-				UE_LOG(LogTemp, Log, TEXT("Found blueprint: %s"), *Blueprint->GetName());
 				// Get the generated class from the blueprint
 				UClass* BlueprintClass = Blueprint->GeneratedClass;
 				if (BlueprintClass)
 				{
-					UE_LOG(LogTemp, Log, TEXT("Found blueprint class: %s"), *BlueprintClass->GetName());
 
 					if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
 					{
-						UE_LOG(LogTemp, Warning, TEXT("Found Actor-based Blueprint class: %s"), *BlueprintClass->GetName());
 
 						// Now, get the default object and access its components
 						AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
 						if (DefaultActor)
 						{
-							UE_LOG(LogTemp, Warning, TEXT("Default actor is valid: %s"), *DefaultActor->GetName());
 
 							// Use Simple Construction Script to inspect the blueprint's components
 							if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
 							{
-								UE_LOG(LogTemp, Warning, TEXT("Found BlueprintGeneratedClass: %s"), *BPGeneratedClass->GetName());
 								if (BPGeneratedClass->SimpleConstructionScript)
 								{
 									const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
-									UE_LOG(LogTemp, Warning, TEXT("Found %d SCS nodes in Blueprint: %s"), SCSNodes.Num(), *BlueprintClass->GetName());
 
 									// Iterate over the SCS nodes to find UDynamicObject components
 									for (USCS_Node* SCSNode : SCSNodes)
@@ -423,21 +417,18 @@ FProcHandle FCognitiveEditorTools::ExportAllDynamics()
 										if (SCSNode && SCSNode->ComponentTemplate)
 										{
 											UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
-											UE_LOG(LogTemp, Warning, TEXT("Found SCS Component: %s in Blueprint: %s"), *ComponentTemplate->GetName(), *BlueprintClass->GetName());
 
 											// Check if the component is a UDynamicObject
 											UDynamicObject* dynamicComponent = Cast<UDynamicObject>(ComponentTemplate);
 
 											if (dynamicComponent == NULL)
 											{
-												UE_LOG(LogTemp, Warning, TEXT("backup FCognitiveEditorTools::ExportDynamicData dynamicComponent is null"));
 												continue;
 											}
 											if (meshNames.Contains(dynamicComponent->MeshName))
 											{
 												continue;
 											}
-											UE_LOG(LogTemp, Log, TEXT("backup Found dynamic object component: %s"), *dynamicComponent->GetName());
 											bool exportActor = false;
 											if (data->MeshName == dynamicComponent->MeshName)
 											{
@@ -553,31 +544,25 @@ FProcHandle FCognitiveEditorTools::ExportDynamicData(TArray<TSharedPtr<FDynamicD
 			UBlueprint* Blueprint = *It;
 			if (Blueprint->GetName() == data->Name)
 			{
-				UE_LOG(LogTemp, Log, TEXT("Found blueprint: %s"), *Blueprint->GetName());
 				// Get the generated class from the blueprint
 				UClass* BlueprintClass = Blueprint->GeneratedClass;
 				if (BlueprintClass)
 				{
-					UE_LOG(LogTemp, Log, TEXT("Found blueprint class: %s"), *BlueprintClass->GetName());
 
 					if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
 					{
-						UE_LOG(LogTemp, Warning, TEXT("Found Actor-based Blueprint class: %s"), *BlueprintClass->GetName());
 
 						// Now, get the default object and access its components
 						AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
 						if (DefaultActor)
 						{
-							UE_LOG(LogTemp, Warning, TEXT("Default actor is valid: %s"), *DefaultActor->GetName());
 
 							// Use Simple Construction Script to inspect the blueprint's components
 							if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
 							{
-								UE_LOG(LogTemp, Warning, TEXT("Found BlueprintGeneratedClass: %s"), *BPGeneratedClass->GetName());
 								if (BPGeneratedClass->SimpleConstructionScript)
 								{
 									const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
-									UE_LOG(LogTemp, Warning, TEXT("Found %d SCS nodes in Blueprint: %s"), SCSNodes.Num(), *BlueprintClass->GetName());
 
 									// Iterate over the SCS nodes to find UDynamicObject components
 									for (USCS_Node* SCSNode : SCSNodes)
@@ -585,21 +570,18 @@ FProcHandle FCognitiveEditorTools::ExportDynamicData(TArray<TSharedPtr<FDynamicD
 										if (SCSNode && SCSNode->ComponentTemplate)
 										{
 											UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
-											UE_LOG(LogTemp, Warning, TEXT("Found SCS Component: %s in Blueprint: %s"), *ComponentTemplate->GetName(), *BlueprintClass->GetName());
 
 											// Check if the component is a UDynamicObject
 											UDynamicObject* dynamicComponent = Cast<UDynamicObject>(ComponentTemplate);
 
 											if (dynamicComponent == NULL)
 											{
-												UE_LOG(LogTemp, Warning, TEXT("backup FCognitiveEditorTools::ExportDynamicData dynamicComponent is null"));
 												continue;
 											}
 											if (meshNames.Contains(dynamicComponent->MeshName))
 											{
 												continue;
 											}
-											UE_LOG(LogTemp, Log, TEXT("backup Found dynamic object component: %s"), *dynamicComponent->GetName());
 											bool exportActor = false;
 											if (data->MeshName == dynamicComponent->MeshName)
 											{
@@ -630,11 +612,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicData(TArray<TSharedPtr<FDynamicD
 
 FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects)
 {
-	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray"));
-
-	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray exportObjects.Num() %d"), exportObjects.Num());
-
-	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray BaseExportDirectory %s"), *BaseExportDirectory);
 
 	FProcHandle fph;
 
@@ -654,7 +631,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 		if (exportObjects[i] == NULL)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray export object is null"));
 			continue;
 		}
 		AActor* Owner = NULL;
@@ -662,10 +638,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		UMeshComponent* bpMesh = NULL;
 		if (exportObjects[i]->GetOwner() == NULL)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray export object owner is null"));
-
-			
-
 			//if the owner is null, the object is likely a blueprint in the project
 			//find the blueprint and get its dynamic object
 
@@ -679,31 +651,25 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 					{
 						if (Blueprint->GetName() == data->Name)
 						{
-							UE_LOG(LogTemp, Log, TEXT("Found blueprint: %s"), *Blueprint->GetName());
 							// Get the generated class from the blueprint
 							UClass* BlueprintClass = Blueprint->GeneratedClass;
 							if (BlueprintClass)
 							{
-								UE_LOG(LogTemp, Log, TEXT("Found blueprint class: %s"), *BlueprintClass->GetName());
 
 								if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
 								{
-									UE_LOG(LogTemp, Warning, TEXT("Found Actor-based Blueprint class: %s"), *BlueprintClass->GetName());
 
 									// Now, get the default object and access its components
 									AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
 									if (DefaultActor)
 									{
-										UE_LOG(LogTemp, Warning, TEXT("Default actor is valid: %s"), *DefaultActor->GetName());
 
 										// Use Simple Construction Script to inspect the blueprint's components
 										if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
 										{
-											UE_LOG(LogTemp, Warning, TEXT("Found BlueprintGeneratedClass: %s"), *BPGeneratedClass->GetName());
 											if (BPGeneratedClass->SimpleConstructionScript)
 											{
 												const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
-												UE_LOG(LogTemp, Warning, TEXT("Found %d SCS nodes in Blueprint: %s"), SCSNodes.Num(), *BlueprintClass->GetName());
 
 												// Iterate over the SCS nodes to find UDynamicObject components
 												for (USCS_Node* SCSNode : SCSNodes)
@@ -711,7 +677,6 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 													if (SCSNode && SCSNode->ComponentTemplate)
 													{
 														UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
-														UE_LOG(LogTemp, Warning, TEXT("Found SCS Component: %s in Blueprint: %s"), *ComponentTemplate->GetName(), *BlueprintClass->GetName());
 
 
 														//check if ComponentTemplate is a mesh
@@ -719,11 +684,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 														//verify that the mesh component is valid
 														if (MeshComponent == NULL)
 														{
-															UE_LOG(LogTemp, Warning, TEXT("backup FCognitiveEditorTools::ExportDynamicData MeshComponent is null"));
-														}
-														else
-														{
-															UE_LOG(LogTemp, Warning, TEXT("backup FCognitiveEditorTools::ExportDynamicData MeshComponent is valid"));
+															continue;
 														}
 														//if its valid, get the attached child component and log them
 														if (MeshComponent)
@@ -740,11 +701,9 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 																	UDynamicObject* DynamicObjectComponent = Cast<UDynamicObject>(ChildNode->ComponentTemplate);
 																	if (DynamicObjectComponent)
 																	{
-																		UE_LOG(LogTemp, Log, TEXT("Found DynamicObjectComponent: %s"), *DynamicObjectComponent->GetName());
 																		// Do something with the dynamic object component
 																		if (DynamicObjectComponent->MeshName == data->MeshName)
 																		{
-																			UE_LOG(LogTemp, Log, TEXT("Found DynamicObjectComponent with matching MeshName: %s"), *DynamicObjectComponent->GetName());
 																			Owner = DefaultActor;
 																			isBlueprint = true;
 																			bpMesh = MeshComponent;
@@ -768,11 +727,9 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			//both the regular owner and the found owners were null
 			if (Owner == NULL)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray Owner (from bp) is null"));
 				continue;
 			}
 
-			//continue;
 		}
 		if (exportObjects[i]->MeshName.IsEmpty())
 		{
@@ -832,9 +789,9 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		if (isBlueprint)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray isBlueprint: EXPORTING NOW"));
+			
 			//use GLTFExporter Plugin
-
-						// Create export options
+			// Create export options
 			UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
 
 			// Set custom export settings
@@ -1258,8 +1215,6 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 
 FReply FCognitiveEditorTools::UploadDynamicsManifest()
 {
-	//UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadDynamicsManifest started"));
-
 	TArray<UDynamicObject*> dynamics;
 
 	//get all the dynamic objects in the scene
@@ -1267,20 +1222,16 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		//AStaticMeshActor *Mesh = *ActorItr;
-		//UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadDynamicsManifest found actor %s"), *ActorItr->GetName());
 		//check all compoenents on the actor in case there are multiple dynamic objects
 		for (UActorComponent* actorComponent : ActorItr->GetComponents())
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadDynamicsManifest found component %s"), *actorComponent->GetName());
 			if (actorComponent->IsA(UDynamicObject::StaticClass()))
 			{
-				//UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadDynamicsManifest found dynamic object"));
 				UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
 				if (dynamic == NULL)
 				{
 					continue;
 				}
-				//UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadDynamicsManifest found dynamic object %s"), *dynamic->MeshName);
 				dynamics.Add(dynamic);
 			}
 		}
@@ -1339,22 +1290,6 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 
 FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObject*> dynamics)
 {
-	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadSelectedDynamicsManifest started"));
-	
-	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadSelectedDynamicsManifest found %d dynamics"), dynamics.Num());
-
-	for (const UDynamicObject* dynamicObject : dynamics)
-	{
-		if (dynamicObject)
-		{
-			UE_LOG(LogTemp, Log, TEXT("Dynamic Object: %s"), *dynamicObject->GetName());
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Null Dynamic Object in array"));
-		}
-	}
-
 	bool wroteAnyObjects = false;
 
 	//split up dynamics and make a web request every 250 items, up to 99 calls
@@ -1390,31 +1325,22 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObje
 						{
 							if (Blueprint->GetName() == data->Name)
 							{
-								UE_LOG(LogTemp, Log, TEXT("Found blueprint: %s"), *Blueprint->GetName());
 								// Get the generated class from the blueprint
 								UClass* BlueprintClass = Blueprint->GeneratedClass;
 								if (BlueprintClass)
 								{
-									UE_LOG(LogTemp, Log, TEXT("Found blueprint class: %s"), *BlueprintClass->GetName());
-
 									if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
 									{
-										UE_LOG(LogTemp, Warning, TEXT("Found Actor-based Blueprint class: %s"), *BlueprintClass->GetName());
-
 										// Now, get the default object and access its components
 										AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
 										if (DefaultActor)
 										{
-											UE_LOG(LogTemp, Warning, TEXT("Default actor is valid: %s"), *DefaultActor->GetName());
-
 											// Use Simple Construction Script to inspect the blueprint's components
 											if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
 											{
-												UE_LOG(LogTemp, Warning, TEXT("Found BlueprintGeneratedClass: %s"), *BPGeneratedClass->GetName());
 												if (BPGeneratedClass->SimpleConstructionScript)
 												{
 													const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
-													UE_LOG(LogTemp, Warning, TEXT("Found %d SCS nodes in Blueprint: %s"), SCSNodes.Num(), *BlueprintClass->GetName());
 
 													// Iterate over the SCS nodes to find UDynamicObject components
 													for (USCS_Node* SCSNode : SCSNodes)
@@ -1422,27 +1348,17 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObje
 														if (SCSNode && SCSNode->ComponentTemplate)
 														{
 															UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
-															UE_LOG(LogTemp, Warning, TEXT("Found SCS Component: %s in Blueprint: %s"), *ComponentTemplate->GetName(), *BlueprintClass->GetName());
 
 															//check if ComponentTemplate is a mesh
 															UMeshComponent* MeshComponent = Cast<UMeshComponent>(ComponentTemplate);
 															//verify that the mesh component is valid
 															if (MeshComponent == NULL)
 															{
-																UE_LOG(LogTemp, Warning, TEXT("backup FCognitiveEditorTools::ExportDynamicData MeshComponent is null"));
-
-															}
-															else
-															{
-																UE_LOG(LogTemp, Warning, TEXT("backup FCognitiveEditorTools::ExportDynamicData MeshComponent is valid"));
-
-																//Owner = DefaultActor;
+																continue;
 															}
 															//if its valid, get the attached child component and log them
 															if (MeshComponent)
 															{
-																//const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
-
 																// Check its child nodes
 																const TArray<USCS_Node*>& ChildNodes = SCSNode->GetChildNodes();
 																for (USCS_Node* ChildNode : ChildNodes)
@@ -1453,11 +1369,9 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObje
 																		UDynamicObject* DynamicObjectComponent = Cast<UDynamicObject>(ChildNode->ComponentTemplate);
 																		if (DynamicObjectComponent)
 																		{
-																			UE_LOG(LogTemp, Log, TEXT("Found DynamicObjectComponent: %s"), *DynamicObjectComponent->GetName());
 																			// Do something with the dynamic object component
 																			if (DynamicObjectComponent->MeshName == data->MeshName)
 																			{
-																				UE_LOG(LogTemp, Log, TEXT("Found DynamicObjectComponent with matching MeshName: %s"), *DynamicObjectComponent->GetName());
 																				Owner = DefaultActor;
 																				isBlueprint = true;
 																				bpMesh = MeshComponent;
@@ -2902,7 +2816,6 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 	for (const FAssetData& AssetData2 : AssetDataList)
 	{
 		FString AssetName = AssetData2.AssetName.ToString();
-		UE_LOG(LogTemp, Warning, TEXT("Processing Blueprint: %s"), *AssetName);
 
 		// Get the GeneratedClass tag from the asset data (without fully loading the asset)
 		FString GeneratedClassPath;
@@ -2914,21 +2827,16 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 			
 			if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Found Actor-based Blueprint class: %s"), *BlueprintClass->GetName());
-
 				// Now, get the default object and access its components
 				AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
 				if (DefaultActor)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Default actor is valid: %s"), *DefaultActor->GetName());
-
 					// Use Simple Construction Script to inspect the blueprint's components
 					if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
 					{
 						if (BPGeneratedClass->SimpleConstructionScript)
 						{
 							const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
-							UE_LOG(LogTemp, Warning, TEXT("Found %d SCS nodes in Blueprint: %s"), SCSNodes.Num(), *BlueprintClass->GetName());
 
 							// Iterate over the SCS nodes to find UDynamicObject components
 							for (USCS_Node* SCSNode : SCSNodes)
@@ -2936,14 +2844,11 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 								if (SCSNode && SCSNode->ComponentTemplate)
 								{
 									UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
-									UE_LOG(LogTemp, Warning, TEXT("Found SCS Component: %s in Blueprint: %s"), *ComponentTemplate->GetName(), *BlueprintClass->GetName());
 
 									// Check if the component is a UDynamicObject
 									UDynamicObject* DynamicObjectComponent = Cast<UDynamicObject>(ComponentTemplate);
 									if (DynamicObjectComponent)
 									{
-										UE_LOG(LogTemp, Warning, TEXT("Found UDynamicObject in blueprint SCS for asset: %s"), *AssetData2.AssetName.ToString());
-
 										// Now populate the SceneDynamics based on the ID type
 										if (DynamicObjectComponent->IdSourceType == EIdSourceType::CustomId)
 										{
@@ -2967,36 +2872,12 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 											SceneDynamics.Add(MakeShareable(new FDynamicData(DynamicObjectComponent->GetOwner()->GetName(), DynamicObjectComponent->MeshName, IdString, DynamicObjectComponent->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
 										}
 									}
-									else
-									{
-										UE_LOG(LogTemp, Warning, TEXT("SCS Component %s is not a UDynamicObject in Blueprint: %s"), *ComponentTemplate->GetName(), *BlueprintClass->GetName());
-									}
-								}
-								else
-								{
-									UE_LOG(LogTemp, Warning, TEXT("SCS Node or its ComponentTemplate is null in Blueprint: %s"), *BlueprintClass->GetName());
 								}
 							}
 						}
-						else
-						{
-							UE_LOG(LogTemp, Warning, TEXT("No SimpleConstructionScript found in Blueprint: %s"), *BlueprintClass->GetName());
-						}
 					}
 				}
-				else
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Default actor is null for Blueprint: %s"), *BlueprintClass->GetName());
-				}
 			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Generated class not found or not an actor-based class for Blueprint: %s"), *AssetData2.AssetName.ToString());
-			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("GeneratedClass tag not found for Blueprint: %s"), *AssetData2.AssetName.ToString());
 		}
 	}
 
@@ -3007,7 +2888,6 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 for (const FAssetData& AssetData2 : AssetDataList)
 {
 	FString AssetName = AssetData2.AssetName.ToString();
-	UE_LOG(LogTemp, Warning, TEXT("Processing Blueprint: %s"), *AssetName);
 
 	// Force load the asset to ensure all data is available
 	UBlueprint* Blueprint = Cast<UBlueprint>(AssetData2.GetAsset());
@@ -3028,7 +2908,6 @@ for (const FAssetData& AssetData2 : AssetDataList)
 		// Ensure the blueprint is compiled
 		if (!BlueprintClass)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Compiling Blueprint: %s"), *AssetName);
 			FKismetEditorUtilities::CompileBlueprint(Blueprint);
 
 			// Try to get the GeneratedClass again after compiling
@@ -3037,36 +2916,28 @@ for (const FAssetData& AssetData2 : AssetDataList)
 
 		if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Found Actor-based Blueprint class: %s"), *BlueprintClass->GetName());
-
 			// Now, get the default object and access its components
 			AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
 			if (DefaultActor)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Default actor is valid: %s"), *DefaultActor->GetName());
-
 				// Use Simple Construction Script to inspect the blueprint's components
 				if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
 				{
 					if (BPGeneratedClass->SimpleConstructionScript)
 					{
 						const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
-						UE_LOG(LogTemp, Warning, TEXT("Found %d SCS nodes in Blueprint: %s"), SCSNodes.Num(), *BlueprintClass->GetName());
-
+						
 						// Iterate over the SCS nodes to find UDynamicObject components
 						for (USCS_Node* SCSNode : SCSNodes)
 						{
 							if (SCSNode && SCSNode->ComponentTemplate)
 							{
 								UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
-								UE_LOG(LogTemp, Warning, TEXT("Found SCS Component: %s in Blueprint: %s"), *ComponentTemplate->GetName(), *BlueprintClass->GetName());
-
+								
 								// Check if the component is a UDynamicObject
 								UDynamicObject* DynamicObjectComponent = Cast<UDynamicObject>(ComponentTemplate);
 								if (DynamicObjectComponent)
 								{
-									UE_LOG(LogTemp, Warning, TEXT("Found UDynamicObject in blueprint SCS for asset: %s"), *AssetData2.AssetName.ToString());
-
 									// Now populate the SceneDynamics based on the ID type
 									if (DynamicObjectComponent->IdSourceType == EIdSourceType::CustomId)
 									{
@@ -3085,36 +2956,12 @@ for (const FAssetData& AssetData2 : AssetDataList)
 										SceneDynamics.Add(MakeShareable(new FDynamicData(DynamicObjectComponent->GetOwner()->GetName(), DynamicObjectComponent->MeshName, IdString, DynamicObjectComponent->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
 									}
 								}
-								else
-								{
-									UE_LOG(LogTemp, Warning, TEXT("SCS Component %s is not a UDynamicObject in Blueprint: %s"), *ComponentTemplate->GetName(), *BlueprintClass->GetName());
-								}
-							}
-							else
-							{
-								UE_LOG(LogTemp, Warning, TEXT("SCS Node or its ComponentTemplate is null in Blueprint: %s"), *BlueprintClass->GetName());
 							}
 						}
 					}
-					else
-					{
-						UE_LOG(LogTemp, Warning, TEXT("No SimpleConstructionScript found in Blueprint: %s"), *BlueprintClass->GetName());
-					}
 				}
 			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Default actor is null for Blueprint: %s"), *BlueprintClass->GetName());
-			}
 		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Generated class not found or not an actor-based class for Blueprint: %s"), *AssetData2.AssetName.ToString());
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("GeneratedClass tag not found for Blueprint: %s"), *AssetData2.AssetName.ToString());
 	}
 }
 

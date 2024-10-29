@@ -61,6 +61,7 @@ public:
 	//assign dynamics to objects in the scene
 	FReply AssignDynamicsToActors();
 	bool IsActorInSceneSelected() const;
+	FText AssignDynamicTooltip() const;
 
 	EVisibility GetSceneWarningVisibility() const;
 

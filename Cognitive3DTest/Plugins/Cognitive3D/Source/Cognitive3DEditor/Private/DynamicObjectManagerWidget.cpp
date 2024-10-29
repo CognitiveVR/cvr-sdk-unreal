@@ -63,7 +63,7 @@ void SDynamicObjectManagerWidget::GetDashboardManifest()
 		}
 
 		auto Request = FHttpModule::Get().CreateRequest();
-		Request->OnProcessRequestComplete().BindRaw(this, &SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived); ////
+		Request->OnProcessRequestComplete().BindRaw(this, &SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived);
 		FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 		FString versionid = FString::FromInt(currentSceneData->VersionId);
 		FString url = "https://" + gateway + "/v0/versions/"+versionid+"/objects";
@@ -325,7 +325,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 							SNew(SButton)
 							.IsEnabled(this, &SDynamicObjectManagerWidget::IsActorInSceneSelected)
 							.Text(FText::FromString("Add Dynamic Object Component(s)"))
-							.ToolTipText(FText::FromString("Add Dynamic Object Components To Selected Actors in Scene"))
+							.ToolTipText(this, &SDynamicObjectManagerWidget::AssignDynamicTooltip)
 							.OnClicked_Raw(this, &SDynamicObjectManagerWidget::AssignDynamicsToActors)
 						]
 					]
@@ -462,10 +462,10 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 	if (result2 == FSuppressableWarningDialog::EResult::Confirm)
 	{
 		//then upload all
-		FCognitiveEditorTools::GetInstance()->UploadDynamics(); ////
+		FCognitiveEditorTools::GetInstance()->UploadDynamics();
 
 		//upload aggregation manifest data
-		FCognitiveEditorTools::GetInstance()->UploadDynamicsManifest(); ////
+		FCognitiveEditorTools::GetInstance()->UploadDynamicsManifest();
 	}
 
 	return FReply::Handled();
@@ -562,7 +562,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 			meshOnly.Add(dynamic);
 			if (result == FSuppressableWarningDialog::EResult::Confirm)
 			{
-				FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportDynamicData(meshOnly); ////
+				FProcHandle fph = FCognitiveEditorTools::GetInstance()->ExportDynamicData(meshOnly);
 				if (fph.IsValid())
 				{
 					FPlatformProcess::WaitForProc(fph);
@@ -599,17 +599,13 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 		{
 			for (UActorComponent* actorComponent : ActorItr->GetComponents())
 			{
-				//UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadDynamicsManifest found component %s"), *actorComponent->GetName());
 				if (actorComponent->IsA(UDynamicObject::StaticClass()))
 				{
-					//UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadDynamicsManifest found dynamic object"));
 					UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
 					if (dynamic == NULL)
 					{
 						continue;
 					}
-					//UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadDynamicsManifest found dynamic object %s"), *dynamic->MeshName);
-					//dynamics.Add(dynamic);
 
 					if (dynamic->IdSourceType == EIdSourceType::CustomId && dynamic->CustomId != "")
 					{
@@ -670,7 +666,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 			}
 		}
 
-		FCognitiveEditorTools::GetInstance()->UploadSelectedDynamicsManifest(dynamics); ////
+		FCognitiveEditorTools::GetInstance()->UploadSelectedDynamicsManifest(dynamics);
 	}
 
 	return FReply::Handled();
@@ -803,10 +799,18 @@ FReply SDynamicObjectManagerWidget::AssignDynamicsToActors()
 bool SDynamicObjectManagerWidget::IsActorInSceneSelected() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
-	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
 
 	USelection* SelectedActors = GEditor->GetSelectedActors();
 	return SelectedActors->Num() > 0;
+}
+
+FText SDynamicObjectManagerWidget::AssignDynamicTooltip() const
+{
+	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
+	{
+		return FText::FromString("Developer Key is not set");
+	}
+	return FText::FromString("Add Dynamic Object Components To Selected Actors in Scene");
 }
 
 EVisibility SDynamicObjectManagerWidget::GetSceneWarningVisibility() const
