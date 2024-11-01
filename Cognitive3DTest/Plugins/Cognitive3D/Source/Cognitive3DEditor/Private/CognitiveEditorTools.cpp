@@ -3,6 +3,8 @@
 */
 
 #include "CognitiveEditorTools.h"
+#include "Kismet2/KismetEditorUtilities.h"
+
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
@@ -378,6 +380,76 @@ FProcHandle FCognitiveEditorTools::ExportAllDynamics()
 		}
 	}
 
+	//the dynamic we are looking for is actually on a blueprint in the project
+	//find the blueprint and get its dynamic object
+
+	for (const TSharedPtr<FDynamicData>& data : SceneDynamics)
+	{
+		// Iterate over all blueprints in the project
+		for (TObjectIterator<UBlueprint> It; It; ++It)
+		{
+			UBlueprint* Blueprint = *It;
+			if (Blueprint->GetName() == data->Name)
+			{
+				// Get the generated class from the blueprint
+				UClass* BlueprintClass = Blueprint->GeneratedClass;
+				if (BlueprintClass)
+				{
+
+					if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
+					{
+
+						// Now, get the default object and access its components
+						AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+						if (DefaultActor)
+						{
+
+							// Use Simple Construction Script to inspect the blueprint's components
+							if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+							{
+								if (BPGeneratedClass->SimpleConstructionScript)
+								{
+									const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+
+									// Iterate over the SCS nodes to find UDynamicObject components
+									for (USCS_Node* SCSNode : SCSNodes)
+									{
+										if (SCSNode && SCSNode->ComponentTemplate)
+										{
+											UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
+
+											// Check if the component is a UDynamicObject
+											UDynamicObject* dynamicComponent = Cast<UDynamicObject>(ComponentTemplate);
+
+											if (dynamicComponent == NULL)
+											{
+												continue;
+											}
+											if (meshNames.Contains(dynamicComponent->MeshName))
+											{
+												continue;
+											}
+											bool exportActor = false;
+											if (data->MeshName == dynamicComponent->MeshName)
+											{
+												exportActor = true;
+											}
+											if (exportActor)
+											{
+												exportObjects.Add(dynamicComponent);
+												meshNames.Add(dynamicComponent->MeshName);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	if (meshNames.Num() == 0)
 	{
 		return fph;
@@ -419,7 +491,7 @@ FReply FCognitiveEditorTools::ExportSelectedDynamics()
 	return FReply::Handled();
 }
 
-FProcHandle FCognitiveEditorTools::ExportDynamicData(TArray< TSharedPtr<FDynamicData>> dynamicData)
+FProcHandle FCognitiveEditorTools::ExportDynamicData(TArray<TSharedPtr<FDynamicData>> dynamicData)
 {
 	//find all meshes in scene that are contained in the dynamicData list
 
@@ -461,6 +533,78 @@ FProcHandle FCognitiveEditorTools::ExportDynamicData(TArray< TSharedPtr<FDynamic
 		}
 	}
 
+	//the dynamic we are looking for is actually on a blueprint in the project
+	//find the blueprint and get its dynamic object
+
+	for (const TSharedPtr<FDynamicData>& data : dynamicData)
+	{
+		// Iterate over all blueprints in the project
+		for (TObjectIterator<UBlueprint> It; It; ++It)
+		{
+			UBlueprint* Blueprint = *It;
+			if (Blueprint->GetName() == data->Name)
+			{
+				// Get the generated class from the blueprint
+				UClass* BlueprintClass = Blueprint->GeneratedClass;
+				if (BlueprintClass)
+				{
+
+					if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
+					{
+
+						// Now, get the default object and access its components
+						AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+						if (DefaultActor)
+						{
+
+							// Use Simple Construction Script to inspect the blueprint's components
+							if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+							{
+								if (BPGeneratedClass->SimpleConstructionScript)
+								{
+									const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+
+									// Iterate over the SCS nodes to find UDynamicObject components
+									for (USCS_Node* SCSNode : SCSNodes)
+									{
+										if (SCSNode && SCSNode->ComponentTemplate)
+										{
+											UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
+
+											// Check if the component is a UDynamicObject
+											UDynamicObject* dynamicComponent = Cast<UDynamicObject>(ComponentTemplate);
+
+											if (dynamicComponent == NULL)
+											{
+												continue;
+											}
+											if (meshNames.Contains(dynamicComponent->MeshName))
+											{
+												continue;
+											}
+											bool exportActor = false;
+											if (data->MeshName == dynamicComponent->MeshName)
+											{
+												exportActor = true;
+											}
+											if (exportActor)
+											{
+												SelectionSetCache.Add(dynamicComponent);
+												meshNames.Add(dynamicComponent->MeshName);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	//make sure to do this ^^ for exportall as well
+
 	return ExportDynamicObjectArray(SelectionSetCache);
 
 	//return FReply::Handled();
@@ -468,6 +612,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicData(TArray< TSharedPtr<FDynamic
 
 FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects)
 {
+
 	FProcHandle fph;
 
 	FVector originalLocation;
@@ -488,24 +633,130 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		{
 			continue;
 		}
+		AActor* Owner = NULL;
+		bool isBlueprint = false;
+		UMeshComponent* bpMesh = NULL;
 		if (exportObjects[i]->GetOwner() == NULL)
 		{
-			continue;
+			//if the owner is null, the object is likely a blueprint in the project
+			//find the blueprint and get its dynamic object
+
+			for (const TSharedPtr<FDynamicData>& data : SceneDynamics)
+			{
+				// Iterate over all blueprints in the project
+				for (TObjectIterator<UBlueprint> It; It; ++It)
+				{
+					UBlueprint* Blueprint = *It;
+					if (exportObjects[i]->MeshName == data->MeshName)
+					{
+						if (Blueprint->GetName() == data->Name)
+						{
+							// Get the generated class from the blueprint
+							UClass* BlueprintClass = Blueprint->GeneratedClass;
+							if (BlueprintClass)
+							{
+
+								if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
+								{
+
+									// Now, get the default object and access its components
+									AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+									if (DefaultActor)
+									{
+
+										// Use Simple Construction Script to inspect the blueprint's components
+										if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+										{
+											if (BPGeneratedClass->SimpleConstructionScript)
+											{
+												const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+
+												// Iterate over the SCS nodes to find UDynamicObject components
+												for (USCS_Node* SCSNode : SCSNodes)
+												{
+													if (SCSNode && SCSNode->ComponentTemplate)
+													{
+														UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
+
+
+														//check if ComponentTemplate is a mesh
+														UMeshComponent* MeshComponent = Cast<UMeshComponent>(ComponentTemplate);
+														//verify that the mesh component is valid
+														if (MeshComponent == NULL)
+														{
+															continue;
+														}
+														//if its valid, get the attached child component and log them
+														if (MeshComponent)
+														{
+															//const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+
+															// Check its child nodes
+															const TArray<USCS_Node*>& ChildNodes = SCSNode->GetChildNodes();
+															for (USCS_Node* ChildNode : ChildNodes)
+															{
+																if (ChildNode && ChildNode->ComponentTemplate)
+																{
+																	// Assuming the dynamic object is of type UDynamicObjectComponent
+																	UDynamicObject* DynamicObjectComponent = Cast<UDynamicObject>(ChildNode->ComponentTemplate);
+																	if (DynamicObjectComponent)
+																	{
+																		// Do something with the dynamic object component
+																		if (DynamicObjectComponent->MeshName == data->MeshName)
+																		{
+																			Owner = DefaultActor;
+																			isBlueprint = true;
+																			bpMesh = MeshComponent;
+																		}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			//both the regular owner and the found owners were null
+			if (Owner == NULL)
+			{
+				continue;
+			}
+
 		}
 		if (exportObjects[i]->MeshName.IsEmpty())
 		{
+			UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray export object mesh name is empty"));
 			continue;
 		}
 
 		DynamicMeshNames.Add(exportObjects[i]->MeshName);
-
-		originalLocation = exportObjects[i]->GetOwner()->GetActorLocation();
-		originalRotation = exportObjects[i]->GetOwner()->GetActorRotation();
-		originalScale = exportObjects[i]->GetOwner()->GetActorScale();
-
-		exportObjects[i]->GetOwner()->SetActorLocation(FVector::ZeroVector);
-		exportObjects[i]->GetOwner()->SetActorRotation(FQuat::Identity);
-		exportObjects[i]->GetOwner()->SetActorScale3D(FVector::OneVector);
+		if (isBlueprint)
+		{
+			originalLocation = Owner->GetActorLocation();
+			originalRotation = Owner->GetActorRotation();
+			originalScale = Owner->GetActorScale();
+			Owner->SetActorLocation(FVector::ZeroVector);
+			Owner->SetActorRotation(FQuat::Identity);
+			Owner->SetActorScale3D(FVector::OneVector);
+		}
+		else
+		{
+			originalLocation = exportObjects[i]->GetOwner()->GetActorLocation();
+			originalRotation = exportObjects[i]->GetOwner()->GetActorRotation();
+			originalScale = exportObjects[i]->GetOwner()->GetActorScale();
+			exportObjects[i]->GetOwner()->SetActorLocation(FVector::ZeroVector);
+			exportObjects[i]->GetOwner()->SetActorRotation(FQuat::Identity);
+			exportObjects[i]->GetOwner()->SetActorScale3D(FVector::OneVector);
+		}
+		
 
 		FString justDirectory = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName;
 		FString tempObject;
@@ -527,39 +778,240 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			PlatformFile.CreateDirectory(*justDirectory);
 		}
 
-
-		GEditor->SelectActor(exportObjects[i]->GetOwner(), true, false, true);
+		if (!isBlueprint)
+		{
+			GEditor->SelectActor(exportObjects[i]->GetOwner(), true, false, true);
+		}
 		ActorsExported++;
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
 
 
-
-		int DynamicObjectCount = 0;
-		//check if this D.O. is on an object with another D.O.
-		for (UActorComponent* Component : exportObjects[i]->GetOwner()->GetComponents())
+		if (isBlueprint)
 		{
-			if (Component->IsA(UDynamicObject::StaticClass()))
+			UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray isBlueprint: EXPORTING NOW"));
+			
+			//use GLTFExporter Plugin
+			// Create export options
+			UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+			// Set custom export settings
+			ExportOptions->ExportUniformScale = 1.0f;
+			ExportOptions->bExportPreviewMesh = true;
+
+			// Texture compression settings
+			ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+			// Create export task
+			UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+			ExportTask->Filename = *tempObject;
+			if (UStaticMeshComponent* staticBpMeshComp = Cast<UStaticMeshComponent>(bpMesh))
 			{
-				DynamicObjectCount++;
+				ExportTask->Object = staticBpMeshComp->GetStaticMesh();
 			}
-		}
-
-		if (DynamicObjectCount > 1) //multiple D.O.s
-		{
-
-			UE_LOG(LogTemp, Warning, TEXT("FOUND MULTIPLE DYNAMIC OBJECTS"));
-
-			//if so, we check that each D.O. has a mesh parents
-			UMeshComponent* ParentMesh = Cast<UMeshComponent>(exportObjects[i]->GetAttachParent());
-
-			if (ParentMesh)
+			else if (USkeletalMeshComponent* skelBpMeshComp = Cast<USkeletalMeshComponent>(bpMesh))
 			{
-				// Check for Static Mesh Component
-				UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(ParentMesh);
-				if (StaticMeshComp && StaticMeshComp->GetStaticMesh())
+				ExportTask->Object = skelBpMeshComp->SkeletalMesh;
+			}
+			ExportTask->bSelected = false;
+			ExportTask->bReplaceIdentical = true;
+			ExportTask->bPrompt = false;
+			ExportTask->bAutomated = true;
+			ExportTask->Options = ExportOptions;
+
+			// Perform export
+			ExportTask->Exporter->RunAssetExportTask(ExportTask);
+		}
+		else
+		{
+			int DynamicObjectCount = 0;
+			//check if this D.O. is on an object with another D.O.
+			for (UActorComponent* Component : exportObjects[i]->GetOwner()->GetComponents())
+			{
+				if (Component->IsA(UDynamicObject::StaticClass()))
 				{
-					UStaticMesh* StaticMeshAsset = StaticMeshComp->GetStaticMesh();
-					// Do something with StaticMeshAsset
+					DynamicObjectCount++;
+				}
+			}
+
+			if (DynamicObjectCount > 1) //multiple D.O.s //shouoldnt we then iterate through each mesh with a D.O. and export those?
+			{
+
+				UE_LOG(LogTemp, Warning, TEXT("FOUND MULTIPLE DYNAMIC OBJECTS"));
+
+				//if so, we check that each D.O. has a mesh parents
+				UMeshComponent* ParentMesh = Cast<UMeshComponent>(exportObjects[i]->GetAttachParent());
+
+				if (ParentMesh)
+				{
+					// Check for Static Mesh Component
+					UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(ParentMesh);
+					if (StaticMeshComp && StaticMeshComp->GetStaticMesh())
+					{
+						UStaticMesh* StaticMeshAsset = StaticMeshComp->GetStaticMesh();
+						// Do something with StaticMeshAsset
+						//use GLTFExporter Plugin
+
+						// Create export options
+						UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+						// Set custom export settings
+						ExportOptions->ExportUniformScale = 1.0f;
+						ExportOptions->bExportPreviewMesh = true;
+
+						// Texture compression settings
+						ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+						// Create export task
+						UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+						ExportTask->Filename = *tempObject;
+						ExportTask->Object = StaticMeshAsset;
+						ExportTask->bSelected = false;
+						ExportTask->bReplaceIdentical = true;
+						ExportTask->bPrompt = false;
+						ExportTask->bAutomated = true;
+						ExportTask->Options = ExportOptions;
+
+						// Perform export
+						ExportTask->Exporter->RunAssetExportTask(ExportTask);
+					}
+
+					// Check for Skeletal Mesh Component
+					USkeletalMeshComponent* SkeletalMeshComp = Cast<USkeletalMeshComponent>(ParentMesh);
+					if (SkeletalMeshComp && SkeletalMeshComp->SkeletalMesh)
+					{
+						USkeletalMesh* SkeletalMeshAsset = SkeletalMeshComp->SkeletalMesh;
+						// Do something with SkeletalMeshAsset
+
+						//use GLTFExporter Plugin
+
+						// Create export options
+						UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+						// Set custom export settings
+						ExportOptions->ExportUniformScale = 1.0f;
+						ExportOptions->bExportPreviewMesh = true;
+
+						// Texture compression settings
+						ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+						// Create export task
+						UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+						ExportTask->Filename = *tempObject;
+						ExportTask->Object = SkeletalMeshAsset;
+						ExportTask->bSelected = false;
+						ExportTask->bReplaceIdentical = true;
+						ExportTask->bPrompt = false;
+						ExportTask->bAutomated = true;
+						ExportTask->Options = ExportOptions;
+
+						// Perform export
+						ExportTask->Exporter->RunAssetExportTask(ExportTask);
+					}
+
+				}
+				else //incorrect configuration of multiple D.O.s
+				{
+					FSuppressableWarningDialog::FSetupInfo DOExportSettingsInfo(LOCTEXT("DynamicObjectExportSettingsBody", "You are exporting a dynamic object on an actor with multiple dynamic objects, but they are not configured correctly. If you want to track multiple meshes on an actor with multiple dynamic objects, make sure each dynamic object is a child of its respective mesh"), LOCTEXT("DynamicObjectExportSettingsTitle", "Incorrect Dynamic Object Export Configuration"), "ExportSelectedDynamicsObjectsBody");
+					DOExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
+					DOExportSettingsInfo.CheckBoxText = FText();
+					FSuppressableWarningDialog DOExportSelectedDynamicMeshes(DOExportSettingsInfo);
+					DOExportSelectedDynamicMeshes.ShowModal();
+
+					continue;
+				}
+			}
+			else //only 1 D.O. proceed as normal
+			{
+				//if theres only 1 D.O. on the object, continue normally
+
+				//pawn export process needs to be able to group meshes somehow on D.O.s with 1 D.O. and multiple meshes
+				if (exportObjects[i]->GetOwner()->IsA(APawn::StaticClass()))
+				{
+					UE_LOG(LogTemp, Warning, TEXT("FOUND PAWN CLASS, EXPORTING MESH"));
+					UMeshComponent* pawnMesh = Cast<UMeshComponent>(exportObjects[i]->GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
+					TArray<UActorComponent*> pawnMeshes;
+					exportObjects[i]->GetOwner()->GetComponents(UMeshComponent::StaticClass(), pawnMeshes);
+
+					TArray< UMeshComponent*> meshes;
+					for (int32 j = 0; j < pawnMeshes.Num(); j++)
+					{
+						UStaticMeshComponent* mesh = Cast<UStaticMeshComponent>(pawnMeshes[j]);
+						if (mesh == NULL)
+						{
+							continue;
+						}
+
+						ULevel* componentLevel = pawnMeshes[j]->GetComponentLevel();
+						if (componentLevel->bIsVisible == 0)
+						{
+							continue;
+							//not visible! possibly on a disabled sublevel
+						}
+
+						meshes.Add(mesh);
+					}
+
+					TArray<UActorComponent*> actorSkeletalComponents;
+					exportObjects[i]->GetOwner()->GetComponents(USkeletalMeshComponent::StaticClass(), actorSkeletalComponents);
+					for (int32 j = 0; j < actorSkeletalComponents.Num(); j++)
+					{
+						USkeletalMeshComponent* mesh = Cast<USkeletalMeshComponent>(actorSkeletalComponents[j]);
+						if (mesh == NULL)
+						{
+							continue;
+						}
+
+						ULevel* componentLevel = actorSkeletalComponents[j]->GetComponentLevel();
+						if (componentLevel->bIsVisible == 0)
+						{
+							continue;
+							//not visible! possibly on a disabled sublevel
+						}
+
+						meshes.Add(mesh);
+					}
+
+					//setup temp meshes package
+					UPackage* NewPackageName = CreatePackage(TEXT("/Game/TempMesh"));
+
+					if (meshes.Num() > 0)
+					{
+						//take the skeletal meshes that we set up earlier and use them to create a static mesh
+						UStaticMesh* tmpStatMesh = MeshUtilities.ConvertMeshesToStaticMesh(meshes, exportObjects[i]->GetOwner()->GetTransform(), NewPackageName->GetName());
+
+						//use GLTFExporter Plugin
+
+						// Create export options
+						UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+						// Set custom export settings
+						ExportOptions->ExportUniformScale = 1.0f;
+						ExportOptions->bExportPreviewMesh = true;
+
+						// Texture compression settings
+						ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+						// Create export task
+						UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+						ExportTask->Filename = *tempObject;
+						ExportTask->Object = tmpStatMesh;
+						ExportTask->bSelected = false;
+						ExportTask->bReplaceIdentical = true;
+						ExportTask->bPrompt = false;
+						ExportTask->bAutomated = true;
+						ExportTask->Options = ExportOptions;
+
+						// Perform export
+						ExportTask->Exporter->RunAssetExportTask(ExportTask);
+
+						TempAssetsToDelete.Add(tmpStatMesh);
+					}
+				}
+				else
+				{
+					//exports the currently selected actor(s)
+					UE_LOG(LogTemp, Warning, TEXT("DOING REGULAR MAP EXPORT"));
+
 					//use GLTFExporter Plugin
 
 					// Create export options
@@ -574,9 +1026,10 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 					// Create export task
 					UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+					ExportTask->Object = GWorld;
+					ExportTask->Exporter = NewObject<UGLTFLevelExporter>();
 					ExportTask->Filename = *tempObject;
-					ExportTask->Object = StaticMeshAsset;
-					ExportTask->bSelected = false;
+					ExportTask->bSelected = true;
 					ExportTask->bReplaceIdentical = true;
 					ExportTask->bPrompt = false;
 					ExportTask->bAutomated = true;
@@ -585,177 +1038,16 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 					// Perform export
 					ExportTask->Exporter->RunAssetExportTask(ExportTask);
 				}
-
-				// Check for Skeletal Mesh Component
-				USkeletalMeshComponent* SkeletalMeshComp = Cast<USkeletalMeshComponent>(ParentMesh);
-				if (SkeletalMeshComp && SkeletalMeshComp->SkeletalMesh)
-				{
-					USkeletalMesh* SkeletalMeshAsset = SkeletalMeshComp->SkeletalMesh;
-					// Do something with SkeletalMeshAsset
-
-					//use GLTFExporter Plugin
-
-					// Create export options
-					UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
-
-					// Set custom export settings
-					ExportOptions->ExportUniformScale = 1.0f;
-					ExportOptions->bExportPreviewMesh = true;
-
-					// Texture compression settings
-					ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
-
-					// Create export task
-					UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
-					ExportTask->Filename = *tempObject;
-					ExportTask->Object = SkeletalMeshAsset;
-					ExportTask->bSelected = false;
-					ExportTask->bReplaceIdentical = true;
-					ExportTask->bPrompt = false;
-					ExportTask->bAutomated = true;
-					ExportTask->Options = ExportOptions;
-
-					// Perform export
-					ExportTask->Exporter->RunAssetExportTask(ExportTask);
-				}
-
-			}
-			else //incorrect configuration of multiple D.O.s
-			{
-				FSuppressableWarningDialog::FSetupInfo DOExportSettingsInfo(LOCTEXT("DynamicObjectExportSettingsBody", "You are exporting a dynamic object on an actor with multiple dynamic objects, but they are not configured correctly. If you want to track multiple meshes on an actor with multiple dynamic objects, make sure each dynamic object is a child of its respective mesh"), LOCTEXT("DynamicObjectExportSettingsTitle", "Incorrect Dynamic Object Export Configuration"), "ExportSelectedDynamicsObjectsBody");
-				DOExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
-				DOExportSettingsInfo.CheckBoxText = FText();
-				FSuppressableWarningDialog DOExportSelectedDynamicMeshes(DOExportSettingsInfo);
-				DOExportSelectedDynamicMeshes.ShowModal();
-
-				continue;
 			}
 		}
-		else //only 1 D.O. proceed as normal
+
+		if (!isBlueprint)
 		{
-			//if theres only 1 D.O. on the object, continue normally
-
-			//pawn export process needs to be able to group meshes somehow on D.O.s with 1 D.O. and multiple meshes
-			if (exportObjects[i]->GetOwner()->IsA(APawn::StaticClass()))
-			{
-				UE_LOG(LogTemp, Warning, TEXT("FOUND PAWN CLASS, EXPORTING MESH"));
-				UMeshComponent* pawnMesh = Cast<UMeshComponent>(exportObjects[i]->GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
-				TArray<UActorComponent*> pawnMeshes;
-				exportObjects[i]->GetOwner()->GetComponents(UMeshComponent::StaticClass(), pawnMeshes);
-
-				TArray< UMeshComponent*> meshes;
-				for (int32 j = 0; j < pawnMeshes.Num(); j++)
-				{
-					UStaticMeshComponent* mesh = Cast<UStaticMeshComponent>(pawnMeshes[j]);
-					if (mesh == NULL)
-					{
-						continue;
-					}
-
-					ULevel* componentLevel = pawnMeshes[j]->GetComponentLevel();
-					if (componentLevel->bIsVisible == 0)
-					{
-						continue;
-						//not visible! possibly on a disabled sublevel
-					}
-
-					meshes.Add(mesh);
-				}
-
-				TArray<UActorComponent*> actorSkeletalComponents;
-				exportObjects[i]->GetOwner()->GetComponents(USkeletalMeshComponent::StaticClass(), actorSkeletalComponents);
-				for (int32 j = 0; j < actorSkeletalComponents.Num(); j++)
-				{
-					USkeletalMeshComponent* mesh = Cast<USkeletalMeshComponent>(actorSkeletalComponents[j]);
-					if (mesh == NULL)
-					{
-						continue;
-					}
-
-					ULevel* componentLevel = actorSkeletalComponents[j]->GetComponentLevel();
-					if (componentLevel->bIsVisible == 0)
-					{
-						continue;
-						//not visible! possibly on a disabled sublevel
-					}
-
-					meshes.Add(mesh);
-				}
-
-				//setup temp meshes package
-				UPackage* NewPackageName = CreatePackage(TEXT("/Game/TempMesh"));
-
-				if (meshes.Num() > 0)
-				{
-					//take the skeletal meshes that we set up earlier and use them to create a static mesh
-					UStaticMesh* tmpStatMesh = MeshUtilities.ConvertMeshesToStaticMesh(meshes, exportObjects[i]->GetOwner()->GetTransform(), NewPackageName->GetName());
-
-					//use GLTFExporter Plugin
-
-					// Create export options
-					UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
-
-					// Set custom export settings
-					ExportOptions->ExportUniformScale = 1.0f;
-					ExportOptions->bExportPreviewMesh = true;
-
-					// Texture compression settings
-					ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
-
-					// Create export task
-					UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
-					ExportTask->Filename = *tempObject;
-					ExportTask->Object = tmpStatMesh;
-					ExportTask->bSelected = false;
-					ExportTask->bReplaceIdentical = true;
-					ExportTask->bPrompt = false;
-					ExportTask->bAutomated = true;
-					ExportTask->Options = ExportOptions;
-
-					// Perform export
-					ExportTask->Exporter->RunAssetExportTask(ExportTask);
-
-					TempAssetsToDelete.Add(tmpStatMesh);
-				}
-			}
-			else
-			{
-				//exports the currently selected actor(s)
-				UE_LOG(LogTemp, Warning, TEXT("DOING REGULAR MAP EXPORT"));
-
-				//use GLTFExporter Plugin
-
-				// Create export options
-				UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
-
-				// Set custom export settings
-				ExportOptions->ExportUniformScale = 1.0f;
-				ExportOptions->bExportPreviewMesh = true;
-
-				// Texture compression settings
-				ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
-
-				// Create export task
-				UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
-				ExportTask->Object = GWorld;
-				ExportTask->Exporter = NewObject<UGLTFLevelExporter>();
-				ExportTask->Filename = *tempObject;
-				ExportTask->bSelected = true;
-				ExportTask->bReplaceIdentical = true;
-				ExportTask->bPrompt = false;
-				ExportTask->bAutomated = true;
-				ExportTask->Options = ExportOptions;
-
-				// Perform export
-				ExportTask->Exporter->RunAssetExportTask(ExportTask);
-			}
+			//reset dynamic back to original transform
+			exportObjects[i]->GetOwner()->SetActorLocation(originalLocation);
+			exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
+			exportObjects[i]->GetOwner()->SetActorScale3D(originalScale);
 		}
-
-
-		//reset dynamic back to original transform
-		exportObjects[i]->GetOwner()->SetActorLocation(originalLocation);
-		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
-		exportObjects[i]->GetOwner()->SetActorScale3D(originalScale);
 
 		//check that files were actually exported
 		if (PlatformFile.FileExists(*tempObject))
@@ -764,6 +1056,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		}
 		else
 		{
+			UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray export object file not found"));
 			//don't export screenshots or save materials unless export popup was confirmed
 			continue;
 		}
@@ -779,7 +1072,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 				break;
 			}
 		}
-		if (perspectiveView != NULL)
+		if (perspectiveView != NULL && !isBlueprint)
 		{
 			FVector startPosition = perspectiveView->GetViewLocation();
 			FRotator startRotation = perspectiveView->GetViewRotation();
@@ -808,7 +1101,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 	if (RawExportFilesFound == 0)
 	{
-		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray Cancelled mesh export"));
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray Cancelled mesh export")); ////
 		return fph;
 	}
 
@@ -929,18 +1222,63 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		//AStaticMeshActor *Mesh = *ActorItr;
+		//check all compoenents on the actor in case there are multiple dynamic objects
+		for (UActorComponent* actorComponent : ActorItr->GetComponents())
+		{
+			if (actorComponent->IsA(UDynamicObject::StaticClass()))
+			{
+				UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
+				if (dynamic == NULL)
+				{
+					continue;
+				}
+				dynamics.Add(dynamic);
+			}
+		}
+	}
 
-		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
-		if (actorComponent == NULL)
+	//get the blueprint dynamics in the project and add them to the list
+	for (const TSharedPtr<FDynamicData>& data : SceneDynamics)
+	{
+		// Iterate over all blueprints in the project
+		for (TObjectIterator<UBlueprint> It; It; ++It)
 		{
-			continue;
+			UBlueprint* Blueprint = *It;
+			if (Blueprint->GetName() == data->Name)
+			{
+				// Get the generated class from the blueprint
+				UClass* BlueprintClass = Blueprint->GeneratedClass;
+				if (BlueprintClass)
+				{
+					// Now, get the default object and access its components
+					AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+					if (DefaultActor)
+					{
+						// Use Simple Construction Script to inspect the blueprint's components
+						if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+						{
+							const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+							// Iterate over the SCS nodes to find UDynamicObject components
+							for (USCS_Node* SCSNode : SCSNodes)
+							{
+								if (SCSNode && SCSNode->ComponentTemplate)
+								{
+									// Check if the component is a UDynamicObject
+									UDynamicObject* dynamicComponent = Cast<UDynamicObject>(SCSNode->ComponentTemplate);
+									if (dynamicComponent)
+									{
+										if (dynamicComponent->MeshName == data->MeshName && !dynamics.Contains(dynamicComponent))
+										{
+											dynamics.Add(dynamicComponent);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		}
-		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
-		if (dynamic == NULL)
-		{
-			continue;
-		}
-		dynamics.Add(dynamic);
 	}
 
 	GLog->Log("Cognitive3D Tools uploading manifest for " + FString::FromInt(dynamics.Num()) + " objects");
@@ -972,16 +1310,120 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObje
 			//if they have a customid -> add them to the objectmanifest string
 			if (dynamics[q]->IdSourceType == EIdSourceType::CustomId && dynamics[q]->CustomId != "")
 			{
-				FVector location = dynamics[q]->GetComponentLocation();
-				FQuat rotation = dynamics[q]->GetComponentQuat();
-				FVector scale = dynamics[q]->GetComponentScale();
+				AActor* Owner = NULL;
+				bool isBlueprint = false;
+				UMeshComponent* bpMesh = NULL;
+
+				//get this dynamic's blueprint, owner, and check a boolean to see if it is a blueprint
+				for (const TSharedPtr<FDynamicData>& data : SceneDynamics)
+				{
+					// Iterate over all blueprints in the project
+					for (TObjectIterator<UBlueprint> It; It; ++It)
+					{
+						UBlueprint* Blueprint = *It;
+						if (dynamics[q]->MeshName == data->MeshName)
+						{
+							if (Blueprint->GetName() == data->Name)
+							{
+								// Get the generated class from the blueprint
+								UClass* BlueprintClass = Blueprint->GeneratedClass;
+								if (BlueprintClass)
+								{
+									if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
+									{
+										// Now, get the default object and access its components
+										AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+										if (DefaultActor)
+										{
+											// Use Simple Construction Script to inspect the blueprint's components
+											if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+											{
+												if (BPGeneratedClass->SimpleConstructionScript)
+												{
+													const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+
+													// Iterate over the SCS nodes to find UDynamicObject components
+													for (USCS_Node* SCSNode : SCSNodes)
+													{
+														if (SCSNode && SCSNode->ComponentTemplate)
+														{
+															UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
+
+															//check if ComponentTemplate is a mesh
+															UMeshComponent* MeshComponent = Cast<UMeshComponent>(ComponentTemplate);
+															//verify that the mesh component is valid
+															if (MeshComponent == NULL)
+															{
+																continue;
+															}
+															//if its valid, get the attached child component and log them
+															if (MeshComponent)
+															{
+																// Check its child nodes
+																const TArray<USCS_Node*>& ChildNodes = SCSNode->GetChildNodes();
+																for (USCS_Node* ChildNode : ChildNodes)
+																{
+																	if (ChildNode && ChildNode->ComponentTemplate)
+																	{
+																		// Assuming the dynamic object is of type UDynamicObjectComponent
+																		UDynamicObject* DynamicObjectComponent = Cast<UDynamicObject>(ChildNode->ComponentTemplate);
+																		if (DynamicObjectComponent)
+																		{
+																			// Do something with the dynamic object component
+																			if (DynamicObjectComponent->MeshName == data->MeshName)
+																			{
+																				Owner = DefaultActor;
+																				isBlueprint = true;
+																				bpMesh = MeshComponent;
+																			}
+																		}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				FVector location;
+				FQuat rotation;
+				FVector scale;
+
+				if (!isBlueprint)
+				{
+					location = dynamics[q]->GetComponentLocation();
+					rotation = dynamics[q]->GetComponentQuat();
+					scale = dynamics[q]->GetComponentScale();
+				}
+				else
+				{
+					location = FVector::ZeroVector;
+					rotation = FQuat::Identity;
+					scale = FVector::OneVector;
+				}
 
 				wroteAnyObjects = true;
 				dynamicsCount++;
+				FString isController = dynamics[q]->IsController ? "true" : "false";
 				objectManifest += "{";
 				objectManifest += "\"id\":\"" + dynamics[q]->CustomId + "\",";
 				objectManifest += "\"mesh\":\"" + dynamics[q]->MeshName + "\",";
-				objectManifest += "\"name\":\"" + dynamics[q]->GetOwner()->GetName() + "\",";
+				if (isBlueprint)
+				{
+					objectManifest += "\"name\":\"" + Owner->GetName() + "\",";
+				}
+				else
+				{
+					objectManifest += "\"name\":\"" + dynamics[q]->GetOwner()->GetName() + "\",";
+				}
+                objectManifest += "\"isController\":\"" + isController + "\",";
 				objectManifest += "\"scaleCustom\":[" + FString::SanitizeFloat(scale.X) + "," + FString::SanitizeFloat(scale.Z) + "," + FString::SanitizeFloat(scale.Y) + "],";
 				objectManifest += "\"initialPosition\":[" + FString::SanitizeFloat(-location.X) + "," + FString::SanitizeFloat(location.Z) + "," + FString::SanitizeFloat(location.Y) + "],";
 				objectManifest += "\"initialRotation\":[" + FString::SanitizeFloat(-rotation.X) + "," + FString::SanitizeFloat(rotation.Z) + "," + FString::SanitizeFloat(-rotation.Y) + "," + FString::SanitizeFloat(rotation.W) + "]";
@@ -1018,7 +1460,11 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObje
 			GLog->Log("CognitiveTools::UploadDynamicsManifest current scene does not have valid version number. GetSceneVersions and try again");
 			return FReply::Handled();
 		}
-
+		if (!objectManifest.Contains("mesh"))
+		{
+			GLog->Log("CognitiveTools::UploadDynamicsManifest object manifest does not contain mesh name");
+			return FReply::Handled();
+		}
 		FString url = PostDynamicObjectManifest(currentSceneData->Id, currentSceneData->VersionNumber);
 
 		//send manifest to api/objects/sceneid
@@ -2038,7 +2484,7 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 	if (WizardUploading && OutstandingDynamicUploadRequests <= 0)
 	{
 		//upload manifest
-		UploadDynamicsManifest();
+		UploadDynamicsManifest(); ////
 	}
 }
 
@@ -2317,7 +2763,7 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 	Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
 #elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 0 
 	Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
-#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3 || ENGINE_MINOR_VERSION == 1)
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1
 	Filter.ClassPaths.Add(UDynamicIdPoolAsset::StaticClass()->GetClassPathName());
 #endif
 
@@ -2343,6 +2789,185 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 		SceneDynamics.Add(MakeShareable(new FDynamicData(IdPoolAsset->PrefabName, IdPoolAsset->MeshName, IdString, IdPoolAsset->Ids, EDynamicTypes::DynamicIdPoolAsset)));
 	}
 
+	//add blueprints with dynamics from project ////
+ 
+		// Create a filter to find all Blueprint assets
+	FARFilter Filter2;
+
+#if ENGINE_MAJOR_VERSION == 4
+	Filter2.ClassNames.Add(UBlueprint::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 0 
+	Filter2.ClassNames.Add(UBlueprint::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1
+	Filter2.ClassPaths.Add(UBlueprint::StaticClass()->GetClassPathName());
+#endif
+
+	Filter2.bRecursiveClasses = true;
+
+	// Get a list of Blueprint assets
+	TArray<FAssetData> AssetDataList;
+	AssetRegistryModule.Get().GetAssets(Filter2, AssetDataList);
+
+
+	UE_LOG(LogTemp, Warning, TEXT("Total Blueprints Found: %d"), AssetDataList.Num());
+
+#if ENGINE_MAJOR_VERSION == 4
+
+	for (const FAssetData& AssetData2 : AssetDataList)
+	{
+		FString AssetName = AssetData2.AssetName.ToString();
+
+		// Get the GeneratedClass tag from the asset data (without fully loading the asset)
+		FString GeneratedClassPath;
+		if (AssetData2.GetTagValue(FName("GeneratedClass"), GeneratedClassPath))
+		{
+			// Remove _C suffix to get the real class path
+			GeneratedClassPath = FPackageName::ExportTextPathToObjectPath(GeneratedClassPath);
+			UClass* BlueprintClass = FindObject<UClass>(nullptr, *GeneratedClassPath);
+			
+			if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
+			{
+				// Now, get the default object and access its components
+				AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+				if (DefaultActor)
+				{
+					// Use Simple Construction Script to inspect the blueprint's components
+					if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+					{
+						if (BPGeneratedClass->SimpleConstructionScript)
+						{
+							const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+
+							// Iterate over the SCS nodes to find UDynamicObject components
+							for (USCS_Node* SCSNode : SCSNodes)
+							{
+								if (SCSNode && SCSNode->ComponentTemplate)
+								{
+									UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
+
+									// Check if the component is a UDynamicObject
+									UDynamicObject* DynamicObjectComponent = Cast<UDynamicObject>(ComponentTemplate);
+									if (DynamicObjectComponent)
+									{
+										// Now populate the SceneDynamics based on the ID type
+										if (DynamicObjectComponent->IdSourceType == EIdSourceType::CustomId)
+										{
+											
+											SceneDynamics.Add(MakeShareable(new FDynamicData(AssetName, DynamicObjectComponent->MeshName, DynamicObjectComponent->CustomId, EDynamicTypes::CustomId)));
+											
+										}
+										else if (DynamicObjectComponent->IdSourceType == EIdSourceType::GeneratedId)
+										{
+											FString idMessage = TEXT("Id generated during runtime");
+											
+											SceneDynamics.Add(MakeShareable(new FDynamicData(AssetName, DynamicObjectComponent->MeshName, idMessage, EDynamicTypes::GeneratedId)));
+											
+											
+										}
+										else if (DynamicObjectComponent->IdSourceType == EIdSourceType::PoolId)
+										{
+											// Construct a string for the number of IDs in the pool
+											FString IdString = FString::Printf(TEXT("Id Pool(%d)"), DynamicObjectComponent->IDPool->Ids.Num());
+											// Add it as TSharedPtr<FDynamicData> to the SceneDynamics
+											SceneDynamics.Add(MakeShareable(new FDynamicData(DynamicObjectComponent->GetOwner()->GetName(), DynamicObjectComponent->MeshName, IdString, DynamicObjectComponent->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1
+
+//BLUEPRINTS WITH DYNAMICS
+
+for (const FAssetData& AssetData2 : AssetDataList)
+{
+	FString AssetName = AssetData2.AssetName.ToString();
+
+	// Force load the asset to ensure all data is available
+	UBlueprint* Blueprint = Cast<UBlueprint>(AssetData2.GetAsset());
+	if (!Blueprint)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to load Blueprint: %s"), *AssetName);
+		continue;
+	}
+
+	// Get the GeneratedClass tag from the asset data (without fully loading the asset)
+	FString GeneratedClassPath;
+	if (AssetData2.GetTagValue(FName("GeneratedClass"), GeneratedClassPath))
+	{
+		// Remove _C suffix to get the real class path
+		GeneratedClassPath = FPackageName::ExportTextPathToObjectPath(GeneratedClassPath);
+		UClass* BlueprintClass = FindObject<UClass>(nullptr, *GeneratedClassPath);
+
+		// Ensure the blueprint is compiled
+		if (!BlueprintClass)
+		{
+			FKismetEditorUtilities::CompileBlueprint(Blueprint);
+
+			// Try to get the GeneratedClass again after compiling
+			BlueprintClass = FindObject<UClass>(nullptr, *GeneratedClassPath);
+		}
+
+		if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
+		{
+			// Now, get the default object and access its components
+			AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+			if (DefaultActor)
+			{
+				// Use Simple Construction Script to inspect the blueprint's components
+				if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+				{
+					if (BPGeneratedClass->SimpleConstructionScript)
+					{
+						const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+						
+						// Iterate over the SCS nodes to find UDynamicObject components
+						for (USCS_Node* SCSNode : SCSNodes)
+						{
+							if (SCSNode && SCSNode->ComponentTemplate)
+							{
+								UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
+								
+								// Check if the component is a UDynamicObject
+								UDynamicObject* DynamicObjectComponent = Cast<UDynamicObject>(ComponentTemplate);
+								if (DynamicObjectComponent)
+								{
+									// Now populate the SceneDynamics based on the ID type
+									if (DynamicObjectComponent->IdSourceType == EIdSourceType::CustomId)
+									{
+										SceneDynamics.Add(MakeShareable(new FDynamicData(AssetName, DynamicObjectComponent->MeshName, DynamicObjectComponent->CustomId, EDynamicTypes::CustomId)));
+									}
+									else if (DynamicObjectComponent->IdSourceType == EIdSourceType::GeneratedId)
+									{
+										FString idMessage = TEXT("Id generated during runtime");
+										SceneDynamics.Add(MakeShareable(new FDynamicData(AssetName, DynamicObjectComponent->MeshName, idMessage, EDynamicTypes::GeneratedId)));
+									}
+									else if (DynamicObjectComponent->IdSourceType == EIdSourceType::PoolId)
+									{
+										// Construct a string for the number of IDs in the pool
+										FString IdString = FString::Printf(TEXT("Id Pool(%d)"), DynamicObjectComponent->IDPool->Ids.Num());
+										// Add it as TSharedPtr<FDynamicData> to the SceneDynamics
+										SceneDynamics.Add(MakeShareable(new FDynamicData(DynamicObjectComponent->GetOwner()->GetName(), DynamicObjectComponent->MeshName, IdString, DynamicObjectComponent->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+//BLUEPRINTS WITH DYNAMICS
+
+#endif
 
 
 	return FReply::Handled();

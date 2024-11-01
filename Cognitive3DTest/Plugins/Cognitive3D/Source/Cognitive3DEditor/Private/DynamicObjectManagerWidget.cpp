@@ -325,7 +325,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 							SNew(SButton)
 							.IsEnabled(this, &SDynamicObjectManagerWidget::IsActorInSceneSelected)
 							.Text(FText::FromString("Add Dynamic Object Component(s)"))
-							.ToolTipText(FText::FromString("Add Dynamic Object Components To Selected Actors in Scene"))
+							.ToolTipText(this, &SDynamicObjectManagerWidget::AssignDynamicTooltip)
 							.OnClicked_Raw(this, &SDynamicObjectManagerWidget::AssignDynamicsToActors)
 						]
 					]
@@ -405,7 +405,7 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 	Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
 #elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 0 || ENGINE_MINOR_VERSION == 1)
 	Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
-#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3)
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2 
 	Filter.ClassPaths.Add(UDynamicIdPoolAsset::StaticClass()->GetClassPathName());
 #endif
 
@@ -597,26 +597,71 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 		//get all the dynamic objects in the scene
 		for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
 		{
-			UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
-			if (actorComponent == NULL)
+			for (UActorComponent* actorComponent : ActorItr->GetComponents())
 			{
-				continue;
-			}
-			UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
-			if (dynamic == NULL)
-			{
-				continue;
-			}
-
-			if (dynamic->IdSourceType == EIdSourceType::CustomId && dynamic->CustomId != "")
-			{
-				FString findId = dynamic->CustomId;
-
-				auto isDynamicSelected = selected.ContainsByPredicate([findId](const TSharedPtr<FDynamicData> InItem) {return InItem->Id == findId;});
-
-				if (isDynamicSelected)
+				if (actorComponent->IsA(UDynamicObject::StaticClass()))
 				{
-					dynamics.Add(dynamic);
+					UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
+					if (dynamic == NULL)
+					{
+						continue;
+					}
+
+					if (dynamic->IdSourceType == EIdSourceType::CustomId && dynamic->CustomId != "")
+					{
+						FString findId = dynamic->CustomId;
+
+						auto isDynamicSelected = selected.ContainsByPredicate([findId](const TSharedPtr<FDynamicData> InItem) {return InItem->Id == findId; });
+
+						if (isDynamicSelected)
+						{
+							dynamics.Add(dynamic);
+						}
+					}
+				}
+			}
+		}
+
+		//get the blueprint dynamics in the project and add them to the list
+		for (const TSharedPtr<FDynamicData>& data : FCognitiveEditorTools::GetInstance()->SceneDynamics)
+		{
+			// Iterate over all blueprints in the project
+			for (TObjectIterator<UBlueprint> It; It; ++It)
+			{
+				UBlueprint* Blueprint = *It;
+				if (Blueprint->GetName() == data->Name)
+				{
+					// Get the generated class from the blueprint
+					UClass* BlueprintClass = Blueprint->GeneratedClass;
+					if (BlueprintClass)
+					{
+						// Now, get the default object and access its components
+						AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+						if (DefaultActor)
+						{
+							// Use Simple Construction Script to inspect the blueprint's components
+							if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+							{
+								const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+								// Iterate over the SCS nodes to find UDynamicObject components
+								for (USCS_Node* SCSNode : SCSNodes)
+								{
+									if (SCSNode && SCSNode->ComponentTemplate)
+									{
+										// Check if the component is a UDynamicObject
+										UDynamicObject* dynamicComponent = Cast<UDynamicObject>(SCSNode->ComponentTemplate);
+										if (dynamicComponent)
+										{
+											if (dynamicComponent->MeshName == data->MeshName && !dynamics.Contains(dynamicComponent))
+											{
+												dynamics.Add(dynamicComponent);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
 				}
 			}
 		}
@@ -754,10 +799,18 @@ FReply SDynamicObjectManagerWidget::AssignDynamicsToActors()
 bool SDynamicObjectManagerWidget::IsActorInSceneSelected() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
-	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId()) { return false; }
 
 	USelection* SelectedActors = GEditor->GetSelectedActors();
 	return SelectedActors->Num() > 0;
+}
+
+FText SDynamicObjectManagerWidget::AssignDynamicTooltip() const
+{
+	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
+	{
+		return FText::FromString("Developer Key is not set");
+	}
+	return FText::FromString("Add Dynamic Object Components To Selected Actors in Scene");
 }
 
 EVisibility SDynamicObjectManagerWidget::GetSceneWarningVisibility() const
