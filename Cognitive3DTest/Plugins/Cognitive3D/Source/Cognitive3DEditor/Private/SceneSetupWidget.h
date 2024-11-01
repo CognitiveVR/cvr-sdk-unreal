@@ -199,4 +199,9 @@ public:
 
 	FText GetDynamicObjectCountToUploadText() const;
 	FText GetSceneVersionToUploadText() const;
+
+	//identification of exported level (or sublevel)
+	void OnLevelNameChanged(const FText& Text);
+	FText GetLevelName() const;
+	FString LevelName;
 };

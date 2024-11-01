@@ -108,7 +108,12 @@ void IDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLa
 
 FReply IDynamicIdPoolAssetDetails::Upload()
 {
-	FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(SelectedTextAsset->Ids, SelectedTextAsset->MeshName, SelectedTextAsset->PrefabName);
+	UWorld* myworld = GWorld->GetWorld();
+
+	FString currentSceneName = myworld->GetMapName();
+	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
+
+	FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(currentSceneName, SelectedTextAsset->Ids, SelectedTextAsset->MeshName, SelectedTextAsset->PrefabName);
 	return FReply::Handled();
 }
 

@@ -50,7 +50,8 @@ public:
 		SLATE_ARGUMENT(FText, MeshName)
 		SLATE_ARGUMENT(FText, Id)
 		SLATE_ARGUMENT(bool, Exported)
-		SLATE_ARGUMENT(bool, Uploaded)
+		SLATE_ARGUMENT(bool, UploadedMesh)
+		SLATE_ARGUMENT(bool, UploadedId)
 	SLATE_END_ARGS()
 
 public:
@@ -64,15 +65,19 @@ public:
 	virtual TSharedRef<SWidget> GenerateWidgetForColumn(const FName& ColumnName) override;
 private:
 	const FSlateBrush* GetExportedStateIcon() const;
-	const FSlateBrush* GetUploadedStateIcon() const;
+	const FSlateBrush* GetUploadedIdStateIcon() const;
+	const FSlateBrush* GetUploadedMeshStateIcon() const;
 	FText GetExportedTooltip() const;
-	FText GetUploadedTooltip() const;
+	FText GetUploadedMeshTooltip() const;
+	FText GetUploadedIdTooltip() const;
+
 
 	FText Name;
 	FText MeshName;
 	FText Id;
 	bool Exported;
-	bool Uploaded;
+	bool UploadedMesh;
+	bool UploadedId;
 
 	FText GetDefaultResponse() const;
 };
