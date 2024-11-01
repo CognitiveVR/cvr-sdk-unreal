@@ -72,6 +72,11 @@ public class Cognitive3DEditor : ModuleRules
 				"UnrealEd"
 			});
 
+        if (Target.bBuildEditor)
+        {
+            PrivateDependencyModuleNames.Add("Kismet");
+        }
+
         var pluginsDirectory = System.IO.Path.Combine(Target.ProjectFile.Directory.ToString(), "Plugins");
         //HP Omnicept
         if (System.IO.Directory.Exists(System.IO.Path.Combine(pluginsDirectory, "HPGlia")))
