@@ -25,7 +25,7 @@ class UHMDOrientation : public UActorComponent
 		FTimerHandle IntervalHandle;
 		void EndInterval();
 		virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-		float IntervalDuration = 1f;
+		float IntervalDuration = 1.0f;
 		void RecordYaw();
 		void RecordPitch();
 
