@@ -83,28 +83,6 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 		customEventRecorder->SendData(true);
 		fixationDataRecorder->SendData(true);
 		sensors->SendData(true);
-		OnRequestSend.Broadcast(true);
-
-		//empty current dynamics manifest
-		dynamicObjectManager->manifest.Empty();
-		dynamicObjectManager->newManifest.Empty();
-		//register dynamics in new level
-		// Iterate over all actors in the loaded level
-		for (AActor* Actor : level->Actors)
-		{
-			if (Actor)
-			{
-				// Check if the actor has a UDynamicObject component
-				UDynamicObject* DynamicComponent = Actor->FindComponentByClass<UDynamicObject>();
-				if (DynamicComponent)
-				{					
-					// Register the component
-					DynamicComponent->RegisterComponent();
-				}
-			}
-		}
-
-
 	}
 
 	if (data.IsValid())
@@ -119,6 +97,37 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 	{
 
 	}
+
+	//empty current dynamics manifest
+	dynamicObjectManager->manifest.Empty();
+	dynamicObjectManager->newManifest.Empty();
+	//register dynamics in new level
+	// Iterate over all actors in the loaded level
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		for (UActorComponent* actorComponent : ActorItr->GetComponents())
+		{
+			if (actorComponent->IsA(UDynamicObject::StaticClass()))
+			{
+				UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+				if (dynamicComponent && !dynamicComponent->IsRegistered())
+				{
+					// Register the component
+					dynamicComponent->RegisterComponent();
+				}
+				if (dynamicComponent)
+				{
+					dynamicComponent->HasInitialized = false;
+					dynamicComponent->Initialize();
+				}
+			}
+		}
+	}
+
+	//we send the dynamic data stream after the new scene is loaded and set as the current scene
+	//that way we can send the new, correct manifest to the desired level
+	dynamicObjectManager->SendData(true);
+
 }
 
 void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld* world)
@@ -169,7 +178,6 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 		customEventRecorder->SendData(true);
 		fixationDataRecorder->SendData(true);
 		sensors->SendData(true);
-		OnRequestSend.Broadcast(true);
 
 		//set new current scene
 		if (stackNewTop.IsValid())
@@ -183,6 +191,35 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 			CurrentTrackingSceneId = "";
 			LastSceneData = nullptr;
 		}
+
+		//empty current dynamics manifest
+		dynamicObjectManager->manifest.Empty();
+		dynamicObjectManager->newManifest.Empty();
+		//register dynamics in new level
+		// Iterate over all actors in the loaded level
+		for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+		{
+			for (UActorComponent* actorComponent : ActorItr->GetComponents())
+			{
+				if (actorComponent->IsA(UDynamicObject::StaticClass()))
+				{
+					UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+					if (dynamicComponent && !dynamicComponent->IsRegistered())
+					{
+						// Register the component
+						dynamicComponent->RegisterComponent();
+					}
+					if (dynamicComponent)
+					{
+						dynamicComponent->HasInitialized = false;
+						dynamicComponent->Initialize();
+					}
+				}
+			}
+		}
+
+		dynamicObjectManager->SendData(true);
+
 		SceneStartTime = FUtil::GetTimestamp();
 	}
 	else
