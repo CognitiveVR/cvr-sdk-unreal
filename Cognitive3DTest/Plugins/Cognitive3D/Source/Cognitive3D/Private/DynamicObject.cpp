@@ -226,6 +226,8 @@ void UDynamicObject::Initialize()
 	{
 		return;
 	}
+	
+	if (cogProvider == nullptr) { return; }
 
 	dynamicObjectManager = cogProvider->dynamicObjectManager;
 
