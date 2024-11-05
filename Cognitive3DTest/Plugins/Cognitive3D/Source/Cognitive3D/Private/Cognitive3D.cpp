@@ -48,6 +48,11 @@ void FAnalyticsCognitive3D::StartupModule()
 
 void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* world)
 {
+	if (!bHasSessionStarted)
+	{
+		return;
+	}
+	
 	if (level == nullptr)
 	{
 		FlushAndCacheEvents();
