@@ -137,6 +137,11 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 
 void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld* world)
 {
+	if (!bHasSessionStarted)
+	{
+		return;
+	}
+
 	if (level == nullptr)
 	{
 		FlushAndCacheEvents();
