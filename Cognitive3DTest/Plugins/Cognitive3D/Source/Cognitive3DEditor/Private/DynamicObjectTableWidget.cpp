@@ -13,7 +13,7 @@ void SDynamicObjectTableWidget::Construct(const FArguments& Args)
 			[
 				SAssignNew(TableViewWidget, SActorListView)
 				.ItemHeight(24)
-				.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneDynamics) //The Items array is the source of this listview
+				.ListItemsSource(&FCognitiveEditorTools::GetInstance()->SceneDynamics) //The Items array is the source of this listview 
 				.OnGenerateRow(this, &SDynamicObjectTableWidget::OnGenerateRowForTable)
 				.SelectionMode(ESelectionMode::Multi)
 				.OnSelectionChanged(this, &SDynamicObjectTableWidget::OnSelectionChanged)
@@ -41,18 +41,25 @@ void SDynamicObjectTableWidget::Construct(const FArguments& Args)
 						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Id</>"))
 					]
 					+ SHeaderRow::Column("exported")
-					.FixedWidth(80)
+					.FixedWidth(90)
 					[
 						SNew(SRichTextBlock)
 						.DecoratorStyleSet(&FEditorStyle::Get())
-						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Exported</>"))
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Mesh Exported</>"))
 					]
-					+ SHeaderRow::Column("uploaded")
-					.FixedWidth(80)
+					+ SHeaderRow::Column("uploadedmesh")
+					.FixedWidth(90)
 					[
 						SNew(SRichTextBlock)
 						.DecoratorStyleSet(&FEditorStyle::Get())
-						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Uploaded</>"))
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Mesh Uploaded</>"))
+					]
+					+ SHeaderRow::Column("uploadedid")
+					.FixedWidth(90)
+					[
+						SNew(SRichTextBlock)
+						.DecoratorStyleSet(&FEditorStyle::Get())
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Id Uploaded</>"))
 					]
 				)
 			]
@@ -61,6 +68,11 @@ void SDynamicObjectTableWidget::Construct(const FArguments& Args)
 
 void SDynamicObjectTableWidget::RefreshTable()
 {
+	if (!TableViewWidget.IsValid())
+	{
+		GLog->Log("SDynamicObjectTableWidget::RefreshTable table is invalid");
+		return;
+	}
 	TableViewWidget->RequestListRefresh();
 }
 
@@ -77,9 +89,12 @@ TSharedRef<ITableRow> SDynamicObjectTableWidget::OnGenerateRowForTable(TSharedPt
 	//find matching InItem by id
 	bool hasUploadedId;
 	FString searchId = InItem->Id;
+	FString searchMesh = InItem->MeshName;
+	
+	TSharedPtr<FString> sceneName = SDynamicObjectManagerWidget::SceneDisplayName;
 
 	//check if the current scene is set up correctly with a SceneId and return the table row
-	if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
+	if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*sceneName))
 	{
 		//check if the export folder has files for this dynamic object
 		bool hasExportedMesh = !InItem->MeshName.IsEmpty() && FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(InItem->MeshName);
@@ -89,7 +104,8 @@ TSharedRef<ITableRow> SDynamicObjectTableWidget::OnGenerateRowForTable(TSharedPt
 			.MeshName(FText::FromString(InItem->MeshName))
 			.Id(FText::FromString(InItem->Id))
 			.Exported(hasExportedMesh)
-			.Uploaded(false);
+			.UploadedMesh(false)
+			.UploadedId(false);
 	}
 
 	if (InItem->DynamicType == EDynamicTypes::DynamicIdPoolAsset || InItem->DynamicType == EDynamicTypes::DynamicIdPool)
@@ -123,6 +139,14 @@ TSharedRef<ITableRow> SDynamicObjectTableWidget::OnGenerateRowForTable(TSharedPt
 		hasUploadedId = FoundId != NULL;
 	}
 
+	bool hasUploadedMesh = false;
+	auto FoundId = SDynamicObjectManagerWidget::dashboardObjects.FindByPredicate([searchMesh](const FDashboardObject& InItem2)
+	{
+		return InItem2.meshName == searchMesh;
+	});
+	hasUploadedMesh = FoundId != NULL;
+
+
 	//check if the export folder has files for this dynamic object
 	bool hasExportedMesh = !InItem->MeshName.IsEmpty() && FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(InItem->MeshName);
 
@@ -131,7 +155,8 @@ TSharedRef<ITableRow> SDynamicObjectTableWidget::OnGenerateRowForTable(TSharedPt
 		.MeshName(FText::FromString(InItem->MeshName))
 		.Id(FText::FromString(InItem->Id))
 		.Exported(hasExportedMesh)
-		.Uploaded(hasUploadedId);
+		.UploadedMesh(hasUploadedMesh)
+		.UploadedId(hasUploadedId);
 }
 
 FReply SDynamicObjectTableWidget::SelectDynamic(TSharedPtr<FDynamicData> data)
@@ -196,7 +221,8 @@ void SDynamicTableItem::Construct(const FArguments& InArgs, const TSharedRef<STa
 	MeshName = InArgs._MeshName;
 	Id = InArgs._Id;
 	Exported = InArgs._Exported;
-	Uploaded = InArgs._Uploaded;
+	UploadedId = InArgs._UploadedId;
+	UploadedMesh = InArgs._UploadedMesh;
 
 	SMultiColumnTableRow<TSharedPtr<FDynamicData> >::Construct(FSuperRowType::FArguments(), InOwnerTableView);
 }
@@ -243,7 +269,7 @@ TSharedRef<SWidget> SDynamicTableItem::GenerateWidgetForColumn(const FName& Colu
 	{
 		return	SNew(SBox)
 			.HeightOverride(20)
-			.WidthOverride(20)
+			.WidthOverride(30)
 			//.Padding(FMargin(3, 0))
 			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Center)
@@ -253,18 +279,32 @@ TSharedRef<SWidget> SDynamicTableItem::GenerateWidgetForColumn(const FName& Colu
 				.Image(this, &SDynamicTableItem::GetExportedStateIcon)
 			];
 	}
-	if (ColumnName == TEXT("uploaded"))
+	if (ColumnName == TEXT("uploadedmesh"))
 	{
 		return	SNew(SBox)
 			.HeightOverride(20)
-			.WidthOverride(20)
+			.WidthOverride(30)
 			//.Padding(FMargin(3, 0))
 			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Center)
 			[
 				SNew(SImage)
-				.ToolTipText(this, &SDynamicTableItem::GetUploadedTooltip)
-				.Image(this, &SDynamicTableItem::GetUploadedStateIcon)
+				.ToolTipText(this, &SDynamicTableItem::GetUploadedMeshTooltip)
+				.Image(this, &SDynamicTableItem::GetUploadedMeshStateIcon)
+			];
+	}
+	if (ColumnName == TEXT("uploadedid"))
+	{
+		return	SNew(SBox)
+			.HeightOverride(20)
+			.WidthOverride(30)
+			//.Padding(FMargin(3, 0))
+			.HAlign(HAlign_Center)
+			.VAlign(VAlign_Center)
+			[
+				SNew(SImage)
+				.ToolTipText(this, &SDynamicTableItem::GetUploadedIdTooltip)
+				.Image(this, &SDynamicTableItem::GetUploadedIdStateIcon)
 			];
 	}
 
@@ -281,9 +321,18 @@ const FSlateBrush* SDynamicTableItem::GetExportedStateIcon() const
 	return FCognitiveEditorTools::GetInstance()->BoxEmptyIcon;
 }
 
-const FSlateBrush* SDynamicTableItem::GetUploadedStateIcon() const
+const FSlateBrush* SDynamicTableItem::GetUploadedIdStateIcon() const
 {
-	if (Uploaded)
+	if (UploadedId)
+	{
+		return FCognitiveEditorTools::GetInstance()->BoxCheckIcon;
+	}
+	return FCognitiveEditorTools::GetInstance()->BoxEmptyIcon;
+}
+
+const FSlateBrush* SDynamicTableItem::GetUploadedMeshStateIcon() const
+{
+	if (UploadedMesh)
 	{
 		return FCognitiveEditorTools::GetInstance()->BoxCheckIcon;
 	}
@@ -296,22 +345,22 @@ FText SDynamicTableItem::GetExportedTooltip() const
 	{
 		if (Exported)
 		{
-			return FText::FromString("Associated Mesh has been exported to temrporary directory");
+			return FText::FromString("Associated Mesh has been exported to temporary directory");
 		}
-		return FText::FromString("Associated Mesh has NOT been exported to temrporary directory");
+		return FText::FromString("Associated Mesh has NOT been exported to temporary directory");
 	}
 	if (Exported)
 	{
-		return FText::FromString("Mesh has been exported to temrporary directory");
+		return FText::FromString("Mesh has been exported to temporary directory");
 	}
-	return FText::FromString("Mesh has NOT been exported to temrporary directory");
+	return FText::FromString("Mesh has NOT been exported to temporary directory");
 }
 
-FText SDynamicTableItem::GetUploadedTooltip() const
+FText SDynamicTableItem::GetUploadedIdTooltip() const
 {
 	if (Id.ToString().Contains("Id Pool Asset"))
 	{
-		if (Uploaded)
+		if (UploadedId)
 		{
 			return FText::FromString("Id Pool Ids have been uploaded to the dashboard");
 		}
@@ -319,21 +368,38 @@ FText SDynamicTableItem::GetUploadedTooltip() const
 	}
 	else if (Id.ToString().Contains("Id Pool"))
 	{
-		if (Uploaded)
+		if (UploadedId)
 		{
-			return FText::FromString("Mesh and Id Pool Ids have been uploaded to the dashboard");
+			return FText::FromString("Id Pool Ids have been uploaded to the dashboard");
 		}
-		return FText::FromString("Mesh and Id Pool Ids have NOT been uploaded to the dashboard");
+		return FText::FromString("Id Pool Ids have NOT been uploaded to the dashboard");
 	}
 	else if (Id.ToString().Contains("generated"))
 	{
 		return FText::FromString("Id generated at runtime");
 	}
-	if (Uploaded)
+	if (UploadedId)
 	{
-		return FText::FromString("Mesh and Id have been uploaded to the dashboard");
+		return FText::FromString("Id have been uploaded to the dashboard");
 	}
-	return FText::FromString("Mesh and Id have NOT been uploaded to the dashboard");
+	return FText::FromString("Id have NOT been uploaded to the dashboard");
+}
+
+FText SDynamicTableItem::GetUploadedMeshTooltip() const
+{
+	if (Id.ToString().Contains("Id Pool Asset") || Id.ToString().Contains("Id Pool"))
+	{
+		if (UploadedMesh)
+		{
+			return FText::FromString("Id Pool Mesh has been uploaded to the dashboard");
+		}
+		return FText::FromString("Id Pool Mesh has NOT been uploaded to the dashboard");
+	}
+	if (UploadedMesh)
+	{
+		return FText::FromString("Mesh has been uploaded to the dashboard");
+	}
+	return FText::FromString("Mesh has NOT been uploaded to the dashboard");
 }
 
 FText SDynamicTableItem::GetDefaultResponse() const

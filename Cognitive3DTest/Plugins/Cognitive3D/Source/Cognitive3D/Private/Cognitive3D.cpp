@@ -48,6 +48,11 @@ void FAnalyticsCognitive3D::StartupModule()
 
 void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* world)
 {
+	if (!bHasSessionStarted)
+	{
+		return;
+	}
+	
 	if (level == nullptr)
 	{
 		FlushAndCacheEvents();
@@ -69,6 +74,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 		{
 			properties->SetStringField("Scene Name", FString(data->Name));
 			properties->SetStringField("Scene Id", FString(data->Id));
+			properties->SetStringField("Previous Scene Name", FString(currentSceneData->Name));
 			float duration = FUtil::GetTimestamp() - SceneStartTime;
 			properties->SetNumberField("Duration", duration);
 			customEventRecorder->Send("c3d.SceneLoaded", properties);
@@ -78,7 +84,10 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 			properties->SetStringField("Sublevel Name", FString(levelName));
 			customEventRecorder->Send("c3d.Level Streaming Load", properties);
 		}
-		FlushAndCacheEvents();
+		gazeDataRecorder->SendData(true);
+		customEventRecorder->SendData(true);
+		fixationDataRecorder->SendData(true);
+		sensors->SendData(true);
 	}
 
 	if (data.IsValid())
@@ -93,10 +102,46 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 	{
 
 	}
+
+	//empty current dynamics manifest
+	dynamicObjectManager->manifest.Empty();
+	dynamicObjectManager->newManifest.Empty();
+	//register dynamics in new level
+	// Iterate over all actors in the loaded level
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		for (UActorComponent* actorComponent : ActorItr->GetComponents())
+		{
+			if (actorComponent->IsA(UDynamicObject::StaticClass()))
+			{
+				UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+				if (dynamicComponent && !dynamicComponent->IsRegistered())
+				{
+					// Register the component
+					dynamicComponent->RegisterComponent();
+				}
+				if (dynamicComponent)
+				{
+					dynamicComponent->HasInitialized = false;
+					dynamicComponent->Initialize();
+				}
+			}
+		}
+	}
+
+	//we send the dynamic data stream after the new scene is loaded and set as the current scene
+	//that way we can send the new, correct manifest to the desired level
+	dynamicObjectManager->SendData(true);
+
 }
 
 void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld* world)
 {
+	if (!bHasSessionStarted)
+	{
+		return;
+	}
+
 	if (level == nullptr)
 	{
 		FlushAndCacheEvents();
@@ -132,13 +177,17 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
 		if (stackNewTop.IsValid())
 		{
-			properties->SetStringField("Scene Name", FString(stackNewTop->Name));
-			properties->SetStringField("Scene Id", FString(stackNewTop->Id));
+			properties->SetStringField("Scene Name", FString(data->Name));
+			properties->SetStringField("Scene Id", FString(data->Id));
+			properties->SetStringField("Destination Scene Name", FString(stackNewTop->Name));
 			float duration = FUtil::GetTimestamp() - SceneStartTime;
 			properties->SetNumberField("Duration", duration);
 			customEventRecorder->Send("c3d.SceneUnloaded", properties);
 		}
-		FlushAndCacheEvents();
+		gazeDataRecorder->SendData(true);
+		customEventRecorder->SendData(true);
+		fixationDataRecorder->SendData(true);
+		sensors->SendData(true);
 
 		//set new current scene
 		if (stackNewTop.IsValid())
@@ -152,6 +201,35 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 			CurrentTrackingSceneId = "";
 			LastSceneData = nullptr;
 		}
+
+		//empty current dynamics manifest
+		dynamicObjectManager->manifest.Empty();
+		dynamicObjectManager->newManifest.Empty();
+		//register dynamics in new level
+		// Iterate over all actors in the loaded level
+		for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+		{
+			for (UActorComponent* actorComponent : ActorItr->GetComponents())
+			{
+				if (actorComponent->IsA(UDynamicObject::StaticClass()))
+				{
+					UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+					if (dynamicComponent && !dynamicComponent->IsRegistered())
+					{
+						// Register the component
+						dynamicComponent->RegisterComponent();
+					}
+					if (dynamicComponent)
+					{
+						dynamicComponent->HasInitialized = false;
+						dynamicComponent->Initialize();
+					}
+				}
+			}
+		}
+
+		dynamicObjectManager->SendData(true);
+
 		SceneStartTime = FUtil::GetTimestamp();
 	}
 	else
@@ -432,13 +510,25 @@ void FAnalyticsProviderCognitive3D::EndSession()
 
 	//cleanup pause and level load delegates
 	if (!PauseHandle.IsValid())
+	{
 		FCoreDelegates::ApplicationWillEnterBackgroundDelegate.Remove(PauseHandle);
+		PauseHandle.Reset();
+	}
 	if (!LevelLoadHandle.IsValid())
+	{
 		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(LevelLoadHandle);
+		LevelLoadHandle.Reset();
+	}
 	if (!SublevelLoadedHandle.IsValid())
+	{
 		FWorldDelegates::LevelAddedToWorld.Remove(SublevelLoadedHandle);
+		SublevelLoadedHandle.Reset();
+	}
 	if (!SublevelUnloadedHandle.IsValid())
+	{
 		FWorldDelegates::LevelRemovedFromWorld.Remove(SublevelUnloadedHandle);
+		SublevelUnloadedHandle.Reset();
+	}
 
 	//reset variables
 	SessionTimestamp = -1;

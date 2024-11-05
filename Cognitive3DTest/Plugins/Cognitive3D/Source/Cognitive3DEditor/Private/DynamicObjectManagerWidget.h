@@ -15,6 +15,7 @@
 #include "SCheckBox.h"
 #include "STableRow.h"
 #include "STextComboBox.h"
+#include "Widgets/Input/SComboBox.h"
 #include "SListView.h"
 #include "SThrobber.h"
 #include "AssetRegistryModule.h"
@@ -61,6 +62,8 @@ public:
 	//assign dynamics to objects in the scene
 	FReply AssignDynamicsToActors();
 	bool IsActorInSceneSelected() const;
+	FText AssignDynamicTooltip() const;
+
 
 	EVisibility GetSceneWarningVisibility() const;
 
@@ -83,4 +86,17 @@ public:
 	void OnDashboardManifestResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	FReply ExportAndOpenSceneSetupWindow();
+
+	
+
+	static TSharedPtr<FString> SceneDisplayName;
+
+	TSharedPtr<class SComboBox<TSharedPtr<FString>>> SceneNamesComboBox;
+	TArray<TSharedPtr<FString>> SceneNamesComboList;
+
+	TSharedRef<SWidget> MakeSceneNamesComboWidget(TSharedPtr<FString> InItem);
+	void OnSceneNamesChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
+	void OnSceneNamesComboOpening();
+	FText GetSceneNamesComboBoxContent() const;
+
 };
