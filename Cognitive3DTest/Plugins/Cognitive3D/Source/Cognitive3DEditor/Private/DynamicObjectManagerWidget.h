@@ -64,6 +64,7 @@ public:
 	bool IsActorInSceneSelected() const;
 	FText AssignDynamicTooltip() const;
 
+
 	EVisibility GetSceneWarningVisibility() const;
 
 	EVisibility SceneNotUploadedVisibility() const;
