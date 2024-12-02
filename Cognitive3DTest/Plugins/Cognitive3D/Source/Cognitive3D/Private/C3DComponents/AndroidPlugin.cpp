@@ -56,7 +56,7 @@ void UAndroidPlugin::OnSessionBegin()
         return;
     }
 
-    FString AppKey = cognitive->ApplicationKey;
+    FString AppKey = "APIKEY:DATA " + cognitive->ApplicationKey;
     FString DeviceId = cognitive->GetDeviceID();
     double timeStamp = FUtil::GetTimestamp();
     FString sessionID = cognitive->GetSessionID();
