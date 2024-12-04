@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root xmlns:android="http://schemas.android.com/apk/res/android">
+  <trace enable="true"/>
+  <init>
+    <log text="Cognitive3D_UPL init"/>
+  </init>
+
+  <gradleCopies>
+    <!-- Copy the .jar file to the Gradle libs folder -->
+    <copyFile src="$S(PluginDir)/lib/classes.jar" dst="$S(BuildDir)/gradle/app/libs/classes.jar" />
+  </gradleCopies>
+
+  <buildGradleAdditions>
+    <!-- Add the .jar file to the Gradle dependencies -->
+    <insert>
+      <![CDATA[
+    dependencies {
+        implementation files('libs/classes.jar')
+    }
+    ]]>
+    </insert>
+  </buildGradleAdditions>
+
+  <!-- Add Proguard rules to prevent class stripping -->
+  <proguardAdditions>
+    <insert>
+      <![CDATA[
+      -keepattributes Signature
+      -dontskipnonpubliclibraryclassmembers
+      
+      -keep class com.c3d.androidjavaplugin.** { *; }
+      
+      -keep class com.c3d.androidjavaplugin.Plugin { *; }
+
+      -keepclassmembers class com.epicgames.ue4.GameActivity {
+            public <methods>;
+            public <fields>;
+      }
+      ]]>
+    </insert>
+  </proguardAdditions>
+
+  <!-- Ensure GameActivity imports your plugin -->
+  <gameActivityImportAdditions>
+    <insert>
+      import com.c3d.androidjavaplugin.Plugin;
+    </insert>
+  </gameActivityImportAdditions>
+
+  <!-- Ensure your plugin is initialized in GameActivity 
+  <gameActivityOnCreateAdditions>
+    <insert>
+      Plugin.initialize(this);
+    </insert>
+  </gameActivityOnCreateAdditions>
+  -->
+
+  <manifestAdditions>
+    <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+      <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+      <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+      <activity android:name="com.c3d.androidjavaplugin.Plugin" />
+    </manifest>
+  </manifestAdditions>
+</root>
