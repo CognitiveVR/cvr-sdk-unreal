@@ -203,7 +203,10 @@ void UDynamicObject::BeginPlay()
 	cogProvider->OnSessionBegin.AddDynamic(this, &UDynamicObject::Initialize);
 	cogProvider->OnPostSessionEnd.AddDynamic(this, &UDynamicObject::OnPostSessionEnd);
 	cogProvider->OnPreSessionEnd.AddDynamic(this, &UDynamicObject::OnPreSessionEnd);
-
+	if (AActor* OwnerActor = GetOwner())
+	{
+		OwnerActor->OnDestroyed.AddDynamic(this, &UDynamicObject::HandleOwnerDestroyed);
+	}
 
 	PreviousRotation = GetOwner()->GetActorRotation();
 }
@@ -784,6 +787,10 @@ void UDynamicObject::CleanupDynamicObject()
 	cogProvider->OnSessionBegin.RemoveDynamic(this, &UDynamicObject::Initialize);
 	cogProvider->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPostSessionEnd);
 	cogProvider->OnPreSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPreSessionEnd);
+	if (GetOwner() != NULL)
+	{
+		GetOwner()->OnDestroyed.RemoveDynamic(this, &UDynamicObject::HandleOwnerDestroyed);
+	}
 
 	HasInitialized = false;
 
@@ -816,6 +823,12 @@ void UDynamicObject::CleanupDynamicObject()
 			Elem.Value->Send();
 		}
 	}
+}
+
+void UDynamicObject::HandleOwnerDestroyed(AActor* DestroyedActor)
+{
+	//send snapshot with "enabled" set to false
+	CleanupDynamicObject();
 }
 
 //called from optional input tracker to serialize button states

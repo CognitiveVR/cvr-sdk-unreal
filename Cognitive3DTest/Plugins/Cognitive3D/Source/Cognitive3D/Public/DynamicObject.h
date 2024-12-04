@@ -186,6 +186,10 @@ public:
 	void EndPlay(const EEndPlayReason::Type EndPlayReason);
 	void CleanupDynamicObject();
 
+	//On Owner Destroyed handler
+	UFUNCTION()
+	void HandleOwnerDestroyed(AActor* DestroyedActor);
+
 	private:
 		void SetUniqueDynamicIds();
 };
