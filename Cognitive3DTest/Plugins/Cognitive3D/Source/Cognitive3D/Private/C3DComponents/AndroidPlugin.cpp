@@ -155,44 +155,8 @@ void UAndroidPlugin::OnSessionBegin()
 
         UE_LOG(LogTemp, Warning, TEXT("Android Session Data Initialized"));
 
-        //
-
-        //
-
-        // Get the GameActivity class
-        jclass ActivityClass = Env->GetObjectClass(GameActivity);
-
-        // Call getExternalFilesDir(null) on the GameActivity instance
-        jmethodID GetExternalFilesDirMethod = Env->GetMethodID(ActivityClass, "getExternalFilesDir", "(Ljava/lang/String;)Ljava/io/File;");
-        if (!GetExternalFilesDirMethod) {
-            UE_LOG(LogTemp, Error, TEXT("Failed to find getExternalFilesDir method"));
-            Env->ExceptionDescribe();
-            Env->ExceptionClear();
-            return;
-        }
-
-        jobject FileObject = Env->CallObjectMethod(GameActivity, GetExternalFilesDirMethod, nullptr);
-        if (!FileObject) {
-            UE_LOG(LogTemp, Error, TEXT("Failed to retrieve external files directory"));
-            return;
-        }
-
-        // Get the absolute path of the directory
-        jclass FileClass = Env->GetObjectClass(FileObject);
-        jmethodID GetAbsolutePathMethod = Env->GetMethodID(FileClass, "getAbsolutePath", "()Ljava/lang/String;");
-        jstring AbsolutePath = (jstring)Env->CallObjectMethod(FileObject, GetAbsolutePathMethod);
-
-        const char* AbsolutePathChars = Env->GetStringUTFChars(AbsolutePath, nullptr);
-        FString PersistentPath = FString(UTF8_TO_TCHAR(AbsolutePathChars));
-        Env->ReleaseStringUTFChars(AbsolutePath, AbsolutePathChars);
-
-        // Clean up local references
-        Env->DeleteLocalRef(FileObject);
-        Env->DeleteLocalRef(FileClass);
-        Env->DeleteLocalRef(AbsolutePath);
 
         // Construct file paths
-        //FString FolderPath = FPaths::Combine(*PersistentPath, TEXT("c3dlocal")); //GeneratedConfigDir
         FolderPath = FPaths::Combine(FPaths::ProjectConfigDir(), TEXT("c3dlocal"));
         FolderPathCrashLog = FPaths::Combine(*FolderPath, TEXT("CrashLogs"));
         CurrentFilePath = FPaths::Combine(*FolderPathCrashLog, FString::Printf(TEXT("BackupCrashLog-%d.log"), FDateTime::Now().ToUnixTimestamp()));
@@ -207,24 +171,11 @@ void UAndroidPlugin::OnSessionBegin()
             FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*FolderPathCrashLog);
         }
 
-        // Debug logs
-        UE_LOG(LogTemp, Warning, TEXT("Folder Path: %s"), *FolderPath);
-        UE_LOG(LogTemp, Warning, TEXT("Folder Path Crash Logs: %s"), *FolderPathCrashLog);
-        UE_LOG(LogTemp, Warning, TEXT("Current File Path: %s"), *CurrentFilePath);
-        UE_LOG(LogTemp, Warning, TEXT("Previous Session File Path: %s"), *PreviousSessionFilePath);
-        UE_LOG(LogTemp, Warning, TEXT("Write Data File Path: %s"), *WriteDataFilePath);
-
-        //
-
 
         jmethodID InitializeMethod = Env->GetStaticMethodID(PluginClass, "initialize", "(Landroid/app/Activity;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
 
         if (InitializeMethod) {
             // Convert file paths to jstrings
-            //jstring JCurrentFilePath = Env->NewStringUTF(TCHAR_TO_UTF8(*CurrentFilePath));
-            //jstring JPreviousSessionFilePath = Env->NewStringUTF(TCHAR_TO_UTF8(*PreviousSessionFilePath));
-            //jstring JWriteDataFilePath = Env->NewStringUTF(TCHAR_TO_UTF8(*WriteDataFilePath));
-
             jstring JCurrentFilePath = Env->NewStringUTF(TCHAR_TO_UTF8(*IFileManager::Get().ConvertToAbsolutePathForExternalAppForWrite(*CurrentFilePath)));
             jstring JPreviousSessionFilePath = Env->NewStringUTF(TCHAR_TO_UTF8(*IFileManager::Get().ConvertToAbsolutePathForExternalAppForWrite(*PreviousSessionFilePath)));
             jstring JWriteDataFilePath = Env->NewStringUTF(TCHAR_TO_UTF8(*IFileManager::Get().ConvertToAbsolutePathForExternalAppForWrite(*WriteDataFilePath)));
@@ -345,12 +296,6 @@ void UAndroidPlugin::OnLevelLoad(UWorld* world)
             }
 
             // Prepare method parameters
-            UE_LOG(LogTemp, Warning, TEXT("UAndroidPlugin: Preparing method parameters"));
-            UE_LOG(LogTemp, Warning, TEXT("UAndroidPlugin: trackingSceneID: %s"), *trackingSceneID);
-            UE_LOG(LogTemp, Warning, TEXT("UAndroidPlugin: trackingSceneVersion: %d"), trackingSceneVersion);
-            UE_LOG(LogTemp, Warning, TEXT("UAndroidPlugin: gazeURL: %s"), *gazeURL);
-            UE_LOG(LogTemp, Warning, TEXT("UAndroidPlugin: eventsURL: %s"), *eventsURL);
-
             jstring TrackingSceneIdStr = Env->NewStringUTF(TCHAR_TO_UTF8(*trackingSceneID));
             jstring GazeURLStr = Env->NewStringUTF(TCHAR_TO_UTF8(*gazeURL));
             jstring EventsURLStr = Env->NewStringUTF(TCHAR_TO_UTF8(*eventsURL));
@@ -371,12 +316,6 @@ void UAndroidPlugin::OnLevelLoad(UWorld* world)
 #endif
 
     }
-}
-
-void UAndroidPlugin::CauseNativeCrash()
-{
-    int* NullPointer = nullptr;
-    *NullPointer = 42; // Dereferencing a null pointer causes a crash
 }
 
 void UAndroidPlugin::LogFileHasContent()

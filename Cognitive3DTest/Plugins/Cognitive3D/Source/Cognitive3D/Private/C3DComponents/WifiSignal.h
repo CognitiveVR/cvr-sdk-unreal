@@ -4,23 +4,23 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "AndroidPlugin.generated.h"
+#include "WifiSignal.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class UAndroidPlugin : public UActorComponent
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class UWifiSignal : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
-	UAndroidPlugin();
+	UWifiSignal();
 
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -29,15 +29,10 @@ private:
 	void OnSessionBegin();
 	UFUNCTION()
 	void OnSessionEnd();
+	FTimerHandle IntervalHandle;
+	void EndInterval();
+	float IntervalDuration = 1.0f;
+	int currentSignalStrength = 0;
+	int previousSignalStrength = 0;
 
-	FString FolderPath;
-	FString FolderPathCrashLog;
-	FString CurrentFilePath;
-	FString PreviousSessionFilePath;
-	FString WriteDataFilePath;
-
-	void OnLevelLoad(UWorld* world);
-
-	void LogFileHasContent();
-	FString ExtractTimestampFromLine(const FString& Line);
 };
