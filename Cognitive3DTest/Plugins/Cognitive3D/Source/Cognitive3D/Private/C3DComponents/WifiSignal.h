@@ -17,7 +17,7 @@ public:
 	UWifiSignal();
 
 protected:
-	// Called when the game starts
+	// Called when the application starts
 	virtual void BeginPlay() override;
 
 public:
