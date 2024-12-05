@@ -20,7 +20,7 @@ UWifiSignal::UWifiSignal()
 }
 
 
-// Called when the game starts
+// Called when the application starts
 void UWifiSignal::BeginPlay()
 {
 	Super::BeginPlay();
