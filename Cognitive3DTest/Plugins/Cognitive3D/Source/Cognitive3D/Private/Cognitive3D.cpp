@@ -609,6 +609,11 @@ void FAnalyticsProviderCognitive3D::SetParticipantFullName(FString participantNa
 
 void FAnalyticsProviderCognitive3D::SetSessionTag(FString Tag)
 {
+	SetSessionTag(Tag, true);
+}
+
+void FAnalyticsProviderCognitive3D::SetSessionTag(FString Tag, bool value)
+{
 	if (Tag.Len() == 0)
 	{
 		FCognitiveLog::Error("FAnalyticsProviderCognitive3D::SetSessionTag must contain > 0 characters");
@@ -620,7 +625,14 @@ void FAnalyticsProviderCognitive3D::SetSessionTag(FString Tag)
 		return;
 	}
 
-	SetSessionProperty("c3d.session_tag."+Tag, "true");
+	if (value == true)
+	{
+		SetSessionProperty("c3d.session_tag." + Tag, "true");
+	}
+	else
+	{
+		SetSessionProperty("c3d.session_tag." + Tag, "false");
+	}
 }
 
 FString FAnalyticsProviderCognitive3D::GetUserID() const
