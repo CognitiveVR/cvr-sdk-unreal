@@ -627,11 +627,11 @@ void FAnalyticsProviderCognitive3D::SetSessionTag(FString Tag, bool value)
 
 	if (value == true)
 	{
-		SetSessionProperty("c3d.session_tag." + Tag, "true");
+		SetSessionProperty("c3d.session_tag." + Tag, true);
 	}
 	else
 	{
-		SetSessionProperty("c3d.session_tag." + Tag, "false");
+		SetSessionProperty("c3d.session_tag." + Tag, false);
 	}
 }
 
@@ -1056,6 +1056,17 @@ void FAnalyticsProviderCognitive3D::SetSessionProperty(FString name, FString val
 	else
 		AllSessionProperties.SetStringField(name, value);
 }
+void FAnalyticsProviderCognitive3D::SetSessionProperty(FString name, bool value)
+{
+	if (NewSessionProperties.HasField(name))
+		NewSessionProperties.Values[name] = MakeShareable(new FJsonValueBoolean(value));
+	else
+		NewSessionProperties.SetBoolField(name, value);
+	if (AllSessionProperties.HasField(name))
+		AllSessionProperties.Values[name] = MakeShareable(new FJsonValueBoolean(value));
+	else
+		AllSessionProperties.SetBoolField(name, value);
+}
 
 void FAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, int32 value)
 {
@@ -1092,6 +1103,18 @@ void FAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, FString
 		AllSessionProperties.Values[completeName] = MakeShareable(new FJsonValueString(value));
 	else
 		AllSessionProperties.SetStringField(completeName, value);
+}
+void FAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, bool value)
+{
+	FString completeName = "c3d.participant." + name;
+	if (NewSessionProperties.HasField(completeName))
+		NewSessionProperties.Values[completeName] = MakeShareable(new FJsonValueBoolean(value));
+	else
+		NewSessionProperties.SetBoolField(completeName, value);
+	if (AllSessionProperties.HasField(completeName))
+		AllSessionProperties.Values[completeName] = MakeShareable(new FJsonValueBoolean(value));
+	else
+		AllSessionProperties.SetBoolField(completeName, value);
 }
 
 FJsonObject FAnalyticsProviderCognitive3D::GetNewSessionProperties()
