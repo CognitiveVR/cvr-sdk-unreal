@@ -57,41 +57,41 @@ void FUtil::SetSessionProperties()
 	cog->SetSessionProperty("c3d.device.hmd.type", HMDDeviceName);
 
 #if defined TOBII_EYETRACKING_ACTIVE
-	cog->SetSessionPropertyBool("c3d.device.eyetracking.enabled", true);
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
 	cog->SetSessionProperty("c3d.device.eyetracking.type", "Tobii");
 	cog->SetSessionProperty("c3d.app.sdktype", "Tobii");
 #elif defined SRANIPAL_1_2_API
-	cog->SetSessionPropertyBool("c3d.device.eyetracking.enabled", true);
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
 	cog->SetSessionProperty("c3d.device.eyetracking.type", "Tobii");
 	cog->SetSessionProperty("c3d.app.sdktype", "SRAnipal");
 #elif defined SRANIPAL_1_3_API
-	cog->SetSessionPropertyBool("c3d.device.eyetracking.enabled", true);
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
 	cog->SetSessionProperty("c3d.device.eyetracking.type", "Tobii");
 	cog->SetSessionProperty("c3d.app.sdktype", "SRAnipal");
 #elif defined VARJOEYETRACKER_API
-	cog->SetSessionPropertyBool("c3d.device.eyetracking.enabled", true);
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
 	cog->SetSessionProperty("c3d.device.eyetracking.type", "Varjo");
 	cog->SetSessionProperty("c3d.app.sdktype", "Varjo");
 #elif defined PICOMOBILE_API
 	//TODO check that pico eye tracking is enabled
-	cog->SetSessionPropertyBool("c3d.device.eyetracking.enabled", true);
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
 	cog->SetSessionProperty("c3d.device.eyetracking.type", "Tobii");
 	cog->SetSessionProperty("c3d.app.sdktype", "Pico");
 	cog->SetSessionProperty("c3d.device.hmd.type", FPlatformMisc::GetCPUBrand()); //returns pretty device name
 #elif defined HPGLIA_API
 	//TODO check that omnicept eye tracking is enabled
-	cog->SetSessionPropertyBool("c3d.device.eyetracking.enabled", true);
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
 	cog->SetSessionProperty("c3d.device.eyetracking.type", "Tobii");
 	cog->SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
 #elif defined INCLUDE_OCULUS_PLUGIN
-	cog->SetSessionPropertyBool("c3d.app.sdktype", "Oculus HMD");
+	cog->SetSessionProperty("c3d.app.sdktype", "Oculus HMD");
 	cog->SetSessionProperty("c3d.device.hmd.type", FPlatformMisc::GetCPUBrand());
 #elif defined INCLUDE_PICO_PLUGIN
-	cog->SetSessionPropertyBool("c3d.device.eyetracking.enabled", true);
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "true");
 	cog->SetSessionProperty("c3d.app.sdktype", "PICO");
 	cog->SetSessionProperty("c3d.device.hmd.type", FPlatformMisc::GetCPUBrand());
 #else
-	cog->SetSessionPropertyBool("c3d.device.eyetracking.enabled", false);
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "false");
 	cog->SetSessionProperty("c3d.device.eyetracking.type", "None");
 	cog->SetSessionProperty("c3d.app.sdktype", "Default");
 #endif

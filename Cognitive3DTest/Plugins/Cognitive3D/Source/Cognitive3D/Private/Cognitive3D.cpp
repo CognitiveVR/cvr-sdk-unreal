@@ -446,11 +446,11 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	}
 	if (currentWorld->WorldType == EWorldType::Game)
 	{
-		SetSessionPropertyBool("c3d.app.inEditor", false);
+		SetSessionProperty("c3d.app.inEditor", false);
 	}
 	else
 	{
-		SetSessionPropertyBool("c3d.app.inEditor", true);
+		SetSessionProperty("c3d.app.inEditor", true);
 	}
 
 
@@ -627,11 +627,11 @@ void FAnalyticsProviderCognitive3D::SetSessionTag(FString Tag, bool value)
 
 	if (value == true)
 	{
-		SetSessionPropertyBool("c3d.session_tag." + Tag, true);
+		SetSessionProperty("c3d.session_tag." + Tag, true);
 	}
 	else
 	{
-		SetSessionPropertyBool("c3d.session_tag." + Tag, false);
+		SetSessionProperty("c3d.session_tag." + Tag, false);
 	}
 }
 
@@ -1056,7 +1056,7 @@ void FAnalyticsProviderCognitive3D::SetSessionProperty(FString name, FString val
 	else
 		AllSessionProperties.SetStringField(name, value);
 }
-void FAnalyticsProviderCognitive3D::SetSessionPropertyBool(FString name, bool value)
+void FAnalyticsProviderCognitive3D::SetSessionProperty(FString name, bool value)
 {
 	if (NewSessionProperties.HasField(name))
 		NewSessionProperties.Values[name] = MakeShareable(new FJsonValueBoolean(value));
@@ -1104,7 +1104,7 @@ void FAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, FString
 	else
 		AllSessionProperties.SetStringField(completeName, value);
 }
-void FAnalyticsProviderCognitive3D::SetParticipantPropertyBool(FString name, bool value)
+void FAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, bool value)
 {
 	FString completeName = "c3d.participant." + name;
 	if (NewSessionProperties.HasField(completeName))
