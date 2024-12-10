@@ -446,11 +446,11 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	}
 	if (currentWorld->WorldType == EWorldType::Game)
 	{
-		SetSessionProperty("c3d.app.inEditor", "false");
+		SetSessionProperty("c3d.app.inEditor", false);
 	}
 	else
 	{
-		SetSessionProperty("c3d.app.inEditor", "true");
+		SetSessionProperty("c3d.app.inEditor", true);
 	}
 
 
