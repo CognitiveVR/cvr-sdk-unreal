@@ -107,7 +107,7 @@ void UCognitive3DBlueprints::UpdateSessionBool(const FString name, const bool va
 		FCognitiveLog::Error("UCognitive3DBlueprints::UpdateSessionBool could not get provider!");
 		return;
 	}
-	cog->SetSessionProperty(name, value);
+	cog->SetSessionPropertyBool(name, value);
 }
 
 void UCognitive3DBlueprints::SetParticipantPropertyInt(const FString name, const int32 value)
@@ -155,7 +155,7 @@ void UCognitive3DBlueprints::SetParticipantPropertyBool(const FString name, cons
 		FCognitiveLog::Error("UCognitive3DBlueprints::SetParticipantPropertyBool could not get provider!");
 		return;
 	}
-	cog->SetParticipantProperty(name, value);
+	cog->SetParticipantPropertyBool(name, value);
 }
 
 void UCognitive3DBlueprints::SetSessionName(const FString name)
