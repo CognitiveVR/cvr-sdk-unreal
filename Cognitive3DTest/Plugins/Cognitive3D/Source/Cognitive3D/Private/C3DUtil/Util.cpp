@@ -91,14 +91,14 @@ void FUtil::SetSessionProperties()
 	cog->SetSessionProperty("c3d.app.sdktype", "PICO");
 	cog->SetSessionProperty("c3d.device.hmd.type", FPlatformMisc::GetCPUBrand());
 #else
-	cog->SetSessionProperty("c3d.device.eyetracking.enabled", "false");
-	cog->SetSessionProperty("c3d.device.eyetracking.type", "None");
-	cog->SetSessionProperty("c3d.app.sdktype", "Default");
+	cog->SetSessionProperty("c3d.device.eyetracking.enabled", false);
+	cog->SetSessionProperty("c3d.device.eyetracking.type", FString("None"));
+	cog->SetSessionProperty("c3d.app.sdktype", FString("Default"));
 #endif
 
-
-	cog->SetSessionProperty("c3d.version", Cognitive3D_SDK_VERSION);
-	cog->SetSessionProperty("c3d.app.engine", "Unreal");
+	FString sdkVersion = Cognitive3D_SDK_VERSION;
+	cog->SetSessionProperty("c3d.version", sdkVersion);
+	cog->SetSessionProperty("c3d.app.engine", FString("Unreal"));
 
 	if (!cog->GetUserID().IsEmpty())
 		cog->SetParticipantId(cog->GetUserID());
@@ -106,7 +106,8 @@ void FUtil::SetSessionProperties()
 
 	const UGeneralProjectSettings& projectSettings = *GetDefault< UGeneralProjectSettings>();
 	cog->SetSessionProperty("c3d.app.version", projectSettings.ProjectVersion);
-	cog->SetSessionProperty("c3d.app.name", FApp::GetProjectName());
+	FString projName = FApp::GetProjectName();
+	cog->SetSessionProperty("c3d.app.name", projName);
 
 	FString engineVersion = FEngineVersion::Current().ToString().Replace(TEXT("+"), TEXT(" "));;
 	cog->SetSessionProperty("c3d.app.engine.version", engineVersion);
@@ -114,19 +115,19 @@ void FUtil::SetSessionProperties()
 	auto platformName = UGameplayStatics::GetPlatformName();
 	if (platformName.Compare("Windows", ESearchCase::IgnoreCase) == 0 || platformName.Compare("Mac", ESearchCase::IgnoreCase) == 0 || platformName.Compare("Linux", ESearchCase::IgnoreCase) == 0)
 	{
-		cog->SetSessionProperty("c3d.device.type", "Desktop");
+		cog->SetSessionProperty("c3d.device.type", FString("Desktop"));
 	}
 	else if (platformName.Compare("IOS", ESearchCase::IgnoreCase) == 0 || platformName.Compare("Android", ESearchCase::IgnoreCase) == 0)
 	{
-		cog->SetSessionProperty("c3d.device.type", "Mobile");
+		cog->SetSessionProperty("c3d.device.type", FString("Mobile"));
 	}
 	else if (platformName.Compare("PS", ESearchCase::IgnoreCase) == 0 || platformName.Contains("xbox", ESearchCase::IgnoreCase) || platformName.Contains("Switch", ESearchCase::IgnoreCase))
 	{
-		cog->SetSessionProperty("c3d.device.type", "Console");
+		cog->SetSessionProperty("c3d.device.type", FString("Console"));
 	}
 	else
 	{
-		cog->SetSessionProperty("c3d.device.type", "Unknown");
+		cog->SetSessionProperty("c3d.device.type", FString("Unknown"));
 	}
 
 #if PLATFORM_ANDROID
