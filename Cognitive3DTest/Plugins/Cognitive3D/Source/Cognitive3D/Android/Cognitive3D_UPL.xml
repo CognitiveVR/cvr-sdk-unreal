@@ -8,6 +8,7 @@
   <gradleCopies>
     <!-- Copy the .jar file to the Gradle libs folder -->
     <copyFile src="$S(PluginDir)/lib/classes.jar" dst="$S(BuildDir)/gradle/app/libs/classes.jar" />
+    <copyFile src="$S(PluginDir)/lib/classes.jar" dst="$S(BuildDir)/gradle/AFSProject/app/libs/classes.jar" />
   </gradleCopies>
 
   <buildGradleAdditions>
