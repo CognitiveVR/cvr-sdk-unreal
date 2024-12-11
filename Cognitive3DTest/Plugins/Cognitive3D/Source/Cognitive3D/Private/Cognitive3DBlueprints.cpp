@@ -98,6 +98,18 @@ void UCognitive3DBlueprints::UpdateSessionString(const FString name, const FStri
 	cog->SetSessionProperty(name, value);
 }
 
+void UCognitive3DBlueprints::UpdateSessionBool(const FString name, const bool value)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	if (!cog.IsValid())
+	{
+		FCognitiveLog::Error("UCognitive3DBlueprints::UpdateSessionBool could not get provider!");
+		return;
+	}
+	cog->SetSessionProperty(name, value);
+}
+
 void UCognitive3DBlueprints::SetParticipantPropertyInt(const FString name, const int32 value)
 {
 	if (!cog.IsValid())
@@ -129,6 +141,18 @@ void UCognitive3DBlueprints::SetParticipantPropertyString(const FString name, co
 	if (!cog.IsValid())
 	{
 		FCognitiveLog::Error("UCognitive3DBlueprints::SetParticipantPropertyString could not get provider!");
+		return;
+	}
+	cog->SetParticipantProperty(name, value);
+}
+
+void UCognitive3DBlueprints::SetParticipantPropertyBool(const FString name, const bool value)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	if (!cog.IsValid())
+	{
+		FCognitiveLog::Error("UCognitive3DBlueprints::SetParticipantPropertyBool could not get provider!");
 		return;
 	}
 	cog->SetParticipantProperty(name, value);

@@ -53,6 +53,8 @@ public:
 	//add a string value to the session properties
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Properties", DisplayName = "Set Session Property String")
 		static void UpdateSessionString(const FString name, const FString value);
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Properties", DisplayName = "Set Session Property Bool")
+		static void UpdateSessionBool(const FString name, const bool value);
 
 	//label this session to a human-friendly on the Cognitive dashboard
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics")
@@ -106,6 +108,9 @@ public:
 	//add a string value to the session properties
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Properties")
 		static void SetParticipantPropertyString(const FString name, const FString value);
+	//add a string value to the session properties
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Properties")
+		static void SetParticipantPropertyBool(const FString name, const bool value);
 
 
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Custom Events")

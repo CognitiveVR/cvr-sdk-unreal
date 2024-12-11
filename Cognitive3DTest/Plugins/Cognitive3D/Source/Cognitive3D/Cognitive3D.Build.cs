@@ -2,6 +2,7 @@
 ** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
 */
 
+
 namespace UnrealBuildTool.Rules
 {
 	public class Cognitive3D : ModuleRules
@@ -72,8 +73,8 @@ namespace UnrealBuildTool.Rules
 					"Launch" // Required for Android builds
 				}
                 );
-                PublicRuntimeLibraryPaths.Add(Path.Combine(ModuleDirectory, "Android/lib"));
-                AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(ModuleDirectory, "Android/Cognitive3D_UPL.xml"));
+                PublicRuntimeLibraryPaths.Add(System.IO.Path.Combine(ModuleDirectory, "Android/lib"));
+                AdditionalPropertiesForReceipt.Add("AndroidPlugin", System.IO.Path.Combine(ModuleDirectory, "Android/Cognitive3D_UPL.xml"));
             }
 
             //uncomment the following line to enable Oculus/Meta functionality. Uses OculusVR for UE4 and OculusXR (MetaXR) for UE5.
