@@ -205,7 +205,7 @@ void UOculusPlatform::HandleUserRetrieved(const ovrMessageHandle Message)
 		cog->SetParticipantId(idString);
 	}
 
-	cog->SetParticipantProperty("oculusId", idString);
+	cog->SetParticipantProperty("oculusId", FString(idString));
 	cog->SetParticipantProperty("oculusDisplayName", displayNameStr);
 	cog->SetParticipantProperty("oculusUsername", usernameStr);
 
