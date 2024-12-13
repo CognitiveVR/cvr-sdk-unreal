@@ -138,6 +138,11 @@ void UEnhancedInputTracker::FindControllers()
 						ControllerType = EC3DControllerType::Quest2;
 						LeftHand = dyn;
 					}
+					else if (dyn->ControllerInputImageName == "oculusquest3touchleft")
+					{
+						ControllerType = EC3DControllerType::Quest3;
+						LeftHand = dyn;
+					}
 					else if (dyn->ControllerInputImageName == "quest_pro_touch_left")
 					{
 						ControllerType = EC3DControllerType::QuestPro;
@@ -194,6 +199,11 @@ void UEnhancedInputTracker::FindControllers()
 					else if (dyn->ControllerInputImageName == "oculusquesttouchright")
 					{
 						ControllerType = EC3DControllerType::Quest2;
+						RightHand = dyn;
+					}
+					else if (dyn->ControllerInputImageName == "oculusquest3touchright")
+					{
+						ControllerType = EC3DControllerType::Quest3;
 						RightHand = dyn;
 					}
 					else if (dyn->ControllerInputImageName == "quest_pro_touch_right")
@@ -311,6 +321,7 @@ void UEnhancedInputTracker::IntervalUpdate()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		//triggers
@@ -988,6 +999,7 @@ void UEnhancedInputTracker::LeftFaceButtonOnePressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("xbtn", 100);
@@ -1020,6 +1032,7 @@ void UEnhancedInputTracker::LeftFaceButtonOneReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("xbtn", 0);
@@ -1052,6 +1065,7 @@ void UEnhancedInputTracker::LeftFaceButtonTwoPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("ybtn", 100);
@@ -1084,6 +1098,7 @@ void UEnhancedInputTracker::LeftFaceButtonTwoReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("ybtn", 0);
@@ -1120,6 +1135,7 @@ void UEnhancedInputTracker::LeftMenuButtonPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("menu", 100);
@@ -1160,6 +1176,7 @@ void UEnhancedInputTracker::LeftMenuButtonReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("menu", 0);
@@ -1206,6 +1223,7 @@ void UEnhancedInputTracker::LeftJoystickPressed(const FInputActionValue& Value)
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis2D)
@@ -1280,6 +1298,7 @@ void UEnhancedInputTracker::LeftJoystickReleased(const FInputActionValue& Value)
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis2D)
@@ -1352,6 +1371,7 @@ void UEnhancedInputTracker::LeftJoystickXPressed(const FInputActionValue& Value)
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis1D)
@@ -1419,6 +1439,7 @@ void UEnhancedInputTracker::LeftJoystickYPressed(const FInputActionValue& Value)
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis1D)
@@ -1486,6 +1507,7 @@ void UEnhancedInputTracker::LeftJoystickXReleased(const FInputActionValue& Value
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis1D)
@@ -1553,6 +1575,7 @@ void UEnhancedInputTracker::LeftJoystickYReleased(const FInputActionValue& Value
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis1D)
@@ -1616,6 +1639,7 @@ void UEnhancedInputTracker::LeftGripPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("grip", 100);
@@ -1663,6 +1687,7 @@ void UEnhancedInputTracker::LeftGripReleased(const FInputActionValue& Value)
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis1D)
@@ -2176,6 +2201,7 @@ void UEnhancedInputTracker::LeftTriggerReleased(const FInputActionValue& Value)
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis1D)
@@ -2233,6 +2259,7 @@ void UEnhancedInputTracker::LeftTriggerPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("trigger", 100);
@@ -2272,6 +2299,7 @@ void UEnhancedInputTracker::RightFaceButtonOnePressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("abtn", 100);
@@ -2304,6 +2332,7 @@ void UEnhancedInputTracker::RightFaceButtonOneReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("abtn", 0);
@@ -2336,6 +2365,7 @@ void UEnhancedInputTracker::RightFaceButtonTwoPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("bbtn", 100);
@@ -2368,6 +2398,7 @@ void UEnhancedInputTracker::RightFaceButtonTwoReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("bbtn", 0);
@@ -2404,6 +2435,7 @@ void UEnhancedInputTracker::RightMenuButtonPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("menu", 100);
@@ -2444,6 +2476,7 @@ void UEnhancedInputTracker::RightMenuButtonReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("menu", 0);
@@ -2489,6 +2522,7 @@ void UEnhancedInputTracker::RightJoystickPressed(const FInputActionValue& Value)
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis2D)
@@ -2561,6 +2595,7 @@ void UEnhancedInputTracker::RightJoystickReleased(const FInputActionValue& Value
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis2D)
@@ -2631,6 +2666,7 @@ void UEnhancedInputTracker::RightJoystickXPressed(const FInputActionValue& Value
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis1D)
@@ -2695,6 +2731,7 @@ void UEnhancedInputTracker::RightJoystickYPressed(const FInputActionValue& Value
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis1D)
@@ -2759,6 +2796,7 @@ void UEnhancedInputTracker::RightJoystickXReleased(const FInputActionValue& Valu
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis1D)
@@ -2823,6 +2861,7 @@ void UEnhancedInputTracker::RightJoystickYReleased(const FInputActionValue& Valu
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis1D)
@@ -2884,6 +2923,7 @@ void UEnhancedInputTracker::RightGripPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("grip", 100);
@@ -2931,6 +2971,7 @@ void UEnhancedInputTracker::RightGripReleased(const FInputActionValue& Value)
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis1D)
@@ -3444,6 +3485,7 @@ void UEnhancedInputTracker::RightTriggerReleased(const FInputActionValue& Value)
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		if (Value.GetValueType() == EInputActionValueType::Axis1D)
@@ -3501,6 +3543,7 @@ void UEnhancedInputTracker::RightTriggerPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("trigger", 100);

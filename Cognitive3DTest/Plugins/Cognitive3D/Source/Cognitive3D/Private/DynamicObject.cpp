@@ -286,6 +286,18 @@ void UDynamicObject::Initialize()
 				MeshName = "OculusQuestTouchLeft";
 			}
 			break;
+		case EC3DControllerType::Quest3:
+			if (IsRightController)
+			{
+				ControllerInputImageName = "oculusquest3touchright";
+				MeshName = "OculusQuest3TouchRight";
+			}
+			else
+			{
+				ControllerInputImageName = "oculusquest3touchleft";
+				MeshName = "OculusQuest3TouchLeft";
+			}
+			break;
 		case EC3DControllerType::QuestPro:
 			if (IsRightController)
 			{
