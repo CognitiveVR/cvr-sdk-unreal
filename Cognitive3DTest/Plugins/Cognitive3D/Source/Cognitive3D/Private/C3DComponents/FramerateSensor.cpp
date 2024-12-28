@@ -85,17 +85,33 @@ void UFramerateSensor::EndInterval()
 	float finalLow1Percent = 1.0f / min1Percent;
 	
 	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+
 	float fpsMultiplier = 1.0f;
 
 #ifdef INCLUDE_OCULUS_PLUGIN
 
 	bool bIsSpaceWarpSupported = false;
+
+	// Check for r.Mobile.Oculus.SpaceWarp.Enable
+	bool bOculusSpaceWarp = false;
 	GConfig->GetBool(
 		TEXT("/Script/Engine.RendererSettings"),
-		TEXT("r.Mobile.SupportApplicationSpaceWarp"),
-		bIsSpaceWarpSupported,
+		TEXT("r.Mobile.Oculus.SpaceWarp.Enable"),
+		bOculusSpaceWarp,
 		GEngineIni
 	);
+
+	// Check for vr.SupportMobileSpaceWarp
+	bool bVrSpaceWarp = false;
+	GConfig->GetBool(
+		TEXT("/Script/Engine.RendererSettings"),
+		TEXT("vr.SupportMobileSpaceWarp"),
+		bVrSpaceWarp,
+		GEngineIni
+	);
+
+	// Set bIsSpaceWarpSupported if either setting is true
+	bIsSpaceWarpSupported = bOculusSpaceWarp || bVrSpaceWarp;
 
 	if (bIsSpaceWarpSupported)
 	{
