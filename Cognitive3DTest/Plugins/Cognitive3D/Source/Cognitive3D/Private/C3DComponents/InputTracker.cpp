@@ -139,7 +139,7 @@ void UInputTracker::FindControllers()
 						ControllerType = EC3DControllerType::Quest2;
 						LeftHand = dyn;
 					}
-					else if (dyn->ControllerInputImageName == "oculusquest3touchleft")
+					else if (dyn->ControllerInputImageName == "quest_plus_touch_left")
 					{
 						ControllerType = EC3DControllerType::Quest3;
 						LeftHand = dyn;
@@ -195,7 +195,7 @@ void UInputTracker::FindControllers()
 						ControllerType = EC3DControllerType::Quest2;
 						RightHand = dyn;
 					}
-					else if (dyn->ControllerInputImageName == "oculusquest3touchright")
+					else if (dyn->ControllerInputImageName == "quest_plus_touch_right")
 					{
 						ControllerType = EC3DControllerType::Quest3;
 						RightHand = dyn;
