@@ -3,6 +3,13 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/FramerateSensor.h"
+#ifdef INCLUDE_OCULUS_PLUGIN
+#if ENGINE_MAJOR_VERSION == 4
+#include "OculusFunctionLibrary.h"
+#elif ENGINE_MAJOR_VERSION == 5
+#include "OculusXRFunctionLibrary.h"
+#endif
+#endif
 
 UFramerateSensor::UFramerateSensor()
 {
@@ -78,11 +85,64 @@ void UFramerateSensor::EndInterval()
 	float finalLow1Percent = 1.0f / min1Percent;
 	
 	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+
+	float fpsMultiplier = 1.0f;
+
+#ifdef INCLUDE_OCULUS_PLUGIN
+
+	bool bIsSpaceWarpSupported = false;
+
+	// Check for r.Mobile.Oculus.SpaceWarp.Enable
+	bool bOculusSpaceWarp = false;
+	GConfig->GetBool(
+		TEXT("/Script/Engine.RendererSettings"),
+		TEXT("r.Mobile.Oculus.SpaceWarp.Enable"),
+		bOculusSpaceWarp,
+		GEngineIni
+	);
+
+	// Check for vr.SupportMobileSpaceWarp
+	bool bVrSpaceWarp = false;
+	GConfig->GetBool(
+		TEXT("/Script/Engine.RendererSettings"),
+		TEXT("vr.SupportMobileSpaceWarp"),
+		bVrSpaceWarp,
+		GEngineIni
+	);
+
+	// Set bIsSpaceWarpSupported if either setting is true
+	bIsSpaceWarpSupported = bOculusSpaceWarp || bVrSpaceWarp;
+
+	if (bIsSpaceWarpSupported)
+	{
+		cognitive->sensors->RecordSensor("c3d.app.meta.spaceWarp", 1.0);
+		cognitive->SetSessionProperty("c3d.app.meta.wasSpaceWarpUsed", true);
+
+#if ENGINE_MAJOR_VERSION == 4
+		float currentDisplayFrequency = UOculusFunctionLibrary::GetCurrentDisplayFrequency();
+#elif ENGINE_MAJOR_VERSION == 5
+		float currentDisplayFrequency = UOculusXRFunctionLibrary::GetCurrentDisplayFrequency();
+#endif
+
+		
+		if (framesPerSecond <= (currentDisplayFrequency / 2.0f) + TOLERANCE_FOR_CAPPED_FPS)
+		{
+			fpsMultiplier = 2.0f;
+		}
+	}
+	else
+	{
+		cognitive->sensors->RecordSensor("c3d.app.meta.spaceWarp", 0.0);
+		fpsMultiplier = 1.0f;
+	}
+
+#endif
+
 	if (cognitive.IsValid() && cognitive->HasStartedSession())
 	{
-		cognitive->sensors->RecordSensor("c3d.fps.avg", framesPerSecond);
-		cognitive->sensors->RecordSensor("c3d.fps.5pl", finalLow5Percent);
-		cognitive->sensors->RecordSensor("c3d.fps.1pl", finalLow1Percent);
+		cognitive->sensors->RecordSensor("c3d.fps.avg", framesPerSecond * fpsMultiplier);
+		cognitive->sensors->RecordSensor("c3d.fps.5pl", finalLow5Percent * fpsMultiplier);
+		cognitive->sensors->RecordSensor("c3d.fps.1pl", finalLow1Percent * fpsMultiplier);
 	}
 
 	intervalFrameCount = 0;
