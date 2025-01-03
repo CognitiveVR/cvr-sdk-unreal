@@ -194,6 +194,7 @@ enum class EC3DControllerType : uint8
 	PicoNeo2,
 	
 	Quest2,
+	Quest3,
 	QuestPro,
 	PicoNeo3,
 	PicoNeo4

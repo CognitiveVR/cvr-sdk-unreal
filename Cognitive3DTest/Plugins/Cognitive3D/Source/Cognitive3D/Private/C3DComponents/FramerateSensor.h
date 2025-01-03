@@ -28,4 +28,6 @@ class UFramerateSensor : public UActorComponent
 		TArray<float> deltaTimes;
 		void EndInterval();
 
+		float TOLERANCE_FOR_CAPPED_FPS = 2;
+
 };
