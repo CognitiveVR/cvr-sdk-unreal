@@ -129,19 +129,82 @@ void FUtil::SetSessionProperties()
 	{
 		cog->SetSessionProperty("c3d.device.type", FString("Unknown"));
 	}
+	FString GPUBrand = "Unknown";
 
 #if PLATFORM_ANDROID
 	cog->SetSessionProperty("c3d.device.cpu", FAndroidMisc::GetCPUChipset());
 	cog->SetSessionProperty("c3d.device.gpu", FAndroidMisc::GetPrimaryGPUBrand());
+	GPUBrand = FAndroidMisc::GetPrimaryGPUBrand();
 	cog->SetSessionProperty("c3d.device.os", "Android OS " + FAndroidMisc::GetOSVersion());
 
 
 #elif PLATFORM_WINDOWS
 	cog->SetSessionProperty("c3d.device.cpu", FPlatformMisc::GetCPUBrand());
 	cog->SetSessionProperty("c3d.device.gpu", FPlatformMisc::GetPrimaryGPUBrand());
+	GPUBrand = FPlatformMisc::GetPrimaryGPUBrand();
 	cog->SetSessionProperty("c3d.device.os", FPlatformMisc::GetOSVersion());
 #endif
 
+	FString HMDName = GetSpecificHMDFromHardware(GPUBrand, FPlatformMisc::GetCPUBrand());
+	cog->SetSessionProperty("c3d.device.hmd.name", HMDName);
+
 	const FPlatformMemoryConstants& MemoryConstants = FPlatformMemory::GetConstants();
 	cog->SetSessionProperty("c3d.device.memory", (int)MemoryConstants.TotalPhysicalGB);
+}
+
+FString FUtil::GetSpecificHMDFromHardware(FString GPUBrand, FString HMDDeviceName)
+{
+
+
+	if (GPUBrand.Contains(TEXT("Adreno"), ESearchCase::IgnoreCase))
+	{
+		if (GPUBrand.Contains(TEXT("740"), ESearchCase::IgnoreCase))
+		{
+			return TEXT("Meta Quest 3");
+		}
+
+		else if (GPUBrand.Contains(TEXT("650"), ESearchCase::IgnoreCase))
+		{
+			if ((HMDDeviceName.Contains(TEXT("Oculus"), ESearchCase::IgnoreCase)) || (HMDDeviceName.Contains(TEXT("Quest"), ESearchCase::IgnoreCase)))
+			{
+				return TEXT("Meta Quest 2");
+			}
+			else if (HMDDeviceName.Contains(TEXT("Pico"), ESearchCase::IgnoreCase))
+			{
+				return TEXT("PICO Neo 3 or PICO 4");
+			}
+			else if (HMDDeviceName.Contains(TEXT("Vive"), ESearchCase::IgnoreCase))
+			{
+				return TEXT("Vive Focus 3");
+			}
+
+		}
+
+		else if (GPUBrand.Contains(TEXT("630"), ESearchCase::IgnoreCase))
+		{
+			return TEXT("PICO Neo 2");
+		}
+
+		else if (GPUBrand.Contains(TEXT("540"), ESearchCase::IgnoreCase))
+		{
+			return TEXT("Meta Quest");
+		}
+	}
+
+
+	// Apple Devices
+	else if (GPUBrand.Contains(TEXT("Apple M2"), ESearchCase::IgnoreCase))
+	{
+		return TEXT("Apple Vision Pro");
+	}
+
+	// PC-tethered VR Headsets (Generalized)
+	else if (GPUBrand.Contains(TEXT("NVIDIA"), ESearchCase::IgnoreCase) ||
+		GPUBrand.Contains(TEXT("AMD"), ESearchCase::IgnoreCase))
+	{
+		return TEXT("PC-tethered VR Headset (e.g., HTC Vive Pro 2, Valve Index)");
+	}
+
+	// Unknown or Unlisted Devices
+	return TEXT("Unknown or Unsupported HMD");
 }
