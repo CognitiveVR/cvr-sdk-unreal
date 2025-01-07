@@ -54,7 +54,7 @@ void FUtil::SetSessionProperties()
 	auto cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 	FString HMDDeviceName = UHeadMountedDisplayFunctionLibrary::GetHMDDeviceName().ToString();
-	cog->SetSessionProperty("c3d.device.hmd.type", HMDDeviceName);
+	cog->SetSessionProperty("c3d.device.model", HMDDeviceName);
 
 #if defined TOBII_EYETRACKING_ACTIVE
 	cog->SetSessionProperty("c3d.device.eyetracking.enabled", true);
@@ -77,7 +77,7 @@ void FUtil::SetSessionProperties()
 	cog->SetSessionProperty("c3d.device.eyetracking.enabled", true);
 	cog->SetSessionProperty("c3d.device.eyetracking.type", FString("Tobii"));
 	cog->SetSessionProperty("c3d.app.sdktype", FString("Pico"));
-	cog->SetSessionProperty("c3d.device.hmd.type", FPlatformMisc::GetCPUBrand()); //returns pretty device name
+	cog->SetSessionProperty("c3d.device.model", FPlatformMisc::GetCPUBrand()); //returns pretty device name
 #elif defined HPGLIA_API
 	//TODO check that omnicept eye tracking is enabled
 	cog->SetSessionProperty("c3d.device.eyetracking.enabled", true);
@@ -85,11 +85,11 @@ void FUtil::SetSessionProperties()
 	cog->SetSessionProperty("c3d.app.sdktype", FString("HP Omnicept"));
 #elif defined INCLUDE_OCULUS_PLUGIN
 	cog->SetSessionProperty("c3d.app.sdktype", FString("Oculus HMD"));
-	cog->SetSessionProperty("c3d.device.hmd.type", FPlatformMisc::GetCPUBrand());
+	cog->SetSessionProperty("c3d.device.model", FPlatformMisc::GetCPUBrand());
 #elif defined INCLUDE_PICO_PLUGIN
 	cog->SetSessionProperty("c3d.device.eyetracking.enabled", true);
 	cog->SetSessionProperty("c3d.app.sdktype", FString("PICO"));
-	cog->SetSessionProperty("c3d.device.hmd.type", FPlatformMisc::GetCPUBrand());
+	cog->SetSessionProperty("c3d.device.model", FPlatformMisc::GetCPUBrand());
 #else
 	cog->SetSessionProperty("c3d.device.eyetracking.enabled", false);
 	cog->SetSessionProperty("c3d.device.eyetracking.type", FString("None"));
@@ -146,7 +146,7 @@ void FUtil::SetSessionProperties()
 #endif
 
 	FString HMDName = GetSpecificHMDFromHardware(GPUBrand, FPlatformMisc::GetCPUBrand());
-	cog->SetSessionProperty("c3d.device.hmd.name", HMDName);
+	cog->SetSessionProperty("c3d.device.hmd.type", HMDName);
 
 	const FPlatformMemoryConstants& MemoryConstants = FPlatformMemory::GetConstants();
 	cog->SetSessionProperty("c3d.device.memory", (int)MemoryConstants.TotalPhysicalGB);
