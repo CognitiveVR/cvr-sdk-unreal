@@ -28,5 +28,5 @@
 			//record several default hardware values to session properties
 			static void SetSessionProperties();
 
-            static FString GetSpecificHMDFromHardware(FString GPUBrand, FString HMDDeviceName);
+            static FString GetSpecificHMDFromHardware(FString GPUBrand, FString HMDDeviceName, FString CPUChipset, int32 DeviceMemory);
     };
