@@ -163,8 +163,9 @@ namespace UnrealBuildTool.Rules
 		void PICOXR()
         {
 			PublicDefinitions.Add("INCLUDE_PICO_PLUGIN");
-			PublicDependencyModuleNames.AddRange(new string[] { "PICOXRHMD" });
-		}
+            PublicDependencyModuleNames.AddRange(new string[] { "PICOXRHMD", "PICOXRInput", "InputDevice" });
+            PrivateIncludePaths.Add(System.IO.Path.Combine(pluginsDirectory, "PICOXR/Source/PICOXRInput/Private"));
+        }
 
 		void OpenXREyeTracking()
         {
