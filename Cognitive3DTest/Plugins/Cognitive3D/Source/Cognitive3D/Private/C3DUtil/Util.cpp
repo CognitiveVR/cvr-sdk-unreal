@@ -191,7 +191,15 @@ FString FUtil::GetSpecificHMDFromHardware(FString GPUBrand, FString HMDDeviceNam
 			}
 			else if (HMDDeviceName.Contains(TEXT("Pico"), ESearchCase::IgnoreCase))
 			{
-				return TEXT("PICO Neo 3 or PICO 4");
+				if (DeviceMemory == 8)
+				{
+					return TEXT("PICO 4");
+				}
+				else if (DeviceMemory == 6)
+				{
+					return TEXT("PICO Neo 3");
+				}
+				return TEXT("PICO 4 -");
 			}
 			else if (HMDDeviceName.Contains(TEXT("Vive"), ESearchCase::IgnoreCase))
 			{
