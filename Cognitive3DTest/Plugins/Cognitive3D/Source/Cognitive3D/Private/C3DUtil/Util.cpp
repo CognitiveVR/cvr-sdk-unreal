@@ -54,7 +54,7 @@ void FUtil::SetSessionProperties()
 	auto cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
 	FString HMDDeviceName = UHeadMountedDisplayFunctionLibrary::GetHMDDeviceName().ToString();
-	cog->SetSessionProperty("c3d.device.hmd.type", HMDDeviceName);
+	cog->SetSessionProperty("c3d.device.model", HMDDeviceName);
 
 #if defined TOBII_EYETRACKING_ACTIVE
 	cog->SetSessionProperty("c3d.device.eyetracking.enabled", true);
@@ -77,7 +77,7 @@ void FUtil::SetSessionProperties()
 	cog->SetSessionProperty("c3d.device.eyetracking.enabled", true);
 	cog->SetSessionProperty("c3d.device.eyetracking.type", FString("Tobii"));
 	cog->SetSessionProperty("c3d.app.sdktype", FString("Pico"));
-	cog->SetSessionProperty("c3d.device.hmd.type", FPlatformMisc::GetCPUBrand()); //returns pretty device name
+	cog->SetSessionProperty("c3d.device.model", FPlatformMisc::GetCPUBrand()); //returns pretty device name
 #elif defined HPGLIA_API
 	//TODO check that omnicept eye tracking is enabled
 	cog->SetSessionProperty("c3d.device.eyetracking.enabled", true);
@@ -85,11 +85,11 @@ void FUtil::SetSessionProperties()
 	cog->SetSessionProperty("c3d.app.sdktype", FString("HP Omnicept"));
 #elif defined INCLUDE_OCULUS_PLUGIN
 	cog->SetSessionProperty("c3d.app.sdktype", FString("Oculus HMD"));
-	cog->SetSessionProperty("c3d.device.hmd.type", FPlatformMisc::GetCPUBrand());
+	cog->SetSessionProperty("c3d.device.model", FPlatformMisc::GetCPUBrand());
 #elif defined INCLUDE_PICO_PLUGIN
 	cog->SetSessionProperty("c3d.device.eyetracking.enabled", true);
 	cog->SetSessionProperty("c3d.app.sdktype", FString("PICO"));
-	cog->SetSessionProperty("c3d.device.hmd.type", FPlatformMisc::GetCPUBrand());
+	cog->SetSessionProperty("c3d.device.model", FPlatformMisc::GetCPUBrand());
 #else
 	cog->SetSessionProperty("c3d.device.eyetracking.enabled", false);
 	cog->SetSessionProperty("c3d.device.eyetracking.type", FString("None"));
@@ -129,19 +129,120 @@ void FUtil::SetSessionProperties()
 	{
 		cog->SetSessionProperty("c3d.device.type", FString("Unknown"));
 	}
+	FString GPUBrand = "Unknown";
+	FString CPUChipset = "Unknown";
 
 #if PLATFORM_ANDROID
-	cog->SetSessionProperty("c3d.device.cpu", FAndroidMisc::GetCPUChipset());
-	cog->SetSessionProperty("c3d.device.gpu", FAndroidMisc::GetPrimaryGPUBrand());
+	GPUBrand = FAndroidMisc::GetPrimaryGPUBrand();
+	CPUChipset = FAndroidMisc::GetCPUChipset();
+	cog->SetSessionProperty("c3d.device.cpu", CPUChipset);
+	cog->SetSessionProperty("c3d.device.gpu", GPUBrand);
 	cog->SetSessionProperty("c3d.device.os", "Android OS " + FAndroidMisc::GetOSVersion());
 
 
 #elif PLATFORM_WINDOWS
-	cog->SetSessionProperty("c3d.device.cpu", FPlatformMisc::GetCPUBrand());
-	cog->SetSessionProperty("c3d.device.gpu", FPlatformMisc::GetPrimaryGPUBrand());
+	GPUBrand = FPlatformMisc::GetPrimaryGPUBrand();
+	CPUChipset = FPlatformMisc::GetCPUBrand();
+	cog->SetSessionProperty("c3d.device.cpu", CPUChipset);
+	cog->SetSessionProperty("c3d.device.gpu", GPUBrand);
 	cog->SetSessionProperty("c3d.device.os", FPlatformMisc::GetOSVersion());
 #endif
 
+
 	const FPlatformMemoryConstants& MemoryConstants = FPlatformMemory::GetConstants();
 	cog->SetSessionProperty("c3d.device.memory", (int)MemoryConstants.TotalPhysicalGB);
+
+	FString HMDName = GetSpecificHMDFromHardware(GPUBrand, HMDDeviceName, CPUChipset, (int)MemoryConstants.TotalPhysicalGB);
+	cog->SetSessionProperty("c3d.device.hmd.type", HMDName);
+
+}
+
+FString FUtil::GetSpecificHMDFromHardware(FString GPUBrand, FString HMDDeviceName, FString CPUChipset, int32 DeviceMemory)
+{
+	if (GPUBrand.Contains(TEXT("Adreno"), ESearchCase::IgnoreCase))
+	{
+		if (GPUBrand.Contains(TEXT("740"), ESearchCase::IgnoreCase))
+		{
+			if (CPUChipset.Contains(TEXT("eureka"), ESearchCase::IgnoreCase))
+			{
+				return TEXT("Meta Quest 3");
+			}
+			else if (CPUChipset.Contains(TEXT("panther"), ESearchCase::IgnoreCase))
+			{
+				return TEXT("Meta Quest 3S");
+			}
+			return TEXT("Meta Quest 3 -");
+		}
+
+		else if (GPUBrand.Contains(TEXT("650"), ESearchCase::IgnoreCase))
+		{
+			if ((HMDDeviceName.Contains(TEXT("Oculus"), ESearchCase::IgnoreCase)) || (HMDDeviceName.Contains(TEXT("Quest"), ESearchCase::IgnoreCase))
+				|| (HMDDeviceName.Contains(TEXT("Meta"), ESearchCase::IgnoreCase)))
+			{
+				if (DeviceMemory == 12)
+				{
+					return TEXT("Meta Quest Pro");
+				}
+				else if (DeviceMemory == 6)
+				{
+					return TEXT("Meta Quest 2");
+				}
+
+				return TEXT("Meta Quest 2 -");
+			}
+			else if (HMDDeviceName.Contains(TEXT("Pico"), ESearchCase::IgnoreCase))
+			{
+				if (DeviceMemory == 8)
+				{
+					return TEXT("PICO 4");
+				}
+				else if (DeviceMemory == 6)
+				{
+					return TEXT("PICO Neo 3");
+				}
+				return TEXT("PICO 4 -");
+			}
+			else if ((HMDDeviceName.Contains(TEXT("Vive"), ESearchCase::IgnoreCase)) || (HMDDeviceName.Contains(TEXT("Wave"), ESearchCase::IgnoreCase)))
+			{
+				if (DeviceMemory == 8)
+				{
+					return TEXT("HTC Vive Focus 3");
+				}
+				else if (DeviceMemory == 12)
+				{
+					return TEXT("HTC Vive XR Elite");
+				}
+				
+				return TEXT("HTC Vive Focus 3 -");
+			}
+
+		}
+
+		else if (GPUBrand.Contains(TEXT("630"), ESearchCase::IgnoreCase))
+		{
+			return TEXT("PICO Neo 2");
+		}
+
+		else if (GPUBrand.Contains(TEXT("540"), ESearchCase::IgnoreCase))
+		{
+			return TEXT("Meta Quest");
+		}
+	}
+
+
+	// Apple Devices
+	else if (GPUBrand.Contains(TEXT("Apple M2"), ESearchCase::IgnoreCase))
+	{
+		return TEXT("Apple Vision Pro");
+	}
+
+	// PC-tethered VR Headsets (Generalized)
+	else if (GPUBrand.Contains(TEXT("NVIDIA"), ESearchCase::IgnoreCase) ||
+		GPUBrand.Contains(TEXT("AMD"), ESearchCase::IgnoreCase))
+	{
+		return TEXT("PC-tethered VR Headset");
+	}
+
+	// Unknown or Unlisted Devices
+	return TEXT("Unknown or Unsupported HMD");
 }
