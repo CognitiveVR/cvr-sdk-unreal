@@ -152,7 +152,7 @@ void FUtil::SetSessionProperties()
 	const FPlatformMemoryConstants& MemoryConstants = FPlatformMemory::GetConstants();
 	cog->SetSessionProperty("c3d.device.memory", (int)MemoryConstants.TotalPhysicalGB);
 
-	FString HMDName = GetSpecificHMDFromHardware(GPUBrand, FPlatformMisc::GetCPUBrand(), CPUChipset, (int)MemoryConstants.TotalPhysicalGB);
+	FString HMDName = GetSpecificHMDFromHardware(GPUBrand, HMDDeviceName, CPUChipset, (int)MemoryConstants.TotalPhysicalGB);
 	cog->SetSessionProperty("c3d.device.hmd.type", HMDName);
 
 }
@@ -176,7 +176,8 @@ FString FUtil::GetSpecificHMDFromHardware(FString GPUBrand, FString HMDDeviceNam
 
 		else if (GPUBrand.Contains(TEXT("650"), ESearchCase::IgnoreCase))
 		{
-			if ((HMDDeviceName.Contains(TEXT("Oculus"), ESearchCase::IgnoreCase)) || (HMDDeviceName.Contains(TEXT("Quest"), ESearchCase::IgnoreCase)))
+			if ((HMDDeviceName.Contains(TEXT("Oculus"), ESearchCase::IgnoreCase)) || (HMDDeviceName.Contains(TEXT("Quest"), ESearchCase::IgnoreCase))
+				|| (HMDDeviceName.Contains(TEXT("Meta"), ESearchCase::IgnoreCase)))
 			{
 				if (DeviceMemory == 12)
 				{
@@ -201,7 +202,7 @@ FString FUtil::GetSpecificHMDFromHardware(FString GPUBrand, FString HMDDeviceNam
 				}
 				return TEXT("PICO 4 -");
 			}
-			else if (HMDDeviceName.Contains(TEXT("Vive"), ESearchCase::IgnoreCase))
+			else if ((HMDDeviceName.Contains(TEXT("Vive"), ESearchCase::IgnoreCase)) || (HMDDeviceName.Contains(TEXT("Wave"), ESearchCase::IgnoreCase)))
 			{
 				if (DeviceMemory == 8)
 				{
