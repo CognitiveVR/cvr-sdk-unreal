@@ -192,6 +192,10 @@ FString FUtil::GetSpecificHMDFromHardware(FString GPUBrand, FString HMDDeviceNam
 			}
 			else if (HMDDeviceName.Contains(TEXT("Pico"), ESearchCase::IgnoreCase))
 			{
+				if (FPlatformMisc::GetCPUBrand().Contains(TEXT("3"), ESearchCase::IgnoreCase) && DeviceMemory == 8)
+				{
+					return TEXT("PICO Neo 3 Pro Eye");
+				}
 				if (DeviceMemory == 8)
 				{
 					return TEXT("PICO 4");
