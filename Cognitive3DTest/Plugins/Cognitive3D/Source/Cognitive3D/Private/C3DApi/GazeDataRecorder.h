@@ -34,6 +34,8 @@ class UCognitive3DBlueprints;
 		float LastSendTime = -60;
 		int32 GazeBatchSize = 100;
 
+		float PlayerSnapshotInterval = 0.1f;
+
 		//send all outstanding gaze data to Cognitive dashboard
 		UFUNCTION()
 			void SendData(bool copyDataToCache);

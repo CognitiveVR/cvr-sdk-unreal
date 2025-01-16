@@ -187,8 +187,7 @@ void FGazeDataRecorder::SendData(bool copyDataToCache)
 		dataArray.Add(snapshotValue);
 	}
 
-	//TODO move the PlayerSnapshotInterval const somewhere actually accessible
-	wholeObj->SetNumberField("interval", 0.1f);
+	wholeObj->SetNumberField("interval", PlayerSnapshotInterval);
 
 	wholeObj->SetArrayField("data", dataArray);
 

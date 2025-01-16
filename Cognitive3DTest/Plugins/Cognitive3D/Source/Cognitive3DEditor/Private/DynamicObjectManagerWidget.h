@@ -53,7 +53,6 @@ public:
 
 	FReply ValidateAndRefresh();
 
-	//TODO make export path configurable here
 	void OnExportPathChanged(const FText& Text);
 
 	FReply UploadSelectedDynamicObjects();
