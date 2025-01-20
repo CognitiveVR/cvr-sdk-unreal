@@ -1289,9 +1289,6 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest(FString LevelName)
 	return FReply::Handled();
 }
 
-//TODO explicitly define where the dynamic objects manifest should be uploaded to
-//TODO probably add a 'scene' text field to the dynamic object window
-//can this be a generated dropdown, to avoid 
 FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(FString LevelName, TArray<UDynamicObject*> dynamics)
 {
 	bool wroteAnyObjects = false;
@@ -1754,7 +1751,7 @@ FReply FCognitiveEditorTools::UploadDynamics(FString LevelName)
 	ReadSceneDataFromFile();
 
 	GLog->Log("FCognitiveEditorTools::UploadDynamics found " + FString::FromInt(dynamicNames.Num()) + " exported dynamic objects");
-	//TODO should pass name into the function
+	
 	TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(LevelName);
 
 	if (!currentSceneData.IsValid())
@@ -2399,8 +2396,6 @@ void FCognitiveEditorTools::UploadFromDirectory(FString LevelName, FString url, 
 
 void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
-	//TODO disable upload button if settings.json doesn't exist
-	//TODO finish scene setup window - it freezes after upload completes (successfully)
 	if (bWasSuccessful)
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted bWasSuccessful response code " + FString::FromInt(Response->GetResponseCode()));

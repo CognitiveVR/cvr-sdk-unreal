@@ -1741,7 +1741,7 @@ EVisibility SSceneSetupWidget::GetAppendedInputsFoundHidden() const
 	}
 
 	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
-	//TODO IMPROVEMENT instead of hard coding strings here, should append a list from the resources folder
+	
 	TArray<FString> actionMapping;
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
@@ -1766,7 +1766,7 @@ EVisibility SSceneSetupWidget::GetAppendedInputsFoundVisibility() const
 	}
 
 	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
-	//TODO IMPROVEMENT instead of hard coding strings here, should append a list from the resources folder
+	
 	TArray<FString> actionMapping;
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
@@ -1787,7 +1787,6 @@ FReply SSceneSetupWidget::AppendInputs()
 {
 	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
 	
-	//TODO IMPROVEMENT instead of hard coding strings here, should append a list from the resources folder
 
 	TArray<FString> actionMapping;
 	TArray<FString> axisMapping;
