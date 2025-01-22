@@ -15,7 +15,7 @@
 //#include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/HeadMountedDisplay/Public/IXRTrackingSystem.h"
 #include "Widgets/Text/STextBlock.h"
-#if defined TOBII_EYETRACKING_ACTIVE
+#if defined INCLUDE_TOBII_PLUGIN
 #include "TobiiTypes.h"
 #include "ITobiiCore.h"
 #include "ITobiiEyetracker.h"
@@ -30,13 +30,13 @@
 #include "SRanipalEye.h"
 #include "SRanipalEye_Core.h"
 #endif
-#if defined VARJOEYETRACKER_API
+#if defined INCLUDE_VARJO_PLUGIN
 #include "VarjoEyeTrackerFunctionLibrary.h"
 #endif
-#if defined PICOMOBILE_API
+#if defined INCLUDE_PICOMOBILE_PLUGIN
 #include "PicoBlueprintFunctionLibrary.h"
 #endif
-#if defined HPGLIA_API
+#if defined INCLUDE_HPGLIA_PLUGIN
 #include "HPGliaClient.h"
 #endif
 #if defined OPENXR_EYETRACKING

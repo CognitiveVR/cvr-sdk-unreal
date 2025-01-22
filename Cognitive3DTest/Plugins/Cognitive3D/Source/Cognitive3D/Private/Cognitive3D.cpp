@@ -1156,17 +1156,17 @@ FString FAnalyticsProviderCognitive3D::GetAttributionParameters()
 
 bool FAnalyticsProviderCognitive3D::HasEyeTrackingSDK()
 {
-#if defined TOBII_EYETRACKING_ACTIVE
+#if defined INCLUDE_TOBII_PLUGIN
 	return true;
 #elif defined WAVEVR_EYETRACKING
 	return true;
 #elif defined OPENXR_EYETRACKING
 	return true;
-#elif defined HPGLIA_API
+#elif defined INCLUDE_HPGLIA_PLUGIN
 	return true;
-#elif defined PICOMOBILE_API
+#elif defined INCLUDE_PICOMOBILE_PLUGIN
 	return true;
-#elif defined VARJOEYETRACKER_API
+#elif defined INCLUDE_VARJO_PLUGIN
 	return true;
 #elif defined SRANIPAL_1_3_API
 	return true;

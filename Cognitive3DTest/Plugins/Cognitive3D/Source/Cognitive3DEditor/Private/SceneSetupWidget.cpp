@@ -1807,7 +1807,7 @@ FReply SSceneSetupWidget::AppendInputs()
 		return FReply::Handled();
 	}
 
-#if defined PICOMOBILE_API
+#if defined INCLUDE_PICOMOBILE_PLUGIN
 	actionMapping.Add("(ActionName=\"C3D_LeftTrigger\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_L_TriggerAxis)");
 	actionMapping.Add("(ActionName=\"C3D_RightGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_R_LGrip)");
 	actionMapping.Add("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_L_RGrip)");

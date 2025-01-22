@@ -30,7 +30,7 @@ void UGliaSensorRecorder::BeginPlay()
 
 void UGliaSensorRecorder::StartListenForTimers()
 {
-#if defined HPGLIA_API
+#if defined INCLUDE_HPGLIA_PLUGIN
 	GetWorld()->GetTimerManager().SetTimer(AutoSendHandle1000MS, this, &UGliaSensorRecorder::TickSensors1000MS, 1, true);
 	GetWorld()->GetTimerManager().SetTimer(AutoSendHandle100MS, this, &UGliaSensorRecorder::TickSensors100MS, 0.1, true);
 #endif
@@ -38,7 +38,7 @@ void UGliaSensorRecorder::StartListenForTimers()
 
 void UGliaSensorRecorder::StopListenForTimers()
 {
-#if defined HPGLIA_API
+#if defined INCLUDE_HPGLIA_PLUGIN
 	GetWorld()->GetTimerManager().ClearTimer(AutoSendHandle1000MS);
 	GetWorld()->GetTimerManager().ClearTimer(AutoSendHandle100MS);
 #endif
@@ -54,7 +54,7 @@ void UGliaSensorRecorder::EndPlay(EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-#if defined HPGLIA_API
+#if defined INCLUDE_HPGLIA_PLUGIN
 void UGliaSensorRecorder::TickSensors1000MS()
 {
 	int32 OutHeartRate = 0;
