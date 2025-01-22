@@ -1342,6 +1342,15 @@ void FAnalyticsProviderCognitive3D::HandleApplicationWillEnterBackground()
 
 void FAnalyticsProviderCognitive3D::SetTrackingScene(FString levelName)
 {
+	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
+	FString previousSceneName = LastSceneData->Name;
+	properties->SetStringField("Scene Name", FString(LastSceneData->Name));
+	properties->SetStringField("Scene Id", FString(LastSceneData->Id));
+	properties->SetStringField("Destination Scene Name", levelName);
+	float duration = FUtil::GetTimestamp() - SceneStartTime;
+	properties->SetNumberField("Duration", duration);
+	customEventRecorder->Send("c3d.SceneUnloaded", properties);
+
 	FlushEvents();
 	TSharedPtr<FSceneData> data = GetSceneData(levelName);
 	if (data.IsValid())
@@ -1358,5 +1367,10 @@ void FAnalyticsProviderCognitive3D::SetTrackingScene(FString levelName)
 		LastSceneData = data;
 		SceneStartTime = FUtil::GetTimestamp();
 	}
-	//todo consider events for arrival/departure from scenes here
+
+	properties->SetStringField("Scene Name", FString(data->Name));
+	properties->SetStringField("Scene Id", FString(data->Id));
+	properties->SetStringField("Previous Scene Name", FString(previousSceneName));
+	properties->SetNumberField("Duration", duration);
+	customEventRecorder->Send("c3d.SceneLoaded", properties);
 }
