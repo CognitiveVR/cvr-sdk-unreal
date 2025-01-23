@@ -213,7 +213,7 @@ void FCustomEventRecorder::SendData(bool copyDataToCache)
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
 
-	wholeObj->SetStringField("userid", cog->GetUserID());
+	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	if (!cog->LobbyId.IsEmpty())
 	{
 		wholeObj->SetStringField("lobbyId", cog->LobbyId);

@@ -32,15 +32,18 @@ void UBoundaryEvent::BeginPlay()
 		{
 			if (RoomSize.X == RoomSize.Y) //stationary, both dimensions exactly the same. UE5 shows 1.21
 			{
-				cognitive->SetSessionProperty(TEXT("c3d.boundaryType"), "Stationary");
+				FString boundaryType = TEXT("Stationary");
+				cognitive->SetSessionProperty(TEXT("c3d.boundaryType"), boundaryType);
 			}
 			else if (RoomSize.X > 0 && RoomSize.Y > 0) //room scale boundary
 			{
-				cognitive->SetSessionProperty(TEXT("c3d.boundaryType"), "Room Scale");
+				FString boundaryType = TEXT("Room Scale");
+				cognitive->SetSessionProperty(TEXT("c3d.boundaryType"), boundaryType);
 			}
 			else //stationary boundary
 			{
-				cognitive->SetSessionProperty(TEXT("c3d.boundaryType"), "Stationary");
+				FString boundaryType = TEXT("Stationary");
+				cognitive->SetSessionProperty(TEXT("c3d.boundaryType"), boundaryType);
 			}
 		}
 

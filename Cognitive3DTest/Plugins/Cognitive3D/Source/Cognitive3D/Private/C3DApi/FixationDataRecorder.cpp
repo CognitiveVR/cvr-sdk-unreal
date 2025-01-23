@@ -65,7 +65,7 @@ void FFixationDataRecorder::SendData(bool copyDataToCache)
 
 	TSharedPtr<FJsonObject> wholeObj = MakeShareable(new FJsonObject);
 
-	wholeObj->SetStringField("userid", cog->GetUserID());
+	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
 	wholeObj->SetNumberField("part", jsonPart);

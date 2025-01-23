@@ -3,6 +3,8 @@
 */
 
 #include "CognitiveEditorTools.h"
+#include "Kismet2/KismetEditorUtilities.h"
+
 
 #include "Cognitive3DSettings.h"
 #include "CognitiveEditorData.h"
@@ -419,6 +421,76 @@ FProcHandle FCognitiveEditorTools::ExportAllDynamics()
 		}
 	}
 
+	//the dynamic we are looking for is actually on a blueprint in the project
+	//find the blueprint and get its dynamic object
+
+	for (const TSharedPtr<FDynamicData>& data : SceneDynamics)
+	{
+		// Iterate over all blueprints in the project
+		for (TObjectIterator<UBlueprint> It; It; ++It)
+		{
+			UBlueprint* Blueprint = *It;
+			if (Blueprint->GetName() == data->Name)
+			{
+				// Get the generated class from the blueprint
+				UClass* BlueprintClass = Blueprint->GeneratedClass;
+				if (BlueprintClass)
+				{
+
+					if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
+					{
+
+						// Now, get the default object and access its components
+						AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+						if (DefaultActor)
+						{
+
+							// Use Simple Construction Script to inspect the blueprint's components
+							if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+							{
+								if (BPGeneratedClass->SimpleConstructionScript)
+								{
+									const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+
+									// Iterate over the SCS nodes to find UDynamicObject components
+									for (USCS_Node* SCSNode : SCSNodes)
+									{
+										if (SCSNode && SCSNode->ComponentTemplate)
+										{
+											UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
+
+											// Check if the component is a UDynamicObject
+											UDynamicObject* dynamicComponent = Cast<UDynamicObject>(ComponentTemplate);
+
+											if (dynamicComponent == NULL)
+											{
+												continue;
+											}
+											if (meshNames.Contains(dynamicComponent->MeshName))
+											{
+												continue;
+											}
+											bool exportActor = false;
+											if (data->MeshName == dynamicComponent->MeshName)
+											{
+												exportActor = true;
+											}
+											if (exportActor)
+											{
+												exportObjects.Add(dynamicComponent);
+												meshNames.Add(dynamicComponent->MeshName);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	if (meshNames.Num() == 0)
 	{
 		return fph;
@@ -460,7 +532,7 @@ FReply FCognitiveEditorTools::ExportSelectedDynamics()
 	return FReply::Handled();
 }
 
-FProcHandle FCognitiveEditorTools::ExportDynamicData(TArray< TSharedPtr<FDynamicData>> dynamicData)
+FProcHandle FCognitiveEditorTools::ExportDynamicData(TArray<TSharedPtr<FDynamicData>> dynamicData)
 {
 	//find all meshes in scene that are contained in the dynamicData list
 
@@ -502,6 +574,78 @@ FProcHandle FCognitiveEditorTools::ExportDynamicData(TArray< TSharedPtr<FDynamic
 		}
 	}
 
+	//the dynamic we are looking for is actually on a blueprint in the project
+	//find the blueprint and get its dynamic object
+
+	for (const TSharedPtr<FDynamicData>& data : dynamicData)
+	{
+		// Iterate over all blueprints in the project
+		for (TObjectIterator<UBlueprint> It; It; ++It)
+		{
+			UBlueprint* Blueprint = *It;
+			if (Blueprint->GetName() == data->Name)
+			{
+				// Get the generated class from the blueprint
+				UClass* BlueprintClass = Blueprint->GeneratedClass;
+				if (BlueprintClass)
+				{
+
+					if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
+					{
+
+						// Now, get the default object and access its components
+						AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+						if (DefaultActor)
+						{
+
+							// Use Simple Construction Script to inspect the blueprint's components
+							if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+							{
+								if (BPGeneratedClass->SimpleConstructionScript)
+								{
+									const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+
+									// Iterate over the SCS nodes to find UDynamicObject components
+									for (USCS_Node* SCSNode : SCSNodes)
+									{
+										if (SCSNode && SCSNode->ComponentTemplate)
+										{
+											UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
+
+											// Check if the component is a UDynamicObject
+											UDynamicObject* dynamicComponent = Cast<UDynamicObject>(ComponentTemplate);
+
+											if (dynamicComponent == NULL)
+											{
+												continue;
+											}
+											if (meshNames.Contains(dynamicComponent->MeshName))
+											{
+												continue;
+											}
+											bool exportActor = false;
+											if (data->MeshName == dynamicComponent->MeshName)
+											{
+												exportActor = true;
+											}
+											if (exportActor)
+											{
+												SelectionSetCache.Add(dynamicComponent);
+												meshNames.Add(dynamicComponent->MeshName);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	//make sure to do this ^^ for exportall as well
+
 	return ExportDynamicObjectArray(SelectionSetCache);
 
 	//return FReply::Handled();
@@ -509,6 +653,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicData(TArray< TSharedPtr<FDynamic
 
 FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObject*> exportObjects)
 {
+
 	FProcHandle fph;
 
 	FVector originalLocation;
@@ -529,24 +674,130 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		{
 			continue;
 		}
+		AActor* Owner = NULL;
+		bool isBlueprint = false;
+		UMeshComponent* bpMesh = NULL;
 		if (exportObjects[i]->GetOwner() == NULL)
 		{
-			continue;
+			//if the owner is null, the object is likely a blueprint in the project
+			//find the blueprint and get its dynamic object
+
+			for (const TSharedPtr<FDynamicData>& data : SceneDynamics)
+			{
+				// Iterate over all blueprints in the project
+				for (TObjectIterator<UBlueprint> It; It; ++It)
+				{
+					UBlueprint* Blueprint = *It;
+					if (exportObjects[i]->MeshName == data->MeshName)
+					{
+						if (Blueprint->GetName() == data->Name)
+						{
+							// Get the generated class from the blueprint
+							UClass* BlueprintClass = Blueprint->GeneratedClass;
+							if (BlueprintClass)
+							{
+
+								if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
+								{
+
+									// Now, get the default object and access its components
+									AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+									if (DefaultActor)
+									{
+
+										// Use Simple Construction Script to inspect the blueprint's components
+										if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+										{
+											if (BPGeneratedClass->SimpleConstructionScript)
+											{
+												const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+
+												// Iterate over the SCS nodes to find UDynamicObject components
+												for (USCS_Node* SCSNode : SCSNodes)
+												{
+													if (SCSNode && SCSNode->ComponentTemplate)
+													{
+														UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
+
+
+														//check if ComponentTemplate is a mesh
+														UMeshComponent* MeshComponent = Cast<UMeshComponent>(ComponentTemplate);
+														//verify that the mesh component is valid
+														if (MeshComponent == NULL)
+														{
+															continue;
+														}
+														//if its valid, get the attached child component and log them
+														if (MeshComponent)
+														{
+															//const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+
+															// Check its child nodes
+															const TArray<USCS_Node*>& ChildNodes = SCSNode->GetChildNodes();
+															for (USCS_Node* ChildNode : ChildNodes)
+															{
+																if (ChildNode && ChildNode->ComponentTemplate)
+																{
+																	// Assuming the dynamic object is of type UDynamicObjectComponent
+																	UDynamicObject* DynamicObjectComponent = Cast<UDynamicObject>(ChildNode->ComponentTemplate);
+																	if (DynamicObjectComponent)
+																	{
+																		// Do something with the dynamic object component
+																		if (DynamicObjectComponent->MeshName == data->MeshName)
+																		{
+																			Owner = DefaultActor;
+																			isBlueprint = true;
+																			bpMesh = MeshComponent;
+																		}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			//both the regular owner and the found owners were null
+			if (Owner == NULL)
+			{
+				continue;
+			}
+
 		}
 		if (exportObjects[i]->MeshName.IsEmpty())
 		{
+			UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray export object mesh name is empty"));
 			continue;
 		}
 
 		DynamicMeshNames.Add(exportObjects[i]->MeshName);
-
-		originalLocation = exportObjects[i]->GetOwner()->GetActorLocation();
-		originalRotation = exportObjects[i]->GetOwner()->GetActorRotation();
-		originalScale = exportObjects[i]->GetOwner()->GetActorScale();
-
-		exportObjects[i]->GetOwner()->SetActorLocation(FVector::ZeroVector);
-		exportObjects[i]->GetOwner()->SetActorRotation(FQuat::Identity);
-		exportObjects[i]->GetOwner()->SetActorScale3D(FVector::OneVector);
+		if (isBlueprint)
+		{
+			originalLocation = Owner->GetActorLocation();
+			originalRotation = Owner->GetActorRotation();
+			originalScale = Owner->GetActorScale();
+			Owner->SetActorLocation(FVector::ZeroVector);
+			Owner->SetActorRotation(FQuat::Identity);
+			Owner->SetActorScale3D(FVector::OneVector);
+		}
+		else
+		{
+			originalLocation = exportObjects[i]->GetOwner()->GetActorLocation();
+			originalRotation = exportObjects[i]->GetOwner()->GetActorRotation();
+			originalScale = exportObjects[i]->GetOwner()->GetActorScale();
+			exportObjects[i]->GetOwner()->SetActorLocation(FVector::ZeroVector);
+			exportObjects[i]->GetOwner()->SetActorRotation(FQuat::Identity);
+			exportObjects[i]->GetOwner()->SetActorScale3D(FVector::OneVector);
+		}
+		
 
 		FString justDirectory = GetDynamicsExportDirectory() + "/" + exportObjects[i]->MeshName;
 		FString tempObject;
@@ -568,163 +819,277 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			PlatformFile.CreateDirectory(*justDirectory);
 		}
 
-
-		GEditor->SelectActor(exportObjects[i]->GetOwner(), true, false, true);
+		if (!isBlueprint)
+		{
+			GEditor->SelectActor(exportObjects[i]->GetOwner(), true, false, true);
+		}
 		ActorsExported++;
 		GLog->Log("FCognitiveEditorTools::ExportDynamicObjectArray dynamic output directory " + tempObject);
 
 
-
-		int DynamicObjectCount = 0;
-		//check if this D.O. is on an object with another D.O.
-		for (UActorComponent* Component : exportObjects[i]->GetOwner()->GetComponents())
+		if (isBlueprint)
 		{
-			if (Component->IsA(UDynamicObject::StaticClass()))
+			UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray isBlueprint: EXPORTING NOW"));
+			
+			//use GLTFExporter Plugin
+			// Create export options
+			UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+			// Set custom export settings
+			ExportOptions->ExportUniformScale = 1.0f;
+			ExportOptions->bExportPreviewMesh = true;
+
+			// Texture compression settings
+			ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+			// Create export task
+			UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+			ExportTask->Filename = *tempObject;
+			if (UStaticMeshComponent* staticBpMeshComp = Cast<UStaticMeshComponent>(bpMesh))
 			{
-				DynamicObjectCount++;
+				ExportTask->Object = staticBpMeshComp->GetStaticMesh();
+			}
+			else if (USkeletalMeshComponent* skelBpMeshComp = Cast<USkeletalMeshComponent>(bpMesh))
+			{
+				ExportTask->Object = skelBpMeshComp->SkeletalMesh;
+			}
+			ExportTask->bSelected = false;
+			ExportTask->bReplaceIdentical = true;
+			ExportTask->bPrompt = false;
+			ExportTask->bAutomated = true;
+			ExportTask->Options = ExportOptions;
+
+			// Perform export
+			ExportTask->Exporter->RunAssetExportTask(ExportTask);
+		}
+		else
+		{
+			int DynamicObjectCount = 0;
+			//check if this D.O. is on an object with another D.O.
+			for (UActorComponent* Component : exportObjects[i]->GetOwner()->GetComponents())
+			{
+				if (Component->IsA(UDynamicObject::StaticClass()))
+				{
+					DynamicObjectCount++;
+				}
+			}
+
+			if (DynamicObjectCount > 1) //multiple D.O.s //shouoldnt we then iterate through each mesh with a D.O. and export those?
+			{
+
+				UE_LOG(LogTemp, Warning, TEXT("FOUND MULTIPLE DYNAMIC OBJECTS"));
+
+				//if so, we check that each D.O. has a mesh parents
+				UMeshComponent* ParentMesh = Cast<UMeshComponent>(exportObjects[i]->GetAttachParent());
+
+				if (ParentMesh)
+				{
+					// Check for Static Mesh Component
+					UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(ParentMesh);
+					if (StaticMeshComp && StaticMeshComp->GetStaticMesh())
+					{
+						UStaticMesh* StaticMeshAsset = StaticMeshComp->GetStaticMesh();
+						// Do something with StaticMeshAsset
+						//use GLTFExporter Plugin
+
+						// Create export options
+						UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+						// Set custom export settings
+						ExportOptions->ExportUniformScale = 1.0f;
+						ExportOptions->bExportPreviewMesh = true;
+
+						// Texture compression settings
+						ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+						// Create export task
+						UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+						ExportTask->Filename = *tempObject;
+						ExportTask->Object = StaticMeshAsset;
+						ExportTask->bSelected = false;
+						ExportTask->bReplaceIdentical = true;
+						ExportTask->bPrompt = false;
+						ExportTask->bAutomated = true;
+						ExportTask->Options = ExportOptions;
+
+						// Perform export
+						ExportTask->Exporter->RunAssetExportTask(ExportTask);
+					}
+
+					// Check for Skeletal Mesh Component
+					USkeletalMeshComponent* SkeletalMeshComp = Cast<USkeletalMeshComponent>(ParentMesh);
+					if (SkeletalMeshComp && SkeletalMeshComp->SkeletalMesh)
+					{
+						USkeletalMesh* SkeletalMeshAsset = SkeletalMeshComp->SkeletalMesh;
+						// Do something with SkeletalMeshAsset
+
+						//use GLTFExporter Plugin
+
+						// Create export options
+						UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+						// Set custom export settings
+						ExportOptions->ExportUniformScale = 1.0f;
+						ExportOptions->bExportPreviewMesh = true;
+
+						// Texture compression settings
+						ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+						// Create export task
+						UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+						ExportTask->Filename = *tempObject;
+						ExportTask->Object = SkeletalMeshAsset;
+						ExportTask->bSelected = false;
+						ExportTask->bReplaceIdentical = true;
+						ExportTask->bPrompt = false;
+						ExportTask->bAutomated = true;
+						ExportTask->Options = ExportOptions;
+
+						// Perform export
+						ExportTask->Exporter->RunAssetExportTask(ExportTask);
+					}
+
+				}
+				else //incorrect configuration of multiple D.O.s
+				{
+					FSuppressableWarningDialog::FSetupInfo DOExportSettingsInfo(LOCTEXT("DynamicObjectExportSettingsBody", "You are exporting a dynamic object on an actor with multiple dynamic objects, but they are not configured correctly. If you want to track multiple meshes on an actor with multiple dynamic objects, make sure each dynamic object is a child of its respective mesh"), LOCTEXT("DynamicObjectExportSettingsTitle", "Incorrect Dynamic Object Export Configuration"), "ExportSelectedDynamicsObjectsBody");
+					DOExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
+					DOExportSettingsInfo.CheckBoxText = FText();
+					FSuppressableWarningDialog DOExportSelectedDynamicMeshes(DOExportSettingsInfo);
+					DOExportSelectedDynamicMeshes.ShowModal();
+
+					continue;
+				}
+			}
+			else //only 1 D.O. proceed as normal
+			{
+				//if theres only 1 D.O. on the object, continue normally
+
+				//pawn export process needs to be able to group meshes somehow on D.O.s with 1 D.O. and multiple meshes
+				if (exportObjects[i]->GetOwner()->IsA(APawn::StaticClass()))
+				{
+					UE_LOG(LogTemp, Warning, TEXT("FOUND PAWN CLASS, EXPORTING MESH"));
+					UMeshComponent* pawnMesh = Cast<UMeshComponent>(exportObjects[i]->GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
+					TArray<UActorComponent*> pawnMeshes;
+					exportObjects[i]->GetOwner()->GetComponents(UMeshComponent::StaticClass(), pawnMeshes);
+
+					TArray< UMeshComponent*> meshes;
+					for (int32 j = 0; j < pawnMeshes.Num(); j++)
+					{
+						UStaticMeshComponent* mesh = Cast<UStaticMeshComponent>(pawnMeshes[j]);
+						if (mesh == NULL)
+						{
+							continue;
+						}
+
+						ULevel* componentLevel = pawnMeshes[j]->GetComponentLevel();
+						if (componentLevel->bIsVisible == 0)
+						{
+							continue;
+							//not visible! possibly on a disabled sublevel
+						}
+
+						meshes.Add(mesh);
+					}
+
+					TArray<UActorComponent*> actorSkeletalComponents;
+					exportObjects[i]->GetOwner()->GetComponents(USkeletalMeshComponent::StaticClass(), actorSkeletalComponents);
+					for (int32 j = 0; j < actorSkeletalComponents.Num(); j++)
+					{
+						USkeletalMeshComponent* mesh = Cast<USkeletalMeshComponent>(actorSkeletalComponents[j]);
+						if (mesh == NULL)
+						{
+							continue;
+						}
+
+						ULevel* componentLevel = actorSkeletalComponents[j]->GetComponentLevel();
+						if (componentLevel->bIsVisible == 0)
+						{
+							continue;
+							//not visible! possibly on a disabled sublevel
+						}
+
+						meshes.Add(mesh);
+					}
+
+					//setup temp meshes package
+					UPackage* NewPackageName = CreatePackage(TEXT("/Game/TempMesh"));
+
+					if (meshes.Num() > 0)
+					{
+						//take the skeletal meshes that we set up earlier and use them to create a static mesh
+						UStaticMesh* tmpStatMesh = MeshUtilities.ConvertMeshesToStaticMesh(meshes, exportObjects[i]->GetOwner()->GetTransform(), NewPackageName->GetName());
+
+						//use GLTFExporter Plugin
+
+						// Create export options
+						UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+						// Set custom export settings
+						ExportOptions->ExportUniformScale = 1.0f;
+						ExportOptions->bExportPreviewMesh = true;
+
+						// Texture compression settings
+						ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+						// Create export task
+						UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+						ExportTask->Filename = *tempObject;
+						ExportTask->Object = tmpStatMesh;
+						ExportTask->bSelected = false;
+						ExportTask->bReplaceIdentical = true;
+						ExportTask->bPrompt = false;
+						ExportTask->bAutomated = true;
+						ExportTask->Options = ExportOptions;
+
+						// Perform export
+						ExportTask->Exporter->RunAssetExportTask(ExportTask);
+
+						TempAssetsToDelete.Add(tmpStatMesh);
+					}
+				}
+				else
+				{
+					//exports the currently selected actor(s)
+					UE_LOG(LogTemp, Warning, TEXT("DOING REGULAR MAP EXPORT"));
+
+					//use GLTFExporter Plugin
+
+					// Create export options
+					UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
+
+					// Set custom export settings
+					ExportOptions->ExportUniformScale = 1.0f;
+					ExportOptions->bExportPreviewMesh = true;
+
+					// Texture compression settings
+					ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+
+					// Create export task
+					UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
+
+					ExportTask->Object = GWorld;
+					ExportTask->Exporter = NewObject<UGLTFLevelExporter>();
+					ExportTask->Filename = *tempObject;
+					ExportTask->bSelected = true;
+					ExportTask->bReplaceIdentical = true;
+					ExportTask->bPrompt = false;
+					ExportTask->bAutomated = true;
+					ExportTask->Options = ExportOptions;
+
+					// Perform export
+					ExportTask->Exporter->RunAssetExportTask(ExportTask);
+				}
 			}
 		}
 
-		if (DynamicObjectCount > 1) //multiple D.O.s
+		if (!isBlueprint)
 		{
-
-			UE_LOG(LogTemp, Warning, TEXT("FOUND MULTIPLE DYNAMIC OBJECTS"));
-
-			//if so, we check that each D.O. has a mesh parents
-			UMeshComponent* ParentMesh = Cast<UMeshComponent>(exportObjects[i]->GetAttachParent());
-
-			if (ParentMesh)
-			{
-				// Check for Static Mesh Component
-				UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(ParentMesh);
-				if (StaticMeshComp && StaticMeshComp->GetStaticMesh())
-				{
-					UStaticMesh* StaticMeshAsset = StaticMeshComp->GetStaticMesh();
-					// Do something with StaticMeshAsset
-					UExporter::ExportToFile(StaticMeshAsset, NULL, *tempObject, true);
-				}
-
-				// Check for Skeletal Mesh Component
-				USkeletalMeshComponent* SkeletalMeshComp = Cast<USkeletalMeshComponent>(ParentMesh);
-				if (SkeletalMeshComp && SkeletalMeshComp->SkeletalMesh)
-				{
-					USkeletalMesh* SkeletalMeshAsset = SkeletalMeshComp->SkeletalMesh;
-					// Do something with SkeletalMeshAsset
-					UExporter::ExportToFile(SkeletalMeshAsset, NULL, *tempObject, true);
-				}
-
-			}
-			else //incorrect configuration of multiple D.O.s
-			{
-				FSuppressableWarningDialog::FSetupInfo DOExportSettingsInfo(LOCTEXT("DynamicObjectExportSettingsBody", "You are exporting a dynamic object on an actor with multiple dynamic objects, but they are not configured correctly. If you want to track multiple meshes on an actor with multiple dynamic objects, make sure each dynamic object is a child of its respective mesh"), LOCTEXT("DynamicObjectExportSettingsTitle", "Incorrect Dynamic Object Export Configuration"), "ExportSelectedDynamicsObjectsBody");
-				DOExportSettingsInfo.ConfirmText = LOCTEXT("Ok", "Ok");
-				DOExportSettingsInfo.CheckBoxText = FText();
-				FSuppressableWarningDialog DOExportSelectedDynamicMeshes(DOExportSettingsInfo);
-				DOExportSelectedDynamicMeshes.ShowModal();
-
-				continue;
-			}
+			//reset dynamic back to original transform
+			exportObjects[i]->GetOwner()->SetActorLocation(originalLocation);
+			exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
+			exportObjects[i]->GetOwner()->SetActorScale3D(originalScale);
 		}
-		else //only 1 D.O. proceed as normal
-		{
-			//if theres only 1 D.O. on the object, continue normally
-
-			//pawn export process needs to be able to group meshes somehow on D.O.s with 1 D.O. and multiple meshes
-			if (exportObjects[i]->GetOwner()->IsA(APawn::StaticClass()))
-			{
-				UE_LOG(LogTemp, Warning, TEXT("FOUND PAWN CLASS, EXPORTING MESH"));
-				UMeshComponent* pawnMesh = Cast<UMeshComponent>(exportObjects[i]->GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
-				TArray<UActorComponent*> pawnMeshes;
-				exportObjects[i]->GetOwner()->GetComponents(UMeshComponent::StaticClass(), pawnMeshes);
-
-				TArray< UMeshComponent*> meshes;
-				for (int32 j = 0; j < pawnMeshes.Num(); j++)
-				{
-					UStaticMeshComponent* mesh = Cast<UStaticMeshComponent>(pawnMeshes[j]);
-					if (mesh == NULL)
-					{
-						continue;
-					}
-
-					ULevel* componentLevel = pawnMeshes[j]->GetComponentLevel();
-					if (componentLevel->bIsVisible == 0)
-					{
-						continue;
-						//not visible! possibly on a disabled sublevel
-					}
-
-					meshes.Add(mesh);
-				}
-
-				TArray<UActorComponent*> actorSkeletalComponents;
-				exportObjects[i]->GetOwner()->GetComponents(USkeletalMeshComponent::StaticClass(), actorSkeletalComponents);
-				for (int32 j = 0; j < actorSkeletalComponents.Num(); j++)
-				{
-					USkeletalMeshComponent* mesh = Cast<USkeletalMeshComponent>(actorSkeletalComponents[j]);
-					if (mesh == NULL)
-					{
-						continue;
-					}
-
-					ULevel* componentLevel = actorSkeletalComponents[j]->GetComponentLevel();
-					if (componentLevel->bIsVisible == 0)
-					{
-						continue;
-						//not visible! possibly on a disabled sublevel
-					}
-
-					meshes.Add(mesh);
-				}
-
-				//setup temp meshes package
-				UPackage* NewPackageName = CreatePackage(TEXT("/Game/TempMesh"));
-
-				if (meshes.Num() > 0)
-				{
-					//take the skeletal meshes that we set up earlier and use them to create a static mesh
-					UStaticMesh* tmpStatMesh = MeshUtilities.ConvertMeshesToStaticMesh(meshes, exportObjects[i]->GetOwner()->GetTransform(), NewPackageName->GetName());
-					UExporter::ExportToFile(tmpStatMesh, NULL, *tempObject, true);
-					TempAssetsToDelete.Add(tmpStatMesh);
-				}
-			}
-			else
-			{
-				//exports the currently selected actor(s)
-				UE_LOG(LogTemp, Warning, TEXT("DOING REGULAR MAP EXPORT"));
-
-				//use GLTFExporter Plugin
-
-				// Create export options
-				UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
-
-				// Set custom export settings
-				ExportOptions->ExportUniformScale = 1.0f;
-				ExportOptions->bExportPreviewMesh = true;
-
-				// Texture compression settings
-				ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
-
-				// Create export task
-				UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
-				ExportTask->Object = GWorld;
-				ExportTask->Exporter = NewObject<UGLTFLevelExporter>();
-				ExportTask->Filename = *tempObject;
-				ExportTask->bSelected = true;
-				ExportTask->bReplaceIdentical = true;
-				ExportTask->bPrompt = false;
-				ExportTask->bAutomated = true;
-				ExportTask->Options = ExportOptions;
-
-				// Perform export
-				ExportTask->Exporter->RunAssetExportTask(ExportTask);
-			}
-		}
-
-
-		//reset dynamic back to original transform
-		exportObjects[i]->GetOwner()->SetActorLocation(originalLocation);
-		exportObjects[i]->GetOwner()->SetActorRotation(originalRotation);
-		exportObjects[i]->GetOwner()->SetActorScale3D(originalScale);
 
 		//check that files were actually exported
 		if (PlatformFile.FileExists(*tempObject))
@@ -733,6 +1098,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 		}
 		else
 		{
+			UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray export object file not found"));
 			//don't export screenshots or save materials unless export popup was confirmed
 			continue;
 		}
@@ -748,7 +1114,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 				break;
 			}
 		}
-		if (perspectiveView != NULL)
+		if (perspectiveView != NULL && !isBlueprint)
 		{
 			FVector startPosition = perspectiveView->GetViewLocation();
 			FRotator startRotation = perspectiveView->GetViewRotation();
@@ -777,7 +1143,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 
 	if (RawExportFilesFound == 0)
 	{
-		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray Cancelled mesh export"));
+		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportDynamicObjectArray Cancelled mesh export")); ////
 		return fph;
 	}
 
@@ -889,7 +1255,7 @@ FReply FCognitiveEditorTools::SetUniqueDynamicIds()
 	return FReply::Handled();
 }
 
-FReply FCognitiveEditorTools::UploadDynamicsManifest()
+FReply FCognitiveEditorTools::UploadDynamicsManifest(FString LevelName)
 {
 	TArray<UDynamicObject*> dynamics;
 
@@ -898,28 +1264,73 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest()
 	{
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		//AStaticMeshActor *Mesh = *ActorItr;
+		//check all compoenents on the actor in case there are multiple dynamic objects
+		for (UActorComponent* actorComponent : ActorItr->GetComponents())
+		{
+			if (actorComponent->IsA(UDynamicObject::StaticClass()))
+			{
+				UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
+				if (dynamic == NULL)
+				{
+					continue;
+				}
+				dynamics.Add(dynamic);
+			}
+		}
+	}
 
-		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
-		if (actorComponent == NULL)
+	//get the blueprint dynamics in the project and add them to the list
+	for (const TSharedPtr<FDynamicData>& data : SceneDynamics)
+	{
+		// Iterate over all blueprints in the project
+		for (TObjectIterator<UBlueprint> It; It; ++It)
 		{
-			continue;
+			UBlueprint* Blueprint = *It;
+			if (Blueprint->GetName() == data->Name)
+			{
+				// Get the generated class from the blueprint
+				UClass* BlueprintClass = Blueprint->GeneratedClass;
+				if (BlueprintClass)
+				{
+					// Now, get the default object and access its components
+					AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+					if (DefaultActor)
+					{
+						// Use Simple Construction Script to inspect the blueprint's components
+						if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+						{
+							const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+							// Iterate over the SCS nodes to find UDynamicObject components
+							for (USCS_Node* SCSNode : SCSNodes)
+							{
+								if (SCSNode && SCSNode->ComponentTemplate)
+								{
+									// Check if the component is a UDynamicObject
+									UDynamicObject* dynamicComponent = Cast<UDynamicObject>(SCSNode->ComponentTemplate);
+									if (dynamicComponent)
+									{
+										if (dynamicComponent->MeshName == data->MeshName && !dynamics.Contains(dynamicComponent))
+										{
+											dynamics.Add(dynamicComponent);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		}
-		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
-		if (dynamic == NULL)
-		{
-			continue;
-		}
-		dynamics.Add(dynamic);
 	}
 
 	GLog->Log("Cognitive3D Tools uploading manifest for " + FString::FromInt(dynamics.Num()) + " objects");
 
-	UploadSelectedDynamicsManifest(dynamics);
+	UploadSelectedDynamicsManifest(LevelName, dynamics);
 
 	return FReply::Handled();
 }
 
-FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObject*> dynamics)
+FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(FString LevelName, TArray<UDynamicObject*> dynamics)
 {
 	bool wroteAnyObjects = false;
 
@@ -941,16 +1352,120 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObje
 			//if they have a customid -> add them to the objectmanifest string
 			if (dynamics[q]->IdSourceType == EIdSourceType::CustomId && dynamics[q]->CustomId != "")
 			{
-				FVector location = dynamics[q]->GetComponentLocation();
-				FQuat rotation = dynamics[q]->GetComponentQuat();
-				FVector scale = dynamics[q]->GetComponentScale();
+				AActor* Owner = NULL;
+				bool isBlueprint = false;
+				UMeshComponent* bpMesh = NULL;
+
+				//get this dynamic's blueprint, owner, and check a boolean to see if it is a blueprint
+				for (const TSharedPtr<FDynamicData>& data : SceneDynamics)
+				{
+					// Iterate over all blueprints in the project
+					for (TObjectIterator<UBlueprint> It; It; ++It)
+					{
+						UBlueprint* Blueprint = *It;
+						if (dynamics[q]->MeshName == data->MeshName)
+						{
+							if (Blueprint->GetName() == data->Name)
+							{
+								// Get the generated class from the blueprint
+								UClass* BlueprintClass = Blueprint->GeneratedClass;
+								if (BlueprintClass)
+								{
+									if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
+									{
+										// Now, get the default object and access its components
+										AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+										if (DefaultActor)
+										{
+											// Use Simple Construction Script to inspect the blueprint's components
+											if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+											{
+												if (BPGeneratedClass->SimpleConstructionScript)
+												{
+													const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+
+													// Iterate over the SCS nodes to find UDynamicObject components
+													for (USCS_Node* SCSNode : SCSNodes)
+													{
+														if (SCSNode && SCSNode->ComponentTemplate)
+														{
+															UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
+
+															//check if ComponentTemplate is a mesh
+															UMeshComponent* MeshComponent = Cast<UMeshComponent>(ComponentTemplate);
+															//verify that the mesh component is valid
+															if (MeshComponent == NULL)
+															{
+																continue;
+															}
+															//if its valid, get the attached child component and log them
+															if (MeshComponent)
+															{
+																// Check its child nodes
+																const TArray<USCS_Node*>& ChildNodes = SCSNode->GetChildNodes();
+																for (USCS_Node* ChildNode : ChildNodes)
+																{
+																	if (ChildNode && ChildNode->ComponentTemplate)
+																	{
+																		// Assuming the dynamic object is of type UDynamicObjectComponent
+																		UDynamicObject* DynamicObjectComponent = Cast<UDynamicObject>(ChildNode->ComponentTemplate);
+																		if (DynamicObjectComponent)
+																		{
+																			// Do something with the dynamic object component
+																			if (DynamicObjectComponent->MeshName == data->MeshName)
+																			{
+																				Owner = DefaultActor;
+																				isBlueprint = true;
+																				bpMesh = MeshComponent;
+																			}
+																		}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				FVector location;
+				FQuat rotation;
+				FVector scale;
+
+				if (!isBlueprint)
+				{
+					location = dynamics[q]->GetComponentLocation();
+					rotation = dynamics[q]->GetComponentQuat();
+					scale = dynamics[q]->GetComponentScale();
+				}
+				else
+				{
+					location = FVector::ZeroVector;
+					rotation = FQuat::Identity;
+					scale = FVector::OneVector;
+				}
 
 				wroteAnyObjects = true;
 				dynamicsCount++;
+				FString isController = dynamics[q]->IsController ? "true" : "false";
 				objectManifest += "{";
 				objectManifest += "\"id\":\"" + dynamics[q]->CustomId + "\",";
 				objectManifest += "\"mesh\":\"" + dynamics[q]->MeshName + "\",";
-				objectManifest += "\"name\":\"" + dynamics[q]->GetOwner()->GetName() + "\",";
+				if (isBlueprint)
+				{
+					objectManifest += "\"name\":\"" + Owner->GetName() + "\",";
+				}
+				else
+				{
+					objectManifest += "\"name\":\"" + dynamics[q]->GetOwner()->GetName() + "\",";
+				}
+                objectManifest += "\"isController\":\"" + isController + "\",";
 				objectManifest += "\"scaleCustom\":[" + FString::SanitizeFloat(scale.X) + "," + FString::SanitizeFloat(scale.Z) + "," + FString::SanitizeFloat(scale.Y) + "],";
 				objectManifest += "\"initialPosition\":[" + FString::SanitizeFloat(-location.X) + "," + FString::SanitizeFloat(location.Z) + "," + FString::SanitizeFloat(location.Y) + "],";
 				objectManifest += "\"initialRotation\":[" + FString::SanitizeFloat(-rotation.X) + "," + FString::SanitizeFloat(rotation.Z) + "," + FString::SanitizeFloat(-rotation.Y) + "," + FString::SanitizeFloat(rotation.W) + "]";
@@ -960,7 +1475,7 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObje
 		if (!wroteAnyObjects)
 		{
 			GLog->Log("Couldn't find any dynamic objects to put into the aggregation manifest!");
-			FCognitiveEditorTools::OnUploadManifestCompleted(NULL, NULL, true);
+			FCognitiveEditorTools::OnUploadManifestCompleted(NULL, NULL, true,FString(""));
 			return FReply::Handled();
 		}
 		//remove last comma
@@ -970,25 +1485,31 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObje
 
 		//send request for this dynamics part
 		//get scene id
-		TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
-		if (!currentSceneData.IsValid())
+		TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName);
+		if (!sceneData.IsValid())
 		{
 			GLog->Log("FCognitiveEditorTools::UploadDynamicObjectManifest could not find current scene id");
 			return FReply::Handled();
 		}
 
-		if (currentSceneData->Id == "")
+		if (sceneData->Id == "")
 		{
 			GLog->Log("CognitiveToolsCustomization::UploadDynamicsManifest couldn't find sceneid for current scene");
 			return FReply::Handled();
 		}
-		if (currentSceneData->VersionNumber == 0)
+		if (sceneData->VersionNumber == 0)
 		{
 			GLog->Log("CognitiveTools::UploadDynamicsManifest current scene does not have valid version number. GetSceneVersions and try again");
 			return FReply::Handled();
 		}
 
-		FString url = PostDynamicObjectManifest(currentSceneData->Id, currentSceneData->VersionNumber);
+		FString url = PostDynamicObjectManifest(sceneData->Id, sceneData->VersionNumber);
+
+		if (!objectManifest.Contains("mesh"))
+		{
+			GLog->Log("CognitiveTools::UploadDynamicsManifest object manifest does not contain mesh name");
+			return FReply::Handled();
+		}
 
 		//send manifest to api/objects/sceneid
 
@@ -1002,7 +1523,7 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObje
 		HttpRequest->SetContentAsString(objectManifest);
 		GLog->Log(objectManifest);
 
-		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestCompleted);
+		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestCompleted, LevelName);
 
 		HttpRequest->ProcessRequest();
 
@@ -1014,7 +1535,7 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(TArray<UDynamicObje
 	return FReply::Handled();
 }
 
-FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FString meshName, FString prefabName)
+FReply FCognitiveEditorTools::UploadDynamicsManifestIds(FString LevelName, TArray<FString> ids, FString meshName, FString prefabName)
 {
 	//this is used by dynamic object id pool. doesn't have initial positions, rotations, scale
 	GLog->Log("Cognitive3D Tools uploading manifest for " + FString::FromInt(ids.Num()) + " objects");
@@ -1063,25 +1584,25 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FSt
 		objectManifest += "]}";
 
 		//get scene id
-		TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
-		if (!currentSceneData.IsValid())
+		TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName);
+		if (!sceneData.IsValid())
 		{
 			GLog->Log("FCognitiveEditorTools::UploadDynamicObjectManifest could not find current scene id");
 			return FReply::Handled();
 		}
 
-		if (currentSceneData->Id == "")
+		if (sceneData->Id == "")
 		{
 			GLog->Log("CognitiveToolsCustomization::UploadDynamicsManifest couldn't find sceneid for current scene");
 			return FReply::Handled();
 		}
-		if (currentSceneData->VersionNumber == 0)
+		if (sceneData->VersionNumber == 0)
 		{
 			GLog->Log("CognitiveTools::UploadDynamicsManifest current scene does not have valid version number. GetSceneVersions and try again");
 			return FReply::Handled();
 		}
 
-		FString url = PostDynamicObjectManifest(currentSceneData->Id, currentSceneData->VersionNumber);
+		FString url = PostDynamicObjectManifest(sceneData->Id, sceneData->VersionNumber);
 
 		//send manifest to api/objects/sceneid
 
@@ -1094,7 +1615,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FSt
 		HttpRequest->SetHeader("Authorization", AuthValue);
 		HttpRequest->SetContentAsString(objectManifest);
 
-		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestIdsCompleted);
+		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestIdsCompleted, LevelName);
 
 		HttpRequest->ProcessRequest();
 
@@ -1106,18 +1627,18 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(TArray<FString> ids, FSt
 	return FReply::Handled();
 }
 
-void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString Level)
 {
 	WizardUploading = false;
 	if (Response.Get() == NULL) //likely no aggregation manifest to upload. no request, no response
 	{
-		GetDynamicsManifest();
+		GetDynamicsManifest(Level);
 		return;
 	}
 
 	if (bWasSuccessful && Response->GetResponseCode() < 300) //successfully uploaded
 	{
-		GetDynamicsManifest();
+		GetDynamicsManifest(Level);
 		WizardUploadError = FString::FromInt(Response->GetResponseCode());
 		WizardUploadResponseCode = Response->GetResponseCode();
 		ShowNotification(TEXT("Dynamic Manifest Uploaded Successfully"));
@@ -1130,18 +1651,18 @@ void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, F
 	}
 }
 
-void FCognitiveEditorTools::OnUploadManifestIdsCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveEditorTools::OnUploadManifestIdsCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
 	WizardUploading = false;
 	if (Response.Get() == NULL) //likely no aggregation manifest to upload. no request, no response
 	{
-		GetDynamicsManifest();
+		GetDynamicsManifest(LevelName);
 		return;
 	}
 
 	if (bWasSuccessful && Response->GetResponseCode() < 300) //successfully uploaded
 	{
-		GetDynamicsManifest();
+		GetDynamicsManifest(LevelName);
 		WizardUploadError = FString::FromInt(Response->GetResponseCode());
 		WizardUploadResponseCode = Response->GetResponseCode();
 		ShowNotification(TEXT("Dynamic Id Pool Ids Uploaded Successfully"));
@@ -1154,15 +1675,15 @@ void FCognitiveEditorTools::OnUploadManifestIdsCompleted(FHttpRequestPtr Request
 	}
 }
 
-FReply FCognitiveEditorTools::GetDynamicsManifest()
+FReply FCognitiveEditorTools::GetDynamicsManifest(FString LevelName)
 {
-	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
-	if (!currentSceneData.IsValid())
+	TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName);
+	if (!sceneData.IsValid())
 	{
-		GLog->Log("CognitiveTools::GetDyanmicManifest could not find current scene data");
+		GLog->Log("CognitiveTools::GetDyanmicManifest could not find current scene data " + LevelName);
 		return FReply::Handled();
 	}
-	if (currentSceneData->VersionId == 0)
+	if (sceneData->VersionId == 0)
 	{
 		GLog->Log("CognitiveTools::GetDyanmicManifest version id is not set! Makes sure the scene has updated scene version");
 		return FReply::Handled();
@@ -1175,7 +1696,7 @@ FReply FCognitiveEditorTools::GetDynamicsManifest()
 
 	auto HttpRequest = FHttpModule::Get().CreateRequest();
 
-	HttpRequest->SetURL(GetDynamicObjectManifest(FString::FromInt(currentSceneData->VersionId)));
+	HttpRequest->SetURL(GetDynamicObjectManifest(FString::FromInt(sceneData->VersionId)));
 
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
 	FString AuthValue = "APIKEY:DEVELOPER " + DeveloperKey;
@@ -1239,7 +1760,7 @@ void FCognitiveEditorTools::OnDynamicManifestResponse(FHttpRequestPtr Request, F
 }
 int32 OutstandingDynamicUploadRequests = 0;
 
-FReply FCognitiveEditorTools::UploadDynamics()
+FReply FCognitiveEditorTools::UploadDynamics(FString LevelName)
 {
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
@@ -1271,7 +1792,8 @@ FReply FCognitiveEditorTools::UploadDynamics()
 	ReadSceneDataFromFile();
 
 	GLog->Log("FCognitiveEditorTools::UploadDynamics found " + FString::FromInt(dynamicNames.Num()) + " exported dynamic objects");
-	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
+	
+	TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(LevelName);
 
 	if (!currentSceneData.IsValid())
 	{
@@ -1294,7 +1816,7 @@ FReply FCognitiveEditorTools::UploadDynamics()
 			FString url = PostDynamicObjectMeshData(currentSceneData->Id, currentSceneData->VersionNumber, fileName);
 			GLog->Log("dynamic upload to url " + url);
 
-			UploadFromDirectory(url, filePath, "object");
+			UploadFromDirectory(LevelName, url, filePath, "object");
 			OutstandingDynamicUploadRequests++;
 		}
 		else
@@ -1309,12 +1831,13 @@ FReply FCognitiveEditorTools::UploadDynamics()
 		WizardUploading = false;
 	}
 
+
 	OnUploadSceneGeometry.ExecuteIfBound(nullptr, nullptr, true);
 
 	return FReply::Handled();
 }
 
-FReply FCognitiveEditorTools::UploadDynamic(FString directory)
+FReply FCognitiveEditorTools::UploadDynamic(FString LevelName, FString directory)
 {
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
@@ -1348,7 +1871,8 @@ FReply FCognitiveEditorTools::UploadDynamic(FString directory)
 	ReadSceneDataFromFile();
 
 	GLog->Log("FCognitiveEditorTools::UploadDynamics found " + FString::FromInt(dynamicNames.Num()) + " exported dynamic objects");
-	TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
+	//TODO should pass level name into the function
+	TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(LevelName);
 
 	if (!currentSceneData.IsValid())
 	{
@@ -1371,7 +1895,7 @@ FReply FCognitiveEditorTools::UploadDynamic(FString directory)
 			FString url = PostDynamicObjectMeshData(currentSceneData->Id, currentSceneData->VersionNumber, fileName);
 			GLog->Log("dynamic upload to url " + url);
 
-			UploadFromDirectory(url, filePath, "object");
+			UploadFromDirectory(LevelName, url, filePath, "object");
 			OutstandingDynamicUploadRequests++;
 		}
 		else
@@ -1444,8 +1968,10 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 		const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
+		GConfig->Flush(false, NormalizedEditorIni);
 #else
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
+		GConfig->Flush(false, EditorIni);
 #endif
 	}
 	else
@@ -1457,17 +1983,19 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 		const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
+		GConfig->Flush(false, NormalizedEditorIni);
 #else
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
+		GConfig->Flush(false, EditorIni);
 #endif
 	}
 	return FReply::Handled();
 }
 
 
-FReply FCognitiveEditorTools::SaveScreenshotToFile()
+FReply FCognitiveEditorTools::SaveScreenshotToFile(const FString& levelName)
 {
-	FString dir = BaseExportDirectory + "/" + GetCurrentSceneName() + "/screenshot/";
+	FString dir = BaseExportDirectory + "/" + levelName + "/screenshot/";
 	if (VerifyOrCreateDirectory(dir))
 	{
 		FString cmd = "HighResShot filename=\"" + dir + "screenshot\" 1920x1080";
@@ -1541,13 +2069,13 @@ void* FCognitiveEditorTools::ChooseParentWindowHandle()
 	return ParentWindowWindowHandle;
 }
 
-FReply FCognitiveEditorTools::UploadScene()
+FReply FCognitiveEditorTools::UploadScene(const FString& LevelName)
 {
 	FString url = "";
 
 	//get scene name
 	//look if scene name has an entry in the scene datas
-	TSharedPtr<FEditorSceneData> sceneData = GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName);
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
 	{
 		//GLog->Log("post update existing scene");
@@ -1562,20 +2090,20 @@ FReply FCognitiveEditorTools::UploadScene()
 	}
 
 	GLog->Log("FCognitiveEditorTools::UploadScene upload scene to " + url);
-	UploadFromDirectory(url, GetCurrentSceneExportDirectory(), "scene");
+	UploadFromDirectory(LevelName, url, GetSceneExportDirectory(LevelName), "scene");
 	//IMPROVEMENT listen for response. when the response returns, request the scene version with auth token
 
 	return FReply::Handled();
 }
 
-void FCognitiveEditorTools::RefreshSceneUploadFiles()
+void FCognitiveEditorTools::RefreshSceneUploadFiles(const FString& SceneName)
 {
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
-	TArray<FString> filesInDirectory = GetAllFilesInDirectory(GetCurrentSceneExportDirectory(), true, filesStartingWith, filesStartingWith, pngextension, false);
+	TArray<FString> filesInDirectory = GetAllFilesInDirectory(GetSceneExportDirectory(SceneName), true, filesStartingWith, filesStartingWith, pngextension, false);
 
-	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(GetCurrentSceneExportDirectory(), true, filesStartingWith, pngextension, filesStartingWith, false);
-	imagesInDirectory.Remove(GetCurrentSceneExportDirectory() + "/screenshot/screenshot.png");
+	TArray<FString> imagesInDirectory = GetAllFilesInDirectory(GetSceneExportDirectory(SceneName), true, filesStartingWith, pngextension, filesStartingWith, false);
+	imagesInDirectory.Remove(GetSceneExportDirectory(SceneName) + "/screenshot/screenshot.png");
 
 	SceneUploadFiles.Empty();
 	for (int32 i = 0; i < filesInDirectory.Num(); i++)
@@ -1747,7 +2275,7 @@ int32 FCognitiveEditorTools::CountUnexportedDynamicsNotUnique()
 	return meshNames.Num();
 }
 
-void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, FString expectedResponseType)
+void FCognitiveEditorTools::UploadFromDirectory(FString LevelName, FString url, FString directory, FString expectedResponseType)
 {
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
@@ -1897,21 +2425,21 @@ void FCognitiveEditorTools::UploadFromDirectory(FString url, FString directory, 
 
 	if (expectedResponseType == "scene")
 	{
-		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadSceneCompleted);
+		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadSceneCompleted, LevelName);
 	}
 	if (expectedResponseType == "object")
 	{
-		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadObjectCompleted);
+		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadObjectCompleted, LevelName);
 	}
 
 	HttpRequest->ProcessRequest();
 }
 
-void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
 	if (bWasSuccessful)
 	{
-		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted response code " + FString::FromInt(Response->GetResponseCode()));
+		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted bWasSuccessful response code " + FString::FromInt(Response->GetResponseCode()));
 	}
 	else
 	{
@@ -1925,6 +2453,7 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 
 	if (bWasSuccessful && Response->GetResponseCode() < 300)
 	{
+		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted Successful Upload");
 		ShowNotification(TEXT("Scene Uploaded Successfully"));
 		//UE_LOG(LogTemp, Warning, TEXT("Upload Scene Response is %s"), *Response->GetContentAsString());
 
@@ -1936,14 +2465,15 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 			return;
 		}
 
-		FString currentSceneName = myworld->GetMapName();
-		currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
+
+		//FString currentSceneName = myworld->GetMapName();
+		LevelName.RemoveFromStart(myworld->StreamingLevelsPrefix);
 
 		FString responseNoQuotes = *Response->GetContentAsString().Replace(TEXT("\""), TEXT(""));
 
 		if (responseNoQuotes.Len() > 0)
 		{
-			SaveSceneData(currentSceneName, responseNoQuotes);
+			SaveSceneData(LevelName, responseNoQuotes);
 			ReadSceneDataFromFile();
 		}
 		else
@@ -1954,18 +2484,19 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 		ConfigFileHasChanged = true;
 		if (WizardUploading)
 		{
-			CurrentSceneVersionRequest();
+			SceneNameVersionRequest(LevelName);
 		}
 	}
 	else
 	{
 		ShowNotification(TEXT("Failed to upload scene"), false);
 		WizardUploading = false;
-		WizardUploadError = "FCognitiveEditorTools::OnUploadSceneCompleted response code " + FString::FromInt(Response->GetResponseCode());
+		WizardUploadError = "FCognitiveEditorTools::OnUploadSceneCompleted Failed to Upload. Response code " + FString::FromInt(Response->GetResponseCode());
+		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted Failed to Upload. Response code " + FString::FromInt(Response->GetResponseCode()));
 	}
 }
 
-void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
 	OutstandingDynamicUploadRequests--;
 
@@ -2003,7 +2534,7 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 	if (WizardUploading && OutstandingDynamicUploadRequests <= 0)
 	{
 		//upload manifest
-		UploadDynamicsManifest();
+		UploadDynamicsManifest(LevelName);
 	}
 }
 
@@ -2112,6 +2643,21 @@ bool FCognitiveEditorTools::CurrentSceneHasSceneId() const
 	return false;
 }
 
+bool FCognitiveEditorTools::SceneHasSceneId(const FString& SceneName) const
+{
+	if (!HasDeveloperKey()) { return false; }
+	TSharedPtr<FEditorSceneData> currentscene = GetSceneData(SceneName);
+	if (!currentscene.IsValid())
+	{
+		return false;
+	}
+	if (currentscene->Id.Len() > 0)
+	{
+		return true;
+	}
+	return false;
+}
+
 bool FCognitiveEditorTools::HasSetExportDirectory() const
 {
 	if (!HasDeveloperKey()) { return false; }
@@ -2119,13 +2665,13 @@ bool FCognitiveEditorTools::HasSetExportDirectory() const
 }
 
 
-FText FCognitiveEditorTools::GetDynamicsOnSceneExplorerTooltip() const
+FText FCognitiveEditorTools::GetDynamicsOnSceneExplorerTooltip(FString LevelName) const
 {
 	if (!HasDeveloperKey())
 	{
 		return FText::FromString("Must log in to get Dynamic Objects List from SceneExplorer");
 	}
-	auto scene = GetCurrentSceneData();
+	auto scene = GetSceneData(LevelName);
 	if (!scene.IsValid())
 	{
 		return FText::FromString("Scene does not have valid data. Must export your level before uploading dynamics!");
@@ -2167,10 +2713,10 @@ bool FCognitiveEditorTools::HasExportedAnyDynamicMeshes() const
 	return filesInDirectory.Num() > 0;
 }
 
-bool FCognitiveEditorTools::HasSetDynamicExportDirectoryHasSceneId() const
+bool FCognitiveEditorTools::HasSetDynamicExportDirectoryHasSceneId(FString LevelName) const
 {
 	if (!HasDeveloperKey()) { return false; }
-	auto scenedata = GetCurrentSceneData();
+	auto scenedata = GetSceneData(LevelName);
 	if (!scenedata.IsValid()) { return false; }
 	if (GetBaseExportDirectory().Len() == 0) { return false; }
 	return true;
@@ -2226,36 +2772,41 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
 		//AStaticMeshActor *Mesh = *ActorItr;
 
-		UActorComponent* actorComponent = (*ActorItr)->GetComponentByClass(UDynamicObject::StaticClass());
-		if (actorComponent == NULL)
-		{
-			continue;
-		}
-		UDynamicObject* dynamic = Cast<UDynamicObject>(actorComponent);
-		if (dynamic == NULL)
-		{
-			continue;
-		}
-		//populate id based on id type
-		if (dynamic->IdSourceType == EIdSourceType::CustomId)
-		{
-			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, dynamic->CustomId, EDynamicTypes::CustomId)));
-		}
-		else if (dynamic->IdSourceType == EIdSourceType::GeneratedId)
-		{
-			FString idMessage = TEXT("Id generated during runtime");
-			//SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, *idMessage)));
-			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, idMessage, EDynamicTypes::GeneratedId)));
-		}
-		else if (dynamic->IdSourceType == EIdSourceType::PoolId)
-		{
-			
-			//construct a string for the number of ids in the pool
-			FString IdString = FString::Printf(TEXT("Id Pool(%d)"), dynamic->IDPool->Ids.Num());
+		//try getting all components that are dynamic objects
+		TArray<UActorComponent*> actorComponents;
+		(*ActorItr)->GetComponents(UDynamicObject::StaticClass(), actorComponents);
 
-			//add it as TSharedPtr<FDynamicData> to the SceneDynamics
-			SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, IdString, dynamic->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
+		for (UActorComponent* actorComp : actorComponents)
+		{
+			UDynamicObject* dynamic = Cast<UDynamicObject>(actorComp);
+			if (dynamic == NULL)
+			{
+				continue;
+			}
+
+			//populate id based on id type
+			if (dynamic->IdSourceType == EIdSourceType::CustomId)
+			{
+				SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, dynamic->CustomId, EDynamicTypes::CustomId)));
+			}
+			else if (dynamic->IdSourceType == EIdSourceType::GeneratedId)
+			{
+				FString idMessage = TEXT("Id generated during runtime");
+				//SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, *idMessage)));
+				SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, idMessage, EDynamicTypes::GeneratedId)));
+			}
+			else if (dynamic->IdSourceType == EIdSourceType::PoolId)
+			{
+
+				//construct a string for the number of ids in the pool
+				FString IdString = FString::Printf(TEXT("Id Pool(%d)"), dynamic->IDPool->Ids.Num());
+
+				//add it as TSharedPtr<FDynamicData> to the SceneDynamics
+				SceneDynamics.Add(MakeShareable(new FDynamicData(dynamic->GetOwner()->GetName(), dynamic->MeshName, IdString, dynamic->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
+			}
+
 		}
+
 		//dynamics.Add(dynamic);
 	}
 
@@ -2277,7 +2828,7 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 	Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
 #elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 0 
 	Filter.ClassNames.Add(UDynamicIdPoolAsset::StaticClass()->GetFName());
-#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 2 || ENGINE_MINOR_VERSION == 3 || ENGINE_MINOR_VERSION == 1)
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1
 	Filter.ClassPaths.Add(UDynamicIdPoolAsset::StaticClass()->GetClassPathName());
 #endif
 
@@ -2289,7 +2840,7 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 	for (const FAssetData& Asset : AssetData)
 	{
 		// Do something with each asset, e.g., log its name
-		UE_LOG(LogTemp, Log, TEXT("Found Asset: %s"), *Asset.AssetName.ToString());
+		//UE_LOG(LogTemp, Log, TEXT("Found Asset: %s"), *Asset.AssetName.ToString());
 
 		//get the actual asset from the asset data
 		UObject* IdPoolObject = Asset.GetAsset();
@@ -2303,6 +2854,185 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 		SceneDynamics.Add(MakeShareable(new FDynamicData(IdPoolAsset->PrefabName, IdPoolAsset->MeshName, IdString, IdPoolAsset->Ids, EDynamicTypes::DynamicIdPoolAsset)));
 	}
 
+	//add blueprints with dynamics from project ////
+ 
+		// Create a filter to find all Blueprint assets
+	FARFilter Filter2;
+
+#if ENGINE_MAJOR_VERSION == 4
+	Filter2.ClassNames.Add(UBlueprint::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 0 
+	Filter2.ClassNames.Add(UBlueprint::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1
+	Filter2.ClassPaths.Add(UBlueprint::StaticClass()->GetClassPathName());
+#endif
+
+	Filter2.bRecursiveClasses = true;
+
+	// Get a list of Blueprint assets
+	TArray<FAssetData> AssetDataList;
+	AssetRegistryModule.Get().GetAssets(Filter2, AssetDataList);
+
+
+	UE_LOG(LogTemp, Warning, TEXT("Total Blueprints Found: %d"), AssetDataList.Num());
+
+#if ENGINE_MAJOR_VERSION == 4
+
+	for (const FAssetData& AssetData2 : AssetDataList)
+	{
+		FString AssetName = AssetData2.AssetName.ToString();
+
+		// Get the GeneratedClass tag from the asset data (without fully loading the asset)
+		FString GeneratedClassPath;
+		if (AssetData2.GetTagValue(FName("GeneratedClass"), GeneratedClassPath))
+		{
+			// Remove _C suffix to get the real class path
+			GeneratedClassPath = FPackageName::ExportTextPathToObjectPath(GeneratedClassPath);
+			UClass* BlueprintClass = FindObject<UClass>(nullptr, *GeneratedClassPath);
+			
+			if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
+			{
+				// Now, get the default object and access its components
+				AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+				if (DefaultActor)
+				{
+					// Use Simple Construction Script to inspect the blueprint's components
+					if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+					{
+						if (BPGeneratedClass->SimpleConstructionScript)
+						{
+							const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+
+							// Iterate over the SCS nodes to find UDynamicObject components
+							for (USCS_Node* SCSNode : SCSNodes)
+							{
+								if (SCSNode && SCSNode->ComponentTemplate)
+								{
+									UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
+
+									// Check if the component is a UDynamicObject
+									UDynamicObject* DynamicObjectComponent = Cast<UDynamicObject>(ComponentTemplate);
+									if (DynamicObjectComponent)
+									{
+										// Now populate the SceneDynamics based on the ID type
+										if (DynamicObjectComponent->IdSourceType == EIdSourceType::CustomId)
+										{
+											
+											SceneDynamics.Add(MakeShareable(new FDynamicData(AssetName, DynamicObjectComponent->MeshName, DynamicObjectComponent->CustomId, EDynamicTypes::CustomId)));
+											
+										}
+										else if (DynamicObjectComponent->IdSourceType == EIdSourceType::GeneratedId)
+										{
+											FString idMessage = TEXT("Id generated during runtime");
+											
+											SceneDynamics.Add(MakeShareable(new FDynamicData(AssetName, DynamicObjectComponent->MeshName, idMessage, EDynamicTypes::GeneratedId)));
+											
+											
+										}
+										else if (DynamicObjectComponent->IdSourceType == EIdSourceType::PoolId)
+										{
+											// Construct a string for the number of IDs in the pool
+											FString IdString = FString::Printf(TEXT("Id Pool(%d)"), DynamicObjectComponent->IDPool->Ids.Num());
+											// Add it as TSharedPtr<FDynamicData> to the SceneDynamics
+											SceneDynamics.Add(MakeShareable(new FDynamicData(DynamicObjectComponent->GetOwner()->GetName(), DynamicObjectComponent->MeshName, IdString, DynamicObjectComponent->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1
+
+//BLUEPRINTS WITH DYNAMICS
+
+for (const FAssetData& AssetData2 : AssetDataList)
+{
+	FString AssetName = AssetData2.AssetName.ToString();
+
+	// Force load the asset to ensure all data is available
+	UBlueprint* Blueprint = Cast<UBlueprint>(AssetData2.GetAsset());
+	if (!Blueprint)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to load Blueprint: %s"), *AssetName);
+		continue;
+	}
+
+	// Get the GeneratedClass tag from the asset data (without fully loading the asset)
+	FString GeneratedClassPath;
+	if (AssetData2.GetTagValue(FName("GeneratedClass"), GeneratedClassPath))
+	{
+		// Remove _C suffix to get the real class path
+		GeneratedClassPath = FPackageName::ExportTextPathToObjectPath(GeneratedClassPath);
+		UClass* BlueprintClass = FindObject<UClass>(nullptr, *GeneratedClassPath);
+
+		// Ensure the blueprint is compiled
+		if (!BlueprintClass)
+		{
+			FKismetEditorUtilities::CompileBlueprint(Blueprint);
+
+			// Try to get the GeneratedClass again after compiling
+			BlueprintClass = FindObject<UClass>(nullptr, *GeneratedClassPath);
+		}
+
+		if (BlueprintClass && BlueprintClass->IsChildOf(AActor::StaticClass()))
+		{
+			// Now, get the default object and access its components
+			AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+			if (DefaultActor)
+			{
+				// Use Simple Construction Script to inspect the blueprint's components
+				if (UBlueprintGeneratedClass* BPGeneratedClass = Cast<UBlueprintGeneratedClass>(BlueprintClass))
+				{
+					if (BPGeneratedClass->SimpleConstructionScript)
+					{
+						const TArray<USCS_Node*>& SCSNodes = BPGeneratedClass->SimpleConstructionScript->GetAllNodes();
+						
+						// Iterate over the SCS nodes to find UDynamicObject components
+						for (USCS_Node* SCSNode : SCSNodes)
+						{
+							if (SCSNode && SCSNode->ComponentTemplate)
+							{
+								UActorComponent* ComponentTemplate = SCSNode->ComponentTemplate;
+								
+								// Check if the component is a UDynamicObject
+								UDynamicObject* DynamicObjectComponent = Cast<UDynamicObject>(ComponentTemplate);
+								if (DynamicObjectComponent)
+								{
+									// Now populate the SceneDynamics based on the ID type
+									if (DynamicObjectComponent->IdSourceType == EIdSourceType::CustomId)
+									{
+										SceneDynamics.Add(MakeShareable(new FDynamicData(AssetName, DynamicObjectComponent->MeshName, DynamicObjectComponent->CustomId, EDynamicTypes::CustomId)));
+									}
+									else if (DynamicObjectComponent->IdSourceType == EIdSourceType::GeneratedId)
+									{
+										FString idMessage = TEXT("Id generated during runtime");
+										SceneDynamics.Add(MakeShareable(new FDynamicData(AssetName, DynamicObjectComponent->MeshName, idMessage, EDynamicTypes::GeneratedId)));
+									}
+									else if (DynamicObjectComponent->IdSourceType == EIdSourceType::PoolId)
+									{
+										// Construct a string for the number of IDs in the pool
+										FString IdString = FString::Printf(TEXT("Id Pool(%d)"), DynamicObjectComponent->IDPool->Ids.Num());
+										// Add it as TSharedPtr<FDynamicData> to the SceneDynamics
+										SceneDynamics.Add(MakeShareable(new FDynamicData(DynamicObjectComponent->GetOwner()->GetName(), DynamicObjectComponent->MeshName, IdString, DynamicObjectComponent->IDPool->Ids, EDynamicTypes::DynamicIdPool)));
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+//BLUEPRINTS WITH DYNAMICS
+
+#endif
 
 
 	return FReply::Handled();
@@ -2419,11 +3149,21 @@ void FCognitiveEditorTools::OnAttributionKeyChanged(const FText& Text)
 void FCognitiveEditorTools::OnExportPathChanged(const FText& Text)
 {
 	BaseExportDirectory = Text.ToString();
+	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+	const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
+	GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
+	GConfig->Flush(false, NormalizedEditorIni);
+#else
+	GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
+	GConfig->Flush(false, EditorIni);
+#endif
 }
 
-FText FCognitiveEditorTools::UploadSceneNameFiles() const
+FText FCognitiveEditorTools::UploadSceneNameFiles(FString LevelName) const
 {
-	auto currentscenedata = GetCurrentSceneData();
+	auto currentscenedata = GetSceneData(LevelName);
 	if (!currentscenedata.IsValid())
 	{
 		UWorld* myworld = GWorld->GetWorld();
@@ -2438,9 +3178,9 @@ FText FCognitiveEditorTools::UploadSceneNameFiles() const
 	return FText::FromString(outstring);
 }
 
-FText FCognitiveEditorTools::OpenSceneNameInBrowser() const
+FText FCognitiveEditorTools::OpenSceneNameInBrowser(FString LevelName) const
 {
-	auto currentscenedata = GetCurrentSceneData();
+	auto currentscenedata = GetSceneData(LevelName);
 	if (!currentscenedata.IsValid())
 	{
 		UWorld* myworld = GWorld->GetWorld();
@@ -2455,9 +3195,9 @@ FText FCognitiveEditorTools::OpenSceneNameInBrowser() const
 	return FText::FromString(outstring);
 }
 
-FText FCognitiveEditorTools::GetDynamicObjectUploadText() const
+FText FCognitiveEditorTools::GetDynamicObjectUploadText(FString LevelName) const
 {
-	auto data = GetCurrentSceneData();
+	auto data = GetSceneData(LevelName);
 	if (!data.IsValid())
 	{
 		return FText::FromString("No Scene Data found - Have you used Cognitive Scene Setup to export this scene?");
@@ -2486,6 +3226,16 @@ FReply FCognitiveEditorTools::ButtonCurrentSceneVersionRequest()
 void FCognitiveEditorTools::CurrentSceneVersionRequest()
 {
 	TSharedPtr<FEditorSceneData> scenedata = GetCurrentSceneData();
+
+	if (scenedata.IsValid())
+	{
+		SceneVersionRequest(*scenedata);
+	}
+}
+
+void FCognitiveEditorTools::SceneNameVersionRequest(const FString& LevelName)
+{
+	TSharedPtr<FEditorSceneData> scenedata = GetSceneData(LevelName);
 
 	if (scenedata.IsValid())
 	{
@@ -2621,7 +3371,7 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 	//ConfigFileHasChanged = true;
 }
 
-void FCognitiveEditorTools::SceneVersionRequest(FEditorSceneData data)
+void FCognitiveEditorTools::SceneVersionRequest(const FEditorSceneData& data)
 {
 	if (!HasDeveloperKey())
 	{
@@ -2641,11 +3391,11 @@ void FCognitiveEditorTools::SceneVersionRequest(FEditorSceneData data)
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetHeader("Content-Type", "application/json");
 
-	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::SceneVersionResponse);
+	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::SceneVersionResponse, data.Name);
 	HttpRequest->ProcessRequest();
 }
 
-void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
 	if (bWasSuccessful)
 		GLog->Log("FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode()));
@@ -2715,7 +3465,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		}
 
 		//check that there is scene data in ini
-		TSharedPtr<FEditorSceneData> currentSceneData = GetCurrentSceneData();
+		TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(LevelName);
 		if (!currentSceneData.IsValid())
 		{
 			GLog->Log("FCognitiveTools::SceneVersionResponse can't find current scene data in ini files");
@@ -2787,7 +3537,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 
 		if (WizardUploading)
 		{
-			UploadDynamics();
+			UploadDynamics(LevelName);
 		}
 	}
 	else
@@ -2827,8 +3577,8 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, EditorIni);
 
-	GConfig->Flush(false, GEngineIni);
-	GConfig->Flush(false, GEditorIni);
+	GConfig->Flush(false, EngineIni);
+	GConfig->Flush(false, EditorIni);
 #endif
 	ConfigFileHasChanged = true;
 
@@ -2846,7 +3596,7 @@ void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 	GConfig->Flush(false, NormalizedEngineIni);
 #else
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, EngineIni);
-	GConfig->Flush(false, GEngineIni);
+	GConfig->Flush(false, EngineIni);
 #endif
 
 	ConfigFileHasChanged = true;
@@ -2865,7 +3615,7 @@ void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
 	GConfig->Flush(false, NormalizedEditorIni);
 #else
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, EditorIni);
-	GConfig->Flush(false, GEngineIni);
+	GConfig->Flush(false, EditorIni);
 #endif
 
 	ConfigFileHasChanged = true;
@@ -2913,8 +3663,10 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 	const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
 
 	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, NormalizedTestSyncFile);
+	GConfig->Flush(false, NormalizedTestSyncFile);
 #else
 	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, TestSyncFile);
+	GConfig->Flush(false, TestSyncFile);
 #endif
 
 	bool didSetKey = false;
@@ -2955,7 +3707,7 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 #else
 	GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, TestSyncFile);
 
-	GConfig->Flush(false, GEngineIni);
+	GConfig->Flush(false, TestSyncFile);
 #endif
 }
 
@@ -3091,7 +3843,7 @@ void FCognitiveEditorTools::CompressAndSaveTexture(const FString& SourcePath, co
 	}
 }
 
-void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
+void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actorsToExport)
 {
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
@@ -3109,14 +3861,14 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	}
 
 	//create directory at scene name path
-	FString sceneDirectory = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/";
+	FString sceneDirectory = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/";
 	FCognitiveEditorTools::VerifyOrCreateDirectory(sceneDirectory);
 
 	//create screenshot directory
-	FString dir = BaseExportDirectory + "/" + GetCurrentSceneName() + "/screenshot/";
+	FString dir = BaseExportDirectory + "/" + LevelName + "/screenshot/";
 	FCognitiveEditorTools::VerifyOrCreateDirectory(dir);
 	
-	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/" + FCognitiveEditorTools::GetInstance()->GetCurrentSceneName() + ".gltf";
+	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName + "/" + LevelName + ".gltf");
 
 	//use GLTFExporter Plugin
 
@@ -3148,7 +3900,7 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	if (CompressExportedFiles)
 	{
 		int32 MaxSize = 1024; // Adjust the size as needed
-		CompressTexturesInExportFolder(FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory(), MaxSize);
+		CompressTexturesInExportFolder(FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName), MaxSize);
 	}
 
 	if (ExportDynamicsWithScene)
@@ -3187,10 +3939,12 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
 
+	bool writeSettingsJsonSuccess = GenerateSettingsJsonFile(LevelName);
+
 	//create settings.json
-	FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(Cognitive3D_SDK_VERSION) + "\",\"sceneName\":\"" + GetCurrentSceneName() + "\"}";
-	FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/settings.json";
-	bool writeSettingsJsonSuccess = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+	//FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(Cognitive3D_SDK_VERSION) + "\",\"sceneName\":\"" + GetCurrentSceneName() + "\"}";
+	//FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/settings.json";
+	//bool writeSettingsJsonSuccess = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	if (writeSettingsJsonSuccess == false)
 	{
 		ShowNotification(TEXT("Unable to save settings.json"), false);
@@ -3202,15 +3956,15 @@ void FCognitiveEditorTools::ExportScene(TArray<AActor*> actorsToExport)
 	FString fileContents = BuildDebugFileContents();
 	FFileHelper::SaveStringToFile(fileContents, *fullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 
-	ValidateGeneratedFiles();
+	ValidateGeneratedFiles(LevelName);
 	
 
 }
 
-void FCognitiveEditorTools::ValidateGeneratedFiles()
+void FCognitiveEditorTools::ValidateGeneratedFiles(const FString LevelName)
 {
 	//validate other files:
-	FString ExportDirPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/";
+	FString ExportDirPath = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/";
 	TArray<FString> FoundFiles;
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 
@@ -3262,19 +4016,17 @@ void FCognitiveEditorTools::ValidateGeneratedFiles()
 	}
 
 	//rename exports and .bin reference in the .gltf when exporting with arbitrary names to be scene.gltf and scene.bin
-	FString levelName = GWorld->GetMapName(); //GetWorld()->GetMapName();
-	levelName.RemoveFromStart(GWorld->StreamingLevelsPrefix);
+	//FString levelName = GWorld->GetMapName(); //GetWorld()->GetMapName();
+	//levelName.RemoveFromStart(GWorld->StreamingLevelsPrefix);
 
 	FString scenegltfPath = ExportDirPath + "/scene.gltf";
-	FString levelgltfPath = ExportDirPath + "/" + levelName +  ".gltf";
+	FString levelgltfPath = ExportDirPath + "/" + LevelName +  ".gltf";
 
 	FString scenebinPath = ExportDirPath + "/scene.bin";
-	FString levelbinPath = ExportDirPath + "/" + levelName + ".bin";
+	FString levelbinPath = ExportDirPath + "/" + LevelName + ".bin";
 
 	FString scenemtlPath = ExportDirPath + "/scene.mtl";
-	FString levelmtlPath = ExportDirPath + "/" + levelName + ".mtl";
-
-
+	FString levelmtlPath = ExportDirPath + "/" + LevelName + ".mtl";
 
 	RenameFile(levelgltfPath, scenegltfPath);
 	RenameFile(levelbinPath, scenebinPath);
@@ -3351,28 +4103,23 @@ void FCognitiveEditorTools::ModifyGLTFContent(FString FilePath)
 	}
 }
 
-void FCognitiveEditorTools::GenerateSettingsJsonFile()
+bool FCognitiveEditorTools::GenerateSettingsJsonFile(const FString& LevelName)
 {
-	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
+	FString ObjPath = FPaths::Combine(BaseExportDirectory, LevelName);
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
 
 	//create settings.json
-	FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(Cognitive3D_SDK_VERSION) + "\",\"sceneName\":\"" + GetCurrentSceneName() + "\"}";
-	FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/settings.json";
-	bool writeSettingsJsonSuccess = FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
-	if (writeSettingsJsonSuccess == false)
-	{
-		WizardUploadResponseCode = 0;
-		WizardUploadError = "FCognitiveEditorTools::ExportScene unable to save settings.json";
-		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene unable to save settings.json"));
-	}
+	FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(Cognitive3D_SDK_VERSION) + "\",\"sceneName\":\"" + LevelName + "\"}";
+	FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/settings.json";
+	return FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+	
 }
 
-bool FCognitiveEditorTools::HasSettingsJsonFile() const
+bool FCognitiveEditorTools::HasSettingsJsonFile(const FString& LevelName) const
 {
-	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
+	FString ObjPath = FPaths::Combine(BaseExportDirectory, LevelName);
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
-	FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/settings.json";
+	FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/settings.json";
 
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 	return PlatformFile.FileExists(*settingsFullPath);
@@ -3411,21 +4158,27 @@ const ISlateStyle& FCognitiveEditorTools::GetSlateStyle()
 #endif
 }
 
-void FCognitiveEditorTools::WizardUpload()
+void FCognitiveEditorTools::WizardUpload(const FString& LevelName)
 {
 	WizardUploading = true;
 	WizardUploadError = "";
 	WizardUploadResponseCode = 0;
 
-	if (!HasSettingsJsonFile())
+	if (!HasSettingsJsonFile(LevelName))
 	{
 		WizardUploadResponseCode = 0;
 		WizardUploadError = "FCognitiveEditorToolsCustomization::WizardUpload settings.json file missing! Creating for current scene";
 		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorToolsCustomization::WizardUpload settings.json file missing! Creating for current scene"));
-		GenerateSettingsJsonFile();
+		bool writeSettingsJsonSuccess = GenerateSettingsJsonFile(LevelName);
+		if (writeSettingsJsonSuccess == false)
+		{
+			WizardUploadResponseCode = 0;
+			WizardUploadError = "FCognitiveEditorTools::ExportScene unable to save settings.json";
+			UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene unable to save settings.json"));
+		}
 	}
 
-	UploadScene();
+	UploadScene(LevelName);
 }
 
 FText FCognitiveEditorTools::GetBaseExportDirectoryDisplay() const

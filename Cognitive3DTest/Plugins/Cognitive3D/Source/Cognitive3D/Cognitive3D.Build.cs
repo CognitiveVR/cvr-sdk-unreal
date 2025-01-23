@@ -2,6 +2,7 @@
 ** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
 */
 
+
 namespace UnrealBuildTool.Rules
 {
 	public class Cognitive3D : ModuleRules
@@ -65,47 +66,58 @@ namespace UnrealBuildTool.Rules
 				}
 				);
 
-			//uncomment the following line to enable Oculus/Meta functionality. Uses OculusVR for UE4 and OculusXR (MetaXR) for UE5.
-			//Specifically adds eye tracking support for Quest Pro and uses Meta APIs for room size and boundary events
-			//MetaXRPlugin();
+            if (Target.Platform == UnrealTargetPlatform.Android)
+            {
+                PublicDependencyModuleNames.AddRange(new string[]{"AndroidPermission", // Common for Android builds
+					"ApplicationCore", // Required for certain Android API calls
+					"Launch" // Required for Android builds
+				}
+                );
+                PublicRuntimeLibraryPaths.Add(System.IO.Path.Combine(ModuleDirectory, "Android/lib"));
+                AdditionalPropertiesForReceipt.Add("AndroidPlugin", System.IO.Path.Combine(ModuleDirectory, "Android/Cognitive3D_UPL.xml"));
+            }
 
-			//Uncomment the following line to enable Oculus Passthrough features. UE 5.2 onward
-			//MUST ALSO ENABLE OCULUS PLUGIN ABOVE!
-			//MetaXRPassthrough();
+            //uncomment the following line to enable Oculus/Meta functionality. Uses OculusVR for UE4 and OculusXR (MetaXR) for UE5.
+            //Specifically adds eye tracking support for Quest Pro and uses Meta APIs for room size and boundary events
+            //MetaXRPlugin();
 
-			//Uncomment the following line to enable Oculus Platform features
-			//Uses Meta Platform Plugin to get Oculus Username. Also gets the user's subscription status
-			//MetaXRPlatform();
+            //Uncomment the following line to enable Oculus Passthrough features. UE 5.2 onward
+            //MUST ALSO ENABLE OCULUS PLUGIN ABOVE!
+            //MetaXRPassthrough();
 
-			//Uncomment the following line to enable PICOXR SDK features
-			//PICOXR();
+            //Uncomment the following line to enable Oculus Platform features
+            //Uses Meta Platform Plugin to get Oculus Username. Also gets the user's subscription status
+            //MetaXRPlatform();
 
-			//Uncomment the following line to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
-			//OpenXREyeTracking();
+            //Uncomment the following line to enable PICOXR SDK features
+            //PICOXR();
 
-			//Uncomment the following line to enable Vive WaveVR eye tracking support
-			//WaveVREyeTracking();
+            //Uncomment the following line to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
+            //OpenXREyeTracking();
 
-			//Varjo (up to and including version 3.0.0)
-			//Varjo();
+            //Uncomment the following line to enable Vive WaveVR eye tracking support
+            //WaveVREyeTracking();
 
-			//Uncomment to enable Tobii Eye Tracking
-			//TobiiEyeTracking();
+            //Varjo (up to and including version 3.0.0)
+            //Varjo();
 
-			//Uncomment to enable Vive SRanipal version 1.3+ for eye tracking
-			//Legacy support, prefer to use Vive OpenXR
-			//SRanipalVivePro();
+            //Uncomment to enable Tobii Eye Tracking
+            //TobiiEyeTracking();
 
-			//Pico Neo 2 Eye tracking
-			//Legacy support, prefer to use PicoXR SDK
-			//PicoMobile();
+            //Uncomment to enable Vive SRanipal version 1.3+ for eye tracking
+            //Legacy support, prefer to use Vive OpenXR
+            //SRanipalVivePro();
 
-			//HP Omnicept eye tracking and sensors
-			//Legacy support
-			//HPGlia();
+            //Pico Neo 2 Eye tracking
+            //Legacy support, prefer to use PicoXR SDK
+            //PicoMobile();
 
-			//this is all for runtime audio capture support using ExitPoll Surveys
-			if (Target.Platform == UnrealTargetPlatform.Win64
+            //HP Omnicept eye tracking and sensors
+            //Legacy support
+            //HPGlia();
+
+            //this is all for runtime audio capture support using ExitPoll Surveys
+            if (Target.Platform == UnrealTargetPlatform.Win64
 				|| Target.Platform == UnrealTargetPlatform.Win32
             )
 			{
@@ -151,8 +163,9 @@ namespace UnrealBuildTool.Rules
 		void PICOXR()
         {
 			PublicDefinitions.Add("INCLUDE_PICO_PLUGIN");
-			PublicDependencyModuleNames.AddRange(new string[] { "PICOXRHMD" });
-		}
+            PublicDependencyModuleNames.AddRange(new string[] { "PICOXRHMD", "PICOXRInput", "InputDevice" });
+            PrivateIncludePaths.Add(System.IO.Path.Combine(pluginsDirectory, "PICOXR/Source/PICOXRInput/Private"));
+        }
 
 		void OpenXREyeTracking()
         {

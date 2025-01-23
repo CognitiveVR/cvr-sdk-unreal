@@ -316,7 +316,7 @@ void FDynamicObjectManager::SendData(bool copyDataToCache)
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 
-	wholeObj->SetStringField("userid", cogProvider->GetUserID());
+	wholeObj->SetStringField("userid", cogProvider->GetDeviceID());
 	if (!cogProvider->LobbyId.IsEmpty())
 	{
 		wholeObj->SetStringField("lobbyId", cogProvider->LobbyId);

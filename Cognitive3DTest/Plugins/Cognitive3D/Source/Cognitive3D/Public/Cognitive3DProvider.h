@@ -166,11 +166,14 @@
 		void SetParticipantProperty(FString name, int32 value);
 		void SetParticipantProperty(FString name, float value);
 		void SetParticipantProperty(FString name, FString value);
+		void SetParticipantProperty(FString name, bool value);
 		void SetSessionTag(FString tag);
+		void SetSessionTag(FString tag, bool value);
 
 		void SetSessionProperty(FString name, int32 value);
 		void SetSessionProperty(FString name, float value);
 		void SetSessionProperty(FString name, FString value);
+		void SetSessionProperty(FString name, bool value);
 
 		FString GetAttributionParameters();
 

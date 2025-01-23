@@ -67,13 +67,18 @@ void FAnalyticsCognitive3D::StartupModule()
 	Cognitive3DProvider.Pin()->sensors = new FSensors();
 	Cognitive3DProvider.Pin()->fixationDataRecorder = new FFixationDataRecorder();
 	Cognitive3DProvider.Pin()->gazeDataRecorder = new FGazeDataRecorder();
-	Cognitive3DProvider.Pin()->localCache = MakeShareable(new FLocalCache(FPaths::GeneratedConfigDir()));
+	Cognitive3DProvider.Pin()->localCache = MakeShareable(new FLocalCache(FPaths::Combine(FPaths::ProjectConfigDir(), TEXT("c3dlocal/"))));
 	Cognitive3DProvider.Pin()->network = MakeShareable(new FNetwork());
 	Cognitive3DProvider.Pin()->dynamicObjectManager = new FDynamicObjectManager();
 }
 
 void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* world)
 {
+	if (!bHasSessionStarted)
+	{
+		return;
+	}
+	
 	if (level == nullptr)
 	{
 		FlushAndCacheEvents();
@@ -95,6 +100,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 		{
 			properties->SetStringField("Scene Name", FString(data->Name));
 			properties->SetStringField("Scene Id", FString(data->Id));
+			properties->SetStringField("Previous Scene Name", FString(currentSceneData->Name));
 			float duration = FUtil::GetTimestamp() - SceneStartTime;
 			properties->SetNumberField("Duration", duration);
 			customEventRecorder->Send("c3d.SceneLoaded", properties);
@@ -104,7 +110,10 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 			properties->SetStringField("Sublevel Name", FString(levelName));
 			customEventRecorder->Send("c3d.Level Streaming Load", properties);
 		}
-		FlushAndCacheEvents();
+		gazeDataRecorder->SendData(true);
+		customEventRecorder->SendData(true);
+		fixationDataRecorder->SendData(true);
+		sensors->SendData(true);
 	}
 
 	if (data.IsValid())
@@ -119,10 +128,46 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 	{
 
 	}
+
+	//empty current dynamics manifest
+	dynamicObjectManager->manifest.Empty();
+	dynamicObjectManager->newManifest.Empty();
+	//register dynamics in new level
+	// Iterate over all actors in the loaded level
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		for (UActorComponent* actorComponent : ActorItr->GetComponents())
+		{
+			if (actorComponent->IsA(UDynamicObject::StaticClass()))
+			{
+				UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+				if (dynamicComponent && !dynamicComponent->IsRegistered())
+				{
+					// Register the component
+					dynamicComponent->RegisterComponent();
+				}
+				if (dynamicComponent)
+				{
+					dynamicComponent->HasInitialized = false;
+					dynamicComponent->Initialize();
+				}
+			}
+		}
+	}
+
+	//we send the dynamic data stream after the new scene is loaded and set as the current scene
+	//that way we can send the new, correct manifest to the desired level
+	dynamicObjectManager->SendData(true);
+
 }
 
 void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld* world)
 {
+	if (!bHasSessionStarted)
+	{
+		return;
+	}
+
 	if (level == nullptr)
 	{
 		FlushAndCacheEvents();
@@ -158,13 +203,17 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
 		if (stackNewTop.IsValid())
 		{
-			properties->SetStringField("Scene Name", FString(stackNewTop->Name));
-			properties->SetStringField("Scene Id", FString(stackNewTop->Id));
+			properties->SetStringField("Scene Name", FString(data->Name));
+			properties->SetStringField("Scene Id", FString(data->Id));
+			properties->SetStringField("Destination Scene Name", FString(stackNewTop->Name));
 			float duration = FUtil::GetTimestamp() - SceneStartTime;
 			properties->SetNumberField("Duration", duration);
 			customEventRecorder->Send("c3d.SceneUnloaded", properties);
 		}
-		FlushAndCacheEvents();
+		gazeDataRecorder->SendData(true);
+		customEventRecorder->SendData(true);
+		fixationDataRecorder->SendData(true);
+		sensors->SendData(true);
 
 		//set new current scene
 		if (stackNewTop.IsValid())
@@ -178,6 +227,35 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 			CurrentTrackingSceneId = "";
 			LastSceneData = nullptr;
 		}
+
+		//empty current dynamics manifest
+		dynamicObjectManager->manifest.Empty();
+		dynamicObjectManager->newManifest.Empty();
+		//register dynamics in new level
+		// Iterate over all actors in the loaded level
+		for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+		{
+			for (UActorComponent* actorComponent : ActorItr->GetComponents())
+			{
+				if (actorComponent->IsA(UDynamicObject::StaticClass()))
+				{
+					UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+					if (dynamicComponent && !dynamicComponent->IsRegistered())
+					{
+						// Register the component
+						dynamicComponent->RegisterComponent();
+					}
+					if (dynamicComponent)
+					{
+						dynamicComponent->HasInitialized = false;
+						dynamicComponent->Initialize();
+					}
+				}
+			}
+		}
+
+		dynamicObjectManager->SendData(true);
+
 		SceneStartTime = FUtil::GetTimestamp();
 	}
 	else
@@ -394,11 +472,11 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	}
 	if (currentWorld->WorldType == EWorldType::Game)
 	{
-		SetSessionProperty("c3d.app.inEditor", "false");
+		SetSessionProperty("c3d.app.inEditor", false);
 	}
 	else
 	{
-		SetSessionProperty("c3d.app.inEditor", "true");
+		SetSessionProperty("c3d.app.inEditor", true);
 	}
 
 
@@ -458,13 +536,25 @@ void FAnalyticsProviderCognitive3D::EndSession()
 
 	//cleanup pause and level load delegates
 	if (!PauseHandle.IsValid())
+	{
 		FCoreDelegates::ApplicationWillEnterBackgroundDelegate.Remove(PauseHandle);
+		PauseHandle.Reset();
+	}
 	if (!LevelLoadHandle.IsValid())
+	{
 		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(LevelLoadHandle);
+		LevelLoadHandle.Reset();
+	}
 	if (!SublevelLoadedHandle.IsValid())
+	{
 		FWorldDelegates::LevelAddedToWorld.Remove(SublevelLoadedHandle);
+		SublevelLoadedHandle.Reset();
+	}
 	if (!SublevelUnloadedHandle.IsValid())
+	{
 		FWorldDelegates::LevelRemovedFromWorld.Remove(SublevelUnloadedHandle);
+		SublevelUnloadedHandle.Reset();
+	}
 
 	//reset variables
 	SessionTimestamp = -1;
@@ -545,6 +635,11 @@ void FAnalyticsProviderCognitive3D::SetParticipantFullName(FString participantNa
 
 void FAnalyticsProviderCognitive3D::SetSessionTag(FString Tag)
 {
+	SetSessionTag(Tag, true);
+}
+
+void FAnalyticsProviderCognitive3D::SetSessionTag(FString Tag, bool value)
+{
 	if (Tag.Len() == 0)
 	{
 		FCognitiveLog::Error("FAnalyticsProviderCognitive3D::SetSessionTag must contain > 0 characters");
@@ -556,7 +651,14 @@ void FAnalyticsProviderCognitive3D::SetSessionTag(FString Tag)
 		return;
 	}
 
-	SetSessionProperty("c3d.session_tag."+Tag, "true");
+	if (value == true)
+	{
+		SetSessionProperty("c3d.session_tag." + Tag, true);
+	}
+	else
+	{
+		SetSessionProperty("c3d.session_tag." + Tag, false);
+	}
 }
 
 FString FAnalyticsProviderCognitive3D::GetUserID() const
@@ -980,6 +1082,17 @@ void FAnalyticsProviderCognitive3D::SetSessionProperty(FString name, FString val
 	else
 		AllSessionProperties.SetStringField(name, value);
 }
+void FAnalyticsProviderCognitive3D::SetSessionProperty(FString name, bool value)
+{
+	if (NewSessionProperties.HasField(name))
+		NewSessionProperties.Values[name] = MakeShareable(new FJsonValueBoolean(value));
+	else
+		NewSessionProperties.SetBoolField(name, value);
+	if (AllSessionProperties.HasField(name))
+		AllSessionProperties.Values[name] = MakeShareable(new FJsonValueBoolean(value));
+	else
+		AllSessionProperties.SetBoolField(name, value);
+}
 
 void FAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, int32 value)
 {
@@ -1016,6 +1129,18 @@ void FAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, FString
 		AllSessionProperties.Values[completeName] = MakeShareable(new FJsonValueString(value));
 	else
 		AllSessionProperties.SetStringField(completeName, value);
+}
+void FAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, bool value)
+{
+	FString completeName = "c3d.participant." + name;
+	if (NewSessionProperties.HasField(completeName))
+		NewSessionProperties.Values[completeName] = MakeShareable(new FJsonValueBoolean(value));
+	else
+		NewSessionProperties.SetBoolField(completeName, value);
+	if (AllSessionProperties.HasField(completeName))
+		AllSessionProperties.Values[completeName] = MakeShareable(new FJsonValueBoolean(value));
+	else
+		AllSessionProperties.SetBoolField(completeName, value);
 }
 
 FJsonObject FAnalyticsProviderCognitive3D::GetNewSessionProperties()

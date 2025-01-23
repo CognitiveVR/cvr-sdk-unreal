@@ -206,7 +206,7 @@ void UOculusPlatform::HandleUserRetrieved(const ovrMessageHandle Message)
 		cog->SetParticipantId(idString);
 	}
 
-	cog->SetParticipantProperty("oculusId", idString);
+	cog->SetParticipantProperty("oculusId", FString(idString));
 	cog->SetParticipantProperty("oculusDisplayName", displayNameStr);
 	cog->SetParticipantProperty("oculusUsername", usernameStr);
 
@@ -347,7 +347,7 @@ void UOculusPlatform::SendSubscriptionData()
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
 
-	wholeObj->SetStringField("userid", cog->GetUserID());
+	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	if (!cog->LobbyId.IsEmpty())
 	{
 		wholeObj->SetStringField("lobbyId", cog->LobbyId);

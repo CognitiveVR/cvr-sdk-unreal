@@ -72,11 +72,11 @@ void UBatteryLevel::EndInterval()
 		cognitive->sensors->RecordSensor("HMD Battery Status", (float)batteryState);
 		if (isRunningOnBattery)
 		{
-			cognitive->SetSessionProperty("c3d.hmd.RunningOnBattery", "Yes");
+			cognitive->SetSessionProperty("c3d.hmd.RunningOnBattery", FString("Yes"));
 		}
 		else
 		{
-			cognitive->SetSessionProperty("c3d.hmd.RunningOnBattery", "No");
+			cognitive->SetSessionProperty("c3d.hmd.RunningOnBattery", FString("No"));
 		}
 	}
 }

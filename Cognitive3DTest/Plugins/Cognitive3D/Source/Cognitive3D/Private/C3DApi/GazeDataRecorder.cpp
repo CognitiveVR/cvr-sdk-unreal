@@ -93,7 +93,7 @@ void FGazeDataRecorder::SendData(bool copyDataToCache)
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
 
-	wholeObj->SetStringField("userid", cog->GetUserID());
+	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	if (!cog->LobbyId.IsEmpty())
 	{
 		wholeObj->SetStringField("lobbyId", cog->LobbyId);
@@ -189,8 +189,7 @@ void FGazeDataRecorder::SendData(bool copyDataToCache)
 		dataArray.Add(snapshotValue);
 	}
 
-	//TODO move the PlayerSnapshotInterval const somewhere actually accessible
-	wholeObj->SetNumberField("interval", 0.1f);
+	wholeObj->SetNumberField("interval", PlayerSnapshotInterval);
 
 	wholeObj->SetArrayField("data", dataArray);
 
