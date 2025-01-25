@@ -1830,7 +1830,6 @@ FReply FCognitiveEditorTools::UploadDynamic(FString LevelName, FString directory
 	ReadSceneDataFromFile();
 
 	GLog->Log("FCognitiveEditorTools::UploadDynamics found " + FString::FromInt(dynamicNames.Num()) + " exported dynamic objects");
-	//TODO should pass level name into the function
 	TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(LevelName);
 
 	if (!currentSceneData.IsValid())
@@ -3250,21 +3249,21 @@ void FCognitiveEditorTools::ReadThirdPartySDKData()
 	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("SRanipal 1.3 Enabled"))));
 #endif // SRANIPAL_1_3_API
 
-#ifdef TOBII_EYETRACKING_ACTIVE
+#ifdef INCLUDE_TOBII_PLUGIN
 	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("Tobii VR Enabled"))));
-#endif // TOBII_EYETRACKING_ACTIVE
+#endif // INCLUDE_TOBII_PLUGIN
 
-#ifdef PICOMOBILE_API
+#ifdef INCLUDE_PICOMOBILE_PLUGIN
 	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("Pico VR Enabled"))));
-#endif // PICOMOBILE_API
+#endif // INCLUDE_PICOMOBILE_PLUGIN
 
-#ifdef HPGLIA_API
+#ifdef INCLUDE_HPGLIA_PLUGIN
 	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("HP Glia Enabled"))));
-#endif // HPGLIA_API
+#endif // INCLUDE_HPGLIA_PLUGIN
 
-#ifdef VARJOEYETRACKER_API
+#ifdef INCLUDE_VARJO_PLUGIN
 	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("Varjo Enabled"))));
-#endif // VARJOEYETRACKER_API
+#endif // INCLUDE_VARJO_PLUGIN
 
 
 }
