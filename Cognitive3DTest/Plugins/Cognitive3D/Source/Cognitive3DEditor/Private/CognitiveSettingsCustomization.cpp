@@ -3,6 +3,7 @@
 */
 
 #include "CognitiveSettingsCustomization.h"
+#include "CognitiveEditorData.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 

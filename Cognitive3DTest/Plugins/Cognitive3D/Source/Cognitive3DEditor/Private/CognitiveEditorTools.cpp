@@ -6,6 +6,47 @@
 #include "Kismet2/KismetEditorUtilities.h"
 
 
+#include "Cognitive3DSettings.h"
+#include "CognitiveEditorData.h"
+#include "IDetailCustomization.h"
+#include "GLTFExporter.h"
+#include "AssetExportTask.h"
+#include "Engine/Texture2D.h"
+#include "Misc/LocalTimestampDirectoryVisitor.h" 
+#include "BusyCursor.h"
+#include "AssetTypeActions_Base.h"
+#include "DynamicObject.h"
+#include "IImageWrapper.h"
+#include "IImageWrapperModule.h" //has enum forward declare
+#include "Framework/Notifications/NotificationManager.h"
+#include "Widgets/Notifications/SNotificationList.h"
+#include "Exporters/GLTFLevelExporter.h" 
+#include "Engine/Texture.h"
+#include "ImageUtils.h"
+#include "Misc/FileHelper.h"
+#include "Misc/ScopedSlowTask.h"
+#include "Classes/Components/SceneComponent.h"
+#include "EditorDirectories.h"
+#include "ObjectTools.h"
+#include "DesktopPlatformModule.h"
+#include "IPluginManager.h"
+#include "MaterialUtilities.h"
+#include "MaterialBakingStructures.h"
+#include "IMaterialBakingModule.h"
+#include "MaterialOptions.h"
+#include "GenericPlatformFile.h"
+#include "Classes/Engine/Level.h"
+#include "CoreMisc.h"
+//
+#include "Cognitive3D/Public/Cognitive3DBlueprints.h"
+//
+#include "Engine/Blueprint.h"
+#include "Kismet2/KismetEditorUtilities.h"
+#include "Kismet2/BlueprintEditorUtils.h"
+#include "Engine/SCS_Node.h"
+#include "Engine/BlueprintGeneratedClass.h"
+
+
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
 

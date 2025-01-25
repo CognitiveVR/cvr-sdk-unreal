@@ -4,6 +4,7 @@
 
 #include "Cognitive3D/Private/C3DComponents/HMDHeight.h"
 #include "HeadMountedDisplayTypes.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
 
 UHMDHeight::UHMDHeight()
 {

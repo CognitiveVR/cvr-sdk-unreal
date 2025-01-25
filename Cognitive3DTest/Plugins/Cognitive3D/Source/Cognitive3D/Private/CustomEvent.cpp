@@ -3,6 +3,8 @@
 */
 
 #include "CustomEvent.h"
+#include "Cognitive3D/Public/DynamicObject.h"
+#include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
 
 TSharedPtr<FAnalyticsProviderCognitive3D> UCustomEvent::cog;
 

@@ -21,6 +21,8 @@
 #include "Widgets/Layout/SScrollBar.h"
 #include "Framework/Layout/Overscroll.h"
 #include "Widgets/Views/SListView.h"
+#include "Cognitive3D/Public/DynamicObject.h"
+
 
 //this is a customized list view. it updates the selected actors in the 3d view based on selected items in the list and updates the list when actors are selected
 

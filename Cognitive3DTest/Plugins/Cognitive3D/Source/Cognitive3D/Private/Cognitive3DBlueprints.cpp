@@ -2,6 +2,7 @@
 ** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
 */
 #include "Cognitive3DBlueprints.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
 //#include "Private/Cognitive3DPrivatePCH.h"
 
 TSharedPtr<FAnalyticsProviderCognitive3D> UCognitive3DBlueprints::cog;
