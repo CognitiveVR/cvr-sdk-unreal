@@ -12,6 +12,8 @@
 #include "Android/AndroidApplication.h"
 #endif
 #include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Cognitive3D/Private/C3DApi/GazeDataRecorder.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
 
 // Sets default values for this component's properties
 UOculusPlatform::UOculusPlatform()
