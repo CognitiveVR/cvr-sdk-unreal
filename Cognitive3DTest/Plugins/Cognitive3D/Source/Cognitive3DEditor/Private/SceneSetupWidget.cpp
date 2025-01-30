@@ -4,6 +4,10 @@
 
 #include "SceneSetupWidget.h"
 
+#include "CognitiveEditorTools.h"
+#include "IPluginManager.h"
+#include "Analytics.h"
+
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
 TArray<TSharedPtr<FDynamicData>> SSceneSetupWidget::GetSceneDynamics()
@@ -1741,7 +1745,7 @@ EVisibility SSceneSetupWidget::GetAppendedInputsFoundHidden() const
 	}
 
 	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
-	//TODO IMPROVEMENT instead of hard coding strings here, should append a list from the resources folder
+	
 	TArray<FString> actionMapping;
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
@@ -1766,7 +1770,7 @@ EVisibility SSceneSetupWidget::GetAppendedInputsFoundVisibility() const
 	}
 
 	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
-	//TODO IMPROVEMENT instead of hard coding strings here, should append a list from the resources folder
+	
 	TArray<FString> actionMapping;
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
@@ -1787,7 +1791,6 @@ FReply SSceneSetupWidget::AppendInputs()
 {
 	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
 	
-	//TODO IMPROVEMENT instead of hard coding strings here, should append a list from the resources folder
 
 	TArray<FString> actionMapping;
 	TArray<FString> axisMapping;
@@ -1808,7 +1811,7 @@ FReply SSceneSetupWidget::AppendInputs()
 		return FReply::Handled();
 	}
 
-#if defined PICOMOBILE_API
+#if defined INCLUDE_PICOMOBILE_PLUGIN
 	actionMapping.Add("(ActionName=\"C3D_LeftTrigger\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_L_TriggerAxis)");
 	actionMapping.Add("(ActionName=\"C3D_RightGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_R_LGrip)");
 	actionMapping.Add("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_L_RGrip)");

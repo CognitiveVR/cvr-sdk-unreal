@@ -163,8 +163,9 @@ namespace UnrealBuildTool.Rules
 		void PICOXR()
         {
 			PublicDefinitions.Add("INCLUDE_PICO_PLUGIN");
-			PublicDependencyModuleNames.AddRange(new string[] { "PICOXRHMD" });
-		}
+            PublicDependencyModuleNames.AddRange(new string[] { "PICOXRHMD", "PICOXRInput", "InputDevice" });
+            PrivateIncludePaths.Add(System.IO.Path.Combine(pluginsDirectory, "PICOXR/Source/PICOXRInput/Private"));
+        }
 
 		void OpenXREyeTracking()
         {
@@ -179,15 +180,15 @@ namespace UnrealBuildTool.Rules
 
 		void Varjo()
         {
-			//TODO set custom C3D compilation symbol instead of using VARJOEYETRACKER_API definition
-			PublicDependencyModuleNames.Add("VarjoHMD");
+            PublicDefinitions.Add("INCLUDE_VARJO_PLUGIN");
+            PublicDependencyModuleNames.Add("VarjoHMD");
 			PublicDependencyModuleNames.Add("VarjoEyeTracker");
 		}
 
 		void TobiiEyeTracking()
         {
-			//TODO set custom C3D compilation symbol instead of using TOBII_EYETRACKING_ACTIVE definition
-			PrivateIncludePaths.AddRange(
+            PublicDefinitions.Add("INCLUDE_TOBII_PLUGIN");
+            PrivateIncludePaths.AddRange(
 				new string[] {
 				"../../TobiiEyeTracking/Source/TobiiCore/Private",
 				"../../TobiiEyeTracking/Source/TobiiCore/Public"
@@ -221,14 +222,14 @@ namespace UnrealBuildTool.Rules
 
 		void PicoMobile()
         {
-			//TODO set custom C3D compilation symbol instead of using PICOMOBILE_API definition
-			PublicDependencyModuleNames.Add("PicoMobile");
+            PublicDefinitions.Add("INCLUDE_PICOMOBILE_PLUGIN");
+            PublicDependencyModuleNames.Add("PicoMobile");
 		}
 
 		void HPGlia()
         {
-			//TODO set custom C3D compilation symbol instead of using HPGLIA_API definition
-			PublicDependencyModuleNames.Add("HPGlia");
+            PublicDefinitions.Add("INCLUDE_HPGLIA_PLUGIN");
+            PublicDependencyModuleNames.Add("HPGlia");
 		}
 	}
 }

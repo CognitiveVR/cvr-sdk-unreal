@@ -3,6 +3,7 @@
 */
 
 #include "ExitPoll.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
 
 //FCognitiveExitPollResponse FExitPoll::lastResponse;
 //FExitPollQuestionSet FExitPoll::currentQuestionSet;

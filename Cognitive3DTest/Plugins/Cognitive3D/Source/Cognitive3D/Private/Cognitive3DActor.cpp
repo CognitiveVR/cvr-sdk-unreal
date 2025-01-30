@@ -3,6 +3,7 @@
 */
 
 #include "Cognitive3DActor.h"
+#include "C3DUtil/CognitiveLog.h"
 
 ACognitive3DActor* ACognitive3DActor::instance = nullptr;
 

@@ -7,6 +7,8 @@
 #include "DrawDebugHelpers.h"
 #include "Interfaces/IPluginManager.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
 
 // Sets default values for this component's properties
 UHMDEvents::UHMDEvents()

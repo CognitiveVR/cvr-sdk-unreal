@@ -4,56 +4,33 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-
-#include "Cognitive3DSettings.h"
-#include "CognitiveEditorData.h"
-#include "IDetailCustomization.h"
-#include "PropertyEditing.h"
-#include "PropertyCustomizationHelpers.h"
-#include "Json.h"
-#include "JsonObjectConverter.h"
-#include "UnrealEd.h"
-#include "GLTFExportOptions.h"
-#include "GLTFExporter.h"
-#include "Exporters/GLTFLevelExporter.h" 
-#include "AssetExportTask.h"
-#include "Engine/Texture.h"
-#include "Engine/Texture2D.h"
-#include "ImageUtils.h"
-#include "Misc/FileHelper.h"
-#include "Misc/ScopedSlowTask.h"
-#include "Misc/LocalTimestampDirectoryVisitor.h"
-#include "BusyCursor.h"
-#include "Classes/Components/SceneComponent.h"
-#include "EngineUtils.h"
-#include "EditorDirectories.h"
-#include "AssetTypeActions_Base.h"
-#include "ObjectTools.h"
-#include "PlatformProcess.h"
-#include "DesktopPlatformModule.h"
-#include "MainFrame.h"
-#include "IPluginManager.h"
-#include "AssetRegistryModule.h"
-#include "IAssetRegistry.h"
-#include "MaterialUtilities.h"
-#include "MaterialBakingStructures.h"
-#include "IMaterialBakingModule.h"
-#include "MeshUtilities.h"
-#include "UObject/Object.h"
-#include "MaterialOptions.h"
-#include "DynamicObject.h"
-#include "GenericPlatformFile.h"
-#include "Http.h"
-#include "UnrealClient.h"
-#include "IImageWrapper.h"
-#include "IImageWrapperModule.h"
+#include "CoreMinimal.h" 
+#include "PropertyEditing.h" 
+#include "PropertyCustomizationHelpers.h" 
+#include "Json.h" 
+#include "JsonObjectConverter.h" 
+#include "UnrealEd.h" 
+#include "GLTFExportOptions.h" 
+#include "EngineUtils.h" 
+#include "PlatformProcess.h" 
+#include "MainFrame.h" 
+#include "AssetRegistryModule.h" 
+#include "IAssetRegistry.h" 
+#include "MeshUtilities.h" 
+#include "UObject/Object.h" 
+#include "Http.h" 
+#include "UnrealClient.h" 
 #include "RenderingThread.h"
-#include "Classes/Engine/Level.h"
-#include "CoreMisc.h"
-#include "C3DCommonEditorTypes.h"
-#include "Framework/Notifications/NotificationManager.h"
-#include "Widgets/Notifications/SNotificationList.h"
+#include "C3DCommonEditorTypes.h" 
+
+
+
+//forward declarations
+class FDynamicData;
+class FEditorSceneData;
+class UDynamicObject;
+class IImageWrapper;
+class IPlatformFile;
 
 //all sorts of functionality for Cognitive SDK
 

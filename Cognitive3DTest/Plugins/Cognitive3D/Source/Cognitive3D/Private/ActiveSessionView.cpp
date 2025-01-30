@@ -4,6 +4,8 @@
 
 #include "ActiveSessionView.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "Kismet/GameplayStatics.h"
+#include "Cognitive3D/Private/C3DComponents/FixationRecorder.h"
 
 float AActiveSessionView::Remap(float num, float low1, float high1, float low2, float high2)
 {

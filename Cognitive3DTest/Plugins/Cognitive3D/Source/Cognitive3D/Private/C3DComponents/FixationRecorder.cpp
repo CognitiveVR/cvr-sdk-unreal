@@ -3,6 +3,9 @@
 */
 
 #include "FixationRecorder.h"
+#include "Cognitive3D/Private/C3DUtil/Util.h"
+#include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
+#include "Cognitive3D/Private/C3DApi/FixationDataRecorder.h"
 
 UFixationRecorder::UFixationRecorder()
 {
@@ -270,7 +273,7 @@ bool UFixationRecorder::CheckEndFixation(const FFixation& testFixation)
 	return false;
 }
 
-#if defined TOBII_EYETRACKING_ACTIVE
+#if defined INCLUDE_TOBII_PLUGIN
 int64 UFixationRecorder::GetEyeCaptureTimestamp(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker)
 {
 	int32 t = eyetracker->GetCombinedGazeData().TimeStamp.ToUnixTimestamp();
@@ -357,7 +360,7 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 	int64 ts = (int64)(FUtil::GetTimestamp() * 1000);
 	return ts;
 }
-#elif defined VARJOEYETRACKER_API
+#elif defined INCLUDE_VARJO_PLUGIN
 bool UFixationRecorder::AreEyesClosed()
 {
 	FVarjoEyeTrackingData eyeTrackingData;
@@ -378,7 +381,7 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 	int64 ts = (int64)(FUtil::GetTimestamp() * 1000);
 	return ts;
 }
-#elif defined PICOMOBILE_API
+#elif defined INCLUDE_PICOMOBILE_PLUGIN
 bool UFixationRecorder::AreEyesClosed()
 {
 	FVector Origin;
@@ -391,7 +394,7 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 	int64 ts = (int64)(FUtil::GetTimestamp() * 1000);
 	return ts;
 }
-#elif defined HPGLIA_API
+#elif defined INCLUDE_HPGLIA_PLUGIN
 bool UFixationRecorder::AreEyesClosed()
 {
 	FEyeTracking eyeTrackingData;
@@ -569,7 +572,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 	//============== draw some rays from the HMD
 	cog->TryGetPlayerHMDPosition(EyeCaptures[index].HMDPosition);
-#if defined TOBII_EYETRACKING_ACTIVE
+#if defined INCLUDE_TOBII_PLUGIN
 	auto eyetracker = ITobiiCore::GetEyeTracker();
 	EyeCaptures[index].EyesClosed = AreEyesClosed(eyetracker);
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp(eyetracker);
@@ -627,7 +630,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	{
 		EyeCaptures[index].Discard = true;
 }
-#elif defined VARJOEYETRACKER_API
+#elif defined INCLUDE_VARJO_PLUGIN
 	EyeCaptures[index].EyesClosed = AreEyesClosed();
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
 
@@ -651,7 +654,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		EyeCaptures[index].Discard = true;
 	}
 
-#elif defined PICOMOBILE_API
+#elif defined INCLUDE_PICOMOBILE_PLUGIN
 	EyeCaptures[index].EyesClosed = AreEyesClosed();
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
 
@@ -668,7 +671,7 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		EyeCaptures[index].Discard = true;
 	}
 
-#elif defined HPGLIA_API
+#elif defined INCLUDE_HPGLIA_PLUGIN
 	EyeCaptures[index].EyesClosed = AreEyesClosed();
 	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
 

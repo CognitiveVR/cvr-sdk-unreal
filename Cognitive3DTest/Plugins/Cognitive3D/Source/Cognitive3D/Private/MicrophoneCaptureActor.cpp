@@ -5,6 +5,7 @@
 
 //#include "Private/Cognitive3DPrivatePCH.h"
 #include "MicrophoneCaptureActor.h"
+#include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
 
 #if PLATFORM_ANDROID
 

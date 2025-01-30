@@ -6,7 +6,6 @@
 
 #include "Cognitive3D/Public/C3DCommonTypes.h"
 #include "UObject/UObjectIterator.h"
-#include "CoreMinimal.h"
 #include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Interfaces/IAnalyticsProviderModule.h"
 #include "Modules/ModuleManager.h"
@@ -15,7 +14,7 @@
 DEFINE_LOG_CATEGORY_STATIC(Cognitive3D_Log, Log, All);
 
 #define Cognitive3D_SDK_NAME "unreal"
-#define Cognitive3D_SDK_VERSION "1.8.3"
+#define Cognitive3D_SDK_VERSION "1.8.4"
 
 class IAnalyticsProvider;
 class FAnalyticsProviderCognitive3D;

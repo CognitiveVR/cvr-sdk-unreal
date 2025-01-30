@@ -6,6 +6,47 @@
 #include "Kismet2/KismetEditorUtilities.h"
 
 
+#include "Cognitive3DSettings.h"
+#include "CognitiveEditorData.h"
+#include "IDetailCustomization.h"
+#include "GLTFExporter.h"
+#include "AssetExportTask.h"
+#include "Engine/Texture2D.h"
+#include "Misc/LocalTimestampDirectoryVisitor.h" 
+#include "BusyCursor.h"
+#include "AssetTypeActions_Base.h"
+#include "DynamicObject.h"
+#include "IImageWrapper.h"
+#include "IImageWrapperModule.h" //has enum forward declare
+#include "Framework/Notifications/NotificationManager.h"
+#include "Widgets/Notifications/SNotificationList.h"
+#include "Exporters/GLTFLevelExporter.h" 
+#include "Engine/Texture.h"
+#include "ImageUtils.h"
+#include "Misc/FileHelper.h"
+#include "Misc/ScopedSlowTask.h"
+#include "Classes/Components/SceneComponent.h"
+#include "EditorDirectories.h"
+#include "ObjectTools.h"
+#include "DesktopPlatformModule.h"
+#include "IPluginManager.h"
+#include "MaterialUtilities.h"
+#include "MaterialBakingStructures.h"
+#include "IMaterialBakingModule.h"
+#include "MaterialOptions.h"
+#include "GenericPlatformFile.h"
+#include "Classes/Engine/Level.h"
+#include "CoreMisc.h"
+//
+#include "Cognitive3D/Public/Cognitive3DBlueprints.h"
+//
+#include "Engine/Blueprint.h"
+#include "Kismet2/KismetEditorUtilities.h"
+#include "Kismet2/BlueprintEditorUtils.h"
+#include "Engine/SCS_Node.h"
+#include "Engine/BlueprintGeneratedClass.h"
+
+
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
 
@@ -1289,9 +1330,6 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest(FString LevelName)
 	return FReply::Handled();
 }
 
-//TODO explicitly define where the dynamic objects manifest should be uploaded to
-//TODO probably add a 'scene' text field to the dynamic object window
-//can this be a generated dropdown, to avoid 
 FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(FString LevelName, TArray<UDynamicObject*> dynamics)
 {
 	bool wroteAnyObjects = false;
@@ -1754,7 +1792,7 @@ FReply FCognitiveEditorTools::UploadDynamics(FString LevelName)
 	ReadSceneDataFromFile();
 
 	GLog->Log("FCognitiveEditorTools::UploadDynamics found " + FString::FromInt(dynamicNames.Num()) + " exported dynamic objects");
-	//TODO should pass name into the function
+	
 	TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(LevelName);
 
 	if (!currentSceneData.IsValid())
@@ -1833,7 +1871,6 @@ FReply FCognitiveEditorTools::UploadDynamic(FString LevelName, FString directory
 	ReadSceneDataFromFile();
 
 	GLog->Log("FCognitiveEditorTools::UploadDynamics found " + FString::FromInt(dynamicNames.Num()) + " exported dynamic objects");
-	//TODO should pass level name into the function
 	TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(LevelName);
 
 	if (!currentSceneData.IsValid())
@@ -2399,8 +2436,6 @@ void FCognitiveEditorTools::UploadFromDirectory(FString LevelName, FString url, 
 
 void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
-	//TODO disable upload button if settings.json doesn't exist
-	//TODO finish scene setup window - it freezes after upload completes (successfully)
 	if (bWasSuccessful)
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted bWasSuccessful response code " + FString::FromInt(Response->GetResponseCode()));
@@ -3255,21 +3290,21 @@ void FCognitiveEditorTools::ReadThirdPartySDKData()
 	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("SRanipal 1.3 Enabled"))));
 #endif // SRANIPAL_1_3_API
 
-#ifdef TOBII_EYETRACKING_ACTIVE
+#ifdef INCLUDE_TOBII_PLUGIN
 	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("Tobii VR Enabled"))));
-#endif // TOBII_EYETRACKING_ACTIVE
+#endif // INCLUDE_TOBII_PLUGIN
 
-#ifdef PICOMOBILE_API
+#ifdef INCLUDE_PICOMOBILE_PLUGIN
 	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("Pico VR Enabled"))));
-#endif // PICOMOBILE_API
+#endif // INCLUDE_PICOMOBILE_PLUGIN
 
-#ifdef HPGLIA_API
+#ifdef INCLUDE_HPGLIA_PLUGIN
 	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("HP Glia Enabled"))));
-#endif // HPGLIA_API
+#endif // INCLUDE_HPGLIA_PLUGIN
 
-#ifdef VARJOEYETRACKER_API
+#ifdef INCLUDE_VARJO_PLUGIN
 	ThirdPartySDKData.Add(MakeShareable(new FString(TEXT("Varjo Enabled"))));
-#endif // VARJOEYETRACKER_API
+#endif // INCLUDE_VARJO_PLUGIN
 
 
 }

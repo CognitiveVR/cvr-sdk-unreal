@@ -2,6 +2,8 @@
 ** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
 */
 #include "Cognitive3D/Private/C3DApi/GazeDataRecorder.h"
+#include "Cognitive3D/Public/Cognitive3DBlueprints.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
 
 //called at module startup to create a default uobject of this type
 FGazeDataRecorder::FGazeDataRecorder()
@@ -187,8 +189,7 @@ void FGazeDataRecorder::SendData(bool copyDataToCache)
 		dataArray.Add(snapshotValue);
 	}
 
-	//TODO move the PlayerSnapshotInterval const somewhere actually accessible
-	wholeObj->SetNumberField("interval", 0.1f);
+	wholeObj->SetNumberField("interval", PlayerSnapshotInterval);
 
 	wholeObj->SetArrayField("data", dataArray);
 

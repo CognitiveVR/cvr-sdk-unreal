@@ -3,8 +3,6 @@
 */
 
 #include "Cognitive3DSettings.h"
-//#include "Cognitive3D.h"
-//#include "Cognitive3DPrivatePCH.h"
 
 #define LOCTEXT_NAMESPACE "Cognitive3DLoc"
 

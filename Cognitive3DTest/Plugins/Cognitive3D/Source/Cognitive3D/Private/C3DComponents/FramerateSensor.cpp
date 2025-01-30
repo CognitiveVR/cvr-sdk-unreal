@@ -3,6 +3,8 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/FramerateSensor.h"
+#include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
+
 #ifdef INCLUDE_OCULUS_PLUGIN
 #if ENGINE_MAJOR_VERSION == 4
 #include "OculusFunctionLibrary.h"
@@ -10,6 +12,7 @@
 #include "OculusXRFunctionLibrary.h"
 #endif
 #endif
+
 
 UFramerateSensor::UFramerateSensor()
 {

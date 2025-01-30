@@ -241,8 +241,6 @@ void UDynamicObject::Initialize()
 	//scene id must be valid to send
 
 	//scene component
-	//todo: need to do some validation that the parent actually exists here for cases
-	//where the component is being registered before its being attached in code
 	if (GetAttachParent() != nullptr)
 	{
 		LastPosition = GetAttachParent()->GetComponentLocation();

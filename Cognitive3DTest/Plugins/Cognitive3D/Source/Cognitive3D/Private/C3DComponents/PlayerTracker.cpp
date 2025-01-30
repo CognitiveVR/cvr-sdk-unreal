@@ -4,6 +4,9 @@
 
 #include "PlayerTracker.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Cognitive3D/Public/DynamicObject.h"
+#include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
 
 UPlayerTracker::UPlayerTracker()
 {
@@ -33,7 +36,7 @@ void UPlayerTracker::BeginPlay()
 
 FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 {
-#if defined TOBII_EYETRACKING_ACTIVE
+#if defined INCLUDE_TOBII_PLUGIN
 	auto eyetracker = ITobiiCore::GetEyeTracker();
 	FVector End = start + eyetracker->GetCombinedGazeData().WorldGazeDirection * 100000.0f;
 	return End;
@@ -64,7 +67,7 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	}
 	End = start + LastDirection * 100000.0f;
 	return End;
-#elif defined VARJOEYETRACKER_API
+#elif defined INCLUDE_VARJO_PLUGIN
 	FVector Start = start;
 	FVector WorldDirection = FVector::ZeroVector;
 	FVector End = FVector::ZeroVector;
@@ -83,7 +86,7 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 	}
 	End = start + LastDirection * 100000.0f;
 	return End;
-#elif defined PICOMOBILE_API
+#elif defined INCLUDE_PICOMOBILE_PLUGIN
 	FVector Start = FVector::ZeroVector;
 	FVector WorldDirection = FVector::ZeroVector;
 	FVector End = FVector::ZeroVector;
@@ -93,7 +96,7 @@ FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 		End = Start + WorldDirection * 10000.0f;
 	}
 	return End;
-#elif defined HPGLIA_API
+#elif defined INCLUDE_HPGLIA_PLUGIN
 	FVector End = FVector::ZeroVector;
 	FVector TempStart = controllers[0]->PlayerCameraManager->GetCameraLocation();
 

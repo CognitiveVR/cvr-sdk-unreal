@@ -3,6 +3,10 @@
 */
 
 #include "DynamicObjectManager.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
+#include "Cognitive3D/Public/Cognitive3DBlueprints.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Cognitive3D/Public/DynamicObject.h"
 
 FDynamicObjectManager::FDynamicObjectManager()
 {

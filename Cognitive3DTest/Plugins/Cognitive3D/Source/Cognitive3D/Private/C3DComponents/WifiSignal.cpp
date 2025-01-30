@@ -81,7 +81,7 @@ void UWifiSignal::EndInterval()
 		if (cognitive.IsValid())
 		{
 			float SignalStrFloat = float(currentSignalStrength);
-			cognitive->sensors->RecordSensor("WifiRSSI", SignalStrFloat);
+			cognitive->sensors->RecordSensor("c3d.app.WifiRSSI", SignalStrFloat);
 		}
 	}
 
