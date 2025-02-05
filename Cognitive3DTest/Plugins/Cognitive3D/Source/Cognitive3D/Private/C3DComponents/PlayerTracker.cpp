@@ -181,75 +181,85 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	FVector captureLocation = controllers[0]->PlayerCameraManager->GetCameraLocation();
 	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
 
-	//look at dynamic object
-	FCollisionQueryParams Params; // You can use this to customize various properties about the trace
-	Params.AddIgnoredActor(GetOwner()); // Ignore the player's pawn
-
-
-	FHitResult Hit; // The hit result gets populated by the line trace
-	FHitResult FloorHit; // The hit result gets populated by the line trace
-
-	FVector Start = captureLocation;
-	FVector End = GetWorldGazeEnd(Start);
-	
-	FCollisionObjectQueryParams params = FCollisionObjectQueryParams();
-	params.AddObjectTypesToQuery(ECC_WorldStatic);
-	params.AddObjectTypesToQuery(ECC_WorldDynamic);
-
-	bool bHit = false;
-	FCollisionQueryParams gazeparams = FCollisionQueryParams(FName(), true);
-	bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, gazeparams);
-
-	GetWorld()->LineTraceSingleByObjectType(FloorHit, captureLocation, FVector(0, 0, -1000), params);
-	
 	bool DidHitFloor = false;
 	FVector FloorHitPosition;
-	if (FloorHit.GetActor() != NULL)
+	if (RecordGazeHit)
 	{
-		DidHitFloor = true;
-		FloorHitPosition = FloorHit.ImpactPoint;
-	}
 
-	if (bHit)
-	{
-		FVector gaze = Hit.ImpactPoint;
 
-		if (Hit.GetActor() != NULL)
+		//look at dynamic object
+		FCollisionQueryParams Params; // You can use this to customize various properties about the trace
+		Params.AddIgnoredActor(GetOwner()); // Ignore the player's pawn
+
+
+		FHitResult Hit; // The hit result gets populated by the line trace
+		FHitResult FloorHit; // The hit result gets populated by the line trace
+
+		FVector Start = captureLocation;
+		FVector End = GetWorldGazeEnd(Start);
+
+		FCollisionObjectQueryParams params = FCollisionObjectQueryParams();
+		params.AddObjectTypesToQuery(ECC_WorldStatic);
+		params.AddObjectTypesToQuery(ECC_WorldDynamic);
+
+		bool bHit = false;
+		FCollisionQueryParams gazeparams = FCollisionQueryParams(FName(), true);
+		bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, gazeparams);
+
+		GetWorld()->LineTraceSingleByObjectType(FloorHit, captureLocation, FVector(0, 0, -1000), params);
+
+		DidHitFloor = false;
+
+		if (FloorHit.GetActor() != NULL)
 		{
-			UActorComponent* hitActorComponent = Hit.GetActor()->GetComponentByClass(UDynamicObject::StaticClass());
-			if (hitActorComponent != NULL)
-			{
-				UDynamicObject* hitDynamicObject = Cast<UDynamicObject>(hitActorComponent);
-				if (hitDynamicObject != NULL && hitDynamicObject->GetObjectId().IsValid())
-				{
-					FVector localHitPosition = hitDynamicObject->GetOwner()->GetActorTransform().InverseTransformPosition(Hit.ImpactPoint);
+			DidHitFloor = true;
+			FloorHitPosition = FloorHit.ImpactPoint;
+		}
 
-					objectid = hitDynamicObject->GetObjectId()->Id;
-					gaze.X = localHitPosition.X;
-					gaze.Y = localHitPosition.Y;
-					gaze.Z = localHitPosition.Z;
+		if (bHit)
+		{
+			FVector gaze = Hit.ImpactPoint;
+
+			if (Hit.GetActor() != NULL)
+			{
+				UActorComponent* hitActorComponent = Hit.GetActor()->GetComponentByClass(UDynamicObject::StaticClass());
+				if (hitActorComponent != NULL)
+				{
+					UDynamicObject* hitDynamicObject = Cast<UDynamicObject>(hitActorComponent);
+					if (hitDynamicObject != NULL && hitDynamicObject->GetObjectId().IsValid())
+					{
+						FVector localHitPosition = hitDynamicObject->GetOwner()->GetActorTransform().InverseTransformPosition(Hit.ImpactPoint);
+
+						objectid = hitDynamicObject->GetObjectId()->Id;
+						gaze.X = localHitPosition.X;
+						gaze.Y = localHitPosition.Y;
+						gaze.Z = localHitPosition.Z;
+					}
+				}
+				else
+				{
+					//hit an actor that is not a dynamic object
 				}
 			}
 			else
 			{
-				//hit an actor that is not a dynamic object
+				//hit some csg or something that is not an actor
 			}
+			cog->gazeDataRecorder->BuildSnapshot(captureLocation, gaze, captureRotation, timestamp, DidHitFloor, FloorHitPosition, objectid);
+
+			if (DebugDisplayGaze)
+				DrawDebugSphere(GetWorld(), gaze, 3, 3, FColor::White, false, 0.2);
 		}
 		else
 		{
-			//hit some csg or something that is not an actor
+			//hit nothing. use position and rotation only
+			cog->gazeDataRecorder->BuildSnapshot(captureLocation, captureRotation, timestamp, DidHitFloor, FloorHitPosition);
 		}
-		cog->gazeDataRecorder->BuildSnapshot(captureLocation, gaze, captureRotation, timestamp, DidHitFloor, FloorHitPosition, objectid);
-
-		if (DebugDisplayGaze)
-			DrawDebugSphere(GetWorld(), gaze, 3, 3, FColor::White, false, 0.2);
 	}
-	else
+	else //RecordGazeHit is false, so we only record the player's position and rotation
 	{
-		//hit nothing. use position and rotation only
 		cog->gazeDataRecorder->BuildSnapshot(captureLocation, captureRotation, timestamp, DidHitFloor, FloorHitPosition);
 	}
-
 	cog->OnCognitiveInterval.Broadcast();
 }
 
