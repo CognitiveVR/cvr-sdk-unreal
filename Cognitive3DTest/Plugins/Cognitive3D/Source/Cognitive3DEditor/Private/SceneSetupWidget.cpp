@@ -182,7 +182,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 
 #pragma endregion
-
+/*
 #pragma region "controller screen"
 
 			+ SVerticalBox::Slot()
@@ -317,7 +317,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 			]
 
 #pragma endregion
-
+*/
 #pragma region "export screen"
 
 			+ SVerticalBox::Slot()
@@ -1187,7 +1187,8 @@ EVisibility SSceneSetupWidget::IsIntroVisible() const
 }
 EVisibility SSceneSetupWidget::IsControllerVisible() const
 {
-	return CurrentPageEnum == ESceneSetupPage::Controller ? EVisibility::Visible : EVisibility::Collapsed;
+	//return CurrentPageEnum == ESceneSetupPage::Controller ? EVisibility::Visible : EVisibility::Collapsed;
+	return EVisibility::Collapsed;
 }
 EVisibility SSceneSetupWidget::IsExportVisible() const
 {
@@ -1367,11 +1368,12 @@ FReply SSceneSetupWidget::NextPage()
 		//save keys to ini
 		SpawnCognitive3DActor();
 	}
-	else if (CurrentPageEnum == ESceneSetupPage::Controller)
+	/*else if (CurrentPageEnum == ESceneSetupPage::Controller)
 	{
 		//set default export directory if it isnt set
 		FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
 	}
+	*/
 	else if (CurrentPageEnum == ESceneSetupPage::Export)
 	{
 		GLog->Log("set dynamic and scene export directories. create if needed");
@@ -1643,27 +1645,29 @@ FText SSceneSetupWidget::GetHeaderTitle() const
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 1 - INTRO</>");
 	}
+	/*
 	if (CurrentPageEnum == ESceneSetupPage::Controller)
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 2 - CONTROLLER SETUP</>");
 	}
+	*/
 	if (CurrentPageEnum == ESceneSetupPage::Export)
 	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 3 - EXPORT SCENE GEOMETRY</>");
+		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 2 - EXPORT SCENE GEOMETRY</>");
 	}
 	if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
 	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 4 - UPLOAD TO DASHBOARD</>");
+		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 3 - UPLOAD TO DASHBOARD</>");
 	}
 	if (CurrentPageEnum == ESceneSetupPage::UploadProgress)
 	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 4 - UPLOAD IN PROGRESS</>");
+		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 3 - UPLOAD IN PROGRESS</>");
 	}
 	if (CurrentPageEnum == ESceneSetupPage::Complete)
 	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 5 - DONE</>");
+		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 4 - DONE</>");
 	}
-	return FText::FromString("<RichTextBlock.BoldHighlight>STEP 5 - DONE</>");
+	return FText::FromString("<RichTextBlock.BoldHighlight>STEP 4 - DONE</>");
 }
 
 void SSceneSetupWidget::OnExportPathChanged(const FText& Text)
@@ -1739,10 +1743,12 @@ const FSlateBrush* SSceneSetupWidget::GetControllerComponentBrush() const
 
 EVisibility SSceneSetupWidget::GetAppendedInputsFoundHidden() const
 {
+	/*
 	if (CurrentPageEnum != ESceneSetupPage::Controller)
 	{
 		return EVisibility::Collapsed;
 	}
+	*/
 
 	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
 	
@@ -1764,10 +1770,12 @@ EVisibility SSceneSetupWidget::GetAppendedInputsFoundHidden() const
 
 EVisibility SSceneSetupWidget::GetAppendedInputsFoundVisibility() const
 {
+	/*
 	if (CurrentPageEnum != ESceneSetupPage::Controller)
 	{
 		return EVisibility::Collapsed;
 	}
+	*/
 
 	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
 	
@@ -1962,10 +1970,12 @@ EVisibility SSceneSetupWidget::UploadThumbnailTextVisibility() const
 
 EVisibility SSceneSetupWidget::GetDefaultInputClassEnhanced() const
 {
+	/*
 	if (CurrentPageEnum != ESceneSetupPage::Controller)
 	{
 		return EVisibility::Collapsed;
 	}
+	*/
 
 	//show AppendInput button if its not using enhanced input
 	FString DefaultPlayerInputClass;

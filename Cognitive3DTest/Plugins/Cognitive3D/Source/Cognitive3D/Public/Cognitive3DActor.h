@@ -12,6 +12,7 @@
 //this class basically only exists to send EndPlay to the CognitiveProvider
 //and as a simple way of getting the right UWorld
 
+class UActorComponent;
 class FAnalyticsProviderCognitive3D;
 
 UCLASS()
@@ -40,4 +41,21 @@ private:
 	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	//Find and automatically assign dynamic objects to controllers
+	UPROPERTY()
+	class UMotionControllerComponent* LeftController;
+
+	UPROPERTY()
+	class UMotionControllerComponent* RightController;
+
+	UPROPERTY()
+	USceneComponent* LeftHandComponent;
+
+	UPROPERTY()
+	USceneComponent* RightHandComponent;
+
+	void InitializeControllers();
+
+	USceneComponent* FindHandComponent(USceneComponent* Parent);
 };
