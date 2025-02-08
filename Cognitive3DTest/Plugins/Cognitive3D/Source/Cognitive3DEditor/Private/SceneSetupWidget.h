@@ -56,7 +56,7 @@ public:
 	{
 		Invalid, //dev key isn't set
 		Intro,
-		//Controller,
+		Controller,
 		Export,
 		UploadChecklist,
 		UploadProgress,
