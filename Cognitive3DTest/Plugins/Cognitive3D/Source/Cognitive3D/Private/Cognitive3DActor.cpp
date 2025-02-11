@@ -153,40 +153,54 @@ void ACognitive3DActor::InitializeControllers()
 		UE_LOG(LogTemp, Warning, TEXT("MotionControllerComponents not found in the scene."));
 	}
 
-	//try creating this bullshit on runtime
-	UDynamicObject* LeftHandDyn = NewObject<UDynamicObject>(LeftController);
-	if (LeftHandComponent)
+	if (!HasDynamicObjectComponent(LeftController))
 	{
-		LeftHandDyn->AttachToComponent(LeftHandComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		//create dynamic objects and assign them during runtime
+		UDynamicObject* LeftHandDyn = NewObject<UDynamicObject>(LeftController);
+		if (LeftHandComponent)
+		{
+			LeftHandDyn->AttachToComponent(LeftHandComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		}
+		else
+		{
+			LeftHandDyn->AttachToComponent(LeftController, FAttachmentTransformRules::KeepRelativeTransform);
+		}
+		//LeftHandDyn->MeshName = TEXT("LeftHandMesh");
+		LeftHandDyn->IdSourceType = EIdSourceType::GeneratedId;
+		LeftHandDyn->IsController = true;
+		LeftHandDyn->IsRightController = false;
+		LeftHandDyn->SyncUpdateWithPlayer = true;
+		LeftHandDyn->ControllerType = EC3DControllerType::Quest3;
+		LeftHandDyn->RegisterComponent();
 	}
 	else
 	{
-		LeftHandDyn->AttachToComponent(LeftController, FAttachmentTransformRules::KeepRelativeTransform);
+		UE_LOG(LogTemp, Warning, TEXT("LeftHandDyn already exists. Skipping creation."));
 	}
-	//LeftHandDyn->MeshName = TEXT("LeftHandMesh");
-	LeftHandDyn->IdSourceType = EIdSourceType::GeneratedId;
-	LeftHandDyn->IsController = true;
-	LeftHandDyn->IsRightController = false;
-	LeftHandDyn->SyncUpdateWithPlayer = true;
-	LeftHandDyn->ControllerType = EC3DControllerType::Quest3;
-	LeftHandDyn->RegisterComponent();
 
-	UDynamicObject* RightHandDyn = NewObject<UDynamicObject>(RightController);
-	if (RightHandComponent)
+	if (!HasDynamicObjectComponent(RightController))
 	{
-		RightHandDyn->AttachToComponent(RightHandComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		UDynamicObject* RightHandDyn = NewObject<UDynamicObject>(RightController);
+		if (RightHandComponent)
+		{
+			RightHandDyn->AttachToComponent(RightHandComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		}
+		else
+		{
+			RightHandDyn->AttachToComponent(RightController, FAttachmentTransformRules::KeepRelativeTransform);
+		}
+		//RightHandDyn->MeshName = TEXT("RightHandMesh");
+		RightHandDyn->IdSourceType = EIdSourceType::GeneratedId;
+		RightHandDyn->IsController = true;
+		RightHandDyn->IsRightController = true;
+		RightHandDyn->SyncUpdateWithPlayer = true;
+		RightHandDyn->ControllerType = EC3DControllerType::Quest3;
+		RightHandDyn->RegisterComponent();
 	}
 	else
 	{
-		RightHandDyn->AttachToComponent(RightController, FAttachmentTransformRules::KeepRelativeTransform);
+		UE_LOG(LogTemp, Warning, TEXT("RightHandDyn already exists. Skipping creation."));
 	}
-	//RightHandDyn->MeshName = TEXT("RightHandMesh");
-	RightHandDyn->IdSourceType = EIdSourceType::GeneratedId;
-	RightHandDyn->IsController = true;
-	RightHandDyn->IsRightController = true;
-	RightHandDyn->SyncUpdateWithPlayer = true;
-	RightHandDyn->ControllerType = EC3DControllerType::Quest3;
-	RightHandDyn->RegisterComponent();
 }
 
 USceneComponent* ACognitive3DActor::FindHandComponent(USceneComponent* Parent)
@@ -213,6 +227,28 @@ USceneComponent* ACognitive3DActor::FindHandComponent(USceneComponent* Parent)
 	}
 
 	return nullptr;  // No valid component found
+}
+
+bool ACognitive3DActor::HasDynamicObjectComponent(USceneComponent* Parent)
+{
+	if (!Parent)
+	{
+		return false;
+	}
+
+	// Get all child components recursively
+	TArray<USceneComponent*> ChildrenComponents;
+	Parent->GetChildrenComponents(true, ChildrenComponents);
+
+	for (USceneComponent* Child : ChildrenComponents)
+	{
+		if (Cast<UDynamicObject>(Child)) // Check if the child is a UDynamicObject
+		{
+			return true;
+		}
+	}
+
+	return false; // No existing UDynamicObject found
 }
 
 UWorld* ACognitive3DActor::GetCognitiveSessionWorld()

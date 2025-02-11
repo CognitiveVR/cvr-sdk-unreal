@@ -58,4 +58,6 @@ private:
 	void InitializeControllers();
 
 	USceneComponent* FindHandComponent(USceneComponent* Parent);
+
+	bool HasDynamicObjectComponent(USceneComponent* Parent);
 };
