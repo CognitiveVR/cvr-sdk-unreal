@@ -198,8 +198,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.AutoWrapText(true)
 					.Justification(ETextJustify::Center)
 					.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
-					.Text(FText::FromString("Open the VR Pawn blueprint that is spawned for your player.\n\n\n\nAttach Dynamic Object components as children of each MotionController actor component."))
+					.Text(FText::FromString("The Cognitive3DActor Blueprint automatically finds your player's controllers in run-time and assigns dynamic objects to them to be tracked for valuable insights on our dashboard.\n\n You do not have to set those up manually, or export and upload a mesh for them to be tracked like other dynamic objects."))
 				]
+					/*
 				+SHorizontalBox::Slot()
 				[
 					SNew(SBox)
@@ -213,8 +214,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						.Image(this, &SSceneSetupWidget::GetControllerComponentBrush)
 					]
 				]
+				*/
 			]
-
+			/*
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
@@ -222,7 +224,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				SNew(SSeparator)
 				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
 			]
-
+			
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
@@ -252,7 +254,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
-
+			*/
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
@@ -1372,6 +1374,7 @@ FReply SSceneSetupWidget::NextPage()
 		//set default export directory if it isnt set
 		FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
 	}
+	
 	else if (CurrentPageEnum == ESceneSetupPage::Export)
 	{
 		GLog->Log("set dynamic and scene export directories. create if needed");
@@ -1643,10 +1646,12 @@ FText SSceneSetupWidget::GetHeaderTitle() const
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 1 - INTRO</>");
 	}
+	
 	if (CurrentPageEnum == ESceneSetupPage::Controller)
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 2 - CONTROLLER SETUP</>");
 	}
+	
 	if (CurrentPageEnum == ESceneSetupPage::Export)
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 3 - EXPORT SCENE GEOMETRY</>");
@@ -1657,13 +1662,13 @@ FText SSceneSetupWidget::GetHeaderTitle() const
 	}
 	if (CurrentPageEnum == ESceneSetupPage::UploadProgress)
 	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 4 - UPLOAD IN PROGRESS</>");
+		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 5 - UPLOAD IN PROGRESS</>");
 	}
 	if (CurrentPageEnum == ESceneSetupPage::Complete)
 	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 5 - DONE</>");
+		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 6 - DONE</>");
 	}
-	return FText::FromString("<RichTextBlock.BoldHighlight>STEP 5 - DONE</>");
+	return FText::FromString("<RichTextBlock.BoldHighlight>STEP 6 - DONE</>");
 }
 
 void SSceneSetupWidget::OnExportPathChanged(const FText& Text)
@@ -1739,10 +1744,12 @@ const FSlateBrush* SSceneSetupWidget::GetControllerComponentBrush() const
 
 EVisibility SSceneSetupWidget::GetAppendedInputsFoundHidden() const
 {
+	
 	if (CurrentPageEnum != ESceneSetupPage::Controller)
 	{
 		return EVisibility::Collapsed;
 	}
+	
 
 	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
 	
@@ -1764,10 +1771,12 @@ EVisibility SSceneSetupWidget::GetAppendedInputsFoundHidden() const
 
 EVisibility SSceneSetupWidget::GetAppendedInputsFoundVisibility() const
 {
+	
 	if (CurrentPageEnum != ESceneSetupPage::Controller)
 	{
 		return EVisibility::Collapsed;
 	}
+	
 
 	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
 	
@@ -1962,10 +1971,12 @@ EVisibility SSceneSetupWidget::UploadThumbnailTextVisibility() const
 
 EVisibility SSceneSetupWidget::GetDefaultInputClassEnhanced() const
 {
+	
 	if (CurrentPageEnum != ESceneSetupPage::Controller)
 	{
 		return EVisibility::Collapsed;
 	}
+	
 
 	//show AppendInput button if its not using enhanced input
 	FString DefaultPlayerInputClass;

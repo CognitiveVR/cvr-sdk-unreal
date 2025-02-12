@@ -6,6 +6,8 @@
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
+FString FUtil::HMDSpecificDeviceName = TEXT(""); // Initialize the static variable
+
 double FUtil::GetTimestamp()
 {
 	//#pragma warning(push)
@@ -155,7 +157,7 @@ void FUtil::SetSessionProperties()
 
 	FString HMDName = GetSpecificHMDFromHardware(GPUBrand, HMDDeviceName, CPUChipset, (int)MemoryConstants.TotalPhysicalGB);
 	cog->SetSessionProperty("c3d.device.hmd.type", HMDName);
-
+	HMDSpecificDeviceName = HMDName;
 }
 
 FString FUtil::GetSpecificHMDFromHardware(FString GPUBrand, FString HMDDeviceName, FString CPUChipset, int32 DeviceMemory)
@@ -250,4 +252,9 @@ FString FUtil::GetSpecificHMDFromHardware(FString GPUBrand, FString HMDDeviceNam
 
 	// Unknown or Unlisted Devices
 	return TEXT("Unknown or Unsupported HMD");
+}
+
+FString FUtil::GetHMDDeviceName()
+{
+	return HMDSpecificDeviceName;
 }
