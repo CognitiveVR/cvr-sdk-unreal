@@ -2954,12 +2954,14 @@ for (const FAssetData& AssetData2 : AssetDataList)
 	FString AssetName = AssetData2.AssetName.ToString();
 
 	// Force load the asset to ensure all data is available
+	/*
 	UBlueprint* Blueprint = Cast<UBlueprint>(AssetData2.GetAsset());
 	if (!Blueprint)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Failed to load Blueprint: %s"), *AssetName);
 		continue;
 	}
+	*/
 
 	// Get the GeneratedClass tag from the asset data (without fully loading the asset)
 	FString GeneratedClassPath;
