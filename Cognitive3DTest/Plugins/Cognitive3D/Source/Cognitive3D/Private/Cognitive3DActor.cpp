@@ -12,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Cognitive3DProvider.h"
 #include "DynamicObject.h"
+#include "Cognitive3D/Private/C3DUtil/Util.h"
 
 ACognitive3DActor* ACognitive3DActor::instance = nullptr;
 
@@ -170,7 +171,46 @@ void ACognitive3DActor::InitializeControllers()
 		LeftHandDyn->IsController = true;
 		LeftHandDyn->IsRightController = false;
 		LeftHandDyn->SyncUpdateWithPlayer = true;
-		LeftHandDyn->ControllerType = EC3DControllerType::Quest3;
+
+		FString HMDDeviceName = FUtil::GetHMDDeviceName();
+
+		if (HMDDeviceName.Contains(TEXT("Meta Quest 2"), ESearchCase::IgnoreCase))
+		{
+			LeftHandDyn->ControllerType = EC3DControllerType::Quest2;
+		}
+		else if (HMDDeviceName.Contains(TEXT("Meta Quest 3"), ESearchCase::IgnoreCase))
+		{
+			LeftHandDyn->ControllerType = EC3DControllerType::Quest3;
+		}
+		else if (HMDDeviceName.Contains(TEXT("Meta Quest Pro"), ESearchCase::IgnoreCase))
+		{
+			LeftHandDyn->ControllerType = EC3DControllerType::QuestPro;
+		}
+		else if (HMDDeviceName.Contains(TEXT("Meta Quest"), ESearchCase::IgnoreCase))
+		{
+			LeftHandDyn->ControllerType = EC3DControllerType::OculusRift;
+		}
+		else if (HMDDeviceName.Contains(TEXT("Pico Neo 2"), ESearchCase::IgnoreCase))
+		{
+			LeftHandDyn->ControllerType = EC3DControllerType::PicoNeo2;
+		}
+		else if (HMDDeviceName.Contains(TEXT("Pico Neo 3"), ESearchCase::IgnoreCase))
+		{
+			LeftHandDyn->ControllerType = EC3DControllerType::PicoNeo3;
+		}
+		else if (HMDDeviceName.Contains(TEXT("Pico 4"), ESearchCase::IgnoreCase))
+		{
+			LeftHandDyn->ControllerType = EC3DControllerType::PicoNeo4;
+		}
+		else if (HMDDeviceName.Contains(TEXT("HTC Vive"), ESearchCase::IgnoreCase))
+		{
+			LeftHandDyn->ControllerType = EC3DControllerType::Vive;
+		}
+		else
+		{
+			LeftHandDyn->ControllerType = EC3DControllerType::Quest3;
+		}
+
 		LeftHandDyn->RegisterComponent();
 	}
 	else
@@ -194,7 +234,45 @@ void ACognitive3DActor::InitializeControllers()
 		RightHandDyn->IsController = true;
 		RightHandDyn->IsRightController = true;
 		RightHandDyn->SyncUpdateWithPlayer = true;
-		RightHandDyn->ControllerType = EC3DControllerType::Quest3;
+
+		FString HMDDeviceName = FUtil::GetHMDDeviceName();
+		if (HMDDeviceName.Contains(TEXT("Meta Quest 2"), ESearchCase::IgnoreCase))
+		{
+			RightHandDyn->ControllerType = EC3DControllerType::Quest2;
+		}
+		else if (HMDDeviceName.Contains(TEXT("Meta Quest 3"), ESearchCase::IgnoreCase))
+		{
+			RightHandDyn->ControllerType = EC3DControllerType::Quest3;
+		}
+		else if (HMDDeviceName.Contains(TEXT("Meta Quest Pro"), ESearchCase::IgnoreCase))
+		{
+			RightHandDyn->ControllerType = EC3DControllerType::QuestPro;
+		}
+		else if (HMDDeviceName.Contains(TEXT("Meta Quest"), ESearchCase::IgnoreCase))
+		{
+			RightHandDyn->ControllerType = EC3DControllerType::OculusRift;
+		}
+		else if (HMDDeviceName.Contains(TEXT("Pico Neo 2"), ESearchCase::IgnoreCase))
+		{
+			RightHandDyn->ControllerType = EC3DControllerType::PicoNeo2;
+		}
+		else if (HMDDeviceName.Contains(TEXT("Pico Neo 3"), ESearchCase::IgnoreCase))
+		{
+			RightHandDyn->ControllerType = EC3DControllerType::PicoNeo3;
+		}
+		else if (HMDDeviceName.Contains(TEXT("Pico 4"), ESearchCase::IgnoreCase))
+		{
+			RightHandDyn->ControllerType = EC3DControllerType::PicoNeo4;
+		}
+		else if (HMDDeviceName.Contains(TEXT("HTC Vive"), ESearchCase::IgnoreCase))
+		{
+			RightHandDyn->ControllerType = EC3DControllerType::Vive;
+		}
+		else
+		{
+			RightHandDyn->ControllerType = EC3DControllerType::Quest3;
+		}
+
 		RightHandDyn->RegisterComponent();
 	}
 	else
