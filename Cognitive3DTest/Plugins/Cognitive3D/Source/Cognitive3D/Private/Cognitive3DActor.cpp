@@ -154,7 +154,7 @@ void ACognitive3DActor::InitializeControllers()
 		UE_LOG(LogTemp, Warning, TEXT("MotionControllerComponents not found in the scene."));
 	}
 
-	if (!HasDynamicObjectComponent(LeftController))
+	if (LeftController && !HasDynamicObjectComponent(LeftController))
 	{
 		//create dynamic objects and assign them during runtime
 		UDynamicObject* LeftHandDyn = NewObject<UDynamicObject>(LeftController);
@@ -218,7 +218,7 @@ void ACognitive3DActor::InitializeControllers()
 		UE_LOG(LogTemp, Warning, TEXT("LeftHandDyn already exists. Skipping creation."));
 	}
 
-	if (!HasDynamicObjectComponent(RightController))
+	if (RightController && !HasDynamicObjectComponent(RightController))
 	{
 		UDynamicObject* RightHandDyn = NewObject<UDynamicObject>(RightController);
 		if (RightHandComponent)
