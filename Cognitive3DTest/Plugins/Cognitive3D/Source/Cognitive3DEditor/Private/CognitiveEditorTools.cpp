@@ -3568,14 +3568,14 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 	const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
 
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, NormalizedEngineIni);
-	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, NormalizedEngineIni);
+	GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("AttributionKey"), *AttributionKey, NormalizedEngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, NormalizedEditorIni);
 
 	GConfig->Flush(false, NormalizedEngineIni);
 	GConfig->Flush(false, NormalizedEditorIni);
 #else
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, EngineIni);
-	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, EngineIni);
+	GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("AttributionKey"), *AttributionKey, EngineIni);
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, EditorIni);
 
 	GConfig->Flush(false, EngineIni);

@@ -77,7 +77,7 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 			.OnTextChanged_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OnApplicationKeyChanged)
 		]
 	];
-
+	/*
 	LoginCategory.AddCustomRow(FText::FromString("Attribution Key"))
 	.ValueContent()
 	.HAlign(HAlign_Fill)
@@ -99,7 +99,7 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 			.OnTextChanged_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OnAttributionKeyChanged)
 		]
 	];
-
+	*/
 	LoginCategory.AddCustomRow(FText::FromString("Save"))
 	.ValueContent()
 	.MinDesiredWidth(256)
@@ -237,11 +237,11 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 	const FString NormalizedEngineIni = GConfig->NormalizeConfigIniPath(EngineIni);
 	const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
 
-	GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, NormalizedEngineIni);
+	GConfig->GetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, NormalizedEngineIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, NormalizedEngineIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, NormalizedEditorIni);
 #else
-	GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, EngineIni);
+	GConfig->GetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, EngineIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, EngineIni);
 	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, EditorIni);
 #endif
