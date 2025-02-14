@@ -81,6 +81,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Cognitive3D Analytics")
 		bool DebugDisplayGaze = false;
 
+	UPROPERTY(EditAnywhere, Category = "Cognitive3D Analytics")
+		bool RecordGazeHit = true;
 
 	float GetLastSendTime();
 	int32 GetPartNumber();
