@@ -46,6 +46,7 @@
 #include "Engine/SCS_Node.h"
 #include "Engine/BlueprintGeneratedClass.h"
 
+#include "LandscapeStreamingProxy.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
@@ -3858,7 +3859,19 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 
 	for (int32 i = 0; i < actorsToExport.Num(); i++)
 	{
-		GEditor->SelectActor((actorsToExport[i]), true, false, true);
+		if (ALandscapeStreamingProxy* LandscapeProxy = Cast<ALandscapeStreamingProxy>(actorsToExport[i]))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("FOUND LANDSCAPE PROXY, SKIPPING SELECT"));
+		}
+		else if (actorsToExport[i]->GetName().StartsWith("SkySphereBlueprint"))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("FOUND SKYSPHERE, SKIPPING SELECT"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("NOT PROXY, FOUND ACTOR: %s"), *actorsToExport[i]->GetFName().ToString());
+			GEditor->SelectActor((actorsToExport[i]), true, false, true);
+		}
 	}
 
 	//create directory at scene name path
