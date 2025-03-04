@@ -212,6 +212,8 @@ void UOculusPlatform::HandleUserRetrieved(const ovrMessageHandle Message)
 	cog->SetParticipantProperty("oculusDisplayName", displayNameStr);
 	cog->SetParticipantProperty("oculusUsername", usernameStr);
 
+	OnOculusNameHandled.Broadcast(displayNameStr);
+
 	if (gotAccessToken == false)
 	{
 		ovr_User_GetAccessToken();
