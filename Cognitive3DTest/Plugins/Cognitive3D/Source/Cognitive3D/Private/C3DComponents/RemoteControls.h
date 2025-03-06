@@ -52,6 +52,7 @@ public:
 	template <typename T>
 	T GetRemoteControlVariable(FString key, T defaultValue);
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRemoteControlVariableReceived);
 
 	UFUNCTION(BlueprintCallable, Category = "Remote Control")
 	int32 GetRemoteControlVariableInt(const FString& Key, int32 DefaultValue);
@@ -64,6 +65,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Remote Control")
 	bool GetRemoteControlVariableBool(const FString& Key, bool DefaultValue);
+
+	UPROPERTY(BlueprintAssignable, Category = "Remote Control")
+	FOnRemoteControlVariableReceived OnRemoteControlVariableReceived;
 };
 
 template<typename T>

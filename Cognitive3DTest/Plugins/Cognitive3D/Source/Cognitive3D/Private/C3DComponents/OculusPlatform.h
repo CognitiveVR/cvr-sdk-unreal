@@ -48,6 +48,7 @@ public:
 		void OnSessionEnd();
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+	UPROPERTY(BlueprintAssignable, Category = "Oculus Platform")
 	FOnOculusNameHandled OnOculusNameHandled;
 
 #ifdef INCLUDE_OCULUS_PLATFORM
