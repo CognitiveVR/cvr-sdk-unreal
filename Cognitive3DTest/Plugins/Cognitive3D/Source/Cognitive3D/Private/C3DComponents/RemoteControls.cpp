@@ -357,15 +357,31 @@ bool URemoteControls::GetRemoteControlVariableBool(const FString& Key, bool Defa
 
 void URemoteControls::CacheTuningVariables(FHttpResponsePtr Response, const FString& JsonResponse)
 {
+	//make folder remotecontrols
+	//store it in a RemoteControls file inside that with just the response
 	if (!cog.IsValid()) { return; }
 	if (!cog->HasStartedSession()) { return; }
 
-	if (!cog->localCache.IsValid()) { return; }
-	if (cog->localCache->IsEnabled())
+	// Get the project's Config directory.
+	FString BaseConfigDir = FPaths::ProjectConfigDir();
+
+	// Define the subfolder and ensure it exists.
+	FString CustomFolder = FPaths::Combine(BaseConfigDir, TEXT("c3dlocal/remotecontrols"));
+	if (!FPaths::DirectoryExists(CustomFolder))
 	{
-		if (cog->localCache->CanWrite(JsonResponse.Len()))
+		// Create the directory if it doesn't exist.
+		IFileManager::Get().MakeDirectory(*CustomFolder);
+	}
+
+	// Combine the subfolder path with your INI file name.
+	FString RemoteControlsFilePath = FPaths::Combine(CustomFolder, TEXT("RemoteControls"));
+
+	// If the file doesn't exist, create it with some default content.
+	if (!FPaths::FileExists(RemoteControlsFilePath))
+	{
+		if (!FFileHelper::SaveStringToFile(JsonResponse, *RemoteControlsFilePath))
 		{
-			cog->localCache->WriteData(Response->GetURL(), JsonResponse);
+			UE_LOG(LogTemp, Error, TEXT("Failed to create config file: %s"), *RemoteControlsFilePath);
 		}
 	}
 }
@@ -375,15 +391,32 @@ void URemoteControls::ReadFromCache()
 	if (!cog.IsValid()) { return; }
 	if (!cog->HasStartedSession()) { return; }
 
-	if (!cog->localCache.IsValid()) { return; }
-	if (cog->localCache->IsEnabled())
+	// Get the project's Config directory.
+	FString BaseConfigDir = FPaths::ProjectConfigDir();
+
+	// Define the subfolder and ensure it exists.
+	FString CustomFolder = FPaths::Combine(BaseConfigDir, TEXT("c3dlocal/remotecontrols"));
+	if (!FPaths::DirectoryExists(CustomFolder))
 	{
-		FString url;
-		FString content;
-		if (cog->localCache->PeekContent(url, content))
+		// Create the directory if it doesn't exist.
+		IFileManager::Get().MakeDirectory(*CustomFolder);
+	}
+
+	// Combine the subfolder path with your INI file name.
+	FString RemoteControlsFilePath = FPaths::Combine(CustomFolder, TEXT("RemoteControls"));
+
+	// If the file doesn't exist, create it with some default content.
+	if (!FPaths::FileExists(RemoteControlsFilePath))
+	{
+		FString JsonResponse;
+		if (!FFileHelper::LoadFileToString(JsonResponse, *RemoteControlsFilePath))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to read config file: %s"), *RemoteControlsFilePath);
+		}
+		else
 		{
 			// Parse the content
-			ParseJsonResponse(content);
+			ParseJsonResponse(JsonResponse);
 		}
 	}
 }
