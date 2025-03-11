@@ -182,7 +182,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
 
 	bool DidHitFloor = false;
-	FVector FloorHitPosition;
+	FVector FloorHitPosition = FVector::ZeroVector;
 	if (RecordGazeHit)
 	{
 

@@ -73,6 +73,8 @@ void UHandElevation::OnSessionEnd()
 
 void UHandElevation::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
+	Super::EndPlay(EndPlayReason);
+
 	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{

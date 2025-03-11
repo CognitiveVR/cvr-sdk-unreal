@@ -397,14 +397,15 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 		FCognitiveLog::Error("FAnalyticsProviderCognitive3D::StartSession World not set. Are you missing a Cognitive Actor in your level?");
 		return false;
 	}
-	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-	//ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
-	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "Analytics", "ApiKey", false);
-	AttributionKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "AttributionKey", false);
+
+	FString C3DSettingsPath = GetSettingsFilePathRuntime();
+
+	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "Analytics", "ApiKey", false);
+	AttributionKey = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "Analytics", "AttributionKey", false);
 
 	FString ValueReceived;
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "AutomaticallySetTrackingScene", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "AutomaticallySetTrackingScene", false);
 	if (ValueReceived.Len() > 0)
 	{
 		AutomaticallySetTrackingScene = FCString::ToBool(*ValueReceived);
@@ -943,6 +944,36 @@ TSharedPtr<FSceneData> FAnalyticsProviderCognitive3D::GetSceneData(FString scene
 	return NULL;
 }
 
+FString FAnalyticsProviderCognitive3D::GetSettingsFilePathRuntime() const
+{
+	// Get the project's Config directory.
+	FString BaseConfigDir = FPaths::ProjectConfigDir();
+
+	// Define the subfolder and ensure it exists.
+	FString CustomFolder = FPaths::Combine(BaseConfigDir, TEXT("c3dlocal"));
+	if (!FPaths::DirectoryExists(CustomFolder))
+	{
+		// Create the directory if it doesn't exist.
+		IFileManager::Get().MakeDirectory(*CustomFolder);
+	}
+
+	// Combine the subfolder path with your INI file name.
+	FString ConfigFilePath = FPaths::Combine(CustomFolder, TEXT("Cognitive3DSettings.ini"));
+
+	// If the file doesn't exist, create it with some default content.
+	if (!FPaths::FileExists(ConfigFilePath))
+	{
+		FString DefaultContent = TEXT("; Cognitive3D Plugin Settings\n[General]\n");
+		if (!FFileHelper::SaveStringToFile(DefaultContent, *ConfigFilePath))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to create config file: %s"), *ConfigFilePath);
+			return FString();
+		}
+	}
+	//ConfigFilePath = FConfigCacheIni::NormalizeConfigIniPath(ConfigFilePath);
+	return ConfigFilePath;
+}
+
 FString FAnalyticsProviderCognitive3D::GetCurrentSceneId()
 {
 	auto currentData = GetCurrentSceneData();
@@ -962,14 +993,11 @@ FString FAnalyticsProviderCognitive3D::GetCurrentSceneVersionNumber()
 void FAnalyticsProviderCognitive3D::CacheSceneData()
 {
 	TArray<FString>scenstrings;
-	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+	FString C3DSettingsPath = GetSettingsFilePathRuntime();
+	GConfig->LoadFile(C3DSettingsPath);
+	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, C3DSettingsPath);
+	GConfig->Flush(false, C3DSettingsPath);
 
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-	const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
-	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, NormalizedTestSyncFile);
-#else
-	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
-#endif
 	SceneData.Empty();
 
 	for (int i = 0; i < scenstrings.Num(); i++)

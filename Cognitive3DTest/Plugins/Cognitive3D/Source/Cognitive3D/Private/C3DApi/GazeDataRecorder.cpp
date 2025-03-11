@@ -18,8 +18,11 @@ void FGazeDataRecorder::StartSession()
 
 	FString ValueReceived;
 
+	FString C3DSettingsPath = cog->GetSettingsFilePathRuntime();
+	GConfig->LoadFile(C3DSettingsPath);
+
 	//gaze batch size
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "GazeBatchSize", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "GazeBatchSize", false);
 	if (ValueReceived.Len() > 0)
 	{
 		int32 sensorLimit = FCString::Atoi(*ValueReceived);

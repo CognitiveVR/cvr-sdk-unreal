@@ -230,22 +230,54 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 	FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
 
-	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+	// Explicitly load the custom config file into GConfig.
+	GConfig->LoadFile(C3DSettingsPath);
+	GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, C3DSettingsPath);
+	GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, C3DSettingsPath);
+	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, C3DSettingsPath);
 
+	GConfig->Flush(false, C3DSettingsPath);
+
+	if (FCognitiveEditorTools::GetInstance()->DeveloperKey.IsEmpty() || FCognitiveEditorTools::GetInstance()->ApplicationKey.IsEmpty())
+	{
+		FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-	const FString NormalizedEngineIni = GConfig->NormalizeConfigIniPath(EngineIni);
-	const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
+		const FString NormalizedEngineIni = GConfig->NormalizeConfigIniPath(EngineIni);
+		const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
 
-	GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, NormalizedEngineIni);
-	GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, NormalizedEngineIni);
-	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, NormalizedEditorIni);
+		GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, NormalizedEngineIni);
+		GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, NormalizedEngineIni);
+		GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, NormalizedEditorIni);
+		GConfig->GetString(TEXT("Analytics"), TEXT("ExportPath"), FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
+
+		//
+		GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, GGameIni);
+		GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, GGameIni);
+		GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, GGameIni);
+		GConfig->GetString(TEXT("Analytics"), TEXT("ExportPath"), FCognitiveEditorTools::GetInstance()->BaseExportDirectory, GGameIni);
+
+		GConfig->Flush(false, GGameIni);
+
+		GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *FCognitiveEditorTools::GetInstance()->ApplicationKey, C3DSettingsPath);
+		GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *FCognitiveEditorTools::GetInstance()->AttributionKey, C3DSettingsPath);
+		GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *FCognitiveEditorTools::GetInstance()->DeveloperKey, C3DSettingsPath);
+		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, C3DSettingsPath);
+		GConfig->Flush(false, C3DSettingsPath);
 #else
-	GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, EngineIni);
-	GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, EngineIni);
-	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, EditorIni);
-#endif
+		GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, EngineIni);
+		GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, EngineIni);
+		GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, EditorIni);
+		GConfig->GetString(TEXT("Analytics"), TEXT("ExportPath"), FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
 
+		GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *FCognitiveEditorTools::GetInstance()->ApplicationKey, C3DSettingsPath);
+		GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *FCognitiveEditorTools::GetInstance()->AttributionKey, C3DSettingsPath);
+		GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *FCognitiveEditorTools::GetInstance()->DeveloperKey, C3DSettingsPath);
+		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, C3DSettingsPath);
+		GConfig->Flush(false, C3DSettingsPath);
+#endif // ENGINE_MAJOR_VERSION == 4
+	}
 
 	//section to check third party SDKs active in the runtime build.cs file
 	IDetailCategoryBuilder& ThirdPartyData = DetailBuilder.EditCategory(TEXT("Active third party SDKs"));
