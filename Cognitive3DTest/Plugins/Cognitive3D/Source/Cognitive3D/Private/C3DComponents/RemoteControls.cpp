@@ -160,7 +160,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 					{
 						int32 ValueInt = TestObj->GetIntegerField(TEXT("valueInt"));
 						properties->SetNumberField("ValueInt", ValueInt);
-						cog->SetSessionProperty(RemoteVariableName, ValueInt);
+						FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
+						cog->SetSessionProperty(PropertyName, ValueInt);
 						RemoteControlVariablesInt.Add(RemoteVariableName, ValueInt);
 						UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
 							*Name, *Description, *RemoteVariableName, *Type, ValueInt);
@@ -169,7 +170,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 					{
 						float ValueFloat = TestObj->GetNumberField(TEXT("valueFloat"));
 						properties->SetNumberField("ValueFloat", ValueFloat);
-						cog->SetSessionProperty(RemoteVariableName, ValueFloat);
+						FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
+						cog->SetSessionProperty(PropertyName, ValueFloat);
 						RemoteControlVariablesFloat.Add(RemoteVariableName, ValueFloat);
 						UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %f"),
 							*Name, *Description, *RemoteVariableName, *Type, ValueFloat);
@@ -178,7 +180,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 					{
 						FString ValueString = TestObj->GetStringField(TEXT("valueString"));
 						properties->SetStringField("ValueString", ValueString);
-						cog->SetSessionProperty(RemoteVariableName, ValueString);
+						FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
+						cog->SetSessionProperty(PropertyName, ValueString);
 						RemoteControlVariablesString.Add(RemoteVariableName, ValueString);
 						UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %s"),
 							*Name, *Description, *RemoteVariableName, *Type, *ValueString);
@@ -187,7 +190,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 					{
 						bool ValueBool = TestObj->GetBoolField(TEXT("valueBool"));
 						properties->SetBoolField("ValueBool", ValueBool);
-						cog->SetSessionProperty(RemoteVariableName, ValueBool);
+						FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
+						cog->SetSessionProperty(PropertyName, ValueBool);
 						RemoteControlVariablesBool.Add(RemoteVariableName, ValueBool);
 						UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
 							*Name, *Description, *RemoteVariableName, *Type, ValueBool);
@@ -230,7 +234,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 						if (!RemoteControlVariablesInt.Contains(RemoteVariableName))
 						{
 							properties->SetNumberField("ValueInt", ValueInt);
-							cog->SetSessionProperty(RemoteVariableName, ValueInt);
+							FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
+							cog->SetSessionProperty(PropertyName, ValueInt);
 							RemoteControlVariablesInt.Add(RemoteVariableName, ValueInt);
 						}
 
@@ -243,7 +248,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 						if (!RemoteControlVariablesFloat.Contains(RemoteVariableName))
 						{
 							properties->SetNumberField("ValueFloat", ValueFloat);
-							cog->SetSessionProperty(RemoteVariableName, ValueFloat);
+							FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
+							cog->SetSessionProperty(PropertyName, ValueFloat);
 							RemoteControlVariablesFloat.Add(RemoteVariableName, ValueFloat);
 						}
 						UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %f"),
@@ -255,7 +261,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 						if (!RemoteControlVariablesString.Contains(RemoteVariableName))
 						{
 							properties->SetStringField("ValueString", ValueString);
-							cog->SetSessionProperty(RemoteVariableName, ValueString);
+							FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
+							cog->SetSessionProperty(PropertyName, ValueString);
 							RemoteControlVariablesString.Add(RemoteVariableName, ValueString);
 						}
 						UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %s"),
@@ -267,7 +274,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 						if (!RemoteControlVariablesBool.Contains(RemoteVariableName))
 						{
 							properties->SetBoolField("ValueBool", ValueBool);
-							cog->SetSessionProperty(RemoteVariableName, ValueBool);
+							FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
+							cog->SetSessionProperty(PropertyName, ValueBool);
 							RemoteControlVariablesBool.Add(RemoteVariableName, ValueBool);
 						}
 						UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
