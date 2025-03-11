@@ -107,6 +107,8 @@ void URemoteControls::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpRespo
 		properties->SetStringField("TuningVariable", ResponseString);
 		cog->customEventRecorder->Send("TuningVariable", properties);
 		ParseJsonResponse(ResponseString);
+		//cache response string
+		CacheTuningVariables(Response, ResponseString);
 	}
 	else
 	{
@@ -115,6 +117,8 @@ void URemoteControls::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpRespo
 		UE_LOG(LogTemp, Error, TEXT("TUNING VARIABLE Error Code: %d"), Response->GetResponseCode());
 		UE_LOG(LogTemp, Error, TEXT("TUNING VARIABLE Error Message: %s"), *Response->GetContentAsString());
 		cog->customEventRecorder->Send("TuningVariable", "Error");
+		//attempt to read response from cache if available
+		ReadFromCache();
 	}
 }
 
@@ -340,5 +344,38 @@ bool URemoteControls::GetRemoteControlVariableBool(const FString& Key, bool Defa
 	else
 	{
 		return DefaultValue;
+	}
+}
+
+void URemoteControls::CacheTuningVariables(FHttpResponsePtr Response, const FString& JsonResponse)
+{
+	if (!cog.IsValid()) { return; }
+	if (!cog->HasStartedSession()) { return; }
+
+	if (!cog->localCache.IsValid()) { return; }
+	if (cog->localCache->IsEnabled())
+	{
+		if (cog->localCache->CanWrite(JsonResponse.Len()))
+		{
+			cog->localCache->WriteData(Response->GetURL(), JsonResponse);
+		}
+	}
+}
+
+void URemoteControls::ReadFromCache()
+{
+	if (!cog.IsValid()) { return; }
+	if (!cog->HasStartedSession()) { return; }
+
+	if (!cog->localCache.IsValid()) { return; }
+	if (cog->localCache->IsEnabled())
+	{
+		FString url;
+		FString content;
+		if (cog->localCache->PeekContent(url, content))
+		{
+			// Parse the content
+			ParseJsonResponse(content);
+		}
 	}
 }
