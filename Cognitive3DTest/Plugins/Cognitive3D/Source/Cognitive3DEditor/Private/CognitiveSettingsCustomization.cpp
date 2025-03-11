@@ -239,7 +239,8 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 
 	GConfig->Flush(false, C3DSettingsPath);
 
-	if (FCognitiveEditorTools::GetInstance()->DeveloperKey.IsEmpty() || FCognitiveEditorTools::GetInstance()->ApplicationKey.IsEmpty())
+	if (FCognitiveEditorTools::GetInstance()->DeveloperKey.IsEmpty() || FCognitiveEditorTools::GetInstance()->ApplicationKey.IsEmpty()
+		|| FCognitiveEditorTools::GetInstance()->BaseExportDirectory.IsEmpty())
 	{
 		FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
