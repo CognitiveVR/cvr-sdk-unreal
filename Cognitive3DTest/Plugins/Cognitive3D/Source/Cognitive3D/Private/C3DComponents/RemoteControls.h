@@ -69,7 +69,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Remote Control")
 	FOnRemoteControlVariableReceived OnRemoteControlVariableReceived;
 
-	void CacheTuningVariables(FHttpResponsePtr Response, const FString& JsonResponse);
+	void CacheRemoteControlVariables(const FString& JsonResponse);
 	void ReadFromCache();
 };
 

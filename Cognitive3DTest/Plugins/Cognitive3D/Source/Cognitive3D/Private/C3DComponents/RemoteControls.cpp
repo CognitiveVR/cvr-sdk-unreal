@@ -101,22 +101,19 @@ void URemoteControls::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpRespo
 	{
 		// Retrieve the response as a string
 		FString ResponseString = Response->GetContentAsString();
-		UE_LOG(LogTemp, Log, TEXT("TUNING VARIABLE Responsecode %d: %s"), Response->GetResponseCode(), *ResponseString);
+		UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Responsecode %d: %s"), Response->GetResponseCode(), *ResponseString);
 		// You can now parse the JSON or process the data as needed.
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
-		properties->SetStringField("TuningVariable", ResponseString);
-		cog->customEventRecorder->Send("TuningVariable", properties);
+		properties->SetStringField("RemoteControlVariable", ResponseString);
+		cog->customEventRecorder->Send("RemoteControlVariable", properties);
 		ParseJsonResponse(ResponseString);
 		//cache response string
-		CacheTuningVariables(Response, ResponseString);
+		CacheRemoteControlVariables(ResponseString);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("TUNING VARIABLE HTTP Request failed"));
-		// Handle the error accordingly.
-		UE_LOG(LogTemp, Error, TEXT("TUNING VARIABLE Error Code: %d"), Response->GetResponseCode());
-		UE_LOG(LogTemp, Error, TEXT("TUNING VARIABLE Error Message: %s"), *Response->GetContentAsString());
-		cog->customEventRecorder->Send("TuningVariable", "Error");
+		UE_LOG(LogTemp, Error, TEXT("REMOTE CONTROL VARIABLE HTTP Request failed"));
+		cog->customEventRecorder->Send("RemoteControlVariable", "Error");
 		//attempt to read response from cache if available
 		ReadFromCache();
 	}
@@ -355,7 +352,7 @@ bool URemoteControls::GetRemoteControlVariableBool(const FString& Key, bool Defa
 	}
 }
 
-void URemoteControls::CacheTuningVariables(FHttpResponsePtr Response, const FString& JsonResponse)
+void URemoteControls::CacheRemoteControlVariables(const FString& JsonResponse)
 {
 	//make folder remotecontrols
 	//store it in a RemoteControls file inside that with just the response
