@@ -19,10 +19,11 @@ void SDynamicObjectManagerWidget::CheckForExpiredDeveloperKey()
 {
 	if (FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
 	{
-		GConfig->Flush(true, GEngineIni);
+		FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+		GConfig->Flush(true, C3DSettingsPath);
 		auto Request = FHttpModule::Get().CreateRequest();
 		Request->OnProcessRequestComplete().BindRaw(this, &SDynamicObjectManagerWidget::OnDeveloperKeyResponseReceived);
-		FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+		FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 		FString url = "https://" + gateway + "/v0/apiKeys/verify";
 		Request->SetURL(url);
 		Request->SetVerb("GET");
@@ -76,7 +77,8 @@ void SDynamicObjectManagerWidget::GetDashboardManifest()
 
 		auto Request = FHttpModule::Get().CreateRequest();
 		Request->OnProcessRequestComplete().BindRaw(this, &SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived);
-		FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+		FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+		FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 		FString versionid = FString::FromInt(currentSceneData->VersionId);
 		FString url = "https://" + gateway + "/v0/versions/"+versionid+"/objects";
 		Request->SetURL(url);

@@ -30,6 +30,8 @@ private:
 	UFUNCTION()
 	void OnSessionEnd();
 
+	FString C3DSettingsPath;
+
 	FString FolderPath;
 	FString FolderPathCrashLog;
 	FString CurrentFilePath;

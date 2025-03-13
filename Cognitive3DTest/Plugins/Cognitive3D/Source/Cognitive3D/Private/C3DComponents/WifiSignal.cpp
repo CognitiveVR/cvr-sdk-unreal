@@ -4,6 +4,8 @@
 #include "C3DComponents/WifiSignal.h"
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
 #if PLATFORM_ANDROID
 #include "Android/AndroidJNI.h"
 #include "Android/AndroidApplication.h"

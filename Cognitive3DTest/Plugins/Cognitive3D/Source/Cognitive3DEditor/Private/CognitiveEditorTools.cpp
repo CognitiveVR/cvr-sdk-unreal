@@ -63,7 +63,9 @@ FCognitiveEditorTools* FCognitiveEditorTools::GetInstance()
 //GET dynamic object manifest
 FString FCognitiveEditorTools::GetDynamicObjectManifest(FString versionid)
 {
-	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString C3DSettingsPath = GetSettingsFilePath();
+
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 	if (Gateway.Len() == 0)
 	{
 		Gateway = "data.cognitive3d.com";
@@ -74,7 +76,9 @@ FString FCognitiveEditorTools::GetDynamicObjectManifest(FString versionid)
 //POST dynamic object manifest
 FString FCognitiveEditorTools::PostDynamicObjectManifest(FString sceneid, int32 versionnumber)
 {
-	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString C3DSettingsPath = GetSettingsFilePath();
+
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 	if (Gateway.Len() == 0)
 	{
 		Gateway = "data.cognitive3d.com";
@@ -85,7 +89,9 @@ FString FCognitiveEditorTools::PostDynamicObjectManifest(FString sceneid, int32 
 //POST dynamic object mesh data
 FString FCognitiveEditorTools::PostDynamicObjectMeshData(FString sceneid, int32 versionnumber, FString exportdirectory)
 {
-	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString C3DSettingsPath = GetSettingsFilePath();
+
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 	if (Gateway.Len() == 0)
 	{
 		Gateway = "data.cognitive3d.com";
@@ -96,7 +102,9 @@ FString FCognitiveEditorTools::PostDynamicObjectMeshData(FString sceneid, int32 
 //GET scene settings and read scene version
 FString FCognitiveEditorTools::GetSceneVersion(FString sceneid)
 {
-	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString C3DSettingsPath = GetSettingsFilePath();
+
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 	if (Gateway.Len() == 0)
 	{
 		Gateway = "data.cognitive3d.com";
@@ -107,7 +115,9 @@ FString FCognitiveEditorTools::GetSceneVersion(FString sceneid)
 //POST scene screenshot
 FString FCognitiveEditorTools::PostScreenshot(FString sceneid, FString versionnumber)
 {
-	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString C3DSettingsPath = GetSettingsFilePath();
+
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 	if (Gateway.Len() == 0)
 	{
 		Gateway = "data.cognitive3d.com";
@@ -118,7 +128,9 @@ FString FCognitiveEditorTools::PostScreenshot(FString sceneid, FString versionnu
 //POST upload decimated scene
 FString FCognitiveEditorTools::PostNewScene()
 {
-	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString C3DSettingsPath = GetSettingsFilePath();
+
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 	if (Gateway.Len() == 0)
 	{
 		Gateway = "data.cognitive3d.com";
@@ -129,7 +141,9 @@ FString FCognitiveEditorTools::PostNewScene()
 //POST upload and replace existing scene
 FString FCognitiveEditorTools::PostUpdateScene(FString sceneid)
 {
-	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString C3DSettingsPath = GetSettingsFilePath();
+
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 	if (Gateway.Len() == 0)
 	{
 		Gateway = "data.cognitive3d.com";
@@ -140,7 +154,9 @@ FString FCognitiveEditorTools::PostUpdateScene(FString sceneid)
 //WEB used to open scenes on sceneexplorer or custom session viewer
 FString FCognitiveEditorTools::SceneExplorerOpen(FString sceneid)
 {
-	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString C3DSettingsPath = GetSettingsFilePath();
+
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 	if (Gateway.Len() == 0)
 	{
 		Gateway = "data.cognitive3d.com";
@@ -155,8 +171,35 @@ void FCognitiveEditorTools::Initialize()
 {
 	CognitiveEditorToolsInstance = new FCognitiveEditorTools;
 
+	FString BaseConfigDir = FPaths::ProjectConfigDir();
+
+	// Define the subfolder and ensure it exists.
+	FString CustomFolder = FPaths::Combine(BaseConfigDir, TEXT("c3dlocal"));
+	if (!FPaths::DirectoryExists(CustomFolder))
+	{
+		// Create the directory if it doesn't exist.
+		IFileManager::Get().MakeDirectory(*CustomFolder);
+	}
+
+	// Combine the subfolder path with your INI file name.
+	FString ConfigFilePath = FPaths::Combine(CustomFolder, TEXT("Cognitive3DSettings.ini"));
+
+	// If the file doesn't exist, create it with some default content.
+	if (!FPaths::FileExists(ConfigFilePath))
+	{
+		FString DefaultContent = TEXT("; Cognitive3D Plugin Settings\n[General]\n");
+		if (!FFileHelper::SaveStringToFile(DefaultContent, *ConfigFilePath))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to create config file: %s"), *ConfigFilePath);
+			return;
+		}
+	}
+	//ConfigFilePath = FConfigCacheIni::NormalizeConfigIniPath(ConfigFilePath);
+	// Explicitly load the custom config file into GConfig.
+	GConfig->LoadFile(ConfigFilePath);
+
 	//should be able to update gateway while unreal is running, but cache if not in editor since that's nuts
-	Gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	Gateway = FAnalytics::Get().GetConfigValueFromIni(ConfigFilePath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 
 	//should update both editor urls and session data urls
 	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(TEXT("ImageWrapper"));
@@ -173,124 +216,76 @@ void FCognitiveEditorTools::Initialize()
 
 void FCognitiveEditorTools::CheckIniConfigured()
 {
-	GConfig->Flush(true, GEngineIni);
-	FString tempGateway;
-	GConfig->GetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("Gateway"), tempGateway, GEngineIni);
+	GLog->Log("FCognitiveEditorTools::CheckIniConfigured called");
+	// Get the project's Config directory.
+	FString BaseConfigDir = FPaths::ProjectConfigDir();
 
-	if (tempGateway.IsEmpty())
+	// Define the subfolder and ensure it exists.
+	FString CustomFolder = FPaths::Combine(BaseConfigDir, TEXT("c3dlocal"));
+	if (!FPaths::DirectoryExists(CustomFolder))
+	{
+		// Create the directory if it doesn't exist.
+		IFileManager::Get().MakeDirectory(*CustomFolder);
+	}
+
+	// Combine the subfolder path with your INI file name.
+	FString ConfigFilePath = FPaths::Combine(CustomFolder, TEXT("Cognitive3DSettings.ini"));
+
+	// If the file doesn't exist, create it with some default content.
+	if (!FPaths::FileExists(ConfigFilePath))
+	{
+		FString DefaultContent = TEXT("; Cognitive3D Plugin Settings\n[General]\n");
+		if (!FFileHelper::SaveStringToFile(DefaultContent, *ConfigFilePath))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to create config file: %s"), *ConfigFilePath);
+			return;
+		}
+	}
+	//ConfigFilePath = FConfigCacheIni::NormalizeConfigIniPath(ConfigFilePath);
+	// Explicitly load the custom config file into GConfig.
+	GConfig->LoadFile(ConfigFilePath);
+
+	GConfig->Flush(true, ConfigFilePath);
+	FString tempC3DGateway;
+	GConfig->GetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("Gateway"), tempC3DGateway, ConfigFilePath);
+
+	if (tempC3DGateway.IsEmpty())
 	{
 		GLog->Log("FCognitiveEditorTools::CheckIniConfigured write defaults to ini");
 		FString defaultgateway = "data.cognitive3d.com";
 		FString trueString = "True";
-		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("Gateway"), *defaultgateway, GEngineIni);
+		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("Gateway"), *defaultgateway, ConfigFilePath);
 
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("GazeBatchSize"), 256, GEngineIni);
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("GazeBatchSize"), 256, ConfigFilePath);
 
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("CustomEventBatchSize"), 256, GEngineIni);
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("CustomEventAutoTimer"), 10, GEngineIni);
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("CustomEventBatchSize"), 256, ConfigFilePath);
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("CustomEventAutoTimer"), 10, ConfigFilePath);
 
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("DynamicDataLimit"), 512, GEngineIni);
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("DynamicAutoTimer"), 10, GEngineIni);
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("DynamicDataLimit"), 512, ConfigFilePath);
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("DynamicAutoTimer"), 10, ConfigFilePath);
 
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("SensorDataLimit"), 512, GEngineIni);
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("SensorAutoTimer"), 10, GEngineIni);
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("SensorDataLimit"), 512, ConfigFilePath);
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("SensorAutoTimer"), 10, ConfigFilePath);
 
-		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), GEngineIni);
-		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), GEngineIni);
-		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), GEngineIni);
-		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), GEngineIni);
+		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), ConfigFilePath);
+		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), ConfigFilePath);
+		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), ConfigFilePath);
+		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), ConfigFilePath);
 
-		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), GEngineIni);
-		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), GEngineIni);
-		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), GEngineIni);
-		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), GEngineIni);
+		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), ConfigFilePath);
+		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), ConfigFilePath);
+		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), ConfigFilePath);
+		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), ConfigFilePath);
 
-		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("EnableLocalCache"), *trueString, GEngineIni);
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("LocalCacheSize"), 100, GEngineIni);
-		GConfig->Flush(false, GEngineIni);
+		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("EnableLocalCache"), *trueString, ConfigFilePath);
+		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("LocalCacheSize"), 100, ConfigFilePath);
+		GConfig->Flush(false, ConfigFilePath);
 	}
-
-	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-	const FString NormalizedEngineIni = GConfig->NormalizeConfigIniPath(EngineIni);
-
-	GConfig->Flush(true, NormalizedEngineIni);
-	FString tempGatewaydefault;
-	GConfig->GetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("Gateway"), tempGatewaydefault, NormalizedEngineIni);
-
-	if (tempGatewaydefault.IsEmpty())
+	else
 	{
-		GLog->Log("FCognitiveEditorTools::CheckIniConfigured write defaults to ini");
-		FString defaultgateway = "data.cognitive3d.com";
-		FString trueString = "True";
-		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("Gateway"), *defaultgateway, NormalizedEngineIni);
-
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("GazeBatchSize"), 256, NormalizedEngineIni);
-
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("CustomEventBatchSize"), 256, NormalizedEngineIni);
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("CustomEventAutoTimer"), 10, NormalizedEngineIni);
-
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("DynamicDataLimit"), 512, NormalizedEngineIni);
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("DynamicAutoTimer"), 10, NormalizedEngineIni);
-
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("SensorDataLimit"), 512, NormalizedEngineIni);
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("SensorAutoTimer"), 10, NormalizedEngineIni);
-
-		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
-		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
-		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
-		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
-
-		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
-		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
-		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
-		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), NormalizedEngineIni);
-
-		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("EnableLocalCache"), *trueString, NormalizedEngineIni);
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("LocalCacheSize"), 100, NormalizedEngineIni);
-		GConfig->Flush(false, NormalizedEngineIni);
+		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::CheckIniConfigured Gateway already set: %s"), *tempC3DGateway);
 	}
 
-#else
-
-	GConfig->Flush(true, EngineIni);
-	FString tempGatewaydefault;
-	GConfig->GetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("Gateway"), tempGatewaydefault, EngineIni);
-
-	if (tempGatewaydefault.IsEmpty())
-	{
-		GLog->Log("FCognitiveEditorTools::CheckIniConfigured write defaults to ini");
-		FString defaultgateway = "data.cognitive3d.com";
-		FString trueString = "True";
-		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("Gateway"), *defaultgateway, EngineIni);
-
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("GazeBatchSize"), 256, EngineIni);
-
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("CustomEventBatchSize"), 256, EngineIni);
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("CustomEventAutoTimer"), 10, EngineIni);
-
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("DynamicDataLimit"), 512, EngineIni);
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("DynamicAutoTimer"), 10, EngineIni);
-
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("SensorDataLimit"), 512, EngineIni);
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("SensorAutoTimer"), 10, EngineIni);
-
-		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), EngineIni);
-		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), EngineIni);
-		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), EngineIni);
-		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), EngineIni);
-
-		GConfig->SetString(TEXT("Analytics"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), EngineIni);
-		GConfig->SetString(TEXT("AnalyticsDebug"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), EngineIni);
-		GConfig->SetString(TEXT("AnalyticsTest"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), EngineIni);
-		GConfig->SetString(TEXT("AnalyticsDevelopment"), TEXT("ProviderModuleName"), TEXT("Cognitive3D"), EngineIni);
-
-		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("EnableLocalCache"), *trueString, EngineIni);
-		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("LocalCacheSize"), 100, EngineIni);
-		GConfig->Flush(false, EngineIni);
-	}
-#endif
 }
 
 //at any step in the uploading process
@@ -320,6 +315,36 @@ bool FCognitiveEditorTools::HasDeveloperKey() const
 bool FCognitiveEditorTools::HasApplicationKey() const
 {
 	return ApplicationKey.Len() > 0;
+}
+
+FString FCognitiveEditorTools::GetSettingsFilePath() const
+{
+	// Get the project's Config directory.
+	FString BaseConfigDir = FPaths::ProjectConfigDir();
+
+	// Define the subfolder and ensure it exists.
+	FString CustomFolder = FPaths::Combine(BaseConfigDir, TEXT("c3dlocal"));
+	if (!FPaths::DirectoryExists(CustomFolder))
+	{
+		// Create the directory if it doesn't exist.
+		IFileManager::Get().MakeDirectory(*CustomFolder);
+	}
+
+	// Combine the subfolder path with your INI file name.
+	FString ConfigFilePath = FPaths::Combine(CustomFolder, TEXT("Cognitive3DSettings.ini"));
+
+	// If the file doesn't exist, create it with some default content.
+	if (!FPaths::FileExists(ConfigFilePath))
+	{
+		FString DefaultContent = TEXT("; Cognitive3D Plugin Settings\n[General]\n");
+		if (!FFileHelper::SaveStringToFile(DefaultContent, *ConfigFilePath))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to create config file: %s"), *ConfigFilePath);
+			return FString();
+		}
+	}
+	//ConfigFilePath = FConfigCacheIni::NormalizeConfigIniPath(ConfigFilePath);
+	return ConfigFilePath;
 }
 
 FProcHandle FCognitiveEditorTools::ExportNewDynamics()
@@ -1962,31 +1987,20 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 	if (PickDirectory(title, fileTypes, lastPath, defaultfile, outFilename))
 	{
 		BaseExportDirectory = outFilename;
-		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
-		
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-		const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
-		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
-		GConfig->Flush(false, NormalizedEditorIni);
-#else
-		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
-		GConfig->Flush(false, EditorIni);
-#endif
+
+		FString C3DSettingsPath = GetSettingsFilePath();
+		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, C3DSettingsPath);
+		GConfig->Flush(false, C3DSettingsPath);
+
 	}
 	else
 	{
 		//set default export directory if it isnt set
 		SetDefaultIfNoExportDirectory();
-		FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+		FString C3DSettingsPath = GetSettingsFilePath();
+		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, C3DSettingsPath);
+		GConfig->Flush(false, C3DSettingsPath);
 
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-		const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
-		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
-		GConfig->Flush(false, NormalizedEditorIni);
-#else
-		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
-		GConfig->Flush(false, EditorIni);
-#endif
 	}
 	return FReply::Handled();
 }
@@ -2875,7 +2889,7 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 
 	UE_LOG(LogTemp, Warning, TEXT("Total Blueprints Found: %d"), AssetDataList.Num());
 
-#if ENGINE_MAJOR_VERSION == 4
+//#if ENGINE_MAJOR_VERSION == 4
 
 	for (const FAssetData& AssetData2 : AssetDataList)
 	{
@@ -2944,8 +2958,8 @@ FReply FCognitiveEditorTools::RefreshDisplayDynamicObjectsCountInScene()
 			}
 		}
 	}
-
-#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1
+/*
+//#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1
 
 //BLUEPRINTS WITH DYNAMICS
 
@@ -2954,14 +2968,14 @@ for (const FAssetData& AssetData2 : AssetDataList)
 	FString AssetName = AssetData2.AssetName.ToString();
 
 	// Force load the asset to ensure all data is available
-	/*
+	
 	UBlueprint* Blueprint = Cast<UBlueprint>(AssetData2.GetAsset());
 	if (!Blueprint)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Failed to load Blueprint: %s"), *AssetName);
 		continue;
 	}
-	*/
+	
 
 	// Get the GeneratedClass tag from the asset data (without fully loading the asset)
 	FString GeneratedClassPath;
@@ -3033,8 +3047,8 @@ for (const FAssetData& AssetData2 : AssetDataList)
 
 //BLUEPRINTS WITH DYNAMICS
 
-#endif
-
+//#endif
+*/
 
 	return FReply::Handled();
 }
@@ -3150,16 +3164,10 @@ void FCognitiveEditorTools::OnAttributionKeyChanged(const FText& Text)
 void FCognitiveEditorTools::OnExportPathChanged(const FText& Text)
 {
 	BaseExportDirectory = Text.ToString();
-	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
 
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-	const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
-	GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, NormalizedEditorIni);
-	GConfig->Flush(false, NormalizedEditorIni);
-#else
-	GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, EditorIni);
-	GConfig->Flush(false, EditorIni);
-#endif
+	FString C3DSettingsPath = GetSettingsFilePath();
+	GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, C3DSettingsPath);
+	GConfig->Flush(false, C3DSettingsPath);
 }
 
 FText FCognitiveEditorTools::UploadSceneNameFiles(FString LevelName) const
@@ -3339,14 +3347,28 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 	SceneData.Empty();
 
 	TArray<FString>scenstrings;
-	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+
+	FString C3DSettingsPath = GetSettingsFilePath();
+	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, C3DSettingsPath);
+	GConfig->Flush(false, C3DSettingsPath);
+
+	if (scenstrings.Num() == 0)
+	{
+		FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-	const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
-	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, NormalizedTestSyncFile);
+		const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
+		GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, NormalizedTestSyncFile);
+		GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, C3DSettingsPath);
+		GConfig->Flush(false, NormalizedTestSyncFile);
 #else
-	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
+		GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
+		GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, C3DSettingsPath);
+		GConfig->Flush(false, TestSyncFile);
 #endif
+		GConfig->Flush(false, C3DSettingsPath);
+	}
+
 	for (int32 i = 0; i < scenstrings.Num(); i++)
 	{
 		TArray<FString> Array;
@@ -3477,14 +3499,29 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		//get array of scene data
 		TArray<FString> iniscenedata;
 
-		FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+		FString C3DSettingsPath = GetSettingsFilePath();
+		GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, C3DSettingsPath);
+		GConfig->Flush(false, C3DSettingsPath);
+		if (iniscenedata.Num() == 0)
+		{
+			GLog->Log("FCognitiveTools::SceneVersionResponse can't find scene data in C3D ini files");
+			WizardUploadError = "FCognitiveTools::SceneVersionResponse can't find scene data in ini files";
+
+
+			FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-		const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
-		GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, NormalizedTestSyncFile);
+			const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
+			GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, NormalizedTestSyncFile);
+			GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, C3DSettingsPath);
+			GConfig->Flush(false, NormalizedTestSyncFile);
 #else
-		GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, TestSyncFile);
+			GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, TestSyncFile);
+			GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, C3DSettingsPath);
+			GConfig->Flush(false, TestSyncFile);
 #endif
+			GConfig->Flush(false, C3DSettingsPath);
+		}
 		//GLog->Log("found this many scene datas in ini " + FString::FromInt(iniscenedata.Num()));
 		//GLog->Log("looking for scene " + currentSceneData->Name);
 
@@ -3513,26 +3550,11 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 
 		GLog->Log("FCognitiveTools::SceneVersionResponse successful. Write scene data to config file");
 
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-		//set array to config
-		GConfig->RemoveKey(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), NormalizedTestSyncFile);
-		GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, NormalizedTestSyncFile);
+		GConfig->RemoveKey(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), C3DSettingsPath);
+		GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, C3DSettingsPath);
 
-		GConfig->Flush(false, NormalizedTestSyncFile);
-#else
-		//set array to config
-		GConfig->RemoveKey(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), TestSyncFile);
-		GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, TestSyncFile);
+		GConfig->Flush(false, C3DSettingsPath);
 
-		//FConfigCacheIni::LoadGlobalIniFile(GEngineIni, TEXT("Engine"));
-
-		//GConfig->RemoveKey(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), GEngineIni);
-		//GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, GEngineIni);
-
-
-		GConfig->Flush(false, TestSyncFile);
-		//GConfig->LoadFile(TestSyncFile);
-#endif
 		ConfigFileHasChanged = true;
 		ReadSceneDataFromFile();
 
@@ -3560,27 +3582,12 @@ TArray<TSharedPtr<FEditorSceneData>> FCognitiveEditorTools::GetSceneData() const
 
 FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 {
-	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
+	FString C3DSettingsPath = GetSettingsFilePath();
+	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, C3DSettingsPath);
+	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, C3DSettingsPath);
+	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, C3DSettingsPath);
+	GConfig->Flush(false, C3DSettingsPath);
 
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-	const FString NormalizedEngineIni = GConfig->NormalizeConfigIniPath(EngineIni);
-	const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
-
-	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, NormalizedEngineIni);
-	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, NormalizedEngineIni);
-	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, NormalizedEditorIni);
-
-	GConfig->Flush(false, NormalizedEngineIni);
-	GConfig->Flush(false, NormalizedEditorIni);
-#else
-	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, EngineIni);
-	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, EngineIni);
-	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, EditorIni);
-
-	GConfig->Flush(false, EngineIni);
-	GConfig->Flush(false, EditorIni);
-#endif
 	ConfigFileHasChanged = true;
 
 	return FReply::Handled();
@@ -3588,17 +3595,9 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 
 void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 {
-	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-	const FString NormalizedEngineIni = GConfig->NormalizeConfigIniPath(EngineIni);
-
-	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, NormalizedEngineIni);
-	GConfig->Flush(false, NormalizedEngineIni);
-#else
-	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, EngineIni);
-	GConfig->Flush(false, EngineIni);
-#endif
+	FString C3DSettingsPath = GetSettingsFilePath();
+	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, C3DSettingsPath);
+	GConfig->Flush(false, C3DSettingsPath);
 
 	ConfigFileHasChanged = true;
 
@@ -3607,17 +3606,9 @@ void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 
 void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
 {
-	FString EditorIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEditor.ini"));
-
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-	const FString NormalizedEditorIni = GConfig->NormalizeConfigIniPath(EditorIni);
-
-	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, NormalizedEditorIni);
-	GConfig->Flush(false, NormalizedEditorIni);
-#else
-	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, EditorIni);
-	GConfig->Flush(false, EditorIni);
-#endif
+	FString C3DSettingsPath = GetSettingsFilePath();
+	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, C3DSettingsPath);
+	GConfig->Flush(false, C3DSettingsPath);
 
 	ConfigFileHasChanged = true;
 
@@ -3658,18 +3649,27 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 
 	TArray<FString> scenePairs = TArray<FString>();
 
-	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+	FString C3DSettingsPath = GetSettingsFilePath();
+	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, C3DSettingsPath);
+	GConfig->Flush(false, C3DSettingsPath);
+
+	if (scenePairs.Num() == 0)
+	{
+		FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-	const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
+		const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
 
-	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, NormalizedTestSyncFile);
-	GConfig->Flush(false, NormalizedTestSyncFile);
+		GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, NormalizedTestSyncFile);
+		GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, C3DSettingsPath);
+		GConfig->Flush(false, NormalizedTestSyncFile);
 #else
-	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, TestSyncFile);
-	GConfig->Flush(false, TestSyncFile);
+		GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, TestSyncFile);
+		GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, C3DSettingsPath);
+		GConfig->Flush(false, TestSyncFile);
 #endif
-
+		GConfig->Flush(false, C3DSettingsPath);
+	}
 	bool didSetKey = false;
 	for (int32 i = 0; i < scenePairs.Num(); i++)
 	{
@@ -3701,15 +3701,8 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 		}
 	}
 
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-	GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, NormalizedTestSyncFile);
-
-	GConfig->Flush(false, NormalizedTestSyncFile);
-#else
-	GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, TestSyncFile);
-
-	GConfig->Flush(false, TestSyncFile);
-#endif
+	GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, C3DSettingsPath);
+	GConfig->Flush(false, C3DSettingsPath);
 }
 
 
@@ -4272,13 +4265,15 @@ FString FCognitiveEditorTools::BuildDebugFileContents() const
 		outputString += FString("Plugins: PicoMobile");
 		outputString += "\n";
 	}
+	
+	FString C3DSettingsPath = GetSettingsFilePath();
 
 	//project directory
 	outputString += FString("Project Name: ") + FPaths::ProjectDir();
 	outputString += "\n";
 
 	//gateway
-	FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 	outputString += "Gateway: " + gateway;
 	outputString += "\n";
 
@@ -4293,59 +4288,59 @@ FString FCognitiveEditorTools::BuildDebugFileContents() const
 	outputString += "\n";
 
 	//config settings (batch sizes, etc)
-	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "CustomEventBatchSize", false);
+	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "CustomEventBatchSize", false);
 	outputString += "Event Snapshot Batch Size: " + ValueReceived;
 	outputString += "\n";
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "CustomEventExtremeLimit", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "CustomEventExtremeLimit", false);
 	outputString += "Event Extreme Batch Size: " + ValueReceived;
 	outputString += "\n";
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "CustomEventMinTimer", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "CustomEventMinTimer", false);
 	outputString += "Event Minimum Send Timer: " + ValueReceived;
 	outputString += "\n";
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "CustomEventAutoTimer", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "CustomEventAutoTimer", false);
 	outputString += "Event Auto Send Timer: " + ValueReceived;
 	outputString += "\n";
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "SensorBatchSize", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "SensorBatchSize", false);
 	outputString += "Sensor Snapshot Batch Size: " + ValueReceived;
 	outputString += "\n";
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "SensorExtremeLimit", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "SensorExtremeLimit", false);
 	outputString += "Sensor Extreme Batch Size: " + ValueReceived;
 	outputString += "\n";
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "SensorMinTimer", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "SensorMinTimer", false);
 	outputString += "Sensor Minimum Send Timer: " + ValueReceived;
 	outputString += "\n";
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "SensorAutoTimer", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "SensorAutoTimer", false);
 	outputString += "Sensor Auto Send Timer: " + ValueReceived;
 	outputString += "\n";
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicBatchSize", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicBatchSize", false);
 	outputString += "Dynamic Snapshot Batch Size: " + ValueReceived;
 	outputString += "\n";
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicExtremeLimit", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicExtremeLimit", false);
 	outputString += "Dynamic Extreme Batch Size: " + ValueReceived;
 	outputString += "\n";
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicMinTimer", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicMinTimer", false);
 	outputString += "Dynamic Minimum Send Timer: " + ValueReceived;
 	outputString += "\n";
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicAutoTimer", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicAutoTimer", false);
 	outputString += "Dynamic Auto Send Timer: " + ValueReceived;
 	outputString += "\n";
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "GazeBatchSize", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "GazeBatchSize", false);
 	outputString += "Gaze Snapshot Batch Size: " + ValueReceived;
 	outputString += "\n";
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "FixationBatchSize", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "FixationBatchSize", false);
 	outputString += "Fixation Snapshot Batch Size: " + ValueReceived;
 	outputString += "\n";
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "FixationExtremeLimit", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "FixationExtremeLimit", false);
 	outputString += "Fixation Extreme Batch Size: " + ValueReceived;
 	outputString += "\n";
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "FixationMinTimer", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "FixationMinTimer", false);
 	outputString += "Fixation Minimum Send Timer: " + ValueReceived;
 	outputString += "\n";
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "FixationAutoTimer", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "FixationAutoTimer", false);
 	outputString += "Fixation Auto Send Timer: " + ValueReceived;
 	outputString += "\n";
 
