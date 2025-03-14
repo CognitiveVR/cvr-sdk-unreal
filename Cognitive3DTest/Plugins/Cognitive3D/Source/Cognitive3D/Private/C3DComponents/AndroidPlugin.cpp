@@ -5,6 +5,7 @@
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "Regex.h"
+#include "Analytics.h"
 #if PLATFORM_ANDROID
 #include "Android/AndroidJNI.h"
 #include "Android/AndroidApplication.h"
@@ -56,6 +57,9 @@ void UAndroidPlugin::OnSessionBegin()
         return;
     }
 
+    C3DSettingsPath = cognitive->GetSettingsFilePathRuntime();
+    GConfig->LoadFile(C3DSettingsPath);
+
     FString AppKey = "APIKEY:DATA " + cognitive->ApplicationKey;
     FString DeviceId = cognitive->GetDeviceID();
     double timeStamp = FUtil::GetTimestamp();
@@ -63,8 +67,7 @@ void UAndroidPlugin::OnSessionBegin()
     FString trackingSceneID = cognitive->CurrentTrackingSceneId;
     FString trackingSceneVersionStr = cognitive->GetCurrentSceneVersionNumber();
     int trackingSceneVersion = FCString::Atoi(*trackingSceneVersionStr);
-    FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-    FString Gateway = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+    FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
     FString gazeURL = "https://" + Gateway + "/v" + FString::FromInt(0) + "/gaze/" + cognitive->GetCurrentSceneId() + "?version=" + cognitive->GetCurrentSceneVersionNumber();
     FString eventsURL = "https://" + Gateway + "/v" + FString::FromInt(0) + "/events/" + cognitive->GetCurrentSceneId() + "?version=" + cognitive->GetCurrentSceneVersionNumber();
 
@@ -245,8 +248,7 @@ void UAndroidPlugin::OnLevelLoad(UWorld* world)
         FString trackingSceneID = cognitive->CurrentTrackingSceneId;
         FString trackingSceneVersionStr = cognitive->GetCurrentSceneVersionNumber();
         int trackingSceneVersion = FCString::Atoi(*trackingSceneVersionStr);
-        FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-        FString Gateway = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+        FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
         FString gazeURL = "https://" + Gateway + "/v" + FString::FromInt(0) + "/gaze/" + cognitive->GetCurrentSceneId() + "?version=" + cognitive->GetCurrentSceneVersionNumber();
         FString eventsURL = "https://" + Gateway + "/v" + FString::FromInt(0) + "/events/" + cognitive->GetCurrentSceneId() + "?version=" + cognitive->GetCurrentSceneVersionNumber();
 
@@ -401,8 +403,7 @@ void UAndroidPlugin::LogFileHasContent()
                         }
 
                         // Generate Event and Gaze URLs
-                        FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-                        FString Gateway = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+                        FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 
                         FString SceneID = Lines[3];
                         FString VersionNumber = Lines[4];
@@ -510,8 +511,7 @@ void UAndroidPlugin::LogFileHasContent()
             {
                 FString SceneID = PreviousSessionLines[3];
                 FString VersionNumber = PreviousSessionLines[4];
-                FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-                FString Gateway = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+                FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 
                 FString EventsURL = FString::Printf(TEXT("https://%s/v0/events/%s?version=%s"), *Gateway, *SceneID, *VersionNumber);
 

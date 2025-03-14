@@ -12,7 +12,16 @@ void FCognitiveLog::Init()
 {
 	ShowDebugLogs = true;
 	ShowDevLogs = false;
-	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "EnableLogging", false);
+
+	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	if (!cognitive.IsValid()) {
+		return;
+	}
+
+	FString C3DSettingsPath = cognitive->GetSettingsFilePathRuntime();
+	GConfig->LoadFile(C3DSettingsPath);
+
+	FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "EnableLogging", false);
 	if (ValueReceived.Len()>0 && ValueReceived == "false")
 	{
 		ShowDebugLogs = false;

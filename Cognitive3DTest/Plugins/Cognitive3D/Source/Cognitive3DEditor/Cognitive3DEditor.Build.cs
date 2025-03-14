@@ -37,7 +37,8 @@ public class Cognitive3DEditor : ModuleRules
                 "EditorScriptingUtilities",
                 "MeshUtilities",
                 "GLTFExporter",
-                "AssetRegistry"
+                "AssetRegistry",
+                "Landscape"
             });
 
         PrivateDependencyModuleNames.AddRange(

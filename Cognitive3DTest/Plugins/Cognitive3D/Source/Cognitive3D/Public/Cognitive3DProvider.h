@@ -140,6 +140,8 @@
 		FString ApplicationKey = "";
 		FString AttributionKey = "";
 
+		FString GetSettingsFilePathRuntime() const;
+
 		FString GetCurrentSceneId();
 		FString GetCurrentSceneVersionNumber();
 		//if a session name has been explicitly set. otherwise will use participant name when that is set

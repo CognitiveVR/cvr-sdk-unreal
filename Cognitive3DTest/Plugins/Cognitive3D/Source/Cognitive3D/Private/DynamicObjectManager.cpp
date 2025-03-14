@@ -27,7 +27,10 @@ void FDynamicObjectManager::OnSessionBegin()
 	MaxSnapshots = 64;
 	FString ValueReceived;
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicDataLimit", false);
+	FString C3DSettingsPath = cogProvider->GetSettingsFilePathRuntime();
+	GConfig->LoadFile(C3DSettingsPath);
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicDataLimit", false);
 	if (ValueReceived.Len() > 0)
 	{
 		int32 dynamicLimit = FCString::Atoi(*ValueReceived);
@@ -37,7 +40,7 @@ void FDynamicObjectManager::OnSessionBegin()
 		}
 	}
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicAutoTimer", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicAutoTimer", false);
 	if (ValueReceived.Len() > 0)
 	{
 		int32 parsedValue = FCString::Atoi(*ValueReceived);
