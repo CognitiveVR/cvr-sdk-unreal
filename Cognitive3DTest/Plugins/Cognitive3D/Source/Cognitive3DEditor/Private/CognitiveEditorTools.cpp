@@ -3167,7 +3167,8 @@ void FCognitiveEditorTools::OnExportPathChanged(const FText& Text)
 	BaseExportDirectory = Text.ToString();
 
 	FString C3DSettingsPath = GetSettingsFilePath();
-	GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, C3DSettingsPath);
+	GConfig->LoadFile(C3DSettingsPath);
+	GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *BaseExportDirectory, C3DSettingsPath);
 	GConfig->Flush(false, C3DSettingsPath);
 }
 
@@ -3584,6 +3585,7 @@ TArray<TSharedPtr<FEditorSceneData>> FCognitiveEditorTools::GetSceneData() const
 FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 {
 	FString C3DSettingsPath = GetSettingsFilePath();
+	GConfig->LoadFile(C3DSettingsPath);
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, C3DSettingsPath);
 	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, C3DSettingsPath);
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, C3DSettingsPath);
@@ -3597,6 +3599,7 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 {
 	FString C3DSettingsPath = GetSettingsFilePath();
+	GConfig->LoadFile(C3DSettingsPath);
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, C3DSettingsPath);
 	GConfig->Flush(false, C3DSettingsPath);
 
@@ -3608,6 +3611,7 @@ void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
 {
 	FString C3DSettingsPath = GetSettingsFilePath();
+	GConfig->LoadFile(C3DSettingsPath);
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, C3DSettingsPath);
 	GConfig->Flush(false, C3DSettingsPath);
 
