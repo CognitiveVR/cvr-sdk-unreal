@@ -13,6 +13,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCognitivePreSessionEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCognitivePostSessionEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCognitiveInterval);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRequestSend, const bool, copyDataToCache);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCognitiveParticipantIdSet, const FString, ParticipantId);
 
 UENUM(BlueprintType)
 enum class EAnswerValueTypeReturn : uint8

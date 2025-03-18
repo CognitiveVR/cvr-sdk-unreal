@@ -71,7 +71,9 @@
 			FOnRequestSend OnRequestSend;
 		UPROPERTY(BlueprintAssignable, Category = "Cognitive3D Analytics")
 			FOnCognitiveInterval OnCognitiveInterval;
-		
+
+		UPROPERTY(BlueprintAssignable, Category = "Cognitive3D Analytics")
+		FOnCognitiveParticipantIdSet OnParticipantIdSet;
 
 		bool StartSession();
 		virtual bool StartSession(const TArray<FAnalyticsEventAttribute>& Attributes) override;

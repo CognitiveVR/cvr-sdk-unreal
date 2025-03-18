@@ -10,6 +10,7 @@
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
+#include "TimerManager.h"
 
 // Sets default values for this component's properties
 URemoteControls::URemoteControls()
@@ -51,33 +52,58 @@ void URemoteControls::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 
 void URemoteControls::OnSessionBegin()
 {
-	// Get the owner and cast it to ACognitive3DActor
-	ACognitive3DActor* CognitiveActor = Cast<ACognitive3DActor>(GetOwner());
+	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
+	if (world == nullptr) { return; }
 
-#ifdef INCLUDE_OCULUS_PLATFORM
-	// Get the OculusPlatform component from the owner
-	UOculusPlatform* OculusPlatformComp = CognitiveActor->FindComponentByClass<UOculusPlatform>();
-	OculusPlatformComp->OnOculusNameHandled.AddDynamic(this, &URemoteControls::QueryRemoteControlVariable);
-#else
-	QueryRemoteControlVariable(cog->GetUserID());
-#endif
+	if (bFetchVariablesAutomatically)
+	{
+		if (bUseParticipantID)
+		{
+			if (!cog->GetUserID().IsEmpty())
+			{
+				UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: FOUND USER ID"));
+				QueryRemoteControlVariable(cog->GetUserID());
+			}
+			else
+			{
+				UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: WAITING FOR USER ID"));
 
+				cog->OnParticipantIdSet.AddDynamic(this, &URemoteControls::QueryRemoteControlVariable);
+
+				world->GetTimerManager().SetTimer(TimerHandle, this, &URemoteControls::CallTimerEndFunction, WaitForParticipantIdTimeout, false);
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: DEVICE ID"));
+			QueryRemoteControlVariable(cog->GetDeviceID());
+		}
+	}
+
+	
 }
 
 void URemoteControls::OnSessionEnd()
 {
-#ifdef INCLUDE_OCULUS_PLATFORM
-	ACognitive3DActor* CognitiveActor = Cast<ACognitive3DActor>(GetOwner());
-	UOculusPlatform* OculusPlatformComp = CognitiveActor->FindComponentByClass<UOculusPlatform>();
-	OculusPlatformComp->OnOculusNameHandled.RemoveDynamic(this, &URemoteControls::QueryRemoteControlVariable);
-#endif
+	bHasRemoteControlVariables = false;
+	if (cog->OnParticipantIdSet.IsBound())
+	{
+		cog->OnParticipantIdSet.RemoveDynamic(this, &URemoteControls::QueryRemoteControlVariable);
+	}
 }
 
-void URemoteControls::QueryRemoteControlVariable(FString UserID)
+void URemoteControls::QueryRemoteControlVariable(FString ParticipantId)
 {
+	if (bHasRemoteControlVariables)
+	{
+		UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Already received"));
+		return;
+	}
+	UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: QUERY REMOTE CONTROL VARIABLE: %s"), *ParticipantId);
+
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
-	FString Url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/remotevariables?identifier=" + UserID;
+	FString Url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/remotevariables?identifier=" + ParticipantId;
 
 	if (cog->ApplicationKey.IsEmpty())
 	{
@@ -97,6 +123,12 @@ void URemoteControls::QueryRemoteControlVariable(FString UserID)
 
 void URemoteControls::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
+	if (bHasRemoteControlVariables)
+	{
+		UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Already received"));
+		return;
+	}
+
 	if (bWasSuccessful && Response.IsValid())
 	{
 		// Retrieve the response as a string
@@ -105,7 +137,7 @@ void URemoteControls::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpRespo
 		// You can now parse the JSON or process the data as needed.
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
 		properties->SetStringField("RemoteControlVariable", ResponseString);
-		cog->customEventRecorder->Send("RemoteControlVariable", properties);
+		//cog->customEventRecorder->Send("RemoteControlVariable", properties);
 		ParseJsonResponse(ResponseString);
 		//cache response string
 		CacheRemoteControlVariables(ResponseString);
@@ -113,7 +145,7 @@ void URemoteControls::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpRespo
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("REMOTE CONTROL VARIABLE HTTP Request failed"));
-		cog->customEventRecorder->Send("RemoteControlVariable", "Error");
+		//cog->customEventRecorder->Send("RemoteControlVariable", "Error");
 		//attempt to read response from cache if available
 		ReadFromCache();
 	}
@@ -198,7 +230,7 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 					properties->SetStringField("Description", Description);
 					properties->SetStringField("RemoteVariableName", RemoteVariableName);
 					properties->SetStringField("Type", Type);
-					cog->customEventRecorder->Send("AB Test", properties);
+					//cog->customEventRecorder->Send("AB Test", properties);
 				}
 			}
 		}
@@ -282,7 +314,7 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 					properties->SetStringField("Description", Description);
 					properties->SetStringField("RemoteVariableName", RemoteVariableName);
 					properties->SetStringField("Type", Type);
-					cog->customEventRecorder->Send("Remote Config", properties);
+					//cog->customEventRecorder->Send("Remote Config", properties);
 				}
 			}
 		}
@@ -300,6 +332,7 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 
 	if (bSuccess)
 	{
+		bHasRemoteControlVariables = true;
 		OnRemoteControlVariableReceived.Broadcast();
 	}
 }
@@ -416,4 +449,10 @@ void URemoteControls::ReadFromCache()
 			ParseJsonResponse(JsonResponse);
 		}
 	}
+}
+
+void URemoteControls::CallTimerEndFunction()
+{
+	UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: TIMER END"));
+	QueryRemoteControlVariable(cog->GetDeviceID());
 }

@@ -606,6 +606,7 @@ void FAnalyticsProviderCognitive3D::SetUserID(const FString& InUserID)
 	}
 
 	ParticipantId = userId;
+	OnParticipantIdSet.Broadcast(ParticipantId);
 	SetParticipantProperty("id", userId);
 	FCognitiveLog::Info("FAnalyticsProviderCognitive3D::SetUserID set user id: " + userId);
 }
@@ -620,6 +621,7 @@ void FAnalyticsProviderCognitive3D::SetParticipantId(FString participantId)
 	}
 
 	ParticipantId = participantId;
+	OnParticipantIdSet.Broadcast(ParticipantId);
 	SetParticipantProperty("id", participantId);
 	FCognitiveLog::Info("FAnalyticsProviderCognitive3D::SetParticipantId set user id: " + participantId);
 }

@@ -38,7 +38,7 @@ public:
 	void OnSessionEnd();
 
 	UFUNCTION(BlueprintCallable, Category = "Remote Control")
-	void QueryRemoteControlVariable(FString UserID);
+	void QueryRemoteControlVariable(FString ParticipantId);
 
 	void OnHttpResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
@@ -71,6 +71,23 @@ public:
 
 	void CacheRemoteControlVariables(const FString& JsonResponse);
 	void ReadFromCache();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Remote Control")
+	bool bFetchVariablesAutomatically = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Remote Control")
+	bool bUseParticipantID = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Remote Control")
+	float WaitForParticipantIdTimeout = 5.0f;
+
+	// Timer handle for managing the delay
+	FTimerHandle TimerHandle;
+
+	UFUNCTION(BlueprintCallable, Category = "Remote Control")
+	void CallTimerEndFunction();
+
+	bool bHasRemoteControlVariables = false;
 };
 
 template<typename T>
