@@ -61,12 +61,12 @@ void URemoteControls::OnSessionBegin()
 		{
 			if (!cog->GetUserID().IsEmpty())
 			{
-				UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: FOUND USER ID"));
+				//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: FOUND USER ID"));
 				QueryRemoteControlVariable(cog->GetUserID());
 			}
 			else
 			{
-				UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: WAITING FOR USER ID"));
+				//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: WAITING FOR USER ID"));
 
 				cog->OnParticipantIdSet.AddDynamic(this, &URemoteControls::QueryRemoteControlVariable);
 
@@ -75,7 +75,7 @@ void URemoteControls::OnSessionBegin()
 		}
 		else
 		{
-			UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: DEVICE ID"));
+			//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: DEVICE ID"));
 			QueryRemoteControlVariable(cog->GetDeviceID());
 		}
 	}
@@ -99,7 +99,7 @@ void URemoteControls::QueryRemoteControlVariable(FString ParticipantId)
 		UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Already received"));
 		return;
 	}
-	UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: QUERY REMOTE CONTROL VARIABLE: %s"), *ParticipantId);
+	//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: QUERY REMOTE CONTROL VARIABLE: %s"), *ParticipantId);
 
 	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
 	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
@@ -133,7 +133,7 @@ void URemoteControls::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpRespo
 	{
 		// Retrieve the response as a string
 		FString ResponseString = Response->GetContentAsString();
-		UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Responsecode %d: %s"), Response->GetResponseCode(), *ResponseString);
+		//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Responsecode %d: %s"), Response->GetResponseCode(), *ResponseString);
 		// You can now parse the JSON or process the data as needed.
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
 		properties->SetStringField("RemoteControlVariable", ResponseString);
@@ -192,8 +192,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 						FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
 						cog->SetSessionProperty(PropertyName, ValueInt);
 						RemoteControlVariablesInt.Add(RemoteVariableName, ValueInt);
-						UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
-							*Name, *Description, *RemoteVariableName, *Type, ValueInt);
+						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
+						//	*Name, *Description, *RemoteVariableName, *Type, ValueInt);
 					}
 					else if (Type == "float")
 					{
@@ -202,8 +202,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 						FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
 						cog->SetSessionProperty(PropertyName, ValueFloat);
 						RemoteControlVariablesFloat.Add(RemoteVariableName, ValueFloat);
-						UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %f"),
-							*Name, *Description, *RemoteVariableName, *Type, ValueFloat);
+						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %f"),
+						//	*Name, *Description, *RemoteVariableName, *Type, ValueFloat);
 					}
 					else if (Type == "string")
 					{
@@ -212,8 +212,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 						FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
 						cog->SetSessionProperty(PropertyName, ValueString);
 						RemoteControlVariablesString.Add(RemoteVariableName, ValueString);
-						UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %s"),
-							*Name, *Description, *RemoteVariableName, *Type, *ValueString);
+						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %s"),
+						//	*Name, *Description, *RemoteVariableName, *Type, *ValueString);
 					}
 					else if (Type == "bool")
 					{
@@ -222,8 +222,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 						FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
 						cog->SetSessionProperty(PropertyName, ValueBool);
 						RemoteControlVariablesBool.Add(RemoteVariableName, ValueBool);
-						UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
-							*Name, *Description, *RemoteVariableName, *Type, ValueBool);
+						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
+						//	*Name, *Description, *RemoteVariableName, *Type, ValueBool);
 					}
 
 					properties->SetStringField("Name", Name);
@@ -268,8 +268,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 							RemoteControlVariablesInt.Add(RemoteVariableName, ValueInt);
 						}
 
-						UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
-							*Name, *Description, *RemoteVariableName, *Type, ValueInt);
+						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
+						//	*Name, *Description, *RemoteVariableName, *Type, ValueInt);
 					}
 					else if (Type == "float")
 					{
@@ -281,8 +281,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 							cog->SetSessionProperty(PropertyName, ValueFloat);
 							RemoteControlVariablesFloat.Add(RemoteVariableName, ValueFloat);
 						}
-						UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %f"),
-							*Name, *Description, *RemoteVariableName, *Type, ValueFloat);
+						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %f"),
+						//	*Name, *Description, *RemoteVariableName, *Type, ValueFloat);
 					}
 					else if (Type == "string")
 					{
@@ -294,8 +294,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 							cog->SetSessionProperty(PropertyName, ValueString);
 							RemoteControlVariablesString.Add(RemoteVariableName, ValueString);
 						}
-						UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %s"),
-							*Name, *Description, *RemoteVariableName, *Type, *ValueString);
+						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %s"),
+						//	*Name, *Description, *RemoteVariableName, *Type, *ValueString);
 					}
 					else if (Type == "bool")
 					{
@@ -307,8 +307,8 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 							cog->SetSessionProperty(PropertyName, ValueBool);
 							RemoteControlVariablesBool.Add(RemoteVariableName, ValueBool);
 						}
-						UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
-							*Name, *Description, *RemoteVariableName, *Type, ValueBool);
+						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
+						//	*Name, *Description, *RemoteVariableName, *Type, ValueBool);
 					}
 					properties->SetStringField("Name", Name);
 					properties->SetStringField("Description", Description);
