@@ -14,7 +14,7 @@
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class URemoteControls : public UActorComponent
+class COGNITIVE3D_API URemoteControls : public UActorComponent
 {
 	GENERATED_BODY()
 
