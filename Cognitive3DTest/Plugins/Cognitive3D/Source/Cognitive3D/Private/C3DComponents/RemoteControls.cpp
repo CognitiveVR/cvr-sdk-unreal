@@ -31,6 +31,7 @@ void URemoteControls::BeginPlay()
 	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cog.IsValid())
 	{
+		cog->remoteControls = this;
 		cog->OnSessionBegin.AddDynamic(this, &URemoteControls::OnSessionBegin);
 		cog->OnPreSessionEnd.AddDynamic(this, &URemoteControls::OnSessionEnd);
 		if (cog->HasStartedSession())

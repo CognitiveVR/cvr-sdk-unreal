@@ -48,6 +48,7 @@
 #include "Cognitive3D/Private/C3DApi/GazeDataRecorder.h"
 #include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
 #include "Cognitive3D/Private/C3DApi/FixationDataRecorder.h"
+#include "Cognitive3D/Private/C3DComponents/RemoteControls.h"
 
 IMPLEMENT_MODULE(FAnalyticsCognitive3D, Cognitive3D);
 
