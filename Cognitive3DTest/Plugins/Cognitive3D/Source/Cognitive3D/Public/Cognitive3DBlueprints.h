@@ -69,6 +69,21 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics")
 	static void RecordSensor(const FString Name, const float Value);
 
+	//remote controls
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
+	static void QueryRemoteControlVariableNoParticipantId();
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
+	static void QueryRemoteControlVariableWithParticipantId(const FString ParticipantId);
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
+	static FString GetRemoteControlVariableString(const FString Key, const FString DefaultValue);
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
+	static int32 GetRemoteControlVariableInt(const FString Key, const int32 DefaultValue);
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
+	static float GetRemoteControlVariableFloat(const FString Key, const float DefaultValue);
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
+	static bool GetRemoteControlVariableBool(const FString Key, const bool DefaultValue);
+
+
 	//request a question set by a hook name from the Cognitive dashboard
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Exit Poll")
 	static void GetQuestionSet(const FString Hook, FCognitiveExitPollResponse response);
