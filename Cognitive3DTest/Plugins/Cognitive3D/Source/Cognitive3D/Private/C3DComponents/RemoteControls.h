@@ -36,7 +36,7 @@ public:
 	void OnSessionBegin();
 	UFUNCTION()
 	void OnSessionEnd();
-
+	UFUNCTION()
 	void QueryRemoteControlVariable(FString ParticipantId);
 
 	void OnHttpResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);

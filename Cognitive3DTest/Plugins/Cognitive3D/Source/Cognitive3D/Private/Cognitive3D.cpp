@@ -565,6 +565,7 @@ void FAnalyticsProviderCognitive3D::EndSession()
 	SessionId = "";
 	bHasCustomSessionName = false;
 	bHasSessionStarted = false;
+	FRemoteControlsRecorder::GetInstance()->bHasRemoteControlVariables = false;
 	CurrentTrackingSceneId.Empty();
 	LastSceneData.Reset();
 

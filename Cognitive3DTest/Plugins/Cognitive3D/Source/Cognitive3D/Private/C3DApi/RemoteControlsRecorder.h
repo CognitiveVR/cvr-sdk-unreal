@@ -18,7 +18,7 @@ public:
 	TMap<FString, float> RemoteControlVariablesFloat;
 	TMap<FString, bool> RemoteControlVariablesBool;
 
-	bool bHasRemoteControlVariables;
+	bool bHasRemoteControlVariables = false;
 
 	static FRemoteControlsRecorder* RemoteControlsRecorderInstance;
 
