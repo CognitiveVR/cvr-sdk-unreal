@@ -12,7 +12,6 @@
 #include "Interfaces/IHttpResponse.h"
 #include "RemoteControls.generated.h"
 
-class FRemoteControlsRecorder;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class COGNITIVE3D_API URemoteControls : public UActorComponent
@@ -78,24 +77,3 @@ public:
 	void CallTimerEndFunction();
 };
 
-template<typename T>
-inline T URemoteControls::GetRemoteControlVariable(FString key, T defaultValue)
-{
-	if (FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesInt.Contains(key))
-	{
-		return FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesInt[key];
-	}
-	else if (FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesFloat.Contains(key))
-	{
-		return FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesFloat[key];
-	}
-	else if (FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesString.Contains(key))
-	{
-		return FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesString[key];
-	}
-	else if (FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Contains(key))
-	{
-		return FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool[key];
-	}
-	return defaultValue;
-}
