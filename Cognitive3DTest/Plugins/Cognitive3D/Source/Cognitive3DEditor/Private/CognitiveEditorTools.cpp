@@ -246,7 +246,6 @@ void FCognitiveEditorTools::CheckIniConfigured()
 	// Explicitly load the custom config file into GConfig.
 	GConfig->LoadFile(ConfigFilePath);
 
-	GConfig->Flush(true, ConfigFilePath);
 	FString tempC3DGateway;
 	GConfig->GetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("Gateway"), tempC3DGateway, ConfigFilePath);
 
@@ -1990,6 +1989,7 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 		BaseExportDirectory = outFilename;
 
 		FString C3DSettingsPath = GetSettingsFilePath();
+		GConfig->LoadFile(C3DSettingsPath);
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, C3DSettingsPath);
 		GConfig->Flush(false, C3DSettingsPath);
 
@@ -1999,6 +1999,7 @@ FReply FCognitiveEditorTools::SelectBaseExportDirectory()
 		//set default export directory if it isnt set
 		SetDefaultIfNoExportDirectory();
 		FString C3DSettingsPath = GetSettingsFilePath();
+		GConfig->LoadFile(C3DSettingsPath);
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, C3DSettingsPath);
 		GConfig->Flush(false, C3DSettingsPath);
 
@@ -3351,6 +3352,7 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 	TArray<FString>scenstrings;
 
 	FString C3DSettingsPath = GetSettingsFilePath();
+	GConfig->LoadFile(C3DSettingsPath);
 	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, C3DSettingsPath);
 	GConfig->Flush(false, C3DSettingsPath);
 
@@ -3368,8 +3370,8 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 		GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, C3DSettingsPath);
 		GConfig->Flush(false, TestSyncFile);
 #endif
-		GConfig->Flush(false, C3DSettingsPath);
 	}
+	GConfig->Flush(false, C3DSettingsPath);
 
 	for (int32 i = 0; i < scenstrings.Num(); i++)
 	{
@@ -3502,8 +3504,9 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		TArray<FString> iniscenedata;
 
 		FString C3DSettingsPath = GetSettingsFilePath();
+		GConfig->LoadFile(C3DSettingsPath);
 		GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, C3DSettingsPath);
-		GConfig->Flush(false, C3DSettingsPath);
+		
 		if (iniscenedata.Num() == 0)
 		{
 			GLog->Log("FCognitiveTools::SceneVersionResponse can't find scene data in C3D ini files");
@@ -3522,7 +3525,6 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 			GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, C3DSettingsPath);
 			GConfig->Flush(false, TestSyncFile);
 #endif
-			GConfig->Flush(false, C3DSettingsPath);
 		}
 		//GLog->Log("found this many scene datas in ini " + FString::FromInt(iniscenedata.Num()));
 		//GLog->Log("looking for scene " + currentSceneData->Name);
@@ -3655,8 +3657,8 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 	TArray<FString> scenePairs = TArray<FString>();
 
 	FString C3DSettingsPath = GetSettingsFilePath();
+	GConfig->LoadFile(C3DSettingsPath);
 	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, C3DSettingsPath);
-	GConfig->Flush(false, C3DSettingsPath);
 
 	if (scenePairs.Num() == 0)
 	{
@@ -3673,7 +3675,6 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 		GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenePairs, C3DSettingsPath);
 		GConfig->Flush(false, TestSyncFile);
 #endif
-		GConfig->Flush(false, C3DSettingsPath);
 	}
 	bool didSetKey = false;
 	for (int32 i = 0; i < scenePairs.Num(); i++)

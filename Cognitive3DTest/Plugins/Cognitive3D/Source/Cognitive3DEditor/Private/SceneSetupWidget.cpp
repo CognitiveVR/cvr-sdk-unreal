@@ -29,7 +29,7 @@ void SSceneSetupWidget::CheckForExpiredDeveloperKey()
 	if (FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
 	{
 		FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
-		GConfig->Flush(true, C3DSettingsPath);
+		GConfig->LoadFile(C3DSettingsPath);
 		auto Request = FHttpModule::Get().CreateRequest();
 		Request->OnProcessRequestComplete().BindRaw(this, &SSceneSetupWidget::OnDeveloperKeyResponseReceived);
 		FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
