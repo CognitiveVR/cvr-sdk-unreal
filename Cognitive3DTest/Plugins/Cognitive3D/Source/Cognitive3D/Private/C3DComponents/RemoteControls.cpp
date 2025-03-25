@@ -64,13 +64,13 @@ void URemoteControls::OnSessionBegin()
 			if (!cog->GetUserID().IsEmpty())
 			{
 				//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: FOUND USER ID"));
-				QueryRemoteControlVariable(cog->GetUserID());
+				FetchRemoteControlVariable(cog->GetUserID());
 			}
 			else
 			{
 				//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: WAITING FOR USER ID"));
 
-				cog->OnParticipantIdSet.AddDynamic(this, &URemoteControls::QueryRemoteControlVariable);
+				cog->OnParticipantIdSet.AddDynamic(this, &URemoteControls::FetchRemoteControlVariable);
 
 				world->GetTimerManager().SetTimer(TimerHandle, this, &URemoteControls::CallTimerEndFunction, WaitForParticipantIdTimeout, false);
 			}
@@ -78,7 +78,7 @@ void URemoteControls::OnSessionBegin()
 		else
 		{
 			//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: DEVICE ID"));
-			QueryRemoteControlVariable(cog->GetDeviceID());
+			FetchRemoteControlVariable();
 		}
 	}
 
@@ -93,12 +93,12 @@ void URemoteControls::OnSessionEnd()
 		cog->OnPreSessionEnd.RemoveDynamic(this, &URemoteControls::OnSessionEnd);
 		if (cog->OnParticipantIdSet.IsBound())
 		{
-			cog->OnParticipantIdSet.RemoveDynamic(this, &URemoteControls::QueryRemoteControlVariable);
+			cog->OnParticipantIdSet.RemoveDynamic(this, &URemoteControls::FetchRemoteControlVariable);
 		}
 	}
 }
 
-void URemoteControls::QueryRemoteControlVariable(FString ParticipantId)
+void URemoteControls::FetchRemoteControlVariable(FString ParticipantId)
 {
 	if (FRemoteControlsRecorder::GetInstance()->bHasRemoteControlVariables)
 	{
@@ -111,6 +111,36 @@ void URemoteControls::QueryRemoteControlVariable(FString ParticipantId)
 	GConfig->LoadFile(C3DSettingsPath);
 	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 	FString Url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/remotevariables?identifier=" + ParticipantId;
+
+	if (cog->ApplicationKey.IsEmpty())
+	{
+		cog->ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "Analytics", "ApiKey", false);
+	}
+	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
+	// Create HTTP Request
+	auto HttpRequest = FHttpModule::Get().CreateRequest();
+	HttpRequest->SetURL(Url);
+	HttpRequest->SetVerb(TEXT("GET"));
+	HttpRequest->SetHeader(TEXT("Authorization"), AuthValue);
+
+	// Handle the response
+	HttpRequest->OnProcessRequestComplete().BindUObject(this, &URemoteControls::OnHttpResponseReceived);
+	HttpRequest->ProcessRequest();
+}
+
+void URemoteControls::FetchRemoteControlVariable()
+{
+	if (FRemoteControlsRecorder::GetInstance()->bHasRemoteControlVariables)
+	{
+		UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Already received"));
+		return;
+	}
+	//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: QUERY REMOTE CONTROL VARIABLE: %s"), *cog->GetDeviceID());
+
+	FString C3DSettingsPath = cog->GetSettingsFilePathRuntime();
+	GConfig->LoadFile(C3DSettingsPath);
+	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString Url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/remotevariables?identifier=" + cog->GetDeviceID();
 
 	if (cog->ApplicationKey.IsEmpty())
 	{
@@ -461,5 +491,5 @@ void URemoteControls::ReadFromCache()
 void URemoteControls::CallTimerEndFunction()
 {
 	UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: TIMER END"));
-	QueryRemoteControlVariable(cog->GetDeviceID());
+	FetchRemoteControlVariable();
 }

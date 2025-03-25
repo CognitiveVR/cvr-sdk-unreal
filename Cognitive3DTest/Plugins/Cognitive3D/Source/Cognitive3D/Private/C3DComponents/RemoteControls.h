@@ -37,7 +37,9 @@ public:
 	UFUNCTION()
 	void OnSessionEnd();
 	UFUNCTION()
-	void QueryRemoteControlVariable(FString ParticipantId);
+	void FetchRemoteControlVariable(FString ParticipantId);
+
+	void FetchRemoteControlVariable();
 
 	void OnHttpResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 

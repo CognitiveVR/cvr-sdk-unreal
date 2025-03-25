@@ -210,22 +210,22 @@ void UCognitive3DBlueprints::RecordSensor(const FString Name, const float Value)
 	cog->sensors->RecordSensor(Name, Value);
 }
 
-void UCognitive3DBlueprints::QueryRemoteControlVariableNoParticipantId()
+void UCognitive3DBlueprints::FetchRemoteControlVariableNoParticipantId()
 {
 	if(!cog.IsValid())
 		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return; }
 	if (!cog->remoteControls->IsActive()) { return; }
-	cog->remoteControls->QueryRemoteControlVariable(cog->GetDeviceID());
+	cog->remoteControls->FetchRemoteControlVariable();
 }
 
-void UCognitive3DBlueprints::QueryRemoteControlVariableWithParticipantId(const FString ParticipantId)
+void UCognitive3DBlueprints::FetchRemoteControlVariableWithParticipantId(const FString ParticipantId)
 {
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (!cog.IsValid()) { return; }
 	if (!cog->remoteControls->IsActive()) { return; }
-	cog->remoteControls->QueryRemoteControlVariable(ParticipantId);
+	cog->remoteControls->FetchRemoteControlVariable(ParticipantId);
 }
 
 FString UCognitive3DBlueprints::GetRemoteControlVariableString(const FString Key, const FString DefaultValue)

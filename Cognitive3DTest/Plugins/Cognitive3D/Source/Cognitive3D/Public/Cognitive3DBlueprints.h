@@ -71,9 +71,9 @@ public:
 
 	//remote controls
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
-	static void QueryRemoteControlVariableNoParticipantId();
+	static void FetchRemoteControlVariableNoParticipantId();
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
-	static void QueryRemoteControlVariableWithParticipantId(const FString ParticipantId);
+	static void FetchRemoteControlVariableWithParticipantId(const FString ParticipantId);
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
 	static FString GetRemoteControlVariableString(const FString Key, const FString DefaultValue);
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
