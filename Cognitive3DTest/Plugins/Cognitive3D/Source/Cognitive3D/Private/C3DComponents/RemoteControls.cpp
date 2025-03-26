@@ -443,13 +443,14 @@ void URemoteControls::CacheRemoteControlVariables(const FString& JsonResponse)
 	// Combine the subfolder path with your INI file name.
 	FString RemoteControlsFilePath = FPaths::Combine(CustomFolder, TEXT("RemoteControls"));
 
-	// If the file doesn't exist, create it with some default content.
-	if (!FPaths::FileExists(RemoteControlsFilePath))
+	// Create or update the file with the given content.
+	if (FFileHelper::SaveStringToFile(JsonResponse, *RemoteControlsFilePath))
 	{
-		if (!FFileHelper::SaveStringToFile(JsonResponse, *RemoteControlsFilePath))
-		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to create config file: %s"), *RemoteControlsFilePath);
-		}
+		UE_LOG(LogTemp, Log, TEXT("Successfully created or updated config file: %s"), *RemoteControlsFilePath);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to create or update config file: %s"), *RemoteControlsFilePath);
 	}
 }
 
@@ -472,19 +473,17 @@ void URemoteControls::ReadFromCache()
 	// Combine the subfolder path with your INI file name.
 	FString RemoteControlsFilePath = FPaths::Combine(CustomFolder, TEXT("RemoteControls"));
 
-	// If the file doesn't exist, create it with some default content.
-	if (!FPaths::FileExists(RemoteControlsFilePath))
+	// Try to read the file directly
+	FString JsonResponse;
+	if (FFileHelper::LoadFileToString(JsonResponse, *RemoteControlsFilePath))
 	{
-		FString JsonResponse;
-		if (!FFileHelper::LoadFileToString(JsonResponse, *RemoteControlsFilePath))
-		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to read config file: %s"), *RemoteControlsFilePath);
-		}
-		else
-		{
-			// Parse the content
-			ParseJsonResponse(JsonResponse);
-		}
+		UE_LOG(LogTemp, Log, TEXT("Successfully read config file: %s"), *RemoteControlsFilePath);
+		// Parse the content
+		ParseJsonResponse(JsonResponse);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to read config file: %s"), *RemoteControlsFilePath);
 	}
 }
 
