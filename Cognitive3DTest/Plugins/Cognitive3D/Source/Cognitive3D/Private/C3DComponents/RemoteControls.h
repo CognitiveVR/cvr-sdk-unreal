@@ -45,9 +45,6 @@ public:
 
 	void ParseJsonResponse(const FString& JsonResponse);
 
-	template <typename T>
-	T GetRemoteControlVariable(FString key, T defaultValue);
-
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRemoteControlVariableReceived);
 
 	int32 GetRemoteControlVariableInt(const FString& Key, int32 DefaultValue);
