@@ -39,7 +39,6 @@ namespace UnrealBuildTool.Rules
             PrivateDependencyModuleNames.AddRange(
                 new string[]
                 {
-                    "HeadMountedDisplay",
 					"Slate",
 					"SlateCore"
                 }
@@ -60,7 +59,8 @@ namespace UnrealBuildTool.Rules
                     "JsonUtilities",
 					"UMG",
 					"EngineSettings",
-					"EyeTracker",
+                    "HeadMountedDisplay",
+                    "EyeTracker",
 					"EnhancedInput",
 					"InputCore"
 				}
