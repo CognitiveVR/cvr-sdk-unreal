@@ -36,34 +36,23 @@ public:
 	void OnSessionBegin();
 	UFUNCTION()
 	void OnSessionEnd();
+	UFUNCTION()
+	void FetchRemoteControlVariable(FString ParticipantId);
 
-	UFUNCTION(BlueprintCallable, Category = "Remote Control")
-	void QueryRemoteControlVariable(FString ParticipantId);
+	void FetchRemoteControlVariable();
 
 	void OnHttpResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	void ParseJsonResponse(const FString& JsonResponse);
 
-	TMap<FString, FString> RemoteControlVariablesString;
-	TMap<FString, int32> RemoteControlVariablesInt;
-	TMap<FString, float> RemoteControlVariablesFloat;
-	TMap<FString, bool> RemoteControlVariablesBool;
-
-	template <typename T>
-	T GetRemoteControlVariable(FString key, T defaultValue);
-
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRemoteControlVariableReceived);
 
-	UFUNCTION(BlueprintCallable, Category = "Remote Control")
 	int32 GetRemoteControlVariableInt(const FString& Key, int32 DefaultValue);
 
-	UFUNCTION(BlueprintCallable, Category = "Remote Control")
 	float GetRemoteControlVariableFloat(const FString& Key, float DefaultValue);
 
-	UFUNCTION(BlueprintCallable, Category = "Remote Control")
 	FString GetRemoteControlVariableString(const FString& Key, const FString& DefaultValue);
 
-	UFUNCTION(BlueprintCallable, Category = "Remote Control")
 	bool GetRemoteControlVariableBool(const FString& Key, bool DefaultValue);
 
 	UPROPERTY(BlueprintAssignable, Category = "Remote Control")
@@ -84,30 +73,6 @@ public:
 	// Timer handle for managing the delay
 	FTimerHandle TimerHandle;
 
-	UFUNCTION(BlueprintCallable, Category = "Remote Control")
 	void CallTimerEndFunction();
-
-	bool bHasRemoteControlVariables = false;
 };
 
-template<typename T>
-inline T URemoteControls::GetRemoteControlVariable(FString key, T defaultValue)
-{
-	if (RemoteControlVariablesInt.Contains(key))
-	{
-		return RemoteControlVariablesInt[key];
-	}
-	else if (RemoteControlVariablesFloat.Contains(key))
-	{
-		return RemoteControlVariablesFloat[key];
-	}
-	else if (RemoteControlVariablesString.Contains(key))
-	{
-		return RemoteControlVariablesString[key];
-	}
-	else if (RemoteControlVariablesBool.Contains(key))
-	{
-		return RemoteControlVariablesBool[key];
-	}
-	return defaultValue;
-}

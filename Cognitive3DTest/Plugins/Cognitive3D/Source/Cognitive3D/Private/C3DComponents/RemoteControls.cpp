@@ -11,6 +11,7 @@
 #include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
 #include "TimerManager.h"
+#include "Cognitive3D/Private/C3DApi/RemoteControlsRecorder.h"
 
 // Sets default values for this component's properties
 URemoteControls::URemoteControls()
@@ -31,6 +32,7 @@ void URemoteControls::BeginPlay()
 	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cog.IsValid())
 	{
+		cog->remoteControls = this;
 		cog->OnSessionBegin.AddDynamic(this, &URemoteControls::OnSessionBegin);
 		cog->OnPreSessionEnd.AddDynamic(this, &URemoteControls::OnSessionEnd);
 		if (cog->HasStartedSession())
@@ -62,13 +64,13 @@ void URemoteControls::OnSessionBegin()
 			if (!cog->GetUserID().IsEmpty())
 			{
 				//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: FOUND USER ID"));
-				QueryRemoteControlVariable(cog->GetUserID());
+				FetchRemoteControlVariable(cog->GetUserID());
 			}
 			else
 			{
 				//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: WAITING FOR USER ID"));
 
-				cog->OnParticipantIdSet.AddDynamic(this, &URemoteControls::QueryRemoteControlVariable);
+				cog->OnParticipantIdSet.AddDynamic(this, &URemoteControls::FetchRemoteControlVariable);
 
 				world->GetTimerManager().SetTimer(TimerHandle, this, &URemoteControls::CallTimerEndFunction, WaitForParticipantIdTimeout, false);
 			}
@@ -76,7 +78,7 @@ void URemoteControls::OnSessionBegin()
 		else
 		{
 			//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: DEVICE ID"));
-			QueryRemoteControlVariable(cog->GetDeviceID());
+			FetchRemoteControlVariable();
 		}
 	}
 
@@ -85,29 +87,64 @@ void URemoteControls::OnSessionBegin()
 
 void URemoteControls::OnSessionEnd()
 {
-	bHasRemoteControlVariables = false;
-	if (cog->OnParticipantIdSet.IsBound())
+	if (cog.IsValid())
 	{
-		cog->OnParticipantIdSet.RemoveDynamic(this, &URemoteControls::QueryRemoteControlVariable);
+		cog->OnSessionBegin.RemoveDynamic(this, &URemoteControls::OnSessionBegin);
+		cog->OnPreSessionEnd.RemoveDynamic(this, &URemoteControls::OnSessionEnd);
+		if (cog->OnParticipantIdSet.IsBound())
+		{
+			cog->OnParticipantIdSet.RemoveDynamic(this, &URemoteControls::FetchRemoteControlVariable);
+		}
 	}
 }
 
-void URemoteControls::QueryRemoteControlVariable(FString ParticipantId)
+void URemoteControls::FetchRemoteControlVariable(FString ParticipantId)
 {
-	if (bHasRemoteControlVariables)
+	if (FRemoteControlsRecorder::GetInstance()->bHasRemoteControlVariables)
 	{
 		UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Already received"));
 		return;
 	}
 	//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: QUERY REMOTE CONTROL VARIABLE: %s"), *ParticipantId);
 
-	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString C3DSettingsPath = cog->GetSettingsFilePathRuntime();
+	GConfig->LoadFile(C3DSettingsPath);
+	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 	FString Url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/remotevariables?identifier=" + ParticipantId;
 
 	if (cog->ApplicationKey.IsEmpty())
 	{
-		cog->ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "Analytics", "ApiKey", false);
+		cog->ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "Analytics", "ApiKey", false);
+	}
+	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
+	// Create HTTP Request
+	auto HttpRequest = FHttpModule::Get().CreateRequest();
+	HttpRequest->SetURL(Url);
+	HttpRequest->SetVerb(TEXT("GET"));
+	HttpRequest->SetHeader(TEXT("Authorization"), AuthValue);
+
+	// Handle the response
+	HttpRequest->OnProcessRequestComplete().BindUObject(this, &URemoteControls::OnHttpResponseReceived);
+	HttpRequest->ProcessRequest();
+}
+
+void URemoteControls::FetchRemoteControlVariable()
+{
+	if (FRemoteControlsRecorder::GetInstance()->bHasRemoteControlVariables)
+	{
+		UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Already received"));
+		return;
+	}
+	//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: QUERY REMOTE CONTROL VARIABLE: %s"), *cog->GetDeviceID());
+
+	FString C3DSettingsPath = cog->GetSettingsFilePathRuntime();
+	GConfig->LoadFile(C3DSettingsPath);
+	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString Url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/remotevariables?identifier=" + cog->GetDeviceID();
+
+	if (cog->ApplicationKey.IsEmpty())
+	{
+		cog->ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "Analytics", "ApiKey", false);
 	}
 	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
 	// Create HTTP Request
@@ -123,7 +160,7 @@ void URemoteControls::QueryRemoteControlVariable(FString ParticipantId)
 
 void URemoteControls::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	if (bHasRemoteControlVariables)
+	if (FRemoteControlsRecorder::GetInstance()->bHasRemoteControlVariables)
 	{
 		UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Already received"));
 		return;
@@ -154,10 +191,10 @@ void URemoteControls::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpRespo
 void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 {
 	//Reset variable arrays
-	RemoteControlVariablesBool.Empty();
-	RemoteControlVariablesFloat.Empty();
-	RemoteControlVariablesInt.Empty();
-	RemoteControlVariablesString.Empty();
+	FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Empty();
+	FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesFloat.Empty();
+	FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesInt.Empty();
+	FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesString.Empty();
 
 	bool bSuccess = false;
 	
@@ -191,7 +228,7 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 						properties->SetNumberField("ValueInt", ValueInt);
 						FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
 						cog->SetSessionProperty(PropertyName, ValueInt);
-						RemoteControlVariablesInt.Add(RemoteVariableName, ValueInt);
+						FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesInt.Add(RemoteVariableName, ValueInt);
 						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
 						//	*Name, *Description, *RemoteVariableName, *Type, ValueInt);
 					}
@@ -201,7 +238,7 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 						properties->SetNumberField("ValueFloat", ValueFloat);
 						FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
 						cog->SetSessionProperty(PropertyName, ValueFloat);
-						RemoteControlVariablesFloat.Add(RemoteVariableName, ValueFloat);
+						FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesFloat.Add(RemoteVariableName, ValueFloat);
 						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %f"),
 						//	*Name, *Description, *RemoteVariableName, *Type, ValueFloat);
 					}
@@ -211,7 +248,7 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 						properties->SetStringField("ValueString", ValueString);
 						FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
 						cog->SetSessionProperty(PropertyName, ValueString);
-						RemoteControlVariablesString.Add(RemoteVariableName, ValueString);
+						FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesString.Add(RemoteVariableName, ValueString);
 						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %s"),
 						//	*Name, *Description, *RemoteVariableName, *Type, *ValueString);
 					}
@@ -221,7 +258,7 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 						properties->SetBoolField("ValueBool", ValueBool);
 						FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
 						cog->SetSessionProperty(PropertyName, ValueBool);
-						RemoteControlVariablesBool.Add(RemoteVariableName, ValueBool);
+						FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Add(RemoteVariableName, ValueBool);
 						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
 						//	*Name, *Description, *RemoteVariableName, *Type, ValueBool);
 					}
@@ -260,12 +297,12 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 					if (Type == "int")
 					{
 						int32 ValueInt = ConfigObj->GetIntegerField(TEXT("valueInt"));
-						if (!RemoteControlVariablesInt.Contains(RemoteVariableName))
+						if (!FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesInt.Contains(RemoteVariableName))
 						{
 							properties->SetNumberField("ValueInt", ValueInt);
 							FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
 							cog->SetSessionProperty(PropertyName, ValueInt);
-							RemoteControlVariablesInt.Add(RemoteVariableName, ValueInt);
+							FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesInt.Add(RemoteVariableName, ValueInt);
 						}
 
 						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
@@ -274,12 +311,12 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 					else if (Type == "float")
 					{
 						float ValueFloat = ConfigObj->GetNumberField(TEXT("valueFloat"));
-						if (!RemoteControlVariablesFloat.Contains(RemoteVariableName))
+						if (!FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesFloat.Contains(RemoteVariableName))
 						{
 							properties->SetNumberField("ValueFloat", ValueFloat);
 							FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
 							cog->SetSessionProperty(PropertyName, ValueFloat);
-							RemoteControlVariablesFloat.Add(RemoteVariableName, ValueFloat);
+							FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesFloat.Add(RemoteVariableName, ValueFloat);
 						}
 						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %f"),
 						//	*Name, *Description, *RemoteVariableName, *Type, ValueFloat);
@@ -287,12 +324,12 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 					else if (Type == "string")
 					{
 						FString ValueString = ConfigObj->GetStringField(TEXT("valueString"));
-						if (!RemoteControlVariablesString.Contains(RemoteVariableName))
+						if (!FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesString.Contains(RemoteVariableName))
 						{
 							properties->SetStringField("ValueString", ValueString);
 							FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
 							cog->SetSessionProperty(PropertyName, ValueString);
-							RemoteControlVariablesString.Add(RemoteVariableName, ValueString);
+							FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesString.Add(RemoteVariableName, ValueString);
 						}
 						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %s"),
 						//	*Name, *Description, *RemoteVariableName, *Type, *ValueString);
@@ -300,12 +337,12 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 					else if (Type == "bool")
 					{
 						bool ValueBool = ConfigObj->GetBoolField(TEXT("valueBool"));
-						if (!RemoteControlVariablesBool.Contains(RemoteVariableName))
+						if (!FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Contains(RemoteVariableName))
 						{
 							properties->SetBoolField("ValueBool", ValueBool);
 							FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
 							cog->SetSessionProperty(PropertyName, ValueBool);
-							RemoteControlVariablesBool.Add(RemoteVariableName, ValueBool);
+							FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Add(RemoteVariableName, ValueBool);
 						}
 						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
 						//	*Name, *Description, *RemoteVariableName, *Type, ValueBool);
@@ -332,16 +369,16 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 
 	if (bSuccess)
 	{
-		bHasRemoteControlVariables = true;
+		FRemoteControlsRecorder::GetInstance()->bHasRemoteControlVariables = true;
 		OnRemoteControlVariableReceived.Broadcast();
 	}
 }
 
 int32 URemoteControls::GetRemoteControlVariableInt(const FString& Key, int32 DefaultValue)
 {
-	if (RemoteControlVariablesInt.Contains(Key))
+	if (FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesInt.Contains(Key))
 	{
-		return RemoteControlVariablesInt[Key];
+		return FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesInt[Key];
 	}
 	else
 	{
@@ -351,9 +388,9 @@ int32 URemoteControls::GetRemoteControlVariableInt(const FString& Key, int32 Def
 
 float URemoteControls::GetRemoteControlVariableFloat(const FString& Key, float DefaultValue)
 {
-	if (RemoteControlVariablesFloat.Contains(Key))
+	if (FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesFloat.Contains(Key))
 	{
-		return RemoteControlVariablesFloat[Key];
+		return FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesFloat[Key];
 	}
 	else
 	{
@@ -363,9 +400,9 @@ float URemoteControls::GetRemoteControlVariableFloat(const FString& Key, float D
 
 FString URemoteControls::GetRemoteControlVariableString(const FString& Key, const FString& DefaultValue)
 {
-	if (RemoteControlVariablesString.Contains(Key))
+	if (FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesString.Contains(Key))
 	{
-		return RemoteControlVariablesString[Key];
+		return FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesString[Key];
 	}
 	else
 	{
@@ -375,9 +412,9 @@ FString URemoteControls::GetRemoteControlVariableString(const FString& Key, cons
 
 bool URemoteControls::GetRemoteControlVariableBool(const FString& Key, bool DefaultValue)
 {
-	if (RemoteControlVariablesBool.Contains(Key))
+	if (FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Contains(Key))
 	{
-		return RemoteControlVariablesBool[Key];
+		return FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool[Key];
 	}
 	else
 	{
@@ -406,13 +443,14 @@ void URemoteControls::CacheRemoteControlVariables(const FString& JsonResponse)
 	// Combine the subfolder path with your INI file name.
 	FString RemoteControlsFilePath = FPaths::Combine(CustomFolder, TEXT("RemoteControls"));
 
-	// If the file doesn't exist, create it with some default content.
-	if (!FPaths::FileExists(RemoteControlsFilePath))
+	// Create or update the file with the given content.
+	if (FFileHelper::SaveStringToFile(JsonResponse, *RemoteControlsFilePath))
 	{
-		if (!FFileHelper::SaveStringToFile(JsonResponse, *RemoteControlsFilePath))
-		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to create config file: %s"), *RemoteControlsFilePath);
-		}
+		UE_LOG(LogTemp, Log, TEXT("Successfully created or updated config file: %s"), *RemoteControlsFilePath);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to create or update config file: %s"), *RemoteControlsFilePath);
 	}
 }
 
@@ -435,24 +473,22 @@ void URemoteControls::ReadFromCache()
 	// Combine the subfolder path with your INI file name.
 	FString RemoteControlsFilePath = FPaths::Combine(CustomFolder, TEXT("RemoteControls"));
 
-	// If the file doesn't exist, create it with some default content.
-	if (!FPaths::FileExists(RemoteControlsFilePath))
+	// Try to read the file directly
+	FString JsonResponse;
+	if (FFileHelper::LoadFileToString(JsonResponse, *RemoteControlsFilePath))
 	{
-		FString JsonResponse;
-		if (!FFileHelper::LoadFileToString(JsonResponse, *RemoteControlsFilePath))
-		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to read config file: %s"), *RemoteControlsFilePath);
-		}
-		else
-		{
-			// Parse the content
-			ParseJsonResponse(JsonResponse);
-		}
+		UE_LOG(LogTemp, Log, TEXT("Successfully read config file: %s"), *RemoteControlsFilePath);
+		// Parse the content
+		ParseJsonResponse(JsonResponse);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to read config file: %s"), *RemoteControlsFilePath);
 	}
 }
 
 void URemoteControls::CallTimerEndFunction()
 {
 	UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: TIMER END"));
-	QueryRemoteControlVariable(cog->GetDeviceID());
+	FetchRemoteControlVariable();
 }

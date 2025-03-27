@@ -59,7 +59,6 @@ void FCognitive3DEditorModule::StartupModule()
 
 	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
 	GConfig->LoadFile(C3DSettingsPath);
-	GConfig->Flush(true, C3DSettingsPath);
 	GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, C3DSettingsPath);
 	GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, C3DSettingsPath);
 	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, C3DSettingsPath);

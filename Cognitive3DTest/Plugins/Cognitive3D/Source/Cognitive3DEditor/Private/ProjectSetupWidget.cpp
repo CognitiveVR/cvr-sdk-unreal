@@ -50,6 +50,7 @@ void SProjectSetupWidget::FetchApplicationKey(FString developerKey)
 	auto HttpRequest = FHttpModule::Get().CreateRequest();
 
 	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+	GConfig->LoadFile(C3DSettingsPath);
 	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 
 	FString url = FString("https://" + Gateway + "/v0/applicationKey");
@@ -99,6 +100,7 @@ void SProjectSetupWidget::FetchOrganizationDetails(FString developerKey)
 	auto HttpRequest = FHttpModule::Get().CreateRequest();
 
 	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+	GConfig->LoadFile(C3DSettingsPath);
 	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 
 	FString url = FString("https://" + Gateway + "/v0/subscriptions");
