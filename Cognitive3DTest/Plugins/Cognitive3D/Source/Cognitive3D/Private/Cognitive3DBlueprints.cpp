@@ -232,8 +232,6 @@ FString UCognitive3DBlueprints::GetRemoteControlVariableString(const FString Key
 {
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
-	if (!cog.IsValid()) { return FString(); }
-	if (!cog->remoteControls->IsActive()) { return FString(); }
 	return cog->remoteControls->GetRemoteControlVariableString(Key, DefaultValue);
 }
 
@@ -241,8 +239,6 @@ int32 UCognitive3DBlueprints::GetRemoteControlVariableInt(const FString Key, con
 {
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
-	if (!cog.IsValid()) { return 0; }
-	if (!cog->remoteControls->IsActive()) { return 0; }
 	return cog->remoteControls->GetRemoteControlVariableInt(Key, DefaultValue);
 }
 
@@ -250,8 +246,6 @@ float UCognitive3DBlueprints::GetRemoteControlVariableFloat(const FString Key, c
 {
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
-	if (!cog.IsValid()) { return 0.0f; }
-	if (!cog->remoteControls->IsActive()) { return 0.0f; }
 	return cog->remoteControls->GetRemoteControlVariableFloat(Key, DefaultValue);
 }
 
@@ -259,8 +253,6 @@ bool UCognitive3DBlueprints::GetRemoteControlVariableBool(const FString Key, con
 {
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
-	if (!cog.IsValid()) { return false; }
-	if (!cog->remoteControls->IsActive()) { return false; }
 	return cog->remoteControls->GetRemoteControlVariableBool(Key, DefaultValue);
 }
 
