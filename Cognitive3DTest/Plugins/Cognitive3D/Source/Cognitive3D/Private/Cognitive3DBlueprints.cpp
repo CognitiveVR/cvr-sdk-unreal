@@ -241,7 +241,7 @@ FString UCognitive3DBlueprints::GetRemoteControlVariableString(const FString Key
 	if (!cog.IsValid())
 	{
 		FCognitiveLog::Error("UCognitive3DBlueprints::GetRemoteControlVariableString could not get provider!");
-		return;
+		return FString();
 	}
 	return cog->remoteControls->GetRemoteControlVariableString(Key, DefaultValue);
 }
@@ -253,7 +253,7 @@ int32 UCognitive3DBlueprints::GetRemoteControlVariableInt(const FString Key, con
 	if (!cog.IsValid())
 	{
 		FCognitiveLog::Error("UCognitive3DBlueprints::GetRemoteControlVariableInt could not get provider!");
-		return;
+		return 0;
 	}
 	return cog->remoteControls->GetRemoteControlVariableInt(Key, DefaultValue);
 }
@@ -265,7 +265,7 @@ float UCognitive3DBlueprints::GetRemoteControlVariableFloat(const FString Key, c
 	if (!cog.IsValid())
 	{
 		FCognitiveLog::Error("UCognitive3DBlueprints::GetRemoteControlVariableFloat could not get provider!");
-		return;
+		return 0.0f;
 	}
 	return cog->remoteControls->GetRemoteControlVariableFloat(Key, DefaultValue);
 }
@@ -277,7 +277,7 @@ bool UCognitive3DBlueprints::GetRemoteControlVariableBool(const FString Key, con
 	if (!cog.IsValid())
 	{
 		FCognitiveLog::Error("UCognitive3DBlueprints::GetRemoteControlVariableBool could not get provider!");
-		return;
+		return false;
 	}
 	return cog->remoteControls->GetRemoteControlVariableBool(Key, DefaultValue);
 }
