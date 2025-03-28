@@ -27,6 +27,7 @@
 	class UDynamicObject;
 	class FGazeDataRecorder;
 	class FFixationDataRecorder;
+	class URemoteControls;
 	//
 	class FAnalyticsCognitive3D;
 	class UCognitive3DBlueprints;
@@ -126,6 +127,7 @@
 		TSharedPtr<FNetwork> network;
 		TSharedPtr<FExitPoll> exitpoll;
 		TSharedPtr<FLocalCache> localCache;
+		URemoteControls* remoteControls;
 
 		FString GetDeviceID() const;
 

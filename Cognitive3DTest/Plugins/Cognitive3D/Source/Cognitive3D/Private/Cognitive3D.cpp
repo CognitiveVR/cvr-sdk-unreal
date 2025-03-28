@@ -48,6 +48,8 @@
 #include "Cognitive3D/Private/C3DApi/GazeDataRecorder.h"
 #include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
 #include "Cognitive3D/Private/C3DApi/FixationDataRecorder.h"
+#include "Cognitive3D/Private/C3DComponents/RemoteControls.h"
+#include "Cognitive3D/Private/C3DApi/RemoteControlsRecorder.h"
 
 IMPLEMENT_MODULE(FAnalyticsCognitive3D, Cognitive3D);
 
@@ -70,6 +72,7 @@ void FAnalyticsCognitive3D::StartupModule()
 	Cognitive3DProvider.Pin()->localCache = MakeShareable(new FLocalCache(FPaths::Combine(FPaths::ProjectConfigDir(), TEXT("c3dlocal/"))));
 	Cognitive3DProvider.Pin()->network = MakeShareable(new FNetwork());
 	Cognitive3DProvider.Pin()->dynamicObjectManager = new FDynamicObjectManager();
+	FRemoteControlsRecorder::Initialize();
 }
 
 void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* world)
@@ -562,6 +565,11 @@ void FAnalyticsProviderCognitive3D::EndSession()
 	SessionId = "";
 	bHasCustomSessionName = false;
 	bHasSessionStarted = false;
+	FRemoteControlsRecorder::GetInstance()->bHasRemoteControlVariables = false;
+	FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesString.Empty();
+	FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesInt.Empty();
+	FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesFloat.Empty();
+	FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Empty();
 	CurrentTrackingSceneId.Empty();
 	LastSceneData.Reset();
 
