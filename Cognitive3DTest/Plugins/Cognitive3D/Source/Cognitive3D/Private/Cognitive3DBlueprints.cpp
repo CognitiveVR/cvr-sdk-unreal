@@ -214,8 +214,6 @@ void UCognitive3DBlueprints::FetchRemoteControlVariableNoParticipantId()
 {
 	if(!cog.IsValid())
 		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
-	if (!cog.IsValid()) { return; }
-	if (!cog->remoteControls->IsActive()) { return; }
 	cog->remoteControls->FetchRemoteControlVariable();
 }
 
@@ -223,8 +221,6 @@ void UCognitive3DBlueprints::FetchRemoteControlVariableWithParticipantId(const F
 {
 	if (!cog.IsValid())
 		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
-	if (!cog.IsValid()) { return; }
-	if (!cog->remoteControls->IsActive()) { return; }
 	cog->remoteControls->FetchRemoteControlVariable(ParticipantId);
 }
 
