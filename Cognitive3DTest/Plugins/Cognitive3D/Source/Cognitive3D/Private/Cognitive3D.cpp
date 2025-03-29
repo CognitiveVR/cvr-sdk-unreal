@@ -50,6 +50,7 @@
 #include "Cognitive3D/Private/C3DApi/FixationDataRecorder.h"
 #include "Cognitive3D/Private/C3DComponents/RemoteControls.h"
 #include "Cognitive3D/Private/C3DApi/RemoteControlsRecorder.h"
+#include "LandscapeStreamingProxy.h"
 
 IMPLEMENT_MODULE(FAnalyticsCognitive3D, Cognitive3D);
 
@@ -93,6 +94,31 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 	FString levelName = level->GetFullGroupName(true);
 	//GLog->Log("FAnalyticsProviderCognitive3D::HandleSublevelUnloaded Loaded sublevel: " + levelName);
 	auto currentSceneData = GetCurrentSceneData();
+
+	bool bIsLandscapeStreamingProxy = false;
+
+	// Check if the level has any actors and if the first valid actor is a Landscape Streaming Proxy
+	for (AActor* Actor : level->Actors)
+	{
+		if (Actor) // Make sure the actor is valid
+		{
+			if (Actor->IsA(ALandscapeStreamingProxy::StaticClass()))
+			{
+				UE_LOG(LogTemp, Log, TEXT("HandleSublevelLoaded: Detected Landscape Streaming Proxy: %s in sublevel %s"), *Actor->GetName(), *level->GetName());
+				//customEventRecorder->Send("c3d.LandscapeLoaded LOADED LANDSCAPE PROXY");
+				bIsLandscapeStreamingProxy = true;
+			}
+			else
+			{
+				UE_LOG(LogTemp, Log, TEXT("HandleSublevelLoaded: Non-landscape actor detected: %s in sublevel %s"), *Actor->GetName(), *level->GetName());
+			}
+		}
+	}
+
+	if (bIsLandscapeStreamingProxy)
+	{
+		return;
+	}
 
 	//lookup scenedata and if valid, push to the stack
 	TSharedPtr<FSceneData> data = GetSceneData(levelName);
