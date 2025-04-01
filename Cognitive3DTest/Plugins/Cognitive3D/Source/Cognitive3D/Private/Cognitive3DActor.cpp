@@ -13,6 +13,7 @@
 #include "Cognitive3DProvider.h"
 #include "DynamicObject.h"
 #include "Cognitive3D/Private/C3DUtil/Util.h"
+#include <Editor.h>
 
 ACognitive3DActor* ACognitive3DActor::instance = nullptr;
 
@@ -36,6 +37,14 @@ void ACognitive3DActor::BeginPlay()
 	cog->OnSessionBegin.AddDynamic(this, &ACognitive3DActor::ReceiveBeginSession);
 	cog->OnPreSessionEnd.AddDynamic(this, &ACognitive3DActor::ReceivePreEndSession);
 	cog->OnPostSessionEnd.AddDynamic(this, &ACognitive3DActor::ReceivePostEndSession);
+
+#if WITH_EDITOR
+	if (GIsEditor)
+	{
+		// Bind once
+		FEditorDelegates::EndPIE.AddUObject(this, &ACognitive3DActor::OnEndPIE);
+	}
+#endif
 
 	InitializeControllers();
 
@@ -75,6 +84,21 @@ void ACognitive3DActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		break;
 	}
 
+
+#if WITH_EDITOR
+	if (GIsEditor && GIsPlayInEditorWorld)
+	{
+		if (bIsEditorStoppingPIE)
+		{
+			shouldEndSession = true;
+		}
+		else
+		{
+			shouldEndSession = false;
+		}
+	}
+#endif
+
 	if (cog.IsValid())
 	{
 		if (shouldEndSession)
@@ -86,6 +110,12 @@ void ACognitive3DActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		cog->OnPostSessionEnd.RemoveDynamic(this, &ACognitive3DActor::ReceivePostEndSession);
 		cog.Reset();
 	}
+}
+
+void ACognitive3DActor::OnEndPIE(bool bIsSimulating)
+{
+	// Set the flag to true
+	bIsEditorStoppingPIE = true;
 }
 
 

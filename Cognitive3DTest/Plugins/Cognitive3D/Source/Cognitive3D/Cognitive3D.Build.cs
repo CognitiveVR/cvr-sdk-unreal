@@ -67,6 +67,11 @@ namespace UnrealBuildTool.Rules
                 }
 				);
 
+            if (Target.bBuildEditor)
+            {
+                PrivateDependencyModuleNames.Add("UnrealEd");
+            }
+
             if (Target.Platform == UnrealTargetPlatform.Android)
             {
                 PublicDependencyModuleNames.AddRange(new string[]{"AndroidPermission", // Common for Android builds
