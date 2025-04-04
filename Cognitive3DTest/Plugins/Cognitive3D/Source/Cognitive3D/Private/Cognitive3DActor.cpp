@@ -13,7 +13,9 @@
 #include "Cognitive3DProvider.h"
 #include "DynamicObject.h"
 #include "Cognitive3D/Private/C3DUtil/Util.h"
+#if WITH_EDITOR
 #include <Editor.h>
+#endif
 
 ACognitive3DActor* ACognitive3DActor::instance = nullptr;
 
