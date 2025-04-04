@@ -201,7 +201,7 @@ void UOculusPlatform::HandleUserRetrieved(const ovrMessageHandle Message)
 	char* idString = new char[256];
 	ovrID_ToString(idString, 256, oculusID);
 
-	cog->SetParticipantFullName(displayNameStr);
+	cog->SetParticipantFullName(usernameStr);
 
 	if (UseOculusIdAsParticipant)
 	{
