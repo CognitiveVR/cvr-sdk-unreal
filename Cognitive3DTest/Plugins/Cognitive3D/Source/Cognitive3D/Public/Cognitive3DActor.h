@@ -42,6 +42,10 @@ private:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+	void OnEndPIE(bool bIsSimulating);
+
+	bool bIsEditorStoppingPIE = false;
+
 	//Find and automatically assign dynamic objects to controllers
 	UPROPERTY()
 	class UMotionControllerComponent* LeftController;

@@ -62,9 +62,15 @@ namespace UnrealBuildTool.Rules
                     "HeadMountedDisplay",
                     "EyeTracker",
 					"EnhancedInput",
-					"InputCore"
-				}
+					"InputCore",
+                    "Landscape"
+                }
 				);
+
+            if (Target.bBuildEditor)
+            {
+                PrivateDependencyModuleNames.Add("UnrealEd");
+            }
 
             if (Target.Platform == UnrealTargetPlatform.Android)
             {
