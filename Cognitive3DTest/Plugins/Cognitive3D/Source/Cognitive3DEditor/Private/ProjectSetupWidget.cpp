@@ -50,8 +50,10 @@ void SProjectSetupWidget::FetchApplicationKey(FString developerKey)
 	auto HttpRequest = FHttpModule::Get().CreateRequest();
 
 	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+	FString C3DKeysPath = FCognitiveEditorTools::GetInstance()->GetKeysFilePath();
 	GConfig->LoadFile(C3DSettingsPath);
-	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	GConfig->LoadFile(C3DKeysPath);
+	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DKeysPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 
 	FString url = FString("https://" + Gateway + "/v0/applicationKey");
 	HttpRequest->SetURL(url);
@@ -100,8 +102,10 @@ void SProjectSetupWidget::FetchOrganizationDetails(FString developerKey)
 	auto HttpRequest = FHttpModule::Get().CreateRequest();
 
 	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+	FString C3DKeysPath = FCognitiveEditorTools::GetInstance()->GetKeysFilePath();
 	GConfig->LoadFile(C3DSettingsPath);
-	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	GConfig->LoadFile(C3DKeysPath);
+	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DKeysPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 
 	FString url = FString("https://" + Gateway + "/v0/subscriptions");
 	HttpRequest->SetURL(url);

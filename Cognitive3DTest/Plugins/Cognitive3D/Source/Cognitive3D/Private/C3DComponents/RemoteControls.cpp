@@ -108,13 +108,15 @@ void URemoteControls::FetchRemoteControlVariable(FString ParticipantId)
 	//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: QUERY REMOTE CONTROL VARIABLE: %s"), *ParticipantId);
 
 	FString C3DSettingsPath = cog->GetSettingsFilePathRuntime();
+	FString C3DKeysPath = cog->GetKeysFilePathRuntime();
 	GConfig->LoadFile(C3DSettingsPath);
+	GConfig->LoadFile(C3DKeysPath);
 	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 	FString Url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/remotevariables?identifier=" + ParticipantId;
 
 	if (cog->ApplicationKey.IsEmpty())
 	{
-		cog->ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "Analytics", "ApiKey", false);
+		cog->ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DKeysPath, "Analytics", "ApiKey", false);
 	}
 	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
 	// Create HTTP Request
@@ -138,13 +140,15 @@ void URemoteControls::FetchRemoteControlVariable()
 	//UE_LOG(LogTemp, Log, TEXT("REMOTE CONTROL VARIABLE Fetching: QUERY REMOTE CONTROL VARIABLE: %s"), *cog->GetDeviceID());
 
 	FString C3DSettingsPath = cog->GetSettingsFilePathRuntime();
+	FString C3DKeysPath = cog->GetKeysFilePathRuntime();
 	GConfig->LoadFile(C3DSettingsPath);
+	GConfig->LoadFile(C3DKeysPath);
 	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 	FString Url = "https://" + Gateway + "/v" + FString::FromInt(0) + "/remotevariables?identifier=" + cog->GetDeviceID();
 
 	if (cog->ApplicationKey.IsEmpty())
 	{
-		cog->ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "Analytics", "ApiKey", false);
+		cog->ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DKeysPath, "Analytics", "ApiKey", false);
 	}
 	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
 	// Create HTTP Request
