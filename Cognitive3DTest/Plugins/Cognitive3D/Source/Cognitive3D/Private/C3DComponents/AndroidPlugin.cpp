@@ -58,9 +58,7 @@ void UAndroidPlugin::OnSessionBegin()
     }
 
     C3DSettingsPath = cognitive->GetSettingsFilePathRuntime();
-	C3DKeysPath = cognitive->GetKeysFilePathRuntime();
     GConfig->LoadFile(C3DSettingsPath);
-	GConfig->LoadFile(C3DKeysPath);
 
     FString AppKey = "APIKEY:DATA " + cognitive->ApplicationKey;
     FString DeviceId = cognitive->GetDeviceID();
@@ -69,7 +67,7 @@ void UAndroidPlugin::OnSessionBegin()
     FString trackingSceneID = cognitive->CurrentTrackingSceneId;
     FString trackingSceneVersionStr = cognitive->GetCurrentSceneVersionNumber();
     int trackingSceneVersion = FCString::Atoi(*trackingSceneVersionStr);
-    FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DKeysPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+    FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
     FString gazeURL = "https://" + Gateway + "/v" + FString::FromInt(0) + "/gaze/" + cognitive->GetCurrentSceneId() + "?version=" + cognitive->GetCurrentSceneVersionNumber();
     FString eventsURL = "https://" + Gateway + "/v" + FString::FromInt(0) + "/events/" + cognitive->GetCurrentSceneId() + "?version=" + cognitive->GetCurrentSceneVersionNumber();
 
@@ -250,7 +248,7 @@ void UAndroidPlugin::OnLevelLoad(UWorld* world)
         FString trackingSceneID = cognitive->CurrentTrackingSceneId;
         FString trackingSceneVersionStr = cognitive->GetCurrentSceneVersionNumber();
         int trackingSceneVersion = FCString::Atoi(*trackingSceneVersionStr);
-        FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DKeysPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+        FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
         FString gazeURL = "https://" + Gateway + "/v" + FString::FromInt(0) + "/gaze/" + cognitive->GetCurrentSceneId() + "?version=" + cognitive->GetCurrentSceneVersionNumber();
         FString eventsURL = "https://" + Gateway + "/v" + FString::FromInt(0) + "/events/" + cognitive->GetCurrentSceneId() + "?version=" + cognitive->GetCurrentSceneVersionNumber();
 
@@ -405,7 +403,7 @@ void UAndroidPlugin::LogFileHasContent()
                         }
 
                         // Generate Event and Gaze URLs
-                        FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DKeysPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+                        FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 
                         FString SceneID = Lines[3];
                         FString VersionNumber = Lines[4];
@@ -513,7 +511,7 @@ void UAndroidPlugin::LogFileHasContent()
             {
                 FString SceneID = PreviousSessionLines[3];
                 FString VersionNumber = PreviousSessionLines[4];
-                FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DKeysPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+                FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 
                 FString EventsURL = FString::Printf(TEXT("https://%s/v0/events/%s?version=%s"), *Gateway, *SceneID, *VersionNumber);
 
