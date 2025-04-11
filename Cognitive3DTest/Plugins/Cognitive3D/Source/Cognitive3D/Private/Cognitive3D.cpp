@@ -428,6 +428,7 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	}
 
 	FString C3DSettingsPath = GetSettingsFilePathRuntime();
+	FString C3DKeysPath = GetKeysFilePathRuntime();
 
 	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "Analytics", "ApiKey", false);
 	AttributionKey = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "Analytics", "AttributionKey", false);
@@ -1000,6 +1001,37 @@ FString FAnalyticsProviderCognitive3D::GetSettingsFilePathRuntime() const
 	if (!FPaths::FileExists(ConfigFilePath))
 	{
 		FString DefaultContent = TEXT("; Cognitive3D Plugin Settings\n[General]\n");
+		if (!FFileHelper::SaveStringToFile(DefaultContent, *ConfigFilePath))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to create config file: %s"), *ConfigFilePath);
+			return FString();
+		}
+	}
+	//ConfigFilePath = FConfigCacheIni::NormalizeConfigIniPath(ConfigFilePath);
+	return ConfigFilePath;
+}
+
+FString FAnalyticsProviderCognitive3D::GetKeysFilePathRuntime() const
+{
+	// Get the project's Config directory.
+	FString BaseConfigDir = FPaths::ProjectConfigDir();
+	FString BaseProjectDir = FPaths::ProjectDir();
+
+	// Define the subfolder and ensure it exists.
+	FString CustomFolder = FPaths::Combine(BaseProjectDir, TEXT("c3dlocal"));
+	if (!FPaths::DirectoryExists(CustomFolder))
+	{
+		// Create the directory if it doesn't exist.
+		IFileManager::Get().MakeDirectory(*CustomFolder);
+	}
+
+	// Combine the subfolder path with your INI file name.
+	FString ConfigFilePath = FPaths::Combine(CustomFolder, TEXT("Cognitive3DKeys.ini"));
+
+	// If the file doesn't exist, create it with some default content.
+	if (!FPaths::FileExists(ConfigFilePath))
+	{
+		FString DefaultContent = TEXT("; Cognitive3D Plugin Keys\n[General]\n");
 		if (!FFileHelper::SaveStringToFile(DefaultContent, *ConfigFilePath))
 		{
 			UE_LOG(LogTemp, Error, TEXT("Failed to create config file: %s"), *ConfigFilePath);

@@ -343,6 +343,7 @@ public:
 	bool HasApplicationKey() const;
 
 	FString GetSettingsFilePath() const;
+	FString GetKeysFilePath() const;
 
 	//send a http request to get the scene version data for current scene from sceneexplorer
 	FReply ButtonCurrentSceneVersionRequest();

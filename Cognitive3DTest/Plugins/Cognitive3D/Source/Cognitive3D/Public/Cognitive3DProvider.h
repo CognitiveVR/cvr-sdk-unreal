@@ -145,6 +145,7 @@
 		FString AttributionKey = "";
 
 		FString GetSettingsFilePathRuntime() const;
+		FString GetKeysFilePathRuntime() const;
 
 		FString GetCurrentSceneId();
 		FString GetCurrentSceneVersionNumber();
