@@ -430,8 +430,8 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	FString C3DSettingsPath = GetSettingsFilePathRuntime();
 	FString C3DKeysPath = GetKeysFilePathRuntime();
 
-	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DKeysPath, "Analytics", "ApiKey", false);
-	AttributionKey = FAnalytics::Get().GetConfigValueFromIni(C3DKeysPath, "Analytics", "AttributionKey", false);
+	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "Analytics", "ApiKey", false);
+	AttributionKey = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "Analytics", "AttributionKey", false);
 
 	FString ValueReceived;
 
@@ -1015,9 +1015,10 @@ FString FAnalyticsProviderCognitive3D::GetKeysFilePathRuntime() const
 {
 	// Get the project's Config directory.
 	FString BaseConfigDir = FPaths::ProjectConfigDir();
+	FString BaseProjectDir = FPaths::ProjectDir();
 
 	// Define the subfolder and ensure it exists.
-	FString CustomFolder = FPaths::Combine(BaseConfigDir, TEXT("c3dlocal"));
+	FString CustomFolder = FPaths::Combine(BaseProjectDir, TEXT("c3dlocal"));
 	if (!FPaths::DirectoryExists(CustomFolder))
 	{
 		// Create the directory if it doesn't exist.

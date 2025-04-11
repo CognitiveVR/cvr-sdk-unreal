@@ -115,7 +115,7 @@ void URemoteControls::FetchRemoteControlVariable(FString ParticipantId)
 	GConfig->LoadFile(C3DKeysPath);
 	if (cog->ApplicationKey.IsEmpty())
 	{
-		cog->ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DKeysPath, "Analytics", "ApiKey", false);
+		cog->ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "Analytics", "ApiKey", false);
 	}
 	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
 	// Create HTTP Request
@@ -146,7 +146,7 @@ void URemoteControls::FetchRemoteControlVariable()
 	GConfig->LoadFile(C3DKeysPath);
 	if (cog->ApplicationKey.IsEmpty())
 	{
-		cog->ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DKeysPath, "Analytics", "ApiKey", false);
+		cog->ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "Analytics", "ApiKey", false);
 	}
 	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
 	// Create HTTP Request

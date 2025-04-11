@@ -351,9 +351,10 @@ FString FCognitiveEditorTools::GetKeysFilePath() const
 {
 	// Get the project's Config directory.
 	FString BaseConfigDir = FPaths::ProjectConfigDir();
+	FString BaseProjectDir = FPaths::ProjectDir();
 
 	// Define the subfolder and ensure it exists.
-	FString CustomFolder = FPaths::Combine(BaseConfigDir, TEXT("c3dlocal"));
+	FString CustomFolder = FPaths::Combine(BaseProjectDir, TEXT("c3dlocal"));
 	if (!FPaths::DirectoryExists(CustomFolder))
 	{
 		// Create the directory if it doesn't exist.
@@ -3620,8 +3621,8 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 	FString C3DKeysPath = GetKeysFilePath();
 	GConfig->LoadFile(C3DSettingsPath);
 	GConfig->LoadFile(C3DKeysPath);
-	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, C3DKeysPath);
-	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, C3DKeysPath);
+	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, C3DSettingsPath);
+	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, C3DSettingsPath);
 	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, C3DKeysPath);
 	GConfig->Flush(false, C3DSettingsPath);
 	GConfig->Flush(false, C3DKeysPath);
@@ -3637,7 +3638,7 @@ void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 	FString C3DKeysPath = GetKeysFilePath();
 	GConfig->LoadFile(C3DSettingsPath);
 	GConfig->LoadFile(C3DKeysPath);
-	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, C3DKeysPath);
+	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, C3DSettingsPath);
 	GConfig->Flush(false, C3DSettingsPath);
 	GConfig->Flush(false, C3DKeysPath);
 
