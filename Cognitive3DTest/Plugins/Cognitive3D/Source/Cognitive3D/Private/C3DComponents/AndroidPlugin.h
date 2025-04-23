@@ -31,6 +31,7 @@ private:
 	void OnSessionEnd();
 
 	FString C3DSettingsPath;
+	FString C3DKeysPath;
 
 	FString FolderPath;
 	FString FolderPathCrashLog;
