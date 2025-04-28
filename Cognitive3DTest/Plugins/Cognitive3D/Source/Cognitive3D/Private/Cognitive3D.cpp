@@ -1007,7 +1007,6 @@ FString FAnalyticsProviderCognitive3D::GetSettingsFilePathRuntime() const
 			return FString();
 		}
 	}
-	//ConfigFilePath = FConfigCacheIni::NormalizeConfigIniPath(ConfigFilePath);
 	return ConfigFilePath;
 }
 
@@ -1038,7 +1037,6 @@ FString FAnalyticsProviderCognitive3D::GetKeysFilePathRuntime() const
 			return FString();
 		}
 	}
-	//ConfigFilePath = FConfigCacheIni::NormalizeConfigIniPath(ConfigFilePath);
 	return ConfigFilePath;
 }
 

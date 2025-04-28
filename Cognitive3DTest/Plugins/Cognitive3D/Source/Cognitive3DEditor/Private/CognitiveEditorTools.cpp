@@ -195,7 +195,6 @@ void FCognitiveEditorTools::Initialize()
 			return;
 		}
 	}
-	//ConfigFilePath = FConfigCacheIni::NormalizeConfigIniPath(ConfigFilePath);
 	// Explicitly load the custom config file into GConfig.
 	GConfig->LoadFile(ConfigFilePath);
 
@@ -242,7 +241,6 @@ void FCognitiveEditorTools::CheckIniConfigured()
 			return;
 		}
 	}
-	//ConfigFilePath = FConfigCacheIni::NormalizeConfigIniPath(ConfigFilePath);
 	// Explicitly load the custom config file into GConfig.
 	GConfig->LoadFile(ConfigFilePath);
 
@@ -343,7 +341,6 @@ FString FCognitiveEditorTools::GetSettingsFilePath() const
 			return FString();
 		}
 	}
-	//ConfigFilePath = FConfigCacheIni::NormalizeConfigIniPath(ConfigFilePath);
 	return ConfigFilePath;
 }
 
@@ -374,7 +371,6 @@ FString FCognitiveEditorTools::GetKeysFilePath() const
 			return FString();
 		}
 	}
-	//ConfigFilePath = FConfigCacheIni::NormalizeConfigIniPath(ConfigFilePath);
 	return ConfigFilePath;
 }
 
