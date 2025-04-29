@@ -195,7 +195,6 @@ void FCognitiveEditorTools::Initialize()
 			return;
 		}
 	}
-	//ConfigFilePath = FConfigCacheIni::NormalizeConfigIniPath(ConfigFilePath);
 	// Explicitly load the custom config file into GConfig.
 	GConfig->LoadFile(ConfigFilePath);
 
@@ -242,7 +241,6 @@ void FCognitiveEditorTools::CheckIniConfigured()
 			return;
 		}
 	}
-	//ConfigFilePath = FConfigCacheIni::NormalizeConfigIniPath(ConfigFilePath);
 	// Explicitly load the custom config file into GConfig.
 	GConfig->LoadFile(ConfigFilePath);
 
@@ -343,7 +341,36 @@ FString FCognitiveEditorTools::GetSettingsFilePath() const
 			return FString();
 		}
 	}
-	//ConfigFilePath = FConfigCacheIni::NormalizeConfigIniPath(ConfigFilePath);
+	return ConfigFilePath;
+}
+
+FString FCognitiveEditorTools::GetKeysFilePath() const
+{
+	// Get the project's Config directory.
+	FString BaseConfigDir = FPaths::ProjectConfigDir();
+	FString BaseProjectDir = FPaths::ProjectDir();
+
+	// Define the subfolder and ensure it exists.
+	FString CustomFolder = FPaths::Combine(BaseProjectDir, TEXT("c3dlocal"));
+	if (!FPaths::DirectoryExists(CustomFolder))
+	{
+		// Create the directory if it doesn't exist.
+		IFileManager::Get().MakeDirectory(*CustomFolder);
+	}
+
+	// Combine the subfolder path with your INI file name.
+	FString ConfigFilePath = FPaths::Combine(CustomFolder, TEXT("Cognitive3DKeys.ini"));
+
+	// If the file doesn't exist, create it with some default content.
+	if (!FPaths::FileExists(ConfigFilePath))
+	{
+		FString DefaultContent = TEXT("; Cognitive3D Plugin Settings\n[General]\n");
+		if (!FFileHelper::SaveStringToFile(DefaultContent, *ConfigFilePath))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to create config file: %s"), *ConfigFilePath);
+			return FString();
+		}
+	}
 	return ConfigFilePath;
 }
 
@@ -3587,11 +3614,14 @@ TArray<TSharedPtr<FEditorSceneData>> FCognitiveEditorTools::GetSceneData() const
 FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 {
 	FString C3DSettingsPath = GetSettingsFilePath();
+	FString C3DKeysPath = GetKeysFilePath();
 	GConfig->LoadFile(C3DSettingsPath);
+	GConfig->LoadFile(C3DKeysPath);
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *ApplicationKey, C3DSettingsPath);
 	GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *AttributionKey, C3DSettingsPath);
-	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, C3DSettingsPath);
+	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *DeveloperKey, C3DKeysPath);
 	GConfig->Flush(false, C3DSettingsPath);
+	GConfig->Flush(false, C3DKeysPath);
 
 	ConfigFileHasChanged = true;
 
@@ -3601,9 +3631,12 @@ FReply FCognitiveEditorTools::SaveAPIDeveloperKeysToFile()
 void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 {
 	FString C3DSettingsPath = GetSettingsFilePath();
+	FString C3DKeysPath = GetKeysFilePath();
 	GConfig->LoadFile(C3DSettingsPath);
+	GConfig->LoadFile(C3DKeysPath);
 	GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *key, C3DSettingsPath);
 	GConfig->Flush(false, C3DSettingsPath);
+	GConfig->Flush(false, C3DKeysPath);
 
 	ConfigFileHasChanged = true;
 
@@ -3613,9 +3646,12 @@ void FCognitiveEditorTools::SaveApplicationKeyToFile(FString key)
 void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
 {
 	FString C3DSettingsPath = GetSettingsFilePath();
+	FString C3DKeysPath = GetKeysFilePath();
 	GConfig->LoadFile(C3DSettingsPath);
-	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, C3DSettingsPath);
+	GConfig->LoadFile(C3DKeysPath);
+	GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *key, C3DKeysPath);
 	GConfig->Flush(false, C3DSettingsPath);
+	GConfig->Flush(false, C3DKeysPath);
 
 	ConfigFileHasChanged = true;
 

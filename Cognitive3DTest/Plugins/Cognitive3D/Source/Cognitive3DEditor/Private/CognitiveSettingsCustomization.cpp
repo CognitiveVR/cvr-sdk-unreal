@@ -231,13 +231,16 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 	FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
 
 	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+	FString C3DKeysPath = FCognitiveEditorTools::GetInstance()->GetKeysFilePath();
 	// Explicitly load the custom config file into GConfig.
 	GConfig->LoadFile(C3DSettingsPath);
+	GConfig->LoadFile(C3DKeysPath);
 	GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, C3DSettingsPath);
 	GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, C3DSettingsPath);
-	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, C3DSettingsPath);
+	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, C3DKeysPath);
 
 	GConfig->Flush(false, C3DSettingsPath);
+	GConfig->Flush(false, C3DKeysPath);
 
 	if (FCognitiveEditorTools::GetInstance()->DeveloperKey.IsEmpty() || FCognitiveEditorTools::GetInstance()->ApplicationKey.IsEmpty()
 		|| FCognitiveEditorTools::GetInstance()->BaseExportDirectory.IsEmpty())
@@ -263,9 +266,10 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 
 		GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *FCognitiveEditorTools::GetInstance()->ApplicationKey, C3DSettingsPath);
 		GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *FCognitiveEditorTools::GetInstance()->AttributionKey, C3DSettingsPath);
-		GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *FCognitiveEditorTools::GetInstance()->DeveloperKey, C3DSettingsPath);
+		GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *FCognitiveEditorTools::GetInstance()->DeveloperKey, C3DKeysPath);
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, C3DSettingsPath);
 		GConfig->Flush(false, C3DSettingsPath);
+		GConfig->Flush(false, C3DKeysPath);
 #else
 		GConfig->GetString(TEXT("Analytics"), TEXT("ApiKey"), FCognitiveEditorTools::GetInstance()->ApplicationKey, EngineIni);
 		GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, EngineIni);
@@ -274,9 +278,10 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 
 		GConfig->SetString(TEXT("Analytics"), TEXT("ApiKey"), *FCognitiveEditorTools::GetInstance()->ApplicationKey, C3DSettingsPath);
 		GConfig->SetString(TEXT("Analytics"), TEXT("AttributionKey"), *FCognitiveEditorTools::GetInstance()->AttributionKey, C3DSettingsPath);
-		GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *FCognitiveEditorTools::GetInstance()->DeveloperKey, C3DSettingsPath);
+		GConfig->SetString(TEXT("Analytics"), TEXT("DeveloperKey"), *FCognitiveEditorTools::GetInstance()->DeveloperKey, C3DKeysPath);
 		GConfig->SetString(TEXT("Analytics"), TEXT("ExportPath"), *FCognitiveEditorTools::GetInstance()->BaseExportDirectory, C3DSettingsPath);
 		GConfig->Flush(false, C3DSettingsPath);
+		GConfig->Flush(false, C3DKeysPath);
 #endif // ENGINE_MAJOR_VERSION == 4
 	}
 
