@@ -7,11 +7,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "Cognitive3D/Private/C3DComponents/FixationRecorder.h"
 
-float AActiveSessionView::Remap(float num, float low1, float high1, float low2, float high2)
-{
-	return low2 + (num - low1) * (high2 - low2) / (high1 - low1);
-}
-
 // Sets default values
 AActiveSessionView::AActiveSessionView()
 {
@@ -71,16 +66,43 @@ void AActiveSessionView::DelaySetupWidget()
 	if (WidgetComponent != NULL)
 	{
 		auto widgetInstance = WidgetComponent->GetUserWidgetObject();
-		UHeadMountedDisplayFunctionLibrary::SetSpectatorScreenModeTexturePlusEyeLayout(FVector2D(0, 0), FVector2D(1, 1), FVector2D(0, 0), FVector2D(1, 1),true,false,true);
+		UHeadMountedDisplayFunctionLibrary::SetSpectatorScreenModeTexturePlusEyeLayout(FVector2D(0, 0), FVector2D(1, 1), FVector2D(0, 0), FVector2D(1, 1), true, false, true);
 		UTextureRenderTarget2D* widgetTextureRT2D = WidgetComponent->GetRenderTarget();
 		UHeadMountedDisplayFunctionLibrary::SetSpectatorScreenTexture((UTexture*)widgetTextureRT2D);
 		UHeadMountedDisplayFunctionLibrary::SetSpectatorScreenMode(ESpectatorScreenMode::TexturePlusEye);
 	}
+
+
+	//screen size debugging
+	//add   #include "GameFramework/GameUserSettings.h"
+	/*
+	auto provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();
+
+	UGameUserSettings* MyGameSettings = GEngine->GetGameUserSettings();
+	FIntPoint screenResolution = MyGameSettings->GetScreenResolution();
+	provider.Pin()->SetSessionProperty("ScreenResolution", FString::FromInt(screenResolution.X) + "  " + FString::FromInt(screenResolution.Y));
+	FIntPoint desktopResolution = MyGameSettings->GetDesktopResolution();
+	provider.Pin()->SetSessionProperty("DesktopResolution", FString::FromInt(desktopResolution.X) + "  " + FString::FromInt(desktopResolution.Y));
+
+	FVector WorldPosition;
+	FVector2D ScreenPosition;
+	ULocalPlayer* const LP = PlayerController ? PlayerController->GetLocalPlayer() : nullptr;
+	if (LP && LP->ViewportClient)
+	{
+		// get the projection data
+		FSceneViewProjectionData ProjectionData;
+		if (LP->GetProjectionData(LP->ViewportClient->Viewport, ProjectionData))
+		{
+			FMatrix const ViewProjectionMatrix = ProjectionData.ComputeViewProjectionMatrix();
+			bool bResult = FSceneView::ProjectWorldToScreen(WorldPosition, ProjectionData.GetConstrainedViewRect(), ViewProjectionMatrix, ScreenPosition);
+			provider.Pin()->SetSessionProperty("ProjectionRect", FString::FromInt(ProjectionData.GetViewRect().Width()) + "  " + FString::FromInt(ProjectionData.GetViewRect().Height()));
+		}
+	}*/
 }
 
 void AActiveSessionView::Tick(float delta)
 {
-	
+
 }
 
 TArray<FVector> AActiveSessionView::GetProjectedFixations()
@@ -109,11 +131,12 @@ TArray<FVector> AActiveSessionView::GetProjectedFixations()
 		PlayerController->ProjectWorldLocationToScreen(worldPosition, screenPosition);
 
 		//remap from hmd to spectator view
-		float x = Remap(screenPosition.X, 0, 2880, 0, 1280);
-		float y = Remap(screenPosition.Y, 0, 1600, 0, 720);
+		float x = Remap(screenPosition.X, 0, GetHMDWidth(), 0, SpectatorWidth);
+		float y = Remap(screenPosition.Y, 0, GetHMDHeight(), 0, SpectatorHeight);
 
 		//slightly shift the x value (because projection is off center)
-		x += 64;
+		x += GetCenterXOffset();
+		y += GetCenterYOffset();
 
 		//add to array
 		RecentFixations.Add(FVector(x, y, points[i].MaxRadius));
@@ -141,20 +164,42 @@ TArray<FVector2D> AActiveSessionView::GetProjectedSaccades()
 		{
 			worldPosition = eyePositions[i]->WorldPosition;
 		}
-		
+
 		FVector2D screenPosition;
-		PlayerController->ProjectWorldLocationToScreen(worldPosition, screenPosition);
+		PlayerController->ProjectWorldLocationToScreen(worldPosition, screenPosition, false);
 
 		//remap from hmd to spectator view
-		float x = Remap(screenPosition.X, 0, 2880, 0, 1280);
-		float y = Remap(screenPosition.Y, 0, 1600, 0, 720);
+		float x = Remap(screenPosition.X, 0, GetHMDWidth(), 0, SpectatorWidth);
+		float y = Remap(screenPosition.Y, 0, GetHMDHeight(), 0, SpectatorHeight);
 
 		//slightly shift the x value (because projection is off center)
-		x += 64;
+		x += GetCenterXOffset();
+		y += GetCenterYOffset();
 
 		//add to array
 		adjustedEyePositions.Add(FVector2D(x, y));
 	}
+
+	//current eye tracking point
+	/*int32 Index = eyePositions.Num() - 1;
+	if (Index > 0)
+	{
+		if (eyePositions[Index]->IsLocal && eyePositions[Index]->Parent != NULL)
+		{
+			worldPosition = eyePositions[Index]->Parent->GetComponentTransform().TransformPosition(eyePositions[Index]->LocalPosition);
+		}
+		else
+		{
+			worldPosition = eyePositions[Index]->WorldPosition;
+		}
+		FVector2D screenPosition;
+		PlayerController->ProjectWorldLocationToScreen(worldPosition, screenPosition);
+
+		//auto provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();
+		//provider.Pin()->sensors->RecordSensor("ScreenPosition.X", screenPosition.X);
+		//provider.Pin()->sensors->RecordSensor("ScreenPosition.Y", screenPosition.Y);
+	}
+	*/
 
 	return adjustedEyePositions;
 }

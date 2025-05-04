@@ -411,6 +411,27 @@ int64 UFixationRecorder::GetEyeCaptureTimestamp()
 	int64 ts = (int64)(FUtil::GetTimestamp() * 1000);
 	return ts;
 }
+#elif defined INCLUDE_OCULUS_PLUGIN
+bool UFixationRecorder::AreEyesClosed()
+{
+	IEyeTracker const* const ET = GEngine ? GEngine->EyeTrackingDevice.Get() : nullptr;
+	if (ET == NULL)
+	{
+		return false;
+	}
+	FEyeTrackerGazeData gazeData;
+	ET->GetEyeTrackerGazeData(gazeData);
+	if (gazeData.ConfidenceValue < 0.5f)
+	{
+		return true;
+	}
+	return false;
+}
+int64 UFixationRecorder::GetEyeCaptureTimestamp()
+{
+	int64 ts = (int64)(FUtil::GetTimestamp() * 1000);
+	return ts;
+}
 #elif defined OPENXR_EYETRACKING
 bool UFixationRecorder::AreEyesClosed()
 {
@@ -696,6 +717,41 @@ void UFixationRecorder::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	else
 	{
 		EyeCaptures[index].Discard = true;
+	}
+#elif defined INCLUDE_OCULUS_PLUGIN
+	EyeCaptures[index].EyesClosed = AreEyesClosed();
+	EyeCaptures[index].Time = GetEyeCaptureTimestamp();
+
+	FVector Start = FVector::ZeroVector;
+	FVector WorldDirection = FVector::ZeroVector;
+	FVector End = FVector::ZeroVector;
+	IEyeTracker const* const ET = GEngine ? GEngine->EyeTrackingDevice.Get() : nullptr;
+	if (ET == NULL)
+	{
+		EyeCaptures[index].Discard = true;
+	}
+	else
+	{
+		EEyeTrackerStatus status = ET->GetEyeTrackerStatus();
+		if (status != EEyeTrackerStatus::Tracking)
+		{
+			EyeCaptures[index].Discard = true;
+		}
+		else
+		{
+			FEyeTrackerGazeData gazeData;
+			ET->GetEyeTrackerGazeData(gazeData);
+			if (gazeData.ConfidenceValue < 0.4f)
+			{
+				EyeCaptures[index].Discard = true;
+			}
+			else
+			{
+				WorldDirection = gazeData.GazeDirection;
+				Start = gazeData.GazeOrigin;
+				End = Start + WorldDirection * MaxFixationDistance;
+			}
+		}
 	}
 #elif defined OPENXR_EYETRACKING
 	EyeCaptures[index].EyesClosed = AreEyesClosed();
