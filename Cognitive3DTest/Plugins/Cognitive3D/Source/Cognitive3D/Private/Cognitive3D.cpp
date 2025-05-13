@@ -50,6 +50,7 @@
 #include "Cognitive3D/Private/C3DApi/FixationDataRecorder.h"
 #include "Cognitive3D/Private/C3DComponents/RemoteControls.h"
 #include "Cognitive3D/Private/C3DApi/RemoteControlsRecorder.h"
+#include "Cognitive3D/Private/C3DApi/BoundaryRecorder.h"
 #include "LandscapeStreamingProxy.h"
 
 IMPLEMENT_MODULE(FAnalyticsCognitive3D, Cognitive3D);
@@ -70,6 +71,7 @@ void FAnalyticsCognitive3D::StartupModule()
 	Cognitive3DProvider.Pin()->sensors = new FSensors();
 	Cognitive3DProvider.Pin()->fixationDataRecorder = new FFixationDataRecorder();
 	Cognitive3DProvider.Pin()->gazeDataRecorder = new FGazeDataRecorder();
+	Cognitive3DProvider.Pin()->boundaryRecorder = new BoundaryRecorder();
 	Cognitive3DProvider.Pin()->localCache = MakeShareable(new FLocalCache(FPaths::Combine(FPaths::ProjectConfigDir(), TEXT("c3dlocal/"))));
 	Cognitive3DProvider.Pin()->network = MakeShareable(new FNetwork());
 	Cognitive3DProvider.Pin()->dynamicObjectManager = new FDynamicObjectManager();
@@ -551,6 +553,7 @@ void FAnalyticsProviderCognitive3D::EndSession()
 	customEventRecorder->PreSessionEnd();
 	fixationDataRecorder->PreSessionEnd();
 	dynamicObjectManager->OnPreSessionEnd();
+	boundaryRecorder->PreSessionEnd();
 	sensors->PreSessionEnd();
 
 	OnPreSessionEnd.Broadcast();
@@ -561,6 +564,7 @@ void FAnalyticsProviderCognitive3D::EndSession()
 	customEventRecorder->PostSessionEnd();
 	fixationDataRecorder->PostSessionEnd();
 	dynamicObjectManager->OnPostSessionEnd();
+	boundaryRecorder->PostSessionEnd();
 	sensors->PostSessionEnd();
 	OnPostSessionEnd.Broadcast();
 	localCache->Close();
@@ -1333,14 +1337,14 @@ bool FAnalyticsProviderCognitive3D::TryGetRoomSize(FVector& roomsize)
 #endif
 }
 
-bool FAnalyticsProviderCognitive3D::TryGetHMDGuardianPoints(TArray<FVector>& GuardianPoints)
+bool FAnalyticsProviderCognitive3D::TryGetHMDGuardianPoints(TArray<FVector>& GuardianPoints, bool usePawnSpace)
 {
 #ifdef INCLUDE_OCULUS_PLUGIN
 #if ENGINE_MAJOR_VERSION == 4 
-	GuardianPoints = UOculusFunctionLibrary::GetGuardianPoints(EBoundaryType::Boundary_PlayArea, false);
+	GuardianPoints = UOculusFunctionLibrary::GetGuardianPoints(EBoundaryType::Boundary_PlayArea, usePawnSpace);
 	return true;
 #elif ENGINE_MAJOR_VERSION == 5 
-	GuardianPoints = UOculusXRFunctionLibrary::GetGuardianPoints(EOculusXRBoundaryType::Boundary_PlayArea, false);
+	GuardianPoints = UOculusXRFunctionLibrary::GetGuardianPoints(EOculusXRBoundaryType::Boundary_PlayArea, usePawnSpace);
 	return true;
 #endif
 #else

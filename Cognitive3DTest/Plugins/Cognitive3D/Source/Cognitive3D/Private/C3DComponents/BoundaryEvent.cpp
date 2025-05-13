@@ -129,7 +129,7 @@ void UBoundaryEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 			if (RoomSize.X > 0 && RoomSize.Y > 0) //room scale boundary
 			{
 				//get the 4 corners of the boundary in world space
-				cognitive->TryGetHMDGuardianPoints(GuardianPoints);
+				cognitive->TryGetHMDGuardianPoints(GuardianPoints, false);
 
 				//get player position in world space
 				cognitive->TryGetPlayerHMDPosition(HMDWorldPos);
