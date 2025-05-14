@@ -227,6 +227,8 @@ void BoundaryRecorder::BoundaryCheckInterval()
 {
 	if (!cog) return;
 	if (!cog->HasStartedSession()) return;
+	bool bShouldSend = false;
+
 	// Check if the player has moved significantly
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GWorld, 0);
 	if (PC)
@@ -235,15 +237,31 @@ void BoundaryRecorder::BoundaryCheckInterval()
 		if (Pawn)
 		{
 			FVector PlayerLocation = Pawn->GetActorLocation();
-			if ((PlayerLocation - LastPlayerLocation).SizeSquared() > 100.0f) // Adjust threshold as needed
+			if ((PlayerLocation - LastPlayerLocation).SizeSquared() > MovementThresholdSqr) // Adjust threshold as needed
 			{
 				Data.Empty();
 				CapturePlayerTransform();
-				//TODO: check for change in boundary shape
-
-				SendData(false);
+				bShouldSend = true;
 			}
 		}
+	}
+
+	// check for changes in the boundary/guardian points
+	TArray<FVector> GuardianPoints;
+	if (cog->TryGetHMDGuardianPoints(GuardianPoints, true))
+	{
+		if (HaveBoundaryPointsChanged(GuardianPoints))
+		{
+			Shapes.Empty();
+			AddGuardianBoundaryPoints(GuardianPoints);
+			LastCapturedGuardianPoints = GuardianPoints;
+			bShouldSend = true;
+		}
+	}
+
+	if (bShouldSend)
+	{
+		SendData(false);
 	}
 }
 
@@ -319,4 +337,21 @@ void BoundaryRecorder::PerformInitialCapture()
 	// --- Send JSON after capturing everything ---
 	SendData(false); // Or true, if you plan to cache
 
+}
+
+bool BoundaryRecorder::HaveBoundaryPointsChanged(const TArray<FVector>& NewPoints) const
+{
+	if (NewPoints.Num() != LastCapturedGuardianPoints.Num())
+	{
+		return true;
+	}
+	for (int32 i = 0; i < NewPoints.Num(); ++i)
+	{
+		// FVector::Equals uses a tolerance on each component
+		if (!NewPoints[i].Equals(LastCapturedGuardianPoints[i], BoundaryTolerance))
+		{
+			return true;
+		}
+	}
+	return false;
 }
