@@ -1347,6 +1347,29 @@ bool FAnalyticsProviderCognitive3D::TryGetHMDGuardianPoints(TArray<FVector>& Gua
 	GuardianPoints = UOculusXRFunctionLibrary::GetGuardianPoints(EOculusXRBoundaryType::Boundary_PlayArea, usePawnSpace);
 	return true;
 #endif
+#elif (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION == 27) || (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 0)
+	//OpenXR/SteamVR
+	// 1) Query the full rectangle size
+	//    This returns the width (X) and depth (Y) in Unreal units of the largest rectangle
+	//    that fits inside your guardian/chaperone area in the Floor (stage) origin. 
+	FVector2D Bounds = UHeadMountedDisplayFunctionLibrary::GetPlayAreaBounds();
+
+	if (Bounds.Length() > 0)
+	{
+		GuardianPoints.Empty();
+		// 2) Compute half-extents
+		const float HalfX = Bounds.X * 0.5f;
+		const float HalfY = Bounds.Y * 0.5f;
+
+		// 3) Build the four corner points in the X/Y plane (Z = 0)
+		//    These are centered on (0,0), which in tracking space is your floor-level origin.
+		GuardianPoints.Add(FVector(HalfX, HalfY, 0.f));  // front-right
+		GuardianPoints.Add(FVector(HalfX, -HalfY, 0.f));  // back-right
+		GuardianPoints.Add(FVector(-HalfX, -HalfY, 0.f));  // back-left
+		GuardianPoints.Add(FVector(-HalfX, HalfY, 0.f));  // front-left
+
+		return true;
+	}
 #else
 	return false;
 #endif
