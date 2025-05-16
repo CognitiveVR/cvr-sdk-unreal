@@ -34,6 +34,123 @@ void UPlayerTracker::BeginPlay()
 	GEngine->GetAllLocalPlayerControllers(controllers);
 }
 
+
+bool UPlayerTracker::TryGetWorldGazeEnd(FVector start, FVector& end)
+{
+#if defined INCLUDE_TOBII_PLUGIN
+	auto eyetracker = ITobiiCore::GetEyeTracker();
+	end = start + eyetracker->GetCombinedGazeData().WorldGazeDirection * 100000.0f;
+	return true;
+#elif defined SRANIPAL_1_2_API
+	FVector TempStart = FVector::ZeroVector;
+	FVector LocalDirection = FVector::ZeroVector;
+
+	if (USRanipal_FunctionLibrary_Eye::GetGazeRay(GazeIndex::COMBINE, TempStart, LocalDirection))
+	{
+		FVector WorldDir = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(LocalDirection);
+		end = start + WorldDir * 100000.0f;
+		LastDirection = WorldDir;
+		return true;
+	}
+	end = start + LastDirection * 100000.0f;
+	return false;
+#elif defined SRANIPAL_1_3_API
+	FVector TempStart = FVector::ZeroVector;
+	FVector LocalDirection = FVector::ZeroVector;
+	if (SRanipalEye_Core::Instance()->GetGazeRay(GazeIndex::COMBINE, TempStart, LocalDirection))
+	{
+		FVector WorldDir = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(LocalDirection);
+		end = start + WorldDir * 100000.0f;
+		LastDirection = WorldDir;
+		return true;
+	}
+	end = start + LastDirection * 100000.0f;
+	return false;
+#elif defined INCLUDE_VARJO_PLUGIN
+	FVector Start = start;
+	FVector WorldDirection = FVector::ZeroVector;
+	end = FVector::ZeroVector;
+	float ignored = 0;
+
+	FVarjoEyeTrackingData data;
+
+	if (UVarjoEyeTrackerFunctionLibrary::GetEyeTrackerGazeData(data)) //if the data is valid
+	{
+		//the gaze transformed into world space
+		UVarjoEyeTrackerFunctionLibrary::GetGazeRay(Start, WorldDirection, ignored);
+
+		end = start + WorldDirection * 10000.0f;
+		LastDirection = WorldDirection;
+		return true;
+	}
+	end = start + LastDirection * 100000.0f;
+	return false;
+#elif defined INCLUDE_PICOMOBILE_PLUGIN
+	FVector Start = FVector::ZeroVector;
+	FVector WorldDirection = FVector::ZeroVector;
+	FVector end = FVector::ZeroVector;
+
+	if (UPicoBlueprintFunctionLibrary::PicoGetEyeTrackingGazeRay(Start, WorldDirection))
+	{
+		end = Start + WorldDirection * 10000.0f;
+		return true;
+	}
+	return false;
+#elif defined INCLUDE_HPGLIA_PLUGIN
+	FVector end = FVector::ZeroVector;
+	FVector TempStart = controllers[0]->PlayerCameraManager->GetCameraLocation();
+
+	FEyeTracking eyeTrackingData;
+	if (UHPGliaClient::GetEyeTracking(eyeTrackingData))
+	{
+		if (eyeTrackingData.CombinedGazeConfidence > 0.4f)
+		{
+			FVector dir = FVector(eyeTrackingData.CombinedGaze.X, eyeTrackingData.CombinedGaze.Y, eyeTrackingData.CombinedGaze.Z);
+			LastDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(dir);
+			end = TempStart + LastDirection * 100000.0f;
+			return true;
+		}
+	}
+	end = TempStart + LastDirection * 100000.0f;
+	return false;
+#elif defined OPENXR_EYETRACKING
+
+	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
+	end = start + captureRotation.Vector() * 100000.0f;
+	IEyeTracker const* const ET = GEngine ? GEngine->EyeTrackingDevice.Get() : nullptr;
+	if (ET != nullptr)
+	{
+		FEyeTrackerGazeData gazeData;
+		if (ET->GetEyeTrackerGazeData(gazeData))
+		{
+			if (gazeData.ConfidenceValue < 0.5f) { return false; }
+			LastDirection = gazeData.GazeDirection;
+			end = start + LastDirection * 100000.0f;
+			return true;
+		}
+	}
+	return false;
+#elif defined WAVEVR_EYETRACKING
+	WaveVREyeManager* pEyeManager = WaveVREyeManager::GetInstance();
+	if (pEyeManager != nullptr)
+	{
+		//is this world direction or local direction?
+		if (pEyeManager->GetCombindedEyeDirectionNormalized(LastDirection))
+		{
+			LastDirection = controllers[0]->PlayerCameraManager->GetActorTransform().TransformVectorNoScale(LastDirection);
+			end = start + LastDirection * 100000.0f;
+			return true;
+		}
+	}
+	end = start + LastDirection * 100000.0f;
+	return false;
+#else
+	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
+	end = start + captureRotation.Vector() * 10000.0f;
+	return true;
+#endif
+}
+
 FVector UPlayerTracker::GetWorldGazeEnd(FVector start)
 {
 #if defined INCLUDE_TOBII_PLUGIN
@@ -196,7 +313,16 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		FHitResult FloorHit; // The hit result gets populated by the line trace
 
 		FVector Start = captureLocation;
-		FVector End = GetWorldGazeEnd(Start);
+		FVector End;
+
+		bool eyeDirectionSuccess = TryGetWorldGazeEnd(Start, End);
+
+		if (!eyeDirectionSuccess)
+		{
+			//record hmd position rotation but no gaze on world
+			cog->gazeDataRecorder->BuildSnapshot(captureLocation, captureRotation, timestamp, DidHitFloor, FloorHitPosition);
+			return;
+		}
 
 		FCollisionObjectQueryParams params = FCollisionObjectQueryParams();
 		params.AddObjectTypesToQuery(ECC_WorldStatic);

@@ -64,6 +64,7 @@ private:
 	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
 
 	FVector GetWorldGazeEnd(FVector start);
+	bool TryGetWorldGazeEnd(FVector start, FVector& end);
 	FVector LastDirection;
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 

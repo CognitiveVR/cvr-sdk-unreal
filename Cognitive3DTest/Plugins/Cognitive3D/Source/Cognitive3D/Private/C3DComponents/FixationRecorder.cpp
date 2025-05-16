@@ -418,7 +418,7 @@ bool UFixationRecorder::AreEyesClosed()
 	if (ET == NULL) { return false; }
 	FEyeTrackerGazeData gazeData;
 	ET->GetEyeTrackerGazeData(gazeData);
-	if (gazeData.ConfidenceValue < 0.5f)
+	if (gazeData.ConfidenceValue < 0.4f)
 	{
 		return true;
 	}
