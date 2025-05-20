@@ -6,4 +6,10 @@ See [docs.cognitive3d.com](http://docs.cognitive3d.com/unreal/get-started/) for 
 
 This SDK supports both C++ and Blueprints.
 
-If you have feedback about this SDK, or wish to contribute, please open an issue in this repo. If you are a Cognitive3D customer and need support, please use the Intercom button on the lower right corner on our [website](https://cognitive3d.com).
+## Support and feedback
+
+If you have feedback about this SDK, or wish to contribute, please open an issue in this repo. 
+
+We also offer community support on our [Discord](https://discord.gg/x38sNUdDRH).
+
+If you are a Cognitive3D customer and need support, please use the Intercom button on the lower right corner on our [website](https://cognitive3d.com).
