@@ -66,6 +66,34 @@ void FCognitive3DEditorModule::StartupModule()
 	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, C3DKeysPath);
 	GConfig->GetString(TEXT("Analytics"), TEXT("ExportPath"), FCognitiveEditorTools::GetInstance()->BaseExportDirectory, C3DSettingsPath);
 	GConfig->Flush(false, C3DSettingsPath);
+
+	// Grab the singleton packaging-settings object (its Config=Game, defaultconfig)
+	UProjectPackagingSettings* PackagingSettings = GetMutableDefault<UProjectPackagingSettings>();
+
+	// Build a directory entry pointing at your folder (relative to /Game or absolute as needed)
+	FDirectoryPath NeverCookDir;
+	FString FolderToExclude = C3DKeysPath;
+	NeverCookDir.Path = FPaths::ConvertRelativePathToFull(C3DKeysPath);
+
+	// 1) Remove it from "Copy as loose files"
+	PackagingSettings->DirectoriesToAlwaysStageAsNonUFS.RemoveAll(
+		[FolderToExclude](const FDirectoryPath& Entry)
+		{
+			return Entry.Path.Equals(FolderToExclude, ESearchCase::IgnoreCase);
+		}
+	);
+
+	// 2) (Just in case) Remove from "Package inside the .pak"
+	PackagingSettings->DirectoriesToAlwaysStageAsUFS.RemoveAll(
+		[FolderToExclude](const FDirectoryPath& Entry)
+		{
+			return Entry.Path.Equals(FolderToExclude, ESearchCase::IgnoreCase);
+		}
+	);
+
+	// Persist the change back to DefaultGame.ini (or DefaultGame.ini -> [YourProject]/Config)
+	PackagingSettings->SaveConfig();
+
 	GConfig->Flush(false, C3DKeysPath);
 
 	if (FCognitiveEditorTools::GetInstance()->DeveloperKey.IsEmpty() || FCognitiveEditorTools::GetInstance()->ApplicationKey.IsEmpty()
