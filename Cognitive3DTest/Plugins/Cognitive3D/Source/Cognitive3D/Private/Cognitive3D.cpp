@@ -177,7 +177,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 					// Register the component
 					dynamicComponent->RegisterComponent();
 				}
-				if (dynamicComponent)
+				if (dynamicComponent && !dynamicComponent->IsController)
 				{
 					dynamicComponent->HasInitialized = false;
 					dynamicComponent->Initialize();
@@ -189,7 +189,8 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 	//we send the dynamic data stream after the new scene is loaded and set as the current scene
 	//that way we can send the new, correct manifest to the desired level
 	dynamicObjectManager->SendData(true);
-
+	//
+	boundaryRecorder->SendData(true);
 }
 
 void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld* world)
@@ -276,7 +277,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 						// Register the component
 						dynamicComponent->RegisterComponent();
 					}
-					if (dynamicComponent)
+					if (dynamicComponent && !dynamicComponent->IsController)
 					{
 						dynamicComponent->HasInitialized = false;
 						dynamicComponent->Initialize();
@@ -286,6 +287,8 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 		}
 
 		dynamicObjectManager->SendData(true);
+		//
+		boundaryRecorder->SendData(true);
 
 		SceneStartTime = FUtil::GetTimestamp();
 	}
@@ -363,6 +366,7 @@ void FAnalyticsProviderCognitive3D::HandlePostLevelLoad(UWorld* world)
 		LastSceneData = data;
 	}
 	SceneStartTime = FUtil::GetTimestamp();
+	boundaryRecorder->SendData(true);
 }
 
 void FAnalyticsCognitive3D::ShutdownModule()
