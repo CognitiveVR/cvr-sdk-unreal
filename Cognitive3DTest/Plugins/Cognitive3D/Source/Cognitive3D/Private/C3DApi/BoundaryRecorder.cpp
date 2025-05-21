@@ -107,9 +107,9 @@ bool BoundaryRecorder::SerializeToJsonString(FString& OutJsonString)
 		if (!Entry.P.ContainsNaN() && !Entry.R.ContainsNaN())
 		{
 			TArray<TSharedPtr<FJsonValue>> PArray = {
-				MakeShared<FJsonValueNumber>(-Entry.P.X / 100), // /100
-				MakeShared<FJsonValueNumber>(Entry.P.Z / 100),
-				MakeShared<FJsonValueNumber>(Entry.P.Y / 100)
+				MakeShared<FJsonValueNumber>(-Entry.P.X),
+				MakeShared<FJsonValueNumber>(Entry.P.Z),
+				MakeShared<FJsonValueNumber>(Entry.P.Y)
 			};
 			DataObj->SetArrayField(TEXT("p"), PArray);
 
@@ -144,9 +144,9 @@ bool BoundaryRecorder::SerializeToJsonString(FString& OutJsonString)
 			if (!Point.ContainsNaN())
 			{
 				TArray<TSharedPtr<FJsonValue>> SinglePoint = {
-					MakeShared<FJsonValueNumber>(-Point.X / 100),//Point.X /100
-					MakeShared<FJsonValueNumber>(Point.Z / 100),//Point.Y
-					MakeShared<FJsonValueNumber>(Point.Y / 100)//Point.Z
+					MakeShared<FJsonValueNumber>(-Point.X),
+					MakeShared<FJsonValueNumber>(Point.Z),
+					MakeShared<FJsonValueNumber>(Point.Y)
 				};
 				PointsArray.Add(MakeShared<FJsonValueArray>(SinglePoint));
 			}
