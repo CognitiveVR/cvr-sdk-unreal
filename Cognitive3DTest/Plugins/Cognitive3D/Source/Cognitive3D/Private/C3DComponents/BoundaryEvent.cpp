@@ -152,7 +152,6 @@ void UBoundaryEvent::HandleRecenter()
 	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
 	properties->SetStringField("Recenter Type", TEXT("HMD Recentered"));
-	properties->SetStringField("Boundary Size", FString::Printf(TEXT("%f x %f"), RoomSize.X, RoomSize.Y));
 	properties->SetStringField("HMD Position", FString::Printf(TEXT("%f, %f, %f"), HMDWorldPos.X, HMDWorldPos.Y, HMDWorldPos.Z));
 	cognitive->customEventRecorder->Send("c3d.User recentered", properties);
 }
@@ -162,7 +161,6 @@ void UBoundaryEvent::HandleControllerRecenter()
 	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
 	properties->SetStringField("Recenter Type", TEXT("Controller Recentered"));
-	properties->SetStringField("Boundary Size", FString::Printf(TEXT("%f x %f"), RoomSize.X, RoomSize.Y));
 	properties->SetStringField("HMD Position", FString::Printf(TEXT("%f, %f, %f"), HMDWorldPos.X, HMDWorldPos.Y, HMDWorldPos.Z));
 	cognitive->customEventRecorder->Send("c3d.User recentered", properties);
 }
