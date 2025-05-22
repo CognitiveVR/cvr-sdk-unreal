@@ -61,6 +61,38 @@ void UBoundaryEvent::OnSessionBegin()
 {
 	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
 	if (world == nullptr) { return; }
+
+	bool bFoundVRNotifications = false;
+	VRNotifications = GetOwner()->FindComponentByClass<UVRNotificationsComponent>();
+	if (!VRNotifications)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No UVRNotificationsComponent found on %s"), *GetOwner()->GetName());
+		VRNotifications = CreateDefaultSubobject<UVRNotificationsComponent>(TEXT("VRNotificationComponent"));
+		if (!VRNotifications)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to create UVRNotificationsComponent"));
+		}
+		else
+		{
+			bFoundVRNotifications = true;
+		}
+	}
+	else
+	{
+		bFoundVRNotifications = true;
+	}
+
+	if (bFoundVRNotifications)
+	{
+		FScriptDelegate Delegate;
+		Delegate.BindUFunction(this, FName(TEXT("HandleRecenter")));
+		VRNotifications->HMDRecenteredDelegate.Add(Delegate);
+
+		FScriptDelegate ControllerDelegate;
+		ControllerDelegate.BindUFunction(this, FName(TEXT("HandleControllerRecenter")));
+		VRNotifications->VRControllerRecenteredDelegate.Add(ControllerDelegate);
+	}
+
 	BoundaryCrossed = false;
 	StillOutsideBoundary = false;
 	PicoCheckBoundary = false;
@@ -105,6 +137,32 @@ void UBoundaryEvent::OnSessionEnd()
 	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
 	if (world == nullptr) { return; }
 	world->GetTimerManager().ClearTimer(IntervalHandle);
+
+	if (!VRNotifications)
+	{
+		return;
+	}
+
+	VRNotifications->HMDRecenteredDelegate.Remove(this, FName(TEXT("HandleRecenter")));
+	VRNotifications->VRControllerRecenteredDelegate.Remove(this, FName(TEXT("HandleControllerRecenter")));
+}
+
+void UBoundaryEvent::HandleRecenter()
+{
+	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
+	properties->SetStringField("Recenter Type", TEXT("HMD Recentered"));
+	properties->SetStringField("HMD Position", FString::Printf(TEXT("%f, %f, %f"), HMDWorldPos.X, HMDWorldPos.Y, HMDWorldPos.Z));
+	cognitive->customEventRecorder->Send("c3d.User recentered", properties);
+}
+
+void UBoundaryEvent::HandleControllerRecenter()
+{
+	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
+	properties->SetStringField("Recenter Type", TEXT("Controller Recentered"));
+	properties->SetStringField("HMD Position", FString::Printf(TEXT("%f, %f, %f"), HMDWorldPos.X, HMDWorldPos.Y, HMDWorldPos.Z));
+	cognitive->customEventRecorder->Send("c3d.User recentered", properties);
 }
 
 
@@ -129,7 +187,7 @@ void UBoundaryEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 			if (RoomSize.X > 0 && RoomSize.Y > 0) //room scale boundary
 			{
 				//get the 4 corners of the boundary in world space
-				cognitive->TryGetHMDGuardianPoints(GuardianPoints);
+				cognitive->TryGetHMDGuardianPoints(GuardianPoints, false);
 
 				//get player position in world space
 				cognitive->TryGetPlayerHMDPosition(HMDWorldPos);
