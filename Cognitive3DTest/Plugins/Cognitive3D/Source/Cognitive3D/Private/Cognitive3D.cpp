@@ -1374,6 +1374,7 @@ bool FAnalyticsProviderCognitive3D::TryGetHMDGuardianPoints(TArray<FVector>& Gua
 
 		return true;
 	}
+	return false;
 #else
 	return false;
 #endif
