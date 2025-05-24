@@ -4,56 +4,33 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-
-#include "Cognitive3DSettings.h"
-#include "CognitiveEditorData.h"
-#include "IDetailCustomization.h"
-#include "PropertyEditing.h"
-#include "PropertyCustomizationHelpers.h"
-#include "Json.h"
-#include "JsonObjectConverter.h"
-#include "UnrealEd.h"
-#include "GLTFExportOptions.h"
-#include "GLTFExporter.h"
-#include "Exporters/GLTFLevelExporter.h" 
-#include "AssetExportTask.h"
-#include "Engine/Texture.h"
-#include "Engine/Texture2D.h"
-#include "ImageUtils.h"
-#include "Misc/FileHelper.h"
-#include "Misc/ScopedSlowTask.h"
-#include "Misc/LocalTimestampDirectoryVisitor.h"
-#include "BusyCursor.h"
-#include "Classes/Components/SceneComponent.h"
-#include "EngineUtils.h"
-#include "EditorDirectories.h"
-#include "AssetTypeActions_Base.h"
-#include "ObjectTools.h"
-#include "PlatformProcess.h"
-#include "DesktopPlatformModule.h"
-#include "MainFrame.h"
-#include "IPluginManager.h"
-#include "AssetRegistryModule.h"
-#include "IAssetRegistry.h"
-#include "MaterialUtilities.h"
-#include "MaterialBakingStructures.h"
-#include "IMaterialBakingModule.h"
-#include "MeshUtilities.h"
-#include "UObject/Object.h"
-#include "MaterialOptions.h"
-#include "DynamicObject.h"
-#include "GenericPlatformFile.h"
-#include "Http.h"
-#include "UnrealClient.h"
-#include "IImageWrapper.h"
-#include "IImageWrapperModule.h"
+#include "CoreMinimal.h" 
+#include "PropertyEditing.h" 
+#include "PropertyCustomizationHelpers.h" 
+#include "Json.h" 
+#include "JsonObjectConverter.h" 
+#include "UnrealEd.h" 
+#include "GLTFExportOptions.h" 
+#include "EngineUtils.h" 
+#include "PlatformProcess.h" 
+#include "MainFrame.h" 
+#include "AssetRegistryModule.h" 
+#include "IAssetRegistry.h" 
+#include "MeshUtilities.h" 
+#include "UObject/Object.h" 
+#include "Http.h" 
+#include "UnrealClient.h" 
 #include "RenderingThread.h"
-#include "Classes/Engine/Level.h"
-#include "CoreMisc.h"
-#include "C3DCommonEditorTypes.h"
-#include "Framework/Notifications/NotificationManager.h"
-#include "Widgets/Notifications/SNotificationList.h"
+#include "C3DCommonEditorTypes.h" 
+
+
+
+//forward declarations
+class FDynamicData;
+class FEditorSceneData;
+class UDynamicObject;
+class IImageWrapper;
+class IPlatformFile;
 
 //all sorts of functionality for Cognitive SDK
 
@@ -116,7 +93,7 @@ public:
 
 
 	bool CurrentSceneHasSceneId() const;
-
+	bool SceneHasSceneId(const FString& SceneName) const;
 
 	bool HasSetExportDirectory() const;
 
@@ -127,7 +104,7 @@ public:
 	FText DynamicCountInScene;
 	FText DisplayDynamicObjectsCountInScene() const;
 	FText DisplayDynamicObjectsCountOnWeb() const;
-	FText GetDynamicObjectUploadText() const;
+	FText GetDynamicObjectUploadText(FString LevelName) const;
 
 	FReply RefreshDisplayDynamicObjectsCountInScene();
 
@@ -171,7 +148,7 @@ public:
 	int32 GetTextureRefactor() const { return TextureRefactor; }
 	FText GetExcludeMeshes() const { return FText::FromString(ExcludeMeshes); }
 
-		FReply UploadScene();
+	FReply UploadScene(const FString& LevelName);
 
 	TArray<AActor*> PrepareSceneForExport(bool OnlyExportSelected);
 	
@@ -183,7 +160,7 @@ public:
 	int32 CountUnexportedDynamics();
 	int32 CountUnexportedDynamicsNotUnique();
 
-	void UploadFromDirectory(FString url, FString directory, FString expectedResponseType);
+	void UploadFromDirectory(FString LevelName, FString url, FString directory, FString expectedResponseType);
 
 	//dynamic objects
 	//Runs the built-in gltf exporter with all meshes
@@ -204,35 +181,35 @@ public:
 
 	//uploads each dynamic object using its directory to the current scene
 	UFUNCTION(Exec, Category = "Dynamics")
-		FReply UploadDynamics();
+		FReply UploadDynamics(FString LevelName);
 	UFUNCTION(Exec, Category = "Dynamics")
-		FReply UploadDynamic(FString directory);
+		FReply UploadDynamic(FString LevelName, FString directory);
 
 	//this is for aggregating dynamic objects
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
-		FReply UploadDynamicsManifest();
+		FReply UploadDynamicsManifest(FString LevelName);
 
 	//this is for aggregating dynamic objects
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
-		FReply UploadSelectedDynamicsManifest(TArray<UDynamicObject*> selectedData);
+		FReply UploadSelectedDynamicsManifest(FString LevelName, TArray<UDynamicObject*> selectedData);
 
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
-		FReply UploadDynamicsManifestIds(TArray<FString> ids, FString meshName, FString prefabName);
+		FReply UploadDynamicsManifestIds(FString LevelName, TArray<FString> ids, FString meshName, FString prefabName);
 
 	UFUNCTION(Exec, Category = "Dynamics Manifest")
 		FReply SetUniqueDynamicIds();
 
-	FReply GetDynamicsManifest();
+	FReply GetDynamicsManifest(FString LevelName);
 	void OnDynamicManifestResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	void OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void OnUploadManifestIdsCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName);
+	void OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName);
+	void OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName);
+	void OnUploadManifestIdsCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName);
 	void OnUploadScreenshotCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	bool PickDirectory(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
-	bool PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
+	//bool PickFile(const FString& Title, const FString& FileTypes, FString& InOutLastPath, const FString& DefaultFile, FString& OutFilename);
 	void* ChooseParentWindowHandle();
 
 	//default base export directory
@@ -290,6 +267,7 @@ public:
 	}
 
 	void CurrentSceneVersionRequest();
+	void SceneNameVersionRequest(const FString& LevelName);
 
 	TArray<FString> GetAllFilesInDirectory(const FString directory, const bool fullPath, const FString onlyFilesStartingWith, const FString onlyFilesWithExtension, const FString ignoreExtension, bool skipsubdirectory) const;
 
@@ -343,10 +321,16 @@ public:
 		return false;
 	}
 
-
-	TArray<TSharedPtr<FEditorSceneData>> SceneData;
+	//reads scene data from ini
+	void ReadSceneDataFromFile();
+		TArray<TSharedPtr<FEditorSceneData>> SceneData;
 	//returns SceneData array
 	TArray<TSharedPtr<FEditorSceneData>> GetSceneData() const;
+	//returns data about a scene by name
+	TSharedPtr<FEditorSceneData> GetSceneData(FString scenename) const;
+	//returns data about a scene by the currently open scene
+	TSharedPtr<FEditorSceneData> GetCurrentSceneData() const;
+
 
 	//Third Party SDKs
 	TArray<TSharedPtr<FString>> ThirdPartySDKData;
@@ -357,29 +341,24 @@ public:
 	FReply OpenCurrentSceneInBrowser();
 	bool HasDeveloperKey() const;
 	bool HasApplicationKey() const;
-	
-	//reads scene data from ini
-	void ReadSceneDataFromFile();
+
+	FString GetSettingsFilePath() const;
+	FString GetKeysFilePath() const;
 
 	//send a http request to get the scene version data for current scene from sceneexplorer
 	FReply ButtonCurrentSceneVersionRequest();
 	
-	//returns data about a scene by name
-	TSharedPtr<FEditorSceneData> GetSceneData(FString scenename) const;
-	//returns data about a scene by the currently open scene
-	TSharedPtr<FEditorSceneData> GetCurrentSceneData() const;
-
 	//has json file and no bmp files in export directory
 	bool HasConvertedFilesInDirectory() const;
 	bool CanUploadSceneFiles() const;
 
-	void SceneVersionRequest(FEditorSceneData data);
-	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void SceneVersionRequest(const FEditorSceneData& data);
+	void SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName);
 
 	TArray<TSharedPtr<FDynamicData>> SceneExplorerDynamics;
 	TArray<TSharedPtr<FString>> SubDirectoryNames;
 
-	void RefreshSceneUploadFiles();
+	void RefreshSceneUploadFiles(const FString& SceneName);
 	int32 GetSceneExportFileCount();
 	int32 GetDynamicObjectFileExportedCount();
 	int32 GetDynamicObjectExportedCount();
@@ -391,29 +370,29 @@ public:
 	TArray<FString> GetValidDirectories(const FString& Directory);
 	int32 DynamicObjectExportedCount;
 
-	FText UploadSceneNameFiles() const;
-	FText OpenSceneNameInBrowser() const;
+	FText UploadSceneNameFiles(FString LevelName) const;
+	FText OpenSceneNameInBrowser(FString LevelName) const;
 	FReply OpenURL(FString url);
 	void FindAllSubDirectoryNames();
 	TArray<TSharedPtr<FString>> GetSubDirectoryNames();
-	FReply SaveScreenshotToFile();
+	FReply SaveScreenshotToFile(const FString& levelName);
 	FReply TakeDynamicScreenshot(FString dynamicName);
 
 	void DelayScreenshot(FString filePath, FLevelEditorViewportClient* perspectiveView, FVector startPos, FRotator startRot);
 	
-	FText GetDynamicsOnSceneExplorerTooltip() const;
+	FText GetDynamicsOnSceneExplorerTooltip(FString LevelName) const;
 	FText SendDynamicsToSceneExplorerTooltip() const;
 	FReply RefreshDynamicSubDirectory();
 	bool ConfigFileHasChanged = false;
 	EVisibility ConfigFileChangedVisibility() const;
 
-	bool HasSetDynamicExportDirectoryHasSceneId() const;
+	bool HasSetDynamicExportDirectoryHasSceneId(FString LevelName) const;
 	FReply SaveAPIDeveloperKeysToFile();
 
 	void SaveApplicationKeyToFile(FString key);
 	void SaveDeveloperKeyToFile(FString key);
 
-	void WizardUpload();
+	void WizardUpload(const FString& LevelName);
 	bool IsWizardUploading();
 
 	//set to 500, 404, 401 if uploading from the wizard encountered and error
@@ -431,16 +410,16 @@ public:
 	//exporting scene.
 	//create directory
 	//export scene as gltf
-	void ExportScene(TArray<AActor*> actorsToExport);
+	void ExportScene(FString LevelName, TArray<AActor*> actorsToExport);
 
-	void ValidateGeneratedFiles();
+	void ValidateGeneratedFiles(const FString LevelName);
 
 	bool RenameFile(FString oldPath, FString newPath);
 
 	void ModifyGLTFContent(FString FilePath);
 
-	void GenerateSettingsJsonFile();
-	bool HasSettingsJsonFile() const;
+	bool GenerateSettingsJsonFile(const FString& LevelName);
+	bool HasSettingsJsonFile(const FString& LevelName) const;
 
 	const FSlateBrush* GetBoxEmptyIcon() const;
 	FSlateBrush* BoxEmptyIcon;

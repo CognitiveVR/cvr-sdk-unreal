@@ -4,6 +4,10 @@
 
 #include "SceneSetupWidget.h"
 
+#include "CognitiveEditorTools.h"
+#include "IPluginManager.h"
+#include "Analytics.h"
+
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
 TArray<TSharedPtr<FDynamicData>> SSceneSetupWidget::GetSceneDynamics()
@@ -24,10 +28,11 @@ void SSceneSetupWidget::CheckForExpiredDeveloperKey()
 {
 	if (FCognitiveEditorTools::GetInstance()->HasDeveloperKey())
 	{
-		GConfig->Flush(true, GEngineIni);
+		FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+		GConfig->LoadFile(C3DSettingsPath);
 		auto Request = FHttpModule::Get().CreateRequest();
 		Request->OnProcessRequestComplete().BindRaw(this, &SSceneSetupWidget::OnDeveloperKeyResponseReceived);
-		FString gateway = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+		FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
 		FString url = "https://" + gateway + "/v0/apiKeys/verify";
 		Request->SetURL(url);
 		Request->SetVerb("GET");
@@ -80,6 +85,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 	CheckForExpiredDeveloperKey();
 	FCognitiveEditorTools::GetInstance()->WizardUploadError = "";
 	FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode = 0;
+	LevelName = UGameplayStatics::GetCurrentLevelName(GWorld); //get current level name as the default
 
 	ChildSlot
 		[
@@ -193,8 +199,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					.AutoWrapText(true)
 					.Justification(ETextJustify::Center)
 					.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
-					.Text(FText::FromString("Open the VR Pawn blueprint that is spawned for your player.\n\n\n\nAttach Dynamic Object components as children of each MotionController actor component."))
+					.Text(FText::FromString("The Cognitive3DActor Blueprint automatically finds your player's controllers in run-time and assigns dynamic objects to them to be tracked for valuable insights on our dashboard.\n\n You do not have to set those up manually, or export and upload a mesh for them to be tracked like other dynamic objects."))
 				]
+					/*
 				+SHorizontalBox::Slot()
 				[
 					SNew(SBox)
@@ -208,8 +215,9 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 						.Image(this, &SSceneSetupWidget::GetControllerComponentBrush)
 					]
 				]
+				*/
 			]
-
+			/*
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
@@ -217,7 +225,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 				SNew(SSeparator)
 				.Visibility(this, &SSceneSetupWidget::IsControllerVisible)
 			]
-
+			
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
@@ -247,7 +255,7 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					]
 				]
 			]
-
+			*/
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0, 0, 0, padding)
@@ -496,6 +504,43 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 					SNew(STextBlock)
 					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
 				.Text(FText::FromString("Compress exported files. Note: this will not affect project files. Recommended for very large and detailed scenes."))
+				]
+			]
+
+			//sublevel name text field
+			+ SVerticalBox::Slot()
+			.MaxHeight(32)
+			[
+				SNew(SHorizontalBox)
+				.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+				+SHorizontalBox::Slot()
+				.MaxWidth(200)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+					.HeightOverride(32)
+					[
+						SNew(STextBlock)
+						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+						.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
+						.Text(FText::FromString("Level Name"))
+					]
+				]
+				+ SHorizontalBox::Slot()
+				.Padding(1)
+				.FillWidth(3)
+				[
+					SNew(SBox)
+					.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+					.WidthOverride(128)
+					.HeightOverride(32)
+					.MaxDesiredHeight(32)
+					[
+						SNew(SEditableTextBox)
+						.Visibility(this, &SSceneSetupWidget::IsExportVisible)
+						.Text(this, &SSceneSetupWidget::GetLevelName)
+						.OnTextChanged(this, &SSceneSetupWidget::OnLevelNameChanged)
+					]
 				]
 			]
 
@@ -1007,15 +1052,16 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 #pragma endregion
 		];
 
-		FString texturepath = IPluginManager::Get().FindPlugin(TEXT("Cognitive3D"))->GetBaseDir() / TEXT("Resources") / TEXT("controller-components.png");
+		FString texturepath = IPluginManager::Get().FindPlugin(TEXT("Cognitive3D"))->GetBaseDir() / TEXT("Resources") / TEXT("C3D_ControllerDynamics.png");
 		FName BrushName = FName(*texturepath);
-		ControllerComponentBrush = new FSlateDynamicImageBrush(BrushName, FVector2D(265, 215));
+		//create a new Image Brush with the width and height defined in the vector
+		ControllerComponentBrush = new FSlateDynamicImageBrush(BrushName, FVector2D(215, 306));
 
 		texturepath = IPluginManager::Get().FindPlugin(TEXT("Cognitive3D"))->GetBaseDir() / TEXT("Resources") / TEXT("controller-configure.png");
 		BrushName = FName(*texturepath);
 		ControllerConfigureBrush = new FSlateDynamicImageBrush(BrushName, FVector2D(265, 138));
 
-		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
+		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles(LevelName);
 		FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
 		FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 		SceneUploadStatus = ESceneUploadStatus::NotStarted;
@@ -1037,11 +1083,11 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 
 	TArray<AActor*> ToBeExportedFinal = FCognitiveEditorTools::GetInstance()->PrepareSceneForExport(OnlyExportSelected);
 
-	FCognitiveEditorTools::GetInstance()->ExportScene(ToBeExportedFinal);
+	FCognitiveEditorTools::GetInstance()->ExportScene(LevelName,ToBeExportedFinal);
 	
 
 	SceneWasExported = true;
-	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
+	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles(LevelName);
 	return FReply::Handled();
 }
 
@@ -1072,7 +1118,7 @@ ECheckBoxState SSceneSetupWidget::GetExportDynamicsCheckbox() const
 
 void SSceneSetupWidget::GenerateScreenshotBrush()
 {
-	FString ScreenshotPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/screenshot/screenshot.png";
+	FString ScreenshotPath = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/screenshot/screenshot.png";
 	FName BrushName = FName(*ScreenshotPath);
 
 	TArray<uint8> RawFileData;
@@ -1102,7 +1148,7 @@ const FSlateBrush* SSceneSetupWidget::GetScreenshotBrushTexture() const
 EVisibility SSceneSetupWidget::IsSceneVersionUpload() const
 {
 	if (CurrentPageEnum != ESceneSetupPage::UploadChecklist) { return EVisibility::Collapsed; }
-	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetSceneData(LevelName);
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
 	{
 		return EVisibility::Visible;
@@ -1114,7 +1160,7 @@ EVisibility SSceneSetupWidget::IsIntroNewVersionVisible() const
 {
 	if (CurrentPageEnum != ESceneSetupPage::Intro) { return EVisibility::Collapsed; }
 
-	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetSceneData(LevelName);
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
 	{
 		return EVisibility::Visible;
@@ -1126,7 +1172,7 @@ EVisibility SSceneSetupWidget::IsNewSceneUpload() const
 {
 	if (CurrentPageEnum != ESceneSetupPage::UploadChecklist) { return EVisibility::Collapsed; }
 	
-	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
+	TSharedPtr<FEditorSceneData> sceneData = FCognitiveEditorTools::GetInstance()->GetSceneData(LevelName);
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
 	{
 		return EVisibility::Collapsed;
@@ -1250,7 +1296,7 @@ FReply SSceneSetupWidget::TakeScreenshot()
 
 	UE_LOG(LogTemp, Warning, TEXT("taking screenshot"));
 
-	FCognitiveEditorTools::GetInstance()->SaveScreenshotToFile();
+	FCognitiveEditorTools::GetInstance()->SaveScreenshotToFile(LevelName);
 
 
 	FViewport* CurrentViewport = GEditor->GetActiveViewport();
@@ -1300,14 +1346,14 @@ FText SSceneSetupWidget::GetNextButtonTooltipText() const
 		{
 			return FText::FromString("You must export the scene geometry to continue");
 		}
-		else if (FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile() == false)
+		else if (FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile(LevelName) == false)
 		{
 			return FText::FromString("settings.json not found in export directory, please try exporting the level again. If the issue persists, please try using a different export directory that allows file writing.");
 		}
 	}
 	if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
 	{
-		if (FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile() == false)
+		if (FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile(LevelName) == false)
 		{
 			return FText::FromString("settings.json not found in export directory, please try exporting the level again. If the issue persists, please try using a different export directory that allows file writing.");
 		}
@@ -1329,20 +1375,21 @@ FReply SSceneSetupWidget::NextPage()
 		//set default export directory if it isnt set
 		FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
 	}
+	
 	else if (CurrentPageEnum == ESceneSetupPage::Export)
 	{
 		GLog->Log("set dynamic and scene export directories. create if needed");
 		FCognitiveEditorTools::GetInstance()->CreateExportFolderStructure();
-		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
+		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles(LevelName);
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
 		TakeScreenshot();
-		FCognitiveEditorTools::GetInstance()->SaveScreenshotToFile();
+		FCognitiveEditorTools::GetInstance()->SaveScreenshotToFile(LevelName);
 	}
 	else if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
 	{
 		FCognitiveEditorTools::GetInstance()->OnUploadSceneGeometry.BindSP(this, &SSceneSetupWidget::OnSceneUploaded);
 
-		FCognitiveEditorTools::GetInstance()->WizardUpload();
+		FCognitiveEditorTools::GetInstance()->WizardUpload(LevelName);
 	}
 	else if (CurrentPageEnum == ESceneSetupPage::UploadProgress)
 	{
@@ -1438,7 +1485,7 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 		}
 		else if (FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount() > 0)
 		{
-			if (FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile() == false)
+			if (FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile(LevelName) == false)
 			{
 				FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode = 0;
 				FCognitiveEditorTools::GetInstance()->WizardUploadError = "settings.json not found in export directory, please try exporting the level again";
@@ -1450,7 +1497,7 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 
 	if (CurrentPageEnum == ESceneSetupPage::UploadChecklist)
 	{
-		if (FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile() == false)
+		if (FCognitiveEditorTools::GetInstance()->HasSettingsJsonFile(LevelName) == false)
 		{
 			FCognitiveEditorTools::GetInstance()->WizardUploadResponseCode = 0;
 			FCognitiveEditorTools::GetInstance()->WizardUploadError = "settings.json not found in export directory, please try exporting the level again";
@@ -1463,9 +1510,9 @@ bool SSceneSetupWidget::NextButtonEnabled() const
 	{
 		//refresh the upload filename lists
 		FCognitiveEditorTools::GetInstance()->RefreshDynamicUploadFiles();
-		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
+		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles(LevelName);
 
-		FString sceneExportDir = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory();
+		FString sceneExportDir = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName);
 		if (!FCognitiveEditorTools::VerifyDirectoryExists(sceneExportDir))
 		{
 			return false;
@@ -1600,10 +1647,12 @@ FText SSceneSetupWidget::GetHeaderTitle() const
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 1 - INTRO</>");
 	}
+	
 	if (CurrentPageEnum == ESceneSetupPage::Controller)
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 2 - CONTROLLER SETUP</>");
 	}
+	
 	if (CurrentPageEnum == ESceneSetupPage::Export)
 	{
 		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 3 - EXPORT SCENE GEOMETRY</>");
@@ -1614,13 +1663,13 @@ FText SSceneSetupWidget::GetHeaderTitle() const
 	}
 	if (CurrentPageEnum == ESceneSetupPage::UploadProgress)
 	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 4 - UPLOAD IN PROGRESS</>");
+		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 5 - UPLOAD IN PROGRESS</>");
 	}
 	if (CurrentPageEnum == ESceneSetupPage::Complete)
 	{
-		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 5 - DONE</>");
+		return FText::FromString("<RichTextBlock.BoldHighlight>STEP 6 - DONE</>");
 	}
-	return FText::FromString("<RichTextBlock.BoldHighlight>STEP 5 - DONE</>");
+	return FText::FromString("<RichTextBlock.BoldHighlight>STEP 6 - DONE</>");
 }
 
 void SSceneSetupWidget::OnExportPathChanged(const FText& Text)
@@ -1629,9 +1678,9 @@ void SSceneSetupWidget::OnExportPathChanged(const FText& Text)
 	if (Text.IsEmpty())
 	{
 		FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
-		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
+		FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles(LevelName);
 	}
-	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles();
+	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles(LevelName);
 }
 
 void SSceneSetupWidget::SpawnCognitive3DActor()
@@ -1696,13 +1745,15 @@ const FSlateBrush* SSceneSetupWidget::GetControllerComponentBrush() const
 
 EVisibility SSceneSetupWidget::GetAppendedInputsFoundHidden() const
 {
+	
 	if (CurrentPageEnum != ESceneSetupPage::Controller)
 	{
 		return EVisibility::Collapsed;
 	}
+	
 
 	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
-	//TODO IMPROVEMENT instead of hard coding strings here, should append a list from the resources folder
+	
 	TArray<FString> actionMapping;
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
@@ -1721,13 +1772,15 @@ EVisibility SSceneSetupWidget::GetAppendedInputsFoundHidden() const
 
 EVisibility SSceneSetupWidget::GetAppendedInputsFoundVisibility() const
 {
+	
 	if (CurrentPageEnum != ESceneSetupPage::Controller)
 	{
 		return EVisibility::Collapsed;
 	}
+	
 
 	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
-	//TODO IMPROVEMENT instead of hard coding strings here, should append a list from the resources folder
+	
 	TArray<FString> actionMapping;
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
@@ -1748,7 +1801,6 @@ FReply SSceneSetupWidget::AppendInputs()
 {
 	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
 	
-	//TODO IMPROVEMENT instead of hard coding strings here, should append a list from the resources folder
 
 	TArray<FString> actionMapping;
 	TArray<FString> axisMapping;
@@ -1769,7 +1821,7 @@ FReply SSceneSetupWidget::AppendInputs()
 		return FReply::Handled();
 	}
 
-#if defined PICOMOBILE_API
+#if defined INCLUDE_PICOMOBILE_PLUGIN
 	actionMapping.Add("(ActionName=\"C3D_LeftTrigger\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_L_TriggerAxis)");
 	actionMapping.Add("(ActionName=\"C3D_RightGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_R_LGrip)");
 	actionMapping.Add("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_L_RGrip)");
@@ -1906,7 +1958,7 @@ EVisibility SSceneSetupWidget::UploadThumbnailTextVisibility() const
 		return EVisibility::Collapsed;
 	}
 
-	FString ScreenshotPath = FCognitiveEditorTools::GetInstance()->GetCurrentSceneExportDirectory() + "/screenshot/screenshot.png";
+	FString ScreenshotPath = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/screenshot/screenshot.png";
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 	if (PlatformFile.FileExists(*ScreenshotPath))
 	{
@@ -1920,10 +1972,12 @@ EVisibility SSceneSetupWidget::UploadThumbnailTextVisibility() const
 
 EVisibility SSceneSetupWidget::GetDefaultInputClassEnhanced() const
 {
+	
 	if (CurrentPageEnum != ESceneSetupPage::Controller)
 	{
 		return EVisibility::Collapsed;
 	}
+	
 
 	//show AppendInput button if its not using enhanced input
 	FString DefaultPlayerInputClass;
@@ -1989,7 +2043,7 @@ FText SSceneSetupWidget::GetDynamicObjectCountToUploadText() const
 
 FText SSceneSetupWidget::GetSceneVersionToUploadText() const
 {
-	auto sceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
+	auto sceneData = FCognitiveEditorTools::GetInstance()->GetSceneData(LevelName);
 	int32 fileCount = FCognitiveEditorTools::GetInstance()->GetSceneExportFileCount();
 	if (sceneData.IsValid())
 	{
@@ -2000,4 +2054,14 @@ FText SSceneSetupWidget::GetSceneVersionToUploadText() const
 	{
 		return FText::FromString("Upload " + FString::FromInt(fileCount) + " files for Scene Geometry (Version 1)");
 	}
+}
+
+FText SSceneSetupWidget::GetLevelName() const
+{
+	return FText::FromString(LevelName);
+}
+
+void SSceneSetupWidget::OnLevelNameChanged(const FText& Text)
+{
+	LevelName = Text.ToString();
 }

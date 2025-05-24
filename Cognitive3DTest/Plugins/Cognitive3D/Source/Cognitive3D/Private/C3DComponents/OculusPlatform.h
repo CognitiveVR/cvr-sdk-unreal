@@ -37,6 +37,8 @@ public:
 
 	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnOculusNameHandled, const FString, OculusName);
+
 	UPROPERTY(EditAnywhere, Category = "Oculus Platform")
 		bool UseOculusIdAsParticipant = true;
 
@@ -45,6 +47,9 @@ public:
 	UFUNCTION()
 		void OnSessionEnd();
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	UPROPERTY(BlueprintAssignable, Category = "Oculus Platform")
+	FOnOculusNameHandled OnOculusNameHandled;
 
 #ifdef INCLUDE_OCULUS_PLATFORM
 

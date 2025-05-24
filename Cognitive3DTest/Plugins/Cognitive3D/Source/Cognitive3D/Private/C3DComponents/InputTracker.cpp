@@ -3,6 +3,7 @@
 */
 
 #include "InputTracker.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 UInputTracker::UInputTracker()
@@ -139,6 +140,11 @@ void UInputTracker::FindControllers()
 						ControllerType = EC3DControllerType::Quest2;
 						LeftHand = dyn;
 					}
+					else if (dyn->ControllerInputImageName == "quest_plus_touch_left")
+					{
+						ControllerType = EC3DControllerType::Quest3;
+						LeftHand = dyn;
+					}
 					else if (dyn->ControllerInputImageName == "quest_pro_touch_left")
 					{
 						ControllerType = EC3DControllerType::QuestPro;
@@ -188,6 +194,11 @@ void UInputTracker::FindControllers()
 					else if (dyn->ControllerInputImageName == "oculusquesttouchright")
 					{
 						ControllerType = EC3DControllerType::Quest2;
+						RightHand = dyn;
+					}
+					else if (dyn->ControllerInputImageName == "quest_plus_touch_right")
+					{
+						ControllerType = EC3DControllerType::Quest3;
 						RightHand = dyn;
 					}
 					else if (dyn->ControllerInputImageName == "quest_pro_touch_right")
@@ -342,6 +353,7 @@ void UInputTracker::IntervalUpdate()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		//triggers
@@ -545,6 +557,7 @@ void UInputTracker::LeftFaceButtonOnePressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("xbtn", 100);
@@ -576,6 +589,7 @@ void UInputTracker::LeftFaceButtonOneReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("xbtn", 0);
@@ -607,6 +621,7 @@ void UInputTracker::LeftFaceButtonTwoPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("ybtn", 100);
@@ -637,6 +652,7 @@ void UInputTracker::LeftFaceButtonTwoReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("ybtn", 0);
@@ -672,6 +688,7 @@ void UInputTracker::LeftMenuButtonPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("menu", 100);
@@ -710,6 +727,7 @@ void UInputTracker::LeftMenuButtonReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("menu", 0);
@@ -748,6 +766,7 @@ void UInputTracker::LeftJoystickPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
@@ -794,6 +813,7 @@ void UInputTracker::LeftJoystickReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
@@ -945,6 +965,7 @@ void UInputTracker::RightFaceButtonOnePressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("abtn", 100);
@@ -975,6 +996,7 @@ void UInputTracker::RightFaceButtonOneReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("abtn", 0);
@@ -1006,6 +1028,7 @@ void UInputTracker::RightFaceButtonTwoPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("bbtn", 100);
@@ -1036,6 +1059,7 @@ void UInputTracker::RightFaceButtonTwoReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("bbtn", 0);
@@ -1071,6 +1095,7 @@ void UInputTracker::RightMenuButtonPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("menu", 100);
@@ -1109,6 +1134,7 @@ void UInputTracker::RightMenuButtonReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("menu", 0);
@@ -1147,6 +1173,7 @@ void UInputTracker::RightJoystickPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
@@ -1193,6 +1220,7 @@ void UInputTracker::RightJoystickReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
@@ -1347,6 +1375,7 @@ void UInputTracker::RightGripPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("grip", 100);
@@ -1389,6 +1418,7 @@ void UInputTracker::RightGripReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		float currentValue = InputComponent->GetAxisValue("C3D_RightGripAxis");
@@ -1431,6 +1461,7 @@ void UInputTracker::LeftGripPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("grip", 100);
@@ -1473,6 +1504,7 @@ void UInputTracker::LeftGripReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		float currentValue = InputComponent->GetAxisValue("C3D_LeftGripAxis");
@@ -1518,6 +1550,7 @@ void UInputTracker::LeftTriggerPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("trigger", 100);
@@ -1566,6 +1599,7 @@ void UInputTracker::LeftTriggerReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
@@ -1614,6 +1648,7 @@ void UInputTracker::RightTriggerPressed()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		auto b = FControllerInputState("trigger", 100);
@@ -1662,6 +1697,7 @@ void UInputTracker::RightTriggerReleased()
 		break;
 	}
 	case EC3DControllerType::Quest2:
+	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
 		float currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");

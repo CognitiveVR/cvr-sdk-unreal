@@ -3,6 +3,8 @@
 */
 
 #include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
+#include "Cognitive3D/Public/Cognitive3DBlueprints.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
 
 FSensors::FSensors()
 {
@@ -18,7 +20,10 @@ void FSensors::StartSession()
 
 	FString ValueReceived;
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "SensorDataLimit", false);
+	FString C3DSettingsPath = cog->GetSettingsFilePathRuntime();
+	GConfig->LoadFile(C3DSettingsPath);
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "SensorDataLimit", false);
 	if (ValueReceived.Len() > 0)
 	{
 		int32 sensorLimit = FCString::Atoi(*ValueReceived);
@@ -28,7 +33,7 @@ void FSensors::StartSession()
 		}
 	}
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "SensorAutoTimer", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "SensorAutoTimer", false);
 	if (ValueReceived.Len() > 0)
 	{
 		int32 parsedValue = FCString::Atoi(*ValueReceived);

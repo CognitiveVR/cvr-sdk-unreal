@@ -2,6 +2,7 @@
 ** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
 */
 
+
 namespace UnrealBuildTool.Rules
 {
 	public class Cognitive3D : ModuleRules
@@ -38,7 +39,6 @@ namespace UnrealBuildTool.Rules
             PrivateDependencyModuleNames.AddRange(
                 new string[]
                 {
-                    "HeadMountedDisplay",
 					"Slate",
 					"SlateCore"
                 }
@@ -59,51 +59,71 @@ namespace UnrealBuildTool.Rules
                     "JsonUtilities",
 					"UMG",
 					"EngineSettings",
-					"EyeTracker",
+                    "HeadMountedDisplay",
+                    "EyeTracker",
 					"EnhancedInput",
-					"InputCore"
-				}
+					"InputCore",
+                    "Landscape"
+                }
 				);
 
-			//uncomment the following line to enable Oculus/Meta functionality. Uses OculusVR for UE4 and OculusXR (MetaXR) for UE5.
-			//MetaXRPlugin();
+            if (Target.bBuildEditor)
+            {
+                PrivateDependencyModuleNames.Add("UnrealEd");
+            }
 
-			//Uncomment the following line to enable Oculus Passthrough features. UE 5.2 onward
-			//MUST ALSO ENABLE OCULUS PLUGIN ABOVE!
-			//MetaXRPassthrough();
+            if (Target.Platform == UnrealTargetPlatform.Android)
+            {
+                PublicDependencyModuleNames.AddRange(new string[]{"AndroidPermission", // Common for Android builds
+					"ApplicationCore", // Required for certain Android API calls
+					"Launch" // Required for Android builds
+				}
+                );
+                PublicRuntimeLibraryPaths.Add(System.IO.Path.Combine(ModuleDirectory, "Android/lib"));
+                AdditionalPropertiesForReceipt.Add("AndroidPlugin", System.IO.Path.Combine(ModuleDirectory, "Android/Cognitive3D_UPL.xml"));
+            }
 
-			//Uncomment the following line to enable Oculus Platform features
-			//MetaXRPlatform();
+            //uncomment the following line to enable Oculus/Meta functionality. Uses OculusVR for UE4 and OculusXR (MetaXR) for UE5.
+            //Specifically adds eye tracking support for Quest Pro and uses Meta APIs for room size and boundary events
+            //MetaXRPlugin();
 
-			//Uncomment the following line to enable PICOXR SDK features
-			//PICOXR();
+            //Uncomment the following line to enable Oculus Passthrough features. UE 5.2 onward
+            //MUST ALSO ENABLE OCULUS PLUGIN ABOVE!
+            //MetaXRPassthrough();
 
-			//Uncomment the following line to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
-			//OpenXREyeTracking();
+            //Uncomment the following line to enable Oculus Platform features
+            //Uses Meta Platform Plugin to get Oculus Username. Also gets the user's subscription status
+            //MetaXRPlatform();
 
-			//Uncomment the following line to enable Vive WaveVR eye tracking support
-			//WaveVREyeTracking();
+            //Uncomment the following line to enable PICOXR SDK features
+            //PICOXR();
 
-			//Varjo (up to and including version 3.0.0)
-			//Varjo();
+            //Uncomment the following line to enable eye tracking support using IEyeTracker interface (varjo openxr support, etc)
+            //OpenXREyeTracking();
 
-			//Uncomment to enable Tobii Eye Tracking
-			//TobiiEyeTracking();
+            //Uncomment the following line to enable Vive WaveVR eye tracking support
+            //WaveVREyeTracking();
 
-			//Uncomment to enable Vive SRanipal version 1.3+ for eye tracking
-			//Legacy support, prefer to use Vive OpenXR
-			//SRanipalVivePro();
+            //Varjo (up to and including version 3.0.0)
+            //Varjo();
 
-			//Pico Neo 2 Eye tracking
-			//Legacy support, prefer to use PicoXR SDK
-			//PicoMobile();
+            //Uncomment to enable Tobii Eye Tracking
+            //TobiiEyeTracking();
 
-			//HP Omnicept eye tracking and sensors
-			//Legacy support
-			//HPGlia();
+            //Uncomment to enable Vive SRanipal version 1.3+ for eye tracking
+            //Legacy support, prefer to use Vive OpenXR
+            //SRanipalVivePro();
 
-			//this is all for runtime audio capture support using ExitPoll Surveys
-			if (Target.Platform == UnrealTargetPlatform.Win64
+            //Pico Neo 2 Eye tracking
+            //Legacy support, prefer to use PicoXR SDK
+            //PicoMobile();
+
+            //HP Omnicept eye tracking and sensors
+            //Legacy support
+            //HPGlia();
+
+            //this is all for runtime audio capture support using ExitPoll Surveys
+            if (Target.Platform == UnrealTargetPlatform.Win64
 				|| Target.Platform == UnrealTargetPlatform.Win32
             )
 			{
@@ -149,8 +169,9 @@ namespace UnrealBuildTool.Rules
 		void PICOXR()
         {
 			PublicDefinitions.Add("INCLUDE_PICO_PLUGIN");
-			PublicDependencyModuleNames.AddRange(new string[] { "PICOXRHMD" });
-		}
+            PublicDependencyModuleNames.AddRange(new string[] { "PICOXRHMD", "PICOXRInput", "InputDevice" });
+            PrivateIncludePaths.Add(System.IO.Path.Combine(pluginsDirectory, "PICOXR/Source/PICOXRInput/Private"));
+        }
 
 		void OpenXREyeTracking()
         {
@@ -165,15 +186,15 @@ namespace UnrealBuildTool.Rules
 
 		void Varjo()
         {
-			//TODO set custom C3D compilation symbol instead of using VARJOEYETRACKER_API definition
-			PublicDependencyModuleNames.Add("VarjoHMD");
+            PublicDefinitions.Add("INCLUDE_VARJO_PLUGIN");
+            PublicDependencyModuleNames.Add("VarjoHMD");
 			PublicDependencyModuleNames.Add("VarjoEyeTracker");
 		}
 
 		void TobiiEyeTracking()
         {
-			//TODO set custom C3D compilation symbol instead of using TOBII_EYETRACKING_ACTIVE definition
-			PrivateIncludePaths.AddRange(
+            PublicDefinitions.Add("INCLUDE_TOBII_PLUGIN");
+            PrivateIncludePaths.AddRange(
 				new string[] {
 				"../../TobiiEyeTracking/Source/TobiiCore/Private",
 				"../../TobiiEyeTracking/Source/TobiiCore/Public"
@@ -207,14 +228,14 @@ namespace UnrealBuildTool.Rules
 
 		void PicoMobile()
         {
-			//TODO set custom C3D compilation symbol instead of using PICOMOBILE_API definition
-			PublicDependencyModuleNames.Add("PicoMobile");
+            PublicDefinitions.Add("INCLUDE_PICOMOBILE_PLUGIN");
+            PublicDependencyModuleNames.Add("PicoMobile");
 		}
 
 		void HPGlia()
         {
-			//TODO set custom C3D compilation symbol instead of using HPGLIA_API definition
-			PublicDependencyModuleNames.Add("HPGlia");
+            PublicDefinitions.Add("INCLUDE_HPGLIA_PLUGIN");
+            PublicDependencyModuleNames.Add("HPGlia");
 		}
 	}
 }

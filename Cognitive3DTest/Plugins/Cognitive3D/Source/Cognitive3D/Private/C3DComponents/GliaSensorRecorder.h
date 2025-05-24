@@ -13,7 +13,7 @@
 #include "Runtime/HeadMountedDisplay/Public/IXRTrackingSystem.h"
 #include "Widgets/Text/STextBlock.h"
 
-#if defined HPGLIA_API
+#if defined INCLUDE_HPGLIA_PLUGIN
 #include "HPGliaClient.h"
 #endif
 #include "DrawDebugHelpers.h"
@@ -28,7 +28,7 @@ class COGNITIVE3D_API UGliaSensorRecorder : public UActorComponent
 	GENERATED_BODY()
 
 private:
-#if defined HPGLIA_API
+#if defined INCLUDE_HPGLIA_PLUGIN
 	int32 LastHeartRate = -1;
 	float LastCognitiveLoad = -1;
 	float LastLeftPupilDiamter = -1;

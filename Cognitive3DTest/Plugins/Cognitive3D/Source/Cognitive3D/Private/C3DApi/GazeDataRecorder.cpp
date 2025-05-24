@@ -2,6 +2,8 @@
 ** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
 */
 #include "Cognitive3D/Private/C3DApi/GazeDataRecorder.h"
+#include "Cognitive3D/Public/Cognitive3DBlueprints.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
 
 //called at module startup to create a default uobject of this type
 FGazeDataRecorder::FGazeDataRecorder()
@@ -16,8 +18,11 @@ void FGazeDataRecorder::StartSession()
 
 	FString ValueReceived;
 
+	FString C3DSettingsPath = cog->GetSettingsFilePathRuntime();
+	GConfig->LoadFile(C3DSettingsPath);
+
 	//gaze batch size
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "GazeBatchSize", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "GazeBatchSize", false);
 	if (ValueReceived.Len() > 0)
 	{
 		int32 sensorLimit = FCString::Atoi(*ValueReceived);
@@ -91,7 +96,7 @@ void FGazeDataRecorder::SendData(bool copyDataToCache)
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
 
-	wholeObj->SetStringField("userid", cog->GetUserID());
+	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	if (!cog->LobbyId.IsEmpty())
 	{
 		wholeObj->SetStringField("lobbyId", cog->LobbyId);
@@ -187,8 +192,7 @@ void FGazeDataRecorder::SendData(bool copyDataToCache)
 		dataArray.Add(snapshotValue);
 	}
 
-	//TODO move the PlayerSnapshotInterval const somewhere actually accessible
-	wholeObj->SetNumberField("interval", 0.1f);
+	wholeObj->SetNumberField("interval", PlayerSnapshotInterval);
 
 	wholeObj->SetArrayField("data", dataArray);
 

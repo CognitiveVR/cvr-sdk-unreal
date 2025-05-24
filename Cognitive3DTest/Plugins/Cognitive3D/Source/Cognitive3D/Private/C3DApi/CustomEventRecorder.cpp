@@ -2,6 +2,8 @@
 ** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
 */
 #include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
+#include "Cognitive3D/Public/Cognitive3DBlueprints.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
 
 FCustomEventRecorder::FCustomEventRecorder()
 {
@@ -17,7 +19,10 @@ void FCustomEventRecorder::StartSession()
 
 	FString ValueReceived;
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "CustomEventBatchSize", false);
+	FString C3DSettingsPath = cog->GetSettingsFilePathRuntime();
+	GConfig->LoadFile(C3DSettingsPath);
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "CustomEventBatchSize", false);
 	if (ValueReceived.Len() > 0)
 	{
 		int32 customEventLimit = FCString::Atoi(*ValueReceived);
@@ -27,7 +32,7 @@ void FCustomEventRecorder::StartSession()
 		}
 	}
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "CustomEventAutoTimer", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "CustomEventAutoTimer", false);
 	if (ValueReceived.Len() > 0)
 	{
 		int32 parsedValue = FCString::Atoi(*ValueReceived);
@@ -211,7 +216,7 @@ void FCustomEventRecorder::SendData(bool copyDataToCache)
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
 
-	wholeObj->SetStringField("userid", cog->GetUserID());
+	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	if (!cog->LobbyId.IsEmpty())
 	{
 		wholeObj->SetStringField("lobbyId", cog->LobbyId);

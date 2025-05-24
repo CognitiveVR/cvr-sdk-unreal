@@ -37,7 +37,8 @@ public class Cognitive3DEditor : ModuleRules
                 "EditorScriptingUtilities",
                 "MeshUtilities",
                 "GLTFExporter",
-                "AssetRegistry"
+                "AssetRegistry",
+                "Landscape"
             });
 
         PrivateDependencyModuleNames.AddRange(
@@ -71,6 +72,11 @@ public class Cognitive3DEditor : ModuleRules
 				"AssetTools",
 				"UnrealEd"
 			});
+
+        if (Target.bBuildEditor)
+        {
+            PrivateDependencyModuleNames.Add("Kismet");
+        }
 
         var pluginsDirectory = System.IO.Path.Combine(Target.ProjectFile.Directory.ToString(), "Plugins");
         //HP Omnicept

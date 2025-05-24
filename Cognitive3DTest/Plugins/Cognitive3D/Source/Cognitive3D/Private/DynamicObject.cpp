@@ -136,34 +136,41 @@ void UDynamicObject::SetUniqueDynamicIds()
 //utility used in editor
 void UDynamicObject::TryGenerateMeshName()
 {
-	if (GetOwner() == NULL)
+	if (GetOwner() == NULL || GetAttachParent() == NULL)
 	{
 		return;
 	}
 
 	if (MeshName.IsEmpty())
 	{
-		UActorComponent* actorComponent = GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass());
-		if (actorComponent != NULL)
+		if (GetAttachParent()->IsA<UStaticMeshComponent>())
 		{
-			UStaticMeshComponent* staticmeshComponent = Cast<UStaticMeshComponent>(actorComponent);
-			if (staticmeshComponent != NULL && staticmeshComponent->GetStaticMesh() != NULL)
+			USceneComponent* actorComponent = Cast<USceneComponent>(GetAttachParent());
+			if (actorComponent != NULL)
 			{
-				MeshName = staticmeshComponent->GetStaticMesh()->GetName();
-				return;
+				UStaticMeshComponent* staticmeshComponent = Cast<UStaticMeshComponent>(actorComponent);
+				if (staticmeshComponent != NULL && staticmeshComponent->GetStaticMesh() != NULL)
+				{
+					MeshName = staticmeshComponent->GetStaticMesh()->GetName();
+					return;
+				}
 			}
 		}
-
-		UActorComponent* actorSkeletalComponent = GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass());
-		if (actorSkeletalComponent != NULL)
+		
+		if (GetAttachParent()->IsA<USkeletalMeshComponent>())
 		{
-			USkeletalMeshComponent* skeletalmeshComponent = Cast<USkeletalMeshComponent>(actorSkeletalComponent);
-			if (skeletalmeshComponent != NULL && skeletalmeshComponent->SkeletalMesh != NULL)
+			USceneComponent* actorSkeletalComponent = Cast<USceneComponent>(GetAttachParent());
+			if (actorSkeletalComponent != NULL)
 			{
-				MeshName = skeletalmeshComponent->SkeletalMesh->GetName();
-				return;
+				USkeletalMeshComponent* skeletalmeshComponent = Cast<USkeletalMeshComponent>(actorSkeletalComponent);
+				if (skeletalmeshComponent != NULL && skeletalmeshComponent->SkeletalMesh != NULL)
+				{
+					MeshName = skeletalmeshComponent->SkeletalMesh->GetName();
+					return;
+				}
 			}
 		}
+		
 	}
 }
 
@@ -196,7 +203,10 @@ void UDynamicObject::BeginPlay()
 	cogProvider->OnSessionBegin.AddDynamic(this, &UDynamicObject::Initialize);
 	cogProvider->OnPostSessionEnd.AddDynamic(this, &UDynamicObject::OnPostSessionEnd);
 	cogProvider->OnPreSessionEnd.AddDynamic(this, &UDynamicObject::OnPreSessionEnd);
-
+	if (AActor* OwnerActor = GetOwner())
+	{
+		OwnerActor->OnDestroyed.AddDynamic(this, &UDynamicObject::HandleOwnerDestroyed);
+	}
 
 	PreviousRotation = GetOwner()->GetActorRotation();
 }
@@ -219,6 +229,8 @@ void UDynamicObject::Initialize()
 	{
 		return;
 	}
+	
+	if (cogProvider == nullptr) { return; }
 
 	dynamicObjectManager = cogProvider->dynamicObjectManager;
 
@@ -229,8 +241,6 @@ void UDynamicObject::Initialize()
 	//scene id must be valid to send
 
 	//scene component
-	//todo: need to do some validation that the parent actually exists here for cases
-	//where the component is being registered before its being attached in code
 	if (GetAttachParent() != nullptr)
 	{
 		LastPosition = GetAttachParent()->GetComponentLocation();
@@ -272,6 +282,18 @@ void UDynamicObject::Initialize()
 			{
 				ControllerInputImageName = "oculusquesttouchleft";
 				MeshName = "OculusQuestTouchLeft";
+			}
+			break;
+		case EC3DControllerType::Quest3:
+			if (IsRightController)
+			{
+				ControllerInputImageName = "quest_plus_touch_right";
+				MeshName = "QuestPlusTouchRight";
+			}
+			else
+			{
+				ControllerInputImageName = "quest_plus_touch_left";
+				MeshName = "QuestPlusTouchLeft";
 			}
 			break;
 		case EC3DControllerType::QuestPro:
@@ -358,11 +380,13 @@ void UDynamicObject::Initialize()
 	}
 
 	bool hasScaleChanged = true;
-	if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+	if (GetAttachParent() != nullptr)
 	{
-		hasScaleChanged = true;
+		if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+		{
+			hasScaleChanged = true;
+		}
 	}
-
 	FDynamicObjectSnapshot initSnapshot = MakeSnapshot(hasScaleChanged);
 	SnapshotBoolProperty(initSnapshot, "enabled", true);
 	dynamicObjectManager->AddSnapshot(initSnapshot);
@@ -383,24 +407,36 @@ void UDynamicObject::UpdateSyncWithPlayer()
 	if (dynamicObjectManager == nullptr) { return; }
 	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
+	FRotator parentRotator;
 	//rotation angle to degrees
-	auto parentRotator = GetAttachParent()->GetComponentRotation();
+	if (GetAttachParent() != nullptr)
+	{
+		parentRotator = GetAttachParent()->GetComponentRotation();
+	}
+	
 	float quatDot = parentRotator.Quaternion() | LastRotation;
 	quatDot = FMath::Abs(quatDot);
 	quatDot = FMath::Min(quatDot, 1.0f);
 	float quatDegrees = FMath::RadiansToDegrees(FMath::Acos(quatDot)) * 2;
 	bool hasScaleChanged = false;
 
-	if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+	if (GetAttachParent() != nullptr)
 	{
-		hasScaleChanged = true;
+
+		if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+		{
+			hasScaleChanged = true;
+		}
 	}
 
 	if (!hasScaleChanged)
 	{
-		if ((LastPosition - GetAttachParent()->GetComponentLocation()).Size() > PositionThreshold)
+		if (GetAttachParent() != nullptr)
 		{
-			//moved
+			if ((LastPosition - GetAttachParent()->GetComponentLocation()).Size() > PositionThreshold)
+			{
+				//moved
+			}
 		}
 		else if (quatDegrees > RotationThreshold) //rotator stuff
 		{
@@ -414,11 +450,14 @@ void UDynamicObject::UpdateSyncWithPlayer()
 	}
 
 	//scene component
-	LastPosition = GetAttachParent()->GetComponentLocation();
-	LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
-	if (hasScaleChanged)
+	if (GetAttachParent() != nullptr)
 	{
-		LastScale = GetAttachParent()->GetComponentScale();
+		LastPosition = GetAttachParent()->GetComponentLocation();
+		LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
+		if (hasScaleChanged)
+		{
+			LastScale = GetAttachParent()->GetComponentScale();
+		}
 	}
 
 	FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
@@ -446,23 +485,34 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 			currentTime -= DynamicUpdateInterval;
 
 		//rotation angle to degrees
-		auto parentRotator = GetAttachParent()->GetComponentRotation();
+		FRotator parentRotator;
+		if (GetAttachParent() != nullptr)
+		{
+
+			parentRotator = GetAttachParent()->GetComponentRotation();
+		}
 		float quatDot = parentRotator.Quaternion() | LastRotation;
 		quatDot = FMath::Abs(quatDot);
 		quatDot = FMath::Min(quatDot, 1.0f);
 		float quatDegrees = FMath::RadiansToDegrees(FMath::Acos(quatDot)) * 2;
 		bool hasScaleChanged = false;
 
-		if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+		if (GetAttachParent() != nullptr)
 		{
-			hasScaleChanged = true;
+			if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
+			{
+				hasScaleChanged = true;
+			}
 		}
 
 		if (!hasScaleChanged)
 		{
-			if ((LastPosition - GetAttachParent()->GetComponentLocation()).Size() > PositionThreshold)
+			if (GetAttachParent() != nullptr)
 			{
-				//moved
+				if ((LastPosition - GetAttachParent()->GetComponentLocation()).Size() > PositionThreshold)
+				{
+					//moved
+				}
 			}
 			else if (quatDegrees > RotationThreshold) //rotator stuff
 			{
@@ -476,11 +526,14 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 		}
 
 		//scene component
-		LastPosition = GetAttachParent()->GetComponentLocation();
-		LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
-		if (hasScaleChanged)
+		if (GetAttachParent() != nullptr)
 		{
-			LastScale = GetAttachParent()->GetComponentScale();
+			LastPosition = GetAttachParent()->GetComponentLocation();
+			LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
+			if (hasScaleChanged)
+			{
+				LastScale = GetAttachParent()->GetComponentScale();
+			}
 		}
 
 		FDynamicObjectSnapshot snapObj = MakeSnapshot(hasScaleChanged);
@@ -550,16 +603,43 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 
 	snapshot.timestamp = ts;
 	snapshot.id = ObjectID->Id;
-	snapshot.position = FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y);
+	if (GetAttachParent() != nullptr)
+	{
+		snapshot.position = FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y);
+	}
 
 	if (hasChangedScale)
 	{
 		snapshot.hasScaleChanged = true;
-		snapshot.scale = GetAttachParent()->GetComponentScale();
+		if (GetAttachParent() != nullptr)
+		{
+			snapshot.scale = GetAttachParent()->GetComponentScale();
+		}
 	}
 
 	FQuat quat;
-	FRotator rot = GetAttachParent()->GetComponentRotation();
+
+	FRotator rot;
+
+	if (GetAttachParent() != nullptr)
+	{
+		rot = GetAttachParent()->GetComponentRotation();
+    //we check if the snapshot if that of a controller
+    //that way we can add a small rotational offset to correct how controllers looks on SceneExplorer
+    if (IsController)
+    {
+      if (IsRightController)
+      {
+        rot.Yaw -= 45.f;
+      }
+      else
+      {
+        rot.Yaw += 45.f;
+      }
+      rot.Normalize();
+    }
+	}
+	
 	quat = rot.Quaternion();
 
 	snapshot.rotation = FQuat(quat.X, quat.Z, quat.Y, quat.W);
@@ -622,7 +702,10 @@ void UDynamicObject::BeginEngagementId(FString parentDynamicObjectId, FString en
 	}
 	else
 	{
-		Engagements[UniqueEngagementId]->SetPosition(GetAttachParent()->GetComponentLocation());
+		if (GetAttachParent() != nullptr)
+		{
+			Engagements[UniqueEngagementId]->SetPosition(GetAttachParent()->GetComponentLocation());
+		}
 		Engagements[UniqueEngagementId]->Send();
 		Engagements[UniqueEngagementId] = ce;
 	}
@@ -646,7 +729,10 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 
 	if (Engagements.Contains(UniqueEngagementId))
 	{
-		Engagements[UniqueEngagementId]->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));
+		if (GetAttachParent() != nullptr)
+		{
+			Engagements[UniqueEngagementId]->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));\
+		}
 		Engagements[UniqueEngagementId]->Send();
 		Engagements.Remove(UniqueEngagementId);
 	}
@@ -656,7 +742,10 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 		UCustomEvent* ce = NewObject<UCustomEvent>(this);
 		ce->SetCategory(engagementName);
 		ce->SetDynamicObject(parentDynamicObjectId);
-		ce->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));
+		if (GetAttachParent() != nullptr)
+		{
+			ce->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));
+		}
 		ce->Send();
 	}
 }
@@ -708,6 +797,10 @@ void UDynamicObject::CleanupDynamicObject()
 	cogProvider->OnSessionBegin.RemoveDynamic(this, &UDynamicObject::Initialize);
 	cogProvider->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPostSessionEnd);
 	cogProvider->OnPreSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPreSessionEnd);
+	if (GetOwner() != NULL)
+	{
+		GetOwner()->OnDestroyed.RemoveDynamic(this, &UDynamicObject::HandleOwnerDestroyed);
+	}
 
 	HasInitialized = false;
 
@@ -733,10 +826,19 @@ void UDynamicObject::CleanupDynamicObject()
 		}
 		if (Elem.Value->GetDynamicId() == ObjectID->Id)
 		{
-			Elem.Value->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));
+			if (GetAttachParent() != nullptr)
+			{
+				Elem.Value->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));
+			}
 			Elem.Value->Send();
 		}
 	}
+}
+
+void UDynamicObject::HandleOwnerDestroyed(AActor* DestroyedActor)
+{
+	//send snapshot with "enabled" set to false
+	CleanupDynamicObject();
 }
 
 //called from optional input tracker to serialize button states

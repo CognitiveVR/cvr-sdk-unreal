@@ -3,6 +3,8 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/HMDOrientation.h"
+#include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
 
 UHMDOrientation::UHMDOrientation()
 {
@@ -76,6 +78,8 @@ void UHMDOrientation::OnSessionEnd()
 
 void UHMDOrientation::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
+	Super::EndPlay(EndPlayReason);
+
 	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{

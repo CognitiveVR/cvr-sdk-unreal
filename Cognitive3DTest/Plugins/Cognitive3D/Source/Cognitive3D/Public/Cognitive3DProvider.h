@@ -4,38 +4,20 @@
 
 #pragma once
 
-#include "Cognitive3D/Public/C3DCommonTypes.h"
-#include "CoreMinimal.h"
-#include "Analytics.h"
-#include "TimerManager.h"
-#include "AnalyticsEventAttribute.h"
-#include "Interfaces/IAnalyticsProvider.h"
-#include "Cognitive3D/Public/Cognitive3D.h"
-#include "Cognitive3D/Public/Cognitive3DBlueprints.h"
 
-#include "HeadMountedDisplay.h"
-#include "Cognitive3D/Public/Cognitive3DSettings.h"
-#include "Cognitive3D/Private/ExitPoll.h"
-#include "Cognitive3D/Private/C3DComponents/PlayerTracker.h"
-#include "Cognitive3D/Public/DynamicObject.h"
-#include "Cognitive3D/Private/C3DComponents/FixationRecorder.h"
-#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "CoreMinimal.h"
+#include "Cognitive3D/Public/C3DCommonTypes.h"
+#include "Interfaces/IAnalyticsProvider.h"
 #include "HeadMountedDisplayTypes.h"
-#include "Cognitive3D/Private/C3DUtil/Util.h"
-#include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
-#include "Cognitive3D/Private/C3DNetwork/Network.h"
-#include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
-#include "Cognitive3D/Public/CustomEvent.h"
-#include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
-#include "Cognitive3D/Private/LocalCache.h"
+#include "Json.h"
+#include "Misc/FileHelper.h"
+#include "HAL/FileManagerGeneric.h"
 #include "Engine/Engine.h"
 #include "Misc/Base64.h"
-#include "Cognitive3D/Private/C3DApi/FixationDataRecorder.h"
-#include "Cognitive3D/Private/C3DApi/GazeDataRecorder.h"
 #include "Misc/PackageName.h"//to get friendly name of streaming levels
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
-	//everything here is referenced from headers. why is this being forward declared?
+
 	class FNetwork;
 	class FCustomEventRecorder;
 	class Cognitive3DResponse;
@@ -45,6 +27,14 @@
 	class UDynamicObject;
 	class FGazeDataRecorder;
 	class FFixationDataRecorder;
+	class URemoteControls;
+	//
+	class FAnalyticsCognitive3D;
+	class UCognitive3DBlueprints;
+	class UFixationRecorder;
+	class FDynamicObjectManager;
+	class FLocalCache;
+	class FCognitiveLog;
 
 	class COGNITIVE3D_API FAnalyticsProviderCognitive3D : public IAnalyticsProvider
 	{
@@ -60,6 +50,7 @@
 		double SessionTimestamp = -1;
 		FJsonObject NewSessionProperties;
 		FJsonObject AllSessionProperties;
+		
 
 	private:
 		//reads all scene data from engine ini
@@ -81,7 +72,9 @@
 			FOnRequestSend OnRequestSend;
 		UPROPERTY(BlueprintAssignable, Category = "Cognitive3D Analytics")
 			FOnCognitiveInterval OnCognitiveInterval;
-		
+
+		UPROPERTY(BlueprintAssignable, Category = "Cognitive3D Analytics")
+		FOnCognitiveParticipantIdSet OnParticipantIdSet;
 
 		bool StartSession();
 		virtual bool StartSession(const TArray<FAnalyticsEventAttribute>& Attributes) override;
@@ -134,6 +127,7 @@
 		TSharedPtr<FNetwork> network;
 		TSharedPtr<FExitPoll> exitpoll;
 		TSharedPtr<FLocalCache> localCache;
+		URemoteControls* remoteControls;
 
 		FString GetDeviceID() const;
 
@@ -149,6 +143,9 @@
 
 		FString ApplicationKey = "";
 		FString AttributionKey = "";
+
+		FString GetSettingsFilePathRuntime() const;
+		FString GetKeysFilePathRuntime() const;
 
 		FString GetCurrentSceneId();
 		FString GetCurrentSceneVersionNumber();
@@ -176,11 +173,14 @@
 		void SetParticipantProperty(FString name, int32 value);
 		void SetParticipantProperty(FString name, float value);
 		void SetParticipantProperty(FString name, FString value);
+		void SetParticipantProperty(FString name, bool value);
 		void SetSessionTag(FString tag);
+		void SetSessionTag(FString tag, bool value);
 
 		void SetSessionProperty(FString name, int32 value);
 		void SetSessionProperty(FString name, float value);
 		void SetSessionProperty(FString name, FString value);
+		void SetSessionProperty(FString name, bool value);
 
 		FString GetAttributionParameters();
 

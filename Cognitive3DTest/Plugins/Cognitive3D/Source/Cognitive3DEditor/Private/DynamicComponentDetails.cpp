@@ -149,21 +149,25 @@ bool IDynamicObjectComponentDetails::HasOwnerAndMeshExportDirAndName() const
 
 bool IDynamicObjectComponentDetails::HasExportAndValidSceneData() const
 {
-	if (!HasOwner()) { return false; }
-	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return false; } //base export directory exists
-	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return false; } //mesh name is valid
-	if (!FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(SelectedDynamicObject.Get()->MeshName)) { return false; } //mesh directory exists
-	if (!FCognitiveEditorTools::GetInstance()->GetCurrentSceneData().IsValid()) { return false; } //scene is valid
-	return true;
+	return false;
+
+	//if (!HasOwner()) { return false; }
+	//if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return false; } //base export directory exists
+	//if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return false; } //mesh name is valid
+	//if (!FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(SelectedDynamicObject.Get()->MeshName)) { return false; } //mesh directory exists
+	//if (!FCognitiveEditorTools::GetInstance()->GetCurrentSceneData().IsValid()) { return false; } //scene is valid
+	//return true;
 }
 
 FText IDynamicObjectComponentDetails::GetUploadTooltip() const
 {
-	if (!HasOwner()) { return FText::FromString(""); }
-	if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return FText::FromString("Export Directory doesn't exist"); }
-	if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return FText::FromString("MeshName should not be empty"); }
-	if (!FCognitiveEditorTools::GetInstance()->GetCurrentSceneData().IsValid()) { return FText::FromString("Scene Data is invalid"); }
-	return FText::FromString("Upload the Dynamic Object Mesh to the current scene");
+	return FText::FromString("Use the Dynamic Object Window from the Cognitive3D Menu to Upload Dynamic Objects");
+
+	//if (!HasOwner()) { return FText::FromString(""); }
+	//if (FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory().IsEmpty()) { return FText::FromString("Export Directory doesn't exist"); }
+	//if (SelectedDynamicObject.Get()->MeshName.IsEmpty()) { return FText::FromString("MeshName should not be empty"); }
+	//if (!FCognitiveEditorTools::GetInstance()->GetCurrentSceneData().IsValid()) { return FText::FromString("Scene Data is invalid"); }
+	//return FText::FromString("Upload the Dynamic Object Mesh to the current scene");
 }
 
 FText IDynamicObjectComponentDetails::HandSetupText() const
@@ -241,18 +245,16 @@ FReply IDynamicObjectComponentDetails::TakeScreenshot()
 
 FReply IDynamicObjectComponentDetails::Export()
 {
-	GEditor->SelectNone(false, true, false);
-
-	GEditor->SelectActor(SelectedDynamicObject->GetOwner(), true, false, true);
-
+	GEditor->SelectNone(false, true, false);	
+	GEditor->SelectActor(SelectedDynamicObject->GetOwner(), true, false, true);	
 	FCognitiveEditorTools::GetInstance()->ExportSelectedDynamics();
-
 	return FReply::Handled();
 }
 
 FReply IDynamicObjectComponentDetails::Upload()
 {
-	FCognitiveEditorTools::GetInstance()->UploadDynamic(SelectedDynamicObject->MeshName);
+	//needs to pass in target scene. this seems too bulky for a component, so guiding devs to Dynamic Object Window for now
+	//FCognitiveEditorTools::GetInstance()->UploadDynamic(SelectedDynamicObject->MeshName);
 
 	return FReply::Handled();
 }

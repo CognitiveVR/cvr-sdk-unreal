@@ -2,6 +2,8 @@
 ** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
 */
 #include "Cognitive3D/Private/C3DApi/FixationDataRecorder.h"
+#include "Cognitive3D/Public/Cognitive3DBlueprints.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
 
 FFixationDataRecorder::FFixationDataRecorder()
 {
@@ -15,7 +17,10 @@ void FFixationDataRecorder::StartSession()
 
 	FString ValueReceived;
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "FixationBatchSize", false);
+	FString C3DSettingsPath = cog->GetSettingsFilePathRuntime();
+	GConfig->LoadFile(C3DSettingsPath);
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "FixationBatchSize", false);
 	if (ValueReceived.Len() > 0)
 	{
 		int32 fixationLimit = FCString::Atoi(*ValueReceived);
@@ -25,7 +30,7 @@ void FFixationDataRecorder::StartSession()
 		}
 	}
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "FixationAutoTimer", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "FixationAutoTimer", false);
 	if (ValueReceived.Len() > 0)
 	{
 		int32 parsedValue = FCString::Atoi(*ValueReceived);
@@ -63,7 +68,7 @@ void FFixationDataRecorder::SendData(bool copyDataToCache)
 
 	TSharedPtr<FJsonObject> wholeObj = MakeShareable(new FJsonObject);
 
-	wholeObj->SetStringField("userid", cog->GetUserID());
+	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	wholeObj->SetStringField("sessionid", cog->GetSessionID());
 	wholeObj->SetNumberField("timestamp", cog->GetSessionTimestamp());
 	wholeObj->SetNumberField("part", jsonPart);

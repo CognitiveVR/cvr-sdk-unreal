@@ -3,6 +3,10 @@
 */
 
 #include "DynamicObjectManager.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
+#include "Cognitive3D/Public/Cognitive3DBlueprints.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Cognitive3D/Public/DynamicObject.h"
 
 FDynamicObjectManager::FDynamicObjectManager()
 {
@@ -23,7 +27,10 @@ void FDynamicObjectManager::OnSessionBegin()
 	MaxSnapshots = 64;
 	FString ValueReceived;
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicDataLimit", false);
+	FString C3DSettingsPath = cogProvider->GetSettingsFilePathRuntime();
+	GConfig->LoadFile(C3DSettingsPath);
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicDataLimit", false);
 	if (ValueReceived.Len() > 0)
 	{
 		int32 dynamicLimit = FCString::Atoi(*ValueReceived);
@@ -33,7 +40,7 @@ void FDynamicObjectManager::OnSessionBegin()
 		}
 	}
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicAutoTimer", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "DynamicAutoTimer", false);
 	if (ValueReceived.Len() > 0)
 	{
 		int32 parsedValue = FCString::Atoi(*ValueReceived);
@@ -312,7 +319,7 @@ void FDynamicObjectManager::SendData(bool copyDataToCache)
 
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 
-	wholeObj->SetStringField("userid", cogProvider->GetUserID());
+	wholeObj->SetStringField("userid", cogProvider->GetDeviceID());
 	if (!cogProvider->LobbyId.IsEmpty())
 	{
 		wholeObj->SetStringField("lobbyId", cogProvider->LobbyId);

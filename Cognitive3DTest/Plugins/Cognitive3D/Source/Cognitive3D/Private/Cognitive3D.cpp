@@ -3,7 +3,7 @@
 */
 
 #include "Cognitive3D/Public/Cognitive3D.h"
-#include "Cognitive3D/Public/Cognitive3DProvider.h"
+//#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Classes/Camera/CameraComponent.h"
 #ifdef INCLUDE_OCULUS_PLUGIN
 #if ENGINE_MAJOR_VERSION == 4
@@ -23,6 +23,35 @@
 #endif
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "HeadMountedDisplayTypes.h"
+
+//
+#include "Cognitive3D/Public/C3DCommonTypes.h"
+#include "Analytics.h"
+#include "TimerManager.h"
+#include "AnalyticsEventAttribute.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
+#include "Cognitive3D/Public/Cognitive3DBlueprints.h"
+#include "HeadMountedDisplay.h"
+#include "Cognitive3D/Public/Cognitive3DSettings.h"
+#include "Cognitive3D/Private/ExitPoll.h"
+#include "Cognitive3D/Private/C3DComponents/PlayerTracker.h"
+#include "Cognitive3D/Public/DynamicObject.h"
+#include "Cognitive3D/Private/C3DComponents/FixationRecorder.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Cognitive3D/Private/C3DUtil/Util.h"
+#include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
+#include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
+#include "Cognitive3D/Public/CustomEvent.h"
+#include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
+#include "Cognitive3D/Private/LocalCache.h"
+#include "Cognitive3D/Private/C3DApi/GazeDataRecorder.h"
+#include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
+#include "Cognitive3D/Private/C3DApi/FixationDataRecorder.h"
+#include "Cognitive3D/Private/C3DComponents/RemoteControls.h"
+#include "Cognitive3D/Private/C3DApi/RemoteControlsRecorder.h"
+#include "LandscapeStreamingProxy.h"
+
 IMPLEMENT_MODULE(FAnalyticsCognitive3D, Cognitive3D);
 
 bool FAnalyticsProviderCognitive3D::bHasSessionStarted = false;
@@ -41,13 +70,19 @@ void FAnalyticsCognitive3D::StartupModule()
 	Cognitive3DProvider.Pin()->sensors = new FSensors();
 	Cognitive3DProvider.Pin()->fixationDataRecorder = new FFixationDataRecorder();
 	Cognitive3DProvider.Pin()->gazeDataRecorder = new FGazeDataRecorder();
-	Cognitive3DProvider.Pin()->localCache = MakeShareable(new FLocalCache(FPaths::GeneratedConfigDir()));
+	Cognitive3DProvider.Pin()->localCache = MakeShareable(new FLocalCache(FPaths::Combine(FPaths::ProjectConfigDir(), TEXT("c3dlocal/"))));
 	Cognitive3DProvider.Pin()->network = MakeShareable(new FNetwork());
 	Cognitive3DProvider.Pin()->dynamicObjectManager = new FDynamicObjectManager();
+	FRemoteControlsRecorder::Initialize();
 }
 
 void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* world)
 {
+	if (!bHasSessionStarted)
+	{
+		return;
+	}
+	
 	if (level == nullptr)
 	{
 		FlushAndCacheEvents();
@@ -60,6 +95,31 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 	//GLog->Log("FAnalyticsProviderCognitive3D::HandleSublevelUnloaded Loaded sublevel: " + levelName);
 	auto currentSceneData = GetCurrentSceneData();
 
+	bool bIsLandscapeStreamingProxy = false;
+
+	// Check if the level has any actors and if the first valid actor is a Landscape Streaming Proxy
+	for (AActor* Actor : level->Actors)
+	{
+		if (Actor) // Make sure the actor is valid
+		{
+			if (Actor->IsA(ALandscapeStreamingProxy::StaticClass()))
+			{
+				UE_LOG(LogTemp, Log, TEXT("HandleSublevelLoaded: Detected Landscape Streaming Proxy: %s in sublevel %s"), *Actor->GetName(), *level->GetName());
+				//customEventRecorder->Send("c3d.LandscapeLoaded LOADED LANDSCAPE PROXY");
+				bIsLandscapeStreamingProxy = true;
+			}
+			else
+			{
+				UE_LOG(LogTemp, Log, TEXT("HandleSublevelLoaded: Non-landscape actor detected: %s in sublevel %s"), *Actor->GetName(), *level->GetName());
+			}
+		}
+	}
+
+	if (bIsLandscapeStreamingProxy)
+	{
+		return;
+	}
+
 	//lookup scenedata and if valid, push to the stack
 	TSharedPtr<FSceneData> data = GetSceneData(levelName);
 	if (currentSceneData.IsValid()) //currently has valid scene data
@@ -69,6 +129,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 		{
 			properties->SetStringField("Scene Name", FString(data->Name));
 			properties->SetStringField("Scene Id", FString(data->Id));
+			properties->SetStringField("Previous Scene Name", FString(currentSceneData->Name));
 			float duration = FUtil::GetTimestamp() - SceneStartTime;
 			properties->SetNumberField("Duration", duration);
 			customEventRecorder->Send("c3d.SceneLoaded", properties);
@@ -78,7 +139,10 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 			properties->SetStringField("Sublevel Name", FString(levelName));
 			customEventRecorder->Send("c3d.Level Streaming Load", properties);
 		}
-		FlushAndCacheEvents();
+		gazeDataRecorder->SendData(true);
+		customEventRecorder->SendData(true);
+		fixationDataRecorder->SendData(true);
+		sensors->SendData(true);
 	}
 
 	if (data.IsValid())
@@ -93,10 +157,46 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 	{
 
 	}
+
+	//empty current dynamics manifest
+	dynamicObjectManager->manifest.Empty();
+	dynamicObjectManager->newManifest.Empty();
+	//register dynamics in new level
+	// Iterate over all actors in the loaded level
+	for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+	{
+		for (UActorComponent* actorComponent : ActorItr->GetComponents())
+		{
+			if (actorComponent->IsA(UDynamicObject::StaticClass()))
+			{
+				UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+				if (dynamicComponent && !dynamicComponent->IsRegistered())
+				{
+					// Register the component
+					dynamicComponent->RegisterComponent();
+				}
+				if (dynamicComponent)
+				{
+					dynamicComponent->HasInitialized = false;
+					dynamicComponent->Initialize();
+				}
+			}
+		}
+	}
+
+	//we send the dynamic data stream after the new scene is loaded and set as the current scene
+	//that way we can send the new, correct manifest to the desired level
+	dynamicObjectManager->SendData(true);
+
 }
 
 void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld* world)
 {
+	if (!bHasSessionStarted)
+	{
+		return;
+	}
+
 	if (level == nullptr)
 	{
 		FlushAndCacheEvents();
@@ -132,13 +232,17 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
 		if (stackNewTop.IsValid())
 		{
-			properties->SetStringField("Scene Name", FString(stackNewTop->Name));
-			properties->SetStringField("Scene Id", FString(stackNewTop->Id));
+			properties->SetStringField("Scene Name", FString(data->Name));
+			properties->SetStringField("Scene Id", FString(data->Id));
+			properties->SetStringField("Destination Scene Name", FString(stackNewTop->Name));
 			float duration = FUtil::GetTimestamp() - SceneStartTime;
 			properties->SetNumberField("Duration", duration);
 			customEventRecorder->Send("c3d.SceneUnloaded", properties);
 		}
-		FlushAndCacheEvents();
+		gazeDataRecorder->SendData(true);
+		customEventRecorder->SendData(true);
+		fixationDataRecorder->SendData(true);
+		sensors->SendData(true);
 
 		//set new current scene
 		if (stackNewTop.IsValid())
@@ -152,6 +256,35 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 			CurrentTrackingSceneId = "";
 			LastSceneData = nullptr;
 		}
+
+		//empty current dynamics manifest
+		dynamicObjectManager->manifest.Empty();
+		dynamicObjectManager->newManifest.Empty();
+		//register dynamics in new level
+		// Iterate over all actors in the loaded level
+		for (TActorIterator<AActor> ActorItr(GWorld); ActorItr; ++ActorItr)
+		{
+			for (UActorComponent* actorComponent : ActorItr->GetComponents())
+			{
+				if (actorComponent->IsA(UDynamicObject::StaticClass()))
+				{
+					UDynamicObject* dynamicComponent = Cast<UDynamicObject>(actorComponent);
+					if (dynamicComponent && !dynamicComponent->IsRegistered())
+					{
+						// Register the component
+						dynamicComponent->RegisterComponent();
+					}
+					if (dynamicComponent)
+					{
+						dynamicComponent->HasInitialized = false;
+						dynamicComponent->Initialize();
+					}
+				}
+			}
+		}
+
+		dynamicObjectManager->SendData(true);
+
 		SceneStartTime = FUtil::GetTimestamp();
 	}
 	else
@@ -293,14 +426,16 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 		FCognitiveLog::Error("FAnalyticsProviderCognitive3D::StartSession World not set. Are you missing a Cognitive Actor in your level?");
 		return false;
 	}
-	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-	//ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "ApiKey", false);
-	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "Analytics", "ApiKey", false);
-	AttributionKey = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "Analytics", "AttributionKey", false);
+
+	FString C3DSettingsPath = GetSettingsFilePathRuntime();
+	FString C3DKeysPath = GetKeysFilePathRuntime();
+
+	ApplicationKey = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "Analytics", "ApiKey", false);
+	AttributionKey = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "Analytics", "AttributionKey", false);
 
 	FString ValueReceived;
 
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "AutomaticallySetTrackingScene", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "AutomaticallySetTrackingScene", false);
 	if (ValueReceived.Len() > 0)
 	{
 		AutomaticallySetTrackingScene = FCString::ToBool(*ValueReceived);
@@ -368,11 +503,11 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	}
 	if (currentWorld->WorldType == EWorldType::Game)
 	{
-		SetSessionProperty("c3d.app.inEditor", "false");
+		SetSessionProperty("c3d.app.inEditor", false);
 	}
 	else
 	{
-		SetSessionProperty("c3d.app.inEditor", "true");
+		SetSessionProperty("c3d.app.inEditor", true);
 	}
 
 
@@ -432,19 +567,36 @@ void FAnalyticsProviderCognitive3D::EndSession()
 
 	//cleanup pause and level load delegates
 	if (!PauseHandle.IsValid())
+	{
 		FCoreDelegates::ApplicationWillEnterBackgroundDelegate.Remove(PauseHandle);
+		PauseHandle.Reset();
+	}
 	if (!LevelLoadHandle.IsValid())
+	{
 		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(LevelLoadHandle);
+		LevelLoadHandle.Reset();
+	}
 	if (!SublevelLoadedHandle.IsValid())
+	{
 		FWorldDelegates::LevelAddedToWorld.Remove(SublevelLoadedHandle);
+		SublevelLoadedHandle.Reset();
+	}
 	if (!SublevelUnloadedHandle.IsValid())
+	{
 		FWorldDelegates::LevelRemovedFromWorld.Remove(SublevelUnloadedHandle);
+		SublevelUnloadedHandle.Reset();
+	}
 
 	//reset variables
 	SessionTimestamp = -1;
 	SessionId = "";
 	bHasCustomSessionName = false;
 	bHasSessionStarted = false;
+	FRemoteControlsRecorder::GetInstance()->bHasRemoteControlVariables = false;
+	FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesString.Empty();
+	FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesInt.Empty();
+	FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesFloat.Empty();
+	FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Empty();
 	CurrentTrackingSceneId.Empty();
 	LastSceneData.Reset();
 
@@ -490,6 +642,7 @@ void FAnalyticsProviderCognitive3D::SetUserID(const FString& InUserID)
 	}
 
 	ParticipantId = userId;
+	OnParticipantIdSet.Broadcast(ParticipantId);
 	SetParticipantProperty("id", userId);
 	FCognitiveLog::Info("FAnalyticsProviderCognitive3D::SetUserID set user id: " + userId);
 }
@@ -504,6 +657,7 @@ void FAnalyticsProviderCognitive3D::SetParticipantId(FString participantId)
 	}
 
 	ParticipantId = participantId;
+	OnParticipantIdSet.Broadcast(ParticipantId);
 	SetParticipantProperty("id", participantId);
 	FCognitiveLog::Info("FAnalyticsProviderCognitive3D::SetParticipantId set user id: " + participantId);
 }
@@ -519,6 +673,11 @@ void FAnalyticsProviderCognitive3D::SetParticipantFullName(FString participantNa
 
 void FAnalyticsProviderCognitive3D::SetSessionTag(FString Tag)
 {
+	SetSessionTag(Tag, true);
+}
+
+void FAnalyticsProviderCognitive3D::SetSessionTag(FString Tag, bool value)
+{
 	if (Tag.Len() == 0)
 	{
 		FCognitiveLog::Error("FAnalyticsProviderCognitive3D::SetSessionTag must contain > 0 characters");
@@ -530,7 +689,14 @@ void FAnalyticsProviderCognitive3D::SetSessionTag(FString Tag)
 		return;
 	}
 
-	SetSessionProperty("c3d.session_tag."+Tag, "true");
+	if (value == true)
+	{
+		SetSessionProperty("c3d.session_tag." + Tag, true);
+	}
+	else
+	{
+		SetSessionProperty("c3d.session_tag." + Tag, false);
+	}
 }
 
 FString FAnalyticsProviderCognitive3D::GetUserID() const
@@ -815,6 +981,65 @@ TSharedPtr<FSceneData> FAnalyticsProviderCognitive3D::GetSceneData(FString scene
 	return NULL;
 }
 
+FString FAnalyticsProviderCognitive3D::GetSettingsFilePathRuntime() const
+{
+	// Get the project's Config directory.
+	FString BaseConfigDir = FPaths::ProjectConfigDir();
+
+	// Define the subfolder and ensure it exists.
+	FString CustomFolder = FPaths::Combine(BaseConfigDir, TEXT("c3dlocal"));
+	if (!FPaths::DirectoryExists(CustomFolder))
+	{
+		// Create the directory if it doesn't exist.
+		IFileManager::Get().MakeDirectory(*CustomFolder);
+	}
+
+	// Combine the subfolder path with your INI file name.
+	FString ConfigFilePath = FPaths::Combine(CustomFolder, TEXT("Cognitive3DSettings.ini"));
+
+	// If the file doesn't exist, create it with some default content.
+	if (!FPaths::FileExists(ConfigFilePath))
+	{
+		FString DefaultContent = TEXT("; Cognitive3D Plugin Settings\n[General]\n");
+		if (!FFileHelper::SaveStringToFile(DefaultContent, *ConfigFilePath))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to create config file: %s"), *ConfigFilePath);
+			return FString();
+		}
+	}
+	return ConfigFilePath;
+}
+
+FString FAnalyticsProviderCognitive3D::GetKeysFilePathRuntime() const
+{
+	// Get the project's Config directory.
+	FString BaseConfigDir = FPaths::ProjectConfigDir();
+	FString BaseProjectDir = FPaths::ProjectDir();
+
+	// Define the subfolder and ensure it exists.
+	FString CustomFolder = FPaths::Combine(BaseProjectDir, TEXT("c3dlocal"));
+	if (!FPaths::DirectoryExists(CustomFolder))
+	{
+		// Create the directory if it doesn't exist.
+		IFileManager::Get().MakeDirectory(*CustomFolder);
+	}
+
+	// Combine the subfolder path with your INI file name.
+	FString ConfigFilePath = FPaths::Combine(CustomFolder, TEXT("Cognitive3DKeys.ini"));
+
+	// If the file doesn't exist, create it with some default content.
+	if (!FPaths::FileExists(ConfigFilePath))
+	{
+		FString DefaultContent = TEXT("; Cognitive3D Plugin Keys\n[General]\n");
+		if (!FFileHelper::SaveStringToFile(DefaultContent, *ConfigFilePath))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to create config file: %s"), *ConfigFilePath);
+			return FString();
+		}
+	}
+	return ConfigFilePath;
+}
+
 FString FAnalyticsProviderCognitive3D::GetCurrentSceneId()
 {
 	auto currentData = GetCurrentSceneData();
@@ -834,14 +1059,11 @@ FString FAnalyticsProviderCognitive3D::GetCurrentSceneVersionNumber()
 void FAnalyticsProviderCognitive3D::CacheSceneData()
 {
 	TArray<FString>scenstrings;
-	FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+	FString C3DSettingsPath = GetSettingsFilePathRuntime();
+	GConfig->LoadFile(C3DSettingsPath);
+	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, C3DSettingsPath);
+	GConfig->Flush(false, C3DSettingsPath);
 
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-	const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
-	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, NormalizedTestSyncFile);
-#else
-	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), scenstrings, TestSyncFile);
-#endif
 	SceneData.Empty();
 
 	for (int i = 0; i < scenstrings.Num(); i++)
@@ -954,6 +1176,17 @@ void FAnalyticsProviderCognitive3D::SetSessionProperty(FString name, FString val
 	else
 		AllSessionProperties.SetStringField(name, value);
 }
+void FAnalyticsProviderCognitive3D::SetSessionProperty(FString name, bool value)
+{
+	if (NewSessionProperties.HasField(name))
+		NewSessionProperties.Values[name] = MakeShareable(new FJsonValueBoolean(value));
+	else
+		NewSessionProperties.SetBoolField(name, value);
+	if (AllSessionProperties.HasField(name))
+		AllSessionProperties.Values[name] = MakeShareable(new FJsonValueBoolean(value));
+	else
+		AllSessionProperties.SetBoolField(name, value);
+}
 
 void FAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, int32 value)
 {
@@ -990,6 +1223,18 @@ void FAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, FString
 		AllSessionProperties.Values[completeName] = MakeShareable(new FJsonValueString(value));
 	else
 		AllSessionProperties.SetStringField(completeName, value);
+}
+void FAnalyticsProviderCognitive3D::SetParticipantProperty(FString name, bool value)
+{
+	FString completeName = "c3d.participant." + name;
+	if (NewSessionProperties.HasField(completeName))
+		NewSessionProperties.Values[completeName] = MakeShareable(new FJsonValueBoolean(value));
+	else
+		NewSessionProperties.SetBoolField(completeName, value);
+	if (AllSessionProperties.HasField(completeName))
+		AllSessionProperties.Values[completeName] = MakeShareable(new FJsonValueBoolean(value));
+	else
+		AllSessionProperties.SetBoolField(completeName, value);
 }
 
 FJsonObject FAnalyticsProviderCognitive3D::GetNewSessionProperties()
@@ -1031,17 +1276,17 @@ FString FAnalyticsProviderCognitive3D::GetAttributionParameters()
 
 bool FAnalyticsProviderCognitive3D::HasEyeTrackingSDK()
 {
-#if defined TOBII_EYETRACKING_ACTIVE
+#if defined INCLUDE_TOBII_PLUGIN
 	return true;
 #elif defined WAVEVR_EYETRACKING
 	return true;
 #elif defined OPENXR_EYETRACKING
 	return true;
-#elif defined HPGLIA_API
+#elif defined INCLUDE_HPGLIA_PLUGIN
 	return true;
-#elif defined PICOMOBILE_API
+#elif defined INCLUDE_PICOMOBILE_PLUGIN
 	return true;
-#elif defined VARJOEYETRACKER_API
+#elif defined INCLUDE_VARJO_PLUGIN
 	return true;
 #elif defined SRANIPAL_1_3_API
 	return true;
@@ -1217,6 +1462,15 @@ void FAnalyticsProviderCognitive3D::HandleApplicationWillEnterBackground()
 
 void FAnalyticsProviderCognitive3D::SetTrackingScene(FString levelName)
 {
+	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
+	FString previousSceneName = LastSceneData->Name;
+	properties->SetStringField("Scene Name", FString(LastSceneData->Name));
+	properties->SetStringField("Scene Id", FString(LastSceneData->Id));
+	properties->SetStringField("Destination Scene Name", levelName);
+	float duration = FUtil::GetTimestamp() - SceneStartTime;
+	properties->SetNumberField("Duration", duration);
+	customEventRecorder->Send("c3d.SceneUnloaded", properties);
+
 	FlushEvents();
 	TSharedPtr<FSceneData> data = GetSceneData(levelName);
 	if (data.IsValid())
@@ -1233,5 +1487,10 @@ void FAnalyticsProviderCognitive3D::SetTrackingScene(FString levelName)
 		LastSceneData = data;
 		SceneStartTime = FUtil::GetTimestamp();
 	}
-	//todo consider events for arrival/departure from scenes here
+
+	properties->SetStringField("Scene Name", FString(data->Name));
+	properties->SetStringField("Scene Id", FString(data->Id));
+	properties->SetStringField("Previous Scene Name", FString(previousSceneName));
+	properties->SetNumberField("Duration", duration);
+	customEventRecorder->Send("c3d.SceneLoaded", properties);
 }

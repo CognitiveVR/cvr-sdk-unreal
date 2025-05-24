@@ -4,6 +4,8 @@
 
 #include "ActiveSessionView.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "Kismet/GameplayStatics.h"
+#include "Cognitive3D/Private/C3DComponents/FixationRecorder.h"
 
 // Sets default values
 AActiveSessionView::AActiveSessionView()

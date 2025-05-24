@@ -2,6 +2,8 @@
 ** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
 */
 #include "Cognitive3DBlueprints.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
+#include "Cognitive3D/Private/C3DComponents/RemoteControls.h"
 //#include "Private/Cognitive3DPrivatePCH.h"
 
 TSharedPtr<FAnalyticsProviderCognitive3D> UCognitive3DBlueprints::cog;
@@ -98,6 +100,18 @@ void UCognitive3DBlueprints::UpdateSessionString(const FString name, const FStri
 	cog->SetSessionProperty(name, value);
 }
 
+void UCognitive3DBlueprints::UpdateSessionBool(const FString name, const bool value)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	if (!cog.IsValid())
+	{
+		FCognitiveLog::Error("UCognitive3DBlueprints::UpdateSessionBool could not get provider!");
+		return;
+	}
+	cog->SetSessionProperty(name, value);
+}
+
 void UCognitive3DBlueprints::SetParticipantPropertyInt(const FString name, const int32 value)
 {
 	if (!cog.IsValid())
@@ -129,6 +143,18 @@ void UCognitive3DBlueprints::SetParticipantPropertyString(const FString name, co
 	if (!cog.IsValid())
 	{
 		FCognitiveLog::Error("UCognitive3DBlueprints::SetParticipantPropertyString could not get provider!");
+		return;
+	}
+	cog->SetParticipantProperty(name, value);
+}
+
+void UCognitive3DBlueprints::SetParticipantPropertyBool(const FString name, const bool value)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	if (!cog.IsValid())
+	{
+		FCognitiveLog::Error("UCognitive3DBlueprints::SetParticipantPropertyBool could not get provider!");
 		return;
 	}
 	cog->SetParticipantProperty(name, value);
@@ -182,6 +208,78 @@ void UCognitive3DBlueprints::RecordSensor(const FString Name, const float Value)
 	}
 	if (!HasSessionStarted()) { return; }
 	cog->sensors->RecordSensor(Name, Value);
+}
+
+void UCognitive3DBlueprints::FetchRemoteControlVariableNoParticipantId()
+{
+	if(!cog.IsValid())
+		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	if (!cog.IsValid())
+	{
+		FCognitiveLog::Error("UCognitive3DBlueprints::FetchRemoteControlVariableNoParticipantId could not get provider!");
+		return;
+	}
+	cog->remoteControls->FetchRemoteControlVariable();
+}
+
+void UCognitive3DBlueprints::FetchRemoteControlVariableWithParticipantId(const FString ParticipantId)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	if (!cog.IsValid())
+	{
+		FCognitiveLog::Error("UCognitive3DBlueprints::FetchRemoteControlVariableWithParticipantId could not get provider!");
+		return;
+	}
+	cog->remoteControls->FetchRemoteControlVariable(ParticipantId);
+}
+
+FString UCognitive3DBlueprints::GetRemoteControlVariableString(const FString Key, const FString DefaultValue)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	if (!cog.IsValid())
+	{
+		FCognitiveLog::Error("UCognitive3DBlueprints::GetRemoteControlVariableString could not get provider!");
+		return FString();
+	}
+	return cog->remoteControls->GetRemoteControlVariableString(Key, DefaultValue);
+}
+
+int32 UCognitive3DBlueprints::GetRemoteControlVariableInt(const FString Key, const int32 DefaultValue)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	if (!cog.IsValid())
+	{
+		FCognitiveLog::Error("UCognitive3DBlueprints::GetRemoteControlVariableInt could not get provider!");
+		return 0;
+	}
+	return cog->remoteControls->GetRemoteControlVariableInt(Key, DefaultValue);
+}
+
+float UCognitive3DBlueprints::GetRemoteControlVariableFloat(const FString Key, const float DefaultValue)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	if (!cog.IsValid())
+	{
+		FCognitiveLog::Error("UCognitive3DBlueprints::GetRemoteControlVariableFloat could not get provider!");
+		return 0.0f;
+	}
+	return cog->remoteControls->GetRemoteControlVariableFloat(Key, DefaultValue);
+}
+
+bool UCognitive3DBlueprints::GetRemoteControlVariableBool(const FString Key, const bool DefaultValue)
+{
+	if (!cog.IsValid())
+		cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	if (!cog.IsValid())
+	{
+		FCognitiveLog::Error("UCognitive3DBlueprints::GetRemoteControlVariableBool could not get provider!");
+		return false;
+	}
+	return cog->remoteControls->GetRemoteControlVariableBool(Key, DefaultValue);
 }
 
 void UCognitive3DBlueprints::GetQuestionSet(const FString Hook, FCognitiveExitPollResponse response)

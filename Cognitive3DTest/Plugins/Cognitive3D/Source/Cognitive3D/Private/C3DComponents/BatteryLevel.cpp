@@ -3,6 +3,8 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/BatteryLevel.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
 
 UBatteryLevel::UBatteryLevel()
 {
@@ -70,11 +72,11 @@ void UBatteryLevel::EndInterval()
 		cognitive->sensors->RecordSensor("HMD Battery Status", (float)batteryState);
 		if (isRunningOnBattery)
 		{
-			cognitive->SetSessionProperty("c3d.hmd.RunningOnBattery", "Yes");
+			cognitive->SetSessionProperty("c3d.hmd.RunningOnBattery", FString("Yes"));
 		}
 		else
 		{
-			cognitive->SetSessionProperty("c3d.hmd.RunningOnBattery", "No");
+			cognitive->SetSessionProperty("c3d.hmd.RunningOnBattery", FString("No"));
 		}
 	}
 }

@@ -3,6 +3,9 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/HandElevation.h"
+#include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Cognitive3D/Public/DynamicObject.h"
 
 UHandElevation::UHandElevation()
 {
@@ -70,6 +73,8 @@ void UHandElevation::OnSessionEnd()
 
 void UHandElevation::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
+	Super::EndPlay(EndPlayReason);
+
 	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cognitive.IsValid())
 	{

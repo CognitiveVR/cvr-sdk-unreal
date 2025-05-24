@@ -2,6 +2,12 @@
 
 
 #include "C3DComponents/Passthrough.h"
+#include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
+#include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
+#include "EngineUtils.h"
+#include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 
 // Sets default values for this component's properties
 UPassthrough::UPassthrough()

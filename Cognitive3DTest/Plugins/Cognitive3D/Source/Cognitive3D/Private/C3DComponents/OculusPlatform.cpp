@@ -11,6 +11,9 @@
 #ifdef __ANDROID__
 #include "Android/AndroidApplication.h"
 #endif
+#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Cognitive3D/Private/C3DApi/GazeDataRecorder.h"
+#include "Cognitive3D/Private/C3DNetwork/Network.h"
 
 // Sets default values for this component's properties
 UOculusPlatform::UOculusPlatform()
@@ -198,16 +201,18 @@ void UOculusPlatform::HandleUserRetrieved(const ovrMessageHandle Message)
 	char* idString = new char[256];
 	ovrID_ToString(idString, 256, oculusID);
 
-	cog->SetParticipantFullName(displayNameStr);
+	cog->SetParticipantFullName(usernameStr);
 
 	if (UseOculusIdAsParticipant)
 	{
 		cog->SetParticipantId(idString);
 	}
 
-	cog->SetParticipantProperty("oculusId", idString);
+	cog->SetParticipantProperty("oculusId", FString(idString));
 	cog->SetParticipantProperty("oculusDisplayName", displayNameStr);
 	cog->SetParticipantProperty("oculusUsername", usernameStr);
+
+	OnOculusNameHandled.Broadcast(displayNameStr);
 
 	if (gotAccessToken == false)
 	{
@@ -346,7 +351,7 @@ void UOculusPlatform::SendSubscriptionData()
 	TSharedPtr<FJsonObject>wholeObj = MakeShareable(new FJsonObject);
 	TArray<TSharedPtr<FJsonValue>> dataArray;
 
-	wholeObj->SetStringField("userid", cog->GetUserID());
+	wholeObj->SetStringField("userid", cog->GetDeviceID());
 	if (!cog->LobbyId.IsEmpty())
 	{
 		wholeObj->SetStringField("lobbyId", cog->LobbyId);

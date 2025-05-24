@@ -3,12 +3,22 @@
 */
 
 #include "LocalCache.h"
+#include "Analytics.h"
 
 FLocalCache::FLocalCache(FString path)
 {
 	FString ValueReceived;
 	localCacheEnabled = false;
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "EnableLocalCache", false);
+
+	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	if (!cognitive.IsValid()) {
+		return;
+	}
+
+	FString C3DSettingsPath = cognitive->GetSettingsFilePathRuntime();
+	GConfig->LoadFile(C3DSettingsPath);
+
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "EnableLocalCache", false);
 	if (ValueReceived.Len() > 0)
 	{
 		if (ValueReceived == "True")
@@ -23,7 +33,7 @@ FLocalCache::FLocalCache(FString path)
 	}
 
 	int32 targetCacheSize = 100 * 1024 * 1024; //convert to MB
-	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(GEngineIni, "/Script/Cognitive3D.Cognitive3DSettings", "LocalCacheSize", false);
+	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "LocalCacheSize", false);
 	if (ValueReceived.Len() > 0)
 	{
 		int32 tempSize = FCString::Atoi(*ValueReceived);

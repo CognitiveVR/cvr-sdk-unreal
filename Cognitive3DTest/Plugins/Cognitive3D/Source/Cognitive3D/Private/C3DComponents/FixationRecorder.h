@@ -14,7 +14,7 @@
 #include "SceneView.h"
 #include "Engine/LocalPlayer.h"
 #include "DrawDebugHelpers.h"
-#if defined TOBII_EYETRACKING_ACTIVE
+#if defined INCLUDE_TOBII_PLUGIN
 #include "TobiiTypes.h"
 #include "ITobiiCore.h"
 #include "ITobiiEyetracker.h"
@@ -30,13 +30,13 @@
 #include "ViveSR_Enums.h"
 #include "SRanipalEye_FunctionLibrary.h"
 #endif
-#if defined VARJOEYETRACKER_API
+#if defined INCLUDE_VARJO_PLUGIN
 #include "VarjoEyeTrackerFunctionLibrary.h"
 #endif
-#if defined PICOMOBILE_API
+#if defined INCLUDE_PICOMOBILE_PLUGIN
 #include "PicoBlueprintFunctionLibrary.h"
 #endif
-#if defined HPGLIA_API
+#if defined INCLUDE_HPGLIA_PLUGIN
 #include "HPGliaClient.h"
 #endif
 #if defined INCLUDE_OCULUS_PLUGIN
@@ -79,7 +79,7 @@ private:
 
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 
-#if defined TOBII_EYETRACKING_ACTIVE
+#if defined INCLUDE_TOBII_PLUGIN
 	bool AreEyesClosed(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker);
 	int64 GetEyeCaptureTimestamp(TSharedPtr<ITobiiEyeTracker, ESPMode::ThreadSafe> eyetracker);
 #elif defined OPENXR_EYETRACKING
@@ -91,13 +91,13 @@ private:
 #elif defined SRANIPAL_1_3_API
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
-#elif defined VARJOEYETRACKER_API
+#elif defined INCLUDE_VARJO_PLUGIN
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
-#elif defined PICOMOBILE_API
+#elif defined INCLUDE_PICOMOBILE_PLUGIN
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
-#elif defined HPGLIA_API
+#elif defined INCLUDE_HPGLIA_PLUGIN
 	bool AreEyesClosed();
 	int64 GetEyeCaptureTimestamp();
 #elif defined WAVEVR_EYETRACKING

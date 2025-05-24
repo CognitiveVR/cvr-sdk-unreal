@@ -53,6 +53,8 @@ public:
 	//add a string value to the session properties
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Properties", DisplayName = "Set Session Property String")
 		static void UpdateSessionString(const FString name, const FString value);
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Properties", DisplayName = "Set Session Property Bool")
+		static void UpdateSessionBool(const FString name, const bool value);
 
 	//label this session to a human-friendly on the Cognitive dashboard
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics")
@@ -66,6 +68,21 @@ public:
 	static void InitializeSensor(const FString Name, const float HzRate = 10, const float InitialValue = 0);
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics")
 	static void RecordSensor(const FString Name, const float Value);
+
+	//remote controls
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
+	static void FetchRemoteControlVariableNoParticipantId();
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
+	static void FetchRemoteControlVariableWithParticipantId(const FString ParticipantId);
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
+	static FString GetRemoteControlVariableString(const FString Key, const FString DefaultValue);
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
+	static int32 GetRemoteControlVariableInt(const FString Key, const int32 DefaultValue);
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
+	static float GetRemoteControlVariableFloat(const FString Key, const float DefaultValue);
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Remote Controls")
+	static bool GetRemoteControlVariableBool(const FString Key, const bool DefaultValue);
+
 
 	//request a question set by a hook name from the Cognitive dashboard
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Exit Poll")
@@ -106,6 +123,9 @@ public:
 	//add a string value to the session properties
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Properties")
 		static void SetParticipantPropertyString(const FString name, const FString value);
+	//add a string value to the session properties
+	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Properties")
+		static void SetParticipantPropertyBool(const FString name, const bool value);
 
 
 	UFUNCTION(BlueprintCallable, Category = "Cognitive3D Analytics|Custom Events")
