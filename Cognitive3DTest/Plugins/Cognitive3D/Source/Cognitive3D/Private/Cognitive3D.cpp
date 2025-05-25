@@ -520,6 +520,7 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	customEventRecorder->StartSession();
 	fixationDataRecorder->StartSession();
 	dynamicObjectManager->OnSessionBegin();
+	boundaryRecorder->StartSession();
 	sensors->StartSession();
 	OnSessionBegin.Broadcast();
 
