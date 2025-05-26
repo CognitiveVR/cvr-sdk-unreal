@@ -192,7 +192,7 @@ void BoundaryRecorder::AddGuardianBoundaryPoints(TArray<FVector>& GuardianPoints
 	//cog->TryGetHMDGuardianPoints(GuardianPoints);
 
 	FShapeEntry ShapeEntry;
-	ShapeEntry.Time = FPlatformTime::Seconds(); // Adjust if needed to your time system
+	ShapeEntry.Time = FUtil::GetTimestamp();
 
 	for (const FVector& Point : GuardianPoints)
 	{
