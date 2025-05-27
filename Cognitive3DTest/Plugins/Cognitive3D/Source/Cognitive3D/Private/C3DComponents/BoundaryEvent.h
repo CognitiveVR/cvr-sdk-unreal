@@ -27,16 +27,6 @@ private:
 	UFUNCTION()
 		void OnSessionEnd();
 
-
-	UPROPERTY()
-		class UVRNotificationsComponent* VRNotifications;
-
-	UFUNCTION()
-		void HandleRecenter();
-
-	UFUNCTION()
-		void HandleControllerRecenter();
-
 	FVector RoomSize;
 	FVector HMDWorldPos;
 
