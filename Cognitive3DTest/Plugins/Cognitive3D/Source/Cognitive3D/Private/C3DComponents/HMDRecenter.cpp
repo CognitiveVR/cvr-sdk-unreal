@@ -97,6 +97,12 @@ void UHMDRecenter::OnSessionEnd()
 
 void UHMDRecenter::HandleRecenter()
 {
+	if (!bCanRecenter)
+	{
+		return; // we already handled one recenter very recently
+	}
+	bCanRecenter = false;
+
 	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	//get player position in world space
 	cognitive->TryGetPlayerHMDPosition(HMDWorldPos);
@@ -104,10 +110,29 @@ void UHMDRecenter::HandleRecenter()
 	properties->SetStringField("Recenter Type", TEXT("HMD Recentered"));
 	properties->SetStringField("HMD Position", FString::Printf(TEXT("%f, %f, %f"), HMDWorldPos.X, HMDWorldPos.Y, HMDWorldPos.Z));
 	cognitive->customEventRecorder->Send("c3d.User recentered", properties);
+
+	// reset the gate after 0.2 seconds
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().SetTimer(
+			DebounceHandle,
+			[this]()
+			{
+				bCanRecenter = true;
+			},
+			0.2f,
+			/*bLoop=*/ false);
+	}
 }
 
 void UHMDRecenter::HandleControllerRecenter()
 {
+	if (!bCanRecenter)
+	{
+		return; // we already handled one recenter very recently
+	}
+	bCanRecenter = false;
+
 	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	//get player position in world space
 	cognitive->TryGetPlayerHMDPosition(HMDWorldPos);
@@ -115,5 +140,18 @@ void UHMDRecenter::HandleControllerRecenter()
 	properties->SetStringField("Recenter Type", TEXT("Controller Recentered"));
 	properties->SetStringField("HMD Position", FString::Printf(TEXT("%f, %f, %f"), HMDWorldPos.X, HMDWorldPos.Y, HMDWorldPos.Z));
 	cognitive->customEventRecorder->Send("c3d.User recentered", properties);
+
+	// reset the gate after 0.2 seconds
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().SetTimer(
+			DebounceHandle,
+			[this]()
+			{
+				bCanRecenter = true;
+			},
+			0.2f,
+			/*bLoop=*/ false);
+	}
 }
 

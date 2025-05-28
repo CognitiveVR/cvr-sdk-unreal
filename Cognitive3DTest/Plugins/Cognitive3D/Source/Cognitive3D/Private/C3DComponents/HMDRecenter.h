@@ -43,4 +43,7 @@ public:
 	void HandleControllerRecenter();
 
 	FVector HMDWorldPos;
+
+	FTimerHandle DebounceHandle;
+	bool bCanRecenter = true;
 };
