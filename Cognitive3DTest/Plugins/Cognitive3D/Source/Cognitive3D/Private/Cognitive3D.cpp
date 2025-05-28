@@ -50,6 +50,7 @@
 #include "Cognitive3D/Private/C3DApi/FixationDataRecorder.h"
 #include "Cognitive3D/Private/C3DComponents/RemoteControls.h"
 #include "Cognitive3D/Private/C3DApi/RemoteControlsRecorder.h"
+#include "Cognitive3D/Private/C3DApi/BoundaryRecorder.h"
 #include "LandscapeStreamingProxy.h"
 
 IMPLEMENT_MODULE(FAnalyticsCognitive3D, Cognitive3D);
@@ -70,6 +71,7 @@ void FAnalyticsCognitive3D::StartupModule()
 	Cognitive3DProvider.Pin()->sensors = new FSensors();
 	Cognitive3DProvider.Pin()->fixationDataRecorder = new FFixationDataRecorder();
 	Cognitive3DProvider.Pin()->gazeDataRecorder = new FGazeDataRecorder();
+	Cognitive3DProvider.Pin()->boundaryRecorder = new BoundaryRecorder();
 	Cognitive3DProvider.Pin()->localCache = MakeShareable(new FLocalCache(FPaths::Combine(FPaths::ProjectConfigDir(), TEXT("c3dlocal/"))));
 	Cognitive3DProvider.Pin()->network = MakeShareable(new FNetwork());
 	Cognitive3DProvider.Pin()->dynamicObjectManager = new FDynamicObjectManager();
@@ -175,7 +177,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 					// Register the component
 					dynamicComponent->RegisterComponent();
 				}
-				if (dynamicComponent)
+				if (dynamicComponent && !dynamicComponent->IsController)
 				{
 					dynamicComponent->HasInitialized = false;
 					dynamicComponent->Initialize();
@@ -187,7 +189,8 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 	//we send the dynamic data stream after the new scene is loaded and set as the current scene
 	//that way we can send the new, correct manifest to the desired level
 	dynamicObjectManager->SendData(true);
-
+	//
+	boundaryRecorder->SendData(true);
 }
 
 void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld* world)
@@ -274,7 +277,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 						// Register the component
 						dynamicComponent->RegisterComponent();
 					}
-					if (dynamicComponent)
+					if (dynamicComponent && !dynamicComponent->IsController)
 					{
 						dynamicComponent->HasInitialized = false;
 						dynamicComponent->Initialize();
@@ -284,6 +287,8 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 		}
 
 		dynamicObjectManager->SendData(true);
+		//
+		boundaryRecorder->SendData(true);
 
 		SceneStartTime = FUtil::GetTimestamp();
 	}
@@ -361,6 +366,7 @@ void FAnalyticsProviderCognitive3D::HandlePostLevelLoad(UWorld* world)
 		LastSceneData = data;
 	}
 	SceneStartTime = FUtil::GetTimestamp();
+	boundaryRecorder->SendData(true);
 }
 
 void FAnalyticsCognitive3D::ShutdownModule()
@@ -514,6 +520,7 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	customEventRecorder->StartSession();
 	fixationDataRecorder->StartSession();
 	dynamicObjectManager->OnSessionBegin();
+	boundaryRecorder->StartSession();
 	sensors->StartSession();
 	OnSessionBegin.Broadcast();
 
@@ -551,6 +558,7 @@ void FAnalyticsProviderCognitive3D::EndSession()
 	customEventRecorder->PreSessionEnd();
 	fixationDataRecorder->PreSessionEnd();
 	dynamicObjectManager->OnPreSessionEnd();
+	boundaryRecorder->PreSessionEnd();
 	sensors->PreSessionEnd();
 
 	OnPreSessionEnd.Broadcast();
@@ -561,6 +569,7 @@ void FAnalyticsProviderCognitive3D::EndSession()
 	customEventRecorder->PostSessionEnd();
 	fixationDataRecorder->PostSessionEnd();
 	dynamicObjectManager->OnPostSessionEnd();
+	boundaryRecorder->PostSessionEnd();
 	sensors->PostSessionEnd();
 	OnPostSessionEnd.Broadcast();
 	localCache->Close();
@@ -1333,16 +1342,40 @@ bool FAnalyticsProviderCognitive3D::TryGetRoomSize(FVector& roomsize)
 #endif
 }
 
-bool FAnalyticsProviderCognitive3D::TryGetHMDGuardianPoints(TArray<FVector>& GuardianPoints)
+bool FAnalyticsProviderCognitive3D::TryGetHMDGuardianPoints(TArray<FVector>& GuardianPoints, bool usePawnSpace)
 {
 #ifdef INCLUDE_OCULUS_PLUGIN
 #if ENGINE_MAJOR_VERSION == 4 
-	GuardianPoints = UOculusFunctionLibrary::GetGuardianPoints(EBoundaryType::Boundary_PlayArea, false);
+	GuardianPoints = UOculusFunctionLibrary::GetGuardianPoints(EBoundaryType::Boundary_PlayArea, usePawnSpace);
 	return true;
 #elif ENGINE_MAJOR_VERSION == 5 
-	GuardianPoints = UOculusXRFunctionLibrary::GetGuardianPoints(EOculusXRBoundaryType::Boundary_PlayArea, false);
+	GuardianPoints = UOculusXRFunctionLibrary::GetGuardianPoints(EOculusXRBoundaryType::Boundary_PlayArea, usePawnSpace);
 	return true;
 #endif
+#elif (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION == 27) || (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 0)
+	//OpenXR/SteamVR
+	// 1) Query the full rectangle size
+	//    This returns the width (X) and depth (Y) in Unreal units of the largest rectangle
+	//    that fits inside your guardian/chaperone area in the Floor (stage) origin. 
+	FVector2D Bounds = UHeadMountedDisplayFunctionLibrary::GetPlayAreaBounds();
+
+	if (Bounds.Length() > 0)
+	{
+		GuardianPoints.Empty();
+		// 2) Compute half-extents
+		const float HalfX = Bounds.X * 0.5f;
+		const float HalfY = Bounds.Y * 0.5f;
+
+		// 3) Build the four corner points in the X/Y plane (Z = 0)
+		//    These are centered on (0,0), which in tracking space is your floor-level origin.
+		GuardianPoints.Add(FVector(HalfX, HalfY, 0.f));  // front-right
+		GuardianPoints.Add(FVector(HalfX, -HalfY, 0.f));  // back-right
+		GuardianPoints.Add(FVector(-HalfX, -HalfY, 0.f));  // back-left
+		GuardianPoints.Add(FVector(-HalfX, HalfY, 0.f));  // front-left
+
+		return true;
+	}
+	return false;
 #else
 	return false;
 #endif

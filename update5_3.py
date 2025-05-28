@@ -132,6 +132,9 @@ insertline(cwd+"/Plugins\Cognitive3D\Source\Cognitive3D\Cognitive3D.Build.cs","	
 
 insertline(cwd+"/Plugins\Cognitive3D\Cognitive3D.uplugin", "	\"Plugins\": [", "		{\n			\"Name\": \"XRBase\",\n			\"Enabled\": true\n		}," )
 
+#add DeveloperToolSettings to editor module build file
+insertline(cwd+"/Plugins\Cognitive3D\Source\Cognitive3DEditor\Cognitive3DEditor.Build.cs","                \"GLTFExporter\",","                \"DeveloperToolSettings\",",)
+
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue"+engineversion+"_"+enginesubversion
 shutil.make_archive(output_filename, 'zip', cwd+"/Plugins/")

@@ -28,6 +28,7 @@
 	class FGazeDataRecorder;
 	class FFixationDataRecorder;
 	class URemoteControls;
+	class BoundaryRecorder;
 	//
 	class FAnalyticsCognitive3D;
 	class UCognitive3DBlueprints;
@@ -124,6 +125,7 @@
 		FDynamicObjectManager* dynamicObjectManager = nullptr;
 		FGazeDataRecorder* gazeDataRecorder = nullptr;
 		FFixationDataRecorder* fixationDataRecorder = nullptr;
+		BoundaryRecorder* boundaryRecorder = nullptr;
 		TSharedPtr<FNetwork> network;
 		TSharedPtr<FExitPoll> exitpoll;
 		TSharedPtr<FLocalCache> localCache;
@@ -188,7 +190,7 @@
 		bool HasEyeTrackingSDK();
 		void SetTrackingScene(FString levelName);
 		bool TryGetRoomSize(FVector& roomsize);
-		bool TryGetHMDGuardianPoints(TArray<FVector>& GuardianPoints);
+		bool TryGetHMDGuardianPoints(TArray<FVector>& GuardianPoints, bool usePawnSpace);
 		bool TryGetHMDPose(FRotator& HMDRotation, FVector& HMDPosition, FVector& HMDNeckPos);
 		bool TryGetHMDWornState(EHMDWornState::Type& WornState);
 		bool IsPointInPolygon4(TArray<FVector> polygon, FVector testPoint);

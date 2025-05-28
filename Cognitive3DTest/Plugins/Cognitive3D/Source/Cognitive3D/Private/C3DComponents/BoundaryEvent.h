@@ -6,6 +6,7 @@
 
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
+#include "VRNotificationsComponent.h"
 #include "BoundaryEvent.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -25,7 +26,6 @@ private:
 		void OnSessionBegin();
 	UFUNCTION()
 		void OnSessionEnd();
-
 
 	FVector RoomSize;
 	FVector HMDWorldPos;

@@ -128,6 +128,8 @@ replaceline(cwd+"/Plugins\Cognitive3D\Source\Cognitive3D\Cognitive3D.Build.cs","
 #change definitions and oculus plugin include in build.cs
 replaceline(cwd+"/Plugins\Cognitive3D\Source\Cognitive3D\Cognitive3D.Build.cs","			PublicDependencyModuleNames.AddRange(new string[] { \"OculusHMD\", \"OculusInput\" });","			PublicDependencyModuleNames.AddRange(new string[] { \"OculusXRHMD\", \"OculusXRInput\" });")
 
+#add DeveloperToolSettings to editor module build file
+insertline(cwd+"/Plugins\Cognitive3D\Source\Cognitive3DEditor\Cognitive3DEditor.Build.cs","                \"GLTFExporter\",","                \"DeveloperToolSettings\",",)
 
 # save to zip archive
 output_filename = cwd+"/C3D_Plugin"+version+"_ue"+engineversion+"_"+enginesubversion
