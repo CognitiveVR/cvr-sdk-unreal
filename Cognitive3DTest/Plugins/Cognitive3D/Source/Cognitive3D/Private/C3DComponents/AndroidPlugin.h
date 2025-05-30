@@ -39,7 +39,8 @@ private:
 	FString PreviousSessionFilePath;
 	FString WriteDataFilePath;
 
-	void OnLevelLoad(UWorld* world);
+	UFUNCTION()
+	void OnLevelLoad();
 
 	void LogFileHasContent();
 	FString ExtractTimestampFromLine(const FString& Line);
