@@ -39,6 +39,10 @@
 #if defined INCLUDE_HPGLIA_PLUGIN
 #include "HPGliaClient.h"
 #endif
+#if defined INCLUDE_OCULUS_PLUGIN
+#include "Runtime/EyeTracker/Public/IEyeTracker.h"
+#include "Runtime/EyeTracker/Public/IEyeTrackerModule.h"
+#endif
 #if defined OPENXR_EYETRACKING
 #include "Runtime/EyeTracker/Public/IEyeTracker.h"
 #include "Runtime/EyeTracker/Public/IEyeTrackerModule.h"

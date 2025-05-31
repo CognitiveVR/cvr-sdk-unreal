@@ -173,10 +173,6 @@ bool BoundaryRecorder::SerializeToJsonString(FString& OutJsonString)
 	{
 		UE_LOG(LogTemp, Error, TEXT("FJsonSerializer::Serialize failed"));
 	}
-	else
-	{
-		UE_LOG(LogTemp, Log, TEXT("Serialized JSON string: %s"), *OutJsonString);
-	}
 
 	return bSuccess;
 }
@@ -188,9 +184,6 @@ bool BoundaryRecorder::DeserializeFromJsonString(const FString& InJsonString)
 
 void BoundaryRecorder::AddGuardianBoundaryPoints(TArray<FVector>& GuardianPoints)
 {
-	UE_LOG(LogTemp, Log, TEXT("Adding Guardian Boundary Points: %d"), GuardianPoints.Num());
-	//cog->TryGetHMDGuardianPoints(GuardianPoints);
-
 	FShapeEntry ShapeEntry;
 	ShapeEntry.Time = FUtil::GetTimestamp();
 
@@ -267,7 +260,6 @@ void BoundaryRecorder::BoundaryCheckInterval()
 
 void BoundaryRecorder::SendData(bool bCacheData)
 {
-	UE_LOG(LogTemp, Log, TEXT("Sending Data to Server"));
 	if (!SerializeToJsonString(JsonDataString))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to serialize JSON"));
@@ -276,15 +268,13 @@ void BoundaryRecorder::SendData(bool bCacheData)
 
 	if (JsonDataString.Len() > 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("calling boundary network call"));
-		UE_LOG(LogTemp, Warning, TEXT("json: %s"), *JsonDataString);
 		cog->network->NetworkCall("boundary", JsonDataString, bCacheData);
 	}
 }
 
 void BoundaryRecorder::PerformInitialCapture()
 {
-	UE_LOG(LogTemp, Log, TEXT("Performing Initial Capture"));
+	//UE_LOG(LogTemp, Log, TEXT("Performing Initial Capture"));
 	if (!cog)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Cached Cognitive reference is null."));
@@ -301,7 +291,6 @@ void BoundaryRecorder::PerformInitialCapture()
 	APlayerController* PC = UGameplayStatics::GetPlayerController(world, 0);
 	if (PC)
 	{
-		UE_LOG(LogTemp, Log, TEXT("PlayerController found"));
 		APawn* Pawn = PC->GetPawn();
 		if (Pawn)
 		{
@@ -324,10 +313,8 @@ void BoundaryRecorder::PerformInitialCapture()
 	TArray<FVector> GuardianPoints;
 	if (cog->TryGetHMDGuardianPoints(GuardianPoints, true))
 	{
-		UE_LOG(LogTemp, Log, TEXT("Guardian Points Captured: %d"), GuardianPoints.Num());
 		AddGuardianBoundaryPoints(GuardianPoints);
 		LastCapturedGuardianPoints = GuardianPoints;
-		UE_LOG(LogTemp, Log, TEXT("Captured Guardian Points: %d"), GuardianPoints.Num());
 	}
 	else
 	{

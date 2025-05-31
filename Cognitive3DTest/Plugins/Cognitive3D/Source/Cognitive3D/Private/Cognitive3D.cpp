@@ -191,6 +191,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 	dynamicObjectManager->SendData(true);
 	//
 	boundaryRecorder->SendData(true);
+	OnCognitiveLevelChange.Broadcast();
 }
 
 void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld* world)
@@ -300,6 +301,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 		properties->SetStringField("Sublevel Name", FString(levelName));
 		customEventRecorder->Send("c3d.Level Streaming Unload", properties);
 	}
+	OnCognitiveLevelChange.Broadcast();
 }
 
 void FAnalyticsProviderCognitive3D::HandlePostLevelLoad(UWorld* world)
@@ -367,6 +369,7 @@ void FAnalyticsProviderCognitive3D::HandlePostLevelLoad(UWorld* world)
 	}
 	SceneStartTime = FUtil::GetTimestamp();
 	boundaryRecorder->SendData(true);
+	OnCognitiveLevelChange.Broadcast();
 }
 
 void FAnalyticsCognitive3D::ShutdownModule()
