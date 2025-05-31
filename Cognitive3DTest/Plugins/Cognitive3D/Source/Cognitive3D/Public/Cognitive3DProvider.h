@@ -73,7 +73,8 @@
 			FOnRequestSend OnRequestSend;
 		UPROPERTY(BlueprintAssignable, Category = "Cognitive3D Analytics")
 			FOnCognitiveInterval OnCognitiveInterval;
-
+		UPROPERTY(BlueprintAssignable, Category = "Cognitive3D Analytics")
+			FOnCognitiveLevelChange OnCognitiveLevelChange;
 		UPROPERTY(BlueprintAssignable, Category = "Cognitive3D Analytics")
 		FOnCognitiveParticipantIdSet OnParticipantIdSet;
 

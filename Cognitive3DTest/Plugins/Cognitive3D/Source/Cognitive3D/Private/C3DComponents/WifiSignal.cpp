@@ -75,7 +75,7 @@ void UWifiSignal::EndInterval()
 	jmethodID GetInstanceMethod = Env->GetStaticMethodID(PluginClass, "getInstance", "(Landroid/app/Activity;)Lcom/c3d/androidjavaplugin/Plugin;");
 	jobject PluginInstance = Env->CallStaticObjectMethod(PluginClass, GetInstanceMethod, GameActivity);
 	currentSignalStrength = Env->CallIntMethod(PluginInstance, MethodID);
-	UE_LOG(LogTemp, Warning, TEXT("Signal Strength: %d"), currentSignalStrength);
+	//UE_LOG(LogTemp, Warning, TEXT("Signal Strength: %d"), currentSignalStrength);
 	if (previousSignalStrength != currentSignalStrength)
 	{
 		previousSignalStrength = currentSignalStrength;

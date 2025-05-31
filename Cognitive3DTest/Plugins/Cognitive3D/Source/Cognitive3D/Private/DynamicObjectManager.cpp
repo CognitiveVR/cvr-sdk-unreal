@@ -352,7 +352,6 @@ void FDynamicObjectManager::SendData(bool copyDataToCache)
 	FString OutputString;
 	auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
-	UE_LOG(LogTemp, Warning, TEXT("calling dynamics network call"));
 	cogProvider->network->NetworkCall("dynamics", OutputString, copyDataToCache);
 
 	snapshots.Empty();

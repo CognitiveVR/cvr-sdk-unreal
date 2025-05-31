@@ -32,10 +32,7 @@ void UAndroidPlugin::BeginPlay()
     {
         cognitive->OnSessionBegin.AddDynamic(this, &UAndroidPlugin::OnSessionBegin);
         cognitive->OnPreSessionEnd.AddDynamic(this, &UAndroidPlugin::OnSessionEnd);
-        if (cognitive->HasStartedSession())
-        {
-            OnSessionBegin();
-        }
+        cognitive->OnCognitiveLevelChange.AddDynamic(this, &UAndroidPlugin::OnLevelLoad);
     }
 }
 
@@ -205,16 +202,18 @@ void UAndroidPlugin::OnSessionBegin()
     //call LogFileHasContent
     LogFileHasContent();
 
-    //bind function to level load process
-    FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UAndroidPlugin::OnLevelLoad);
-
 }
 
 void UAndroidPlugin::OnSessionEnd()
 {
+    auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+    if (!cognitive.IsValid()) {
+        return;
+    }
+    cognitive->OnCognitiveLevelChange.RemoveAll(this);
 }
 
-void UAndroidPlugin::OnLevelLoad(UWorld* world)
+void UAndroidPlugin::OnLevelLoad()
 {
     auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
     if (!cognitive.IsValid()) {
@@ -223,7 +222,7 @@ void UAndroidPlugin::OnLevelLoad(UWorld* world)
 
     UE_LOG(LogTemp, Warning, TEXT("UAndroidPlugin: Level loaded"));
 
-    auto level = world->GetCurrentLevel();
+    auto level = GWorld->GetCurrentLevel();
     if (level == nullptr)
     {
         return;
@@ -234,13 +233,6 @@ void UAndroidPlugin::OnLevelLoad(UWorld* world)
 
 
     TSharedPtr<FSceneData> data = cognitive->GetSceneData(levelName);
-
-    //if the new scene is the same as the current scene, DONT return
-    if (cognitive->LastSceneData.IsValid() && data.IsValid() && cognitive->LastSceneData->Id == data->Id)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("UAndroidPlugin: Scene is the same as the current scene"));
-        //return;
-    }
 
     if (cognitive->LastSceneData.IsValid())
     {
@@ -537,6 +529,7 @@ void UAndroidPlugin::LogFileHasContent()
 
                     UE_LOG(LogTemp, Log, TEXT("sendEndSessionEvents called for previous session file."));
                 }
+                return;
             }
         }
 

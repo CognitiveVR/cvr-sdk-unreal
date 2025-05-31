@@ -210,7 +210,6 @@ void FSensors::SendData(bool copyDataToCache)
 	const TCHAR* charcomplete = *complete;
 	OutputString = OutputString.Replace(TEXT("\"SENSORDATAHERE\""), charcomplete);
 
-	UE_LOG(LogTemp, Warning, TEXT("calling sensors network call"));
 	cog->network->NetworkCall("sensors", OutputString, copyDataToCache);
 
 	for (auto& entry : SensorDataPoints)
