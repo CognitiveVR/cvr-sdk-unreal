@@ -22,4 +22,5 @@ public:
 	TSharedPtr< FUICommandInfo > OpenDynamicObjectWindow;
 	TSharedPtr< FUICommandInfo > OpenOnlineDocumentation;
 	TSharedPtr< FUICommandInfo > OpenCognitiveDashboard;
+	TSharedPtr< FUICommandInfo > OpenFullC3DSetup;
 };

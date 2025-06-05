@@ -14,6 +14,7 @@
 #include "Editor/EditorStyle/Public/EditorStyleSet.h"
 #include "SceneSetupWidget.h"
 #include "ProjectSetupWidget.h"
+#include "SProjectManagerWidget.h"
 #include "DynamicObjectManagerWidget.h"
 #include "WorkspaceMenuStructure.h"
 #include "CognitiveSettingsCustomization.h"
@@ -33,6 +34,9 @@ public:
 	static void CloseProjectSetupWindow();
 	static void CloseSceneSetupWindow();
 	static void CloseDynamicObjectWindow();
+
+	static void SpawnFullC3DSetup();
+	static void CloseFullC3DSetup();
 
 	static inline FCognitive3DEditorModule& Get()
 	{

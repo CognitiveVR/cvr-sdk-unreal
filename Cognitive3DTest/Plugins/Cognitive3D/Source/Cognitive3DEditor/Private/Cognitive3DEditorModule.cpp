@@ -50,6 +50,15 @@ TSharedRef<SDockTab> CreateCognitiveDynamicObjectTabArgs(const FSpawnTabArgs& Sp
 		];
 }
 
+TSharedRef<SDockTab> CreateCognitiveFullSetupTabArgs(const FSpawnTabArgs& SpawnTabArgs)
+{
+	return SNew(SDockTab)
+		.TabRole(ETabRole::NomadTab)
+		[
+			SNew(SProjectManagerWidget)
+		];
+}
+
 void FCognitive3DEditorModule::StartupModule()
 {
 #if WITH_EDITOR
@@ -148,6 +157,7 @@ void FCognitive3DEditorModule::StartupModule()
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveSceneSetup"), FOnSpawnTab::CreateStatic(&CreateCognitiveSceneSetupTabArgs)).SetMenuType(ETabSpawnerMenuType::Hidden);
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveProjectSetup"), FOnSpawnTab::CreateStatic(&CreateCognitiveProjectSetupTabArgs)).SetMenuType(ETabSpawnerMenuType::Hidden);
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveDynamicObjectManager"), FOnSpawnTab::CreateStatic(&CreateCognitiveDynamicObjectTabArgs)).SetMenuType(ETabSpawnerMenuType::Hidden);
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("CognitiveFullProjectSetup"), FOnSpawnTab::CreateStatic(&CreateCognitiveFullSetupTabArgs)).SetMenuType(ETabSpawnerMenuType::Hidden);
 
 	FCognitive3DCommands::Register();
 	PluginCommands = MakeShareable(new FUICommandList);
@@ -177,7 +187,12 @@ void FCognitive3DEditorModule::StartupModule()
 		FCognitive3DCommands::Get().OpenCognitiveDashboard,
 		FExecuteAction::CreateStatic(&FCognitive3DEditorModule::OpenCognitiveDashboard)
 	);
-
+	
+	PluginCommands->MapAction(
+		FCognitive3DCommands::Get().OpenFullC3DSetup,
+		FExecuteAction::CreateStatic(&FCognitive3DEditorModule::SpawnFullC3DSetup)
+	);
+	
 
 	//append the menu after help
 	TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
@@ -216,6 +231,7 @@ void FCognitive3DEditorModule::StartupModule()
 		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenDynamicObjectWindow);
 		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenOnlineDocumentation);
 		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenCognitiveDashboard);
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenFullC3DSetup);
 	}
 
 void FCognitive3DEditorModule::ShutdownModule()
@@ -314,5 +330,32 @@ void FCognitive3DEditorModule::CloseDynamicObjectWindow()
 		projectTab->RequestCloseTab();
 	}
 }
+
+void FCognitive3DEditorModule::SpawnFullC3DSetup()
+{
+	FTabId projectTabId = FTabId(FName("CognitiveFullProjectSetup"));
+	auto projectTab = FGlobalTabmanager::Get()->FindExistingLiveTab(projectTabId);
+	if (projectTab.IsValid())
+	{
+		projectTab->RequestCloseTab();
+	}
+	else
+	{
+		TSharedPtr<SDockTab> MajorTab = FGlobalTabmanager::Get()->TryInvokeTab(projectTabId);
+		MajorTab->SetContent(SNew(SProjectManagerWidget));
+	}
+	//FGlobalTabmanager::Get()->TryInvokeTab(FTabId(FName("CognitiveFullProjectSetup")));
+}
+
+void FCognitive3DEditorModule::CloseFullC3DSetup()
+{
+	FTabId projectTabId = FTabId(FName("CognitiveFullProjectSetup"));
+	auto projectTab = FGlobalTabmanager::Get()->FindExistingLiveTab(projectTabId);
+	if (projectTab.IsValid())
+	{
+		projectTab->RequestCloseTab();
+	}
+}
+
 
 #undef LOCTEXT_NAMESPACE

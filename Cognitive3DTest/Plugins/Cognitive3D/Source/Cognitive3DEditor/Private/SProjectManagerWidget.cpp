@@ -1,0 +1,1612 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "SProjectManagerWidget.h"
+#include "SlateOptMacros.h"
+#include "CognitiveEditorTools.h"
+#include "IPluginManager.h"
+#include "Analytics.h"
+#if ENGINE_MAJOR_VERSION == 5
+#include "SDockTab.h"
+#elif ENGINE_MAJOR_VERSION == 4
+#include "SDockableTab.h"
+#endif
+#include "SExpandableArea.h"
+#include "STextBlock.h"
+#include "SScrollBox.h"
+#include "SBox.h"
+#include "Framework/Notifications/NotificationManager.h"
+#include "Widgets/Notifications/SNotificationList.h"
+
+#define LOCTEXT_NAMESPACE "BaseToolEditor"
+
+BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
+void SProjectManagerWidget::Construct(const FArguments& InArgs)
+{
+	FCognitiveEditorTools::CheckIniConfigured();
+	DisplayAPIKey = FCognitiveEditorTools::GetInstance()->GetApplicationKey().ToString();
+	DisplayDeveloperKey = FCognitiveEditorTools::GetInstance()->GetDeveloperKey().ToString();
+	DisplayExportDirectory = FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory();
+
+	// Initialize each SDK’s state by checking build.cs
+	SDKCheckboxStates.Add(TEXT("MetaXR"),
+		IsSDKEnabledInBuildCs(TEXT("MetaXRPlugin")));
+	SDKCheckboxStates.Add(TEXT("MetaXRPlatform"),
+		IsSDKEnabledInBuildCs(TEXT("MetaXRPlatform")));
+	SDKCheckboxStates.Add(TEXT("PicoXR"),
+		IsSDKEnabledInBuildCs(TEXT("PicoXR")));       
+	SDKCheckboxStates.Add(TEXT("WaveVR"),
+		IsSDKEnabledInBuildCs(TEXT("WaveVR")));       
+	
+    ChildSlot  
+    [  
+		//header
+		SNew(SOverlay)
+		+ SOverlay::Slot()
+		.VAlign(VAlign_Top)
+		.HAlign(HAlign_Left)
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			[
+				SNew(SBox)
+				//.WidthOverride(128)
+				.HeightOverride(32)
+				[
+					SNew(SRichTextBlock)
+					.Justification(ETextJustify::Left)
+					.DecoratorStyleSet(&FEditorStyle::Get())
+                    .Text(FText::FromString("Cognitive3D Full Project Setup"))
+				]
+			]
+		]
+			//body
+		+ SOverlay::Slot()
+		[
+			SNew(SVerticalBox)
+
+			+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(0,0,0,5)
+				[
+					SNew(SExpandableArea)
+						.InitiallyCollapsed(true)
+						.HeaderContent()
+						[
+							SNew(STextBlock)
+								.Text(FText::FromString(TEXT("Authentication")))
+						]
+						.BodyContent()
+						[
+							SNew(SVerticalBox)
+
+								+ SVerticalBox::Slot()
+								.AutoHeight()
+								.Padding(0, 0, 0, 5)
+								[
+									SNew(SRichTextBlock)
+										.Visibility(EVisibility::Visible)
+										.AutoWrapText(true)
+										.Justification(ETextJustify::Center)
+										.DecoratorStyleSet(&FEditorStyle::Get())
+										.Text(FText::FromString("Please add your <RichTextBlock.BoldHighlight>Cognitive3D Project API Keys</> below to continue\nThese are available on the Project Dashboard"))
+								]
+								//dev key
+								+ SVerticalBox::Slot()
+								.MaxHeight(32)
+								.AutoHeight()
+								.Padding(0, 0, 0, 5)
+								[
+									SNew(SHorizontalBox)
+										.Visibility(EVisibility::Visible)
+										+ SHorizontalBox::Slot()
+										[
+											SNew(SBox)
+												.Visibility(EVisibility::Visible)
+												.WidthOverride(128)
+												.HeightOverride(32)
+												[
+													SNew(STextBlock)
+														.Visibility(EVisibility::Visible)
+														.Text(FText::FromString("Developer Key\nThis key is secret and should be kept safe, make sure not to commit to version control"))
+												]
+										]
+										+ SHorizontalBox::Slot()
+										[
+											SNew(SBox)
+												.Visibility(EVisibility::Visible)
+												.WidthOverride(128)
+												.HeightOverride(32)
+												[
+													SNew(SEditableTextBox)
+														.Visibility(EVisibility::Visible)
+														.Text(this, &SProjectManagerWidget::GetDisplayDeveloperKey)
+														.OnTextChanged(this, &SProjectManagerWidget::OnDeveloperKeyChanged)
+														//.OnTextCommitted()
+												]
+										]
+								]
+								+ SVerticalBox::Slot()
+								.AutoHeight()
+								.Padding(0, 0, 0, 5)
+								[
+									SNew(SSeparator)
+										.Visibility(EVisibility::Visible)
+								]
+
+								//app key
+								+ SVerticalBox::Slot()
+								.AutoHeight()
+								.Padding(0, 0, 0, 5)
+								[
+									SAssignNew(OrgNameTextBlock, STextBlock)
+										.Visibility(EVisibility::Visible)
+										.Justification(ETextJustify::Center)
+										.Text(FText::FromString("Unknown"))
+								]
+
+								+ SVerticalBox::Slot()
+								.AutoHeight()
+								.Padding(0, 0, 0, 5)
+								[
+									SAssignNew(OrgTrialTextBlock, STextBlock)
+										.Visibility(EVisibility::Visible)
+										.Justification(ETextJustify::Center)
+										.Text(FText::FromString("Unknown"))
+								]
+
+								+ SVerticalBox::Slot()
+								.AutoHeight()
+								.Padding(0, 0, 0, 5)
+								[
+									SAssignNew(OrgExpiryTextBlock, STextBlock)
+										.Visibility(EVisibility::Visible)
+										.Justification(ETextJustify::Center)
+										.Text(FText::FromString("Unknown"))
+								]
+
+								+ SVerticalBox::Slot()
+								.MaxHeight(32)
+								.AutoHeight()
+								.Padding(0, 0, 0, 5)
+								[
+									SNew(SHorizontalBox)
+										.Visibility(EVisibility::Visible)
+										+ SHorizontalBox::Slot()
+										[
+											SNew(SBox)
+												.Visibility(EVisibility::Visible)
+												.WidthOverride(128)
+												.HeightOverride(32)
+												[
+													SNew(STextBlock)
+														.Visibility(EVisibility::Visible)
+														.Text(FText::FromString("Application Key\nThis key identifies and authorizes the session data being uploaded to your project"))
+												]
+										]
+
+										+ SHorizontalBox::Slot()
+										[
+											SNew(SBox)
+												.Visibility(EVisibility::Visible)
+												.WidthOverride(128)
+												.HeightOverride(32)
+												[
+													SNew(SEditableTextBox)
+														.Visibility(EVisibility::Visible)
+														.Text(this, &SProjectManagerWidget::GetDisplayAPIKey)
+														.OnTextChanged(this, &SProjectManagerWidget::OnAPIKeyChanged)
+												]
+										]
+								]
+
+								//validate keys button
+								+ SVerticalBox::Slot()
+								.AutoHeight()
+								.Padding(0, 0, 0, 5)
+								[
+									SNew(SBox)
+										.HAlign(HAlign_Center)
+										.VAlign(VAlign_Center)
+										//set width/height override to match the image size
+										//.HeightOverride(150)
+										.WidthOverride(256)
+										.HeightOverride(32)
+										.Visibility(EVisibility::Visible)
+										[
+											SNew(SButton)
+												//.ContentPadding(0)
+												.Text(FText::FromString("Validate Developer Key and Fetch Application Key"))
+												.OnClicked(this, &SProjectManagerWidget::ValidateKeys)
+										]
+								]
+								
+
+						]
+				]
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					.Padding(0, 0, 0, 5)
+					[
+						SNew(SSeparator)
+							.Visibility(EVisibility::Visible)
+					]
+
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.Padding(0, 0, 0, 5)
+						[
+							SNew(SExpandableArea)
+								.InitiallyCollapsed(true)
+								.HeaderContent()
+								[
+									SNew(STextBlock)
+										.Text(FText::FromString(TEXT("Player Setup")))
+								]
+								.BodyContent()
+								[
+									SNew(SVerticalBox)
+
+										+ SVerticalBox::Slot()
+										.AutoHeight()
+										.Padding(0, 0, 0, 5)
+										[
+											SNew(SHorizontalBox)
+												.Visibility(EVisibility::Visible)
+												+ SHorizontalBox::Slot()
+												[
+													SNew(SRichTextBlock)
+														.Visibility(EVisibility::Visible)
+														.AutoWrapText(true)
+														.Justification(ETextJustify::Center)
+														.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
+														.Text(FText::FromString("The Cognitive3DActor Blueprint automatically finds your player's controllers in run-time and assigns dynamic objects to them to be tracked for valuable insights on our dashboard.\n\n You do not have to set those up manually, or export and upload a mesh for them to be tracked like other dynamic objects."))
+												]
+										]
+										+SVerticalBox::Slot()
+										.AutoHeight()
+										.Padding(0, 0, 0, 5)
+										[
+											SNew(SSeparator)
+												.Visibility(EVisibility::Visible)
+										]
+
+										+ SVerticalBox::Slot()
+										.AutoHeight()
+										.Padding(0, 0, 0, 5)
+										.HAlign(EHorizontalAlignment::HAlign_Center)
+										[
+											SNew(SRichTextBlock)
+												.Visibility(EVisibility::Visible)
+												.AutoWrapText(true)
+												.Justification(ETextJustify::Center)
+												.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
+												.Text(this, &SProjectManagerWidget::GetInputClassText)
+										]
+
+										+ SVerticalBox::Slot()
+										.AutoHeight()
+										.Padding(0, 0, 0, 5)
+										.HAlign(EHorizontalAlignment::HAlign_Center)
+										[
+											SNew(SBox)
+												.Visibility(this, &SProjectManagerWidget::GetDefaultInputClassEnhanced)
+												[
+													SNew(SRichTextBlock)
+														.Visibility(this, &SProjectManagerWidget::GetAppendedInputsFoundVisibility)
+														.AutoWrapText(true)
+														.Justification(ETextJustify::Center)
+														.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
+														.Text(FText::FromString("The Cognitive3D action maps have been added to DefaultInputs.ini"))
+												]
+										]
+
+										+ SVerticalBox::Slot()
+										.AutoHeight()
+										.Padding(0, 0, 0, 5)
+										.HAlign(EHorizontalAlignment::HAlign_Center)
+										[
+											SNew(SBox)
+												.Visibility(this, &SProjectManagerWidget::GetDefaultInputClassEnhanced)
+												[
+													SNew(SHorizontalBox)
+														+ SHorizontalBox::Slot()
+														.AutoWidth()
+														[
+															SNew(SBox)
+																.Visibility(EVisibility::Visible)
+																.WidthOverride(256)
+																.HeightOverride(32)
+																[
+																	SNew(SButton)
+																		.Text(FText::FromString("Append Input Data to Input.ini"))
+																		.OnClicked(this, &SProjectManagerWidget::AppendInputs)
+																]
+														]
+												]
+										]
+
+								]
+						]
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							.Padding(0, 0, 0, 5)
+							[
+								SNew(SSeparator)
+									.Visibility(EVisibility::Visible)
+							]
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							.Padding(0, 0, 0, 5)
+							[
+								SNew(SExpandableArea)
+									.InitiallyCollapsed(true)
+									.HeaderContent()
+									[
+										SNew(STextBlock)
+											.Text(FText::FromString(TEXT("Scene Setup")))
+									]
+									.BodyContent()
+									[
+										SNew(SVerticalBox)
+
+											//export directory
+											+ SVerticalBox::Slot()
+											.AutoHeight()
+											.Padding(0, 0, 0, 5)
+											[
+												SNew(STextBlock)
+													.Visibility(EVisibility::Visible)
+													.Justification(ETextJustify::Center)
+													.AutoWrapText(true)
+													.Text(FText::FromString("When uploading your level to the dashboard, we use Unreal's GLTF exporter to automatically prepare the scene.\nThis includes exporting images as .pngs\n\nWe also need a temporary Export Directory to save Unreal files to while we process them."))
+											]
+
+
+
+											+SVerticalBox::Slot()
+											.VAlign(VAlign_Center)
+											.AutoHeight()
+											.Padding(0, 0, 0, 5)
+											[
+												SNew(STextBlock)
+													.Visibility(EVisibility::Visible)
+													.Justification(ETextJustify::Center)
+													.Text(FText::FromString("You will need to create a temporary directory to store the exported files."))
+											]
+
+											+ SVerticalBox::Slot()
+											.AutoHeight()
+											.Padding(0, 0, 0, 5)
+											[
+												SNew(SSeparator)
+													.Visibility(EVisibility::Visible)
+											]
+
+											//path to export directory
+											+ SVerticalBox::Slot()
+											.MaxHeight(32)
+											.AutoHeight()
+											.Padding(0, 0, 0, 5)
+											[
+												SNew(SHorizontalBox)
+													.Visibility(EVisibility::Visible)
+													+ SHorizontalBox::Slot()
+													.MaxWidth(200)
+													[
+														SNew(SBox)
+															.Visibility(EVisibility::Visible)
+															.HeightOverride(32)
+															[
+																SNew(STextBlock)
+																	.Visibility(EVisibility::Visible)
+																	.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
+																	.Text(FText::FromString("Path to Export Directory"))
+															]
+													]
+													+ SHorizontalBox::Slot()
+													.FillWidth(3)
+													.Padding(1)
+													[
+														SNew(SBox)
+															.Visibility(EVisibility::Visible)
+															.HeightOverride(32)
+															.MaxDesiredHeight(32)
+															[
+																SNew(SEditableTextBox)
+																	.Visibility(EVisibility::Visible)
+																	.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBaseExportDirectoryDisplay)
+																	.OnTextChanged(this, &SProjectManagerWidget::OnExportPathChanged)
+																	//SNew(STextBlock)
+																	//
+															]
+													]
+													+ SHorizontalBox::Slot()
+													.MaxWidth(17)
+													[
+														SNew(SHorizontalBox)
+															+ SHorizontalBox::Slot()
+															.AutoWidth()
+															.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+															.VAlign(VAlign_Center)
+															[
+																SNew(SBox)
+																	.Visibility(EVisibility::Visible)
+																	.HeightOverride(17)
+																	.WidthOverride(17)
+																	[
+																		SNew(SButton)
+																			.Visibility(EVisibility::Visible)
+																			//PickerWidget = SAssignNew(BrowseButton, SButton)
+																			.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
+																			.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
+																			.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectBaseExportDirectory)
+																			.ContentPadding(2.0f)
+																			.ForegroundColor(FSlateColor::UseForeground())
+																			.IsFocusable(false)
+																			[
+																				SNew(SImage)
+																					.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
+																					.ColorAndOpacity(FSlateColor::UseForeground())
+																			]
+																	]
+															]
+													]
+													+ SHorizontalBox::Slot()
+													.MaxWidth(17)
+													[
+														SNew(SHorizontalBox)
+															+ SHorizontalBox::Slot()
+															.AutoWidth()
+															.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+															.VAlign(VAlign_Center)
+															[
+																SNew(SBox)
+																	.Visibility(EVisibility::Visible)
+																	.HeightOverride(17)
+																	.WidthOverride(17)
+																	[
+																		SNew(SImage)
+																			.Visibility(EVisibility::Visible)
+																			.Image(this, &SProjectManagerWidget::GetExportPathStateIcon)
+																			.ToolTipText(this, &SProjectManagerWidget::GetExportPathTooltipText)
+																			.ColorAndOpacity(FSlateColor::UseForeground())
+																	]
+															]
+													]
+											]
+
+											+ SVerticalBox::Slot()
+											.AutoHeight()
+											.Padding(0,0,0,5)
+											[
+												SNew(SHorizontalBox)
+													.Visibility(EVisibility::Visible)
+													+ SHorizontalBox::Slot()
+													[
+														SNew(SRichTextBlock)
+															.Visibility(EVisibility::Visible)
+															.AutoWrapText(true)
+															.Justification(ETextJustify::Center)
+															.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
+															.Text(FText::FromString("This is where we will do something with scene exports and uploads."))
+													]
+											]
+											+ SVerticalBox::Slot()
+											.AutoHeight()
+											.Padding(0, 0, 0, 10)
+											[
+												SNew(SExpandableArea)
+													.InitiallyCollapsed(false)
+													.HeaderContent()
+													[
+														SNew(STextBlock)
+															.Text(FText::FromString(TEXT("Scenes to Export")))
+													]
+													.BodyContent()
+													[
+														SAssignNew(SceneChecklistContainer, SVerticalBox)
+													]
+											]
+											+ SVerticalBox::Slot()
+											.AutoHeight()
+											.HAlign(HAlign_Center)
+											.Padding(0, 10)
+											[
+												SNew(SButton)
+													.Text(FText::FromString("Export Selected Scenes"))
+													.OnClicked_Lambda([this]() -> FReply {
+													ExportSelectedMaps();
+													return FReply::Handled();
+														})
+											]
+
+											+ SVerticalBox::Slot()
+											.AutoHeight()
+											.HAlign(HAlign_Center)
+											.Padding(0, 10)
+											[
+												SNew(SButton)
+													.Text(FText::FromString("Upload Exported Scenes"))
+													.OnClicked_Lambda([this]() -> FReply
+														{
+															for (const TPair<FString, bool>& Pair : LevelSelectionMap)
+															{
+																if (Pair.Value)
+																{
+																	FString LevelName = FPackageName::GetShortName(Pair.Key);
+																	LevelName.Split(TEXT("."), nullptr, &LevelName); // Remove package extension
+																	FCognitiveEditorTools::GetInstance()->UploadScene(LevelName);
+																}
+															}
+															return FReply::Handled();
+														})
+											]
+									]
+							]
+
+							+ SVerticalBox::Slot()
+								.AutoHeight()
+								.Padding(0, 0, 0, 5)
+								[
+									SNew(SSeparator)
+										.Visibility(EVisibility::Visible)
+								]
+
+							// ===== New Third-Party SDKs Section =====
+							+ SVerticalBox::Slot()
+								.AutoHeight()
+								.Padding(0, 0, 0, 5)
+								[
+									SNew(SExpandableArea)
+										.InitiallyCollapsed(true)
+										.HeaderContent()
+										[
+											SNew(STextBlock)
+												.Text(FText::FromString(TEXT("Third-Party SDKs")))
+												.Font(FEditorStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
+										]
+										.BodyContent()
+										[
+											SNew(SVerticalBox)
+
+												// MetaXR
+												+ SVerticalBox::Slot()
+												.AutoHeight()
+												.Padding(5, 2)
+												[
+														SNew(SCheckBox)
+														.IsChecked_Lambda([this]() {
+														return SDKCheckboxStates.FindRef(TEXT("MetaXR"))
+															? ECheckBoxState::Checked
+															: ECheckBoxState::Unchecked;
+															})
+															.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
+															const bool bEnabled = (NewState == ECheckBoxState::Checked);
+															SDKCheckboxStates.Add(TEXT("MetaXR"), bEnabled);
+															this->ApplySDKToggle(TEXT("MetaXR"), bEnabled);
+																})
+														[
+															SNew(STextBlock)
+																.Text(FText::FromString(TEXT("MetaXR")))
+														]
+														
+												]
+
+												// MetaXRPlatform (only enabled if MetaXR is checked)
+												+ SVerticalBox::Slot()
+												.AutoHeight()
+												.Padding(20, 2)
+												[
+													SNew(SCheckBox)
+														.IsEnabled_Lambda([this]() {
+														return SDKCheckboxStates.FindRef(TEXT("MetaXR"));
+															})
+														.IsChecked_Lambda([this]() {
+														return SDKCheckboxStates.FindRef(TEXT("MetaXRPlatform"))
+															? ECheckBoxState::Checked
+															: ECheckBoxState::Unchecked;
+															})
+														.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
+														const bool bEnabled = (NewState == ECheckBoxState::Checked);
+														SDKCheckboxStates.Add(TEXT("MetaXRPlatform"), bEnabled);
+														this->ApplySDKToggle(TEXT("MetaXRPlatform"), bEnabled);
+															})
+														[
+															SNew(STextBlock)
+																.Text(FText::FromString(TEXT("MetaXRPlatform")))
+														]
+												]
+
+												// PicoXR
+												+ SVerticalBox::Slot()
+												.AutoHeight()
+												.Padding(5, 2)
+												[
+													SNew(SCheckBox)
+														.IsChecked_Lambda([this]() {
+														return SDKCheckboxStates.FindRef(TEXT("PicoXR"))
+															? ECheckBoxState::Checked
+															: ECheckBoxState::Unchecked;
+															})
+														.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
+														const bool bEnabled = (NewState == ECheckBoxState::Checked);
+														SDKCheckboxStates.Add(TEXT("PicoXR"), bEnabled);
+														this->ApplySDKToggle(TEXT("PicoXR"), bEnabled);
+															})
+														[
+															SNew(STextBlock)
+																.Text(FText::FromString(TEXT("PicoXR")))
+														]
+												]
+
+												// WaveVR
+												+ SVerticalBox::Slot()
+												.AutoHeight()
+												.Padding(5, 2)
+												[
+													SNew(SCheckBox)
+														.IsChecked_Lambda([this]() {
+														return SDKCheckboxStates.FindRef(TEXT("WaveVR"))
+															? ECheckBoxState::Checked
+															: ECheckBoxState::Unchecked;
+															})
+														.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
+														const bool bEnabled = (NewState == ECheckBoxState::Checked);
+														SDKCheckboxStates.Add(TEXT("WaveVR"), bEnabled);
+														this->ApplySDKToggle(TEXT("WaveVR"), bEnabled);
+															})
+														[
+															SNew(STextBlock)
+																.Text(FText::FromString(TEXT("WaveVR")))
+														]
+												]
+										]
+								]
+		] // end of the overlay slot
+		//finish setup button
+		+ SOverlay::Slot()
+			.VAlign(VAlign_Bottom)
+			.HAlign(HAlign_Center)
+			.Padding(0, 10, 0, 10)
+			[
+				
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+				.AutoHeight()
+				.HAlign(HAlign_Center)
+				.Padding(0, 10)
+				[
+					SNew(SBox)
+						.WidthOverride(200)
+						.HeightOverride(32)
+						[
+							SNew(SButton)
+								.Text(FText::FromString(TEXT("Finish Setup")))
+								.OnClicked_Lambda([this]() -> FReply {
+								this->RestartEditor();
+								return FReply::Handled();
+									})
+						]
+				]
+			]
+    ];
+
+	CollectAllMaps();
+	RebuildSceneChecklist();
+}
+FReply SProjectManagerWidget::OpenFullC3DSetupWindow()
+{
+	FCognitive3DEditorModule::SpawnFullC3DSetup();
+	return FReply::Handled();
+}
+
+FReply SProjectManagerWidget::ValidateKeys()
+{
+	CheckForExpiredDeveloperKey(DisplayDeveloperKey);
+
+	FCognitiveEditorTools::GetInstance()->SaveDeveloperKeyToFile(DisplayDeveloperKey);
+	FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
+	FetchApplicationKey(DisplayDeveloperKey);
+	FetchOrganizationDetails(DisplayDeveloperKey);
+
+	return FReply::Handled();
+}
+
+void SProjectManagerWidget::CheckForExpiredDeveloperKey(FString developerKey)
+{
+	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+	GConfig->Flush(true, C3DSettingsPath);
+	auto Request = FHttpModule::Get().CreateRequest();
+	Request->OnProcessRequestComplete().BindRaw(this, &SProjectManagerWidget::OnDeveloperKeyResponseReceived);
+	FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString url = "https://" + gateway + "/v0/apiKeys/verify";
+	Request->SetURL(url);
+	Request->SetVerb("GET");
+	Request->SetHeader(TEXT("Authorization"), "APIKEY:DEVELOPER " + developerKey);
+	Request->ProcessRequest();
+}
+
+void SProjectManagerWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (Response.IsValid() == false)
+	{
+		GLog->Log("SProjectSetupWidget::OnDeveloperKeyResponseReceived invalid response");
+		return;
+	}
+
+	int32 responseCode = Response->GetResponseCode();
+	if (responseCode == 200)
+	{
+		GLog->Log("Developer Key Response Code is 200");
+		//CurrentPageEnum = EProjectSetupPage::OrganizationDetails;
+	}
+	else
+	{
+		SGenericDialogWidget::OpenDialog(FText::FromString("Your developer key has expired"), SNew(STextBlock).Text(FText::FromString("Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.")));
+		GLog->Log("Developer Key Response Code is " + FString::FromInt(responseCode) + ". Developer key may be invalid or expired");
+	}
+}
+
+void SProjectManagerWidget::FetchApplicationKey(FString developerKey)
+{
+	auto HttpRequest = FHttpModule::Get().CreateRequest();
+
+	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+	GConfig->LoadFile(C3DSettingsPath);
+	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+
+	FString url = FString("https://" + Gateway + "/v0/applicationKey");
+	HttpRequest->SetURL(url);
+	HttpRequest->SetVerb("GET");
+	FString AuthValue = "APIKEY:DEVELOPER " + FCognitiveEditorTools::GetInstance()->DeveloperKey;
+	HttpRequest->SetHeader("Authorization", AuthValue);
+	HttpRequest->SetHeader("Content-Type", "application/json");
+	HttpRequest->OnProcessRequestComplete().BindRaw(this, &SProjectManagerWidget::GetApplicationKeyResponse);
+	HttpRequest->ProcessRequest();
+}
+
+void SProjectManagerWidget::GetApplicationKeyResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (Response.IsValid() == false)
+	{
+		GLog->Log("SProjectSetupWidget::GetApplicationKeyResponse invalid response");
+		return;
+	}
+	int32 responseCode = Response->GetResponseCode();
+	if (responseCode != 200)
+	{
+		GLog->Log("Application Key Response Code is " + FString::FromInt(responseCode));
+		return;
+	}
+
+	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("UpdateApplicationKeyBody", "Found Application Key on the Dashboard, we recommend using this key."), LOCTEXT("UpdateApplicationKeyTitle", "Found Application Key"), "Cognitive3dApplicationKey");
+	Info.ConfirmText = LOCTEXT("Yes", "Ok");
+	//Info.CancelText = LOCTEXT("No", "No");
+	Info.CheckBoxText = FText();
+	FSuppressableWarningDialog WarnAboutCoordinatesSystem(Info);
+	FSuppressableWarningDialog::EResult result = WarnAboutCoordinatesSystem.ShowModal();
+
+	if (result == FSuppressableWarningDialog::EResult::Confirm)
+	{
+		auto content = Response->GetContentAsString();
+		FApplicationKeyResponse responseObject;
+		FJsonObjectConverter::JsonObjectStringToUStruct(content, &responseObject, 0, 0);
+
+		FCognitiveEditorTools::GetInstance()->SaveApplicationKeyToFile(responseObject.apikey);
+		DisplayAPIKey = responseObject.apikey;
+	}
+}
+
+void SProjectManagerWidget::FetchOrganizationDetails(FString developerKey)
+{
+	auto HttpRequest = FHttpModule::Get().CreateRequest();
+
+	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+	GConfig->LoadFile(C3DSettingsPath);
+	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+
+	FString url = FString("https://" + Gateway + "/v0/subscriptions");
+	HttpRequest->SetURL(url);
+	HttpRequest->SetVerb("GET");
+	FString AuthValue = "APIKEY:DEVELOPER " + FCognitiveEditorTools::GetInstance()->DeveloperKey;
+	HttpRequest->SetHeader("Authorization", AuthValue);
+	HttpRequest->SetHeader("Content-Type", "application/json");
+	HttpRequest->OnProcessRequestComplete().BindRaw(this, &SProjectManagerWidget::GetOrganizationDetailsResponse);
+	HttpRequest->ProcessRequest();
+}
+
+void SProjectManagerWidget::GetOrganizationDetailsResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (Response.IsValid() == false)
+	{
+		GLog->Log("SProjectSetupWidget::GetOrganizationDetailsResponse invalid response");
+		return;
+	}
+
+	int32 responseCode = Response->GetResponseCode();
+	if (responseCode != 200)
+	{
+		GLog->Log("Organization Details Response Code is " + FString::FromInt(responseCode));
+		return;
+	}
+
+	auto content = Response->GetContentAsString();
+	FOrganizationDataResponse responseObject;
+	FJsonObjectConverter::JsonObjectStringToUStruct(content, &responseObject, 0, 0);
+	OrgNameTextBlock->SetText(FText::FromString("Organization Name: " + responseObject.organizationName));
+
+	if (responseObject.subscriptions.Num() == 0)
+	{
+		GLog->Log("No Cognitive3D Subscription");
+	}
+	else
+	{
+		FDateTime expiryDate = FDateTime::FromUnixTimestamp(responseObject.subscriptions[0].expiration / 1000);
+
+		FString expiryPrettyDate;
+		expiryPrettyDate.Append(FString::FromInt(expiryDate.GetDay()));
+		expiryPrettyDate.Append(" ");
+		FString MonthStr;
+		switch (expiryDate.GetMonthOfYear())
+		{
+		case EMonthOfYear::January:		MonthStr = TEXT("Jan");	break;
+		case EMonthOfYear::February:	MonthStr = TEXT("Feb");	break;
+		case EMonthOfYear::March:		MonthStr = TEXT("Mar");	break;
+		case EMonthOfYear::April:		MonthStr = TEXT("Apr");	break;
+		case EMonthOfYear::May:			MonthStr = TEXT("May");	break;
+		case EMonthOfYear::June:		MonthStr = TEXT("Jun");	break;
+		case EMonthOfYear::July:		MonthStr = TEXT("Jul");	break;
+		case EMonthOfYear::August:		MonthStr = TEXT("Aug");	break;
+		case EMonthOfYear::September:	MonthStr = TEXT("Sep");	break;
+		case EMonthOfYear::October:		MonthStr = TEXT("Oct");	break;
+		case EMonthOfYear::November:	MonthStr = TEXT("Nov");	break;
+		case EMonthOfYear::December:	MonthStr = TEXT("Dec");	break;
+		}
+		expiryPrettyDate.Append(MonthStr);
+		expiryPrettyDate.Append(", ");
+		expiryPrettyDate.Append(FString::FromInt(expiryDate.GetYear()));
+
+		OrgExpiryTextBlock->SetText(FText::FromString("Expiry Date: " + expiryPrettyDate));
+		OrgTrialTextBlock->SetText(responseObject.subscriptions[0].isFreeTrial ? FText::FromString("Is Trial: True") : FText::FromString("Is Trial: False"));
+	}
+}
+
+FText SProjectManagerWidget::GetDisplayAPIKey() const
+{
+	return FText::FromString(DisplayAPIKey);
+}
+
+void SProjectManagerWidget::OnAPIKeyChanged(const FText& Text)
+{
+	DisplayAPIKey = Text.ToString();
+}
+
+FText SProjectManagerWidget::GetDisplayDeveloperKey() const
+{
+	return FText::FromString(DisplayDeveloperKey);
+}
+
+void SProjectManagerWidget::OnDeveloperKeyChanged(const FText& Text)
+{
+	DisplayDeveloperKey = Text.ToString();
+}
+
+const FSlateBrush* SProjectManagerWidget::GetExportPathStateIcon() const
+{
+	if (FCognitiveEditorTools::GetInstance()->HasSetExportDirectory())
+	{
+		return FCognitiveEditorTools::GetInstance()->BoxCheckIcon;
+	}
+	return FCognitiveEditorTools::GetInstance()->BoxEmptyIcon;
+}
+
+FText SProjectManagerWidget::GetExportPathTooltipText() const
+{
+	if (FCognitiveEditorTools::GetInstance()->HasSetExportDirectory())
+	{
+		return FText::FromString("");
+	}
+	return FText::FromString("Temporary export directory is not set");
+}
+
+void SProjectManagerWidget::OnExportPathChanged(const FText& Text)
+{
+	DisplayExportDirectory = Text.ToString();
+}
+
+FText SProjectManagerWidget::GetInputClassText() const
+{
+	//get text based on whether or not enhanced input is the default input class
+	if (GetDefaultInputClassEnhanced() == EVisibility::Collapsed)
+	{
+		return FText::FromString("Project is using Enhanced Input, C3D will automatically track controller inputs.\nIf you would like us not to track controller inputs, remove the EnhancedInputTracker component from the Cognitive3D blueprint in the level");
+	}
+	else if (GetAppendedInputsFoundHidden() == EVisibility::Visible)
+	{
+		return FText::FromString("You can append inputs to your DefaultInput.ini file. This will allow you to visualize the button presses of the player.");
+	}
+	else
+	{
+		return FText::FromString("");
+	}
+}
+
+FReply SProjectManagerWidget::AppendInputs()
+{
+	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
+
+
+	TArray<FString> actionMapping;
+	TArray<FString> axisMapping;
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+	const FString NormalizedInputIni = GConfig->NormalizeConfigIniPath(InputIni);
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, NormalizedInputIni);
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+AxisMappings"), axisMapping, NormalizedInputIni);
+#else
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, InputIni);
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+AxisMappings"), axisMapping, InputIni);
+#endif
+
+	if (actionMapping.Contains("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Left_Grip_Click)"))
+	{
+		GLog->Log("SSceneSetupWidget::AppendInputs already includes Cognitive3D Inputs");
+		//already added! don't append again
+		return FReply::Handled();
+	}
+
+#if defined INCLUDE_PICOMOBILE_PLUGIN
+	actionMapping.Add("(ActionName=\"C3D_LeftTrigger\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_L_TriggerAxis)");
+	actionMapping.Add("(ActionName=\"C3D_RightGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_R_LGrip)");
+	actionMapping.Add("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_L_RGrip)");
+	actionMapping.Add("(ActionName=\"C3D_RightTrigger\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_R_TriggerAxis)");
+	actionMapping.Add("(ActionName=\"C3D_LeftJoystick\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_L_RockerC)");
+	actionMapping.Add("(ActionName=\"C3D_RightJoystick\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_R_RockerC)");
+	actionMapping.Add("(ActionName=\"C3D_LeftFaceButtonOne\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_L_X)");
+	actionMapping.Add("(ActionName=\"C3D_LeftFaceButtonTwo\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_L_Y)");
+	actionMapping.Add("(ActionName=\"C3D_RightFaceButtonOne\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_R_A)");
+	actionMapping.Add("(ActionName=\"C3D_RightFaceButtonTwo\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_R_B)");
+	actionMapping.Add("(ActionName=\"C3D_LeftMenuButton\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_L_Home)");
+	actionMapping.Add("(ActionName=\"C3D_RightMenuButton\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=PicoNeoController_R_Home)");
+	axisMapping.Add("(AxisName=\"C3D_LeftJoystickH\",Scale=1.000000,Key=PicoNeoController_L_RockerX)");
+	axisMapping.Add("(AxisName=\"C3D_LeftJoystickV\",Scale=-1.000000,Key=PicoNeoController_L_RockerY)");
+	axisMapping.Add("(AxisName=\"C3D_RightJoystickH\",Scale=1.000000,Key=PicoNeoController_R_RockerX)");
+	axisMapping.Add("(AxisName=\"C3D_RightJoystickV\",Scale=-1.000000,Key=PicoNeoController_R_RockerY)");
+	axisMapping.Add("(AxisName=\"C3D_LeftTriggerAxis\",Scale=1.000000,Key=PicoNeoController_L_TriggerAxis)");
+	axisMapping.Add("(AxisName=\"C3D_RightTriggerAxis\",Scale=1.000000,Key=PicoNeoController_R_TriggerAxis)");
+#endif
+
+	actionMapping.Add("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Left_Grip_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Left_Grip_Axis)");
+	actionMapping.Add("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Left_Grip_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=Vive_Left_Grip_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Right_Grip_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Right_Grip_Axis)");
+	actionMapping.Add("(ActionName=\"C3D_RightGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Right_Grip_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=Vive_Right_Grip_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftTrigger\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Left_Trigger_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftTrigger\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Left_Trigger_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftTrigger\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Left_Trigger_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftTrigger\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=Vive_Left_Trigger_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightTrigger\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Right_Trigger_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightTrigger\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Right_Trigger_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightTrigger\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Right_Trigger_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightTrigger\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=Vive_Right_Trigger_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftTouchpadTouch\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Left_Trackpad_Touch)");
+	actionMapping.Add("(ActionName=\"C3D_LeftTouchpadTouch\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Left_Trackpad_Touch)");
+	actionMapping.Add("(ActionName=\"C3D_LeftTouchpadTouch\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=Vive_Left_Trackpad_Touch)");
+	actionMapping.Add("(ActionName=\"C3D_RightTouchpadTouch\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Right_Trackpad_Touch)");
+	actionMapping.Add("(ActionName=\"C3D_RightTouchpadTouch\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Right_Trackpad_Touch)");
+	actionMapping.Add("(ActionName=\"C3D_RightTouchpadTouch\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=Vive_Right_Trackpad_Touch)");
+	actionMapping.Add("(ActionName=\"C3D_LeftTouchpadPress\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Left_Trackpad_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftTouchpadPress\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Left_Trackpad_Force)");
+	actionMapping.Add("(ActionName=\"C3D_LeftTouchpadPress\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=Vive_Left_Trackpad_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightTouchpadPress\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Right_Trackpad_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightTouchpadPress\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Right_Trackpad_Force)");
+	actionMapping.Add("(ActionName=\"C3D_RightTouchpadPress\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=Vive_Right_Trackpad_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftJoystick\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Left_Thumbstick_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftJoystick\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Left_Thumbstick_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftJoystick\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Left_Thumbstick_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightJoystick\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Right_Thumbstick_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightJoystick\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Right_Thumbstick_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightJoystick\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Right_Thumbstick_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftFaceButtonOne\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Left_Trackpad_Up)");
+	actionMapping.Add("(ActionName=\"C3D_LeftFaceButtonOne\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Left_X_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftFaceButtonOne\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Left_A_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftFaceButtonTwo\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Left_Trackpad_Right)");
+	actionMapping.Add("(ActionName=\"C3D_LeftFaceButtonTwo\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Left_Y_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftFaceButtonTwo\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Left_B_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightFaceButtonOne\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Right_Trackpad_Up)");
+	actionMapping.Add("(ActionName=\"C3D_RightFaceButtonOne\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Right_A_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightFaceButtonOne\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Right_A_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightFaceButtonTwo\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Right_Trackpad_Right)");
+	actionMapping.Add("(ActionName=\"C3D_RightFaceButtonTwo\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Right_B_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightFaceButtonTwo\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Right_B_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftMenuButton\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Left_Menu_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftMenuButton\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Left_System_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftMenuButton\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Left_Menu_Click)");
+	actionMapping.Add("(ActionName=\"C3D_LeftMenuButton\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=Vive_Left_Menu_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightMenuButton\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=ValveIndex_Right_System_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightMenuButton\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Right_Menu_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightMenuButton\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=Vive_Right_Menu_Click)");
+	actionMapping.Add("(ActionName=\"C3D_RightMenuButton\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=MixedReality_Right_Menu_Click)");
+
+	axisMapping.Add("(AxisName=\"C3D_LeftTouchpadH\",Scale=1.000000,Key=MixedReality_Left_Trackpad_X)");
+	axisMapping.Add("(AxisName=\"C3D_LeftTouchpadH\",Scale=1.000000,Key=Vive_Left_Trackpad_X)");
+	axisMapping.Add("(AxisName=\"C3D_LeftTouchpadV\",Scale=1.000000,Key=MixedReality_Left_Trackpad_Y)");
+	axisMapping.Add("(AxisName=\"C3D_LeftTouchpadV\",Scale=1.000000,Key=Vive_Left_Trackpad_Y)");
+	axisMapping.Add("(AxisName=\"C3D_RightTouchpadH\",Scale=1.000000,Key=MixedReality_Right_Trackpad_X)");
+	axisMapping.Add("(AxisName=\"C3D_RightTouchpadH\",Scale=1.000000,Key=Vive_Right_Trackpad_X)");
+	axisMapping.Add("(AxisName=\"C3D_RightTouchpadV\",Scale=1.000000,Key=MixedReality_Right_Trackpad_Y)");
+	axisMapping.Add("(AxisName=\"C3D_RightTouchpadV\",Scale=1.000000,Key=Vive_Right_Trackpad_Y)");
+	axisMapping.Add("(AxisName=\"C3D_LeftJoystickH\",Scale=1.000000,Key=OculusTouch_Left_Thumbstick_X)");
+	axisMapping.Add("(AxisName=\"C3D_LeftJoystickH\",Scale=1.000000,Key=ValveIndex_Left_Thumbstick_X)");
+	axisMapping.Add("(AxisName=\"C3D_LeftJoystickH\",Scale=1.000000,Key=MixedReality_Left_Thumbstick_X)");
+	axisMapping.Add("(AxisName=\"C3D_LeftJoystickV\",Scale=1.000000,Key=OculusTouch_Left_Thumbstick_Y)");
+	axisMapping.Add("(AxisName=\"C3D_LeftJoystickV\",Scale=1.000000,Key=ValveIndex_Left_Thumbstick_Y)");
+	axisMapping.Add("(AxisName=\"C3D_LeftJoystickV\",Scale=1.000000,Key=MixedReality_Left_Thumbstick_Y)");
+	axisMapping.Add("(AxisName=\"C3D_RightJoystickH\",Scale=1.000000,Key=OculusTouch_Right_Thumbstick_X)");
+	axisMapping.Add("(AxisName=\"C3D_RightJoystickH\",Scale=1.000000,Key=ValveIndex_Right_Thumbstick_X)");
+	axisMapping.Add("(AxisName=\"C3D_RightJoystickH\",Scale=1.000000,Key=MixedReality_Right_Thumbstick_X)");
+	axisMapping.Add("(AxisName=\"C3D_RightJoystickV\",Scale=1.000000,Key=OculusTouch_Right_Thumbstick_Y)");
+	axisMapping.Add("(AxisName=\"C3D_RightJoystickV\",Scale=1.000000,Key=ValveIndex_Right_Thumbstick_Y)");
+	axisMapping.Add("(AxisName=\"C3D_RightJoystickV\",Scale=1.000000,Key=MixedReality_Right_Thumbstick_Y)");
+	axisMapping.Add("(AxisName=\"C3D_LeftGripAxis\",Scale=1.000000,Key=OculusTouch_Left_Grip_Axis)");
+	axisMapping.Add("(AxisName=\"C3D_LeftGripAxis\",Scale=1.000000,Key=ValveIndex_Left_Grip_Axis)");
+	axisMapping.Add("(AxisName=\"C3D_LeftGripAxis\",Scale=1.000000,Key=MixedReality_Left_Grip_Click)");
+	axisMapping.Add("(AxisName=\"C3D_LeftGripAxis\",Scale=1.000000,Key=Vive_Left_Grip_Click)");
+	axisMapping.Add("(AxisName=\"C3D_RightGripAxis\",Scale=1.000000,Key=OculusTouch_Right_Grip_Axis)");
+	axisMapping.Add("(AxisName=\"C3D_RightGripAxis\",Scale=1.000000,Key=ValveIndex_Right_Grip_Axis)");
+	axisMapping.Add("(AxisName=\"C3D_RightGripAxis\",Scale=1.000000,Key=MixedReality_Right_Grip_Click)");
+	axisMapping.Add("(AxisName=\"C3D_RightGripAxis\",Scale=1.000000,Key=Vive_Right_Grip_Click)");
+	axisMapping.Add("(AxisName=\"C3D_LeftTriggerAxis\",Scale=1.000000,Key=OculusTouch_Left_Trigger_Axis)");
+	axisMapping.Add("(AxisName=\"C3D_LeftTriggerAxis\",Scale=1.000000,Key=ValveIndex_Left_Trigger_Axis)");
+	axisMapping.Add("(AxisName=\"C3D_LeftTriggerAxis\",Scale=1.000000,Key=MixedReality_Left_Trigger_Axis)");
+	axisMapping.Add("(AxisName=\"C3D_LeftTriggerAxis\",Scale=1.000000,Key=Vive_Left_Trigger_Axis)");
+	axisMapping.Add("(AxisName=\"C3D_RightTriggerAxis\",Scale=1.000000,Key=OculusTouch_Right_Trigger_Axis)");
+	axisMapping.Add("(AxisName=\"C3D_RightTriggerAxis\",Scale=1.000000,Key=ValveIndex_Right_Trigger_Axis)");
+	axisMapping.Add("(AxisName=\"C3D_RightTriggerAxis\",Scale=1.000000,Key=MixedReality_Right_Trigger_Axis)");
+	axisMapping.Add("(AxisName=\"C3D_RightTriggerAxis\",Scale=1.000000,Key=Vive_Right_Trigger_Axis)");
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+	GConfig->SetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, NormalizedInputIni);
+	GConfig->SetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+AxisMappings"), axisMapping, NormalizedInputIni);
+
+	GConfig->Flush(false, NormalizedInputIni);
+#else
+	GConfig->SetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, InputIni);
+	GConfig->SetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+AxisMappings"), axisMapping, InputIni);
+
+	GConfig->Flush(false, InputIni);
+#endif
+
+	GLog->Log("SSceneSetupWidget::AppendInputs complete");
+
+	return FReply::Handled();
+}
+
+EVisibility SProjectManagerWidget::GetAppendedInputsFoundHidden() const
+{
+	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
+
+	TArray<FString> actionMapping;
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+	const FString NormalizedInputIni = GConfig->NormalizeConfigIniPath(InputIni);
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, NormalizedInputIni);
+#else
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, InputIni);
+#endif
+
+	if (actionMapping.Contains("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Left_Grip_Click)"))
+	{
+		return EVisibility::Collapsed;
+	}
+	return EVisibility::Visible;
+}
+
+EVisibility SProjectManagerWidget::GetAppendedInputsFoundVisibility() const
+{
+	FString InputIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultInput.ini"));
+
+	TArray<FString> actionMapping;
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+	const FString NormalizedInputIni = GConfig->NormalizeConfigIniPath(InputIni);
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, NormalizedInputIni);
+#else
+	GConfig->GetArray(TEXT("/Script/Engine.InputSettings"), TEXT("+ActionMappings"), actionMapping, InputIni);
+#endif
+
+	if (actionMapping.Contains("(ActionName=\"C3D_LeftGrip\",bShift=False,bCtrl=False,bAlt=False,bCmd=False,Key=OculusTouch_Left_Grip_Click)"))
+	{
+		return EVisibility::Visible;
+	}
+	return EVisibility::Collapsed;
+}
+
+EVisibility SProjectManagerWidget::GetDefaultInputClassEnhanced() const
+{
+	//show AppendInput button if its not using enhanced input
+	FString DefaultPlayerInputClass;
+	FString DefaultInputComponentClass;
+
+	// Retrieve the settings from DefaultInput.ini
+	bool bFoundPlayerInputClass = GConfig->GetString(
+		TEXT("/Script/Engine.InputSettings"),
+		TEXT("DefaultPlayerInputClass"),
+		DefaultPlayerInputClass,
+		GInputIni
+	);
+
+	bool bFoundInputComponentClass = GConfig->GetString(
+		TEXT("/Script/Engine.InputSettings"),
+		TEXT("DefaultInputComponentClass"),
+		DefaultInputComponentClass,
+		GInputIni
+	);
+
+	// Check if either of the classes are set to Enhanced Input classes
+	//if its using it, collapse the box showing the append input button
+	bool bIsEnhancedInput = false;
+
+	if (bFoundPlayerInputClass && bFoundInputComponentClass)
+	{
+		bIsEnhancedInput = DefaultPlayerInputClass.Contains("EnhancedPlayerInput") ||
+			DefaultInputComponentClass.Contains("EnhancedInputComponent");
+	}
+
+	if (bIsEnhancedInput)
+	{
+		return EVisibility::Collapsed;
+	}
+	else
+	{
+		return EVisibility::Visible;
+	}
+}
+
+void SProjectManagerWidget::CollectAllMaps()
+{
+	UE_LOG(LogTemp, Warning, TEXT("CollectAllMaps called"));
+	TArray<FAssetData> MapAssets;
+	FARFilter Filter;
+	Filter.ClassNames.Add(UWorld::StaticClass()->GetFName());
+	Filter.bRecursivePaths = true;
+	Filter.PackagePaths.Add(FName(TEXT("/Game"))); // Covers all
+
+	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	AssetRegistryModule.Get().GetAssets(Filter, MapAssets);
+	UE_LOG(LogTemp, Warning, TEXT("Found %d map assets"), MapAssets.Num());
+
+	for (const FAssetData& Asset : MapAssets)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Found map: %s"), *Asset.ObjectPath.ToString());
+		LevelSelectionMap.Add(Asset.ObjectPath.ToString(), false);
+	}
+}
+
+void SProjectManagerWidget::ExportSelectedMaps()
+{
+	UWorld* World = GEditor->GetEditorWorldContext().World();
+	FString OriginalMap;
+
+	if (World)
+	{
+		OriginalMap = World->GetOutermost()->GetName(); // e.g. /Game/Maps/MyMap
+	}
+
+	TArray<FString> SelectedMaps;
+	for (const TPair<FString, bool>& Pair : LevelSelectionMap)
+	{
+		if (Pair.Value)
+		{
+			SelectedMaps.Add(Pair.Key);
+		}
+	}
+
+	FScopedSlowTask ExportTask(SelectedMaps.Num(), FText::FromString("Exporting selected maps..."));
+	ExportTask.MakeDialog();
+
+	for (const FString& MapPath : SelectedMaps)
+	{
+		ExportTask.EnterProgressFrame(1.f, FText::FromString(FString::Printf(TEXT("Exporting %s"), *MapPath)));
+
+		if (FEditorFileUtils::LoadMap(MapPath, false, true))
+		{
+			UWorld* EditorWorld = GEditor->GetEditorWorldContext().World();
+			if (!EditorWorld) continue;
+
+			TArray<AActor*> ActorsToExport;
+
+			for (TActorIterator<AActor> It(EditorWorld); It; ++It)
+			{
+				AActor* Actor = *It;
+
+				// Optionally filter actors if needed (example below)
+				if (!Actor->IsPendingKillPending() && !Actor->IsTemplate())
+				{
+					ActorsToExport.Add(Actor);
+				}
+			}
+
+			FString LevelName = FPackageName::GetShortName(MapPath);
+			LevelName.Split(TEXT("."), nullptr, &LevelName); // Remove package extension
+			FCognitiveEditorTools::GetInstance()->ExportScene(LevelName, ActorsToExport);
+			FCognitiveEditorTools::GetInstance()->SaveScreenshotToFile(LevelName);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Failed to load map: %s"), *MapPath);
+		}
+	}
+
+	// Restore original map
+	if (!OriginalMap.IsEmpty())
+	{
+		FEditorFileUtils::LoadMap(OriginalMap, false, true);
+	}
+}
+
+void SProjectManagerWidget::RebuildSceneChecklist()
+{
+	UE_LOG(LogTemp, Warning, TEXT("RebuildSceneChecklist called"));
+	if (!SceneChecklistContainer.IsValid()) return;
+
+	SceneChecklistContainer->ClearChildren();
+
+	for (const TPair<FString, bool>& Pair : LevelSelectionMap)
+	{
+		const FString& MapPath = Pair.Key;
+
+		SceneChecklistContainer->AddSlot()
+			.AutoHeight()
+			.Padding(5)
+			[
+				SNew(SCheckBox)
+					.IsChecked_Lambda([this, MapPath]() {
+					return LevelSelectionMap.Contains(MapPath) && LevelSelectionMap[MapPath]
+						? ECheckBoxState::Checked
+							: ECheckBoxState::Unchecked;
+						})
+					.OnCheckStateChanged_Lambda([this, MapPath](ECheckBoxState NewState) {
+					LevelSelectionMap.FindOrAdd(MapPath) = (NewState == ECheckBoxState::Checked);
+						})
+					[
+						SNew(STextBlock)
+							.Text(FText::FromString(FPackageName::GetShortName(MapPath)))
+					]
+			];
+	}
+}
+
+
+void SProjectManagerWidget::ApplySDKToggle(const FString& SDKName, bool bEnable)
+{
+	// --- 1) Update build.cs --- 
+
+	const FString BuildCsPath = FPaths::ProjectDir() / TEXT("Plugins/Cognitive3D/Source/Cognitive3D/Cognitive3D.build.cs");
+	TArray<FString> Lines;
+	if (FFileHelper::LoadFileToStringArray(Lines, *BuildCsPath))
+	{
+		auto FixLine = [&](FString& Line, const FString& Method)
+			{
+				const FString Commented = FString::Printf(TEXT("//%s();"), *Method);
+				const FString UnComment = FString::Printf(TEXT("%s();"), *Method);
+
+				if (bEnable && Line.Contains(Commented))
+				{
+					Line = Line.Replace(*Commented, *UnComment);
+				}
+				else if (!bEnable && Line.Contains(UnComment))
+				{
+					if (Line.Contains(TEXT("//") + Method))
+					{
+						
+					}
+					else
+					{
+						Line = Line.Replace(*UnComment, *Commented);
+					}
+				}
+			};
+
+		for (auto& L : Lines)
+		{
+			if (SDKName == TEXT("MetaXR"))
+			{
+				if (bEnable)
+				{
+					FixLine(L, TEXT("MetaXRPlugin"));
+					FixLine(L, TEXT("MetaXRPassthrough"));
+				}
+				else
+				{
+					FixLine(L, TEXT("MetaXRPlugin"));
+					FixLine(L, TEXT("MetaXRPassthrough"));
+					FixLine(L, TEXT("MetaXRPlatform"));
+				}
+			}
+			else if (SDKName == TEXT("MetaXRPlatform"))
+			{
+				FixLine(L, TEXT("MetaXRPlatform"));
+			}
+			else if (SDKName == TEXT("PicoXR"))
+			{
+				FixLine(L, TEXT("PICOXR"));
+			}
+			else if (SDKName == TEXT("WaveVR"))
+			{
+				FixLine(L, TEXT("WaveVREyeTracking"));
+			}
+		}
+
+		FFileHelper::SaveStringArrayToFile(Lines, *BuildCsPath);
+	}
+
+	// --- 2) Update .uproject Plugins array ---
+	const FString UProjectPath = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir() + FApp::GetProjectName() + TEXT(".uproject"));
+	FString JsonRaw;
+	if (FFileHelper::LoadFileToString(JsonRaw, *UProjectPath))
+	{
+		TSharedPtr<FJsonObject> RootObj;
+		TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonRaw);
+
+		if (FJsonSerializer::Deserialize(Reader, RootObj) && RootObj.IsValid())
+		{
+			TArray<TSharedPtr<FJsonValue>> Plugins = RootObj->GetArrayField(TEXT("Plugins"));
+			bool bModified = false;
+
+			if (bEnable)
+			{
+				bool bFound = false;
+				for (auto& Val : Plugins)
+				{
+					if (SDKName == TEXT("MetaXR"))
+					{
+#if ENGINE_MAJOR_VERSION == 5
+						auto Obj = Val->AsObject();
+						if (Obj->GetStringField(TEXT("Name")) == "OculusXR")
+						{
+							Obj->SetBoolField(TEXT("Enabled"), bEnable);
+							Obj->SetArrayField(TEXT("SupportedTargetPlatforms"), { MakeShared<FJsonValueString>(TEXT("Win64")), MakeShared<FJsonValueString>(TEXT("Android")) });
+							bFound = true;
+							break;
+						}
+#elif ENGINE_MAJOR_VERSION == 4
+						auto Obj = Val->AsObject();
+						if (Obj->GetStringField(TEXT("Name")) == "OculusVR")
+						{
+							Obj->SetBoolField(TEXT("Enabled"), bEnable);
+							Obj->SetArrayField(TEXT("SupportedTargetPlatforms"), { MakeShared<FJsonValueString>(TEXT("Win64")), MakeShared<FJsonValueString>(TEXT("Win32")), MakeShared<FJsonValueString>(TEXT("Android")) });
+							bFound = true;
+							break;
+						}
+#endif
+					}
+					else if (SDKName == TEXT("MetaXRPlatform"))
+					{
+						auto Obj = Val->AsObject();
+						if (Obj->GetStringField(TEXT("Name")) == "OculusPlatform")
+						{
+							Obj->SetBoolField(TEXT("Enabled"), bEnable);
+							Obj->SetArrayField(TEXT("SupportedTargetPlatforms"), { MakeShared<FJsonValueString>(TEXT("Win64")), MakeShared<FJsonValueString>(TEXT("Android")) });
+							bFound = true;
+							break;
+						}
+					}
+					else if (SDKName == TEXT("PicoXR"))
+					{
+						auto Obj = Val->AsObject();
+						if (Obj->GetStringField(TEXT("Name")) == "PICOXR")
+						{
+							Obj->SetBoolField(TEXT("Enabled"), bEnable);
+							Obj->SetArrayField(TEXT("SupportedTargetPlatforms"), { MakeShared<FJsonValueString>(TEXT("Win64")), MakeShared<FJsonValueString>(TEXT("Android")) });
+							bFound = true;
+							break;
+						}
+					}
+					else if (SDKName == TEXT("WaveVR"))
+					{
+						auto Obj = Val->AsObject();
+						if (Obj->GetStringField(TEXT("Name")) == "WaveVR")
+						{
+							Obj->SetBoolField(TEXT("Enabled"), bEnable);
+							bFound = true;
+							break;
+						}
+					}
+				}
+
+				if (!bFound)
+				{
+					if (SDKName == TEXT("MetaXR"))
+					{
+#if ENGINE_MAJOR_VERSION == 5
+						TSharedPtr<FJsonObject> NewPlugin = MakeShared<FJsonObject>();
+						NewPlugin->SetStringField(TEXT("Name"), "OculusXR");
+						NewPlugin->SetBoolField(TEXT("Enabled"), true);
+						NewPlugin->SetArrayField(TEXT("SupportedTargetPlatforms"), { MakeShared<FJsonValueString>(TEXT("Win64")), MakeShared<FJsonValueString>(TEXT("Android")) });
+						Plugins.Add(MakeShared<FJsonValueObject>(NewPlugin));
+#elif ENGINE_MAJOR_VERSION == 4
+						TSharedPtr<FJsonObject> NewPlugin = MakeShared<FJsonObject>();
+						NewPlugin->SetStringField(TEXT("Name"), "OculusVR");
+						NewPlugin->SetBoolField(TEXT("Enabled"), true);
+						NewPlugin->SetArrayField(TEXT("SupportedTargetPlatforms"), { MakeShared<FJsonValueString>(TEXT("Win64")), MakeShared<FJsonValueString>(TEXT("Win32")), MakeShared<FJsonValueString>(TEXT("Android")) });
+						Plugins.Add(MakeShared<FJsonValueObject>(NewPlugin));
+#endif
+					}
+					else if (SDKName == TEXT("MetaXRPlatform"))
+					{
+						TSharedPtr<FJsonObject> NewPlugin = MakeShared<FJsonObject>();
+						NewPlugin->SetStringField(TEXT("Name"), "OculusPlatform");
+						NewPlugin->SetBoolField(TEXT("Enabled"), true);
+						NewPlugin->SetArrayField(TEXT("SupportedTargetPlatforms"), { MakeShared<FJsonValueString>(TEXT("Win64")), MakeShared<FJsonValueString>(TEXT("Android")) });
+						Plugins.Add(MakeShared<FJsonValueObject>(NewPlugin));
+					}
+					else if (SDKName == TEXT("PicoXR"))
+					{
+						TSharedPtr<FJsonObject> NewPlugin = MakeShared<FJsonObject>();
+						NewPlugin->SetStringField(TEXT("Name"), "PICOXR");
+						NewPlugin->SetBoolField(TEXT("Enabled"), true);
+						NewPlugin->SetArrayField(TEXT("SupportedTargetPlatforms"), { MakeShared<FJsonValueString>(TEXT("Win64")), MakeShared<FJsonValueString>(TEXT("Android")) });
+						Plugins.Add(MakeShared<FJsonValueObject>(NewPlugin));
+					}
+					else if (SDKName == TEXT("WaveVR"))
+					{
+						TSharedPtr<FJsonObject> NewPlugin = MakeShared<FJsonObject>();
+						NewPlugin->SetStringField(TEXT("Name"), "WaveVR");
+						NewPlugin->SetBoolField(TEXT("Enabled"), true);
+						Plugins.Add(MakeShared<FJsonValueObject>(NewPlugin));
+					}
+				}
+				bModified = true;
+			}
+			else
+			{
+				// If disabling: remove any object based on its name
+				for (int32 Index = Plugins.Num() - 1; Index >= 0; --Index)
+				{
+					if (SDKName == TEXT("MetaXR"))
+					{
+#if ENGINE_MAJOR_VERSION == 5
+						TSharedPtr<FJsonObject> Obj = Plugins[Index]->AsObject();
+						if (Obj->GetStringField(TEXT("Name")) == TEXT("OculusXR") || Obj->GetStringField(TEXT("Name")) == TEXT("OculusPlatform"))
+						{
+							Plugins.RemoveAt(Index);
+							bModified = true;
+						}
+#elif ENGINE_MAJOR_VERSION == 4
+						TSharedPtr<FJsonObject> Obj = Plugins[Index]->AsObject();
+						if (Obj->GetStringField(TEXT("Name")) == TEXT("OculusVR") || Obj->GetStringField(TEXT("Name")) == TEXT("OculusPlatform"))
+						{
+							Plugins.RemoveAt(Index);
+							bModified = true;
+						}
+						SDKCheckboxStates.Add(TEXT("MetaXRPlatform"), false);
+						IsSDKEnabledInBuildCs(TEXT("MetaXRPlatform"));
+#endif
+					}
+					else if (SDKName == TEXT("MetaXRPlatform"))
+					{
+						TSharedPtr<FJsonObject> Obj = Plugins[Index]->AsObject();
+						if (Obj->GetStringField(TEXT("Name")) == TEXT("OculusPlatform"))
+						{
+							Plugins.RemoveAt(Index);
+							bModified = true;
+						}
+					}
+					else if (SDKName == TEXT("PicoXR"))
+					{
+						TSharedPtr<FJsonObject> Obj = Plugins[Index]->AsObject();
+						if (Obj->GetStringField(TEXT("Name")) == TEXT("PICOXR"))
+						{
+							Plugins.RemoveAt(Index);
+							bModified = true;
+						}
+					}
+					else if (SDKName == TEXT("WaveVR"))
+					{
+						TSharedPtr<FJsonObject> Obj = Plugins[Index]->AsObject();
+						if (Obj->GetStringField(TEXT("Name")) == TEXT("WaveVR"))
+						{
+							Plugins.RemoveAt(Index);
+							bModified = true;
+						}
+					}
+				}
+			}
+
+			if (bModified)
+			{
+				RootObj->SetArrayField(TEXT("Plugins"), Plugins);
+
+				FString Output;
+				TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&Output);
+				if (FJsonSerializer::Serialize(RootObj.ToSharedRef(), Writer))
+				{
+					FFileHelper::SaveStringToFile(Output, *UProjectPath);
+				}
+			}
+		}
+	}
+
+	// --- 3) Prompt for restart (toast) ---
+	FNotificationInfo Info(FText::FromString(TEXT("Editor restart required to apply SDK changes.")));
+	Info.ButtonDetails.Add(
+		FNotificationButtonInfo(
+			FText::FromString(TEXT("Restart Now")),
+			FText::FromString(TEXT("Restart the editor immediately.")),
+			FSimpleDelegate::CreateLambda([]()
+				{
+					// This will save needed assets/sources and restart
+					FUnrealEdMisc::Get().RestartEditor(true);
+				}),
+			SNotificationItem::CS_Pending
+		)
+	);
+	Info.ExpireDuration = 5.0f;
+	TSharedPtr<SNotificationItem> Notification = FSlateNotificationManager::Get().AddNotification(Info);
+	if (Notification.IsValid())
+	{
+		Notification->SetCompletionState(SNotificationItem::CS_Pending);
+	}
+}
+
+bool SProjectManagerWidget::IsSDKEnabledInBuildCs(const FString& MethodName)
+{
+	const FString BuildCsPath =
+		FPaths::ProjectDir() / TEXT("Plugins/Cognitive3D/Source/Cognitive3D/Cognitive3D.build.cs");
+
+	TArray<FString> Lines;
+	if (!FFileHelper::LoadFileToStringArray(Lines, *BuildCsPath))
+	{
+		// If we can’t read it, default to false
+		return false;
+	}
+
+	const FString LiveCall = FString::Printf(TEXT("%s();"), *MethodName);
+	const FString CommentPrefix = TEXT("//");
+
+	for (const FString& L : Lines)
+	{
+		// Trim leading whitespace
+		FString Trimmed = L;
+		Trimmed.TrimStartInline();
+
+		// If it starts with //MetaXRPlugin();, that means commented out, skip
+		if (Trimmed.StartsWith(CommentPrefix + LiveCall))
+		{
+			continue;
+		}
+
+		// If the line contains MetaXRPlugin(); AND does NOT start with //, that means enabled:
+		if (Trimmed.Contains(LiveCall) && !Trimmed.StartsWith(CommentPrefix))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void SProjectManagerWidget::RestartEditor()
+{
+	const EAppReturnType::Type Choice = FMessageDialog::Open(
+		EAppMsgType::YesNo,
+		FText::FromString(TEXT(
+			"Your changes will only take effect after restarting the editor.\n\nRestart now?"
+		))
+	);
+
+	if (Choice == EAppReturnType::Yes)
+	{
+		FUnrealEdMisc::Get().RestartEditor(/*bWarn=*/false);
+	}
+}
+
+
+END_SLATE_FUNCTION_BUILD_OPTIMIZATION
