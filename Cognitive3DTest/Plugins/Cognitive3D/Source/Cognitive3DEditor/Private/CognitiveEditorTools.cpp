@@ -2576,6 +2576,9 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 	}
 	else
 	{
+		FString responseCodeStr = "UploadingObjectError:" + FString::FromInt(Response->GetResponseCode()) + "_SceneUploadPage";
+		USegmentAnalytics::Get()->TrackEvent(responseCodeStr, "SceneSetupSceneUploadPage");
+
 		WizardUploading = false;
 		if (HasExportedAnyDynamicMeshes())
 		{
