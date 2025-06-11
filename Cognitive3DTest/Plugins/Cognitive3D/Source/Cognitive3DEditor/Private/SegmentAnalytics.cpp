@@ -94,6 +94,23 @@ void USegmentAnalytics::TrackEvent(const FString& EventName, const FString& Butt
     SendToSegment(TEXT("track"), JsonObject);
 }
 
+void USegmentAnalytics::TrackEvent(const FString& EventName, TSharedPtr<FJsonObject> Properties)
+{
+    if (WriteKey.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("WriteKey is not set. Cannot track event."));
+        return;
+    }
+
+    TSharedRef<FJsonObject> JsonObject = MakeShared<FJsonObject>();
+    JsonObject->SetNumberField("userId", UserId);
+    JsonObject->SetNumberField("anonymousId", AnonymousId);
+    JsonObject->SetStringField("event", EventName);
+    JsonObject->SetObjectField("properties", Properties);
+
+    SendToSegment(TEXT("track"), JsonObject);
+}
+
 void USegmentAnalytics::FetchUserData()
 {
     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();

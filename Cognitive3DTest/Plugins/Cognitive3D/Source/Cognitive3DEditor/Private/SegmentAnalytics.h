@@ -22,6 +22,7 @@ public:
     void GetKeyFromServer();
 
     void TrackEvent(const FString& EventName, const FString& ButtonName);
+    void TrackEvent(const FString& EventName, TSharedPtr<FJsonObject> Properties);
 
 private:
     

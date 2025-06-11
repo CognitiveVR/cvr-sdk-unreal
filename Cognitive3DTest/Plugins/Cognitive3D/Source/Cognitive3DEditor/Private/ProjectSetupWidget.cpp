@@ -7,6 +7,7 @@
 #include "CognitiveEditorTools.h"
 #include "IPluginManager.h"
 #include "Analytics.h"
+#include "SegmentAnalytics.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
@@ -67,16 +68,19 @@ void SProjectSetupWidget::GetApplicationKeyResponse(FHttpRequestPtr Request, FHt
 {
 	if (Response.IsValid() == false)
 	{
+		USegmentAnalytics::Get()->TrackEvent(TEXT("ProjectSetupWindow_ApplicationKeyInvalidResponse"), TEXT("ProjectSetupWindow"));
 		GLog->Log("SProjectSetupWidget::GetApplicationKeyResponse invalid response");
 		return;
 	}
 	int32 responseCode = Response->GetResponseCode();
 	if (responseCode != 200)
 	{
+		FString responseCodeStr = "InvalidDevKey_ProjectSetup_" + FString::FromInt(responseCode);
+		USegmentAnalytics::Get()->TrackEvent(responseCodeStr, TEXT("ProjectSetupWindow"));
 		GLog->Log("Application Key Response Code is " + FString::FromInt(responseCode));
 		return;
 	}
-	
+	USegmentAnalytics::Get()->TrackEvent(TEXT("ValidDevKey_ProjectSetup"), TEXT("ProjectSetupWindow"));
 	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("UpdateApplicationKeyBody", "Found Application Key on the Dashboard, we recommend using this key."), LOCTEXT("UpdateApplicationKeyTitle", "Found Application Key"), "Cognitive3dApplicationKey");
 	Info.ConfirmText = LOCTEXT("Yes", "Ok");
 	//Info.CancelText = LOCTEXT("No", "No");
@@ -172,6 +176,8 @@ void SProjectSetupWidget::GetOrganizationDetailsResponse(FHttpRequestPtr Request
 
 void SProjectSetupWidget::Construct(const FArguments& Args)
 {
+	USegmentAnalytics::Get()->TrackEvent(TEXT("ProjectSetupWindow_Opened"), TEXT("ProjectSetupWindow"));
+
 	FCognitiveEditorTools::CheckIniConfigured();
 	DisplayAPIKey = FCognitiveEditorTools::GetInstance()->GetApplicationKey().ToString();
 	DisplayDeveloperKey = FCognitiveEditorTools::GetInstance()->GetDeveloperKey().ToString();
@@ -897,6 +903,7 @@ void SProjectSetupWidget::OnExportPathChanged(const FText& Text)
 
 FReply SProjectSetupWidget::OpenSceneSetupWindow()
 {
+	USegmentAnalytics::Get()->TrackEvent(TEXT("OpenSceneSetupSelected_ProjectSetupNextStepsPage"), TEXT("OpenSceneSetup"));
 	FCognitive3DEditorModule::CloseProjectSetupWindow();
 	FCognitive3DEditorModule::SpawnCognitiveSceneSetupTab();
 	return FReply::Handled();
@@ -904,6 +911,7 @@ FReply SProjectSetupWidget::OpenSceneSetupWindow()
 
 FReply SProjectSetupWidget::OpenDynamicObjectWindow()
 {
+	USegmentAnalytics::Get()->TrackEvent(TEXT("OpenDynamicObjectManagerSelected_ProjectSetupNextStepsPage"), TEXT("OpenDynamicObjectManager"));
 	FCognitive3DEditorModule::CloseProjectSetupWindow();
 	FCognitive3DEditorModule::SpawnCognitiveDynamicTab();
 	return FReply::Handled();

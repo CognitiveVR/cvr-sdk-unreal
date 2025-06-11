@@ -243,7 +243,7 @@ void FCognitive3DEditorModule::SpawnCognitiveDynamicTab()
 	else
 	{
 		TSharedPtr<SDockTab> MajorTab = FGlobalTabmanager::Get()->TryInvokeTab(tabId);
-		MajorTab->SetContent(SNew(SDynamicObjectManagerWidget));
+		//MajorTab->SetContent(SNew(SDynamicObjectManagerWidget));
 	}
 }
 
@@ -258,7 +258,7 @@ void FCognitive3DEditorModule::SpawnCognitiveSceneSetupTab()
 	else
 	{
 		TSharedPtr<SDockTab> MajorTab = FGlobalTabmanager::Get()->TryInvokeTab(tabId);
-		MajorTab->SetContent(SNew(SSceneSetupWidget));
+		//MajorTab->SetContent(SNew(SSceneSetupWidget));
 	}
 }
 
@@ -273,7 +273,7 @@ void FCognitive3DEditorModule::SpawnCognitiveProjectSetupTab()
 	else
 	{
 		TSharedPtr<SDockTab> MajorTab = FGlobalTabmanager::Get()->TryInvokeTab(tabId);
-		MajorTab->SetContent(SNew(SProjectSetupWidget));
+		//MajorTab->SetContent(SNew(SProjectSetupWidget));
 	}
 }
 
