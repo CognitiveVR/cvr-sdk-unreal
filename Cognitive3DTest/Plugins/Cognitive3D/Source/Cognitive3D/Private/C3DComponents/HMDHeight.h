@@ -35,4 +35,7 @@ class UHMDHeight : public UActorComponent
 		float GetMedianHeight();
 		//
 		EHMDWornState::Type WornState = EHMDWornState::NotWorn;
+
+		//forehead
+		float ForeheadHeight = 11.0f;
 };

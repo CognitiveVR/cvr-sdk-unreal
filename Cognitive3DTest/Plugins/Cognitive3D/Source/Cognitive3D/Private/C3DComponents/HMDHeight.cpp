@@ -50,13 +50,13 @@ void UHMDHeight::EndInterval()
 			//record median hmd height while still collecting samples
 			if (SampledHeights.Num() % IntermediateSampleCount == 0)
 			{
-				cognitive->SetParticipantProperty("hmdHeight", GetMedianHeight());
+				cognitive->SetParticipantProperty("height", GetMedianHeight() + ForeheadHeight);
 			}
 
 			//record a final median hmd height
 			if (SampledHeights.Num() > NumberOfSamples)
 			{
-				cognitive->SetParticipantProperty("hmdHeight", GetMedianHeight());
+				cognitive->SetParticipantProperty("height", GetMedianHeight() + ForeheadHeight);
 				
 				//when complete, clear timer
 				auto world = ACognitive3DActor::GetCognitiveSessionWorld();
