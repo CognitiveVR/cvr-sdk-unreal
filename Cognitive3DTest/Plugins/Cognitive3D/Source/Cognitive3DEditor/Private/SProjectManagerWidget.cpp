@@ -75,6 +75,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 						[
 							SNew(STextBlock)
 								.Text(FText::FromString(TEXT("Authentication")))
+								.Font(FEditorStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
 						]
 						.BodyContent()
 						[
@@ -142,7 +143,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 									SAssignNew(OrgNameTextBlock, STextBlock)
 										.Visibility(EVisibility::Visible)
 										.Justification(ETextJustify::Center)
-										.Text(FText::FromString("Unknown"))
+										.Text(FText::FromString("Unknown Organization Name"))
 								]
 
 								+ SVerticalBox::Slot()
@@ -152,7 +153,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 									SAssignNew(OrgTrialTextBlock, STextBlock)
 										.Visibility(EVisibility::Visible)
 										.Justification(ETextJustify::Center)
-										.Text(FText::FromString("Unknown"))
+										.Text(FText::FromString("Unknown Organization Trial Status"))
 								]
 
 								+ SVerticalBox::Slot()
@@ -162,7 +163,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 									SAssignNew(OrgExpiryTextBlock, STextBlock)
 										.Visibility(EVisibility::Visible)
 										.Justification(ETextJustify::Center)
-										.Text(FText::FromString("Unknown"))
+										.Text(FText::FromString("Unknown Organization Expirey Date"))
 								]
 
 								+ SVerticalBox::Slot()
@@ -244,6 +245,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 								[
 									SNew(STextBlock)
 										.Text(FText::FromString(TEXT("Player Setup")))
+										.Font(FEditorStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
 								]
 								.BodyContent()
 								[
@@ -347,6 +349,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 									[
 										SNew(STextBlock)
 											.Text(FText::FromString(TEXT("Scene Setup")))
+											.Font(FEditorStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
 									]
 									.BodyContent()
 									[
@@ -510,40 +513,6 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 														SAssignNew(SceneChecklistContainer, SVerticalBox)
 													]
 											]
-											+ SVerticalBox::Slot()
-											.AutoHeight()
-											.HAlign(HAlign_Center)
-											.Padding(0, 10)
-											[
-												SNew(SButton)
-													.Text(FText::FromString("Export Selected Scenes"))
-													.OnClicked_Lambda([this]() -> FReply {
-													ExportSelectedMaps();
-													return FReply::Handled();
-														})
-											]
-
-											+ SVerticalBox::Slot()
-											.AutoHeight()
-											.HAlign(HAlign_Center)
-											.Padding(0, 10)
-											[
-												SNew(SButton)
-													.Text(FText::FromString("Upload Exported Scenes"))
-													.OnClicked_Lambda([this]() -> FReply
-														{
-															for (const TPair<FString, bool>& Pair : LevelSelectionMap)
-															{
-																if (Pair.Value)
-																{
-																	FString LevelName = FPackageName::GetShortName(Pair.Key);
-																	LevelName.Split(TEXT("."), nullptr, &LevelName); // Remove package extension
-																	FCognitiveEditorTools::GetInstance()->UploadScene(LevelName);
-																}
-															}
-															return FReply::Handled();
-														})
-											]
 									]
 							]
 
@@ -686,7 +655,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 							SNew(SButton)
 								.Text(FText::FromString(TEXT("Finish Setup")))
 								.OnClicked_Lambda([this]() -> FReply {
-								this->RestartEditor();
+								this->FinalizeProjectSetup();
 								return FReply::Handled();
 									})
 						]
@@ -1189,7 +1158,7 @@ void SProjectManagerWidget::CollectAllMaps()
 	}
 }
 
-void SProjectManagerWidget::ExportSelectedMaps()
+void SProjectManagerWidget::FinalizeProjectSetup()
 {
 	UWorld* World = GEditor->GetEditorWorldContext().World();
 	FString OriginalMap;
@@ -1198,6 +1167,8 @@ void SProjectManagerWidget::ExportSelectedMaps()
 	{
 		OriginalMap = World->GetOutermost()->GetName(); // e.g. /Game/Maps/MyMap
 	}
+	
+	OnExportAllSceneGeometry.BindSP(this, &SProjectManagerWidget::OnLevelsExported);
 
 	TArray<FString> SelectedMaps;
 	for (const TPair<FString, bool>& Pair : LevelSelectionMap)
@@ -1220,6 +1191,47 @@ void SProjectManagerWidget::ExportSelectedMaps()
 			UWorld* EditorWorld = GEditor->GetEditorWorldContext().World();
 			if (!EditorWorld) continue;
 
+			bool bFoundC3DActor = false;
+
+			//spawn c3d actor
+			//check if there's a Cognitive3DActor already in the world
+			for (TObjectIterator<ACognitive3DActor> Itr; Itr; ++Itr)
+			{
+				if (Itr->IsPendingKillPending())
+				{
+					//if a ACognitive3DActor was deleted from the world, it sticks around but is pending a kill. possibly in some undo buffer?
+					continue;
+				}
+				bFoundC3DActor = true;
+			}
+
+			if (!bFoundC3DActor)
+			{
+				//spawn a Cognitive3DActor blueprint
+				UClass* classPtr = LoadObject<UClass>(nullptr, TEXT("/Cognitive3D/BP_Cognitive3DActor.BP_Cognitive3DActor_C"));
+				if (classPtr)
+				{
+					AActor* obj = EditorWorld->SpawnActor<AActor>(classPtr);
+					obj->OnConstruction(obj->GetTransform());
+					obj->PostActorConstruction();
+					GLog->Log("SSceneSetupWidget::SpawnCognitive3DActor spawned BP_Cognitive3DActor in world");
+				}
+				else
+				{
+					GLog->Log("SSceneSetupWidget::SpawnCognitive3DActor couldn't find BP_Cognitive3DActor class");
+				}
+
+				//Mark the level dirty so the editor knows it's changed
+				EditorWorld->PersistentLevel->MarkPackageDirty();
+
+				//Save the map back to disk so your spawned actor is baked in
+				{
+					UPackage* LevelPackage = EditorWorld->PersistentLevel->GetOutermost();
+					TArray<UPackage*> ToSave = { LevelPackage };
+					FEditorFileUtils::PromptForCheckoutAndSave(ToSave, false, false);
+				}
+			}
+
 			TArray<AActor*> ActorsToExport;
 
 			for (TActorIterator<AActor> It(EditorWorld); It; ++It)
@@ -1235,8 +1247,8 @@ void SProjectManagerWidget::ExportSelectedMaps()
 
 			FString LevelName = FPackageName::GetShortName(MapPath);
 			LevelName.Split(TEXT("."), nullptr, &LevelName); // Remove package extension
+			
 			FCognitiveEditorTools::GetInstance()->ExportScene(LevelName, ActorsToExport);
-			FCognitiveEditorTools::GetInstance()->SaveScreenshotToFile(LevelName);
 		}
 		else
 		{
@@ -1249,6 +1261,8 @@ void SProjectManagerWidget::ExportSelectedMaps()
 	{
 		FEditorFileUtils::LoadMap(OriginalMap, false, true);
 	}
+
+	OnExportAllSceneGeometry.ExecuteIfBound(true);
 }
 
 void SProjectManagerWidget::RebuildSceneChecklist()
@@ -1280,6 +1294,33 @@ void SProjectManagerWidget::RebuildSceneChecklist()
 							.Text(FText::FromString(FPackageName::GetShortName(MapPath)))
 					]
 			];
+	}
+}
+
+void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
+{
+	if (bWasSuccessful)
+	{
+		OnUploadAllSceneGeometry.BindSP(this, &SProjectManagerWidget::OnLevelsUploaded);
+
+		for (const TPair<FString, bool>& Pair : LevelSelectionMap)
+		{
+			if (Pair.Value)
+			{
+				FString LevelName = FPackageName::GetShortName(Pair.Key);
+				LevelName.Split(TEXT("."), nullptr, &LevelName); // Remove package extension
+				FCognitiveEditorTools::GetInstance()->WizardUpload(LevelName);
+			}
+		}
+		OnUploadAllSceneGeometry.ExecuteIfBound(true);
+	}
+}
+
+void SProjectManagerWidget::OnLevelsUploaded(bool bWasSuccessful)
+{
+	if (bWasSuccessful)
+	{
+		RestartEditor();
 	}
 }
 

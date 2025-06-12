@@ -96,8 +96,15 @@ public:
 	// Store checkbox state per level
 	TMap<FString, bool> LevelSelectionMap;
 	void CollectAllMaps();
-	void ExportSelectedMaps();
+	void FinalizeProjectSetup();
 	void RebuildSceneChecklist();
+
+	//delegates
+	FOnUploadAllSceneGeometry OnUploadAllSceneGeometry;
+	FOnExportAllSceneGeometry OnExportAllSceneGeometry;
+	//delegate callbacks
+	void OnLevelsExported(bool bWasSuccessful);
+	void OnLevelsUploaded(bool bWasSuccessful);
 
 	//third party SDK setup
 	void ApplySDKToggle(const FString& SDKName, bool bEnable);

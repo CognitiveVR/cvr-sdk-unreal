@@ -342,7 +342,7 @@ void FCognitive3DEditorModule::SpawnFullC3DSetup()
 	else
 	{
 		TSharedPtr<SDockTab> MajorTab = FGlobalTabmanager::Get()->TryInvokeTab(projectTabId);
-		MajorTab->SetContent(SNew(SProjectManagerWidget));
+		//MajorTab->SetContent(SNew(SProjectManagerWidget));
 	}
 	//FGlobalTabmanager::Get()->TryInvokeTab(FTabId(FName("CognitiveFullProjectSetup")));
 }
