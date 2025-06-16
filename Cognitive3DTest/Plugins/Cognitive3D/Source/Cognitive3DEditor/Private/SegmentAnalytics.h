@@ -26,7 +26,7 @@ public:
 
 private:
     
-    FString KEY_URL = "https://data.cognitive3d.com/segmentWriteKey";
+    FString KEY_URL = "https://data.cognitive3d.com/segmentWriteKey?engine=unreal";
 
     FString WriteKey;
     int32 UserId = 0;
