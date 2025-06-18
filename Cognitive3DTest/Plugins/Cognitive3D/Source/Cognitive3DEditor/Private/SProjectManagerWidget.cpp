@@ -17,6 +17,9 @@
 #include "SBox.h"
 #include "Framework/Notifications/NotificationManager.h"
 #include "Widgets/Notifications/SNotificationList.h"
+#include "Widgets/Layout/SScrollBox.h"
+#include "Widgets/Images/SImage.h"
+#include "CognitiveEditorStyle.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
@@ -40,346 +43,339 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 	
     ChildSlot  
     [  
-		//header
-		SNew(SOverlay)
-		+ SOverlay::Slot()
-		.VAlign(VAlign_Top)
-		.HAlign(HAlign_Left)
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
+		SNew(SVerticalBox)
+		//scrollable region
+		+SVerticalBox::Slot()
+			.FillHeight(1.0f)
 			[
-				SNew(SBox)
-				//.WidthOverride(128)
-				.HeightOverride(32)
-				[
-					SNew(SRichTextBlock)
-					.Justification(ETextJustify::Left)
-					.DecoratorStyleSet(&FEditorStyle::Get())
-                    .Text(FText::FromString("Cognitive3D Full Project Setup"))
-				]
-			]
-		]
-			//body
-		+ SOverlay::Slot()
-		[
-			SNew(SVerticalBox)
+			//Make the entire page scrollable
+			SNew(SScrollBox)
+			+ SScrollBox::Slot()
+			[
+				//Vertical stack banner text then  content
+				SNew(SVerticalBox)
 
-			+ SVerticalBox::Slot()
-				.AutoHeight()
-				.Padding(0,0,0,5)
-				[
-					SNew(SExpandableArea)
-						.InitiallyCollapsed(true)
-						.HeaderContent()
+					// Banner Image at the very top
+					+SVerticalBox::Slot()
+					.AutoHeight()
+					.HAlign(HAlign_Center)
+					.Padding(0, 0, 0, 10)
+					[
+						SNew(SImage)
+							.Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.Banner")))
+					]
+
+					
+					//Introductory Text under the banner
+					+SVerticalBox::Slot()
+					.AutoHeight()
+					.HAlign(HAlign_Center)
+					.Padding(0, 0, 0, 20)
+					[
+						SNew(STextBlock)
+							.AutoWrapText(true)
+							.Text(FText::FromString(
+								TEXT("Welcome to the Cognitive3D setup. Use the panels below to configure authentication, "
+									"select your third-party SDKs, and prepare your scenes for export.")))
+					]
+
+					
+					+SVerticalBox::Slot()
+					.AutoHeight()
+					[
+
+						//header
+						SNew(SOverlay)
+						+ SOverlay::Slot()
+						.VAlign(VAlign_Top)
+						.HAlign(HAlign_Left)
 						[
-							SNew(STextBlock)
-								.Text(FText::FromString(TEXT("Authentication")))
-								.Font(FEditorStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
+							SNew(SHorizontalBox)
+							+ SHorizontalBox::Slot()
+							[
+								SNew(SBox)
+								//.WidthOverride(128)
+								.HeightOverride(32)
+								[
+									SNew(SRichTextBlock)
+									.Justification(ETextJustify::Left)
+									.DecoratorStyleSet(&FEditorStyle::Get())
+									.Text(FText::FromString("Cognitive3D Full Project Setup"))
+								]
+							]
 						]
-						.BodyContent()
+							//body
+						+ SOverlay::Slot()
 						[
 							SNew(SVerticalBox)
 
-								+ SVerticalBox::Slot()
+							+ SVerticalBox::Slot()
 								.AutoHeight()
-								.Padding(0, 0, 0, 5)
+								.Padding(0,0,0,5)
 								[
-									SNew(SRichTextBlock)
-										.Visibility(EVisibility::Visible)
-										.AutoWrapText(true)
-										.Justification(ETextJustify::Center)
-										.DecoratorStyleSet(&FEditorStyle::Get())
-										.Text(FText::FromString("Please add your <RichTextBlock.BoldHighlight>Cognitive3D Project API Keys</> below to continue\nThese are available on the Project Dashboard"))
-								]
-								//dev key
-								+ SVerticalBox::Slot()
-								.MaxHeight(32)
-								.AutoHeight()
-								.Padding(0, 0, 0, 5)
-								[
-									SNew(SHorizontalBox)
-										.Visibility(EVisibility::Visible)
-										+ SHorizontalBox::Slot()
+									SNew(SExpandableArea)
+										.InitiallyCollapsed(true)
+										.HeaderContent()
 										[
-											SNew(SBox)
-												.Visibility(EVisibility::Visible)
-												.WidthOverride(128)
-												.HeightOverride(32)
-												[
-													SNew(STextBlock)
-														.Visibility(EVisibility::Visible)
-														.Text(FText::FromString("Developer Key\nThis key is secret and should be kept safe, make sure not to commit to version control"))
-												]
+											SNew(STextBlock)
+												.Text(FText::FromString(TEXT("Authentication")))
+												.Font(FEditorStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
 										]
-										+ SHorizontalBox::Slot()
+										.BodyContent()
 										[
-											SNew(SBox)
-												.Visibility(EVisibility::Visible)
-												.WidthOverride(128)
-												.HeightOverride(32)
-												[
-													SNew(SEditableTextBox)
-														.Visibility(EVisibility::Visible)
-														.Text(this, &SProjectManagerWidget::GetDisplayDeveloperKey)
-														.OnTextChanged(this, &SProjectManagerWidget::OnDeveloperKeyChanged)
-														//.OnTextCommitted()
-												]
-										]
-								]
-								+ SVerticalBox::Slot()
-								.AutoHeight()
-								.Padding(0, 0, 0, 5)
-								[
-									SNew(SSeparator)
-										.Visibility(EVisibility::Visible)
-								]
+											SNew(SVerticalBox)
 
-								//app key
-								+ SVerticalBox::Slot()
-								.AutoHeight()
-								.Padding(0, 0, 0, 5)
-								[
-									SAssignNew(OrgNameTextBlock, STextBlock)
-										.Visibility(EVisibility::Visible)
-										.Justification(ETextJustify::Center)
-										.Text(FText::FromString("Unknown Organization Name"))
-								]
-
-								+ SVerticalBox::Slot()
-								.AutoHeight()
-								.Padding(0, 0, 0, 5)
-								[
-									SAssignNew(OrgTrialTextBlock, STextBlock)
-										.Visibility(EVisibility::Visible)
-										.Justification(ETextJustify::Center)
-										.Text(FText::FromString("Unknown Organization Trial Status"))
-								]
-
-								+ SVerticalBox::Slot()
-								.AutoHeight()
-								.Padding(0, 0, 0, 5)
-								[
-									SAssignNew(OrgExpiryTextBlock, STextBlock)
-										.Visibility(EVisibility::Visible)
-										.Justification(ETextJustify::Center)
-										.Text(FText::FromString("Unknown Organization Expirey Date"))
-								]
-
-								+ SVerticalBox::Slot()
-								.MaxHeight(32)
-								.AutoHeight()
-								.Padding(0, 0, 0, 5)
-								[
-									SNew(SHorizontalBox)
-										.Visibility(EVisibility::Visible)
-										+ SHorizontalBox::Slot()
-										[
-											SNew(SBox)
-												.Visibility(EVisibility::Visible)
-												.WidthOverride(128)
-												.HeightOverride(32)
-												[
-													SNew(STextBlock)
-														.Visibility(EVisibility::Visible)
-														.Text(FText::FromString("Application Key\nThis key identifies and authorizes the session data being uploaded to your project"))
-												]
-										]
-
-										+ SHorizontalBox::Slot()
-										[
-											SNew(SBox)
-												.Visibility(EVisibility::Visible)
-												.WidthOverride(128)
-												.HeightOverride(32)
-												[
-													SNew(SEditableTextBox)
-														.Visibility(EVisibility::Visible)
-														.Text(this, &SProjectManagerWidget::GetDisplayAPIKey)
-														.OnTextChanged(this, &SProjectManagerWidget::OnAPIKeyChanged)
-												]
-										]
-								]
-
-								//validate keys button
-								+ SVerticalBox::Slot()
-								.AutoHeight()
-								.Padding(0, 0, 0, 5)
-								[
-									SNew(SBox)
-										.HAlign(HAlign_Center)
-										.VAlign(VAlign_Center)
-										//set width/height override to match the image size
-										//.HeightOverride(150)
-										.WidthOverride(256)
-										.HeightOverride(32)
-										.Visibility(EVisibility::Visible)
-										[
-											SNew(SButton)
-												//.ContentPadding(0)
-												.Text(FText::FromString("Validate Developer Key and Fetch Application Key"))
-												.OnClicked(this, &SProjectManagerWidget::ValidateKeys)
-										]
-								]
-								
-
-						]
-				]
-
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.Padding(0, 0, 0, 5)
-					[
-						SNew(SSeparator)
-							.Visibility(EVisibility::Visible)
-					]
-
-
-						+ SVerticalBox::Slot()
-						.AutoHeight()
-						.Padding(0, 0, 0, 5)
-						[
-							SNew(SExpandableArea)
-								.InitiallyCollapsed(true)
-								.HeaderContent()
-								[
-									SNew(STextBlock)
-										.Text(FText::FromString(TEXT("Player Setup")))
-										.Font(FEditorStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
-								]
-								.BodyContent()
-								[
-									SNew(SVerticalBox)
-
-										+ SVerticalBox::Slot()
-										.AutoHeight()
-										.Padding(0, 0, 0, 5)
-										[
-											SNew(SHorizontalBox)
-												.Visibility(EVisibility::Visible)
-												+ SHorizontalBox::Slot()
+												+ SVerticalBox::Slot()
+												.AutoHeight()
+												.Padding(0, 0, 0, 5)
 												[
 													SNew(SRichTextBlock)
 														.Visibility(EVisibility::Visible)
 														.AutoWrapText(true)
 														.Justification(ETextJustify::Center)
-														.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
-														.Text(FText::FromString("The Cognitive3DActor Blueprint automatically finds your player's controllers in run-time and assigns dynamic objects to them to be tracked for valuable insights on our dashboard.\n\n You do not have to set those up manually, or export and upload a mesh for them to be tracked like other dynamic objects."))
+														.DecoratorStyleSet(&FEditorStyle::Get())
+														.Text(FText::FromString("Please add your <RichTextBlock.BoldHighlight>Cognitive3D Project API Keys</> below to continue\nThese are available on the Project Dashboard"))
 												]
-										]
-										+SVerticalBox::Slot()
-										.AutoHeight()
-										.Padding(0, 0, 0, 5)
-										[
-											SNew(SSeparator)
-												.Visibility(EVisibility::Visible)
-										]
-
-										+ SVerticalBox::Slot()
-										.AutoHeight()
-										.Padding(0, 0, 0, 5)
-										.HAlign(EHorizontalAlignment::HAlign_Center)
-										[
-											SNew(SRichTextBlock)
-												.Visibility(EVisibility::Visible)
-												.AutoWrapText(true)
-												.Justification(ETextJustify::Center)
-												.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
-												.Text(this, &SProjectManagerWidget::GetInputClassText)
-										]
-
-										+ SVerticalBox::Slot()
-										.AutoHeight()
-										.Padding(0, 0, 0, 5)
-										.HAlign(EHorizontalAlignment::HAlign_Center)
-										[
-											SNew(SBox)
-												.Visibility(this, &SProjectManagerWidget::GetDefaultInputClassEnhanced)
-												[
-													SNew(SRichTextBlock)
-														.Visibility(this, &SProjectManagerWidget::GetAppendedInputsFoundVisibility)
-														.AutoWrapText(true)
-														.Justification(ETextJustify::Center)
-														.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
-														.Text(FText::FromString("The Cognitive3D action maps have been added to DefaultInputs.ini"))
-												]
-										]
-
-										+ SVerticalBox::Slot()
-										.AutoHeight()
-										.Padding(0, 0, 0, 5)
-										.HAlign(EHorizontalAlignment::HAlign_Center)
-										[
-											SNew(SBox)
-												.Visibility(this, &SProjectManagerWidget::GetDefaultInputClassEnhanced)
+												//dev key
+												+ SVerticalBox::Slot()
+												.MaxHeight(32)
+												.AutoHeight()
+												.Padding(0, 0, 0, 5)
 												[
 													SNew(SHorizontalBox)
+														.Visibility(EVisibility::Visible)
 														+ SHorizontalBox::Slot()
-														.AutoWidth()
 														[
 															SNew(SBox)
 																.Visibility(EVisibility::Visible)
-																.WidthOverride(256)
+																.WidthOverride(128)
 																.HeightOverride(32)
 																[
-																	SNew(SButton)
-																		.Text(FText::FromString("Append Input Data to Input.ini"))
-																		.OnClicked(this, &SProjectManagerWidget::AppendInputs)
+																	SNew(STextBlock)
+																		.Visibility(EVisibility::Visible)
+																		.Text(FText::FromString("Developer Key\nThis key is secret and should be kept safe, make sure not to commit to version control"))
+																]
+														]
+														+ SHorizontalBox::Slot()
+														[
+															SNew(SBox)
+																.Visibility(EVisibility::Visible)
+																.WidthOverride(128)
+																.HeightOverride(32)
+																[
+																	SNew(SEditableTextBox)
+																		.Visibility(EVisibility::Visible)
+																		.Text(this, &SProjectManagerWidget::GetDisplayDeveloperKey)
+																		.OnTextChanged(this, &SProjectManagerWidget::OnDeveloperKeyChanged)
+																		//.OnTextCommitted()
 																]
 														]
 												]
+												+ SVerticalBox::Slot()
+												.AutoHeight()
+												.Padding(0, 0, 0, 5)
+												[
+													SNew(SSeparator)
+														.Visibility(EVisibility::Visible)
+												]
+
+												//app key
+												+ SVerticalBox::Slot()
+												.AutoHeight()
+												.Padding(0, 0, 0, 5)
+												[
+													SAssignNew(OrgNameTextBlock, STextBlock)
+														.Visibility(EVisibility::Visible)
+														.Justification(ETextJustify::Center)
+														.Text(FText::FromString("Unknown Organization Name"))
+												]
+
+												+ SVerticalBox::Slot()
+												.AutoHeight()
+												.Padding(0, 0, 0, 5)
+												[
+													SAssignNew(OrgTrialTextBlock, STextBlock)
+														.Visibility(EVisibility::Visible)
+														.Justification(ETextJustify::Center)
+														.Text(FText::FromString("Unknown Organization Trial Status"))
+												]
+
+												+ SVerticalBox::Slot()
+												.AutoHeight()
+												.Padding(0, 0, 0, 5)
+												[
+													SAssignNew(OrgExpiryTextBlock, STextBlock)
+														.Visibility(EVisibility::Visible)
+														.Justification(ETextJustify::Center)
+														.Text(FText::FromString("Unknown Organization Expirey Date"))
+												]
+
+												+ SVerticalBox::Slot()
+												.MaxHeight(32)
+												.AutoHeight()
+												.Padding(0, 0, 0, 5)
+												[
+													SNew(SHorizontalBox)
+														.Visibility(EVisibility::Visible)
+														+ SHorizontalBox::Slot()
+														[
+															SNew(SBox)
+																.Visibility(EVisibility::Visible)
+																.WidthOverride(128)
+																.HeightOverride(32)
+																[
+																	SNew(STextBlock)
+																		.Visibility(EVisibility::Visible)
+																		.Text(FText::FromString("Application Key\nThis key identifies and authorizes the session data being uploaded to your project"))
+																]
+														]
+
+														+ SHorizontalBox::Slot()
+														[
+															SNew(SBox)
+																.Visibility(EVisibility::Visible)
+																.WidthOverride(128)
+																.HeightOverride(32)
+																[
+																	SNew(SEditableTextBox)
+																		.Visibility(EVisibility::Visible)
+																		.Text(this, &SProjectManagerWidget::GetDisplayAPIKey)
+																		.OnTextChanged(this, &SProjectManagerWidget::OnAPIKeyChanged)
+																]
+														]
+												]
+
+												//validate keys button
+												+ SVerticalBox::Slot()
+												.AutoHeight()
+												.Padding(0, 0, 0, 5)
+												[
+													SNew(SBox)
+														.HAlign(HAlign_Center)
+														.VAlign(VAlign_Center)
+														//set width/height override to match the image size
+														//.HeightOverride(150)
+														.WidthOverride(256)
+														.HeightOverride(32)
+														.Visibility(EVisibility::Visible)
+														[
+															SNew(SButton)
+																//.ContentPadding(0)
+																.Text(FText::FromString("Validate Developer Key and Fetch Application Key"))
+																.OnClicked(this, &SProjectManagerWidget::ValidateKeys)
+														]
+												]
+								
+
 										]
-
 								]
-						]
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							.Padding(0, 0, 0, 5)
-							[
-								SNew(SSeparator)
-									.Visibility(EVisibility::Visible)
-							]
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							.Padding(0, 0, 0, 5)
-							[
-								SNew(SExpandableArea)
-									.InitiallyCollapsed(true)
-									.HeaderContent()
+
+									+ SVerticalBox::Slot()
+									.AutoHeight()
+									.Padding(0, 0, 0, 5)
 									[
-										SNew(STextBlock)
-											.Text(FText::FromString(TEXT("Scene Setup")))
-											.Font(FEditorStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
+										SNew(SSeparator)
+											.Visibility(EVisibility::Visible)
 									]
-									.BodyContent()
-									[
-										SNew(SVerticalBox)
-
-											//export directory
-											+ SVerticalBox::Slot()
-											.AutoHeight()
-											.Padding(0, 0, 0, 5)
-											[
-												SNew(STextBlock)
-													.Visibility(EVisibility::Visible)
-													.Justification(ETextJustify::Center)
-													.AutoWrapText(true)
-													.Text(FText::FromString("When uploading your level to the dashboard, we use Unreal's GLTF exporter to automatically prepare the scene.\nThis includes exporting images as .pngs\n\nWe also need a temporary Export Directory to save Unreal files to while we process them."))
-											]
 
 
+										+ SVerticalBox::Slot()
+										.AutoHeight()
+										.Padding(0, 0, 0, 5)
+										[
+											SNew(SExpandableArea)
+												.InitiallyCollapsed(true)
+												.HeaderContent()
+												[
+													SNew(STextBlock)
+														.Text(FText::FromString(TEXT("Player Setup")))
+														.Font(FEditorStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
+												]
+												.BodyContent()
+												[
+													SNew(SVerticalBox)
 
-											+SVerticalBox::Slot()
-											.VAlign(VAlign_Center)
-											.AutoHeight()
-											.Padding(0, 0, 0, 5)
-											[
-												SNew(STextBlock)
-													.Visibility(EVisibility::Visible)
-													.Justification(ETextJustify::Center)
-													.Text(FText::FromString("You will need to create a temporary directory to store the exported files."))
-											]
+														+ SVerticalBox::Slot()
+														.AutoHeight()
+														.Padding(0, 0, 0, 5)
+														[
+															SNew(SHorizontalBox)
+																.Visibility(EVisibility::Visible)
+																+ SHorizontalBox::Slot()
+																[
+																	SNew(SRichTextBlock)
+																		.Visibility(EVisibility::Visible)
+																		.AutoWrapText(true)
+																		.Justification(ETextJustify::Center)
+																		.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
+																		.Text(FText::FromString("The Cognitive3DActor Blueprint automatically finds your player's controllers in run-time and assigns dynamic objects to them to be tracked for valuable insights on our dashboard.\n\n You do not have to set those up manually, or export and upload a mesh for them to be tracked like other dynamic objects."))
+																]
+														]
+														+SVerticalBox::Slot()
+														.AutoHeight()
+														.Padding(0, 0, 0, 5)
+														[
+															SNew(SSeparator)
+																.Visibility(EVisibility::Visible)
+														]
 
+														+ SVerticalBox::Slot()
+														.AutoHeight()
+														.Padding(0, 0, 0, 5)
+														.HAlign(EHorizontalAlignment::HAlign_Center)
+														[
+															SNew(SRichTextBlock)
+																.Visibility(EVisibility::Visible)
+																.AutoWrapText(true)
+																.Justification(ETextJustify::Center)
+																.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
+																.Text(this, &SProjectManagerWidget::GetInputClassText)
+														]
+
+														+ SVerticalBox::Slot()
+														.AutoHeight()
+														.Padding(0, 0, 0, 5)
+														.HAlign(EHorizontalAlignment::HAlign_Center)
+														[
+															SNew(SBox)
+																.Visibility(this, &SProjectManagerWidget::GetDefaultInputClassEnhanced)
+																[
+																	SNew(SRichTextBlock)
+																		.Visibility(this, &SProjectManagerWidget::GetAppendedInputsFoundVisibility)
+																		.AutoWrapText(true)
+																		.Justification(ETextJustify::Center)
+																		.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
+																		.Text(FText::FromString("The Cognitive3D action maps have been added to DefaultInputs.ini"))
+																]
+														]
+
+														+ SVerticalBox::Slot()
+														.AutoHeight()
+														.Padding(0, 0, 0, 5)
+														.HAlign(EHorizontalAlignment::HAlign_Center)
+														[
+															SNew(SBox)
+																.Visibility(this, &SProjectManagerWidget::GetDefaultInputClassEnhanced)
+																[
+																	SNew(SHorizontalBox)
+																		+ SHorizontalBox::Slot()
+																		.AutoWidth()
+																		[
+																			SNew(SBox)
+																				.Visibility(EVisibility::Visible)
+																				.WidthOverride(256)
+																				.HeightOverride(32)
+																				[
+																					SNew(SButton)
+																						.Text(FText::FromString("Append Input Data to Input.ini"))
+																						.OnClicked(this, &SProjectManagerWidget::AppendInputs)
+																				]
+																		]
+																]
+														]
+
+												]
+										]
 											+ SVerticalBox::Slot()
 											.AutoHeight()
 											.Padding(0, 0, 0, 5)
@@ -387,281 +383,324 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 												SNew(SSeparator)
 													.Visibility(EVisibility::Visible)
 											]
-
-											//path to export directory
 											+ SVerticalBox::Slot()
-											.MaxHeight(32)
 											.AutoHeight()
 											.Padding(0, 0, 0, 5)
 											[
-												SNew(SHorizontalBox)
-													.Visibility(EVisibility::Visible)
-													+ SHorizontalBox::Slot()
-													.MaxWidth(200)
-													[
-														SNew(SBox)
-															.Visibility(EVisibility::Visible)
-															.HeightOverride(32)
-															[
-																SNew(STextBlock)
-																	.Visibility(EVisibility::Visible)
-																	.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
-																	.Text(FText::FromString("Path to Export Directory"))
-															]
-													]
-													+ SHorizontalBox::Slot()
-													.FillWidth(3)
-													.Padding(1)
-													[
-														SNew(SBox)
-															.Visibility(EVisibility::Visible)
-															.HeightOverride(32)
-															.MaxDesiredHeight(32)
-															[
-																SNew(SEditableTextBox)
-																	.Visibility(EVisibility::Visible)
-																	.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBaseExportDirectoryDisplay)
-																	.OnTextChanged(this, &SProjectManagerWidget::OnExportPathChanged)
-																	//SNew(STextBlock)
-																	//
-															]
-													]
-													+ SHorizontalBox::Slot()
-													.MaxWidth(17)
-													[
-														SNew(SHorizontalBox)
-															+ SHorizontalBox::Slot()
-															.AutoWidth()
-															.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
-															.VAlign(VAlign_Center)
-															[
-																SNew(SBox)
-																	.Visibility(EVisibility::Visible)
-																	.HeightOverride(17)
-																	.WidthOverride(17)
-																	[
-																		SNew(SButton)
-																			.Visibility(EVisibility::Visible)
-																			//PickerWidget = SAssignNew(BrowseButton, SButton)
-																			.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
-																			.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
-																			.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectBaseExportDirectory)
-																			.ContentPadding(2.0f)
-																			.ForegroundColor(FSlateColor::UseForeground())
-																			.IsFocusable(false)
-																			[
-																				SNew(SImage)
-																					.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
-																					.ColorAndOpacity(FSlateColor::UseForeground())
-																			]
-																	]
-															]
-													]
-													+ SHorizontalBox::Slot()
-													.MaxWidth(17)
-													[
-														SNew(SHorizontalBox)
-															+ SHorizontalBox::Slot()
-															.AutoWidth()
-															.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
-															.VAlign(VAlign_Center)
-															[
-																SNew(SBox)
-																	.Visibility(EVisibility::Visible)
-																	.HeightOverride(17)
-																	.WidthOverride(17)
-																	[
-																		SNew(SImage)
-																			.Visibility(EVisibility::Visible)
-																			.Image(this, &SProjectManagerWidget::GetExportPathStateIcon)
-																			.ToolTipText(this, &SProjectManagerWidget::GetExportPathTooltipText)
-																			.ColorAndOpacity(FSlateColor::UseForeground())
-																	]
-															]
-													]
-											]
-
-											+ SVerticalBox::Slot()
-											.AutoHeight()
-											.Padding(0,0,0,5)
-											[
-												SNew(SHorizontalBox)
-													.Visibility(EVisibility::Visible)
-													+ SHorizontalBox::Slot()
-													[
-														SNew(SRichTextBlock)
-															.Visibility(EVisibility::Visible)
-															.AutoWrapText(true)
-															.Justification(ETextJustify::Center)
-															.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
-															.Text(FText::FromString("This is where we will do something with scene exports and uploads."))
-													]
-											]
-											+ SVerticalBox::Slot()
-											.AutoHeight()
-											.Padding(0, 0, 0, 10)
-											[
 												SNew(SExpandableArea)
-													.InitiallyCollapsed(false)
+													.InitiallyCollapsed(true)
 													.HeaderContent()
 													[
 														SNew(STextBlock)
-															.Text(FText::FromString(TEXT("Scenes to Export")))
+															.Text(FText::FromString(TEXT("Scene Setup")))
+															.Font(FEditorStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
 													]
 													.BodyContent()
 													[
-														SAssignNew(SceneChecklistContainer, SVerticalBox)
+														SNew(SVerticalBox)
+
+															//export directory
+															+ SVerticalBox::Slot()
+															.AutoHeight()
+															.Padding(0, 0, 0, 5)
+															[
+																SNew(STextBlock)
+																	.Visibility(EVisibility::Visible)
+																	.Justification(ETextJustify::Center)
+																	.AutoWrapText(true)
+																	.Text(FText::FromString("When uploading your level to the dashboard, we use Unreal's GLTF exporter to automatically prepare the scene.\nThis includes exporting images as .pngs\n\nWe also need a temporary Export Directory to save Unreal files to while we process them."))
+															]
+
+
+
+															+SVerticalBox::Slot()
+															.VAlign(VAlign_Center)
+															.AutoHeight()
+															.Padding(0, 0, 0, 5)
+															[
+																SNew(STextBlock)
+																	.Visibility(EVisibility::Visible)
+																	.Justification(ETextJustify::Center)
+																	.Text(FText::FromString("You will need to create a temporary directory to store the exported files."))
+															]
+
+															+ SVerticalBox::Slot()
+															.AutoHeight()
+															.Padding(0, 0, 0, 5)
+															[
+																SNew(SSeparator)
+																	.Visibility(EVisibility::Visible)
+															]
+
+															//path to export directory
+															+ SVerticalBox::Slot()
+															.MaxHeight(32)
+															.AutoHeight()
+															.Padding(0, 0, 0, 5)
+															[
+																SNew(SHorizontalBox)
+																	.Visibility(EVisibility::Visible)
+																	+ SHorizontalBox::Slot()
+																	.MaxWidth(200)
+																	[
+																		SNew(SBox)
+																			.Visibility(EVisibility::Visible)
+																			.HeightOverride(32)
+																			[
+																				SNew(STextBlock)
+																					.Visibility(EVisibility::Visible)
+																					.IsEnabled_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::HasDeveloperKey)
+																					.Text(FText::FromString("Path to Export Directory"))
+																			]
+																	]
+																	+ SHorizontalBox::Slot()
+																	.FillWidth(3)
+																	.Padding(1)
+																	[
+																		SNew(SBox)
+																			.Visibility(EVisibility::Visible)
+																			.HeightOverride(32)
+																			.MaxDesiredHeight(32)
+																			[
+																				SNew(SEditableTextBox)
+																					.Visibility(EVisibility::Visible)
+																					.Text_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::GetBaseExportDirectoryDisplay)
+																					.OnTextChanged(this, &SProjectManagerWidget::OnExportPathChanged)
+																					//SNew(STextBlock)
+																					//
+																			]
+																	]
+																	+ SHorizontalBox::Slot()
+																	.MaxWidth(17)
+																	[
+																		SNew(SHorizontalBox)
+																			+ SHorizontalBox::Slot()
+																			.AutoWidth()
+																			.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+																			.VAlign(VAlign_Center)
+																			[
+																				SNew(SBox)
+																					.Visibility(EVisibility::Visible)
+																					.HeightOverride(17)
+																					.WidthOverride(17)
+																					[
+																						SNew(SButton)
+																							.Visibility(EVisibility::Visible)
+																							//PickerWidget = SAssignNew(BrowseButton, SButton)
+																							.ButtonStyle(FEditorStyle::Get(), "HoverHintOnly")
+																							.ToolTipText(LOCTEXT("FolderButtonToolTipText", "Choose a directory from this computer"))
+																							.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::SelectBaseExportDirectory)
+																							.ContentPadding(2.0f)
+																							.ForegroundColor(FSlateColor::UseForeground())
+																							.IsFocusable(false)
+																							[
+																								SNew(SImage)
+																									.Image(FEditorStyle::GetBrush("PropertyWindow.Button_Ellipsis"))
+																									.ColorAndOpacity(FSlateColor::UseForeground())
+																							]
+																					]
+																			]
+																	]
+																	+ SHorizontalBox::Slot()
+																	.MaxWidth(17)
+																	[
+																		SNew(SHorizontalBox)
+																			+ SHorizontalBox::Slot()
+																			.AutoWidth()
+																			.Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+																			.VAlign(VAlign_Center)
+																			[
+																				SNew(SBox)
+																					.Visibility(EVisibility::Visible)
+																					.HeightOverride(17)
+																					.WidthOverride(17)
+																					[
+																						SNew(SImage)
+																							.Visibility(EVisibility::Visible)
+																							.Image(this, &SProjectManagerWidget::GetExportPathStateIcon)
+																							.ToolTipText(this, &SProjectManagerWidget::GetExportPathTooltipText)
+																							.ColorAndOpacity(FSlateColor::UseForeground())
+																					]
+																			]
+																	]
+															]
+
+															+ SVerticalBox::Slot()
+															.AutoHeight()
+															.Padding(0,0,0,5)
+															[
+																SNew(SHorizontalBox)
+																	.Visibility(EVisibility::Visible)
+																	+ SHorizontalBox::Slot()
+																	[
+																		SNew(SRichTextBlock)
+																			.Visibility(EVisibility::Visible)
+																			.AutoWrapText(true)
+																			.Justification(ETextJustify::Center)
+																			.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
+																			.Text(FText::FromString("This is where we will do something with scene exports and uploads."))
+																	]
+															]
+															+ SVerticalBox::Slot()
+															.AutoHeight()
+															.Padding(0, 0, 0, 10)
+															[
+																SNew(SExpandableArea)
+																	.InitiallyCollapsed(false)
+																	.HeaderContent()
+																	[
+																		SNew(STextBlock)
+																			.Text(FText::FromString(TEXT("Scenes to Export")))
+																	]
+																	.BodyContent()
+																	[
+																		SAssignNew(SceneChecklistContainer, SVerticalBox)
+																	]
+															]
 													]
 											]
-									]
-							]
 
-							+ SVerticalBox::Slot()
-								.AutoHeight()
-								.Padding(0, 0, 0, 5)
-								[
-									SNew(SSeparator)
-										.Visibility(EVisibility::Visible)
-								]
-
-							// ===== New Third-Party SDKs Section =====
-							+ SVerticalBox::Slot()
-								.AutoHeight()
-								.Padding(0, 0, 0, 5)
-								[
-									SNew(SExpandableArea)
-										.InitiallyCollapsed(true)
-										.HeaderContent()
-										[
-											SNew(STextBlock)
-												.Text(FText::FromString(TEXT("Third-Party SDKs")))
-												.Font(FEditorStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
-										]
-										.BodyContent()
-										[
-											SNew(SVerticalBox)
-
-												// MetaXR
-												+ SVerticalBox::Slot()
+											+ SVerticalBox::Slot()
 												.AutoHeight()
-												.Padding(5, 2)
+												.Padding(0, 0, 0, 5)
 												[
-														SNew(SCheckBox)
-														.IsChecked_Lambda([this]() {
-														return SDKCheckboxStates.FindRef(TEXT("MetaXR"))
-															? ECheckBoxState::Checked
-															: ECheckBoxState::Unchecked;
-															})
-															.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
-															const bool bEnabled = (NewState == ECheckBoxState::Checked);
-															SDKCheckboxStates.Add(TEXT("MetaXR"), bEnabled);
-															this->ApplySDKToggle(TEXT("MetaXR"), bEnabled);
-																})
+													SNew(SSeparator)
+														.Visibility(EVisibility::Visible)
+												]
+
+											// ===== New Third-Party SDKs Section =====
+											+ SVerticalBox::Slot()
+												.AutoHeight()
+												.Padding(0, 0, 0, 5)
+												[
+													SNew(SExpandableArea)
+														.InitiallyCollapsed(true)
+														.HeaderContent()
 														[
 															SNew(STextBlock)
-																.Text(FText::FromString(TEXT("MetaXR")))
+																.Text(FText::FromString(TEXT("Third-Party SDKs")))
+																.Font(FEditorStyle::GetFontStyle("DetailsView.CategoryFontStyle"))
 														]
+														.BodyContent()
+														[
+															SNew(SVerticalBox)
+
+																// MetaXR
+																+ SVerticalBox::Slot()
+																.AutoHeight()
+																.Padding(5, 2)
+																[
+																		SNew(SCheckBox)
+																		.IsChecked_Lambda([this]() {
+																		return SDKCheckboxStates.FindRef(TEXT("MetaXR"))
+																			? ECheckBoxState::Checked
+																			: ECheckBoxState::Unchecked;
+																			})
+																			.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
+																			const bool bEnabled = (NewState == ECheckBoxState::Checked);
+																			SDKCheckboxStates.Add(TEXT("MetaXR"), bEnabled);
+																			this->ApplySDKToggle(TEXT("MetaXR"), bEnabled);
+																				})
+																		[
+																			SNew(STextBlock)
+																				.Text(FText::FromString(TEXT("MetaXR")))
+																		]
 														
-												]
+																]
 
-												// MetaXRPlatform (only enabled if MetaXR is checked)
-												+ SVerticalBox::Slot()
-												.AutoHeight()
-												.Padding(20, 2)
-												[
-													SNew(SCheckBox)
-														.IsEnabled_Lambda([this]() {
-														return SDKCheckboxStates.FindRef(TEXT("MetaXR"));
-															})
-														.IsChecked_Lambda([this]() {
-														return SDKCheckboxStates.FindRef(TEXT("MetaXRPlatform"))
-															? ECheckBoxState::Checked
-															: ECheckBoxState::Unchecked;
-															})
-														.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
-														const bool bEnabled = (NewState == ECheckBoxState::Checked);
-														SDKCheckboxStates.Add(TEXT("MetaXRPlatform"), bEnabled);
-														this->ApplySDKToggle(TEXT("MetaXRPlatform"), bEnabled);
-															})
-														[
-															SNew(STextBlock)
-																.Text(FText::FromString(TEXT("MetaXRPlatform")))
+																// MetaXRPlatform (only enabled if MetaXR is checked)
+																+ SVerticalBox::Slot()
+																.AutoHeight()
+																.Padding(20, 2)
+																[
+																	SNew(SCheckBox)
+																		.IsEnabled_Lambda([this]() {
+																		return SDKCheckboxStates.FindRef(TEXT("MetaXR"));
+																			})
+																		.IsChecked_Lambda([this]() {
+																		return SDKCheckboxStates.FindRef(TEXT("MetaXRPlatform"))
+																			? ECheckBoxState::Checked
+																			: ECheckBoxState::Unchecked;
+																			})
+																		.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
+																		const bool bEnabled = (NewState == ECheckBoxState::Checked);
+																		SDKCheckboxStates.Add(TEXT("MetaXRPlatform"), bEnabled);
+																		this->ApplySDKToggle(TEXT("MetaXRPlatform"), bEnabled);
+																			})
+																		[
+																			SNew(STextBlock)
+																				.Text(FText::FromString(TEXT("MetaXRPlatform")))
+																		]
+																]
+
+																// PicoXR
+																+ SVerticalBox::Slot()
+																.AutoHeight()
+																.Padding(5, 2)
+																[
+																	SNew(SCheckBox)
+																		.IsChecked_Lambda([this]() {
+																		return SDKCheckboxStates.FindRef(TEXT("PicoXR"))
+																			? ECheckBoxState::Checked
+																			: ECheckBoxState::Unchecked;
+																			})
+																		.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
+																		const bool bEnabled = (NewState == ECheckBoxState::Checked);
+																		SDKCheckboxStates.Add(TEXT("PicoXR"), bEnabled);
+																		this->ApplySDKToggle(TEXT("PicoXR"), bEnabled);
+																			})
+																		[
+																			SNew(STextBlock)
+																				.Text(FText::FromString(TEXT("PicoXR")))
+																		]
+																]
+
+																// WaveVR
+																+ SVerticalBox::Slot()
+																.AutoHeight()
+																.Padding(5, 2)
+																[
+																	SNew(SCheckBox)
+																		.IsChecked_Lambda([this]() {
+																		return SDKCheckboxStates.FindRef(TEXT("WaveVR"))
+																			? ECheckBoxState::Checked
+																			: ECheckBoxState::Unchecked;
+																			})
+																		.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
+																		const bool bEnabled = (NewState == ECheckBoxState::Checked);
+																		SDKCheckboxStates.Add(TEXT("WaveVR"), bEnabled);
+																		this->ApplySDKToggle(TEXT("WaveVR"), bEnabled);
+																			})
+																		[
+																			SNew(STextBlock)
+																				.Text(FText::FromString(TEXT("WaveVR")))
+																		]
+																]
 														]
 												]
-
-												// PicoXR
-												+ SVerticalBox::Slot()
-												.AutoHeight()
-												.Padding(5, 2)
-												[
-													SNew(SCheckBox)
-														.IsChecked_Lambda([this]() {
-														return SDKCheckboxStates.FindRef(TEXT("PicoXR"))
-															? ECheckBoxState::Checked
-															: ECheckBoxState::Unchecked;
-															})
-														.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
-														const bool bEnabled = (NewState == ECheckBoxState::Checked);
-														SDKCheckboxStates.Add(TEXT("PicoXR"), bEnabled);
-														this->ApplySDKToggle(TEXT("PicoXR"), bEnabled);
-															})
-														[
-															SNew(STextBlock)
-																.Text(FText::FromString(TEXT("PicoXR")))
-														]
-												]
-
-												// WaveVR
-												+ SVerticalBox::Slot()
-												.AutoHeight()
-												.Padding(5, 2)
-												[
-													SNew(SCheckBox)
-														.IsChecked_Lambda([this]() {
-														return SDKCheckboxStates.FindRef(TEXT("WaveVR"))
-															? ECheckBoxState::Checked
-															: ECheckBoxState::Unchecked;
-															})
-														.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
-														const bool bEnabled = (NewState == ECheckBoxState::Checked);
-														SDKCheckboxStates.Add(TEXT("WaveVR"), bEnabled);
-														this->ApplySDKToggle(TEXT("WaveVR"), bEnabled);
-															})
-														[
-															SNew(STextBlock)
-																.Text(FText::FromString(TEXT("WaveVR")))
-														]
-												]
-										]
-								]
-		] // end of the overlay slot
+						] // end of the overlay slot
+				] // end of vertical box
+			] // end of scroll box slot
+		] // end of vertical box slot
 		//finish setup button
-		+ SOverlay::Slot()
-			.VAlign(VAlign_Bottom)
-			.HAlign(HAlign_Center)
-			.Padding(0, 10, 0, 10)
-			[
-				
-			SNew(SVerticalBox)
 			+ SVerticalBox::Slot()
-				.AutoHeight()
-				.HAlign(HAlign_Center)
-				.Padding(0, 10)
-				[
-					SNew(SBox)
-						.WidthOverride(200)
-						.HeightOverride(32)
-						[
-							SNew(SButton)
-								.Text(FText::FromString(TEXT("Finish Setup")))
-								.OnClicked_Lambda([this]() -> FReply {
-								this->FinalizeProjectSetup();
-								return FReply::Handled();
-									})
-						]
-				]
+			.AutoHeight()
+			.HAlign(HAlign_Center)
+			.Padding(0, 10)
+			[
+				SNew(SBox)
+					.WidthOverride(200)
+					.HeightOverride(32)
+					[
+						SNew(SButton)
+							.Text(FText::FromString(TEXT("Finish Setup")))
+							.OnClicked_Lambda([this]() -> FReply {
+							this->FinalizeProjectSetup();
+							return FReply::Handled();
+								})
+					]
 			]
-    ];
+	]; // end of child slot
 
 	CollectAllMaps();
 	RebuildSceneChecklist();
