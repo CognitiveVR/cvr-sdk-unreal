@@ -37,5 +37,5 @@ class UHMDHeight : public UActorComponent
 		EHMDWornState::Type WornState = EHMDWornState::NotWorn;
 
 		//forehead
-		float ForeheadHeight = 11.0f;
+		float ForeheadHeight = 11.0f; // typical forehead height is 11 cm
 };
