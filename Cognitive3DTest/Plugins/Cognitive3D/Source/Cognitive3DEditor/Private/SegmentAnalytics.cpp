@@ -34,11 +34,8 @@ void USegmentAnalytics::Initialize()
 	{
 		SingletonInstance->AnonymousId = static_cast<int32>(GetTypeHash(FGuid::NewGuid()));
 	}
-	UE_LOG(LogTemp, Log, TEXT("SegmentAnalytics initialized with UserId: %d, AnonymousId: %d"), UserId, AnonymousId);
 	// Optionally, you can also set a GroupId if needed
 	SingletonInstance->GroupId = static_cast<int32>(GetTypeHash(FGuid::NewGuid()));
-
-	UE_LOG(LogTemp, Log, TEXT("SegmentAnalytics initialized with WriteKey: %s"), *WriteKey);
 
 	FetchUserData();
 }
@@ -57,16 +54,16 @@ void USegmentAnalytics::GetKeyFromServer()
                 if (!RetrievedKey.IsEmpty())
                 {
                     WriteKey = RetrievedKey;
-                    UE_LOG(LogTemp, Log, TEXT("Segment write key retrieved and stored."));
+                    //UE_LOG(LogTemp, Log, TEXT("Segment write key retrieved and stored."));
                 }
                 else
                 {
-                    UE_LOG(LogTemp, Error, TEXT("Empty Segment write key received."));
+                    //UE_LOG(LogTemp, Error, TEXT("Empty Segment write key received."));
                 }
             }
             else
             {
-                UE_LOG(LogTemp, Error, TEXT("Failed to fetch Segment write key: %s"), *Resp->GetContentAsString());
+                //UE_LOG(LogTemp, Error, TEXT("Failed to fetch Segment write key: %s"), *Resp->GetContentAsString());
             }
         });
 
@@ -77,7 +74,7 @@ void USegmentAnalytics::TrackEvent(const FString& EventName, const FString& Butt
 {
     if (WriteKey.IsEmpty())
     {
-        UE_LOG(LogTemp, Warning, TEXT("WriteKey is not set. Cannot track event."));
+        //UE_LOG(LogTemp, Warning, TEXT("WriteKey is not set. Cannot track event."));
         return;
     }
 
@@ -98,7 +95,7 @@ void USegmentAnalytics::TrackEvent(const FString& EventName, TSharedPtr<FJsonObj
 {
     if (WriteKey.IsEmpty())
     {
-        UE_LOG(LogTemp, Warning, TEXT("WriteKey is not set. Cannot track event."));
+        //UE_LOG(LogTemp, Warning, TEXT("WriteKey is not set. Cannot track event."));
         return;
     }
 
@@ -131,7 +128,7 @@ void USegmentAnalytics::FetchUserData()
         {
             if (!bSuccess || Resp->GetResponseCode() != 200)
             {
-                UE_LOG(LogTemp, Error, TEXT("Failed to fetch user data: %s"), *Resp->GetContentAsString());
+                //UE_LOG(LogTemp, Error, TEXT("Failed to fetch user data: %s"), *Resp->GetContentAsString());
                 return;
             }
 
@@ -140,7 +137,7 @@ void USegmentAnalytics::FetchUserData()
 
             if (!FJsonSerializer::Deserialize(Reader, UserData) || !UserData.IsValid())
             {
-                UE_LOG(LogTemp, Error, TEXT("Invalid JSON in user data response."));
+                //UE_LOG(LogTemp, Error, TEXT("Invalid JSON in user data response."));
                 return;
             }
 
@@ -148,8 +145,6 @@ void USegmentAnalytics::FetchUserData()
             FString PrettyJson;
             TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&PrettyJson);
             FJsonSerializer::Serialize(UserData.ToSharedRef(), Writer);
-
-            UE_LOG(LogTemp, Log, TEXT("UserData Response:\n%s"), *PrettyJson);
 
             int32 ParsedUserId = 0;
             int32 ParsedGroupId = 0;
@@ -231,7 +226,7 @@ void USegmentAnalytics::SendToSegment(const FString& Endpoint, const TSharedRef<
 {
     if (WriteKey.IsEmpty())
     {
-        UE_LOG(LogTemp, Warning, TEXT("Segment WriteKey not set"));
+        //UE_LOG(LogTemp, Warning, TEXT("Segment WriteKey not set"));
         return;
     }
 
@@ -252,11 +247,11 @@ void USegmentAnalytics::SendToSegment(const FString& Endpoint, const TSharedRef<
         {
             if (bSuccess && Resp->GetResponseCode() == 200)
             {
-                UE_LOG(LogTemp, Log, TEXT("Segment event sent successfully."));
+                //UE_LOG(LogTemp, Log, TEXT("Segment event sent successfully."));
             }
             else
             {
-                UE_LOG(LogTemp, Error, TEXT("Segment event failed: %s"), *Resp->GetContentAsString());
+                //UE_LOG(LogTemp, Error, TEXT("Segment event failed: %s"), *Resp->GetContentAsString());
             }
         });
 
