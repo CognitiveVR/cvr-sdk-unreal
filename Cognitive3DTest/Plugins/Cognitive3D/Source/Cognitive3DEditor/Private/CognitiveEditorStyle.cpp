@@ -35,7 +35,7 @@ void FCognitiveEditorStyle::Initialize()
             TEXT("CognitiveEditor.Banner"),
             new FSlateImageBrush(
                 ResourceDir / TEXT("C3D-Primary-Logo-WhiteText-1k.png"),
-                FVector2D(800, 200)
+                FVector2D(720, 144)
             )
         );
 
