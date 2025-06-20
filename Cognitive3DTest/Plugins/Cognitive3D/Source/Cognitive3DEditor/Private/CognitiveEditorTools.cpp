@@ -48,6 +48,8 @@
 
 #include "LandscapeStreamingProxy.h"
 
+#include "SegmentAnalytics.h"
+
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
 
@@ -2462,9 +2464,9 @@ void FCognitiveEditorTools::UploadFromDirectory(FString LevelName, FString url, 
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetContent(AllBytes);
-
+#if !(ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 6)
 	FHttpModule::Get().SetHttpTimeout(0);
-
+#endif
 	if (expectedResponseType == "scene")
 	{
 		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadSceneCompleted, LevelName);
@@ -2498,6 +2500,11 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted Successful Upload");
 		ShowNotification(TEXT("Scene Uploaded Successfully"));
 		//UE_LOG(LogTemp, Warning, TEXT("Upload Scene Response is %s"), *Response->GetContentAsString());
+		
+		TSharedPtr<FJsonObject> PropertiesObject = MakeShared<FJsonObject>();
+		TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName);
+		PropertiesObject->SetNumberField("sceneVersion", sceneData->VersionNumber);
+		USegmentAnalytics::Get()->TrackEvent("UploadingSceneComplete_SceneUploadPage", PropertiesObject);
 
 		UWorld* myworld = GWorld->GetWorld();
 		if (myworld == NULL)
@@ -2531,6 +2538,9 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 	}
 	else
 	{
+		FString responseCodeStr =  "UploadingSceneError:" + FString::FromInt(Response->GetResponseCode()) + "_SceneUploadPage";
+		USegmentAnalytics::Get()->TrackEvent(responseCodeStr, "SceneSetupSceneUploadPage");
+
 		ShowNotification(TEXT("Failed to upload scene"), false);
 		WizardUploading = false;
 		WizardUploadError = "FCognitiveEditorTools::OnUploadSceneCompleted Failed to Upload. Response code " + FString::FromInt(Response->GetResponseCode());
@@ -2566,6 +2576,9 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 	}
 	else
 	{
+		FString responseCodeStr = "UploadingObjectError:" + FString::FromInt(Response->GetResponseCode()) + "_SceneUploadPage";
+		USegmentAnalytics::Get()->TrackEvent(responseCodeStr, "SceneSetupSceneUploadPage");
+
 		WizardUploading = false;
 		if (HasExportedAnyDynamicMeshes())
 		{
@@ -3755,6 +3768,7 @@ TArray<AActor*> FCognitiveEditorTools::PrepareSceneForExport(bool OnlyExportSele
 	TArray<AActor*> ToBeExported;
 	if (OnlyExportSelected) //only export selected
 	{
+		USegmentAnalytics::Get()->TrackEvent("ExportSelectedScenes", "SceneManagement_ExportAndUploadSelectedScenes");
 		for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)
 		{
 			if (AActor* Actor = Cast<AActor>(*It))
@@ -3765,6 +3779,7 @@ TArray<AActor*> FCognitiveEditorTools::PrepareSceneForExport(bool OnlyExportSele
 	}
 	else //select all
 	{
+		USegmentAnalytics::Get()->TrackEvent("ExportAllScenes", "SceneManagement_ExportAndUploadAllScenes");
 		UWorld* World = GEditor->GetLevelViewportClients()[0]->GetWorld();
 		GEditor->Exec(World, TEXT("actor select all"));
 		for (FSelectionIterator It(GEditor->GetSelectedActorIterator()); It; ++It)

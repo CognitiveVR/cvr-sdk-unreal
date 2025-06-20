@@ -4,6 +4,7 @@
 
 #include "DynamicObjectManagerWidget.h"
 #include "Analytics.h"
+#include "SegmentAnalytics.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
@@ -126,6 +127,8 @@ void SDynamicObjectManagerWidget::OnDashboardManifestResponseReceived(FHttpReque
 
 void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 {
+	USegmentAnalytics::Get()->TrackEvent(TEXT("DynamicObjectsWindow_Opened"), TEXT("DynamicObjectsWindow"));
+
 	float padding = 10;
 
 	FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();

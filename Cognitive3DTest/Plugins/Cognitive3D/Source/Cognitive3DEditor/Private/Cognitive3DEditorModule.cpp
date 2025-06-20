@@ -4,6 +4,7 @@
 
 #include "Cognitive3DEditorModule.h"
 #include "C3DCommands.h"
+#include "SegmentAnalytics.h"
 
 IMPLEMENT_MODULE(FCognitive3DEditorModule, Cognitive3DEditor);
 
@@ -66,6 +67,9 @@ void FCognitive3DEditorModule::StartupModule()
 	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, C3DKeysPath);
 	GConfig->GetString(TEXT("Analytics"), TEXT("ExportPath"), FCognitiveEditorTools::GetInstance()->BaseExportDirectory, C3DSettingsPath);
 	GConfig->Flush(false, C3DSettingsPath);
+
+	//segment init
+	USegmentAnalytics::Get()->Initialize();
 
 	// Grab the singleton packaging-settings object (its Config=Game, defaultconfig)
 	UProjectPackagingSettings* PackagingSettings = GetMutableDefault<UProjectPackagingSettings>();
@@ -239,7 +243,7 @@ void FCognitive3DEditorModule::SpawnCognitiveDynamicTab()
 	else
 	{
 		TSharedPtr<SDockTab> MajorTab = FGlobalTabmanager::Get()->TryInvokeTab(tabId);
-		MajorTab->SetContent(SNew(SDynamicObjectManagerWidget));
+		//MajorTab->SetContent(SNew(SDynamicObjectManagerWidget));
 	}
 }
 
@@ -254,7 +258,7 @@ void FCognitive3DEditorModule::SpawnCognitiveSceneSetupTab()
 	else
 	{
 		TSharedPtr<SDockTab> MajorTab = FGlobalTabmanager::Get()->TryInvokeTab(tabId);
-		MajorTab->SetContent(SNew(SSceneSetupWidget));
+		//MajorTab->SetContent(SNew(SSceneSetupWidget));
 	}
 }
 
@@ -269,7 +273,7 @@ void FCognitive3DEditorModule::SpawnCognitiveProjectSetupTab()
 	else
 	{
 		TSharedPtr<SDockTab> MajorTab = FGlobalTabmanager::Get()->TryInvokeTab(tabId);
-		MajorTab->SetContent(SNew(SProjectSetupWidget));
+		//MajorTab->SetContent(SNew(SProjectSetupWidget));
 	}
 }
 
