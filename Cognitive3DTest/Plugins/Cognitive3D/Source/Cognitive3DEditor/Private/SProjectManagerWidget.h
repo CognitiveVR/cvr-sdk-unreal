@@ -46,6 +46,20 @@ public:
 	void Construct(const FArguments& InArgs);
 	FReply OpenFullC3DSetupWindow();
 
+	// near the top of the class
+private:
+	// Combined list to drive the Slate ListView
+	TArray<TSharedPtr<FEditorSceneData>> SceneListItems;
+
+	// The actual ListView widget
+	TSharedPtr< SListView< TSharedPtr<FEditorSceneData> > > SceneListView;
+
+	// Row-generation callback
+	TSharedRef<ITableRow> OnGenerateSceneRow(
+		TSharedPtr<FEditorSceneData> Item,
+		const TSharedRef<STableViewBase>& OwnerTable);
+
+public:
 	//project setup
 	//dev and api key
 
@@ -61,7 +75,6 @@ public:
 	void GetOrganizationDetailsResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	TMap<FString, bool> SDKCheckboxStates;
-	//void SProjectManagerWidget::OnSDKCheckedChanged(ECheckBoxState NewState, FString SDKName);
 
 	FString DisplayAPIKey;
 	FText GetDisplayAPIKey() const;
@@ -97,7 +110,6 @@ public:
 	TMap<FString, bool> LevelSelectionMap;
 	void CollectAllMaps();
 	void FinalizeProjectSetup();
-	void RebuildSceneChecklist();
 
 	//delegates
 	FOnUploadAllSceneGeometry OnUploadAllSceneGeometry;

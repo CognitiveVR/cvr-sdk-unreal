@@ -40,6 +40,52 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 		IsSDKEnabledInBuildCs(TEXT("PicoXR")));       
 	SDKCheckboxStates.Add(TEXT("WaveVR"),
 		IsSDKEnabledInBuildCs(TEXT("WaveVR")));       
+
+	CollectAllMaps();
+
+	//Copy existing exported scenes:
+	SceneListItems = FCognitiveEditorTools::GetInstance()->SceneData;
+
+	//Build a small set of names we already have to speed up duplicate checks:
+	TSet<FString> SeenNames;
+	for (auto& Entry : SceneListItems)
+	{
+		SeenNames.Add(Entry->Name);
+	}
+
+	//Now walk every map in LevelSelectionMap:
+	for (auto& Pair : LevelSelectionMap)
+	{
+		// Pair.Key might be "/Game/Maps/VRMap.VRMap" or similar.
+		// GetShortName gives you "VRMap.VRMap" if that’s how it’s stored.
+		FString RawName = FPackageName::GetShortName(Pair.Key);
+
+		// Clean off any “Foo.Foo” suffix -> just the part before the first dot:
+		FString CleanName;
+		if (!RawName.Split(TEXT("."), &CleanName, nullptr))
+		{
+			CleanName = RawName;
+		}
+
+		//If we haven't already seen this scene name, add a placeholder entry:
+		if (!SeenNames.Contains(CleanName))
+		{
+			SceneListItems.Add(
+				MakeShared<FEditorSceneData>(
+					CleanName,     // Name
+					TEXT(""),      // Id empty
+					0,             // VersionNumber
+					0              // VersionId
+				)
+			);
+			SeenNames.Add(CleanName);
+		}
+	}
+
+	//Sort alphabetically by Name to keep things tidy
+	SceneListItems.Sort([](auto& A, auto& B) {
+		return A->Name < B->Name;
+		});
 	
     ChildSlot  
     [  
@@ -541,20 +587,41 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																			.Text(FText::FromString("This is where we will do something with scene exports and uploads."))
 																	]
 															]
-															+ SVerticalBox::Slot()
+															+SVerticalBox::Slot()
 															.AutoHeight()
 															.Padding(0, 0, 0, 10)
 															[
-																SNew(SExpandableArea)
-																	.InitiallyCollapsed(false)
-																	.HeaderContent()
+																SNew(SBox)
+																	.MaxDesiredHeight(200)
 																	[
-																		SNew(STextBlock)
-																			.Text(FText::FromString(TEXT("Scenes to Export")))
-																	]
-																	.BodyContent()
-																	[
-																		SAssignNew(SceneChecklistContainer, SVerticalBox)
+																		SAssignNew(SceneListView,
+																			SListView< TSharedPtr<FEditorSceneData> >)
+																			.ItemHeight(24)
+																			.ListItemsSource(&SceneListItems)
+																			.OnGenerateRow(this, &SProjectManagerWidget::OnGenerateSceneRow)
+																			.HeaderRow(
+																				SNew(SHeaderRow)
+
+																				+ SHeaderRow::Column("Select")
+																				.FixedWidth(30)
+																				.DefaultLabel(FText::GetEmpty())
+
+																				+ SHeaderRow::Column("Name")
+																				.FillWidth(1.0f)
+																				.DefaultLabel(FText::FromString("Name"))
+
+																				+ SHeaderRow::Column("Id")
+																				.FillWidth(1.0f)
+																				.DefaultLabel(FText::FromString("Id"))
+
+																				+ SHeaderRow::Column("Ver#")
+																				.FillWidth(0.3f)
+																				.DefaultLabel(FText::FromString("Version"))
+
+																				+ SHeaderRow::Column("VerId")
+																				.FillWidth(0.3f)
+																				.DefaultLabel(FText::FromString("Ver Id"))
+																			)
 																	]
 															]
 													]
@@ -701,14 +768,78 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 					]
 			]
 	]; // end of child slot
-
-	CollectAllMaps();
-	RebuildSceneChecklist();
+	
 }
 FReply SProjectManagerWidget::OpenFullC3DSetupWindow()
 {
 	FCognitive3DEditorModule::SpawnFullC3DSetup();
 	return FReply::Handled();
+}
+
+TSharedRef<ITableRow> SProjectManagerWidget::OnGenerateSceneRow(TSharedPtr<FEditorSceneData> Item, const TSharedRef<STableViewBase>& OwnerTable)
+{
+	return SNew(STableRow< TSharedPtr<FEditorSceneData> >, OwnerTable)
+		[
+			SNew(SHorizontalBox)
+
+				//Checkbox column
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.VAlign(VAlign_Center)
+				[
+					SNew(SCheckBox)
+						.IsChecked_Lambda([this, Item]() {
+						bool bSel = false;
+						FString Short = Item->Name;
+						if (LevelSelectionMap.Contains(Short))
+						{
+							bSel = LevelSelectionMap[Short];
+						}
+						return bSel ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+							})
+						.OnCheckStateChanged_Lambda([this, Item](ECheckBoxState NewState) {
+						const bool bOn = (NewState == ECheckBoxState::Checked);
+						FString Short = Item->Name;
+						LevelSelectionMap.Add(Short, bOn);
+							})
+				]
+
+				//Name
+				+ SHorizontalBox::Slot()
+				.FillWidth(1.0f)
+				.Padding(5, 0)
+				[
+					SNew(STextBlock)
+						.Text(FText::FromString(Item->Name))
+				]
+
+				//Id (may be empty)
+				+ SHorizontalBox::Slot()
+				.FillWidth(1.0f)
+				.Padding(5, 0)
+				[
+					SNew(STextBlock)
+						.Text(FText::FromString(Item->Id))
+				]
+
+				//Version Number
+				+ SHorizontalBox::Slot()
+				.FillWidth(0.3f)
+				.Padding(5, 0)
+				[
+					SNew(STextBlock)
+						.Text(FText::AsNumber(Item->VersionNumber))
+				]
+
+				//Version Id
+				+ SHorizontalBox::Slot()
+				.FillWidth(0.3f)
+				.Padding(5, 0)
+				[
+					SNew(STextBlock)
+						.Text(FText::AsNumber(Item->VersionId))
+				]
+		];
 }
 
 FReply SProjectManagerWidget::ValidateKeys()
@@ -1302,38 +1433,6 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 	}
 
 	OnExportAllSceneGeometry.ExecuteIfBound(true);
-}
-
-void SProjectManagerWidget::RebuildSceneChecklist()
-{
-	UE_LOG(LogTemp, Warning, TEXT("RebuildSceneChecklist called"));
-	if (!SceneChecklistContainer.IsValid()) return;
-
-	SceneChecklistContainer->ClearChildren();
-
-	for (const TPair<FString, bool>& Pair : LevelSelectionMap)
-	{
-		const FString& MapPath = Pair.Key;
-
-		SceneChecklistContainer->AddSlot()
-			.AutoHeight()
-			.Padding(5)
-			[
-				SNew(SCheckBox)
-					.IsChecked_Lambda([this, MapPath]() {
-					return LevelSelectionMap.Contains(MapPath) && LevelSelectionMap[MapPath]
-						? ECheckBoxState::Checked
-							: ECheckBoxState::Unchecked;
-						})
-					.OnCheckStateChanged_Lambda([this, MapPath](ECheckBoxState NewState) {
-					LevelSelectionMap.FindOrAdd(MapPath) = (NewState == ECheckBoxState::Checked);
-						})
-					[
-						SNew(STextBlock)
-							.Text(FText::FromString(FPackageName::GetShortName(MapPath)))
-					]
-			];
-	}
 }
 
 void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
