@@ -1655,14 +1655,14 @@ void SProjectManagerWidget::ApplySDKToggle(const FString& SDKName, bool bEnable)
 						TSharedPtr<FJsonObject> Obj = Plugins[Index]->AsObject();
 						if (Obj->GetStringField(TEXT("Name")) == TEXT("OculusXR") || Obj->GetStringField(TEXT("Name")) == TEXT("OculusPlatform"))
 						{
-							Plugins.RemoveAt(Index);
+							Obj->SetBoolField(TEXT("Enabled"), false);
 							bModified = true;
 						}
 #elif ENGINE_MAJOR_VERSION == 4
 						TSharedPtr<FJsonObject> Obj = Plugins[Index]->AsObject();
 						if (Obj->GetStringField(TEXT("Name")) == TEXT("OculusVR") || Obj->GetStringField(TEXT("Name")) == TEXT("OculusPlatform"))
 						{
-							Plugins.RemoveAt(Index);
+							Obj->SetBoolField(TEXT("Enabled"), false);
 							bModified = true;
 						}
 						SDKCheckboxStates.Add(TEXT("MetaXRPlatform"), false);
@@ -1674,7 +1674,7 @@ void SProjectManagerWidget::ApplySDKToggle(const FString& SDKName, bool bEnable)
 						TSharedPtr<FJsonObject> Obj = Plugins[Index]->AsObject();
 						if (Obj->GetStringField(TEXT("Name")) == TEXT("OculusPlatform"))
 						{
-							Plugins.RemoveAt(Index);
+							Obj->SetBoolField(TEXT("Enabled"), false);
 							bModified = true;
 						}
 					}
@@ -1683,7 +1683,7 @@ void SProjectManagerWidget::ApplySDKToggle(const FString& SDKName, bool bEnable)
 						TSharedPtr<FJsonObject> Obj = Plugins[Index]->AsObject();
 						if (Obj->GetStringField(TEXT("Name")) == TEXT("PICOXR"))
 						{
-							Plugins.RemoveAt(Index);
+							Obj->SetBoolField(TEXT("Enabled"), false);
 							bModified = true;
 						}
 					}
@@ -1692,7 +1692,7 @@ void SProjectManagerWidget::ApplySDKToggle(const FString& SDKName, bool bEnable)
 						TSharedPtr<FJsonObject> Obj = Plugins[Index]->AsObject();
 						if (Obj->GetStringField(TEXT("Name")) == TEXT("WaveVR"))
 						{
-							Plugins.RemoveAt(Index);
+							Obj->SetBoolField(TEXT("Enabled"), false);
 							bModified = true;
 						}
 					}
@@ -1713,7 +1713,7 @@ void SProjectManagerWidget::ApplySDKToggle(const FString& SDKName, bool bEnable)
 		}
 	}
 
-	// --- 3) Prompt for restart (toast) ---
+	// --- Prompt for restart (toast) ---
 	FNotificationInfo Info(FText::FromString(TEXT("Editor restart required to apply SDK changes.")));
 	Info.ButtonDetails.Add(
 		FNotificationButtonInfo(
