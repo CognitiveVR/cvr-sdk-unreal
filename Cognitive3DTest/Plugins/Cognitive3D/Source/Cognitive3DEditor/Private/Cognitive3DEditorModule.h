@@ -62,4 +62,5 @@ private:
 	TSharedPtr<FUICommandList> PluginCommands;
 	static void AddMenu(FMenuBarBuilder& MenuBuilder);
 	static void FillMenu(FMenuBuilder& MenuBuilder);
+	static void FillLegacySubMenu(FMenuBuilder& MenuBuilder);
 };

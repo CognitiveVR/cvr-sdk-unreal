@@ -229,12 +229,22 @@ void FCognitive3DEditorModule::StartupModule()
 
 	void FCognitive3DEditorModule::FillMenu(FMenuBuilder& MenuBuilder)
 	{
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenFullC3DSetup);
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenOnlineDocumentation);
+		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenCognitiveDashboard);
+
+		MenuBuilder.AddSubMenu(
+			LOCTEXT("Cognitive3DSettingsMenu", "Legacy"),
+			LOCTEXT("Cognitive3DSettingsMenuTooltip", "Open Legacy Cognitive3D Windows"),
+			FNewMenuDelegate::CreateStatic(&FCognitive3DEditorModule::FillLegacySubMenu)
+		);
+	}
+
+	void FCognitive3DEditorModule::FillLegacySubMenu(FMenuBuilder& MenuBuilder)
+	{
 		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenProjectSetupWindow);
 		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenSceneSetupWindow);
 		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenDynamicObjectWindow);
-		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenOnlineDocumentation);
-		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenCognitiveDashboard);
-		MenuBuilder.AddMenuEntry(FCognitive3DCommands::Get().OpenFullC3DSetup);
 	}
 
 void FCognitive3DEditorModule::ShutdownModule()
