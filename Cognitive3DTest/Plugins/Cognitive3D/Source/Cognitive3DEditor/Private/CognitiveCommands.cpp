@@ -14,6 +14,7 @@ void FCognitive3DCommands::RegisterCommands()
 	UI_COMMAND(OpenOnlineDocumentation, "Open Online Documentation...", "Opens online documentation in your default browser", EUserInterfaceActionType::Button, FInputGesture());
 	UI_COMMAND(OpenCognitiveDashboard, "Open Cognitive3D Dashboard", "Opens the Cognitive3D Dashboard in your default browser", EUserInterfaceActionType::Button, FInputGesture());
 	UI_COMMAND(OpenFullC3DSetup, "Open Full Cognitive3D Setup", "Opens the full Cognitive3D setup window", EUserInterfaceActionType::Button, FInputGesture());
+	UI_COMMAND(OpenFeatureBuilder, "Open Cognitive3D Feature Builder", "Opens the Cognitive3D Feature Builder Window for Dynamic Object Management and more", EUserInterfaceActionType::Button, FInputGesture());
 }
 
 #undef LOCTEXT_NAMESPACE

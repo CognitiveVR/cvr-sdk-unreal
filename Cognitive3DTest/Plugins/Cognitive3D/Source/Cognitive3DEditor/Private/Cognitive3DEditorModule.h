@@ -15,6 +15,7 @@
 #include "SceneSetupWidget.h"
 #include "ProjectSetupWidget.h"
 #include "SProjectManagerWidget.h"
+#include "SFeatureBuilderWidget.h"
 #include "DynamicObjectManagerWidget.h"
 #include "WorkspaceMenuStructure.h"
 #include "CognitiveSettingsCustomization.h"
@@ -37,6 +38,9 @@ public:
 
 	static void SpawnFullC3DSetup();
 	static void CloseFullC3DSetup();
+
+	static void SpawnFeatureBuilder();
+	static void CloseFeatureBuilder();
 
 	static inline FCognitive3DEditorModule& Get()
 	{
