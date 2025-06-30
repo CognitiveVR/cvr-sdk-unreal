@@ -122,4 +122,6 @@ public:
 	void ApplySDKToggle(const FString& SDKName, bool bEnable);
 	bool IsSDKEnabledInBuildCs(const FString& MethodName);
 	void RestartEditor();
+
+	bool bDidChangeSDKs = false;
 };

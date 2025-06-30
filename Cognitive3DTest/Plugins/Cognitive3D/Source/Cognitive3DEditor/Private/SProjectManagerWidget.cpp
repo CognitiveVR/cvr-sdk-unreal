@@ -1500,7 +1500,9 @@ void SProjectManagerWidget::ApplySDKToggle(const FString& SDKName, bool bEnable)
 				if (bEnable)
 				{
 					FixLine(L, TEXT("MetaXRPlugin"));
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
 					FixLine(L, TEXT("MetaXRPassthrough"));
+#endif
 				}
 				else
 				{
@@ -1713,26 +1715,10 @@ void SProjectManagerWidget::ApplySDKToggle(const FString& SDKName, bool bEnable)
 		}
 	}
 
-	// --- Prompt for restart (toast) ---
-	FNotificationInfo Info(FText::FromString(TEXT("Editor restart required to apply SDK changes.")));
-	Info.ButtonDetails.Add(
-		FNotificationButtonInfo(
-			FText::FromString(TEXT("Restart Now")),
-			FText::FromString(TEXT("Restart the editor immediately.")),
-			FSimpleDelegate::CreateLambda([]()
-				{
-					// This will save needed assets/sources and restart
-					FUnrealEdMisc::Get().RestartEditor(true);
-				}),
-			SNotificationItem::CS_Pending
-		)
-	);
-	Info.ExpireDuration = 5.0f;
-	TSharedPtr<SNotificationItem> Notification = FSlateNotificationManager::Get().AddNotification(Info);
-	if (Notification.IsValid())
-	{
-		Notification->SetCompletionState(SNotificationItem::CS_Pending);
-	}
+	bDidChangeSDKs = true;
+
+	FCognitiveEditorTools::GetInstance()->ShowNotification("Third-Party SDK changes made, editor will restart and rebuild the project upon finalizing setup", true);
+	UE_LOG(LogTemp, Warning, TEXT("Third-Party SDK changes made, editor will restart and rebuild the project upon finalizing setup."));
 }
 
 bool SProjectManagerWidget::IsSDKEnabledInBuildCs(const FString& MethodName)
@@ -1774,17 +1760,42 @@ bool SProjectManagerWidget::IsSDKEnabledInBuildCs(const FString& MethodName)
 
 void SProjectManagerWidget::RestartEditor()
 {
+	if (!bDidChangeSDKs)
+	{
+		const EAppReturnType::Type Choice = FMessageDialog::Open(
+			EAppMsgType::Ok,
+			LOCTEXT("FinalizeSetupPrompt",
+				"You are now ready to use the Cognitive3D plugin to collect spatial analytics for your project!")
+		);
+
+		// No SDK changes, no need to restart
+		return;
+	}
+
 	const EAppReturnType::Type Choice = FMessageDialog::Open(
 		EAppMsgType::YesNo,
-		FText::FromString(TEXT(
-			"Your changes will only take effect after restarting the editor.\n\nRestart now?"
-		))
+		LOCTEXT("RestartPrompt",
+			"Your changes will only take effect after restarting the editor.\n\nRestart now?")
 	);
 
-	if (Choice == EAppReturnType::Yes)
+	// Check if config file is already set to auto recompile on startup.
+	bool bAutoRecompile = false;
+	GConfig->GetBool(TEXT("/Script/UnrealEd.EditorLoadingSavingSettings"), TEXT("bForceCompilationAtStartup"), bAutoRecompile, GEditorPerProjectIni);
+
+	if (!bAutoRecompile)
 	{
-		FUnrealEdMisc::Get().RestartEditor(/*bWarn=*/false);
+		GConfig->SetBool(TEXT("/Script/UnrealEd.EditorLoadingSavingSettings"), TEXT("bForceCompilationAtStartup"), true, GEditorPerProjectIni);
+		GConfig->Flush(false, GEditorPerProjectIni);
+		UE_LOG(LogTemp, Log, TEXT("Enabling Editor Auto Recompile at Startup"));
+		FCognitiveEditorTools::GetInstance()->bIsRestartEditorAfterSetup = true;
 	}
+
+	if (Choice != EAppReturnType::Yes)
+	{
+		return;
+	}
+
+	FUnrealEdMisc::Get().RestartEditor(/*bWarn=*/false);
 }
 
 

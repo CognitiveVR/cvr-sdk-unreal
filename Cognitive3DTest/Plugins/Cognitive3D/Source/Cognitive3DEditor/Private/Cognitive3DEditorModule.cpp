@@ -228,6 +228,24 @@ void FCognitive3DEditorModule::StartupModule()
 	PropertyModule.RegisterCustomClassLayout(TEXT("Cognitive3DSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&ICognitiveSettingsCustomization::MakeInstance));
 	PropertyModule.RegisterCustomClassLayout(TEXT("DynamicObject"), FOnGetDetailCustomizationInstance::CreateStatic(&IDynamicObjectComponentDetails::MakeInstance));
 	PropertyModule.RegisterCustomClassLayout(TEXT("DynamicIdPoolAsset"), FOnGetDetailCustomizationInstance::CreateStatic(&IDynamicIdPoolAssetDetails::MakeInstance));
+
+	if (FCognitiveEditorTools::GetInstance()->bIsRestartEditorAfterSetup)
+	{
+		FCognitiveEditorTools::GetInstance()->bIsRestartEditorAfterSetup = false;
+		//turn off build on startup once the editor is back up
+		//we only turn it on when we restart after a project setup (third party sdk change)
+		// Check if config file is already set to auto recompile on startup.
+		bool bAutoRecompile = false;
+		GConfig->GetBool(TEXT("/Script/UnrealEd.EditorLoadingSavingSettings"), TEXT("bForceCompilationAtStartup"), bAutoRecompile, GEditorPerProjectIni);
+
+		if (bAutoRecompile)
+		{
+			GConfig->SetBool(TEXT("/Script/UnrealEd.EditorLoadingSavingSettings"), TEXT("bForceCompilationAtStartup"), false, GEditorPerProjectIni);
+			GConfig->Flush(false, GEditorPerProjectIni);
+			UE_LOG(LogTemp, Log, TEXT("Enabling Editor Auto Recompile at Startup"));
+		}
+	}
+
 #endif
 }
 

@@ -432,6 +432,8 @@ public:
 
 	//notifications
 	void ShowNotification(FString Message, bool bSuccessful = true);
+
+	bool bIsRestartEditorAfterSetup = false;
 };
 
 //used for uploading multiple dynamics at once
