@@ -46,6 +46,8 @@ private:
     //remote controls
     FReply OnLaunchRemoteControls();
     FReply OnAddRemoteControlsComponent();
+    //custom events
+	FReply OnLaunchCustomEvents();
     //other
     FReply OnBackClicked();
 };

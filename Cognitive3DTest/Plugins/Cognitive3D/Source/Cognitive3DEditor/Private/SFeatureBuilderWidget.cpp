@@ -37,7 +37,11 @@ void SFeatureBuilderWidget::Construct(const FArguments& InArgs)
 
 		{ TEXT("RemoteControls"), FText::FromString("Remote Controls"),
 		  FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.RemoteControlsIcon")),
-		  FText::FromString("Set up remote control variables for your project") }
+		  FText::FromString("Set up remote control variables for your project") },
+
+		{ TEXT("CustomEvents"), FText::FromString("Custom Events"),
+		  FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CustomEvents")),
+		  FText::FromString("Samples showing how to record custom events in C++ and Blueprints") }
 	};
 
 	ChildSlot
@@ -129,7 +133,7 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 			.AutoWrapText(true)]
 			+ SVerticalBox::Slot().AutoHeight().Padding(5)
 			[SNew(SButton)
-			.Text(FText::FromString("Launch Exit Poll"))
+			.Text(FText::FromString("ExitPoll Documentation"))
 			.OnClicked(this, &SFeatureBuilderWidget::OnLaunchExitPoll)]
 			+SVerticalBox::Slot().AutoHeight().Padding(5)
 			[SNew(SButton)
@@ -149,8 +153,64 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 			[SNew(STextBlock)
 			.Text(FText::FromString("Add Remote Controls component to the BP_Cognitive3DActor to allow for the use of remote control variables from the dashboard.\nBelow is a button to check out the documentation, and another to add the component."))
 			.AutoWrapText(true)]
-			+ SVerticalBox::Slot().AutoHeight().Padding(5)[SNew(SButton).Text(FText::FromString("Open Website")).OnClicked(this, &SFeatureBuilderWidget::OnLaunchRemoteControls)]
+			+ SVerticalBox::Slot().AutoHeight().Padding(5)[SNew(SButton).Text(FText::FromString("RemoteControls Documentation")).OnClicked(this, &SFeatureBuilderWidget::OnLaunchRemoteControls)]
 			+ SVerticalBox::Slot().AutoHeight().Padding(5)[SNew(SButton).Text(FText::FromString("Add RemoteControls Component")).OnClicked(this, &SFeatureBuilderWidget::OnAddRemoteControlsComponent)];
+	}
+	else if (SelectedFeature == TEXT("CustomEvents"))
+	{
+			return SNew(SScrollBox)
+			+ SScrollBox::Slot()
+			[
+					SNew(SVerticalBox)
+					+ SVerticalBox::Slot().AutoHeight().Padding(5)
+					[SNew(STextBlock)
+					.Text(FText::FromString("Custom Events"))
+					.Font(FEditorStyle::GetFontStyle("Heading"))]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5)
+					[SNew(SButton)
+					.Text(FText::FromString("Custom Event Documentation"))
+					.OnClicked(this, &SFeatureBuilderWidget::OnLaunchCustomEvents)]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5)
+					[SNew(STextBlock)
+					.Text(FText::FromString("Here is a Blueprint and C++ sample showing simple use of the custom event."))
+					.AutoWrapText(true)]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5)
+					[SNew(SImage).Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CustomEventsSimple")))]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5)
+					[SNew(STextBlock)
+					.Text(FText::FromString("TWeakPtr<FAnalyticsProviderCognitive3D> provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();\nif (provider.IsValid())\n{\n	//send an event with a name\n	provider.Pin()->customEventRecorder->Send(\"My Event\");\n	//send an event with a name and a position\n	provider.Pin()->customEventRecorder->Send(\"My Event With Position\", FVector(0, 100, 0));\n}"))
+					.AutoWrapText(true)]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5)
+					[SNew(STextBlock)
+					.Text(FText::FromString("Here is a Blueprint and C++ sample showing how to send custom events with properties."))
+					.AutoWrapText(true)]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5)
+					[SNew(SImage).Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CustomEventsProperties")))]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5)
+					[SNew(STextBlock)
+					.Text(FText::FromString("TWeakPtr<FAnalyticsProviderCognitive3D> provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();\nif (provider.IsValid())\n{\n	//create some properties and send an event\n	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());\n	properties->SetStringField(\"last login\", FString(\"never\"));\n	properties->SetNumberField(\"login attempts\", 4);\n	provider.Pin()->customEventRecorder->Send(\"Login Attempt\", properties);\n}"))
+					.AutoWrapText(true)]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5)
+					[SNew(STextBlock)
+					.Text(FText::FromString("Here is a Blueprint and C++ sample showing how to send custom events linked to a dynamic object."))
+					.AutoWrapText(true)]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5)
+					[SNew(SImage).Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CustomEventsDynamicObjects")))]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5)
+					[SNew(STextBlock)
+					.Text(FText::FromString("TWeakPtr<FAnalyticsProviderCognitive3D> provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();\nif (provider.IsValid())\n{\n	//send an event with a dynamic object\n	FString dynamicObjectId = dynamicObjectPtr->GetObjectId()->Id;\n	provider.Pin()->customEventRecorder->Send(\"Dynamic Object Event\", properties, dynamicObjectId);\n}"))
+					.AutoWrapText(true)]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5)
+					[SNew(STextBlock)
+					.Text(FText::FromString("Here is a Blueprint and C++ sample showing how to create a custom event object that can be references elsewhere."))
+					.AutoWrapText(true)]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5)
+					[SNew(SImage).Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CustomEventsMakeObject")))]
+					+ SVerticalBox::Slot().AutoHeight().Padding(5)
+					[SNew(STextBlock)
+					.Text(FText::FromString("TWeakPtr<FAnalyticsProviderCognitive3D> provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();\nif (provider.IsValid())\n{\n	//create a custom event object and set properties on that\n	UCustomEvent* customEvent = NewObject<UCustomEvent>(this);\n	customEvent->SetCategory(\"Custom Event\");\n	customEvent->SetDynamicObject(dynamicObjectPtr);\n	customEvent->AppendAllSensors();\n	customEvent->SetProperty(\"somekey1\", 5);\n	customEvent->SetProperty(\"somekey2\", \"somevalue\");\n	customEvent->SetPosition(FVector(0, 100, 0));\n	customEvent->Send();}"))
+					.AutoWrapText(true)]
+			];
 	}
 
 	// Fallback
@@ -311,6 +371,12 @@ FReply SFeatureBuilderWidget::OnAddRemoteControlsComponent()
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to load class at %s."), *ClassPath);
 	}
+	return FReply::Handled();
+}
+
+FReply SFeatureBuilderWidget::OnLaunchCustomEvents()
+{
+	FPlatformProcess::LaunchURL(TEXT("https://docs.cognitive3d.com/unreal/customevents/"), nullptr, nullptr);
 	return FReply::Handled();
 }
 

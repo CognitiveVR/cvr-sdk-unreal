@@ -39,6 +39,38 @@ void FCognitiveEditorStyle::Initialize()
             )
         );
 
+		StyleInstance->Set(
+			TEXT("CognitiveEditor.CustomEventsSimple"),
+			new FSlateImageBrush(
+				ResourceDir / TEXT("event-simple.png"),
+				FVector2D(514, 216)
+			)
+		);
+
+		StyleInstance->Set(
+			TEXT("CognitiveEditor.CustomEventsProperties"),
+			new FSlateImageBrush(
+				ResourceDir / TEXT("event-properties.png"),
+				FVector2D(712, 182)
+			)
+		);
+
+        StyleInstance->Set(
+            TEXT("CognitiveEditor.CustomEventsDynamicObjects"),
+            new FSlateImageBrush(
+                ResourceDir / TEXT("event-dynamic.png"),
+                FVector2D(456, 250)
+            )
+        );
+
+        StyleInstance->Set(
+            TEXT("CognitiveEditor.CustomEventsMakeObject"),
+            new FSlateImageBrush(
+                ResourceDir / TEXT("event-object.png"),
+                FVector2D(1084, 186)
+            )
+        );
+
         // Finally, register with Slate
         FSlateStyleRegistry::RegisterSlateStyle(*StyleInstance);
     }
