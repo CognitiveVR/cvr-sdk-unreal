@@ -1313,7 +1313,13 @@ void SProjectManagerWidget::CollectAllMaps()
 	UE_LOG(LogTemp, Warning, TEXT("CollectAllMaps called"));
 	TArray<FAssetData> MapAssets;
 	FARFilter Filter;
+#if ENGINE_MAJOR_VERSION == 4
 	Filter.ClassNames.Add(UWorld::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 0 || ENGINE_MINOR_VERSION == 1)
+	Filter.ClassNames.Add(UWorld::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2 
+	Filter.ClassPaths.Add(UWorld::StaticClass()->GetClassPathName());
+#endif
 	Filter.bRecursivePaths = true;
 	Filter.PackagePaths.Add(FName(TEXT("/Game"))); // Covers all
 

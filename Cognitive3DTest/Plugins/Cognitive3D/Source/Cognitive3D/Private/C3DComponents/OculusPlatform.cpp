@@ -122,6 +122,8 @@ void UOculusPlatform::OnSessionEnd()
 
 void UOculusPlatform::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	Super::EndPlay(EndPlayReason);
+
 	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cog.IsValid())
 	{
