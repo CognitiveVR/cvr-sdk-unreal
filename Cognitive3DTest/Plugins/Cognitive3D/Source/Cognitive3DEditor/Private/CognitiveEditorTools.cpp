@@ -3895,15 +3895,15 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 	{
 		if (ALandscapeStreamingProxy* LandscapeProxy = Cast<ALandscapeStreamingProxy>(actorsToExport[i]))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("FOUND LANDSCAPE PROXY, SKIPPING SELECT"));
+			//UE_LOG(LogTemp, Warning, TEXT("FOUND LANDSCAPE PROXY, SKIPPING SELECT"));
 		}
 		else if (actorsToExport[i]->GetName().StartsWith("SkySphereBlueprint"))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("FOUND SKYSPHERE, SKIPPING SELECT"));
+			//UE_LOG(LogTemp, Warning, TEXT("FOUND SKYSPHERE, SKIPPING SELECT"));
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("NOT PROXY, FOUND ACTOR: %s"), *actorsToExport[i]->GetFName().ToString());
+			//UE_LOG(LogTemp, Warning, TEXT("NOT PROXY, FOUND ACTOR: %s"), *actorsToExport[i]->GetFName().ToString());
 			GEditor->SelectActor((actorsToExport[i]), true, false, true);
 		}
 	}

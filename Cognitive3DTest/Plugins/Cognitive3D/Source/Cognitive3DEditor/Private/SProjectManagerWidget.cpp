@@ -778,6 +778,24 @@ FReply SProjectManagerWidget::OpenFullC3DSetupWindow()
 
 TSharedRef<ITableRow> SProjectManagerWidget::OnGenerateSceneRow(TSharedPtr<FEditorSceneData> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
+
+	// Helper to look up the full key from the short name
+	auto GetFullObjectPath = [this, Item]() -> FString
+		{
+			for (auto& Pair : LevelSelectionMap)
+			{
+				// Pair.Key is "/Game/.../MapName.MapName"
+				FString PackagePath, AssetName;
+				if (Pair.Key.Split(TEXT("."), &PackagePath, &AssetName,
+					ESearchCase::IgnoreCase, ESearchDir::FromStart)
+					&& AssetName == Item->Name)
+				{
+					return Pair.Key;
+				}
+			}
+			return FString(); // not found
+		};
+
 	return SNew(STableRow< TSharedPtr<FEditorSceneData> >, OwnerTable)
 		[
 			SNew(SHorizontalBox)
@@ -788,19 +806,22 @@ TSharedRef<ITableRow> SProjectManagerWidget::OnGenerateSceneRow(TSharedPtr<FEdit
 				.VAlign(VAlign_Center)
 				[
 					SNew(SCheckBox)
-						.IsChecked_Lambda([this, Item]() {
-						bool bSel = false;
-						FString Short = Item->Name;
-						if (LevelSelectionMap.Contains(Short))
+						.IsChecked_Lambda([this, GetFullObjectPath]() {
+						const FString FullPath = GetFullObjectPath();
+						if (FullPath.Len() && LevelSelectionMap.Contains(FullPath))
 						{
-							bSel = LevelSelectionMap[Short];
+							return LevelSelectionMap[FullPath]
+								? ECheckBoxState::Checked
+									: ECheckBoxState::Unchecked;
 						}
-						return bSel ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+						return ECheckBoxState::Unchecked;
 							})
-						.OnCheckStateChanged_Lambda([this, Item](ECheckBoxState NewState) {
-						const bool bOn = (NewState == ECheckBoxState::Checked);
-						FString Short = Item->Name;
-						LevelSelectionMap.Add(Short, bOn);
+						.OnCheckStateChanged_Lambda([this, GetFullObjectPath](ECheckBoxState NewState) {
+						const FString FullPath = GetFullObjectPath();
+						if (FullPath.Len())
+						{
+							LevelSelectionMap.Add(FullPath, NewState == ECheckBoxState::Checked);
+						}
 							})
 				]
 
@@ -1336,100 +1357,220 @@ void SProjectManagerWidget::CollectAllMaps()
 
 void SProjectManagerWidget::FinalizeProjectSetup()
 {
+	//UE_LOG(LogTemp, Warning, TEXT("FinalizeProjectSetup called"));
 	UWorld* World = GEditor->GetEditorWorldContext().World();
 	FString OriginalMap;
 
 	if (World)
 	{
 		OriginalMap = World->GetOutermost()->GetName(); // e.g. /Game/Maps/MyMap
+		//UE_LOG(LogTemp, Warning, TEXT("Current World: %s"), *OriginalMap);
 	}
 	
 	OnExportAllSceneGeometry.BindSP(this, &SProjectManagerWidget::OnLevelsExported);
 
-	TArray<FString> SelectedMaps;
+	// Gather only the user-checked entries
+	TArray<FString> SelectedKeys;
 	for (const TPair<FString, bool>& Pair : LevelSelectionMap)
 	{
 		if (Pair.Value)
 		{
-			SelectedMaps.Add(Pair.Key);
+			SelectedKeys.Add(Pair.Key);
+			UE_LOG(LogTemp, Warning, TEXT("Selected map: %s"), *Pair.Key);
 		}
 	}
 
-	FScopedSlowTask ExportTask(SelectedMaps.Num(), FText::FromString("Exporting selected maps..."));
-	ExportTask.MakeDialog();
 
-	for (const FString& MapPath : SelectedMaps)
+	//Auto-discover sublevel->parent mappings 
+	TMap<FString, FString> SublevelToParent;
 	{
-		ExportTask.EnterProgressFrame(1.f, FText::FromString(FString::Printf(TEXT("Exporting %s"), *MapPath)));
+		// We need a list of all potential persistent maps under /Game/Maps
+		TArray<FAssetData> AllMaps;
+		FARFilter MapFilter;
+		MapFilter.bRecursivePaths = true;
+		MapFilter.PackagePaths.Empty();
+#if ENGINE_MAJOR_VERSION == 4
+		MapFilter.ClassNames.Add(UWorld::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5
+		MapFilter.ClassPaths.Add(UWorld::StaticClass()->GetClassPathName());
+#endif
+		FAssetRegistryModule& ARM = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+		ARM.Get().GetAssets(MapFilter, AllMaps);
 
-		if (FEditorFileUtils::LoadMap(MapPath, false, true))
+		for (auto& Asset : AllMaps)
 		{
-			UWorld* EditorWorld = GEditor->GetEditorWorldContext().World();
-			if (!EditorWorld) continue;
-
-			bool bFoundC3DActor = false;
-
-			//spawn c3d actor
-			//check if there's a Cognitive3DActor already in the world
-			for (TObjectIterator<ACognitive3DActor> Itr; Itr; ++Itr)
+			const FString PackageName = Asset.ObjectPath.ToString().LeftChop(Asset.AssetName.ToString().Len() + 1);
+			if (!FEditorFileUtils::LoadMap(PackageName, false, false))
 			{
-				if (Itr->IsPendingKillPending())
-				{
-					//if a ACognitive3DActor was deleted from the world, it sticks around but is pending a kill. possibly in some undo buffer?
-					continue;
-				}
-				bFoundC3DActor = true;
+				continue;
 			}
+			UWorld* W = GEditor->GetEditorWorldContext().World();
+			if (!W) continue;
 
-			if (!bFoundC3DActor)
+			for (ULevelStreaming* LS : W->GetStreamingLevels())
 			{
-				//spawn a Cognitive3DActor blueprint
-				UClass* classPtr = LoadObject<UClass>(nullptr, TEXT("/Cognitive3D/BP_Cognitive3DActor.BP_Cognitive3DActor_C"));
-				if (classPtr)
+				if (LS)
 				{
-					AActor* obj = EditorWorld->SpawnActor<AActor>(classPtr);
-					obj->OnConstruction(obj->GetTransform());
-					obj->PostActorConstruction();
-					GLog->Log("SSceneSetupWidget::SpawnCognitive3DActor spawned BP_Cognitive3DActor in world");
-				}
-				else
-				{
-					GLog->Log("SSceneSetupWidget::SpawnCognitive3DActor couldn't find BP_Cognitive3DActor class");
-				}
-
-				//Mark the level dirty so the editor knows it's changed
-				EditorWorld->PersistentLevel->MarkPackageDirty();
-
-				//Save the map back to disk so your spawned actor is baked in
-				{
-					UPackage* LevelPackage = EditorWorld->PersistentLevel->GetOutermost();
-					TArray<UPackage*> ToSave = { LevelPackage };
-					FEditorFileUtils::PromptForCheckoutAndSave(ToSave, false, false);
+					const FString ChildPkg = LS->GetWorldAssetPackageName();
+					SublevelToParent.FindOrAdd(ChildPkg) = PackageName;
+					UE_LOG(LogTemp, Warning, TEXT("Mapped sublevel %s ? parent %s"), *ChildPkg, *PackageName);
 				}
 			}
+		}
 
-			TArray<AActor*> ActorsToExport;
+		// Restore whatever map was open before tinkering
+		if (!OriginalMap.IsEmpty())
+		{
+			FEditorFileUtils::LoadMap(OriginalMap, false, true);
+		}
+	}
 
-			for (TActorIterator<AActor> It(EditorWorld); It; ++It)
-			{
-				AActor* Actor = *It;
+	//Build lookup & buckets directly from SelectedKeys (which are full object paths)
+	TMap<FString, FString> PackageToAssetName;
+	TArray<FString> PureMaps;
+	TArray<FString> SublevelKeys;
 
-				// Optionally filter actors if needed (example below)
-				if (!Actor->IsPendingKillPending() && !Actor->IsTemplate())
-				{
-					ActorsToExport.Add(Actor);
-				}
-			}
+	for (const FString& Key : SelectedKeys)
+	{
+		// Key == "/Game/.../MyMap.MyMap"
+		// This yields "/Game/.../MyMap"
+		const FString PackagePath = FPackageName::ObjectPathToPackageName(Key);
+		// This yields "MyMap"
+		const FString AssetName = FPackageName::GetShortName(PackagePath);
 
-			FString LevelName = FPackageName::GetShortName(MapPath);
-			LevelName.Split(TEXT("."), nullptr, &LevelName); // Remove package extension
-			
-			FCognitiveEditorTools::GetInstance()->ExportScene(LevelName, ActorsToExport);
+		PackageToAssetName.Add(PackagePath, AssetName);
+
+		if (SublevelToParent.Contains(PackagePath))
+		{
+			SublevelKeys.AddUnique(PackagePath);
+			UE_LOG(LogTemp, Warning, TEXT("Queue sublevel: %s (pkg: %s)"),
+				*AssetName, *PackagePath);
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Failed to load map: %s"), *MapPath);
+			PureMaps.AddUnique(PackagePath);
+			UE_LOG(LogTemp, Warning, TEXT("Queue pure map:   %s (pkg: %s)"),
+				*AssetName, *PackagePath);
 		}
+	}
+
+	//Create the slow task for TOTAL items = PureMaps + SublevelKeys
+	FScopedSlowTask ExportTask(PureMaps.Num() + SublevelKeys.Num(), LOCTEXT("ExportingMaps", "Exporting selected maps..."));
+	ExportTask.MakeDialog();
+
+	//Export each pure map
+	for (const FString& PackageToLoad : PureMaps)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Exporting map: %s"), *PackageToLoad);
+		
+		const FString& NameToExport = PackageToAssetName[PackageToLoad];
+		ExportTask.EnterProgressFrame(1.f, FText::FromString(NameToExport));
+
+		if (!FEditorFileUtils::LoadMap(PackageToLoad, false, true))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Failed to load %s"), *PackageToLoad);
+			continue;
+		}
+
+		UWorld* W = GEditor->GetEditorWorldContext().World();
+		if (!W) continue;
+
+		// disable all sublevels
+		for (ULevelStreaming* LS : W->GetStreamingLevels())
+		{
+			if (LS) { LS->SetShouldBeLoaded(false); LS->SetShouldBeVisible(false);}
+		}
+		W->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+
+		bool bFoundC3DActor = false;
+
+		//spawn c3d actor
+		//check if there's a Cognitive3DActor already in the world
+		for (TObjectIterator<ACognitive3DActor> Itr; Itr; ++Itr)
+		{
+			if (Itr->IsPendingKillPending())
+			{
+				//if a ACognitive3DActor was deleted from the world, it sticks around but is pending a kill. possibly in some undo buffer?
+				continue;
+			}
+			bFoundC3DActor = true;
+		}
+
+		if (!bFoundC3DActor)
+		{
+			//spawn a Cognitive3DActor blueprint
+			UClass* classPtr = LoadObject<UClass>(nullptr, TEXT("/Cognitive3D/BP_Cognitive3DActor.BP_Cognitive3DActor_C"));
+			if (classPtr)
+			{
+				AActor* obj = W->SpawnActor<AActor>(classPtr);
+				obj->OnConstruction(obj->GetTransform());
+				obj->PostActorConstruction();
+				GLog->Log("SSceneSetupWidget::SpawnCognitive3DActor spawned BP_Cognitive3DActor in world");
+			}
+			else
+			{
+				GLog->Log("SSceneSetupWidget::SpawnCognitive3DActor couldn't find BP_Cognitive3DActor class");
+			}
+
+			//Mark the level dirty so the editor knows it's changed
+			W->PersistentLevel->MarkPackageDirty();
+
+			//Save the map back to disk so your spawned actor is baked in
+			{
+				UPackage* LevelPackage = W->PersistentLevel->GetOutermost();
+				TArray<UPackage*> ToSave = { LevelPackage };
+				FEditorFileUtils::PromptForCheckoutAndSave(ToSave, false, false);
+			}
+		}
+
+		// collect and export under its own name
+		TArray<AActor*> Actors;
+		for (ULevel* L : W->GetLevels())
+			if (L)
+				for (AActor* A : L->Actors)
+					if (A && !A->IsPendingKillPending() && !A->IsTemplate())
+						Actors.Add(A);
+		FString ShortName = FPackageName::GetShortName(PackageToLoad);
+		FCognitiveEditorTools::GetInstance()->ExportScene(NameToExport, Actors);
+	}
+
+	//Export each sublevel under its own name, but loading its parent world
+	for (const FString& SubPath : SublevelKeys)
+	{
+		const FString& NameToExport = PackageToAssetName[SubPath];
+		ExportTask.EnterProgressFrame(1.f, FText::FromString(NameToExport));
+		const FString& ParentMap = SublevelToParent[SubPath];
+
+		if (!FEditorFileUtils::LoadMap(ParentMap, false, true))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Failed to load parent %s for sublevel %s"), *ParentMap, *SubPath);
+			continue;
+		}
+
+		UWorld* W = GEditor->GetEditorWorldContext().World();
+		if (!W) continue;
+
+		// turn off all, then only SubPath
+		for (ULevelStreaming* LS : W->GetStreamingLevels())
+		{
+			if (!LS) continue;
+			const FString ChildPkg = LS->GetWorldAssetPackageName();
+			LS->SetShouldBeLoaded(ChildPkg == SubPath);
+			LS->SetShouldBeVisible(ChildPkg == SubPath);
+		}
+		W->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+
+		// now collect and export all actors in parent + sublevel
+		TArray<AActor*> Actors;
+		for (ULevel* L : W->GetLevels())
+			if (L)
+				for (AActor* A : L->Actors)
+					if (A && !A->IsPendingKillPending() && !A->IsTemplate())
+						Actors.Add(A);
+
+		// Export under the sublevel's name
+		FString SubName = FPackageName::GetShortName(SubPath);
+		FCognitiveEditorTools::GetInstance()->ExportScene(SubName, Actors);
 	}
 
 	// Restore original map
