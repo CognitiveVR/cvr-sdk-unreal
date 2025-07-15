@@ -517,7 +517,13 @@ void UAndroidPlugin::LogFileHasContent()
                 {
                     jstring JSessionID = Env->NewStringUTF(TCHAR_TO_UTF8(*PreviousSessionLines[0]));
                     jstring JUserID = Env->NewStringUTF(TCHAR_TO_UTF8(*PreviousSessionLines[1]));
-                    jstring JTimestamp = Env->NewStringUTF(TCHAR_TO_UTF8(*PreviousSessionLines[2]));
+                    //check if timestamp has comma and replace it with a period
+					FString Timestamp = PreviousSessionLines[2];
+					if (Timestamp.Contains(TEXT(",")))
+					{
+						Timestamp = Timestamp.Replace(TEXT(","), TEXT("."));
+					}
+                    jstring JTimestamp = Env->NewStringUTF(TCHAR_TO_UTF8(*Timestamp));
                     jstring JEventURL = Env->NewStringUTF(TCHAR_TO_UTF8(*EventsURL));
 
                     Env->CallVoidMethod(PluginInstance, SendEndSessionEventsMethod, JSessionID, JUserID, JTimestamp, JEventURL);
