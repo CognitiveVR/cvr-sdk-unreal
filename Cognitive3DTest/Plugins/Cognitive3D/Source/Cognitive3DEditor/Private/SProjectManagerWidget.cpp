@@ -1523,15 +1523,20 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 			}
 		}
 
-		// collect and export under its own name
-		TArray<AActor*> Actors;
-		for (ULevel* L : W->GetLevels())
-			if (L)
-				for (AActor* A : L->Actors)
-					if (A && !A->IsPendingKillPending() && !A->IsTemplate())
-						Actors.Add(A);
+		// only grab actors from the *persistent* level, never from sublevels
+		TArray<AActor*> ActorsToExport;
+		if (ULevel* Persistent = W->PersistentLevel)
+		{
+			for (AActor* A : Persistent->Actors)
+			{
+				if (A && !A->IsPendingKillPending() && !A->IsTemplate())
+				{
+					ActorsToExport.Add(A);
+				}
+			}
+		}
 		FString ShortName = FPackageName::GetShortName(PackageToLoad);
-		FCognitiveEditorTools::GetInstance()->ExportScene(NameToExport, Actors);
+		FCognitiveEditorTools::GetInstance()->ExportScene(NameToExport, ActorsToExport);
 	}
 
 	//Export each sublevel under its own name, but loading its parent world
@@ -1560,17 +1565,43 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 		}
 		W->FlushLevelStreaming(EFlushLevelStreamingType::Full);
 
-		// now collect and export all actors in parent + sublevel
-		TArray<AActor*> Actors;
-		for (ULevel* L : W->GetLevels())
-			if (L)
-				for (AActor* A : L->Actors)
-					if (A && !A->IsPendingKillPending() && !A->IsTemplate())
-						Actors.Add(A);
+		// build the allowed set of levels
+		TSet<ULevel*> AllowedLevels;
+		AllowedLevels.Add(W->PersistentLevel);
+
+		// find the one streaming level that matches our SubPkg and add its level
+		for (ULevelStreaming* LS : W->GetStreamingLevels())
+		{
+			if (!LS) continue;
+			if (LS->GetWorldAssetPackageName() == SubPath)
+			{
+				if (ULevel* Loaded = LS->GetLoadedLevel())
+				{
+					AllowedLevels.Add(Loaded);
+				}
+				break;
+			}
+		}
+
+		// now only export actors from those levels
+		TArray<AActor*> ActorsToExport;
+		for (ULevel* Level : W->GetLevels())
+		{
+			if (!AllowedLevels.Contains(Level))
+				continue;
+
+			for (AActor* Actor : Level->Actors)
+			{
+				if (Actor && !Actor->IsPendingKillPending() && !Actor->IsTemplate())
+				{
+					ActorsToExport.Add(Actor);
+				}
+			}
+		}
 
 		// Export under the sublevel's name
 		FString SubName = FPackageName::GetShortName(SubPath);
-		FCognitiveEditorTools::GetInstance()->ExportScene(SubName, Actors);
+		FCognitiveEditorTools::GetInstance()->ExportScene(SubName, ActorsToExport);
 	}
 
 	// Restore original map
