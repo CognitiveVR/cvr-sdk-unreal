@@ -254,7 +254,7 @@ FReply SFeatureBuilderWidget::OnAddExitPollBlueprint()
 				FString LevelFilename = FPackageName::LongPackageNameToFilename(LevelPackage->GetName(), FPackageName::GetMapPackageExtension());
 				bool bLevelSaved = UPackage::SavePackage(
 					LevelPackage,
-					CurrentLevel,
+					nullptr,
 					RF_Standalone,
 					*LevelFilename,
 					GError,
@@ -332,7 +332,7 @@ FReply SFeatureBuilderWidget::OnAddRemoteControlsComponent()
 						FString LevelFilename = FPackageName::LongPackageNameToFilename(LevelPackage->GetName(), FPackageName::GetMapPackageExtension());
 						bool bLevelSaved = UPackage::SavePackage(
 							LevelPackage,
-							CurrentLevel,
+							nullptr,
 							RF_Standalone,
 							*LevelFilename,
 							GError,
