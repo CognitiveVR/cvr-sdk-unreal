@@ -19,7 +19,7 @@ void UPlayerTracker::BeginPlay()
 
 	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 
-	auto cognitiveActor = ACognitive3DActor::GetCognitive3DActor();
+	auto cognitiveActor = ACognitive3DActor::GetCognitive3DActor(GetWorld());
 	if (cognitiveActor != GetOwner())
 	{
 		UnregisterComponent();
