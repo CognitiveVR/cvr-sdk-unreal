@@ -258,3 +258,24 @@ FString FUtil::GetHMDDeviceName()
 {
 	return HMDSpecificDeviceName;
 }
+
+UWorld* FUtil::GetCurrentActiveWorld()
+{
+    if (GEngine)
+    {
+        // Iterate through all known engine worlds.
+        for (const FWorldContext& Context : GEngine->GetWorldContexts()) {
+            // Check if this is a game world or a Play-In-Editor (PIE) world and
+            // the world has not been unlaoded
+            if ((Context.WorldType == EWorldType::Game || 
+                    Context.WorldType == EWorldType::PIE) &&
+                (IsValid(Context.World()))) {
+                return Context.World();
+            }
+        }
+    }
+
+    // Return null value if we didn't find any worlds
+    return nullptr;
+}
+
