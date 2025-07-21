@@ -32,6 +32,8 @@
 
             static FString GetHMDDeviceName();
 
+            static UWorld* GetCurrentActiveWorld();
+
     private:
         static FString HMDSpecificDeviceName;
     };
