@@ -94,6 +94,16 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 	if (!AutomaticallySetTrackingScene) { return; }
 
 	FString levelName = level->GetFullGroupName(true);
+	TArray<FString> PathParts;
+	level->GetPathName().ParseIntoArray(PathParts, TEXT("/"), true);
+	FString levelPath = "";
+	if (PathParts.Num() > 0)
+	{
+		PathParts.RemoveAt(PathParts.Num() - 1); //remove the last part, which is the level name
+		levelPath = FString::Join(PathParts, TEXT("/"));
+		levelPath = "/" + levelPath; //add a leading slash
+	}
+
 	//GLog->Log("FAnalyticsProviderCognitive3D::HandleSublevelUnloaded Loaded sublevel: " + levelName);
 	auto currentSceneData = GetCurrentSceneData();
 
@@ -123,7 +133,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 	}
 
 	//lookup scenedata and if valid, push to the stack
-	TSharedPtr<FSceneData> data = GetSceneData(levelName);
+	TSharedPtr<FSceneData> data = GetSceneData(levelPath + "/" + levelName);
 	if (currentSceneData.IsValid()) //currently has valid scene data
 	{
 		TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());
@@ -210,6 +220,16 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 	if (!AutomaticallySetTrackingScene) { return; }
 
 	FString levelName = level->GetFullGroupName(true);
+	TArray<FString> PathParts;
+	level->GetPathName().ParseIntoArray(PathParts, TEXT("/"), true);
+	FString levelPath = "";
+	if (PathParts.Num() > 0)
+	{
+		PathParts.RemoveAt(PathParts.Num() - 1); //remove the last part, which is the level name
+		levelPath = FString::Join(PathParts, TEXT("/"));
+		levelPath = "/" + levelPath; //add a leading slash
+	}
+
 	//GLog->Log("FAnalyticsProviderCognitive3D::HandleSublevelUnloaded Unloaded sublevel: " + levelName);
 	auto currentSceneData = GetCurrentSceneData();
 	if (LoadedSceneDataStack.Num() == 0)
@@ -218,7 +238,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 		return;
 	}
 	auto stackTop = LoadedSceneDataStack.Top();
-	TSharedPtr<FSceneData> data = GetSceneData(levelName);
+	TSharedPtr<FSceneData> data = GetSceneData(levelPath + "/" + levelName);
 
 
 	if (stackTop == currentSceneData && data == currentSceneData) //changing current scene to something further down the stack (or no scene)
@@ -315,12 +335,22 @@ void FAnalyticsProviderCognitive3D::HandlePostLevelLoad(UWorld* world)
 	if (!AutomaticallySetTrackingScene) { return; }
 
 	FString levelName = level->GetFullGroupName(true);
+	TArray<FString> PathParts;
+	level->GetPathName().ParseIntoArray(PathParts, TEXT("/"), true);
+	FString levelPath = "";
+	if (PathParts.Num() > 0)
+	{
+		PathParts.RemoveAt(PathParts.Num() - 1); //remove the last part, which is the level name
+		levelPath = FString::Join(PathParts, TEXT("/"));
+		levelPath = "/" + levelPath; //add a leading slash
+	}
+
 	//GLog->Log("FAnalyticsProviderCognitive3D::HandlePostLevelLoad level post load level: " + levelName);
 	auto currentSceneData = GetCurrentSceneData();
 
 	//lookup scenedata and if valid, add it to the stack
 	LoadedSceneDataStack.Empty();
-	TSharedPtr<FSceneData> data = GetSceneData(levelName);
+	TSharedPtr<FSceneData> data = GetSceneData(levelPath + "/" + levelName);
 
 	//if the new scene is the same as the current scene, return
 	if (LastSceneData.IsValid() && data.IsValid() && LastSceneData->Id == data->Id)
@@ -473,12 +503,24 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	if (AutomaticallySetTrackingScene)
 	{
 		auto level = currentWorld->GetCurrentLevel();
+		UE_LOG(LogTemp, Log, TEXT("FAnalyticsProviderCognitive3D::StartSession level post load level: %s"), *level->GetPathName());
+		TArray<FString> PathParts;
+		level->GetPathName().ParseIntoArray(PathParts, TEXT("/"), true);
+		FString levelPath = "";
+		if (PathParts.Num() > 0)
+		{
+			PathParts.RemoveAt(PathParts.Num() - 1); //remove the last part, which is the level name
+			levelPath = FString::Join(PathParts, TEXT("/"));
+			levelPath = "/" + levelPath; //add a leading slash
+		}
+
 		if (level != nullptr)
 		{
 			FString levelName = level->GetFullGroupName(true);
-			TSharedPtr<FSceneData> data = GetSceneData(levelName);
+			TSharedPtr<FSceneData> data = GetSceneData(levelPath + "/" + levelName);
 			if (data.IsValid())
 			{
+				UE_LOG(LogTemp, Log, TEXT("FAnalyticsProviderCognitive3D::StartSession Scene Data is valid: %s"), *data->Name);
 				LoadedSceneDataStack.Push(data);
 				ForceWriteSessionMetadata = true;
 				CurrentTrackingSceneId = data->Id;
@@ -981,15 +1023,38 @@ TSharedPtr<FSceneData> FAnalyticsProviderCognitive3D::GetCurrentSceneData()
 
 TSharedPtr<FSceneData> FAnalyticsProviderCognitive3D::GetSceneData(FString scenename)
 {
+	UE_LOG(LogTemp, Warning, TEXT("FAnalyticsProviderCognitive3D::GetSceneData %s"), *scenename);
+
+	FString ShortName = scenename;
+	FString PathName = "";
+
+	if (scenename.Contains("/"))
+	{
+		TArray<FString> PathParts;
+		scenename.ParseIntoArray(PathParts, TEXT("/"), true);
+		if (PathParts.Num() > 0)
+		{
+			ShortName = PathParts.Last();
+			PathParts.RemoveAt(PathParts.Num() - 1); //remove the last part, which is the level name
+			PathName = FString::Join(PathParts, TEXT("/"));
+			PathName = "/" + PathName; //add a leading slash
+		}
+	}
+
 	for (int i = 0; i < SceneData.Num(); i++)
 	{
 		if (!SceneData[i].IsValid()) { continue; }
-		if (SceneData[i]->Name == scenename)
+		if (SceneData[i]->Name == ShortName)
 		{
+			if (!PathName.IsEmpty() && SceneData[i]->Path != PathName)
+			{
+				//scene name matches, but path does not
+				continue;
+			}
 			return SceneData[i];
 		}
 	}
-	//FCognitiveLog::Warning("FAnalyticsProviderCognitive3D::GetSceneData couldn't find SceneData for scene " + scenename);
+	FCognitiveLog::Warning("FAnalyticsProviderCognitive3D::GetSceneData couldn't find SceneData for scene " + scenename);
 	return NULL;
 }
 
@@ -1090,13 +1155,14 @@ void FAnalyticsProviderCognitive3D::CacheSceneData()
 			Array.Add("0");
 		}
 
-		if (Array.Num() != 4)
+		if (Array.Num() != 5)
 		{
 			FCognitiveLog::Error("FAnalyticsProviderCognitive3D::CacheSceneData failed to parse " + scenstrings[i]);
 			continue;
 		}
 
-		SceneData.Add(MakeShareable(new FSceneData(Array[0], Array[1], FCString::Atoi(*Array[2]), FCString::Atoi(*Array[3]))));
+		UE_LOG(LogTemp, Warning, TEXT("FAnalyticsProviderCognitive3D::CacheSceneData %s %s %s %s %s"), *Array[0], *Array[1], *Array[2], *Array[3], *Array[4]);
+		SceneData.Add(MakeShareable(new FSceneData(Array[0], Array[1], Array[2], FCString::Atoi(*Array[3]), FCString::Atoi(*Array[4]))));
 	}
 }
 
@@ -1508,6 +1574,19 @@ void FAnalyticsProviderCognitive3D::SetTrackingScene(FString levelName)
 	customEventRecorder->Send("c3d.SceneUnloaded", properties);
 
 	FlushEvents();
+	auto cognitiveActor = ACognitive3DActor::GetCognitive3DActor();
+	auto currentWorld = cognitiveActor -> GetWorld();
+	auto level = currentWorld->GetCurrentLevel();
+	TArray<FString> PathParts;
+	level->GetPathName().ParseIntoArray(PathParts, TEXT("/"), true);
+	FString levelPath = "";
+	if (PathParts.Num() > 0)
+	{
+		PathParts.RemoveAt(PathParts.Num() - 1); //remove the last part, which is the level name
+		levelPath = FString::Join(PathParts, TEXT("/"));
+		levelPath = "/" + levelPath; //add a leading slash
+	}
+
 	TSharedPtr<FSceneData> data = GetSceneData(levelName);
 	if (data.IsValid())
 	{

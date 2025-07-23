@@ -111,6 +111,8 @@ public:
 	void CollectAllMaps();
 	void FinalizeProjectSetup();
 
+	TMap<TSharedPtr<FEditorSceneData>, FString> SceneItemToPath;
+
 	//delegates
 	FOnUploadAllSceneGeometry OnUploadAllSceneGeometry;
 	FOnExportAllSceneGeometry OnExportAllSceneGeometry;

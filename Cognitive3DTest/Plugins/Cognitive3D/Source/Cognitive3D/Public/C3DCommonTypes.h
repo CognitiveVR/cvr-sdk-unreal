@@ -146,13 +146,15 @@ class FSceneData
 {
 public:
 	FString Name = "";
+	FString Path = "";
 	FString Id = "";
 	int32 VersionNumber = 1;
 	int32 VersionId = 0;
 
-	FSceneData(FString name, FString id, int32 versionnumber, int32 versionid)
+	FSceneData(FString name, FString path, FString id, int32 versionnumber, int32 versionid)
 	{
 		Name = name;
+		Path = path;
 		Id = id;
 		VersionNumber = versionnumber;
 		VersionId = versionid;

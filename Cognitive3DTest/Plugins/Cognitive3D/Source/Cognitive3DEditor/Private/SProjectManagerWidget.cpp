@@ -43,48 +43,72 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 
 	CollectAllMaps();
 
-	//Copy existing exported scenes:
+	// Start with whatever the server / config already gave you:
 	SceneListItems = FCognitiveEditorTools::GetInstance()->SceneData;
 
-	//Build a small set of names we already have to speed up duplicate checks:
-	TSet<FString> SeenNames;
+	// Build a quick lookup of already-exported package paths 
+	TSet<FString> ExportedPackagePaths;
 	for (auto& Entry : SceneListItems)
 	{
-		SeenNames.Add(Entry->Name);
+		// Entry->Path is "/Game/Maps" and Entry->Name is "VRMap"
+		ExportedPackagePaths.Add(Entry->Path + "/" + Entry->Name);
 	}
 
-	//Now walk every map in LevelSelectionMap:
+	// Add every map in LevelSelectionMap whose package path isn't yet exported
+	TSet<FString> SeenPackages;
 	for (auto& Pair : LevelSelectionMap)
 	{
-		// Pair.Key might be "/Game/Maps/VRMap.VRMap" or similar.
-		// GetShortName gives you "VRMap.VRMap" if that’s how it’s stored.
-		FString RawName = FPackageName::GetShortName(Pair.Key);
-
-		// Clean off any “Foo.Foo” suffix -> just the part before the first dot:
-		FString CleanName;
-		if (!RawName.Split(TEXT("."), &CleanName, nullptr))
+		const FString& FullObjectPath = Pair.Key;
+		// eg "/Game/Maps/VRMap.VRMap"
+		FString PackagePath, AssetName;
+		if (!FullObjectPath.Split(
+			TEXT("."),
+			&PackagePath,    // "/Game/Maps/VRMap"
+			&AssetName,      // "VRMap"
+			ESearchCase::IgnoreCase,
+			ESearchDir::FromStart))
 		{
-			CleanName = RawName;
+			// shouldn't ever happen, but fallback
+			PackagePath = FullObjectPath;
+			AssetName = FPackageName::GetShortName(FullObjectPath);
 		}
 
-		//If we haven't already seen this scene name, add a placeholder entry:
-		if (!SeenNames.Contains(CleanName))
+		//remove the map name from PackagePath
+		TArray<FString> PathParts;
+		PackagePath.ParseIntoArray(PathParts, TEXT("/"), true);
+		//keep all parts except the last one
+		if (PathParts.Num() > 1)
 		{
-			SceneListItems.Add(
-				MakeShared<FEditorSceneData>(
-					CleanName,     // Name
-					TEXT(""),      // Id empty
-					0,             // VersionNumber
-					0              // VersionId
-				)
-			);
-			SeenNames.Add(CleanName);
+			PathParts.RemoveAt(PathParts.Num() - 1, 1); // remove last part
+			PackagePath = FString::Join(PathParts, TEXT("/")); // rejoin
+			PackagePath = FString(TEXT("/")) + PackagePath; // ensure it starts with "/"
 		}
+
+
+		// skip if already exported or already queued
+		if (ExportedPackagePaths.Contains(PackagePath + "/" + AssetName) ||
+			SeenPackages.Contains(PackagePath + "/" + AssetName))
+		{
+			continue;
+		}
+
+		SeenPackages.Add(PackagePath + "/" + AssetName);
+
+		// names and paths are package-based now
+		SceneListItems.Add(MakeShared<FEditorSceneData>(
+			AssetName,     // eg "VRMap"
+			PackagePath,   // eg "/Game/Maps"
+			TEXT(""),      // Id
+			0,             // VersionNumber
+			0              // VersionId
+		));
 	}
 
-	//Sort alphabetically by Name to keep things tidy
+	//  Sort by Name then Path
 	SceneListItems.Sort([](auto& A, auto& B) {
-		return A->Name < B->Name;
+		int32 C = A->Name.Compare(B->Name, ESearchCase::IgnoreCase);
+		return (C != 0) ? (C < 0)
+			: (A->Path.Compare(B->Path, ESearchCase::IgnoreCase) < 0);
 		});
 	
     ChildSlot  
@@ -610,6 +634,10 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																				.FillWidth(1.0f)
 																				.DefaultLabel(FText::FromString("Name"))
 
+																				+ SHeaderRow::Column("Path")
+																				.FillWidth(2.0f)
+																				.DefaultLabel(FText::FromString("Path"))
+
 																				+ SHeaderRow::Column("Id")
 																				.FillWidth(1.0f)
 																				.DefaultLabel(FText::FromString("Id"))
@@ -779,83 +807,59 @@ FReply SProjectManagerWidget::OpenFullC3DSetupWindow()
 TSharedRef<ITableRow> SProjectManagerWidget::OnGenerateSceneRow(TSharedPtr<FEditorSceneData> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
 
-	// Helper to look up the full key from the short name
-	auto GetFullObjectPath = [this, Item]() -> FString
-		{
-			for (auto& Pair : LevelSelectionMap)
-			{
-				// Pair.Key is "/Game/.../MapName.MapName"
-				FString PackagePath, AssetName;
-				if (Pair.Key.Split(TEXT("."), &PackagePath, &AssetName,
-					ESearchCase::IgnoreCase, ESearchDir::FromStart)
-					&& AssetName == Item->Name)
-				{
-					return Pair.Key;
-				}
-			}
-			return FString(); // not found
-		};
+	const FString& FullPath = Item->Path + "/" + Item->Name;
 
 	return SNew(STableRow< TSharedPtr<FEditorSceneData> >, OwnerTable)
 		[
 			SNew(SHorizontalBox)
 
-				//Checkbox column
+				// Checkbox
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				.VAlign(VAlign_Center)
 				[
 					SNew(SCheckBox)
-						.IsChecked_Lambda([this, GetFullObjectPath]() {
-						const FString FullPath = GetFullObjectPath();
-						if (FullPath.Len() && LevelSelectionMap.Contains(FullPath))
-						{
-							return LevelSelectionMap[FullPath]
-								? ECheckBoxState::Checked
-									: ECheckBoxState::Unchecked;
-						}
-						return ECheckBoxState::Unchecked;
+						.IsChecked_Lambda([this, FullPath]() {
+						return (LevelSelectionMap.FindRef(FullPath)
+							? ECheckBoxState::Checked
+							: ECheckBoxState::Unchecked);
 							})
-						.OnCheckStateChanged_Lambda([this, GetFullObjectPath](ECheckBoxState NewState) {
-						const FString FullPath = GetFullObjectPath();
-						if (FullPath.Len())
-						{
-							LevelSelectionMap.Add(FullPath, NewState == ECheckBoxState::Checked);
-						}
+						.OnCheckStateChanged_Lambda([this, FullPath](ECheckBoxState State) {
+						LevelSelectionMap.Add(FullPath, State == ECheckBoxState::Checked);
 							})
 				]
 
-				//Name
+				// Name column
 				+ SHorizontalBox::Slot()
-				.FillWidth(1.0f)
+				.FillWidth(1)
 				.Padding(5, 0)
 				[
 					SNew(STextBlock)
 						.Text(FText::FromString(Item->Name))
 				]
 
-				//Id (may be empty)
+				// (you can add a small Path column if you like:)
 				+ SHorizontalBox::Slot()
-				.FillWidth(1.0f)
+				.FillWidth(1)
 				.Padding(5, 0)
+				[
+					SNew(STextBlock)
+						.Text(FText::FromString(Item->Path))
+						.Font(FEditorStyle::Get().GetFontStyle("MonoFont"))
+				]
+
+				// Id, VersionNumber, VersionId...
+				+ SHorizontalBox::Slot().FillWidth(0.3f).Padding(5, 0)
 				[
 					SNew(STextBlock)
 						.Text(FText::FromString(Item->Id))
 				]
-
-				//Version Number
-				+ SHorizontalBox::Slot()
-				.FillWidth(0.3f)
-				.Padding(5, 0)
+				+ SHorizontalBox::Slot().FillWidth(0.3f).Padding(5, 0)
 				[
 					SNew(STextBlock)
 						.Text(FText::AsNumber(Item->VersionNumber))
 				]
-
-				//Version Id
-				+ SHorizontalBox::Slot()
-				.FillWidth(0.3f)
-				.Padding(5, 0)
+				+ SHorizontalBox::Slot().FillWidth(0.3f).Padding(5, 0)
 				[
 					SNew(STextBlock)
 						.Text(FText::AsNumber(Item->VersionId))
@@ -1535,8 +1539,9 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 				}
 			}
 		}
-		FString ShortName = FPackageName::GetShortName(PackageToLoad);
-		FCognitiveEditorTools::GetInstance()->ExportScene(NameToExport, ActorsToExport);
+		//FString ShortName = FPackageName::GetShortName(PackageToLoad);
+		//FCognitiveEditorTools::GetInstance()->ExportScene(NameToExport, ActorsToExport);
+		FCognitiveEditorTools::GetInstance()->ExportScene(PackageToLoad, ActorsToExport);
 	}
 
 	//Export each sublevel under its own name, but loading its parent world
@@ -1601,7 +1606,8 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 
 		// Export under the sublevel's name
 		FString SubName = FPackageName::GetShortName(SubPath);
-		FCognitiveEditorTools::GetInstance()->ExportScene(SubName, ActorsToExport);
+		//FCognitiveEditorTools::GetInstance()->ExportScene(SubName, ActorsToExport);
+		FCognitiveEditorTools::GetInstance()->ExportScene(SubPath, ActorsToExport);
 	}
 
 	// Restore original map
@@ -1625,7 +1631,11 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 			{
 				FString LevelName = FPackageName::GetShortName(Pair.Key);
 				LevelName.Split(TEXT("."), nullptr, &LevelName); // Remove package extension
-				FCognitiveEditorTools::GetInstance()->WizardUpload(LevelName);
+
+				FString AdjustedLevelName = Pair.Key.Replace(TEXT("/"), TEXT("_")); // Replace slashes with underscores for upload
+				AdjustedLevelName.Split(TEXT("."), &AdjustedLevelName, nullptr ); // Remove package extension
+				UE_LOG(LogTemp, Warning, TEXT("SProjectManagerWidget::OnLevelsExported Uploading level: %s"), *AdjustedLevelName);
+				FCognitiveEditorTools::GetInstance()->WizardUpload(AdjustedLevelName);
 			}
 		}
 		OnUploadAllSceneGeometry.ExecuteIfBound(true);
