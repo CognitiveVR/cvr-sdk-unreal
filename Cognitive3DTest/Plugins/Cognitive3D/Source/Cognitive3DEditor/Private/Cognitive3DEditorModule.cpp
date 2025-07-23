@@ -76,6 +76,8 @@ void FCognitive3DEditorModule::StartupModule()
 	FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>(TEXT("LevelEditor"));
 	FCognitiveEditorTools::Initialize();
 
+	FString RestartAfterSetupString;
+
 	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
 	FString C3DKeysPath = FCognitiveEditorTools::GetInstance()->GetKeysFilePath();
 	GConfig->LoadFile(C3DSettingsPath);
@@ -84,6 +86,7 @@ void FCognitive3DEditorModule::StartupModule()
 	GConfig->GetString(TEXT("Analytics"), TEXT("AttributionKey"), FCognitiveEditorTools::GetInstance()->AttributionKey, C3DSettingsPath);
 	GConfig->GetString(TEXT("Analytics"), TEXT("DeveloperKey"), FCognitiveEditorTools::GetInstance()->DeveloperKey, C3DKeysPath);
 	GConfig->GetString(TEXT("Analytics"), TEXT("ExportPath"), FCognitiveEditorTools::GetInstance()->BaseExportDirectory, C3DSettingsPath);
+	GConfig->GetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("RestartAfterSetup"), RestartAfterSetupString, C3DSettingsPath);
 	GConfig->Flush(false, C3DSettingsPath);
 
 	FCognitiveEditorStyle::Initialize();
@@ -229,9 +232,13 @@ void FCognitive3DEditorModule::StartupModule()
 	PropertyModule.RegisterCustomClassLayout(TEXT("DynamicObject"), FOnGetDetailCustomizationInstance::CreateStatic(&IDynamicObjectComponentDetails::MakeInstance));
 	PropertyModule.RegisterCustomClassLayout(TEXT("DynamicIdPoolAsset"), FOnGetDetailCustomizationInstance::CreateStatic(&IDynamicIdPoolAssetDetails::MakeInstance));
 
-	if (FCognitiveEditorTools::GetInstance()->bIsRestartEditorAfterSetup)
+	UE_LOG(LogTemp, Log, TEXT("Cognitive3DEditorModule started up"));
+	if (RestartAfterSetupString == "True")
 	{
-		FCognitiveEditorTools::GetInstance()->bIsRestartEditorAfterSetup = false;
+		UE_LOG(LogTemp, Log, TEXT("Restarting Editor after project setup"));
+		GConfig->LoadFile(C3DSettingsPath);
+		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("RestartAfterSetup"), TEXT("False"), C3DSettingsPath);
+		GConfig->Flush(false, C3DSettingsPath);
 		//turn off build on startup once the editor is back up
 		//we only turn it on when we restart after a project setup (third party sdk change)
 		// Check if config file is already set to auto recompile on startup.
@@ -244,6 +251,10 @@ void FCognitive3DEditorModule::StartupModule()
 			GConfig->Flush(false, GEditorPerProjectIni);
 			UE_LOG(LogTemp, Log, TEXT("Enabling Editor Auto Recompile at Startup"));
 		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("Cognitive3DEditorModule started up without restart"));
 	}
 
 #endif

@@ -252,6 +252,7 @@ void FCognitiveEditorTools::CheckIniConfigured()
 		GLog->Log("FCognitiveEditorTools::CheckIniConfigured write defaults to ini");
 		FString defaultgateway = "data.cognitive3d.com";
 		FString trueString = "True";
+		FString falseString = "False";
 		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("Gateway"), *defaultgateway, ConfigFilePath);
 
 		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("GazeBatchSize"), 256, ConfigFilePath);
@@ -277,6 +278,8 @@ void FCognitiveEditorTools::CheckIniConfigured()
 
 		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("EnableLocalCache"), *trueString, ConfigFilePath);
 		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("LocalCacheSize"), 100, ConfigFilePath);
+
+		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("RestartAfterSetup"), *falseString, ConfigFilePath);
 		GConfig->Flush(false, ConfigFilePath);
 	}
 	else

@@ -1969,14 +1969,23 @@ void SProjectManagerWidget::RestartEditor()
 	// Check if config file is already set to auto recompile on startup.
 	bool bAutoRecompile = false;
 	GConfig->GetBool(TEXT("/Script/UnrealEd.EditorLoadingSavingSettings"), TEXT("bForceCompilationAtStartup"), bAutoRecompile, GEditorPerProjectIni);
+	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+	GConfig->LoadFile(C3DSettingsPath);
+	GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("RestartAfterSetup"), TEXT("False"), C3DSettingsPath);
 
 	if (!bAutoRecompile)
 	{
 		GConfig->SetBool(TEXT("/Script/UnrealEd.EditorLoadingSavingSettings"), TEXT("bForceCompilationAtStartup"), true, GEditorPerProjectIni);
 		GConfig->Flush(false, GEditorPerProjectIni);
 		UE_LOG(LogTemp, Log, TEXT("Enabling Editor Auto Recompile at Startup"));
-		FCognitiveEditorTools::GetInstance()->bIsRestartEditorAfterSetup = true;
+		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("RestartAfterSetup"), TEXT("True"), C3DSettingsPath);
 	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("Editor Auto Recompile at Startup is already enabled"));
+		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("RestartAfterSetup"), TEXT("True"), C3DSettingsPath);
+	}
+	GConfig->Flush(false, C3DSettingsPath);
 
 	if (Choice != EAppReturnType::Yes)
 	{
