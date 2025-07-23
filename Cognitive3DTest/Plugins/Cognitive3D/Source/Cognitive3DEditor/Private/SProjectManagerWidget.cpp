@@ -1956,6 +1956,11 @@ void SProjectManagerWidget::RestartEditor()
 				"You are now ready to use the Cognitive3D plugin to collect spatial analytics for your project!")
 		);
 
+		if (Choice == EAppReturnType::Ok)
+		{
+			FCognitive3DEditorModule::CloseFullC3DSetup();
+		}
+
 		// No SDK changes, no need to restart
 		return;
 	}
