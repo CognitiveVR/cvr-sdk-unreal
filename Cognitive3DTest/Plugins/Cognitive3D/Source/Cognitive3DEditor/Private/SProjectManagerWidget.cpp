@@ -595,22 +595,6 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																	]
 															]
 
-															+ SVerticalBox::Slot()
-															.AutoHeight()
-															.Padding(0,0,0,5)
-															[
-																SNew(SHorizontalBox)
-																	.Visibility(EVisibility::Visible)
-																	+ SHorizontalBox::Slot()
-																	[
-																		SNew(SRichTextBlock)
-																			.Visibility(EVisibility::Visible)
-																			.AutoWrapText(true)
-																			.Justification(ETextJustify::Center)
-																			.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
-																			.Text(FText::FromString("This is where we will do something with scene exports and uploads."))
-																	]
-															]
 															+SVerticalBox::Slot()
 															.AutoHeight()
 															.Padding(0, 0, 0, 10)
