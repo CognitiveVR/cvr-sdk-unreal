@@ -191,6 +191,14 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Name</>"))
 				]
 
+				+ SHeaderRow::Column("path")
+				.FillWidth(1)
+				[
+					SNew(SRichTextBlock)
+						.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
+						.Text(FText::FromString("<RichTextBlock.BoldHighlight>Path</>"))
+				]
+
 				+ SHeaderRow::Column("id")
 				.FillWidth(1)
 				[
@@ -316,6 +324,13 @@ TSharedRef<ITableRow> ICognitiveSettingsCustomization::OnGenerateWorkspaceRow(TS
 			[
 				SNew(STextBlock)
 				.Text(FText::FromString(InItem->Name))
+			]
+			+ SHorizontalBox::Slot()
+			.FillWidth(1)
+			.Padding(2.0f)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(InItem->Path))
 			]
 			+ SHorizontalBox::Slot()
 			.FillWidth(1)
