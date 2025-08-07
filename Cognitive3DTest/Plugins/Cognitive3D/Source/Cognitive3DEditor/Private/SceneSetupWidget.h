@@ -204,5 +204,6 @@ public:
 	//identification of exported level (or sublevel)
 	void OnLevelNameChanged(const FText& Text);
 	FText GetLevelName() const;
-	FString LevelName;
+	FString LevelName; // /Game/Maps/VRMap
+	FString AdjustedLevelName; // _Game_Maps_VRMap
 };
