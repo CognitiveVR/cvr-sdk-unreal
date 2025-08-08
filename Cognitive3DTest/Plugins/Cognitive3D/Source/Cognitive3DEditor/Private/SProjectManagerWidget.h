@@ -113,6 +113,10 @@ public:
 
 	TMap<TSharedPtr<FEditorSceneData>, FString> SceneItemToPath;
 
+	//compression toggle helpers
+	ECheckBoxState IsCompressTexturesChecked() const { return FCognitiveEditorTools::GetInstance()->CompressExportedFiles ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; }
+	void OnCompressTexturesChanged(ECheckBoxState NewState) { FCognitiveEditorTools::GetInstance()->CompressExportedFiles = (NewState == ECheckBoxState::Checked); }
+
 	//delegates
 	FOnUploadAllSceneGeometry OnUploadAllSceneGeometry;
 	FOnExportAllSceneGeometry OnExportAllSceneGeometry;

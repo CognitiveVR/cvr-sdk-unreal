@@ -595,6 +595,25 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																	]
 															]
 
+															//texture compression checkbox
+
+															//compress Textures toggle
+																+SVerticalBox::Slot()
+																.AutoHeight()
+																.Padding(0, 5)
+																[
+																	SNew(SCheckBox)
+																		.IsChecked(this, &SProjectManagerWidget::IsCompressTexturesChecked)
+																		.OnCheckStateChanged(this, &SProjectManagerWidget::OnCompressTexturesChanged)
+																		[
+																			SNew(STextBlock)
+																				.Text(FText::FromString(TEXT("Compress Textures After Export")))
+																				.ToolTipText(FText::FromString(
+																					TEXT("When checked, all exported textures will be run through a post-export compressor.")))
+																		]
+																]
+
+															//scene list
 															+SVerticalBox::Slot()
 															.AutoHeight()
 															.Padding(0, 0, 0, 10)

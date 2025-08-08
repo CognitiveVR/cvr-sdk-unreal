@@ -3892,6 +3892,8 @@ TArray<AActor*> FCognitiveEditorTools::PrepareSceneForExport(bool OnlyExportSele
 
 void FCognitiveEditorTools::CompressTexturesInExportFolder(const FString& ExportFolder, int32 MaxSize)
 {
+	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::CompressTexturesInExportFolder called with ExportFolder: %s and MaxSize: %d"), *ExportFolder, MaxSize);
+
 	IFileManager& FileManager = IFileManager::Get();
 	TArray<FString> TextureFiles;
 	FileManager.FindFilesRecursive(TextureFiles, *ExportFolder, TEXT("*.png"), true, false);
@@ -3900,9 +3902,8 @@ void FCognitiveEditorTools::CompressTexturesInExportFolder(const FString& Export
 
 	for (const FString& TextureFile : TextureFiles)
 	{
-		FString SourcePath = FPaths::Combine(ExportFolder, TextureFile);
-		FString DestinationPath = FPaths::Combine(ExportFolder, TextureFile); // Save in the same location
-		CompressAndSaveTexture(SourcePath, DestinationPath, MaxSize);
+		CompressAndSaveTexture(TextureFile, TextureFile, MaxSize);
+		UE_LOG(LogTemp, Log, TEXT("Compressed texture: %s"), *TextureFile);
 	}
 }
 
