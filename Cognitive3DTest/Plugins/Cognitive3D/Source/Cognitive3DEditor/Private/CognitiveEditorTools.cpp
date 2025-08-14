@@ -2500,11 +2500,6 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted Successful Upload");
 		ShowNotification(TEXT("Scene Uploaded Successfully"));
 		//UE_LOG(LogTemp, Warning, TEXT("Upload Scene Response is %s"), *Response->GetContentAsString());
-		
-		TSharedPtr<FJsonObject> PropertiesObject = MakeShared<FJsonObject>();
-		TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName);
-		PropertiesObject->SetNumberField("sceneVersion", sceneData->VersionNumber);
-		USegmentAnalytics::Get()->TrackEvent("UploadingSceneComplete_SceneUploadPage", PropertiesObject);
 
 		UWorld* myworld = GWorld->GetWorld();
 		if (myworld == NULL)
@@ -2524,6 +2519,11 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 		{
 			SaveSceneData(LevelName, responseNoQuotes);
 			ReadSceneDataFromFile();
+
+			TSharedPtr<FJsonObject> PropertiesObject = MakeShared<FJsonObject>();
+			TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName);
+			PropertiesObject->SetNumberField("sceneVersion", sceneData->VersionNumber);
+			USegmentAnalytics::Get()->TrackEvent("UploadingSceneComplete_SceneUploadPage", PropertiesObject);
 		}
 		else
 		{
