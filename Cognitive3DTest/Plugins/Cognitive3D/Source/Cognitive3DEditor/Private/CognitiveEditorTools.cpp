@@ -2714,7 +2714,10 @@ bool FCognitiveEditorTools::CurrentSceneHasSceneId() const
 
 bool FCognitiveEditorTools::SceneHasSceneId(const FString& SceneName) const
 {
-	if (!HasDeveloperKey()) { return false; }
+	if (!HasDeveloperKey()) 
+	{
+		return false; 
+	}
 	TSharedPtr<FEditorSceneData> currentscene = GetSceneData(SceneName);
 	if (!currentscene.IsValid())
 	{
@@ -3708,7 +3711,12 @@ TSharedPtr<FEditorSceneData> FCognitiveEditorTools::GetCurrentSceneData() const
 
 	FString currentSceneName = myworld->GetMapName();
 	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
-	return GetSceneData(currentSceneName);
+	// This is the full long package name, e.g. "/Game/Maps/MyMap"
+	FString PackageName = GWorld->GetOutermost()->GetName();
+	FString AdjustedPackageName = PackageName.Replace(TEXT("/"), TEXT("_")); //replace / with _
+	//return GetSceneData(currentSceneName);
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::GetCurrentSceneData currentSceneName %s"), *AdjustedPackageName);
+	return GetSceneData(AdjustedPackageName);
 }
 
 FString lastSceneName;
@@ -3718,19 +3726,19 @@ TSharedPtr<FEditorSceneData> FCognitiveEditorTools::GetSceneData(FString scenena
 	FString PathName = "";
 	if (scenename.Contains("_"))
 	{
-		UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::GetSceneData scenename %s contains _"), *scenename);
+		//UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::GetSceneData scenename %s contains _"), *scenename);
 		//scenename.Replace(TEXT("_"), TEXT("/"));
 		TArray<FString> PathParts;
 		scenename.ParseIntoArray(PathParts, TEXT("_"), true);
 		ShortName = PathParts.Last();
-		UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::GetSceneData ShortName %s"), *ShortName);
+		//UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::GetSceneData ShortName %s"), *ShortName);
 		PathName = "/";
 		for (int32 i = 0; i < PathParts.Num() - 1; i++)
 		{
 			if (i > 0) { PathName += TEXT("/"); }
 			PathName += PathParts[i];
 		}
-		UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::GetSceneData PathName %s"), *PathName);
+		//UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::GetSceneData PathName %s"), *PathName);
 	}
 	for (int32 i = 0; i < SceneData.Num(); i++)
 	{
@@ -3743,7 +3751,7 @@ TSharedPtr<FEditorSceneData> FCognitiveEditorTools::GetSceneData(FString scenena
 				continue; //path doesn't match
 			}
 			return SceneData[i];
-			UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::GetSceneData found SceneData for scene %s with path %s id %s version %d and versionid %d"), *SceneData[i]->Name, *SceneData[i]->Path, *SceneData[i]->Id, SceneData[i]->VersionNumber, SceneData[i]->VersionId);
+			//UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::GetSceneData found SceneData for scene %s with path %s id %s version %d and versionid %d"), *SceneData[i]->Name, *SceneData[i]->Path, *SceneData[i]->Id, SceneData[i]->VersionNumber, SceneData[i]->VersionId);
 		}
 	}
 	if (lastSceneName != ShortName)
