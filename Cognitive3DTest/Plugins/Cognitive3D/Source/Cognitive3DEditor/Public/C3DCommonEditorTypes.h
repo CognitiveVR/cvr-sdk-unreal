@@ -9,6 +9,7 @@
 
 DECLARE_DELEGATE_ThreeParams(FOnUploadSceneGeometry, FHttpRequestPtr, FHttpResponsePtr, bool)
 
+DECLARE_DELEGATE_OneParam(FOnUploadAllDynamics, bool)
 DECLARE_DELEGATE_OneParam(FOnUploadAllSceneGeometry, bool)
 DECLARE_DELEGATE_OneParam(FOnExportAllSceneGeometry, bool)
 

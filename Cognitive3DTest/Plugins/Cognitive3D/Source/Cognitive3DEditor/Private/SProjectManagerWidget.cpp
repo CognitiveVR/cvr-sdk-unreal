@@ -20,6 +20,7 @@
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Images/SImage.h"
 #include "CognitiveEditorStyle.h"
+#include "Cognitive3D/Public/DynamicObject.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
@@ -612,6 +613,23 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																					TEXT("When checked, all exported textures will be run through a post-export compressor.")))
 																		]
 																]
+
+																//export dynamics with scene toggle
+
+																+SVerticalBox::Slot()
+																	.AutoHeight()
+																	.Padding(0, 5)
+																	[
+																		SNew(SCheckBox)
+																			.IsChecked(this, &SProjectManagerWidget::IsExportDynamicsChecked)
+																			.OnCheckStateChanged(this, &SProjectManagerWidget::OnExportDynamicsChanged)
+																			[
+																				SNew(STextBlock)
+																					.Text(FText::FromString(TEXT("Export and Upload Dynamics with Scene")))
+																					.ToolTipText(FText::FromString(
+																						TEXT("When checked, all dynamic objects will be exported and uploaded with the respective scene.")))
+																			]
+																	]
 
 															//scene list
 															+SVerticalBox::Slot()
@@ -1364,6 +1382,8 @@ void SProjectManagerWidget::CollectAllMaps()
 
 void SProjectManagerWidget::FinalizeProjectSetup()
 {
+	//empty dynamics map
+	DynamicObjecstMap.Empty();
 	//UE_LOG(LogTemp, Warning, TEXT("FinalizeProjectSetup called"));
 	UWorld* World = GEditor->GetEditorWorldContext().World();
 	FString OriginalMap;
@@ -1461,6 +1481,9 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 		}
 	}
 
+	TotalLevelCount = PureMaps.Num() + SublevelKeys.Num();
+	FCognitiveEditorTools::GetInstance()->TotalLevelsToUpload = TotalLevelCount;
+	FCognitiveEditorTools::GetInstance()->TotalSetOfDynamicsToUpload = TotalLevelCount;
 	//Create the slow task for TOTAL items = PureMaps + SublevelKeys
 	FScopedSlowTask ExportTask(PureMaps.Num() + SublevelKeys.Num(), LOCTEXT("ExportingMaps", "Exporting selected maps..."));
 	ExportTask.MakeDialog();
@@ -1532,6 +1555,7 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 
 		// only grab actors from the *persistent* level, never from sublevels
 		TArray<AActor*> ActorsToExport;
+		TArray<UDynamicObject*> DynamicObjects; //ExportDynamicObjectArray
 		if (ULevel* Persistent = W->PersistentLevel)
 		{
 			for (AActor* A : Persistent->Actors)
@@ -1539,12 +1563,26 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 				if (A && !A->IsPendingKillPending() && !A->IsTemplate())
 				{
 					ActorsToExport.Add(A);
+
+					//check for dynamic object component on actors
+					if(UDynamicObject* DynamicObject = Cast<UDynamicObject>(A->GetComponentByClass(UDynamicObject::StaticClass())))
+					{
+						if (DynamicObject != nullptr)
+						{
+							DynamicObjects.Add(DynamicObject);
+						}
+					}
 				}
 			}
 		}
-		//FString ShortName = FPackageName::GetShortName(PackageToLoad);
-		//FCognitiveEditorTools::GetInstance()->ExportScene(NameToExport, ActorsToExport);
+
 		FCognitiveEditorTools::GetInstance()->ExportScene(PackageToLoad, ActorsToExport);
+
+		if (FCognitiveEditorTools::GetInstance()->UploadingDynamicsFromFullSetup)
+		{
+			FCognitiveEditorTools::GetInstance()->ExportDynamicObjectArray(DynamicObjects);
+			DynamicObjecstMap.Add(PackageToLoad, DynamicObjects);
+		}
 	}
 
 	//Export each sublevel under its own name, but loading its parent world
@@ -1593,6 +1631,8 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 
 		// now only export actors from those levels
 		TArray<AActor*> ActorsToExport;
+		//TArray<TSharedPtr<UDynamicObject*>> DynamicObjects; //ExportDynamicObjectArray
+		TArray<UDynamicObject*> DynamicObjects;
 		for (ULevel* Level : W->GetLevels())
 		{
 			if (!AllowedLevels.Contains(Level))
@@ -1603,14 +1643,27 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 				if (Actor && !Actor->IsPendingKillPending() && !Actor->IsTemplate())
 				{
 					ActorsToExport.Add(Actor);
+
+					//check for dynamic object component on actors
+					if (UDynamicObject* DynamicObject = Cast<UDynamicObject>(Actor->GetComponentByClass(UDynamicObject::StaticClass())))
+					{
+						if (DynamicObject != nullptr)
+						{
+							DynamicObjects.Add(DynamicObject);
+						}
+					}
 				}
 			}
 		}
 
 		// Export under the sublevel's name
-		FString SubName = FPackageName::GetShortName(SubPath);
-		//FCognitiveEditorTools::GetInstance()->ExportScene(SubName, ActorsToExport);
 		FCognitiveEditorTools::GetInstance()->ExportScene(SubPath, ActorsToExport);
+
+		if (FCognitiveEditorTools::GetInstance()->UploadingDynamicsFromFullSetup)
+		{
+			FCognitiveEditorTools::GetInstance()->ExportDynamicObjectArray(DynamicObjects);
+			DynamicObjecstMap.Add(SubPath, DynamicObjects);
+		}
 	}
 
 	// Restore original map
@@ -1626,7 +1679,21 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{
-		OnUploadAllSceneGeometry.BindSP(this, &SProjectManagerWidget::OnLevelsUploaded);
+		UE_LOG(LogTemp, Warning, TEXT("SProjectManagerWidget::OnLevelsExported called with %d levels to upload"), TotalLevelCount);
+		FScopedSlowTask UploadTask(TotalLevelCount, LOCTEXT("UploadingMaps", "Uploading selected maps..."));
+		UploadTask.MakeDialog();
+
+		UWorld* World = GEditor->GetEditorWorldContext().World();
+		FString OriginalMap;
+
+		if (World)
+		{
+			OriginalMap = World->GetOutermost()->GetName(); // e.g. /Game/Maps/MyMap
+			//UE_LOG(LogTemp, Warning, TEXT("Current World: %s"), *OriginalMap);
+		}
+
+		FCognitiveEditorTools::GetInstance()->OnUploadAllSceneGeometry.BindSP(this, &SProjectManagerWidget::OnLevelsUploaded);
+		FCognitiveEditorTools::GetInstance()->UploadingScenesFromFullSetup = true;
 
 		for (const TPair<FString, bool>& Pair : LevelSelectionMap)
 		{
@@ -1634,18 +1701,87 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 			{
 				FString LevelName = FPackageName::GetShortName(Pair.Key);
 				LevelName.Split(TEXT("."), nullptr, &LevelName); // Remove package extension
-
+				//start task
+				UploadTask.EnterProgressFrame(1.0f, FText::FromString(Pair.Key));
+				//load the map for the current pair
+				if (!FEditorFileUtils::LoadMap(Pair.Key, false, true))
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Failed to load %s"), *Pair.Key);
+					continue;
+				}
+				FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 				FString AdjustedLevelName = Pair.Key.Replace(TEXT("/"), TEXT("_")); // Replace slashes with underscores for upload
 				AdjustedLevelName.Split(TEXT("."), &AdjustedLevelName, nullptr ); // Remove package extension
 				UE_LOG(LogTemp, Warning, TEXT("SProjectManagerWidget::OnLevelsExported Uploading level: %s"), *AdjustedLevelName);
 				FCognitiveEditorTools::GetInstance()->WizardUpload(AdjustedLevelName);
 			}
 		}
-		OnUploadAllSceneGeometry.ExecuteIfBound(true);
+
+		// Restore original map
+		if (!OriginalMap.IsEmpty())
+		{
+			FEditorFileUtils::LoadMap(OriginalMap, false, true);
+		}
 	}
 }
 
 void SProjectManagerWidget::OnLevelsUploaded(bool bWasSuccessful)
+{
+	
+	if (bWasSuccessful)
+	{
+		if (!FCognitiveEditorTools::GetInstance()->UploadingDynamicsFromFullSetup)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SProjectManagerWidget::OnLevelsUploaded Uploading dynamics from full setup is disabled, skipping dynamics upload"));
+			//RestartEditor();
+			//go straight to the last step and prompt restart the editor
+			OnUploadAllSceneGeometry.BindSP(this, &SProjectManagerWidget::OnDynamicsUploaded);
+			OnUploadAllSceneGeometry.ExecuteIfBound(true);
+			return;
+		}
+		UE_LOG(LogTemp, Warning, TEXT("SProjectManagerWidget::OnLevelsUploaded called with %d dynamics to upload"), TotalLevelCount);
+		FCognitiveEditorTools::GetInstance()->OnUploadAllDynamics.BindSP(this, &SProjectManagerWidget::OnDynamicsUploaded);
+
+		//FScopedSlowTask UploadDynTask(TotalLevelCount, LOCTEXT("UploadingDynamics", "Uploading level dynamics..."));
+		//UploadDynTask.MakeDialog();
+
+		UWorld* World = GEditor->GetEditorWorldContext().World();
+		FString OriginalMap;
+
+		if (World)
+		{
+			OriginalMap = World->GetOutermost()->GetName(); // e.g. /Game/Maps/MyMap
+			//UE_LOG(LogTemp, Warning, TEXT("Current World: %s"), *OriginalMap);
+		}
+
+		//go through the map for <path, dynamics> and upload each dynamics manifest
+		for (const TPair<FString, TArray<UDynamicObject*>>& Pair : DynamicObjecstMap)
+		{
+			//UploadDynTask.EnterProgressFrame(1.f, FText::FromString(Pair.Key));
+
+			//load the map for the current pair
+			if (!FEditorFileUtils::LoadMap(Pair.Key, false, true))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Failed to load %s"), *Pair.Key);
+				continue;
+			}
+			FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
+			FString LevelName = FPackageName::GetShortName(Pair.Key);
+			LevelName.Split(TEXT("."), nullptr, &LevelName); // Remove package extension
+			FString AdjustedLevelName = Pair.Key.Replace(TEXT("/"), TEXT("_")); // Replace slashes with underscores for upload
+			AdjustedLevelName.Split(TEXT("."), &AdjustedLevelName, nullptr); // Remove package extension
+			UE_LOG(LogTemp, Warning, TEXT("SProjectManagerWidget::OnLevelsExported Uploading dynamics for level: %s"), *AdjustedLevelName);
+			FCognitiveEditorTools::GetInstance()->UploadDynamicsManifest(AdjustedLevelName);
+		}
+		// Restore original map
+		if (!OriginalMap.IsEmpty())
+		{
+			FEditorFileUtils::LoadMap(OriginalMap, false, true);
+		}
+	}
+}
+
+void SProjectManagerWidget::OnDynamicsUploaded(bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{

@@ -31,6 +31,7 @@
 class FCognitiveTools;
 class FCognitive3DEditorModule;
 class FCognitiveEditorTools;
+class UDynamicObject;
 
 /**
  * 
@@ -117,12 +118,21 @@ public:
 	ECheckBoxState IsCompressTexturesChecked() const { return FCognitiveEditorTools::GetInstance()->CompressExportedFiles ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; }
 	void OnCompressTexturesChanged(ECheckBoxState NewState) { FCognitiveEditorTools::GetInstance()->CompressExportedFiles = (NewState == ECheckBoxState::Checked); }
 
+	//export dynamics toggle
+	ECheckBoxState IsExportDynamicsChecked() const { return FCognitiveEditorTools::GetInstance()->UploadingDynamicsFromFullSetup ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; }
+	void OnExportDynamicsChanged(ECheckBoxState NewState) { FCognitiveEditorTools::GetInstance()->UploadingDynamicsFromFullSetup = (NewState == ECheckBoxState::Checked); }
+
 	//delegates
-	FOnUploadAllSceneGeometry OnUploadAllSceneGeometry;
 	FOnExportAllSceneGeometry OnExportAllSceneGeometry;
+	FOnUploadAllDynamics OnUploadAllDynamics;
+	FOnUploadAllSceneGeometry OnUploadAllSceneGeometry;
 	//delegate callbacks
 	void OnLevelsExported(bool bWasSuccessful);
 	void OnLevelsUploaded(bool bWasSuccessful);
+	void OnDynamicsUploaded(bool bWasSuccessful);
+	TMap<FString, TArray<UDynamicObject*>> DynamicObjecstMap;
+
+	int32 TotalLevelCount = 0;
 
 	//third party SDK setup
 	void ApplySDKToggle(const FString& SDKName, bool bEnable);

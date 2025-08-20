@@ -1333,7 +1333,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest(FString LevelName)
 			}
 		}
 	}
-
+	
 	//get the blueprint dynamics in the project and add them to the list
 	for (const TSharedPtr<FDynamicData>& data : SceneDynamics)
 	{
@@ -1409,12 +1409,12 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(FString LevelName, 
 				continue;
 			}
 			//if they have a customid -> add them to the objectmanifest string
-			if (dynamics[q]->IdSourceType == EIdSourceType::CustomId && dynamics[q]->CustomId != "")
+			if (dynamics[q]->IdSourceType == EIdSourceType::CustomId && !dynamics[q]->CustomId.IsEmpty())
 			{
 				AActor* Owner = NULL;
 				bool isBlueprint = false;
 				UMeshComponent* bpMesh = NULL;
-
+				
 				//get this dynamic's blueprint, owner, and check a boolean to see if it is a blueprint
 				for (const TSharedPtr<FDynamicData>& data : SceneDynamics)
 				{
@@ -1509,7 +1509,6 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(FString LevelName, 
 					rotation = FQuat::Identity;
 					scale = FVector::OneVector;
 				}
-
 				wroteAnyObjects = true;
 				dynamicsCount++;
 				FString isController = dynamics[q]->IsController ? "true" : "false";
@@ -1688,8 +1687,6 @@ FReply FCognitiveEditorTools::UploadDynamicsManifestIds(FString LevelName, TArra
 
 void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString Level)
 {
-	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::OnUploadManifestCompleted called for level %s"), *Level);
-
 	WizardUploading = false;
 	if (Response.Get() == NULL) //likely no aggregation manifest to upload. no request, no response
 	{
@@ -1776,6 +1773,12 @@ void FCognitiveEditorTools::OnDynamicManifestResponse(FHttpRequestPtr Request, F
 	{
 		GLog->Log("FCognitiveEditorTools::OnDynamicManifestResponse response code " + FString::FromInt(Response->GetResponseCode()));
 		ShowNotification(TEXT("Dynamic Manifest Uploaded Successfully"));
+		TotalSetOfDynamicsToUpload--;
+		if(UploadingDynamicsFromFullSetup && TotalSetOfDynamicsToUpload <= 0)
+		{
+			OnUploadAllDynamics.ExecuteIfBound(true);
+			UploadingDynamicsFromFullSetup = false;
+		}
 	}
 	else
 	{
@@ -1895,7 +1898,6 @@ FReply FCognitiveEditorTools::UploadDynamics(FString LevelName)
 		GLog->Log("FCognitiveEditorTools::UploadDynamics has no dynamics to upload!");
 		WizardUploading = false;
 	}
-
 
 	OnUploadSceneGeometry.ExecuteIfBound(nullptr, nullptr, true);
 
@@ -2602,8 +2604,20 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 
 	if (WizardUploading && OutstandingDynamicUploadRequests <= 0)
 	{
-		//upload manifest
-		UploadDynamicsManifest(LevelName); // _Game_Maps_VRMap
+		if (!UploadingDynamicsFromFullSetup && !UploadingScenesFromFullSetup)
+		{
+			//upload manifest
+			UploadDynamicsManifest(LevelName); // _Game_Maps_VRMap
+		}
+		if (UploadingScenesFromFullSetup)
+		{
+			TotalLevelsToUpload--;
+			if (TotalLevelsToUpload <= 0)
+			{
+				OnUploadAllSceneGeometry.ExecuteIfBound(true);
+				UploadingScenesFromFullSetup = false;
+			}
+		}
 	}
 }
 
@@ -3108,7 +3122,6 @@ for (const FAssetData& AssetData2 : AssetDataList)
 
 //#endif
 */
-
 	return FReply::Handled();
 }
 
@@ -3638,7 +3651,26 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 
 		if (WizardUploading)
 		{
-			UploadDynamics(LevelName); // _Game_Maps_VRMap
+			if (UploadingScenesFromFullSetup)
+			{
+				if (UploadingDynamicsFromFullSetup)
+				{
+					UploadDynamics(LevelName); // _Game_Maps_VRMap
+				}
+				else
+				{
+					TotalLevelsToUpload--;
+					if (TotalLevelsToUpload <= 0)
+					{
+						OnUploadAllSceneGeometry.ExecuteIfBound(true);
+						UploadingScenesFromFullSetup = false;
+					}
+				}
+			}
+			else
+			{
+				UploadDynamics(LevelName); // _Game_Maps_VRMap
+			}
 		}
 	}
 	else
