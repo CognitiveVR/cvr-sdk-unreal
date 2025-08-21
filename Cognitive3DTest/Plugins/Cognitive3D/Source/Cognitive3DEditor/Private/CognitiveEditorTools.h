@@ -442,6 +442,9 @@ public:
 	//notifications
 	void ShowNotification(FString Message, bool bSuccessful = true);
 
+	FString SplitCharacter = TEXT("_--_");
+	FString AdjustPathName(FString OriginalPathName) const;
+
 	//flag for when uploading dynamics from full project setup
 	bool UploadingDynamicsFromFullSetup = false;
 	//flag for when uploading scenes from full project setup

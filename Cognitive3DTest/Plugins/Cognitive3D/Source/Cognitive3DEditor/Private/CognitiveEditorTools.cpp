@@ -2136,7 +2136,7 @@ FReply FCognitiveEditorTools::UploadScene(const FString& LevelName)
 	FString url = "";
 
 	TArray<FString> SplitLevelName;
-	LevelName.ParseIntoArray(SplitLevelName, TEXT("_"), true);
+	LevelName.ParseIntoArray(SplitLevelName, *SplitCharacter, true);
 	FString ShortName = SplitLevelName.Last();
 	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::UploadScene ShortName: %s"), *ShortName);
 
@@ -3499,7 +3499,8 @@ void FCognitiveEditorTools::SceneVersionRequest(const FEditorSceneData& data)
 	{
 		LevelName = LevelPath + "/" + LevelName;
 	}
-	LevelName = LevelName.Replace(TEXT("/"), TEXT("_")); //replace / with _ for url
+	//LevelName = LevelName.Replace(TEXT("/"), TEXT("_")); //replace / with _ for url
+	LevelName = AdjustPathName(LevelName); //adjust path name to be valid for url
 	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::SceneVersionRequest %s"), *LevelName);
 	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::SceneVersionResponse, LevelName); //data.Name old input. _Game_Maps_VRMap
 	HttpRequest->ProcessRequest();
@@ -3745,7 +3746,8 @@ TSharedPtr<FEditorSceneData> FCognitiveEditorTools::GetCurrentSceneData() const
 	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
 	// This is the full long package name, e.g. "/Game/Maps/MyMap"
 	FString PackageName = GWorld->GetOutermost()->GetName();
-	FString AdjustedPackageName = PackageName.Replace(TEXT("/"), TEXT("_")); //replace / with _
+	//FString AdjustedPackageName = PackageName.Replace(TEXT("/"), TEXT("_")); //replace / with _
+	FString AdjustedPackageName = AdjustPathName(PackageName);
 	//return GetSceneData(currentSceneName);
 	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::GetCurrentSceneData currentSceneName %s"), *AdjustedPackageName);
 	return GetSceneData(AdjustedPackageName);
@@ -3761,7 +3763,7 @@ TSharedPtr<FEditorSceneData> FCognitiveEditorTools::GetSceneData(FString scenena
 		//UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::GetSceneData scenename %s contains _"), *scenename);
 		//scenename.Replace(TEXT("_"), TEXT("/"));
 		TArray<FString> PathParts;
-		scenename.ParseIntoArray(PathParts, TEXT("_"), true);
+		scenename.ParseIntoArray(PathParts, *SplitCharacter, true);
 		ShortName = PathParts.Last();
 		//UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::GetSceneData ShortName %s"), *ShortName);
 		PathName = "/";
@@ -3798,7 +3800,7 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 {
 	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::SaveSceneData - SceneName: %s, SceneKey: %s"), *sceneName, *sceneKey);
 
-	FString ReAdjustedLevelName = sceneName.Replace(TEXT("_"), TEXT("/"));
+	FString ReAdjustedLevelName = sceneName.Replace(*SplitCharacter, TEXT("/"));
 	TArray<FString> PathParts;
 	ReAdjustedLevelName.ParseIntoArray(PathParts, TEXT("/"), true);
 	FString ShortName = PathParts.Last();
@@ -4037,12 +4039,13 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 			GEditor->SelectActor((actorsToExport[i]), true, false, true);
 		}
 	}
-	FString AdjustedLevelName = LevelName.Replace(TEXT("/"), TEXT("_")); // _Game_Maps_VRMap
+	//FString AdjustedLevelName = LevelName.Replace(TEXT("/"), TEXT("_")); // _Game_Maps_VRMap
+	FString AdjustedLevelName = AdjustPathName(LevelName);
 	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::ExportScene AFTER REPLACE exporting scene with LevelName: %s"), *AdjustedLevelName);
 
 	TArray<FString> SplitFullPathName;
 	//LevelName.Split(TEXT("_"), ESearchCase::IgnoreCase, ESearchDir::FromEnd);
-	AdjustedLevelName.ParseIntoArray(SplitFullPathName, TEXT("_"), true);
+	AdjustedLevelName.ParseIntoArray(SplitFullPathName, *SplitCharacter, true);
 	FString ShortName = SplitFullPathName.Last();
 	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::ExportScene ShortName: %s"), *ShortName);
 
@@ -4151,7 +4154,7 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 void FCognitiveEditorTools::ValidateGeneratedFiles(const FString LevelName)
 {
 	TArray<FString> SplitLevelName;
-	LevelName.ParseIntoArray(SplitLevelName, TEXT("_"), true);
+	LevelName.ParseIntoArray(SplitLevelName, *SplitCharacter, true);
 	FString ShortName = SplitLevelName.Last();
 
 	//validate other files:
@@ -4302,7 +4305,7 @@ bool FCognitiveEditorTools::GenerateSettingsJsonFile(const FString& LevelName)
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
 
 	TArray<FString> SplitFullPathName;
-	LevelName.ParseIntoArray(SplitFullPathName, TEXT("_"), true);
+	LevelName.ParseIntoArray(SplitFullPathName, *SplitCharacter, true);
 	FString ShortName = SplitFullPathName.Last();
 
 	//create settings.json
@@ -4337,6 +4340,15 @@ void FCognitiveEditorTools::ShowNotification(FString Message, bool bSuccessful)
 	}
 	
 	FSlateNotificationManager::Get().AddNotification(NotifyInfo);
+}
+
+FString FCognitiveEditorTools::AdjustPathName(FString OriginalPathName) const
+{
+	// Adjust the path name to ensure it is in the correct format
+	OriginalPathName.ReplaceInline(TEXT("/"), *SplitCharacter); // Replace slashes with underscores
+	OriginalPathName.TrimStartAndEndInline(); // Trim any leading or trailing whitespace
+
+	return OriginalPathName;
 }
 
 const FSlateBrush* FCognitiveEditorTools::GetBrush(FName brushName)

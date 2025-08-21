@@ -147,7 +147,8 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 	if (tempSceneData.IsValid())
 	{
 		SceneDisplayName = MakeShareable(new FString(tempSceneData->Path + "/" + tempSceneData->Name));
-		AdjustedSceneDisplayName = MakeShareable(new FString(SceneDisplayName->Replace(TEXT("/"), TEXT("_"))));
+		//AdjustedSceneDisplayName = MakeShareable(new FString(SceneDisplayName->Replace(TEXT("/"), TEXT("_"))));
+		AdjustedSceneDisplayName = MakeShareable(new FString(FCognitiveEditorTools::GetInstance()->AdjustPathName(*SceneDisplayName)));
 	}
 
 	ChildSlot
@@ -1033,7 +1034,8 @@ void SDynamicObjectManagerWidget::OnSceneNamesChanged(TSharedPtr<FString> NewSel
 	//if (SelectInfo != ESelectInfo::Direct)
 	{
 		SceneDisplayName = NewSelection;
-		AdjustedSceneDisplayName = MakeShareable(new FString(SceneDisplayName->Replace(TEXT("/"), TEXT("_"))));
+		//AdjustedSceneDisplayName = MakeShareable(new FString(SceneDisplayName->Replace(TEXT("/"), TEXT("_"))));
+		AdjustedSceneDisplayName = MakeShareable(new FString(FCognitiveEditorTools::GetInstance()->AdjustPathName(*SceneDisplayName)));
 	}
 	RefreshDisplayDynamicObjectsCountInScene();
 }

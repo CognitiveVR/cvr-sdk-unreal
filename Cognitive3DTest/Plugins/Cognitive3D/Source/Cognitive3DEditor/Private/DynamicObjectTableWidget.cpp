@@ -93,7 +93,8 @@ TSharedRef<ITableRow> SDynamicObjectTableWidget::OnGenerateRowForTable(TSharedPt
 	
 	TSharedPtr<FString> sceneName = SDynamicObjectManagerWidget::SceneDisplayName;
 	FString PackageName = GWorld->GetOutermost()->GetName();
-	FString AdjustedPackageName = PackageName.Replace(TEXT("/"), TEXT("_")); //replace / with _
+	//FString AdjustedPackageName = PackageName.Replace(TEXT("/"), TEXT("_")); //replace / with _
+	FString AdjustedPackageName = FCognitiveEditorTools::GetInstance()->AdjustPathName(PackageName);
 	//check if the current scene is set up correctly with a SceneId and return the table row
 	if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*AdjustedPackageName))
 	{

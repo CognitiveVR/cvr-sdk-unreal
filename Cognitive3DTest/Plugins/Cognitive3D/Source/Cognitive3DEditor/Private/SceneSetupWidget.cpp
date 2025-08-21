@@ -98,7 +98,8 @@ void SSceneSetupWidget::Construct(const FArguments& Args)
 
 	LevelName = PackageName;
 
-	AdjustedLevelName = LevelName.Replace(TEXT("/"), TEXT("_")); // Replace slashes with underscores for export/upload
+	//AdjustedLevelName = LevelName.Replace(TEXT("/"), TEXT("_")); // Replace slashes with underscores for export/upload
+	AdjustedLevelName = FCognitiveEditorTools::GetInstance()->AdjustPathName(LevelName); // Adjust path name for upload
 	AdjustedLevelName.Split(TEXT("."), &AdjustedLevelName, nullptr); // Remove package extension
 
 	ChildSlot

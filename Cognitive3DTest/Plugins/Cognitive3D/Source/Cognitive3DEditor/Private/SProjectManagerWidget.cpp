@@ -1710,7 +1710,8 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 					continue;
 				}
 				FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
-				FString AdjustedLevelName = Pair.Key.Replace(TEXT("/"), TEXT("_")); // Replace slashes with underscores for upload
+				//FString AdjustedLevelName = Pair.Key.Replace(TEXT("/"), TEXT("_")); // Replace slashes with underscores for upload
+				FString AdjustedLevelName = FCognitiveEditorTools::GetInstance()->AdjustPathName(Pair.Key);
 				AdjustedLevelName.Split(TEXT("."), &AdjustedLevelName, nullptr ); // Remove package extension
 				UE_LOG(LogTemp, Warning, TEXT("SProjectManagerWidget::OnLevelsExported Uploading level: %s"), *AdjustedLevelName);
 				FCognitiveEditorTools::GetInstance()->WizardUpload(AdjustedLevelName);
@@ -1768,7 +1769,8 @@ void SProjectManagerWidget::OnLevelsUploaded(bool bWasSuccessful)
 			FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
 			FString LevelName = FPackageName::GetShortName(Pair.Key);
 			LevelName.Split(TEXT("."), nullptr, &LevelName); // Remove package extension
-			FString AdjustedLevelName = Pair.Key.Replace(TEXT("/"), TEXT("_")); // Replace slashes with underscores for upload
+			//FString AdjustedLevelName = Pair.Key.Replace(TEXT("/"), TEXT("_")); // Replace slashes with underscores for upload
+			FString AdjustedLevelName = FCognitiveEditorTools::GetInstance()->AdjustPathName(Pair.Key);
 			AdjustedLevelName.Split(TEXT("."), &AdjustedLevelName, nullptr); // Remove package extension
 			UE_LOG(LogTemp, Warning, TEXT("SProjectManagerWidget::OnLevelsExported Uploading dynamics for level: %s"), *AdjustedLevelName);
 			FCognitiveEditorTools::GetInstance()->UploadDynamicsManifest(AdjustedLevelName);
