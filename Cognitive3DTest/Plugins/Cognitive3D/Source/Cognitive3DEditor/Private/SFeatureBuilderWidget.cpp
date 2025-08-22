@@ -122,8 +122,6 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 	{
 		return SNew(SVerticalBox)
 			+ SVerticalBox::Slot().AutoHeight().Padding(5)
-			[SNew(SImage).Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.ExitPollIcon")))]
-			+ SVerticalBox::Slot().AutoHeight().Padding(5)
 			[SNew(STextBlock)
 			.Text(FText::FromString("Exit Poll Setup"))
 			.Font(FEditorStyle::GetFontStyle("Heading"))]
@@ -143,8 +141,6 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 	else if (SelectedFeature == TEXT("RemoteControls"))
 	{
 		return SNew(SVerticalBox)
-			+ SVerticalBox::Slot().AutoHeight().Padding(5)
-			[SNew(SImage).Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.RemoteControlsIcon")))]
 			+ SVerticalBox::Slot().AutoHeight().Padding(5)
 			[SNew(STextBlock)
 			.Text(FText::FromString("Remote Controls"))
@@ -174,41 +170,23 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 					[SNew(STextBlock)
 					.Text(FText::FromString("Here is a Blueprint and C++ sample showing simple use of the custom event."))
 					.AutoWrapText(true)]
-					+ SVerticalBox::Slot().AutoHeight().Padding(5)
-					[SNew(SImage).Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CustomEventsSimple")))]
+					+ SVerticalBox::Slot()
+						.Padding(5)
+						.HAlign(HAlign_Center)
+						.MaxHeight(200)
+					[
+						SNew(SHorizontalBox)
+						+SHorizontalBox::Slot()
+							.MaxWidth(500)
+							.Padding(5)
+						[
+						SNew(SImage)
+						.Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CustomEventsSimple")))
+						]
+					]
 					+ SVerticalBox::Slot().AutoHeight().Padding(5)
 					[SNew(STextBlock)
 					.Text(FText::FromString("TWeakPtr<FAnalyticsProviderCognitive3D> provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();\nif (provider.IsValid())\n{\n	//send an event with a name\n	provider.Pin()->customEventRecorder->Send(\"My Event\");\n	//send an event with a name and a position\n	provider.Pin()->customEventRecorder->Send(\"My Event With Position\", FVector(0, 100, 0));\n}"))
-					.AutoWrapText(true)]
-					+ SVerticalBox::Slot().AutoHeight().Padding(5)
-					[SNew(STextBlock)
-					.Text(FText::FromString("Here is a Blueprint and C++ sample showing how to send custom events with properties."))
-					.AutoWrapText(true)]
-					+ SVerticalBox::Slot().AutoHeight().Padding(5)
-					[SNew(SImage).Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CustomEventsProperties")))]
-					+ SVerticalBox::Slot().AutoHeight().Padding(5)
-					[SNew(STextBlock)
-					.Text(FText::FromString("TWeakPtr<FAnalyticsProviderCognitive3D> provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();\nif (provider.IsValid())\n{\n	//create some properties and send an event\n	TSharedPtr<FJsonObject> properties = MakeShareable(new FJsonObject());\n	properties->SetStringField(\"last login\", FString(\"never\"));\n	properties->SetNumberField(\"login attempts\", 4);\n	provider.Pin()->customEventRecorder->Send(\"Login Attempt\", properties);\n}"))
-					.AutoWrapText(true)]
-					+ SVerticalBox::Slot().AutoHeight().Padding(5)
-					[SNew(STextBlock)
-					.Text(FText::FromString("Here is a Blueprint and C++ sample showing how to send custom events linked to a dynamic object."))
-					.AutoWrapText(true)]
-					+ SVerticalBox::Slot().AutoHeight().Padding(5)
-					[SNew(SImage).Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CustomEventsDynamicObjects")))]
-					+ SVerticalBox::Slot().AutoHeight().Padding(5)
-					[SNew(STextBlock)
-					.Text(FText::FromString("TWeakPtr<FAnalyticsProviderCognitive3D> provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();\nif (provider.IsValid())\n{\n	//send an event with a dynamic object\n	FString dynamicObjectId = dynamicObjectPtr->GetObjectId()->Id;\n	provider.Pin()->customEventRecorder->Send(\"Dynamic Object Event\", properties, dynamicObjectId);\n}"))
-					.AutoWrapText(true)]
-					+ SVerticalBox::Slot().AutoHeight().Padding(5)
-					[SNew(STextBlock)
-					.Text(FText::FromString("Here is a Blueprint and C++ sample showing how to create a custom event object that can be references elsewhere."))
-					.AutoWrapText(true)]
-					+ SVerticalBox::Slot().AutoHeight().Padding(5)
-					[SNew(SImage).Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CustomEventsMakeObject")))]
-					+ SVerticalBox::Slot().AutoHeight().Padding(5)
-					[SNew(STextBlock)
-					.Text(FText::FromString("TWeakPtr<FAnalyticsProviderCognitive3D> provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();\nif (provider.IsValid())\n{\n	//create a custom event object and set properties on that\n	UCustomEvent* customEvent = NewObject<UCustomEvent>(this);\n	customEvent->SetCategory(\"Custom Event\");\n	customEvent->SetDynamicObject(dynamicObjectPtr);\n	customEvent->AppendAllSensors();\n	customEvent->SetProperty(\"somekey1\", 5);\n	customEvent->SetProperty(\"somekey2\", \"somevalue\");\n	customEvent->SetPosition(FVector(0, 100, 0));\n	customEvent->Send();}"))
 					.AutoWrapText(true)]
 			];
 	}

@@ -43,31 +43,36 @@ void FCognitiveEditorStyle::Initialize()
 			TEXT("CognitiveEditor.CustomEventsSimple"),
 			new FSlateImageBrush(
 				ResourceDir / TEXT("event-simple.png"),
-				FVector2D(514, 216)
-			)
-		);
-
-		StyleInstance->Set(
-			TEXT("CognitiveEditor.CustomEventsProperties"),
-			new FSlateImageBrush(
-				ResourceDir / TEXT("event-properties.png"),
-				FVector2D(712, 182)
+				FVector2D(500, 200)
 			)
 		);
 
         StyleInstance->Set(
-            TEXT("CognitiveEditor.CustomEventsDynamicObjects"),
+            TEXT("CognitiveEditor.DynamicObjectsIcon"),
             new FSlateImageBrush(
-                ResourceDir / TEXT("event-dynamic.png"),
-                FVector2D(456, 250)
+                ResourceDir / TEXT("dynamicObjects.png"),
+                FVector2D(100, 100)
             )
         );
-
         StyleInstance->Set(
-            TEXT("CognitiveEditor.CustomEventsMakeObject"),
+            TEXT("CognitiveEditor.ExitPollIcon"),
             new FSlateImageBrush(
-                ResourceDir / TEXT("event-object.png"),
-                FVector2D(1084, 186)
+                ResourceDir / TEXT("exitPoll.png"),
+                FVector2D(100, 100)
+            )
+        );
+        StyleInstance->Set(
+            TEXT("CognitiveEditor.RemoteControlsIcon"),
+            new FSlateImageBrush(
+                ResourceDir / TEXT("remoteControls.png"),
+                FVector2D(100, 100)
+            )
+        );
+        StyleInstance->Set(
+            TEXT("CognitiveEditor.CustomEvents"),
+            new FSlateImageBrush(
+                ResourceDir / TEXT("customEvents.png"),
+                FVector2D(100, 100)
             )
         );
 
