@@ -21,6 +21,7 @@
 #include "Widgets/Images/SImage.h"
 #include "CognitiveEditorStyle.h"
 #include "Cognitive3D/Public/DynamicObject.h"
+#include "SegmentAnalytics.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 

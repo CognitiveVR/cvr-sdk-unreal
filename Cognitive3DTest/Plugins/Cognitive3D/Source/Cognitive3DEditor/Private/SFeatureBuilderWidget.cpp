@@ -21,6 +21,7 @@
 #include "GameFramework/Actor.h"
 #include "BlueprintEditorUtils.h"
 #include <KismetEditorUtilities.h>
+#include "SegmentAnalytics.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SFeatureBuilderWidget::Construct(const FArguments& InArgs)
@@ -116,10 +117,12 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 	UE_LOG(LogTemp, Warning, TEXT("Creating detail widget for feature: %s"), *SelectedFeature.ToString());
 	if (SelectedFeature == TEXT("DynamicObjects"))
 	{
+		USegmentAnalytics::Get()->TrackEvent(TEXT("DynamicManagerWindow_Opened"), TEXT("FeatureBuilderWindow"));
 		return SNew(SDynamicObjectManagerWidget);
 	}
 	else if (SelectedFeature == TEXT("ExitPoll"))
 	{
+		USegmentAnalytics::Get()->TrackEvent(TEXT("ExitpollWindow_Opened"), TEXT("FeatureBuilderWindow"));
 		return SNew(SVerticalBox)
 			+ SVerticalBox::Slot().AutoHeight().Padding(5)
 			[SNew(STextBlock)
@@ -140,6 +143,7 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 	}
 	else if (SelectedFeature == TEXT("RemoteControls"))
 	{
+		USegmentAnalytics::Get()->TrackEvent(TEXT("RemoteControlsWindow_Opened"), TEXT("FeatureBuilderWindow"));
 		return SNew(SVerticalBox)
 			+ SVerticalBox::Slot().AutoHeight().Padding(5)
 			[SNew(STextBlock)
@@ -154,6 +158,7 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 	}
 	else if (SelectedFeature == TEXT("CustomEvents"))
 	{
+		USegmentAnalytics::Get()->TrackEvent(TEXT("CustomEventsWindow_Opened"), TEXT("FeatureBuilderWindow"));
 			return SNew(SScrollBox)
 			+ SScrollBox::Slot()
 			[
@@ -360,6 +365,7 @@ FReply SFeatureBuilderWidget::OnLaunchCustomEvents()
 
 FReply SFeatureBuilderWidget::OnBackClicked()
 {
+	USegmentAnalytics::Get()->TrackEvent(TEXT("BackButton_Clicked"), TEXT("FeatureBuilderWindow"));
 	CurrentMode = EPageMode::List;
 	return FReply::Handled();
 }

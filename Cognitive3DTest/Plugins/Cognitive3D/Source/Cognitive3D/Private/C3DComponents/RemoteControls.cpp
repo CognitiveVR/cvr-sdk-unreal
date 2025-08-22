@@ -254,7 +254,7 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %s"),
 						//	*Name, *Description, *RemoteVariableName, *Type, *ValueString);
 					}
-					else if (Type == "bool")
+					else if (Type == "boolean")
 					{
 						bool ValueBool = TestObj->GetBoolField(TEXT("valueBool"));
 						properties->SetBoolField("ValueBool", ValueBool);
@@ -336,7 +336,7 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %s"),
 						//	*Name, *Description, *RemoteVariableName, *Type, *ValueString);
 					}
-					else if (Type == "bool")
+					else if (Type == "boolean")
 					{
 						bool ValueBool = ConfigObj->GetBoolField(TEXT("valueBool"));
 						if (!FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Contains(RemoteVariableName))
