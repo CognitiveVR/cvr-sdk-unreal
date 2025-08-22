@@ -17,14 +17,13 @@
 #include <Editor.h>
 #endif
 
-ACognitive3DActor* ACognitive3DActor::instance = nullptr;
+TMap<uint32, ACognitive3DActor*> ACognitive3DActor::PerWorldInstanceMap;
 
 // Sets default values
 ACognitive3DActor::ACognitive3DActor()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-	instance = nullptr;
 
 }
 
@@ -368,19 +367,38 @@ UWorld* ACognitive3DActor::GetCognitiveSessionWorld()
 	return cognitiveActor->GetWorld();
 }
 
-ACognitive3DActor* ACognitive3DActor::GetCognitive3DActor()
+ACognitive3DActor* ACognitive3DActor::GetCognitive3DActor(const UObject *WorldContextObject)
 {
-	if (instance == NULL)
-	{
-		for (TObjectIterator<ACognitive3DActor> Itr; Itr; ++Itr)
-		{
-			UWorld* tempWorld = Itr->GetWorld();
-			if (tempWorld == NULL) { continue; }
-			if (tempWorld->WorldType != EWorldType::PIE && tempWorld->WorldType != EWorldType::Game) { continue; }
-			instance = *Itr;
-			break;
-		}
+    UWorld *RequestedWorld = nullptr;
+    
+    if (!IsValid(WorldContextObject)) {
+        // Since we didn't get any context object we'll use the current local
+        // player
+        RequestedWorld = FUtil::GetCurrentActiveWorld();
+    } else {
+        RequestedWorld = WorldContextObject->GetWorld();
+    }
+ 
+    // If the world is null something has gone very wrong
+	//check(IsValid(RequestedWorld));
+	if (RequestedWorld == nullptr) {
+		return nullptr;
 	}
+ 
+ 	// Check per-world cache
+    ACognitive3DActor **AnalyticsActor = PerWorldInstanceMap.Find(RequestedWorld->GetUniqueID());
+ 	if (AnalyticsActor != nullptr && IsValid(*AnalyticsActor)) {
+         return *AnalyticsActor;
+ 	}
+ 
+     // This world has not been added yet so let's search it
+ 	for (TActorIterator<ACognitive3DActor> Itr(RequestedWorld); Itr; ++Itr) {
+         // Found one so let's add this instance to the map
+ 		PerWorldInstanceMap.Add(RequestedWorld->GetUniqueID(), *Itr);
+ 		return *Itr;
+ 	} 
 
-	return instance;
+    // If we get here there are no Cognitive3DActors in any world
+    return nullptr;
+
 }

@@ -32,13 +32,19 @@ void UOculusPlatform::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
+	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
+	FString OculusAppId = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "OnlineSubsystemOculus", "OculusAppId", false);
+	if (OculusAppId.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Oculus App ID is not set in DefaultEngine.ini under OnlineSubsystemOculus"));
+		return;
+	}
 #ifdef INCLUDE_OCULUS_PLATFORM
 #ifdef __ANDROID__
 	JNIEnv* Env = FAndroidApplication::GetJavaEnv();
 	jobject Activity = FAndroidApplication::GetGameActivityThis();
 
-	FString EngineIni = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-	FString OculusAppId = FAnalytics::Get().GetConfigValueFromIni(EngineIni, "OnlineSubsystemOculus", "OculusAppId", false);
+	
 	auto tempAnsi = StringCast<ANSICHAR>(*OculusAppId);
 	const char* AppID = tempAnsi.Get();
 

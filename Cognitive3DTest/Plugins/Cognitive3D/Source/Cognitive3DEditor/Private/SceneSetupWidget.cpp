@@ -7,6 +7,7 @@
 #include "CognitiveEditorTools.h"
 #include "IPluginManager.h"
 #include "Analytics.h"
+#include "SegmentAnalytics.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
@@ -80,6 +81,8 @@ void SSceneSetupWidget::OnSceneUploaded(FHttpRequestPtr Request, FHttpResponsePt
 
 void SSceneSetupWidget::Construct(const FArguments& Args)
 {
+	USegmentAnalytics::Get()->TrackEvent(TEXT("SceneSetupWindow_Opened"), TEXT("SceneSetupWindow"));
+
 	float padding = 10;
 	FCognitiveEditorTools::CheckIniConfigured();
 	CheckForExpiredDeveloperKey();
@@ -1424,6 +1427,7 @@ FReply SSceneSetupWidget::NextPage()
 	}
 	if (CurrentPageEnum == ESceneSetupPage::Complete)
 	{
+		USegmentAnalytics::Get()->TrackEvent("SceneSetupComplete", "SceneSetupPage");
 		FCognitive3DEditorModule::CloseSceneSetupWindow();
 	}
 
