@@ -113,6 +113,9 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 			: (A->Path.Compare(B->Path, ESearchCase::IgnoreCase) < 0);
 		});
 	
+	//segment analytics
+	USegmentAnalytics::Get()->TrackEvent(TEXT("FullProjectSetupWindow_Opened"), TEXT("FullProjectSetupWindow"));
+
     ChildSlot  
     [  
 		SNew(SVerticalBox)

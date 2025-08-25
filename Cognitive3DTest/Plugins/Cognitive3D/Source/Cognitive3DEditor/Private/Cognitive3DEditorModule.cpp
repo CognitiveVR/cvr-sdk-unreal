@@ -414,6 +414,7 @@ void FCognitive3DEditorModule::CloseFullC3DSetup()
 	auto projectTab = FGlobalTabmanager::Get()->FindExistingLiveTab(projectTabId);
 	if (projectTab.IsValid())
 	{
+		USegmentAnalytics::Get()->TrackEvent(TEXT("FullProjectSetupWindow_Closed"), TEXT("FullProjectSetupWindow"));
 		projectTab->RequestCloseTab();
 	}
 }
