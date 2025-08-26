@@ -1386,6 +1386,7 @@ void SProjectManagerWidget::CollectAllMaps()
 
 void SProjectManagerWidget::FinalizeProjectSetup()
 {
+	USegmentAnalytics::Get()->TrackEvent(TEXT("FullProjectSetupWindow_FinalizingSetup"), TEXT("FullProjectSetupWindow"));
 	//empty dynamics map
 	DynamicObjecstMap.Empty();
 	//UE_LOG(LogTemp, Warning, TEXT("FinalizeProjectSetup called"));
@@ -1488,6 +1489,13 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 	TotalLevelCount = PureMaps.Num() + SublevelKeys.Num();
 	FCognitiveEditorTools::GetInstance()->TotalLevelsToUpload = TotalLevelCount;
 	FCognitiveEditorTools::GetInstance()->TotalSetOfDynamicsToUpload = TotalLevelCount;
+	if(TotalLevelCount == 0)
+	{
+		//nothing to do
+		USegmentAnalytics::Get()->TrackEvent(TEXT("FullProjectSetupWindow_NoMapsSelected"), TEXT("FullProjectSetupWindow"));
+		RestartEditor();
+		return;
+	}
 	//Create the slow task for TOTAL items = PureMaps + SublevelKeys
 	FScopedSlowTask ExportTask(PureMaps.Num() + SublevelKeys.Num(), LOCTEXT("ExportingMaps", "Exporting selected maps..."));
 	ExportTask.MakeDialog();
@@ -2141,7 +2149,7 @@ void SProjectManagerWidget::RestartEditor()
 	{
 		return;
 	}
-
+	FCognitive3DEditorModule::CloseFullC3DSetup();
 	FUnrealEdMisc::Get().RestartEditor(/*bWarn=*/false);
 }
 
