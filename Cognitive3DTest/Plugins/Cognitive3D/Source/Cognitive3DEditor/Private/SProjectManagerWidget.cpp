@@ -809,11 +809,57 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 			.Padding(0, 10)
 			[
 				SNew(SBox)
-					.WidthOverride(200)
+					.WidthOverride(320)
 					.HeightOverride(32)
 					[
 						SNew(SButton)
-							.Text(FText::FromString(TEXT("Finish Setup")))
+							.Text_Lambda([this]() {
+								// Check if any levels are selected (including default selections)
+								bool bAnySelected = false;
+								
+								// Check each scene in the list
+								for (const auto& SceneData : SceneListItems)
+								{
+									const FString& FullPath = SceneData->Path + "/" + SceneData->Name;
+									bool* SelectionState = LevelSelectionMap.Find(FullPath);
+									
+									if (SelectionState)
+									{
+										// Explicit selection in map
+										if (*SelectionState)
+										{
+											bAnySelected = true;
+											break;
+										}
+									}
+									else
+									{
+										// Not in map, check if it defaults to selected (version 0)
+										if (SceneData->VersionNumber == 0)
+										{
+											bAnySelected = true;
+											break;
+										}
+									}
+								}
+								
+								if (bDidChangeSDKs && bAnySelected)
+								{
+									return FText::FromString(TEXT("Upload Scene(s), Recompile and Finalize Project"));
+								}
+								else if (bDidChangeSDKs && !bAnySelected)
+								{
+									return FText::FromString(TEXT("Recompile Project and Finish Setup"));
+								}
+								else if (!bDidChangeSDKs && bAnySelected)
+								{
+									return FText::FromString(TEXT("Upload Scene(s) and Finish Setup"));
+								}
+								else
+								{
+									return FText::FromString(TEXT("Finish Setup"));
+								}
+							})
 							.HAlign(HAlign_Center)
 							.VAlign(VAlign_Center)
 							.OnClicked_Lambda([this]() -> FReply {
@@ -859,9 +905,16 @@ TSharedRef<ITableRow> SProjectManagerWidget::OnGenerateSceneRow(TSharedPtr<FEdit
 				return SNew(SCheckBox)
 					.HAlign(HAlign_Center)
 					.IsChecked_Lambda([this, FullPath]() {
-						return (ParentWidget->LevelSelectionMap.FindRef(FullPath)
-							? ECheckBoxState::Checked
-							: ECheckBoxState::Unchecked);
+						bool* SelectionState = ParentWidget->LevelSelectionMap.Find(FullPath);
+						if (SelectionState)
+						{
+							return *SelectionState ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+						}
+						else
+						{
+							// If not in map and version number is 0, default to checked
+							return (SceneData->VersionNumber == 0) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+						}
 					})
 					.OnCheckStateChanged_Lambda([this, FullPath](ECheckBoxState State) {
 						ParentWidget->LevelSelectionMap.Add(FullPath, State == ECheckBoxState::Checked);

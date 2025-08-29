@@ -57,7 +57,7 @@ void SFeatureBuilderWidget::Construct(const FArguments& InArgs)
 							.Text(FText::FromString("Explore the features ofour platform. Each feature unlocks powerful capabilities you can use in your experience, from Dynamic Objects to live control and more."))
 							.Font(FEditorStyle::GetFontStyle("Heading"))
 						]
-						+SVerticalBox::Slot().AutoHeight().Padding(5)
+						+SVerticalBox::Slot().FillHeight(1).Padding(5)
 						[
 						SNew(SWidgetSwitcher)
 							.WidgetIndex(this, &SFeatureBuilderWidget::GetPageIndex)
@@ -165,7 +165,16 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 			.Text(FText::FromString("Add Remote Controls component to the BP_Cognitive3DActor to allow for the use of remote control variables from the dashboard.\nBelow is a button to check out the documentation, and another to add the component."))
 			.AutoWrapText(true)]
 			+ SVerticalBox::Slot().AutoHeight().Padding(5)[SNew(SButton).Text(FText::FromString("RemoteControls Documentation")).OnClicked(this, &SFeatureBuilderWidget::OnLaunchRemoteControls)]
-			+ SVerticalBox::Slot().AutoHeight().Padding(5)[SNew(SButton).Text(FText::FromString("Add RemoteControls Component")).OnClicked(this, &SFeatureBuilderWidget::OnAddRemoteControlsComponent)];
+			+ SVerticalBox::Slot().AutoHeight().Padding(5)
+			[
+				SNew(SButton)
+					.Text_Lambda([this]() {
+						return HasRemoteControlsComponent() 
+							? FText::FromString("Remove RemoteControls Component")
+							: FText::FromString("Add RemoteControls Component");
+					})
+					.OnClicked(this, &SFeatureBuilderWidget::OnToggleRemoteControlsComponent)
+			];
 	}
 	else if (SelectedFeature == TEXT("CustomEvents"))
 	{
@@ -201,9 +210,19 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 						]
 					]
 					+ SVerticalBox::Slot().AutoHeight().Padding(5)
-					[SNew(STextBlock)
-					.Text(FText::FromString("TWeakPtr<FAnalyticsProviderCognitive3D> provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();\nif (provider.IsValid())\n{\n	//send an event with a name\n	provider.Pin()->customEventRecorder->Send(\"My Event\");\n	//send an event with a name and a position\n	provider.Pin()->customEventRecorder->Send(\"My Event With Position\", FVector(0, 100, 0));\n}"))
-					.AutoWrapText(true)]
+					[
+						SNew(SBorder)
+						.BorderImage(FEditorStyle::GetBrush("DetailsView.CategoryMiddle"))
+						.Padding(8)
+						[
+							SNew(SMultiLineEditableText)
+							.Text(FText::FromString("TWeakPtr<FAnalyticsProviderCognitive3D> provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();\nif (provider.IsValid())\n{\n\t//send an event with a name\n\tprovider.Pin()->customEventRecorder->Send(\"My Event\");\n\t//send an event with a name and a position\n\tprovider.Pin()->customEventRecorder->Send(\"My Event With Position\", FVector(0, 100, 0));\n}"))
+							.IsReadOnly(true)
+							.SelectAllTextWhenFocused(false)
+							.Font(FEditorStyle::Get().GetFontStyle("MonoFont"))
+							.AutoWrapText(false)
+						]
+					]
 			];
 	}
 
@@ -371,6 +390,115 @@ FReply SFeatureBuilderWidget::OnAddRemoteControlsComponent()
 FReply SFeatureBuilderWidget::OnLaunchCustomEvents()
 {
 	FPlatformProcess::LaunchURL(TEXT("https://docs.cognitive3d.com/unreal/customevents/"), nullptr, nullptr);
+	return FReply::Handled();
+}
+
+
+bool SFeatureBuilderWidget::HasRemoteControlsComponent() const
+{
+	static const FString ClassPath = TEXT("/Cognitive3D/BP_Cognitive3DActor.BP_Cognitive3DActor_C");
+	UClass* ClassPtr = LoadObject<UClass>(nullptr, *ClassPath);
+	if (ClassPtr)
+	{
+		UBlueprint* BP = Cast<UBlueprint>(ClassPtr->ClassGeneratedBy);
+		if (BP && BP->SimpleConstructionScript)
+		{
+			USimpleConstructionScript* SCS = BP->SimpleConstructionScript;
+			// Check if RemoteControls component already exists
+			for (USCS_Node* Node : SCS->GetAllNodes())
+			{
+				if (Node && Node->ComponentClass && Node->ComponentClass == URemoteControls::StaticClass())
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+FReply SFeatureBuilderWidget::OnToggleRemoteControlsComponent()
+{
+	if (HasRemoteControlsComponent())
+	{
+		// Remove the component
+		UE_LOG(LogTemp, Log, TEXT("Removing RemoteControls component from BP_Cognitive3DActor blueprint"));
+		static const FString ClassPath = TEXT("/Cognitive3D/BP_Cognitive3DActor.BP_Cognitive3DActor_C");
+		UClass* ClassPtr = LoadObject<UClass>(nullptr, *ClassPath);
+		if (ClassPtr)
+		{
+			UBlueprint* BP = Cast<UBlueprint>(ClassPtr->ClassGeneratedBy);
+			if (BP)
+			{
+				BP->Modify();
+				USimpleConstructionScript* SCS = BP->SimpleConstructionScript;
+				if (SCS)
+				{
+					// Find and remove RemoteControls component
+					USCS_Node* NodeToRemove = nullptr;
+					for (USCS_Node* Node : SCS->GetAllNodes())
+					{
+						if (Node && Node->ComponentClass && Node->ComponentClass == URemoteControls::StaticClass())
+						{
+							NodeToRemove = Node;
+							break;
+						}
+					}
+					
+					if (NodeToRemove)
+					{
+						SCS->RemoveNode(NodeToRemove);
+						FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(BP);
+						UE_LOG(LogTemp, Log, TEXT("RemoteControls component removed from blueprint asset at %s."), *ClassPath);
+						
+						// Save and compile the blueprint
+						UPackage* Package = BP->GetOutermost();
+						FString PackageFileName = FPackageName::LongPackageNameToFilename(Package->GetName(), FPackageName::GetAssetPackageExtension());
+						bool bSaved = UPackage::SavePackage(Package, BP, RF_Standalone, *PackageFileName, GError, nullptr, true, true, SAVE_None);
+						if (bSaved)
+						{
+							FKismetEditorUtilities::CompileBlueprint(BP);
+							UE_LOG(LogTemp, Log, TEXT("Blueprint saved and compiled after removing RemoteControls component"));
+
+							// Save the current level/map
+							UWorld* EditorWorld = GEditor->GetEditorWorldContext().World();
+							if (EditorWorld && EditorWorld->GetCurrentLevel())
+							{
+								ULevel* CurrentLevel = EditorWorld->GetCurrentLevel();
+								UPackage* LevelPackage = CurrentLevel->GetOutermost();
+								FString LevelFilename = FPackageName::LongPackageNameToFilename(LevelPackage->GetName(), FPackageName::GetMapPackageExtension());
+								bool bLevelSaved = UPackage::SavePackage(
+									LevelPackage,
+									nullptr,
+									RF_Standalone,
+									*LevelFilename,
+									GError,
+									nullptr,
+									true,
+									true,
+									SAVE_None
+								);
+								if (bLevelSaved)
+								{
+									UE_LOG(LogTemp, Log, TEXT("Level auto-saved: %s"), *LevelFilename);
+								}
+								else
+								{
+									UE_LOG(LogTemp, Error, TEXT("Failed to auto-save level: %s"), *LevelFilename);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		// Add the component (reuse existing logic)
+		return OnAddRemoteControlsComponent();
+	}
+	
 	return FReply::Handled();
 }
 

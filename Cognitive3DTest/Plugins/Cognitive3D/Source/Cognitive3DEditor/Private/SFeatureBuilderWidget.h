@@ -30,7 +30,7 @@ private:
     struct FFeature { FName Key; FText DisplayName; const FSlateBrush* Icon; FText Desc; };
     TArray<FFeature> FeatureList;
 
-    // Detail holder—updates dynamically
+    // Detail holder updates dynamically
     TSharedPtr<SBox> DetailBox;
 
     // Builds each page
@@ -46,6 +46,8 @@ private:
     //remote controls
     FReply OnLaunchRemoteControls();
     FReply OnAddRemoteControlsComponent();
+    FReply OnToggleRemoteControlsComponent();
+    bool HasRemoteControlsComponent() const;
     //custom events
 	FReply OnLaunchCustomEvents();
     //other
