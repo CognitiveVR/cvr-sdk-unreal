@@ -31,7 +31,7 @@ void IDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 	}
 
 	DetailLayout.EditCategory( "DynamicObject" )
-	.AddCustomRow( NSLOCTEXT("SkyLightDetails", "UpdateSkyLight", "Recapture Scene") )
+	.AddCustomRow( NSLOCTEXT("Cognitive3DEditor", "RefreshDynamicObject", "Refresh Dynamic Object") )
 	.ValueContent()
 	.MaxDesiredWidth(200.f)
 	.MinDesiredWidth(200.f)
@@ -50,7 +50,7 @@ void IDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 		]
 	];
 	DetailLayout.EditCategory( "DynamicObject" )
-	.AddCustomRow( NSLOCTEXT("SkyLightDetails", "UpdateSkyLight", "Recapture Scene") )
+	.AddCustomRow( NSLOCTEXT("Cognitive3DEditor", "RefreshDynamicObject", "Refresh Dynamic Object") )
 	.ValueContent()
 	.MaxDesiredWidth(200.f)
 	.MinDesiredWidth(200.f)
@@ -69,7 +69,7 @@ void IDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 		]
 	];
 	DetailLayout.EditCategory( "DynamicObject" )
-	.AddCustomRow( NSLOCTEXT("SkyLightDetails", "UpdateSkyLight", "Recapture Scene") )
+	.AddCustomRow( NSLOCTEXT("Cognitive3DEditor", "RefreshDynamicObject", "Refresh Dynamic Object") )
 	.ValueContent()
 	.MaxDesiredWidth(200.f)
 	.MinDesiredWidth(200.f)
@@ -88,7 +88,7 @@ void IDynamicObjectComponentDetails::CustomizeDetails( IDetailLayoutBuilder& Det
 		]
 	];
 	DetailLayout.EditCategory( "DynamicObject" )
-	.AddCustomRow( NSLOCTEXT("SkyLightDetails", "UpdateSkyLight", "Recapture Scene") )
+	.AddCustomRow( NSLOCTEXT("Cognitive3DEditor", "RefreshDynamicObject", "Refresh Dynamic Object") )
 	.ValueContent()
 	.MaxDesiredWidth(200.f)
 	.MinDesiredWidth(200.f)

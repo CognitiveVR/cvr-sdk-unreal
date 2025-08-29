@@ -50,16 +50,26 @@ void SFeatureBuilderWidget::Construct(const FArguments& InArgs)
 			SNew(SBox)
 				.WidthOverride(600).HeightOverride(400)
 				[
-					SNew(SWidgetSwitcher)
-						.WidgetIndex(this, &SFeatureBuilderWidget::GetPageIndex)
+					SNew(SVerticalBox)
+						+ SVerticalBox::Slot().AutoHeight().Padding(5)
+						[
+							SNew(STextBlock)
+							.Text(FText::FromString("Explore the features ofour platform. Each feature unlocks powerful capabilities you can use in your experience, from Dynamic Objects to live control and more."))
+							.Font(FEditorStyle::GetFontStyle("Heading"))
+						]
+						+SVerticalBox::Slot().AutoHeight().Padding(5)
+						[
+						SNew(SWidgetSwitcher)
+							.WidgetIndex(this, &SFeatureBuilderWidget::GetPageIndex)
 
-						// List view slot
+							// List view slot
+							+ SWidgetSwitcher::Slot()
+							[BuildFeatureList()]
+
+						// Detail view slot
 						+ SWidgetSwitcher::Slot()
-						[BuildFeatureList()]
-
-					// Detail view slot
-					+ SWidgetSwitcher::Slot()
-						[BuildFeatureDetail()]
+							[BuildFeatureDetail()]
+						]
 				]
 		];
 }
@@ -77,10 +87,11 @@ TSharedRef<SWidget> SFeatureBuilderWidget::BuildFeatureList()
 						SNew(SHorizontalBox)
 							+ SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
 							[SNew(SImage).Image(Feature.Icon)]
-							+ SHorizontalBox::Slot().FillWidth(1).Padding(10, 0)
+							+ SHorizontalBox::Slot().FillWidth(1).Padding(10, 0).VAlign(VAlign_Center)
 							[
 								SNew(SVerticalBox)
-									+ SVerticalBox::Slot().AutoHeight()
+									+ SVerticalBox::Slot()
+									.AutoHeight()
 									[SNew(STextBlock)
 									.Text(Feature.DisplayName)
 									.Font(FEditorStyle::GetFontStyle("HeadingExtraSmall"))]

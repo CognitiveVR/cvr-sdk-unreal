@@ -33,7 +33,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 	DisplayDeveloperKey = FCognitiveEditorTools::GetInstance()->GetDeveloperKey().ToString();
 	DisplayExportDirectory = FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory();
 
-	// Initialize each SDK’s state by checking build.cs
+	// Initialize each SDKs state by checking build.cs
 	SDKCheckboxStates.Add(TEXT("MetaXR"),
 		IsSDKEnabledInBuildCs(TEXT("MetaXRPlugin")));
 	SDKCheckboxStates.Add(TEXT("MetaXRPlatform"),
@@ -814,6 +814,8 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 					[
 						SNew(SButton)
 							.Text(FText::FromString(TEXT("Finish Setup")))
+							.HAlign(HAlign_Center)
+							.VAlign(VAlign_Center)
 							.OnClicked_Lambda([this]() -> FReply {
 							this->FinalizeProjectSetup();
 							return FReply::Handled();
@@ -831,65 +833,78 @@ FReply SProjectManagerWidget::OpenFullC3DSetupWindow()
 
 TSharedRef<ITableRow> SProjectManagerWidget::OnGenerateSceneRow(TSharedPtr<FEditorSceneData> Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
-
 	const FString& FullPath = Item->Path + "/" + Item->Name;
 
-	return SNew(STableRow< TSharedPtr<FEditorSceneData> >, OwnerTable)
-		[
-			SNew(SHorizontalBox)
+	class SSceneTableRow : public SMultiColumnTableRow<TSharedPtr<FEditorSceneData>>
+	{
+	public:
+		SLATE_BEGIN_ARGS(SSceneTableRow) {}
+			SLATE_ARGUMENT(TSharedPtr<FEditorSceneData>, SceneData)
+			SLATE_ARGUMENT(SProjectManagerWidget*, ParentWidget)
+		SLATE_END_ARGS()
 
-				// Checkbox
-				+ SHorizontalBox::Slot()
-				.AutoWidth()
-				.VAlign(VAlign_Center)
-				[
-					SNew(SCheckBox)
-						.IsChecked_Lambda([this, FullPath]() {
-						return (LevelSelectionMap.FindRef(FullPath)
+		void Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
+		{
+			SceneData = InArgs._SceneData;
+			ParentWidget = InArgs._ParentWidget;
+			SMultiColumnTableRow<TSharedPtr<FEditorSceneData>>::Construct(FSuperRowType::FArguments(), InOwnerTableView);
+		}
+
+		virtual TSharedRef<SWidget> GenerateWidgetForColumn(const FName& ColumnName) override
+		{
+			const FString& FullPath = SceneData->Path + "/" + SceneData->Name;
+
+			if (ColumnName == "Select")
+			{
+				return SNew(SCheckBox)
+					.HAlign(HAlign_Center)
+					.IsChecked_Lambda([this, FullPath]() {
+						return (ParentWidget->LevelSelectionMap.FindRef(FullPath)
 							? ECheckBoxState::Checked
 							: ECheckBoxState::Unchecked);
-							})
-						.OnCheckStateChanged_Lambda([this, FullPath](ECheckBoxState State) {
-						LevelSelectionMap.Add(FullPath, State == ECheckBoxState::Checked);
-							})
-				]
+					})
+					.OnCheckStateChanged_Lambda([this, FullPath](ECheckBoxState State) {
+						ParentWidget->LevelSelectionMap.Add(FullPath, State == ECheckBoxState::Checked);
+					});
+			}
+			else if (ColumnName == "Name")
+			{
+				return SNew(STextBlock)
+					.Text(FText::FromString(SceneData->Name));
+			}
+			else if (ColumnName == "Path")
+			{
+				return SNew(STextBlock)
+					.Text(FText::FromString(SceneData->Path))
+					.Font(FEditorStyle::Get().GetFontStyle("MonoFont"));
+			}
+			else if (ColumnName == "Id")
+			{
+				return SNew(STextBlock)
+					.Text(FText::FromString(SceneData->Id));
+			}
+			else if (ColumnName == "Ver#")
+			{
+				return SNew(STextBlock)
+					.Text(FText::AsNumber(SceneData->VersionNumber));
+			}
+			else if (ColumnName == "VerId")
+			{
+				return SNew(STextBlock)
+					.Text(FText::AsNumber(SceneData->VersionId));
+			}
 
-				// Name column
-				+ SHorizontalBox::Slot()
-				.FillWidth(1)
-				.Padding(5, 0)
-				[
-					SNew(STextBlock)
-						.Text(FText::FromString(Item->Name))
-				]
+			return SNullWidget::NullWidget;
+		}
 
-				// (you can add a small Path column if you like:)
-				+ SHorizontalBox::Slot()
-				.FillWidth(1)
-				.Padding(5, 0)
-				[
-					SNew(STextBlock)
-						.Text(FText::FromString(Item->Path))
-						.Font(FEditorStyle::Get().GetFontStyle("MonoFont"))
-				]
+	private:
+		TSharedPtr<FEditorSceneData> SceneData;
+		SProjectManagerWidget* ParentWidget;
+	};
 
-				// Id, VersionNumber, VersionId...
-				+ SHorizontalBox::Slot().FillWidth(0.3f).Padding(5, 0)
-				[
-					SNew(STextBlock)
-						.Text(FText::FromString(Item->Id))
-				]
-				+ SHorizontalBox::Slot().FillWidth(0.3f).Padding(5, 0)
-				[
-					SNew(STextBlock)
-						.Text(FText::AsNumber(Item->VersionNumber))
-				]
-				+ SHorizontalBox::Slot().FillWidth(0.3f).Padding(5, 0)
-				[
-					SNew(STextBlock)
-						.Text(FText::AsNumber(Item->VersionId))
-				]
-		];
+	return SNew(SSceneTableRow, OwnerTable)
+		.SceneData(Item)
+		.ParentWidget(this);
 }
 
 FReply SProjectManagerWidget::ValidateKeys()
@@ -2070,7 +2085,7 @@ bool SProjectManagerWidget::IsSDKEnabledInBuildCs(const FString& MethodName)
 	TArray<FString> Lines;
 	if (!FFileHelper::LoadFileToStringArray(Lines, *BuildCsPath))
 	{
-		// If we can’t read it, default to false
+		// If we cant read it, default to false
 		return false;
 	}
 

@@ -1428,7 +1428,7 @@ bool FAnalyticsProviderCognitive3D::TryGetHMDGuardianPoints(TArray<FVector>& Gua
 	//    that fits inside your guardian/chaperone area in the Floor (stage) origin. 
 	FVector2D Bounds = UHeadMountedDisplayFunctionLibrary::GetPlayAreaBounds();
 
-	if (Bounds.Length() > 0)
+	if (Bounds.Size() > 0)
 	{
 		GuardianPoints.Empty();
 		// 2) Compute half-extents

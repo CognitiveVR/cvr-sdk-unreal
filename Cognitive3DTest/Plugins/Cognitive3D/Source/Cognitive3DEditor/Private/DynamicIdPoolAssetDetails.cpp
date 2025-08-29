@@ -35,7 +35,7 @@ void IDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLa
 	//IMPROVEMENT add export directory field?
 
 	DetailLayout.EditCategory("Scene Explorer")
-	.AddCustomRow(NSLOCTEXT("SkyLightDetails", "UpdateSkyLight", "Recapture Scene"))
+	.AddCustomRow(NSLOCTEXT("Cognitive3DEditor", "RefreshIdPool", "Refresh ID Pool"))
 	.ValueContent()
 	.MaxDesiredWidth(500.f)
 	.MinDesiredWidth(400.f)
@@ -69,7 +69,7 @@ void IDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLa
 	];
 
 	DetailLayout.EditCategory( "Scene Explorer" )
-	.AddCustomRow( NSLOCTEXT("SkyLightDetails", "UpdateSkyLight", "Recapture Scene") )
+	.AddCustomRow( NSLOCTEXT("Cognitive3DEditor", "RefreshIdPool", "Refresh ID Pool") )
 	.ValueContent()
 	.MaxDesiredWidth(200.f)
 	.MinDesiredWidth(200.f)
@@ -88,7 +88,7 @@ void IDynamicIdPoolAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLa
 	];
 
 	DetailLayout.EditCategory( "Scene Explorer" )
-	.AddCustomRow( NSLOCTEXT("SkyLightDetails", "UpdateSkyLight", "Recapture Scene") )
+	.AddCustomRow( NSLOCTEXT("Cognitive3DEditor", "RefreshIdPool", "Refresh ID Pool") )
 	.ValueContent()
 	.MaxDesiredWidth(200.f)
 	.MinDesiredWidth(200.f)
