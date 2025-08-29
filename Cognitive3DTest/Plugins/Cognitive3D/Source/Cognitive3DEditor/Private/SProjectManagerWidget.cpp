@@ -44,6 +44,8 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 		IsSDKEnabledInBuildCs(TEXT("WaveVR")));       
 
 	CollectAllMaps();
+	//set default export directory if it isnt set
+	FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
 
 	// Start with whatever the server / config already gave you:
 	SceneListItems = FCognitiveEditorTools::GetInstance()->SceneData;
