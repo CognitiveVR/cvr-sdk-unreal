@@ -47,6 +47,9 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 	//set default export directory if it isnt set
 	FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
 
+	//check keys
+	ValidateKeys();
+
 	// Start with whatever the server / config already gave you:
 	SceneListItems = FCognitiveEditorTools::GetInstance()->SceneData;
 
@@ -1041,6 +1044,14 @@ void SProjectManagerWidget::GetApplicationKeyResponse(FHttpRequestPtr Request, F
 		return;
 	}
 
+	auto content = Response->GetContentAsString();
+	FApplicationKeyResponse responseObject;
+	FJsonObjectConverter::JsonObjectStringToUStruct(content, &responseObject, 0, 0);
+
+	FCognitiveEditorTools::GetInstance()->SaveApplicationKeyToFile(responseObject.apikey);
+	DisplayAPIKey = responseObject.apikey;
+
+	/*
 	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("UpdateApplicationKeyBody", "Found Application Key on the Dashboard, we recommend using this key."), LOCTEXT("UpdateApplicationKeyTitle", "Found Application Key"), "Cognitive3dApplicationKey");
 	Info.ConfirmText = LOCTEXT("Yes", "Ok");
 	//Info.CancelText = LOCTEXT("No", "No");
@@ -1057,6 +1068,7 @@ void SProjectManagerWidget::GetApplicationKeyResponse(FHttpRequestPtr Request, F
 		FCognitiveEditorTools::GetInstance()->SaveApplicationKeyToFile(responseObject.apikey);
 		DisplayAPIKey = responseObject.apikey;
 	}
+	*/
 }
 
 void SProjectManagerWidget::FetchOrganizationDetails(FString developerKey)
