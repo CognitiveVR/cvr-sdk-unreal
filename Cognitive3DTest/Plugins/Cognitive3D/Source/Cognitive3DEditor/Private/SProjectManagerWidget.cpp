@@ -39,9 +39,19 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 	SDKCheckboxStates.Add(TEXT("MetaXRPlatform"),
 		IsSDKEnabledInBuildCs(TEXT("MetaXRPlatform")));
 	SDKCheckboxStates.Add(TEXT("PicoXR"),
-		IsSDKEnabledInBuildCs(TEXT("PicoXR")));       
+		IsSDKEnabledInBuildCs(TEXT("PICOXR")));       
 	SDKCheckboxStates.Add(TEXT("WaveVR"),
-		IsSDKEnabledInBuildCs(TEXT("WaveVR")));       
+		IsSDKEnabledInBuildCs(TEXT("WaveVREyeTracking")));
+	SDKCheckboxStates.Add(TEXT("OpenXREyeTracking"),
+		IsSDKEnabledInBuildCs(TEXT("OpenXREyeTracking")));
+	SDKCheckboxStates.Add(TEXT("Varjo"),
+		IsSDKEnabledInBuildCs(TEXT("Varjo")));
+	SDKCheckboxStates.Add(TEXT("SRanipal"),
+		IsSDKEnabledInBuildCs(TEXT("SRanipalVivePro")));
+	SDKCheckboxStates.Add(TEXT("HPOmnicept"),
+		IsSDKEnabledInBuildCs(TEXT("HPGlia")));
+	SDKCheckboxStates.Add(TEXT("TobiiEyeTracking"),
+		IsSDKEnabledInBuildCs(TEXT("TobiiEyeTracking")));
 
 	CollectAllMaps();
 	//set default export directory if it isnt set
@@ -801,6 +811,116 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																				.Text(FText::FromString(TEXT("WaveVR")))
 																		]
 																]
+
+																// OpenXREyeTracking
+																+ SVerticalBox::Slot()
+																	.AutoHeight()
+																	.Padding(5, 2)
+																	[
+																		SNew(SCheckBox)
+																			.IsChecked_Lambda([this]() {
+																			return SDKCheckboxStates.FindRef(TEXT("OpenXREyeTracking"))
+																				? ECheckBoxState::Checked
+																				: ECheckBoxState::Unchecked;
+																				})
+																			.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
+																			const bool bEnabled = (NewState == ECheckBoxState::Checked);
+																			SDKCheckboxStates.Add(TEXT("OpenXREyeTracking"), bEnabled);
+																			this->ApplySDKToggle(TEXT("OpenXREyeTracking"), bEnabled);
+																				})
+																			[
+																				SNew(STextBlock)
+																					.Text(FText::FromString(TEXT("OpenXREyeTracking")))
+																			]
+																	]
+
+																// Varjo
+																+ SVerticalBox::Slot()
+																	.AutoHeight()
+																	.Padding(5, 2)
+																	[
+																		SNew(SCheckBox)
+																			.IsChecked_Lambda([this]() {
+																			return SDKCheckboxStates.FindRef(TEXT("Varjo"))
+																				? ECheckBoxState::Checked
+																				: ECheckBoxState::Unchecked;
+																				})
+																			.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
+																			const bool bEnabled = (NewState == ECheckBoxState::Checked);
+																			SDKCheckboxStates.Add(TEXT("Varjo"), bEnabled);
+																			this->ApplySDKToggle(TEXT("Varjo"), bEnabled);
+																				})
+																			[
+																				SNew(STextBlock)
+																					.Text(FText::FromString(TEXT("Varjo")))
+																			]
+																	]
+
+																// SRanipal
+																+ SVerticalBox::Slot()
+																	.AutoHeight()
+																	.Padding(5, 2)
+																	[
+																		SNew(SCheckBox)
+																			.IsChecked_Lambda([this]() {
+																			return SDKCheckboxStates.FindRef(TEXT("SRanipal"))
+																				? ECheckBoxState::Checked
+																				: ECheckBoxState::Unchecked;
+																				})
+																			.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
+																			const bool bEnabled = (NewState == ECheckBoxState::Checked);
+																			SDKCheckboxStates.Add(TEXT("SRanipal"), bEnabled);
+																			this->ApplySDKToggle(TEXT("SRanipal"), bEnabled);
+																				})
+																			[
+																				SNew(STextBlock)
+																					.Text(FText::FromString(TEXT("SRanipal (Vive Pro Eye)")))
+																			]
+																	]
+
+																// Tobii
+																+ SVerticalBox::Slot()
+																	.AutoHeight()
+																	.Padding(5, 2)
+																	[
+																		SNew(SCheckBox)
+																			.IsChecked_Lambda([this]() {
+																			return SDKCheckboxStates.FindRef(TEXT("TobiiEyeTracking"))
+																				? ECheckBoxState::Checked
+																				: ECheckBoxState::Unchecked;
+																				})
+																			.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
+																			const bool bEnabled = (NewState == ECheckBoxState::Checked);
+																			SDKCheckboxStates.Add(TEXT("TobiiEyeTracking"), bEnabled);
+																			this->ApplySDKToggle(TEXT("TobiiEyeTracking"), bEnabled);
+																				})
+																			[
+																				SNew(STextBlock)
+																					.Text(FText::FromString(TEXT("Tobii")))
+																			]
+																	]
+
+																// HPOmnicept
+																+ SVerticalBox::Slot()
+																	.AutoHeight()
+																	.Padding(5, 2)
+																	[
+																		SNew(SCheckBox)
+																			.IsChecked_Lambda([this]() {
+																			return SDKCheckboxStates.FindRef(TEXT("HPOmnicept"))
+																				? ECheckBoxState::Checked
+																				: ECheckBoxState::Unchecked;
+																				})
+																			.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) {
+																			const bool bEnabled = (NewState == ECheckBoxState::Checked);
+																			SDKCheckboxStates.Add(TEXT("HPOmnicept"), bEnabled);
+																			this->ApplySDKToggle(TEXT("HPOmnicept"), bEnabled);
+																				})
+																			[
+																				SNew(STextBlock)
+																					.Text(FText::FromString(TEXT("HP Omnicept")))
+																			]
+																	]
 														]
 												]
 						] // end of the overlay slot
@@ -1946,6 +2066,26 @@ void SProjectManagerWidget::ApplySDKToggle(const FString& SDKName, bool bEnable)
 			{
 				FixLine(L, TEXT("WaveVREyeTracking"));
 			}
+			else if (SDKName == TEXT("OpenXREyeTracking"))
+			{
+				FixLine(L, TEXT("OpenXREyeTracking"));
+			}
+			else if (SDKName == TEXT("Varjo"))
+			{
+				FixLine(L, TEXT("Varjo"));
+			}
+			else if (SDKName == TEXT("SRanipal"))
+			{
+				FixLine(L, TEXT("SRanipalVivePro"));
+			}
+			else if (SDKName == TEXT("HPOmnicept"))
+			{
+				FixLine(L, TEXT("HPGlia"));
+			}
+			else if (SDKName == TEXT("TobiiEyeTracking"))
+			{
+				FixLine(L, TEXT("TobiiEyeTracking"));
+			}
 		}
 
 		FFileHelper::SaveStringArrayToFile(Lines, *BuildCsPath);
@@ -2023,6 +2163,28 @@ void SProjectManagerWidget::ApplySDKToggle(const FString& SDKName, bool bEnable)
 							break;
 						}
 					}
+					else if (SDKName == TEXT("OpenXREyeTracking"))
+					{
+						auto Obj = Val->AsObject();
+						if (Obj->GetStringField(TEXT("Name")) == "OpenXREyeTracker")
+						{
+							Obj->SetBoolField(TEXT("Enabled"), bEnable);
+							Obj->SetArrayField(TEXT("SupportedTargetPlatforms"), { MakeShared<FJsonValueString>(TEXT("Win64")), MakeShared<FJsonValueString>(TEXT("Android")) });
+							bFound = true;
+							break;
+						}
+					}
+					else if (SDKName == TEXT("Varjo"))
+					{
+						auto Obj = Val->AsObject();
+						if (Obj->GetStringField(TEXT("Name")) == "VarjoOpenXR")
+						{
+							Obj->SetBoolField(TEXT("Enabled"), bEnable);
+							Obj->SetArrayField(TEXT("SupportedTargetPlatforms"), { MakeShared<FJsonValueString>(TEXT("Win64")), MakeShared<FJsonValueString>(TEXT("Android")) });
+							bFound = true;
+							break;
+						}
+					}
 				}
 
 				if (!bFound)
@@ -2064,6 +2226,22 @@ void SProjectManagerWidget::ApplySDKToggle(const FString& SDKName, bool bEnable)
 						TSharedPtr<FJsonObject> NewPlugin = MakeShared<FJsonObject>();
 						NewPlugin->SetStringField(TEXT("Name"), "WaveVR");
 						NewPlugin->SetBoolField(TEXT("Enabled"), true);
+						Plugins.Add(MakeShared<FJsonValueObject>(NewPlugin));
+					}
+					else if (SDKName == TEXT("OpenXREyeTracking"))
+					{
+						TSharedPtr<FJsonObject> NewPlugin = MakeShared<FJsonObject>();
+						NewPlugin->SetStringField(TEXT("Name"), "OpenXREyeTracker");
+						NewPlugin->SetBoolField(TEXT("Enabled"), true);
+						NewPlugin->SetArrayField(TEXT("SupportedTargetPlatforms"), { MakeShared<FJsonValueString>(TEXT("Win64")), MakeShared<FJsonValueString>(TEXT("Android")) });
+						Plugins.Add(MakeShared<FJsonValueObject>(NewPlugin));
+					}
+					else if (SDKName == TEXT("Varjo"))
+					{
+						TSharedPtr<FJsonObject> NewPlugin = MakeShared<FJsonObject>();
+						NewPlugin->SetStringField(TEXT("Name"), "VarjoOpenXR");
+						NewPlugin->SetBoolField(TEXT("Enabled"), true);
+						NewPlugin->SetArrayField(TEXT("SupportedTargetPlatforms"), { MakeShared<FJsonValueString>(TEXT("Win64")), MakeShared<FJsonValueString>(TEXT("Android")) });
 						Plugins.Add(MakeShared<FJsonValueObject>(NewPlugin));
 					}
 				}
@@ -2116,6 +2294,24 @@ void SProjectManagerWidget::ApplySDKToggle(const FString& SDKName, bool bEnable)
 					{
 						TSharedPtr<FJsonObject> Obj = Plugins[Index]->AsObject();
 						if (Obj->GetStringField(TEXT("Name")) == TEXT("WaveVR"))
+						{
+							Obj->SetBoolField(TEXT("Enabled"), false);
+							bModified = true;
+						}
+					}
+					else if (SDKName == TEXT("OpenXREyeTracking"))
+					{
+						TSharedPtr<FJsonObject> Obj = Plugins[Index]->AsObject();
+						if (Obj->GetStringField(TEXT("Name")) == TEXT("OpenXREyeTracker"))
+						{
+							Obj->SetBoolField(TEXT("Enabled"), false);
+							bModified = true;
+						}
+					}
+					else if (SDKName == TEXT("Varjo"))
+					{
+						TSharedPtr<FJsonObject> Obj = Plugins[Index]->AsObject();
+						if (Obj->GetStringField(TEXT("Name")) == TEXT("VarjoOpenXR"))
 						{
 							Obj->SetBoolField(TEXT("Enabled"), false);
 							bModified = true;
