@@ -125,8 +125,6 @@ public:
 
 	//delegates
 	FOnExportAllSceneGeometry OnExportAllSceneGeometry;
-	FOnUploadAllDynamics OnUploadAllDynamics;
-	FOnUploadAllSceneGeometry OnUploadAllSceneGeometry;
 	//delegate callbacks
 	void OnLevelsExported(bool bWasSuccessful);
 	void OnLevelsUploaded(bool bWasSuccessful);

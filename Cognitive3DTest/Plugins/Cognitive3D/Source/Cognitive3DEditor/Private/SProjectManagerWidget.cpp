@@ -1959,10 +1959,7 @@ void SProjectManagerWidget::OnLevelsUploaded(bool bWasSuccessful)
 		if (!FCognitiveEditorTools::GetInstance()->UploadingDynamicsFromFullSetup)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("SProjectManagerWidget::OnLevelsUploaded Uploading dynamics from full setup is disabled, skipping dynamics upload"));
-			//RestartEditor();
-			//go straight to the last step and prompt restart the editor
-			OnUploadAllSceneGeometry.BindSP(this, &SProjectManagerWidget::OnDynamicsUploaded);
-			OnUploadAllSceneGeometry.ExecuteIfBound(true);
+			RestartEditor();
 			return;
 		}
 		UE_LOG(LogTemp, Warning, TEXT("SProjectManagerWidget::OnLevelsUploaded called with %d dynamics to upload"), TotalLevelCount);
@@ -2408,6 +2405,7 @@ bool SProjectManagerWidget::IsSDKEnabledInBuildCs(const FString& MethodName)
 
 void SProjectManagerWidget::RestartEditor()
 {
+	//if no SDK changes, just finalize setup
 	if (!bDidChangeSDKs)
 	{
 		const EAppReturnType::Type Choice = FMessageDialog::Open(
@@ -2425,6 +2423,7 @@ void SProjectManagerWidget::RestartEditor()
 		return;
 	}
 
+	// Prompt to restart the editor
 	const EAppReturnType::Type Choice = FMessageDialog::Open(
 		EAppMsgType::YesNo,
 		LOCTEXT("RestartPrompt",
