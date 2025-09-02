@@ -53,6 +53,9 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 	SDKCheckboxStates.Add(TEXT("TobiiEyeTracking"),
 		IsSDKEnabledInBuildCs(TEXT("TobiiEyeTracking")));
 
+	// Store initial states for comparison
+	InitialSDKCheckboxStates = SDKCheckboxStates;
+
 	CollectAllMaps();
 	//set default export directory if it isnt set
 	FCognitiveEditorTools::GetInstance()->SetDefaultIfNoExportDirectory();
@@ -1037,8 +1040,16 @@ TSharedRef<ITableRow> SProjectManagerWidget::OnGenerateSceneRow(TSharedPtr<FEdit
 						}
 						else
 						{
-							// If not in map and version number is 0, default to checked
-							return (SceneData->VersionNumber == 0) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+							// If not in map and version number is 0, add it to the map as checked and return checked
+							if (SceneData->VersionNumber == 0)
+							{
+								ParentWidget->LevelSelectionMap.Add(FullPath, true);
+								return ECheckBoxState::Checked;
+							}
+							else
+							{
+								return ECheckBoxState::Unchecked;
+							}
 						}
 					})
 					.OnCheckStateChanged_Lambda([this, FullPath](ECheckBoxState State) {
@@ -2334,10 +2345,28 @@ void SProjectManagerWidget::ApplySDKToggle(const FString& SDKName, bool bEnable)
 		}
 	}
 
-	bDidChangeSDKs = true;
-
-	FCognitiveEditorTools::GetInstance()->ShowNotification("Third-Party SDK changes made, editor will restart and rebuild the project upon finalizing setup", true);
-	UE_LOG(LogTemp, Warning, TEXT("Third-Party SDK changes made, editor will restart and rebuild the project upon finalizing setup."));
+	// Check if any SDK state has actually changed from the initial state
+	bool bHasChanges = false;
+	for (const auto& Pair : SDKCheckboxStates)
+	{
+		const FString& SDKKey = Pair.Key;
+		bool CurrentState = Pair.Value;
+		bool InitialState = InitialSDKCheckboxStates.FindRef(SDKKey);
+		
+		if (CurrentState != InitialState)
+		{
+			bHasChanges = true;
+			break;
+		}
+	}
+	
+	bDidChangeSDKs = bHasChanges;
+	
+	if (bDidChangeSDKs)
+	{
+		FCognitiveEditorTools::GetInstance()->ShowNotification("Third-Party SDK changes made, editor will restart and rebuild the project upon finalizing setup", true);
+		UE_LOG(LogTemp, Warning, TEXT("Third-Party SDK changes made, editor will restart and rebuild the project upon finalizing setup."));
+	}
 }
 
 bool SProjectManagerWidget::IsSDKEnabledInBuildCs(const FString& MethodName)

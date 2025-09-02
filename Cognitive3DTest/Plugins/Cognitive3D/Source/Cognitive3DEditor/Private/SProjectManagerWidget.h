@@ -76,6 +76,7 @@ public:
 	void GetOrganizationDetailsResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	TMap<FString, bool> SDKCheckboxStates;
+	TMap<FString, bool> InitialSDKCheckboxStates;
 
 	FString DisplayAPIKey;
 	FText GetDisplayAPIKey() const;
