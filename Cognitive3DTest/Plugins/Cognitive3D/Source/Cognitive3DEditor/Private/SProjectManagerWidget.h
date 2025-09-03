@@ -74,6 +74,9 @@ public:
 
 	void FetchOrganizationDetails(FString developerKey);
 	void GetOrganizationDetailsResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	
+	void FetchDeveloperKeyExpiryDate(FString developerKey);
+	void GetDeveloperKeyExpiryDateResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	TMap<FString, bool> SDKCheckboxStates;
 	TMap<FString, bool> InitialSDKCheckboxStates;
@@ -87,11 +90,13 @@ public:
 	FString DisplayDeveloperKey;
 	FText GetDisplayDeveloperKey() const;
 	void OnDeveloperKeyChanged(const FText& Text);
+	void OnDeveloperKeyCommitted(const FText& Text, ETextCommit::Type CommitType);
 
 	TSharedPtr<STextBlock> OrgNameTextBlock;
 	TSharedPtr<STextBlock> OrgSubscriptionTextBlock;
 	TSharedPtr<STextBlock> OrgExpiryTextBlock;
 	TSharedPtr<STextBlock> OrgTrialTextBlock;
+	TSharedPtr<STextBlock> DeveloperKeyExpiryTextBlock;
 
 	//export path
 	FString DisplayExportDirectory;

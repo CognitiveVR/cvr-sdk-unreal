@@ -260,7 +260,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																		.Visibility(EVisibility::Visible)
 																		.Text(this, &SProjectManagerWidget::GetDisplayDeveloperKey)
 																		.OnTextChanged(this, &SProjectManagerWidget::OnDeveloperKeyChanged)
-																		//.OnTextCommitted()
+																		.OnTextCommitted(this, &SProjectManagerWidget::OnDeveloperKeyCommitted)
 																]
 														]
 												]
@@ -301,6 +301,16 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 														.Visibility(EVisibility::Visible)
 														.Justification(ETextJustify::Center)
 														.Text(FText::FromString("Unknown Organization Expirey Date"))
+												]
+
+												+ SVerticalBox::Slot()
+												.AutoHeight()
+												.Padding(0, 0, 0, 5)
+												[
+													SAssignNew(DeveloperKeyExpiryTextBlock, STextBlock)
+														.Visibility(EVisibility::Visible)
+														.Justification(ETextJustify::Center)
+														.Text(FText::FromString("Unknown Developer Key Expirey Date"))
 												]
 
 												+ SVerticalBox::Slot()
@@ -1107,6 +1117,7 @@ FReply SProjectManagerWidget::ValidateKeys()
 	FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
 	FetchApplicationKey(DisplayDeveloperKey);
 	FetchOrganizationDetails(DisplayDeveloperKey);
+	FetchDeveloperKeyExpiryDate(DisplayDeveloperKey);
 
 	return FReply::Handled();
 }
@@ -1281,6 +1292,94 @@ void SProjectManagerWidget::GetOrganizationDetailsResponse(FHttpRequestPtr Reque
 	}
 }
 
+void SProjectManagerWidget::FetchDeveloperKeyExpiryDate(FString developerKey)
+{
+	auto HttpRequest = FHttpModule::Get().CreateRequest();
+	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+	GConfig->Flush(true, C3DSettingsPath);
+	
+	FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString url = "https://" + gateway + "/v0/user";
+	
+	HttpRequest->SetURL(url);
+	HttpRequest->SetVerb("GET");
+	HttpRequest->SetHeader(TEXT("Authorization"), "APIKEY:DEVELOPER " + developerKey);
+	HttpRequest->OnProcessRequestComplete().BindRaw(this, &SProjectManagerWidget::GetDeveloperKeyExpiryDateResponse);
+	HttpRequest->ProcessRequest();
+}
+
+void SProjectManagerWidget::GetDeveloperKeyExpiryDateResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (Response.IsValid() == false)
+	{
+		GLog->Log("SProjectManagerWidget::GetDeveloperKeyExpiryDateResponse invalid response");
+		return;
+	}
+
+	int32 responseCode = Response->GetResponseCode();
+	if (responseCode != 200)
+	{
+		GLog->Log("Developer Key Expiry Date Response Code is " + FString::FromInt(responseCode));
+		DeveloperKeyExpiryTextBlock->SetText(FText::FromString("Developer Key Expiry: Unknown"));
+		return;
+	}
+
+	auto content = Response->GetContentAsString();
+	
+	// Parse JSON to extract keyExpiresAt field (Unix timestamp since 1970)
+	TSharedPtr<FJsonObject> JsonObject;
+	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(content);
+	
+	if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
+	{
+		// Look for keyExpiresAt field (Unix timestamp)
+		int64 ExpirationTimestamp = 0;
+		if (JsonObject->TryGetNumberField(TEXT("keyExpiresAt"), ExpirationTimestamp))
+		{
+			// Check if timestamp is in seconds or milliseconds by looking at the size
+			// If it's > year 2030 in seconds (1893456000), it's probably in milliseconds
+			FDateTime expiryDate = (ExpirationTimestamp > 1893456000) 
+				? FDateTime::FromUnixTimestamp(ExpirationTimestamp / 1000)
+				: FDateTime::FromUnixTimestamp(ExpirationTimestamp);
+			
+			FString expiryPrettyDate;
+			expiryPrettyDate.Append(FString::FromInt(expiryDate.GetDay()));
+			expiryPrettyDate.Append(" ");
+			
+			FString MonthStr;
+			switch (expiryDate.GetMonthOfYear())
+			{
+			case EMonthOfYear::January:		MonthStr = TEXT("Jan");	break;
+			case EMonthOfYear::February:	MonthStr = TEXT("Feb");	break;
+			case EMonthOfYear::March:		MonthStr = TEXT("Mar");	break;
+			case EMonthOfYear::April:		MonthStr = TEXT("Apr");	break;
+			case EMonthOfYear::May:			MonthStr = TEXT("May");	break;
+			case EMonthOfYear::June:		MonthStr = TEXT("Jun");	break;
+			case EMonthOfYear::July:		MonthStr = TEXT("Jul");	break;
+			case EMonthOfYear::August:		MonthStr = TEXT("Aug");	break;
+			case EMonthOfYear::September:	MonthStr = TEXT("Sep");	break;
+			case EMonthOfYear::October:		MonthStr = TEXT("Oct");	break;
+			case EMonthOfYear::November:	MonthStr = TEXT("Nov");	break;
+			case EMonthOfYear::December:	MonthStr = TEXT("Dec");	break;
+			}
+			
+			expiryPrettyDate.Append(MonthStr);
+			expiryPrettyDate.Append(", ");
+			expiryPrettyDate.Append(FString::FromInt(expiryDate.GetYear()));
+			
+			DeveloperKeyExpiryTextBlock->SetText(FText::FromString("Developer Key Expiry Date: " + expiryPrettyDate));
+		}
+		else
+		{
+			DeveloperKeyExpiryTextBlock->SetText(FText::FromString("Developer Key Expiry: keyExpiresAt field not found"));
+		}
+	}
+	else
+	{
+		DeveloperKeyExpiryTextBlock->SetText(FText::FromString("Developer Key Expiry: Failed to parse response"));
+	}
+}
+
 FText SProjectManagerWidget::GetDisplayAPIKey() const
 {
 	return FText::FromString(DisplayAPIKey);
@@ -1299,6 +1398,12 @@ FText SProjectManagerWidget::GetDisplayDeveloperKey() const
 void SProjectManagerWidget::OnDeveloperKeyChanged(const FText& Text)
 {
 	DisplayDeveloperKey = Text.ToString();
+}
+
+void SProjectManagerWidget::OnDeveloperKeyCommitted(const FText& Text, ETextCommit::Type CommitType)
+{
+	DisplayDeveloperKey = Text.ToString();
+	ValidateKeys();
 }
 
 const FSlateBrush* SProjectManagerWidget::GetExportPathStateIcon() const
