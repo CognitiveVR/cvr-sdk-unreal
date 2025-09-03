@@ -229,10 +229,20 @@ void UAndroidPlugin::OnLevelLoad()
     }
 
     FString levelName = level->GetFullGroupName(true);
+    TArray<FString> PathParts;
+    level->GetPathName().ParseIntoArray(PathParts, TEXT("/"), true);
+    FString levelPath = "";
+    if (PathParts.Num() > 0)
+    {
+        PathParts.RemoveAt(PathParts.Num() - 1); //remove the last part, which is the level name
+        levelPath = FString::Join(PathParts, TEXT("/"));
+        levelPath = "/" + levelPath; //add a leading slash
+    }
+
     auto currentSceneData = cognitive->GetCurrentSceneData();
 
 
-    TSharedPtr<FSceneData> data = cognitive->GetSceneData(levelName);
+    TSharedPtr<FSceneData> data = cognitive->GetSceneData(levelPath + "/" + levelName);
 
     if (cognitive->LastSceneData.IsValid())
     {

@@ -254,6 +254,7 @@ void FCognitiveEditorTools::CheckIniConfigured()
 		GLog->Log("FCognitiveEditorTools::CheckIniConfigured write defaults to ini");
 		FString defaultgateway = "data.cognitive3d.com";
 		FString trueString = "True";
+		FString falseString = "False";
 		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("Gateway"), *defaultgateway, ConfigFilePath);
 
 		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("GazeBatchSize"), 256, ConfigFilePath);
@@ -279,6 +280,8 @@ void FCognitiveEditorTools::CheckIniConfigured()
 
 		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("EnableLocalCache"), *trueString, ConfigFilePath);
 		GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("LocalCacheSize"), 100, ConfigFilePath);
+
+		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("RestartAfterSetup"), *falseString, ConfigFilePath);
 		GConfig->Flush(false, ConfigFilePath);
 	}
 	else
@@ -1332,7 +1335,7 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest(FString LevelName)
 			}
 		}
 	}
-
+	
 	//get the blueprint dynamics in the project and add them to the list
 	for (const TSharedPtr<FDynamicData>& data : SceneDynamics)
 	{
@@ -1379,13 +1382,17 @@ FReply FCognitiveEditorTools::UploadDynamicsManifest(FString LevelName)
 
 	GLog->Log("Cognitive3D Tools uploading manifest for " + FString::FromInt(dynamics.Num()) + " objects");
 
-	UploadSelectedDynamicsManifest(LevelName, dynamics);
+	UploadSelectedDynamicsManifest(LevelName, dynamics); // _Game_Maps_VRMap
 
 	return FReply::Handled();
 }
 
 FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(FString LevelName, TArray<UDynamicObject*> dynamics)
 {
+	//uelog the levelname
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadSelectedDynamicsManifest called for level %s"), *LevelName);
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadSelectedDynamicsManifest called with %d dynamics"), dynamics.Num());
+
 	bool wroteAnyObjects = false;
 
 	//split up dynamics and make a web request every 250 items, up to 99 calls
@@ -1404,12 +1411,12 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(FString LevelName, 
 				continue;
 			}
 			//if they have a customid -> add them to the objectmanifest string
-			if (dynamics[q]->IdSourceType == EIdSourceType::CustomId && dynamics[q]->CustomId != "")
+			if (dynamics[q]->IdSourceType == EIdSourceType::CustomId && !dynamics[q]->CustomId.IsEmpty())
 			{
 				AActor* Owner = NULL;
 				bool isBlueprint = false;
 				UMeshComponent* bpMesh = NULL;
-
+				
 				//get this dynamic's blueprint, owner, and check a boolean to see if it is a blueprint
 				for (const TSharedPtr<FDynamicData>& data : SceneDynamics)
 				{
@@ -1504,7 +1511,6 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(FString LevelName, 
 					rotation = FQuat::Identity;
 					scale = FVector::OneVector;
 				}
-
 				wroteAnyObjects = true;
 				dynamicsCount++;
 				FString isController = dynamics[q]->IsController ? "true" : "false";
@@ -1539,7 +1545,7 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(FString LevelName, 
 
 		//send request for this dynamics part
 		//get scene id
-		TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName);
+		TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName); // _Game_Maps_VRMap
 		if (!sceneData.IsValid())
 		{
 			GLog->Log("FCognitiveEditorTools::UploadDynamicObjectManifest could not find current scene id");
@@ -1577,7 +1583,7 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(FString LevelName, 
 		HttpRequest->SetContentAsString(objectManifest);
 		GLog->Log(objectManifest);
 
-		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestCompleted, LevelName);
+		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadManifestCompleted, LevelName); // _Game_Maps_VRMap
 
 		HttpRequest->ProcessRequest();
 
@@ -1686,13 +1692,13 @@ void FCognitiveEditorTools::OnUploadManifestCompleted(FHttpRequestPtr Request, F
 	WizardUploading = false;
 	if (Response.Get() == NULL) //likely no aggregation manifest to upload. no request, no response
 	{
-		GetDynamicsManifest(Level);
+		GetDynamicsManifest(Level); // _Game_Maps_VRMap
 		return;
 	}
 
 	if (bWasSuccessful && Response->GetResponseCode() < 300) //successfully uploaded
 	{
-		GetDynamicsManifest(Level);
+		GetDynamicsManifest(Level); // _Game_Maps_VRMap
 		WizardUploadError = FString::FromInt(Response->GetResponseCode());
 		WizardUploadResponseCode = Response->GetResponseCode();
 		ShowNotification(TEXT("Dynamic Manifest Uploaded Successfully"));
@@ -1731,7 +1737,9 @@ void FCognitiveEditorTools::OnUploadManifestIdsCompleted(FHttpRequestPtr Request
 
 FReply FCognitiveEditorTools::GetDynamicsManifest(FString LevelName)
 {
-	TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName);
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::GetDynamicsManifest called for level %s"), *LevelName);
+
+	TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName); // _Game_Maps_VRMap
 	if (!sceneData.IsValid())
 	{
 		GLog->Log("CognitiveTools::GetDyanmicManifest could not find current scene data " + LevelName);
@@ -1767,6 +1775,12 @@ void FCognitiveEditorTools::OnDynamicManifestResponse(FHttpRequestPtr Request, F
 	{
 		GLog->Log("FCognitiveEditorTools::OnDynamicManifestResponse response code " + FString::FromInt(Response->GetResponseCode()));
 		ShowNotification(TEXT("Dynamic Manifest Uploaded Successfully"));
+		TotalSetOfDynamicsToUpload--;
+		if(UploadingDynamicsFromFullSetup && TotalSetOfDynamicsToUpload <= 0)
+		{
+			OnUploadAllDynamics.ExecuteIfBound(true);
+			UploadingDynamicsFromFullSetup = false;
+		}
 	}
 	else
 	{
@@ -1816,6 +1830,8 @@ int32 OutstandingDynamicUploadRequests = 0;
 
 FReply FCognitiveEditorTools::UploadDynamics(FString LevelName)
 {
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadDynamics called for level %s"), *LevelName);
+
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
 
@@ -1847,7 +1863,7 @@ FReply FCognitiveEditorTools::UploadDynamics(FString LevelName)
 
 	GLog->Log("FCognitiveEditorTools::UploadDynamics found " + FString::FromInt(dynamicNames.Num()) + " exported dynamic objects");
 	
-	TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(LevelName);
+	TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(LevelName); // _Game_Maps_VRMap
 
 	if (!currentSceneData.IsValid())
 	{
@@ -1885,7 +1901,6 @@ FReply FCognitiveEditorTools::UploadDynamics(FString LevelName)
 		WizardUploading = false;
 	}
 
-
 	OnUploadSceneGeometry.ExecuteIfBound(nullptr, nullptr, true);
 
 	return FReply::Handled();
@@ -1893,6 +1908,8 @@ FReply FCognitiveEditorTools::UploadDynamics(FString LevelName)
 
 FReply FCognitiveEditorTools::UploadDynamic(FString LevelName, FString directory)
 {
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadDynamic called for level %s with directory %s"), *LevelName, *directory);
+
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
 
@@ -2115,11 +2132,19 @@ void* FCognitiveEditorTools::ChooseParentWindowHandle()
 
 FReply FCognitiveEditorTools::UploadScene(const FString& LevelName)
 {
+	//LevelName formatted as _Game_Maps_VRMap for example, use _ to split
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadScene called for level %s"), *LevelName);
+
 	FString url = "";
+
+	TArray<FString> SplitLevelName;
+	LevelName.ParseIntoArray(SplitLevelName, *SplitCharacter, true);
+	FString ShortName = SplitLevelName.Last();
+	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::UploadScene ShortName: %s"), *ShortName);
 
 	//get scene name
 	//look if scene name has an entry in the scene datas
-	TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName);
+	TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName); //send in LevelName _Game_Maps_VRMap and have the function replace _ with / and use that to split into the shortname and path
 	if (sceneData.IsValid() && sceneData->Id.Len() > 0)
 	{
 		//GLog->Log("post update existing scene");
@@ -2134,7 +2159,7 @@ FReply FCognitiveEditorTools::UploadScene(const FString& LevelName)
 	}
 
 	GLog->Log("FCognitiveEditorTools::UploadScene upload scene to " + url);
-	UploadFromDirectory(LevelName, url, GetSceneExportDirectory(LevelName), "scene");
+	UploadFromDirectory(LevelName, url, GetSceneExportDirectory(LevelName), "scene"); //LevelName _Game_Maps_VRMap
 	//IMPROVEMENT listen for response. when the response returns, request the scene version with auth token
 
 	return FReply::Handled();
@@ -2319,8 +2344,10 @@ int32 FCognitiveEditorTools::CountUnexportedDynamicsNotUnique()
 	return meshNames.Num();
 }
 
-void FCognitiveEditorTools::UploadFromDirectory(FString LevelName, FString url, FString directory, FString expectedResponseType)
+void FCognitiveEditorTools::UploadFromDirectory(FString LevelName, FString url, FString directory, FString expectedResponseType) ////
 {
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadFromDirectory called for level %s with url %s and directory %s"), *LevelName, *url, *directory);
+
 	FString filesStartingWith = TEXT("");
 	FString pngextension = TEXT("png");
 
@@ -2469,11 +2496,11 @@ void FCognitiveEditorTools::UploadFromDirectory(FString LevelName, FString url, 
 #endif
 	if (expectedResponseType == "scene")
 	{
-		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadSceneCompleted, LevelName);
+		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadSceneCompleted, LevelName); // _Game_Maps_VRMap
 	}
 	if (expectedResponseType == "object")
 	{
-		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadObjectCompleted, LevelName);
+		HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::OnUploadObjectCompleted, LevelName); // _Game_Maps_VRMap
 	}
 
 	HttpRequest->ProcessRequest();
@@ -2481,6 +2508,8 @@ void FCognitiveEditorTools::UploadFromDirectory(FString LevelName, FString url, 
 
 void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::OnUploadSceneCompleted called for level %s"), *LevelName);
+
 	if (bWasSuccessful)
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted bWasSuccessful response code " + FString::FromInt(Response->GetResponseCode()));
@@ -2517,7 +2546,7 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 
 		if (responseNoQuotes.Len() > 0)
 		{
-			SaveSceneData(LevelName, responseNoQuotes);
+			SaveSceneData(LevelName, responseNoQuotes); // _Game_Maps_VRMap
 			ReadSceneDataFromFile();
 
 			TSharedPtr<FJsonObject> PropertiesObject = MakeShared<FJsonObject>();
@@ -2533,7 +2562,7 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 		ConfigFileHasChanged = true;
 		if (WizardUploading)
 		{
-			SceneNameVersionRequest(LevelName);
+			SceneNameVersionRequest(LevelName); // _Game_Maps_VRMap
 		}
 	}
 	else
@@ -2588,8 +2617,20 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 
 	if (WizardUploading && OutstandingDynamicUploadRequests <= 0)
 	{
-		//upload manifest
-		UploadDynamicsManifest(LevelName);
+		if (!UploadingDynamicsFromFullSetup && !UploadingScenesFromFullSetup)
+		{
+			//upload manifest
+			UploadDynamicsManifest(LevelName); // _Game_Maps_VRMap
+		}
+		if (UploadingScenesFromFullSetup)
+		{
+			TotalLevelsToUpload--;
+			if (TotalLevelsToUpload <= 0)
+			{
+				OnUploadAllSceneGeometry.ExecuteIfBound(true);
+				UploadingScenesFromFullSetup = false;
+			}
+		}
 	}
 }
 
@@ -2700,7 +2741,10 @@ bool FCognitiveEditorTools::CurrentSceneHasSceneId() const
 
 bool FCognitiveEditorTools::SceneHasSceneId(const FString& SceneName) const
 {
-	if (!HasDeveloperKey()) { return false; }
+	if (!HasDeveloperKey()) 
+	{
+		return false; 
+	}
 	TSharedPtr<FEditorSceneData> currentscene = GetSceneData(SceneName);
 	if (!currentscene.IsValid())
 	{
@@ -3091,7 +3135,6 @@ for (const FAssetData& AssetData2 : AssetDataList)
 
 //#endif
 */
-
 	return FReply::Handled();
 }
 
@@ -3287,7 +3330,8 @@ void FCognitiveEditorTools::CurrentSceneVersionRequest()
 
 void FCognitiveEditorTools::SceneNameVersionRequest(const FString& LevelName)
 {
-	TSharedPtr<FEditorSceneData> scenedata = GetSceneData(LevelName);
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::SceneNameVersionRequest %s"), *LevelName);
+	TSharedPtr<FEditorSceneData> scenedata = GetSceneData(LevelName); // _Game_Maps_VRMap
 
 	if (scenedata.IsValid())
 	{
@@ -3418,20 +3462,20 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 		TArray<FString> Array;
 		scenstrings[i].ParseIntoArray(Array, TEXT(","), true);
 
-		if (Array.Num() == 2) //scenename,sceneid
+		if (Array.Num() == 3) //scenename,path,sceneid
 		{
 			//old scene data. append versionnumber and versionid
 			Array.Add("1");
 			Array.Add("0");
 		}
 
-		if (Array.Num() != 4)
+		if (Array.Num() != 5) //has name, path, id, version number, version id
 		{
 			GLog->Log("FCognitiveTools::RefreshSceneData failed to parse " + scenstrings[i]);
 			continue;
 		}
-
-		SceneData.Add(MakeShareable(new FEditorSceneData(Array[0], Array[1], FCString::Atoi(*Array[2]), FCString::Atoi(*Array[3]))));
+		UE_LOG(LogTemp, Log, TEXT("FCognitiveTools::RefreshSceneData found scene %s with path %s id %s version %s and versionid %s"), *Array[0], *Array[1], *Array[2], *Array[3], *Array[4]);
+		SceneData.Add(MakeShareable(new FEditorSceneData(Array[0], Array[1], Array[2], FCString::Atoi(*Array[3]), FCString::Atoi(*Array[4]))));
 	}
 
 	GLog->Log("FCognitiveTools::RefreshSceneData found this many scenes: " + FString::FromInt(SceneData.Num()));
@@ -3458,12 +3502,27 @@ void FCognitiveEditorTools::SceneVersionRequest(const FEditorSceneData& data)
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetHeader("Content-Type", "application/json");
 
-	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::SceneVersionResponse, data.Name);
+	//create levelname with path included
+	FString LevelName = data.Name;
+	FString LevelPath = data.Path;
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::SceneVersionRequest LevelName %s"), *LevelName);
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::SceneVersionRequest LevelPath %s"), *LevelPath);
+
+	if (LevelPath.Len() > 0)
+	{
+		LevelName = LevelPath + "/" + LevelName;
+	}
+	//LevelName = LevelName.Replace(TEXT("/"), TEXT("_")); //replace / with _ for url
+	LevelName = AdjustPathName(LevelName); //adjust path name to be valid for url
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::SceneVersionRequest %s"), *LevelName);
+	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::SceneVersionResponse, LevelName); //data.Name old input. _Game_Maps_VRMap
 	HttpRequest->ProcessRequest();
 }
 
 void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::SceneVersionResponse %s"), *LevelName);
+
 	if (bWasSuccessful)
 		GLog->Log("FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode()));
 	else
@@ -3532,7 +3591,7 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		}
 
 		//check that there is scene data in ini
-		TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(LevelName);
+		TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(LevelName); // _Game_Maps_VRMap
 		if (!currentSceneData.IsValid())
 		{
 			GLog->Log("FCognitiveTools::SceneVersionResponse can't find current scene data in ini files");
@@ -3579,10 +3638,12 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 			TArray<FString> entryarray;
 			iniscenedata[i].ParseIntoArray(entryarray, TEXT(","), true);
 
-			if (entryarray[0] == currentSceneData->Name && versionNumber > lastVersionNumber)
+			if (entryarray[0] == currentSceneData->Name && entryarray[1] == currentSceneData->Path && versionNumber > lastVersionNumber) //need to also check path to write to the correct scene
 			{
 				lastVersionNumber = versionNumber;
-				iniscenedata[i] = entryarray[0] + "," + entryarray[1] + "," + FString::FromInt(versionNumber) + "," + FString::FromInt(versionId);
+				iniscenedata[i] = entryarray[0] /*Name*/ + "," + entryarray[1] /*Path*/ + "," + entryarray[2] /*Id*/ + "," + FString::FromInt(versionNumber) + "," + FString::FromInt(versionId);
+				UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::SceneVersionResponse overwriting scene data to append versionnumber %d and versionid %d"), versionNumber, versionId);
+				UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::SceneVersionResponse scene data: %s"), *iniscenedata[i]);
 				//GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse overwriting scene data to append versionnumber and versionid");
 				//GLog->Log(iniscenedata[i]);
 			}
@@ -3604,7 +3665,26 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 
 		if (WizardUploading)
 		{
-			UploadDynamics(LevelName);
+			if (UploadingScenesFromFullSetup)
+			{
+				if (UploadingDynamicsFromFullSetup)
+				{
+					UploadDynamics(LevelName); // _Game_Maps_VRMap
+				}
+				else
+				{
+					TotalLevelsToUpload--;
+					if (TotalLevelsToUpload <= 0)
+					{
+						OnUploadAllSceneGeometry.ExecuteIfBound(true);
+						UploadingScenesFromFullSetup = false;
+					}
+				}
+			}
+			else
+			{
+				UploadDynamics(LevelName); // _Game_Maps_VRMap
+			}
 		}
 	}
 	else
@@ -3677,31 +3757,77 @@ TSharedPtr<FEditorSceneData> FCognitiveEditorTools::GetCurrentSceneData() const
 
 	FString currentSceneName = myworld->GetMapName();
 	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
-	return GetSceneData(currentSceneName);
+	// This is the full long package name, e.g. "/Game/Maps/MyMap"
+	FString PackageName = GWorld->GetOutermost()->GetName();
+	//FString AdjustedPackageName = PackageName.Replace(TEXT("/"), TEXT("_")); //replace / with _
+	FString AdjustedPackageName = AdjustPathName(PackageName);
+	//return GetSceneData(currentSceneName);
+	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::GetCurrentSceneData currentSceneName %s"), *AdjustedPackageName);
+	return GetSceneData(AdjustedPackageName);
 }
 
 FString lastSceneName;
 TSharedPtr<FEditorSceneData> FCognitiveEditorTools::GetSceneData(FString scenename) const
 {
+	FString ShortName = scenename;
+	FString PathName = "";
+	if (scenename.Contains("_"))
+	{
+		//UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::GetSceneData scenename %s contains _"), *scenename);
+		//scenename.Replace(TEXT("_"), TEXT("/"));
+		TArray<FString> PathParts;
+		scenename.ParseIntoArray(PathParts, *SplitCharacter, true);
+		ShortName = PathParts.Last();
+		//UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::GetSceneData ShortName %s"), *ShortName);
+		PathName = "/";
+		for (int32 i = 0; i < PathParts.Num() - 1; i++)
+		{
+			if (i > 0) { PathName += TEXT("/"); }
+			PathName += PathParts[i];
+		}
+		//UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::GetSceneData PathName %s"), *PathName);
+	}
 	for (int32 i = 0; i < SceneData.Num(); i++)
 	{
 		if (!SceneData[i].IsValid()) { continue; }
-		if (SceneData[i]->Name == scenename)
+		if (SceneData[i]->Name == ShortName)
 		{
+			//check for path when we have that set up
+			if (PathName != "" && SceneData[i]->Path != PathName)
+			{
+				continue; //path doesn't match
+			}
 			return SceneData[i];
+			//UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::GetSceneData found SceneData for scene %s with path %s id %s version %d and versionid %d"), *SceneData[i]->Name, *SceneData[i]->Path, *SceneData[i]->Id, SceneData[i]->VersionNumber, SceneData[i]->VersionId);
 		}
 	}
-	if (lastSceneName != scenename)
+	if (lastSceneName != ShortName)
 	{
-		GLog->Log("FCognitiveToolsCustomization::GetSceneData couldn't find SceneData for scene " + scenename);
-		lastSceneName = scenename;
+		GLog->Log("FCognitiveToolsCustomization::GetSceneData couldn't find SceneData for scene " + ShortName);
+		lastSceneName = ShortName;
 	}
 	return NULL;
 }
 
 void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 {
-	FString keyValue = sceneName + "," + sceneKey;
+	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::SaveSceneData - SceneName: %s, SceneKey: %s"), *sceneName, *sceneKey);
+
+	FString ReAdjustedLevelName = sceneName.Replace(*SplitCharacter, TEXT("/"));
+	TArray<FString> PathParts;
+	ReAdjustedLevelName.ParseIntoArray(PathParts, TEXT("/"), true);
+	FString ShortName = PathParts.Last();
+	FString PathName = "/";
+	for (int32 i = 0; i < PathParts.Num() - 1; i++)
+	{
+		if (i > 0) { PathName += TEXT("/"); }
+		PathName += PathParts[i];
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::SaveSceneData - SceneName: %s, SceneKey: %s, ShortName: %s, PathName: %s"), *sceneName, *sceneKey, *ShortName, *PathName);
+
+	//FString keyValue = sceneName + "," + sceneKey;
+	FString keyValue = ShortName + "," + PathName + "," + sceneKey;
 
 	TArray<FString> scenePairs = TArray<FString>();
 
@@ -3730,8 +3856,11 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 	{
 		FString name;
 		FString key;
-		scenePairs[i].Split(TEXT(","), &name, &key);
-		if (*name == sceneName)
+		TArray<FString> keyParts;
+		scenePairs[i].ParseIntoArray(keyParts, TEXT(","), true);
+		//scenePairs[i].Split(TEXT(","), &name, &key);
+		UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::SaveSceneData - checking scene %s with path %s and key %s"), *keyParts[0], *keyParts[1], *keyParts[2]);
+		if (*keyParts[0] == ShortName && *keyParts[1] == PathName) // *name == scenename <- old
 		{
 			scenePairs[i] = keyValue;
 			didSetKey = true;
@@ -3820,6 +3949,8 @@ TArray<AActor*> FCognitiveEditorTools::PrepareSceneForExport(bool OnlyExportSele
 
 void FCognitiveEditorTools::CompressTexturesInExportFolder(const FString& ExportFolder, int32 MaxSize)
 {
+	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::CompressTexturesInExportFolder called with ExportFolder: %s and MaxSize: %d"), *ExportFolder, MaxSize);
+
 	IFileManager& FileManager = IFileManager::Get();
 	TArray<FString> TextureFiles;
 	FileManager.FindFilesRecursive(TextureFiles, *ExportFolder, TEXT("*.png"), true, false);
@@ -3828,9 +3959,8 @@ void FCognitiveEditorTools::CompressTexturesInExportFolder(const FString& Export
 
 	for (const FString& TextureFile : TextureFiles)
 	{
-		FString SourcePath = FPaths::Combine(ExportFolder, TextureFile);
-		FString DestinationPath = FPaths::Combine(ExportFolder, TextureFile); // Save in the same location
-		CompressAndSaveTexture(SourcePath, DestinationPath, MaxSize);
+		CompressAndSaveTexture(TextureFile, TextureFile, MaxSize);
+		UE_LOG(LogTemp, Log, TEXT("Compressed texture: %s"), *TextureFile);
 	}
 }
 
@@ -3896,6 +4026,8 @@ void FCognitiveEditorTools::CompressAndSaveTexture(const FString& SourcePath, co
 
 void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actorsToExport)
 {
+	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::ExportScene called with LevelName: %s"), *LevelName); // /Game/Maps/VRMap
+
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
 	if (!tempworld)
@@ -3910,28 +4042,37 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 	{
 		if (ALandscapeStreamingProxy* LandscapeProxy = Cast<ALandscapeStreamingProxy>(actorsToExport[i]))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("FOUND LANDSCAPE PROXY, SKIPPING SELECT"));
+			//UE_LOG(LogTemp, Warning, TEXT("FOUND LANDSCAPE PROXY, SKIPPING SELECT"));
 		}
 		else if (actorsToExport[i]->GetName().StartsWith("SkySphereBlueprint"))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("FOUND SKYSPHERE, SKIPPING SELECT"));
+			//UE_LOG(LogTemp, Warning, TEXT("FOUND SKYSPHERE, SKIPPING SELECT"));
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("NOT PROXY, FOUND ACTOR: %s"), *actorsToExport[i]->GetFName().ToString());
+			//UE_LOG(LogTemp, Warning, TEXT("NOT PROXY, FOUND ACTOR: %s"), *actorsToExport[i]->GetFName().ToString());
 			GEditor->SelectActor((actorsToExport[i]), true, false, true);
 		}
 	}
+	//FString AdjustedLevelName = LevelName.Replace(TEXT("/"), TEXT("_")); // _Game_Maps_VRMap
+	FString AdjustedLevelName = AdjustPathName(LevelName);
+	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::ExportScene AFTER REPLACE exporting scene with LevelName: %s"), *AdjustedLevelName);
+
+	TArray<FString> SplitFullPathName;
+	//LevelName.Split(TEXT("_"), ESearchCase::IgnoreCase, ESearchDir::FromEnd);
+	AdjustedLevelName.ParseIntoArray(SplitFullPathName, *SplitCharacter, true);
+	FString ShortName = SplitFullPathName.Last();
+	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::ExportScene ShortName: %s"), *ShortName);
 
 	//create directory at scene name path
-	FString sceneDirectory = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/";
+	FString sceneDirectory = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(AdjustedLevelName) + "/";
 	FCognitiveEditorTools::VerifyOrCreateDirectory(sceneDirectory);
 
 	//create screenshot directory
-	FString dir = BaseExportDirectory + "/" + LevelName + "/screenshot/";
+	FString dir = BaseExportDirectory + "/" + AdjustedLevelName + "/screenshot/";
 	FCognitiveEditorTools::VerifyOrCreateDirectory(dir);
 	
-	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName + "/" + LevelName + ".gltf");
+	FString ExportedSceneFile2 = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(AdjustedLevelName + "/" + ShortName + ".gltf");
 
 	//use GLTFExporter Plugin
 
@@ -3963,7 +4104,7 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 	if (CompressExportedFiles)
 	{
 		int32 MaxSize = 1024; // Adjust the size as needed
-		CompressTexturesInExportFolder(FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName), MaxSize);
+		CompressTexturesInExportFolder(FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(AdjustedLevelName), MaxSize);
 	}
 
 	if (ExportDynamicsWithScene)
@@ -4002,7 +4143,7 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 	FString ObjPath = FPaths::Combine(BaseExportDirectory, GetCurrentSceneName());
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
 
-	bool writeSettingsJsonSuccess = GenerateSettingsJsonFile(LevelName);
+	bool writeSettingsJsonSuccess = GenerateSettingsJsonFile(AdjustedLevelName);
 
 	//create settings.json
 	//FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(Cognitive3D_SDK_VERSION) + "\",\"sceneName\":\"" + GetCurrentSceneName() + "\"}";
@@ -4015,17 +4156,22 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 	}
 	//write debug.log including unreal data, scene contents, folder contents
 	//should happen after next button is pressed
-	FString fullPath = escapedOutPath + "/debug.log";
+	//FString fullPath = escapedOutPath + "/debug.log";
+	FString fullPath = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(AdjustedLevelName) + "/debug.log";
 	FString fileContents = BuildDebugFileContents();
 	FFileHelper::SaveStringToFile(fileContents, *fullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 
-	ValidateGeneratedFiles(LevelName);
+	ValidateGeneratedFiles(AdjustedLevelName); // _Game_Maps_VRMap
 	
 
 }
 
 void FCognitiveEditorTools::ValidateGeneratedFiles(const FString LevelName)
 {
+	TArray<FString> SplitLevelName;
+	LevelName.ParseIntoArray(SplitLevelName, *SplitCharacter, true);
+	FString ShortName = SplitLevelName.Last();
+
 	//validate other files:
 	FString ExportDirPath = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/";
 	TArray<FString> FoundFiles;
@@ -4083,13 +4229,13 @@ void FCognitiveEditorTools::ValidateGeneratedFiles(const FString LevelName)
 	//levelName.RemoveFromStart(GWorld->StreamingLevelsPrefix);
 
 	FString scenegltfPath = ExportDirPath + "/scene.gltf";
-	FString levelgltfPath = ExportDirPath + "/" + LevelName +  ".gltf";
+	FString levelgltfPath = ExportDirPath + "/" + ShortName +  ".gltf";
 
 	FString scenebinPath = ExportDirPath + "/scene.bin";
-	FString levelbinPath = ExportDirPath + "/" + LevelName + ".bin";
+	FString levelbinPath = ExportDirPath + "/" + ShortName + ".bin";
 
 	FString scenemtlPath = ExportDirPath + "/scene.mtl";
-	FString levelmtlPath = ExportDirPath + "/" + LevelName + ".mtl";
+	FString levelmtlPath = ExportDirPath + "/" + ShortName + ".mtl";
 
 	RenameFile(levelgltfPath, scenegltfPath);
 	RenameFile(levelbinPath, scenebinPath);
@@ -4168,11 +4314,17 @@ void FCognitiveEditorTools::ModifyGLTFContent(FString FilePath)
 
 bool FCognitiveEditorTools::GenerateSettingsJsonFile(const FString& LevelName)
 {
+	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::GenerateSettingsJsonFile called with LevelName: %s"), *LevelName);
+
 	FString ObjPath = FPaths::Combine(BaseExportDirectory, LevelName);
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
 
+	TArray<FString> SplitFullPathName;
+	LevelName.ParseIntoArray(SplitFullPathName, *SplitCharacter, true);
+	FString ShortName = SplitFullPathName.Last();
+
 	//create settings.json
-	FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(Cognitive3D_SDK_VERSION) + "\",\"sceneName\":\"" + LevelName + "\"}";
+	FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(Cognitive3D_SDK_VERSION) + "\",\"sceneName\":\"" + ShortName + "\"}";
 	FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/settings.json";
 	return FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	
@@ -4180,6 +4332,8 @@ bool FCognitiveEditorTools::GenerateSettingsJsonFile(const FString& LevelName)
 
 bool FCognitiveEditorTools::HasSettingsJsonFile(const FString& LevelName) const
 {
+	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::HasSettingsJsonFile called with LevelName: %s"), *LevelName);
+
 	FString ObjPath = FPaths::Combine(BaseExportDirectory, LevelName);
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
 	FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/settings.json";
@@ -4201,6 +4355,15 @@ void FCognitiveEditorTools::ShowNotification(FString Message, bool bSuccessful)
 	}
 	
 	FSlateNotificationManager::Get().AddNotification(NotifyInfo);
+}
+
+FString FCognitiveEditorTools::AdjustPathName(FString OriginalPathName) const
+{
+	// Adjust the path name to ensure it is in the correct format
+	OriginalPathName.ReplaceInline(TEXT("/"), *SplitCharacter); // Replace slashes with underscores
+	OriginalPathName.TrimStartAndEndInline(); // Trim any leading or trailing whitespace
+
+	return OriginalPathName;
 }
 
 const FSlateBrush* FCognitiveEditorTools::GetBrush(FName brushName)

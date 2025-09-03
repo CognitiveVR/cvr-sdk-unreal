@@ -92,9 +92,11 @@ TSharedRef<ITableRow> SDynamicObjectTableWidget::OnGenerateRowForTable(TSharedPt
 	FString searchMesh = InItem->MeshName;
 	
 	TSharedPtr<FString> sceneName = SDynamicObjectManagerWidget::SceneDisplayName;
-
+	FString PackageName = GWorld->GetOutermost()->GetName();
+	//FString AdjustedPackageName = PackageName.Replace(TEXT("/"), TEXT("_")); //replace / with _
+	FString AdjustedPackageName = FCognitiveEditorTools::GetInstance()->AdjustPathName(PackageName);
 	//check if the current scene is set up correctly with a SceneId and return the table row
-	if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*sceneName))
+	if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*AdjustedPackageName))
 	{
 		//check if the export folder has files for this dynamic object
 		bool hasExportedMesh = !InItem->MeshName.IsEmpty() && FCognitiveEditorTools::GetInstance()->DynamicMeshDirectoryExists(InItem->MeshName);
