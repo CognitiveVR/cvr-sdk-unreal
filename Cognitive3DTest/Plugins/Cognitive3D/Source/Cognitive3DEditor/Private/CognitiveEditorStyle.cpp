@@ -5,6 +5,7 @@
 #include "Styling/SlateStyleRegistry.h"
 #include "Interfaces/IPluginManager.h"
 #include "Brushes/SlateImageBrush.h"
+#include "Brushes/SlateColorBrush.h"
 #include "Misc/Paths.h"
 
 TSharedPtr<FSlateStyleSet> FCognitiveEditorStyle::StyleInstance = nullptr;
@@ -74,6 +75,12 @@ void FCognitiveEditorStyle::Initialize()
                 ResourceDir / TEXT("customEvents.png"),
                 FVector2D(100, 100)
             )
+        );
+
+        // Code box styling - consistent across UE versions
+        StyleInstance->Set(
+            TEXT("CognitiveEditor.CodeBox"),
+            new FSlateColorBrush(FLinearColor(0.07f, 0.07f, 0.07f, 1.0f)) // Dark gray background
         );
 
         // Finally, register with Slate

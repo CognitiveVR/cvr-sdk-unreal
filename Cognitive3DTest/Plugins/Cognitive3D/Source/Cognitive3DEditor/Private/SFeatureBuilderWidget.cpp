@@ -226,7 +226,7 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 					+ SVerticalBox::Slot().AutoHeight().Padding(5)
 					[
 						SNew(SBorder)
-						.BorderImage(FEditorStyle::GetBrush("DetailsView.CategoryMiddle"))
+						.BorderImage(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CodeBox")))
 						.Padding(8)
 						[
 							SNew(SMultiLineEditableText)
