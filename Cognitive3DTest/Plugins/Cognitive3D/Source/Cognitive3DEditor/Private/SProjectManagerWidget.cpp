@@ -990,6 +990,9 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 							})
 							.HAlign(HAlign_Center)
 							.VAlign(VAlign_Center)
+							.IsEnabled_Lambda([this]() {
+								return bIsDeveloperKeyValid;
+							})
 							.OnClicked_Lambda([this]() -> FReply {
 							this->FinalizeProjectSetup();
 							return FReply::Handled();
@@ -1133,11 +1136,13 @@ void SProjectManagerWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr Reque
 	int32 responseCode = Response->GetResponseCode();
 	if (responseCode == 200)
 	{
+		bIsDeveloperKeyValid = true;
 		GLog->Log("Developer Key Response Code is 200");
 		//CurrentPageEnum = EProjectSetupPage::OrganizationDetails;
 	}
 	else
 	{
+		bIsDeveloperKeyValid = false;
 		SGenericDialogWidget::OpenDialog(FText::FromString("Your developer key has expired"), SNew(STextBlock).Text(FText::FromString("Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.")));
 		GLog->Log("Developer Key Response Code is " + FString::FromInt(responseCode) + ". Developer key may be invalid or expired");
 	}

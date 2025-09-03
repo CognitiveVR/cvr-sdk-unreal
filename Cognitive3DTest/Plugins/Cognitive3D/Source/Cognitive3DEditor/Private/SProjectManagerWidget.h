@@ -78,6 +78,8 @@ public:
 	TMap<FString, bool> SDKCheckboxStates;
 	TMap<FString, bool> InitialSDKCheckboxStates;
 
+	bool bIsDeveloperKeyValid = false;
+
 	FString DisplayAPIKey;
 	FText GetDisplayAPIKey() const;
 	void OnAPIKeyChanged(const FText& Text);

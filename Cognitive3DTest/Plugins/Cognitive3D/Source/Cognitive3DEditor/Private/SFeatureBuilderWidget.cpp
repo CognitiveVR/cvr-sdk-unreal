@@ -22,6 +22,10 @@
 #include "BlueprintEditorUtils.h"
 #include <KismetEditorUtilities.h>
 #include "SegmentAnalytics.h"
+#include "HttpModule.h"
+#include "Interfaces/IHttpRequest.h"
+#include "Interfaces/IHttpResponse.h"
+#include "CognitiveEditorTools.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SFeatureBuilderWidget::Construct(const FArguments& InArgs)
@@ -44,6 +48,13 @@ void SFeatureBuilderWidget::Construct(const FArguments& InArgs)
 		  FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CustomEvents")),
 		  FText::FromString("Samples showing how to record custom events in C++ and Blueprints") }
 	};
+
+    // Validate developer key on startup
+    FString developerKey = FCognitiveEditorTools::GetInstance()->GetDeveloperKey().ToString();
+	if (!developerKey.IsEmpty())
+	{
+		CheckForExpiredDeveloperKey(developerKey);
+	}
 
 	ChildSlot
 		[
@@ -82,6 +93,9 @@ TSharedRef<SWidget> SFeatureBuilderWidget::BuildFeatureList()
 			[
 				SNew(SButton)
 					.HAlign(HAlign_Left)
+					.IsEnabled_Lambda([this]() {
+						return bIsDeveloperKeyValid;
+					})
 					.OnClicked(this, &SFeatureBuilderWidget::OnFeatureClicked, Feature.Key)
 					[
 						SNew(SHorizontalBox)
@@ -500,6 +514,41 @@ FReply SFeatureBuilderWidget::OnToggleRemoteControlsComponent()
 	}
 	
 	return FReply::Handled();
+}
+
+void SFeatureBuilderWidget::CheckForExpiredDeveloperKey(FString developerKey)
+{
+	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+	GConfig->Flush(true, C3DSettingsPath);
+	auto Request = FHttpModule::Get().CreateRequest();
+	Request->OnProcessRequestComplete().BindRaw(this, &SFeatureBuilderWidget::OnDeveloperKeyResponseReceived);
+	FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	FString url = "https://" + gateway + "/v0/apiKeys/verify";
+	Request->SetURL(url);
+	Request->SetVerb("GET");
+	Request->SetHeader(TEXT("Authorization"), "APIKEY:DEVELOPER " + developerKey);
+	Request->ProcessRequest();
+}
+
+void SFeatureBuilderWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (Response.IsValid() == false)
+	{
+		GLog->Log("SFeatureBuilderWidget::OnDeveloperKeyResponseReceived invalid response");
+		return;
+	}
+
+	int32 responseCode = Response->GetResponseCode();
+	if (responseCode == 200)
+	{
+		bIsDeveloperKeyValid = true;
+		GLog->Log("Feature Builder: Developer Key Response Code is 200");
+	}
+	else
+	{
+		bIsDeveloperKeyValid = false;
+		GLog->Log("Feature Builder: Developer Key Response Code is " + FString::FromInt(responseCode) + ". Developer key may be invalid or expired");
+	}
 }
 
 FReply SFeatureBuilderWidget::OnBackClicked()

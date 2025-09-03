@@ -30,6 +30,8 @@ private:
     struct FFeature { FName Key; FText DisplayName; const FSlateBrush* Icon; FText Desc; };
     TArray<FFeature> FeatureList;
 
+    bool bIsDeveloperKeyValid = false;
+
     // Detail holder updates dynamically
     TSharedPtr<SBox> DetailBox;
 
@@ -50,6 +52,9 @@ private:
     bool HasRemoteControlsComponent() const;
     //custom events
 	FReply OnLaunchCustomEvents();
+    //developer key validation
+    void CheckForExpiredDeveloperKey(FString developerKey);
+    void OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
     //other
     FReply OnBackClicked();
 };
