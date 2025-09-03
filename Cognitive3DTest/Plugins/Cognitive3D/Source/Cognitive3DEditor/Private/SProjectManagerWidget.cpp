@@ -300,7 +300,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 													SAssignNew(OrgExpiryTextBlock, STextBlock)
 														.Visibility(EVisibility::Visible)
 														.Justification(ETextJustify::Center)
-														.Text(FText::FromString("Unknown Organization Expirey Date"))
+														.Text(FText::FromString("Unknown Organization Expiry Date"))
 												]
 
 												+ SVerticalBox::Slot()
@@ -310,7 +310,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 													SAssignNew(DeveloperKeyExpiryTextBlock, STextBlock)
 														.Visibility(EVisibility::Visible)
 														.Justification(ETextJustify::Center)
-														.Text(FText::FromString("Unknown Developer Key Expirey Date"))
+														.Text(FText::FromString("Unknown Developer Key Expiry Date"))
 												]
 
 												+ SVerticalBox::Slot()
