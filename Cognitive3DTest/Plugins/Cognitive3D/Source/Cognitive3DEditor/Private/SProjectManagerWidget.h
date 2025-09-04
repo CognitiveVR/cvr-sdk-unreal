@@ -95,7 +95,6 @@ public:
 	TSharedPtr<STextBlock> OrgNameTextBlock;
 	TSharedPtr<STextBlock> OrgSubscriptionTextBlock;
 	TSharedPtr<STextBlock> OrgExpiryTextBlock;
-	TSharedPtr<STextBlock> OrgTrialTextBlock;
 	TSharedPtr<STextBlock> DeveloperKeyExpiryTextBlock;
 
 	//export path

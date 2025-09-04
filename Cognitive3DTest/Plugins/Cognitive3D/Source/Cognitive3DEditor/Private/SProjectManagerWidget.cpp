@@ -227,7 +227,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 														.AutoWrapText(true)
 														.Justification(ETextJustify::Center)
 														.DecoratorStyleSet(&FEditorStyle::Get())
-														.Text(FText::FromString("Please add your <RichTextBlock.BoldHighlight>Cognitive3D Project API Keys</> below to continue\nThese are available on the Project Dashboard"))
+														.Text(FText::FromString("Please add your <RichTextBlock.BoldHighlight>Cognitive3D Project Developer Key</> below to continue\nThis is available on the Project Dashboard"))
 												]
 												//dev key
 												+ SVerticalBox::Slot()
@@ -246,7 +246,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																[
 																	SNew(STextBlock)
 																		.Visibility(EVisibility::Visible)
-																		.Text(FText::FromString("Developer Key\nThis key is secret and should be kept safe, make sure not to commit to version control"))
+																		.Text(FText::FromString("Developer Key\nThis key is secret. It should not be committed to version control"))
 																]
 														]
 														+ SHorizontalBox::Slot()
@@ -264,6 +264,29 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																]
 														]
 												]
+
+												//validate keys button
+												+ SVerticalBox::Slot()
+												.AutoHeight()
+												.Padding(0, 0, 0, 5)
+												[
+													SNew(SBox)
+														.HAlign(HAlign_Center)
+														.VAlign(VAlign_Center)
+														//set width/height override to match the image size
+														//.HeightOverride(150)
+														.WidthOverride(256)
+														.HeightOverride(32)
+														.Visibility(EVisibility::Visible)
+														[
+															SNew(SButton)
+																//.ContentPadding(0)
+																.Text(FText::FromString("Validate Developer Key"))
+																.OnClicked(this, &SProjectManagerWidget::ValidateKeys)
+														]
+												]
+
+												//separator
 												+ SVerticalBox::Slot()
 												.AutoHeight()
 												.Padding(0, 0, 0, 5)
@@ -281,16 +304,6 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 														.Visibility(EVisibility::Visible)
 														.Justification(ETextJustify::Center)
 														.Text(FText::FromString("Unknown Organization Name"))
-												]
-
-												+ SVerticalBox::Slot()
-												.AutoHeight()
-												.Padding(0, 0, 0, 5)
-												[
-													SAssignNew(OrgTrialTextBlock, STextBlock)
-														.Visibility(EVisibility::Visible)
-														.Justification(ETextJustify::Center)
-														.Text(FText::FromString("Unknown Organization Trial Status"))
 												]
 
 												+ SVerticalBox::Slot()
@@ -348,28 +361,6 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 														]
 												]
 
-												//validate keys button
-												+ SVerticalBox::Slot()
-												.AutoHeight()
-												.Padding(0, 0, 0, 5)
-												[
-													SNew(SBox)
-														.HAlign(HAlign_Center)
-														.VAlign(VAlign_Center)
-														//set width/height override to match the image size
-														//.HeightOverride(150)
-														.WidthOverride(256)
-														.HeightOverride(32)
-														.Visibility(EVisibility::Visible)
-														[
-															SNew(SButton)
-																//.ContentPadding(0)
-																.Text(FText::FromString("Validate Developer Key and Fetch Application Key"))
-																.OnClicked(this, &SProjectManagerWidget::ValidateKeys)
-														]
-												]
-								
-
 										]
 								]
 
@@ -411,7 +402,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																		.AutoWrapText(true)
 																		.Justification(ETextJustify::Center)
 																		.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
-																		.Text(FText::FromString("The Cognitive3DActor Blueprint automatically finds your player's controllers in run-time and assigns dynamic objects to them to be tracked for valuable insights on our dashboard.\n\n You do not have to set those up manually, or export and upload a mesh for them to be tracked like other dynamic objects."))
+																		.Text(FText::FromString("Controllers are tracked automatically."))
 																]
 														]
 														+SVerticalBox::Slot()
@@ -511,7 +502,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																	.Visibility(EVisibility::Visible)
 																	.Justification(ETextJustify::Center)
 																	.AutoWrapText(true)
-																	.Text(FText::FromString("When uploading your level to the dashboard, we use Unreal's GLTF exporter to automatically prepare the scene.\nThis includes exporting images as .pngs\n\nWe also need a temporary Export Directory to save Unreal files to while we process them."))
+																	.Text(FText::FromString("Please select a temporary Export Directory to save exported scene files."))
 															]
 
 
@@ -1287,8 +1278,7 @@ void SProjectManagerWidget::GetOrganizationDetailsResponse(FHttpRequestPtr Reque
 		expiryPrettyDate.Append(", ");
 		expiryPrettyDate.Append(FString::FromInt(expiryDate.GetYear()));
 
-		OrgExpiryTextBlock->SetText(FText::FromString("Expiry Date: " + expiryPrettyDate));
-		OrgTrialTextBlock->SetText(responseObject.subscriptions[0].isFreeTrial ? FText::FromString("Is Trial: True") : FText::FromString("Is Trial: False"));
+		OrgExpiryTextBlock->SetText(FText::FromString("Organization License renewal date: " + expiryPrettyDate));
 	}
 }
 
@@ -1434,11 +1424,11 @@ FText SProjectManagerWidget::GetInputClassText() const
 	//get text based on whether or not enhanced input is the default input class
 	if (GetDefaultInputClassEnhanced() == EVisibility::Collapsed)
 	{
-		return FText::FromString("Project is using Enhanced Input, C3D will automatically track controller inputs.\nIf you would like us not to track controller inputs, remove the EnhancedInputTracker component from the Cognitive3D blueprint in the level");
+		return FText::FromString("The project is using Enhanced Input, controller inputs are recorded automatically.\nTo disabled recording inputs, remove the EnhancedInputTracker component from the Cognitive3D blueprint in the level");
 	}
 	else if (GetAppendedInputsFoundHidden() == EVisibility::Visible)
 	{
-		return FText::FromString("You can append inputs to your DefaultInput.ini file. This will allow you to visualize the button presses of the player.");
+		return FText::FromString("The project is not using Enhanced Inputs, controller inputs will need to be enabled.\nPress the button below to append inputs to your DefaultInput.ini file");
 	}
 	else
 	{
