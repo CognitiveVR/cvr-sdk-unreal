@@ -3820,7 +3820,10 @@ void FCognitiveEditorTools::SaveDeveloperKeyToFile(FString key)
 TSharedPtr<FEditorSceneData> FCognitiveEditorTools::GetCurrentSceneData() const
 {
 	UWorld* myworld = GWorld->GetWorld();
-
+	if(myworld == NULL)
+	{
+		return NULL;
+	}
 	FString currentSceneName = myworld->GetMapName();
 	currentSceneName.RemoveFromStart(myworld->StreamingLevelsPrefix);
 	// This is the full long package name, e.g. "/Game/Maps/MyMap"
@@ -3837,7 +3840,7 @@ TSharedPtr<FEditorSceneData> FCognitiveEditorTools::GetSceneData(FString scenena
 {
 	FString ShortName = scenename;
 	FString PathName = "";
-	if (scenename.Contains("_"))
+	if (scenename.Contains(SplitCharacter))
 	{
 		//UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::GetSceneData scenename %s contains _"), *scenename);
 		//scenename.Replace(TEXT("_"), TEXT("/"));

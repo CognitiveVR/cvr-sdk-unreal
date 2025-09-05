@@ -145,7 +145,6 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 		SceneNamesComboList.Add(MakeShareable(new FString(sceneData->Path + "/" + sceneData->Name)));
 	}
 	TSharedPtr<FEditorSceneData> tempSceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
-	TSharedPtr<FString> currentSceneFullPath = MakeShareable(new FString(tempSceneData->Path + "/" + tempSceneData->Name));
 
 	if (tempSceneData.IsValid())
 	{
