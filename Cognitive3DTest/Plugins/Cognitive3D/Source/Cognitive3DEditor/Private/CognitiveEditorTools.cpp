@@ -3469,6 +3469,72 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 			Array.Add("0");
 		}
 
+		//backwards compatibility for old scene data
+		if( Array.Num() == 4) //has name, id, version number, version id (missing path)
+		{
+			//use the scene name to find the path of the level
+			FString SceneName = Array[0];
+			FString ScenePath = TEXT("");
+			
+			// Use AssetRegistry to find the level/map with matching name
+			FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+			IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+			
+			FARFilter Filter;
+#if ENGINE_MAJOR_VERSION == 4
+			Filter.ClassNames.Add(UWorld::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 0 
+			Filter.ClassNames.Add(UWorld::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1
+			Filter.ClassPaths.Add(UWorld::StaticClass()->GetClassPathName());
+#endif
+			Filter.PackagePaths.Add(TEXT("/Game"));
+			Filter.bRecursivePaths = true;
+			
+			TArray<FAssetData> AssetData;
+			AssetRegistry.GetAssets(Filter, AssetData);
+			
+			// Look for a level/map with the same name
+			for (const FAssetData& Asset : AssetData)
+			{
+				if (Asset.AssetName.ToString() == SceneName)
+				{
+					FString FullPackagePath = Asset.PackageName.ToString();
+					// Remove the level name to get just the directory path
+					// e.g., "/Game/Maps/VRMap" becomes "/Game/Maps"
+					ScenePath = FPaths::GetPath(FullPackagePath);
+					break;
+				}
+			}
+			
+			if (!ScenePath.IsEmpty())
+			{
+				// Insert the found path at index 1, shifting other elements down
+				Array.Insert(ScenePath, 1);
+				UE_LOG(LogTemp, Log, TEXT("FCognitiveTools::RefreshSceneData backwards compatibility - found path %s for scene %s"), *ScenePath, *SceneName);
+			}
+			else
+			{
+				// If we can't find the path, insert a placeholder to maintain array structure
+				Array.Insert(TEXT("/Game/UnknownPath"), 1);
+				UE_LOG(LogTemp, Warning, TEXT("FCognitiveTools::RefreshSceneData backwards compatibility - could not find path for scene %s"), *SceneName);
+			}
+			
+			// Update this specific SceneData entry in the config file
+			FString UpdatedSceneData = FString::Join(Array, TEXT(","));
+			scenstrings[i] = UpdatedSceneData;  // Update the specific entry in the array
+			
+			// Write the entire updated scenstrings array back to config
+			FString ConfigPath = GetSettingsFilePath();
+			GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), 
+				TEXT("SceneData"), 
+				scenstrings, 
+				ConfigPath);
+			GConfig->Flush(false, ConfigPath);
+			
+			UE_LOG(LogTemp, Log, TEXT("FCognitiveTools::RefreshSceneData updated specific SceneData entry: %s"), *UpdatedSceneData);
+		}
+
 		if (Array.Num() != 5) //has name, path, id, version number, version id
 		{
 			GLog->Log("FCognitiveTools::RefreshSceneData failed to parse " + scenstrings[i]);
