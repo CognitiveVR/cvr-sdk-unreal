@@ -207,7 +207,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 								.Padding(0,0,0,5)
 								[
 									SNew(SExpandableArea)
-										.InitiallyCollapsed(true)
+										.InitiallyCollapsed(false)
 										.HeaderContent()
 										[
 											SNew(STextBlock)
@@ -378,7 +378,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 										.Padding(0, 0, 0, 5)
 										[
 											SNew(SExpandableArea)
-												.InitiallyCollapsed(true)
+												.InitiallyCollapsed(false)
 												.HeaderContent()
 												[
 													SNew(STextBlock)
@@ -482,7 +482,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 											.Padding(0, 0, 0, 5)
 											[
 												SNew(SExpandableArea)
-													.InitiallyCollapsed(true)
+													.InitiallyCollapsed(false)
 													.HeaderContent()
 													[
 														SNew(STextBlock)
@@ -713,7 +713,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 												.Padding(0, 0, 0, 5)
 												[
 													SNew(SExpandableArea)
-														.InitiallyCollapsed(true)
+														.InitiallyCollapsed(false)
 														.HeaderContent()
 														[
 															SNew(STextBlock)

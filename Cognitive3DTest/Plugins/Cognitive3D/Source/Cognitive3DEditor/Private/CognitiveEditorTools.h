@@ -446,7 +446,7 @@ public:
 	FString AdjustPathName(FString OriginalPathName) const;
 
 	//flag for when uploading dynamics from full project setup
-	bool UploadingDynamicsFromFullSetup = false;
+	bool UploadingDynamicsFromFullSetup = true;
 	//flag for when uploading scenes from full project setup
 	bool UploadingScenesFromFullSetup = false;
 };
