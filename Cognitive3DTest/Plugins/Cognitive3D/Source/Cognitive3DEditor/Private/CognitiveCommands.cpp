@@ -13,7 +13,7 @@ void FCognitive3DCommands::RegisterCommands()
 	UI_COMMAND(OpenDynamicObjectWindow, "Dynamic Object Window", "Opens the Dynamic Object Window", EUserInterfaceActionType::Button, FInputGesture());
 	UI_COMMAND(OpenOnlineDocumentation, "Open Online Documentation...", "Opens online documentation in your default browser", EUserInterfaceActionType::Button, FInputGesture());
 	UI_COMMAND(OpenCognitiveDashboard, "Open Dashboard...", "Opens the Dashboard in your default browser", EUserInterfaceActionType::Button, FInputGesture());
-	UI_COMMAND(OpenFullC3DSetup, "Open Full Setup", "Opens the full setup window", EUserInterfaceActionType::Button, FInputGesture());
+	UI_COMMAND(OpenFullC3DSetup, "Open Project Setup", "Opens the project setup window", EUserInterfaceActionType::Button, FInputGesture());
 	UI_COMMAND(OpenFeatureBuilder, "Open Feature Builder", "Opens the Feature Builder Window for Dynamic Object Management and more", EUserInterfaceActionType::Button, FInputGesture());
 }
 

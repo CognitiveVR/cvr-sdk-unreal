@@ -36,7 +36,7 @@ void SFeatureBuilderWidget::Construct(const FArguments& InArgs)
 		  FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.DynamicObjectsIcon")),
 		  FText::FromString("Manage Dynamic Objects in your project.") },
 
-		{ TEXT("ExitPoll"), FText::FromString("Exit Poll"),
+		{ TEXT("ExitPoll"), FText::FromString("ExitPoll Survey"),
 		  FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.ExitPollIcon")),
 		  FText::FromString("Set up ExitPoll surveys for your project.") },
 
@@ -202,7 +202,7 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 				.HAlign(HAlign_Fill)
 				[
 					SNew(STextBlock)
-					.Text(FText::FromString("Exit Poll allows you to gather feedback from users at any point during their session. Create custom questionnaires to understand user experience, collect ratings, and gain insights into user behavior and preferences."))
+					.Text(FText::FromString("ExitPoll Surveys allow you to gather feedback from users at any point during their session. Create custom questionnaires to understand user experience, collect ratings, and gain insights into user behavior and preferences."))
 					.AutoWrapText(true)
 					.Font(FEditorStyle::GetFontStyle("RegularText"))
 					.Justification(ETextJustify::Left)
