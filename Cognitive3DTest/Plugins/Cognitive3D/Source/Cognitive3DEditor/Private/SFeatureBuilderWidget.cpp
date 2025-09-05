@@ -62,14 +62,6 @@ void SFeatureBuilderWidget::Construct(const FArguments& InArgs)
 				.WidthOverride(600).HeightOverride(400)
 				[
 					SNew(SVerticalBox)
-						+ SVerticalBox::Slot()
-						.AutoHeight()
-						.Padding(5)
-						[
-							SNew(STextBlock)
-						.Text(FText::FromString("Explore the features ofour platform. Each feature unlocks powerful capabilities you can use in your experience, from Dynamic Objects to live control and more."))
-						.Font(FEditorStyle::GetFontStyle("Heading"))
-						]
 						+SVerticalBox::Slot()
 						.FillHeight(1)
 						.Padding(5)
@@ -90,7 +82,15 @@ void SFeatureBuilderWidget::Construct(const FArguments& InArgs)
 }
 TSharedRef<SWidget> SFeatureBuilderWidget::BuildFeatureList()
 {
-	TSharedRef<SVerticalBox> Box = SNew(SVerticalBox);
+	TSharedRef<SVerticalBox> Box = SNew(SVerticalBox)
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(5)
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString("Explore the features of our platform. Each feature unlocks powerful capabilities you can use in your experience, from Dynamic Objects to live control and more."))
+			.Font(FEditorStyle::GetFontStyle("Heading"))
+		];
 	for (const FFeature& Feature : FeatureList)
 	{
 		Box->AddSlot()
@@ -143,14 +143,34 @@ TSharedRef<SWidget> SFeatureBuilderWidget::BuildFeatureList()
 TSharedRef<SWidget> SFeatureBuilderWidget::BuildFeatureDetail()
 {
 	return SNew(SVerticalBox)
-		// Back button
+		// Back button and header
 		+ SVerticalBox::Slot()
 		.AutoHeight()
+		.HAlign(HAlign_Left)
 		.Padding(5)
 		[
-			SNew(SButton)
-			.Text(FText::FromString("<-Back"))
-			.OnClicked(this, &SFeatureBuilderWidget::OnBackClicked)
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.VAlign(VAlign_Center)
+			.Padding(0, 0, 15, 0)
+			[
+				SNew(SBox)
+				.WidthOverride(FOptionalSize())
+				[
+					SNew(SButton)
+					.Text(FText::FromString("<-Back"))
+					.OnClicked(this, &SFeatureBuilderWidget::OnBackClicked)
+				]
+			]
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.VAlign(VAlign_Center)
+			[
+				SNew(STextBlock)
+				.Text(this, &SFeatureBuilderWidget::GetSelectedFeatureDisplayName)
+				.TextStyle(FCognitiveEditorStyle::GetStyleSet().Get(), "CognitiveEditor.FeatureButtonTitle")
+			]
 		]
 
 		// Dynamic detail area
@@ -176,35 +196,39 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 		return SNew(SVerticalBox)
 			+ SVerticalBox::Slot()
 			.AutoHeight()
+			.HAlign(HAlign_Left)
 			.Padding(5)
 			[
 				SNew(STextBlock)
-			.Text(FText::FromString("Exit Poll Setup"))
-			.Font(FEditorStyle::GetFontStyle("Heading"))
+				.Text(FText::FromString("Exit Poll allows you to gather feedback from users at any point during their session. Create custom questionnaires to understand user experience, collect ratings, and gain insights into user behavior and preferences."))
+				.AutoWrapText(true)
+				.Font(FEditorStyle::GetFontStyle("RegularText"))
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
+			.HAlign(HAlign_Center)
 			.Padding(5)
 			[
-				SNew(STextBlock)
-			.Text(FText::FromString("ExitPoll allows you to set up a survey for players at any point in the level progression.\nBelow is a button to open the documentation in a browser, and another to add the exitpoll object to the currently open level"))
-			.AutoWrapText(true)
-			]
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(5)
-			[
-				SNew(SButton)
-			.Text(FText::FromString("ExitPoll Documentation"))
-			.OnClicked(this, &SFeatureBuilderWidget::OnLaunchExitPoll)
+				SNew(SBox)
+				.WidthOverride(FOptionalSize())
+				[
+					SNew(SButton)
+					.Text(FText::FromString("ExitPoll Documentation"))
+					.OnClicked(this, &SFeatureBuilderWidget::OnLaunchExitPoll)
+				]
 			]
 			+SVerticalBox::Slot()
 			.AutoHeight()
+			.HAlign(HAlign_Center)
 			.Padding(5)
 			[
-				SNew(SButton)
-			.Text(FText::FromString("Add ExitPoll Blueprint"))
-			.OnClicked(this, &SFeatureBuilderWidget::OnAddExitPollBlueprint)
+				SNew(SBox)
+				.WidthOverride(FOptionalSize())
+				[
+					SNew(SButton)
+					.Text(FText::FromString("Add ExitPoll Blueprint"))
+					.OnClicked(this, &SFeatureBuilderWidget::OnAddExitPollBlueprint)
+				]
 			];
 	}
 	else if (SelectedFeature == TEXT("RemoteControls"))
@@ -213,39 +237,43 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 		return SNew(SVerticalBox)
 			+ SVerticalBox::Slot()
 			.AutoHeight()
+			.HAlign(HAlign_Left)
 			.Padding(5)
 			[
 				SNew(STextBlock)
-			.Text(FText::FromString("Remote Controls"))
-			.Font(FEditorStyle::GetFontStyle("Heading"))
+				.Text(FText::FromString("Remote Controls allow you to modify variables in your application in real-time from the Cognitive3D dashboard. Change gameplay parameters, adjust difficulty, or update content without rebuilding your application."))
+				.AutoWrapText(true)
+				.Font(FEditorStyle::GetFontStyle("RegularText"))
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
+			.HAlign(HAlign_Center)
 			.Padding(5)
 			[
-				SNew(STextBlock)
-			.Text(FText::FromString("Add Remote Controls component to the BP_Cognitive3DActor to allow for the use of remote control variables from the dashboard.\nBelow is a button to check out the documentation, and another to add the component."))
-			.AutoWrapText(true)
-			]
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(5)
-			[
-				SNew(SButton)
+				SNew(SBox)
+				.WidthOverride(FOptionalSize())
+				[
+					SNew(SButton)
 					.Text(FText::FromString("RemoteControls Documentation"))
 					.OnClicked(this, &SFeatureBuilderWidget::OnLaunchRemoteControls)
+				]
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
+			.HAlign(HAlign_Center)
 			.Padding(5)
 			[
-				SNew(SButton)
+				SNew(SBox)
+				.WidthOverride(FOptionalSize())
+				[
+					SNew(SButton)
 					.Text_Lambda([this]() {
 						return HasRemoteControlsComponent() 
 							? FText::FromString("Remove RemoteControls Component")
 							: FText::FromString("Add RemoteControls Component");
 					})
 					.OnClicked(this, &SFeatureBuilderWidget::OnToggleRemoteControlsComponent)
+				]
 			];
 	}
 	else if (SelectedFeature == TEXT("CustomEvents"))
@@ -257,51 +285,78 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 					SNew(SVerticalBox)
 					+ SVerticalBox::Slot()
 						.AutoHeight()
+						.HAlign(HAlign_Left)
 						.Padding(5)
 					[
 						SNew(STextBlock)
-					.Text(FText::FromString("Custom Events"))
-					.Font(FEditorStyle::GetFontStyle("Heading"))]
+						.Text(FText::FromString("Custom Events let you track specific interactions, achievements, or moments in your application. Send events with custom data to analyze user behavior, measure engagement, and understand how users interact with your content."))
+						.AutoWrapText(true)
+						.Font(FEditorStyle::GetFontStyle("RegularText"))
+					]
 					+ SVerticalBox::Slot()
 						.AutoHeight()
-						.Padding(5)
-					[
-						SNew(SButton)
-					.Text(FText::FromString("Custom Event Documentation"))
-					.OnClicked(this, &SFeatureBuilderWidget::OnLaunchCustomEvents)]
-					+ SVerticalBox::Slot()
-						.AutoHeight()
-						.Padding(5)
-					[
-						SNew(STextBlock)
-					.Text(FText::FromString("Here is a Blueprint and C++ sample showing simple use of the custom event."))
-					.AutoWrapText(true)]
-					+ SVerticalBox::Slot()
-						.Padding(5)
 						.HAlign(HAlign_Center)
-						.MaxHeight(200)
+						.Padding(5)
 					[
-						SNew(SHorizontalBox)
-						+SHorizontalBox::Slot()
-							.MaxWidth(500)
-							.Padding(5)
+						SNew(SBox)
+						.WidthOverride(FOptionalSize())
 						[
-						SNew(SImage)
-						.Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CustomEventsSimple")))
+							SNew(SButton)
+							.Text(FText::FromString("Custom Event Documentation"))
+							.OnClicked(this, &SFeatureBuilderWidget::OnLaunchCustomEvents)
 						]
 					]
-					+ SVerticalBox::Slot().AutoHeight().Padding(5)
+					+ SVerticalBox::Slot()
+						.AutoHeight()
+						.HAlign(HAlign_Left)
+						.Padding(5)
 					[
-						SNew(SBorder)
-						.BorderImage(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CodeBox")))
-						.Padding(8)
+						SNew(STextBlock)
+						.Text(FText::FromString("Blueprint Example:"))
+						.AutoWrapText(true)
+						.Font(FEditorStyle::GetFontStyle("HeadingSmall"))
+					]
+					+ SVerticalBox::Slot()
+						.AutoHeight()
+						.HAlign(HAlign_Center)
+						.Padding(5)
+					[
+						SNew(SBox)
+						.WidthOverride(FOptionalSize())
+						.HeightOverride(FOptionalSize())
 						[
-							SNew(SMultiLineEditableText)
-							.Text(FText::FromString("TWeakPtr<FAnalyticsProviderCognitive3D> provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();\nif (provider.IsValid())\n{\n\t//send an event with a name\n\tprovider.Pin()->customEventRecorder->Send(\"My Event\");\n\t//send an event with a name and a position\n\tprovider.Pin()->customEventRecorder->Send(\"My Event With Position\", FVector(0, 100, 0));\n}"))
-							.IsReadOnly(true)
-							.SelectAllTextWhenFocused(false)
-							.Font(FEditorStyle::Get().GetFontStyle("MonoFont"))
-							.AutoWrapText(false)
+							SNew(SImage)
+							.Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CustomEventsSimple")))
+						]
+					]
+					+ SVerticalBox::Slot()
+						.AutoHeight()
+						.HAlign(HAlign_Left)
+						.Padding(5, 15, 5, 5)
+					[
+						SNew(STextBlock)
+						.Text(FText::FromString("C++ Example:"))
+						.Font(FEditorStyle::GetFontStyle("HeadingSmall"))
+					]
+					+ SVerticalBox::Slot()
+						.AutoHeight()
+						.HAlign(HAlign_Center)
+						.Padding(5)
+					[
+						SNew(SBox)
+						.WidthOverride(FOptionalSize())
+						[
+							SNew(SBorder)
+							.BorderImage(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CodeBox")))
+							.Padding(8)
+							[
+								SNew(SMultiLineEditableText)
+								.Text(FText::FromString("TWeakPtr<FAnalyticsProviderCognitive3D> provider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider();\nif (provider.IsValid())\n{\n\t//send an event with a name\n\tprovider.Pin()->customEventRecorder->Send(\"My Event\");\n\t//send an event with a name and a position\n\tprovider.Pin()->customEventRecorder->Send(\"My Event With Position\", FVector(0, 100, 0));\n}"))
+								.IsReadOnly(true)
+								.SelectAllTextWhenFocused(false)
+								.Font(FEditorStyle::Get().GetFontStyle("MonoFont"))
+								.AutoWrapText(false)
+							]
 						]
 					]
 			];
@@ -616,6 +671,18 @@ void SFeatureBuilderWidget::OnDeveloperKeyResponseReceived(FHttpRequestPtr Reque
 		bIsDeveloperKeyValid = false;
 		GLog->Log("Feature Builder: Developer Key Response Code is " + FString::FromInt(responseCode) + ". Developer key may be invalid or expired");
 	}
+}
+
+FText SFeatureBuilderWidget::GetSelectedFeatureDisplayName() const
+{
+	for (const FFeature& Feature : FeatureList)
+	{
+		if (Feature.Key == SelectedFeature)
+		{
+			return Feature.DisplayName;
+		}
+	}
+	return FText::FromString("Unknown Feature");
 }
 
 FReply SFeatureBuilderWidget::OnBackClicked()

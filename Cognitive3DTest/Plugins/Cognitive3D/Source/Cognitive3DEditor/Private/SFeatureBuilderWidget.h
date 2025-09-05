@@ -26,6 +26,9 @@ private:
 
     // Switcher index getter
     int32 GetPageIndex() const { return static_cast<int32>(CurrentMode); }
+    
+    // Get display name for selected feature
+    FText GetSelectedFeatureDisplayName() const;
 
     struct FFeature { FName Key; FText DisplayName; const FSlateBrush* Icon; FText Desc; };
     TArray<FFeature> FeatureList;

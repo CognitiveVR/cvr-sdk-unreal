@@ -45,7 +45,7 @@ void FCognitiveEditorStyle::Initialize()
 			TEXT("CognitiveEditor.CustomEventsSimple"),
 			new FSlateImageBrush(
 				ResourceDir / TEXT("event-simple.png"),
-				FVector2D(500, 200)
+				FVector2D(400, 400)
 			)
 		);
 
