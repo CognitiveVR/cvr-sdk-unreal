@@ -154,22 +154,33 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 					.HAlign(HAlign_Center)
 					.Padding(0, 0, 0, 10)
 					[
-						SNew(SImage)
+						SNew(SBox)
+						.MaxDesiredWidth(800.0f)
+						.HeightOverride(FOptionalSize())
+						[
+							SNew(SImage)
 							.Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.Banner")))
+							.ColorAndOpacity(FLinearColor::White)
+						]
 					]
 
 					
 					//Introductory Text under the banner
 					+SVerticalBox::Slot()
 					.AutoHeight()
-					.HAlign(HAlign_Center)
 					.Padding(0, 0, 0, 20)
 					[
-						SNew(STextBlock)
+						SNew(SBox)
+						.HAlign(HAlign_Fill)
+						.WidthOverride(FOptionalSize())
+						[
+							SNew(STextBlock)
 							.AutoWrapText(true)
+							.Justification(ETextJustify::Center)
 							.Text(FText::FromString(
 								TEXT("Welcome to the Cognitive3D setup. Use the panels below to configure authentication, "
 									"select your third-party SDKs, and prepare your scenes for export.")))
+						]
 					]
 
 					
@@ -416,14 +427,18 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 														+ SVerticalBox::Slot()
 														.AutoHeight()
 														.Padding(0, 0, 0, 5)
-														.HAlign(EHorizontalAlignment::HAlign_Center)
 														[
-															SNew(SRichTextBlock)
+															SNew(SBox)
+															.HAlign(HAlign_Fill)
+															.WidthOverride(FOptionalSize())
+															[
+																SNew(SRichTextBlock)
 																.Visibility(EVisibility::Visible)
 																.AutoWrapText(true)
 																.Justification(ETextJustify::Center)
 																.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
 																.Text(this, &SProjectManagerWidget::GetInputClassText)
+															]
 														]
 
 														+ SVerticalBox::Slot()
@@ -503,19 +518,6 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																	.Justification(ETextJustify::Center)
 																	.AutoWrapText(true)
 																	.Text(FText::FromString("Please select a temporary Export Directory to save exported scene files."))
-															]
-
-
-
-															+SVerticalBox::Slot()
-															.VAlign(VAlign_Center)
-															.AutoHeight()
-															.Padding(0, 0, 0, 5)
-															[
-																SNew(STextBlock)
-																	.Visibility(EVisibility::Visible)
-																	.Justification(ETextJustify::Center)
-																	.Text(FText::FromString("You will need to create a temporary directory to store the exported files."))
 															]
 
 															+ SVerticalBox::Slot()
@@ -974,7 +976,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 								
 								if (bDidChangeSDKs && bAnySelected)
 								{
-									return FText::FromString(TEXT("Upload Scene(s), Recompile and Finalize Project"));
+									return FText::FromString(TEXT("Upload Scene(s), Recompile and Finish Setup"));
 								}
 								else if (bDidChangeSDKs && !bAnySelected)
 								{
