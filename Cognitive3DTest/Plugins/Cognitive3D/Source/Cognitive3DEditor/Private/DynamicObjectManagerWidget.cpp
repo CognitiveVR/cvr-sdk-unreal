@@ -1035,11 +1035,14 @@ void SDynamicObjectManagerWidget::OnSceneNamesChanged(TSharedPtr<FString> NewSel
 	// if it's set from code, we did that on purpose
 	//if (SelectInfo != ESelectInfo::Direct)
 	{
-		SceneDisplayName = NewSelection;
-		//AdjustedSceneDisplayName = MakeShareable(new FString(SceneDisplayName->Replace(TEXT("/"), TEXT("_"))));
-		if (SceneDisplayName->Len() > 0)
+		if (NewSelection.IsValid())
 		{
-			AdjustedSceneDisplayName = MakeShareable(new FString(FCognitiveEditorTools::GetInstance()->AdjustPathName(*SceneDisplayName)));
+			SceneDisplayName = NewSelection;
+			//AdjustedSceneDisplayName = MakeShareable(new FString(SceneDisplayName->Replace(TEXT("/"), TEXT("_"))));
+			if (SceneDisplayName->Len() > 0)
+			{
+				AdjustedSceneDisplayName = MakeShareable(new FString(FCognitiveEditorTools::GetInstance()->AdjustPathName(*SceneDisplayName)));
+			}
 		}
 	}
 	RefreshDisplayDynamicObjectsCountInScene();
