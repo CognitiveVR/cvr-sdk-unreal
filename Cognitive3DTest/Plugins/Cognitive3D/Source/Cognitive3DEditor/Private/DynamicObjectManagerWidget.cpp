@@ -1037,7 +1037,10 @@ void SDynamicObjectManagerWidget::OnSceneNamesChanged(TSharedPtr<FString> NewSel
 	{
 		SceneDisplayName = NewSelection;
 		//AdjustedSceneDisplayName = MakeShareable(new FString(SceneDisplayName->Replace(TEXT("/"), TEXT("_"))));
-		AdjustedSceneDisplayName = MakeShareable(new FString(FCognitiveEditorTools::GetInstance()->AdjustPathName(*SceneDisplayName)));
+		if (SceneDisplayName->Len() > 0)
+		{
+			AdjustedSceneDisplayName = MakeShareable(new FString(FCognitiveEditorTools::GetInstance()->AdjustPathName(*SceneDisplayName)));
+		}
 	}
 	RefreshDisplayDynamicObjectsCountInScene();
 }
