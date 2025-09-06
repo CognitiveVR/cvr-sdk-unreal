@@ -1035,10 +1035,10 @@ void SDynamicObjectManagerWidget::OnSceneNamesChanged(TSharedPtr<FString> NewSel
 	// if it's set from code, we did that on purpose
 	//if (SelectInfo != ESelectInfo::Direct)
 	{
-		SceneDisplayName = NewSelection;
 		//AdjustedSceneDisplayName = MakeShareable(new FString(SceneDisplayName->Replace(TEXT("/"), TEXT("_"))));
-		if (SceneDisplayName->Len() > 0)
+		if (SceneDisplayName.IsValid() && NewSelection.IsValid() && !NewSelection->IsEmpty())
 		{
+			SceneDisplayName = NewSelection;
 			AdjustedSceneDisplayName = MakeShareable(new FString(FCognitiveEditorTools::GetInstance()->AdjustPathName(*SceneDisplayName)));
 		}
 	}
@@ -1048,6 +1048,11 @@ void SDynamicObjectManagerWidget::OnSceneNamesChanged(TSharedPtr<FString> NewSel
 void SDynamicObjectManagerWidget::OnSceneNamesComboOpening()
 {
 	SceneNamesComboList.Empty();
+	if (FCognitiveEditorTools::GetInstance()->GetSceneData().Num() == 0)
+	{
+		//no scenes uploaded
+		return;
+	}
 	for (auto sceneData : FCognitiveEditorTools::GetInstance()->GetSceneData())
 	{
 		SceneNamesComboList.Add(MakeShareable(new FString(sceneData->Path + "/" + sceneData->Name)));
