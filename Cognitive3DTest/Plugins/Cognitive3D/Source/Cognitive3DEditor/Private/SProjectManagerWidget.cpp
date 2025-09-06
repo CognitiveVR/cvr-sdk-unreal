@@ -731,7 +731,12 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																.AutoHeight()
 																.Padding(5, 2)
 																[
+																	SNew(SVerticalBox)
+																	+ SVerticalBox::Slot()
+																	.AutoHeight()
+																	[
 																		SNew(SCheckBox)
+																		.ToolTipText(FText::FromString(TEXT("Enables Meta Quest/Rift VR headset support and hand tracking functionality")))
 																		.IsChecked_Lambda([this]() {
 																		return SDKCheckboxStates.FindRef(TEXT("MetaXR"))
 																			? ECheckBoxState::Checked
@@ -746,7 +751,16 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																			SNew(STextBlock)
 																				.Text(FText::FromString(TEXT("MetaXR")))
 																		]
-														
+																	]
+																	+ SVerticalBox::Slot()
+																	.AutoHeight()
+																	.Padding(20, 0, 0, 5)
+																	[
+																		SNew(STextBlock)
+																		.Text(FText::FromString(TEXT("Meta Quest/Rift VR headset and hand tracking support")))
+																		.Font(FEditorStyle::GetFontStyle("SmallText"))
+																		.ColorAndOpacity(FSlateColor::UseSubduedForeground())
+																	]
 																]
 
 																// MetaXRPlatform (only enabled if MetaXR is checked)
@@ -754,7 +768,12 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																.AutoHeight()
 																.Padding(20, 2)
 																[
-																	SNew(SCheckBox)
+																	SNew(SVerticalBox)
+																	+ SVerticalBox::Slot()
+																	.AutoHeight()
+																	[
+																		SNew(SCheckBox)
+																		.ToolTipText(FText::FromString(TEXT("Enables Meta platform services including social features and achievements")))
 																		.IsEnabled_Lambda([this]() {
 																		return SDKCheckboxStates.FindRef(TEXT("MetaXR"));
 																			})
@@ -772,6 +791,16 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																			SNew(STextBlock)
 																				.Text(FText::FromString(TEXT("MetaXRPlatform")))
 																		]
+																	]
+																	+ SVerticalBox::Slot()
+																	.AutoHeight()
+																	.Padding(20, 0, 0, 5)
+																	[
+																		SNew(STextBlock)
+																		.Text(FText::FromString(TEXT("Meta platform services and social features")))
+																		.Font(FEditorStyle::GetFontStyle("SmallText"))
+																		.ColorAndOpacity(FSlateColor::UseSubduedForeground())
+																	]
 																]
 
 																// PicoXR
@@ -779,7 +808,12 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																.AutoHeight()
 																.Padding(5, 2)
 																[
-																	SNew(SCheckBox)
+																	SNew(SVerticalBox)
+																	+ SVerticalBox::Slot()
+																	.AutoHeight()
+																	[
+																		SNew(SCheckBox)
+																		.ToolTipText(FText::FromString(TEXT("Enables Pico VR headset support and hand tracking")))
 																		.IsChecked_Lambda([this]() {
 																		return SDKCheckboxStates.FindRef(TEXT("PicoXR"))
 																			? ECheckBoxState::Checked
@@ -794,6 +828,16 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																			SNew(STextBlock)
 																				.Text(FText::FromString(TEXT("PicoXR")))
 																		]
+																	]
+																	+ SVerticalBox::Slot()
+																	.AutoHeight()
+																	.Padding(20, 0, 0, 5)
+																	[
+																		SNew(STextBlock)
+																		.Text(FText::FromString(TEXT("Pico VR headset and hand tracking support")))
+																		.Font(FEditorStyle::GetFontStyle("SmallText"))
+																		.ColorAndOpacity(FSlateColor::UseSubduedForeground())
+																	]
 																]
 
 																// WaveVR
@@ -801,7 +845,12 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																.AutoHeight()
 																.Padding(5, 2)
 																[
-																	SNew(SCheckBox)
+																	SNew(SVerticalBox)
+																	+ SVerticalBox::Slot()
+																	.AutoHeight()
+																	[
+																		SNew(SCheckBox)
+																		.ToolTipText(FText::FromString(TEXT("Enables HTC Vive Wave VR platform with eye tracking support")))
 																		.IsChecked_Lambda([this]() {
 																		return SDKCheckboxStates.FindRef(TEXT("WaveVR"))
 																			? ECheckBoxState::Checked
@@ -816,6 +865,16 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																			SNew(STextBlock)
 																				.Text(FText::FromString(TEXT("WaveVR")))
 																		]
+																	]
+																	+ SVerticalBox::Slot()
+																	.AutoHeight()
+																	.Padding(20, 0, 0, 5)
+																	[
+																		SNew(STextBlock)
+																		.Text(FText::FromString(TEXT("HTC Vive Wave platform with eye tracking")))
+																		.Font(FEditorStyle::GetFontStyle("SmallText"))
+																		.ColorAndOpacity(FSlateColor::UseSubduedForeground())
+																	]
 																]
 
 																// OpenXREyeTracking
@@ -823,7 +882,12 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																	.AutoHeight()
 																	.Padding(5, 2)
 																	[
-																		SNew(SCheckBox)
+																		SNew(SVerticalBox)
+																		+ SVerticalBox::Slot()
+																		.AutoHeight()
+																		[
+																			SNew(SCheckBox)
+																			.ToolTipText(FText::FromString(TEXT("Enables OpenXR-standard eye tracking for compatible headsets")))
 																			.IsChecked_Lambda([this]() {
 																			return SDKCheckboxStates.FindRef(TEXT("OpenXREyeTracking"))
 																				? ECheckBoxState::Checked
@@ -838,6 +902,16 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																				SNew(STextBlock)
 																					.Text(FText::FromString(TEXT("OpenXREyeTracking")))
 																			]
+																		]
+																		+ SVerticalBox::Slot()
+																		.AutoHeight()
+																		.Padding(20, 0, 0, 5)
+																		[
+																			SNew(STextBlock)
+																			.Text(FText::FromString(TEXT("OpenXR-standard eye tracking support")))
+																			.Font(FEditorStyle::GetFontStyle("SmallText"))
+																			.ColorAndOpacity(FSlateColor::UseSubduedForeground())
+																		]
 																	]
 
 																// Varjo
@@ -845,7 +919,12 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																	.AutoHeight()
 																	.Padding(5, 2)
 																	[
-																		SNew(SCheckBox)
+																		SNew(SVerticalBox)
+																		+ SVerticalBox::Slot()
+																		.AutoHeight()
+																		[
+																			SNew(SCheckBox)
+																			.ToolTipText(FText::FromString(TEXT("Enables Varjo high-end VR headsets with eye tracking and mixed reality")))
 																			.IsChecked_Lambda([this]() {
 																			return SDKCheckboxStates.FindRef(TEXT("Varjo"))
 																				? ECheckBoxState::Checked
@@ -860,6 +939,16 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																				SNew(STextBlock)
 																					.Text(FText::FromString(TEXT("Varjo")))
 																			]
+																		]
+																		+ SVerticalBox::Slot()
+																		.AutoHeight()
+																		.Padding(20, 0, 0, 5)
+																		[
+																			SNew(STextBlock)
+																			.Text(FText::FromString(TEXT("Varjo high-end VR with eye tracking and mixed reality")))
+																			.Font(FEditorStyle::GetFontStyle("SmallText"))
+																			.ColorAndOpacity(FSlateColor::UseSubduedForeground())
+																		]
 																	]
 
 																// SRanipal
@@ -867,7 +956,12 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																	.AutoHeight()
 																	.Padding(5, 2)
 																	[
-																		SNew(SCheckBox)
+																		SNew(SVerticalBox)
+																		+ SVerticalBox::Slot()
+																		.AutoHeight()
+																		[
+																			SNew(SCheckBox)
+																			.ToolTipText(FText::FromString(TEXT("Enables HTC Vive Pro Eye tracking using SRanipal SDK")))
 																			.IsChecked_Lambda([this]() {
 																			return SDKCheckboxStates.FindRef(TEXT("SRanipal"))
 																				? ECheckBoxState::Checked
@@ -882,6 +976,16 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																				SNew(STextBlock)
 																					.Text(FText::FromString(TEXT("SRanipal (Vive Pro Eye)")))
 																			]
+																		]
+																		+ SVerticalBox::Slot()
+																		.AutoHeight()
+																		.Padding(20, 0, 0, 5)
+																		[
+																			SNew(STextBlock)
+																			.Text(FText::FromString(TEXT("HTC Vive Pro Eye tracking via SRanipal")))
+																			.Font(FEditorStyle::GetFontStyle("SmallText"))
+																			.ColorAndOpacity(FSlateColor::UseSubduedForeground())
+																		]
 																	]
 
 																// Tobii
@@ -889,7 +993,12 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																	.AutoHeight()
 																	.Padding(5, 2)
 																	[
-																		SNew(SCheckBox)
+																		SNew(SVerticalBox)
+																		+ SVerticalBox::Slot()
+																		.AutoHeight()
+																		[
+																			SNew(SCheckBox)
+																			.ToolTipText(FText::FromString(TEXT("Enables Tobii eye tracking technology for supported devices")))
 																			.IsChecked_Lambda([this]() {
 																			return SDKCheckboxStates.FindRef(TEXT("TobiiEyeTracking"))
 																				? ECheckBoxState::Checked
@@ -904,6 +1013,16 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																				SNew(STextBlock)
 																					.Text(FText::FromString(TEXT("Tobii")))
 																			]
+																		]
+																		+ SVerticalBox::Slot()
+																		.AutoHeight()
+																		.Padding(20, 0, 0, 5)
+																		[
+																			SNew(STextBlock)
+																			.Text(FText::FromString(TEXT("Tobii eye tracking technology")))
+																			.Font(FEditorStyle::GetFontStyle("SmallText"))
+																			.ColorAndOpacity(FSlateColor::UseSubduedForeground())
+																		]
 																	]
 
 																// HPOmnicept
@@ -911,7 +1030,12 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																	.AutoHeight()
 																	.Padding(5, 2)
 																	[
-																		SNew(SCheckBox)
+																		SNew(SVerticalBox)
+																		+ SVerticalBox::Slot()
+																		.AutoHeight()
+																		[
+																			SNew(SCheckBox)
+																			.ToolTipText(FText::FromString(TEXT("Enables HP Omnicept biometric sensors including heart rate, eye tracking, and cognitive load detection")))
 																			.IsChecked_Lambda([this]() {
 																			return SDKCheckboxStates.FindRef(TEXT("HPOmnicept"))
 																				? ECheckBoxState::Checked
@@ -926,6 +1050,16 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																				SNew(STextBlock)
 																					.Text(FText::FromString(TEXT("HP Omnicept")))
 																			]
+																		]
+																		+ SVerticalBox::Slot()
+																		.AutoHeight()
+																		.Padding(20, 0, 0, 5)
+																		[
+																			SNew(STextBlock)
+																			.Text(FText::FromString(TEXT("HP Omnicept biometric sensors and cognitive load detection")))
+																			.Font(FEditorStyle::GetFontStyle("SmallText"))
+																			.ColorAndOpacity(FSlateColor::UseSubduedForeground())
+																		]
 																	]
 														]
 												]
