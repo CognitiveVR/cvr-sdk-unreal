@@ -32,6 +32,10 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 	DisplayAPIKey = FCognitiveEditorTools::GetInstance()->GetApplicationKey().ToString();
 	DisplayDeveloperKey = FCognitiveEditorTools::GetInstance()->GetDeveloperKey().ToString();
 	DisplayExportDirectory = FCognitiveEditorTools::GetInstance()->GetBaseExportDirectory();
+	//
+	FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
+	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
+	FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
 
 	// Initialize each SDKs state by checking build.cs
 	SDKCheckboxStates.Add(TEXT("MetaXR"),

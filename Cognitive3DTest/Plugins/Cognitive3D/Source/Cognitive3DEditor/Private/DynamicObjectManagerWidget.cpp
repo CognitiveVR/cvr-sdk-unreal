@@ -135,6 +135,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 	FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
 	FCognitiveEditorTools::CheckIniConfigured();
 	CheckForExpiredDeveloperKey();
+	RefreshDisplayDynamicObjectsCountInScene();
 
 	SceneDisplayName = MakeShareable(new FString(""));
 	AdjustedSceneDisplayName = MakeShareable(new FString(""));
