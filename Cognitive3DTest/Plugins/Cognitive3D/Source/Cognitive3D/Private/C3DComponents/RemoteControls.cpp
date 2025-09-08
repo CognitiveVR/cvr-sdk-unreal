@@ -2,7 +2,7 @@
 
 
 #include "C3DComponents/RemoteControls.h"
-#include "C3DComponents/OculusPlatform.h"
+#include "C3DComponents/SocialPlatform.h"
 #include "Cognitive3DActor.h"
 #include "Components/ActorComponent.h"
 #include "Json.h"
