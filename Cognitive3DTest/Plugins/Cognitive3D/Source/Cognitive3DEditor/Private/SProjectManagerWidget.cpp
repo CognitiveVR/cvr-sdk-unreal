@@ -739,8 +739,16 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																	.Text(FText::FromString(TEXT("Select Third-Party SDKs you are using. If you have the appropriate SDK installed in your project, this will enable additional features like eye tracking (with supported hardware).")))
 																	.AutoWrapText(true)
 																	.Font(FEditorStyle::GetFontStyle("RegularText"))
-																	.Justification(ETextJustify::Left)
+																	.Justification(ETextJustify::Center)
 																]
+															]
+															
+															// Separator
+															+ SVerticalBox::Slot()
+															.AutoHeight()
+															.Padding(5, 0, 5, 10)
+															[
+																SNew(SSeparator)
 															]
 
 																// MetaXR
