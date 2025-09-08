@@ -157,6 +157,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 						SNew(SBox)
 						.MaxDesiredWidth(800.0f)
 						.HeightOverride(FOptionalSize())
+						.MinAspectRatio(5.49)
 						[
 							SNew(SImage)
 							.Image(FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.Banner")))
@@ -1430,7 +1431,7 @@ void SProjectManagerWidget::GetOrganizationDetailsResponse(FHttpRequestPtr Reque
 		expiryPrettyDate.Append(", ");
 		expiryPrettyDate.Append(FString::FromInt(expiryDate.GetYear()));
 
-		OrgExpiryTextBlock->SetText(FText::FromString("Organization License renewal date: " + expiryPrettyDate));
+		OrgExpiryTextBlock->SetText(FText::FromString("Organization License Renewal Date: " + expiryPrettyDate));
 	}
 }
 
