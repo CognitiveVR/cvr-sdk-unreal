@@ -84,7 +84,7 @@ public:
 	void GetDashboardManifest();
 	void OnDashboardManifestResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	FReply ExportAndOpenSceneSetupWindow();
+	FReply ExportAndOpenProjectSetup();
 
 	
 

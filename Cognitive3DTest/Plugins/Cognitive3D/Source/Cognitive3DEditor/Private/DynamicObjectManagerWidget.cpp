@@ -253,7 +253,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					.Visibility(this, &SDynamicObjectManagerWidget::SceneNotUploadedVisibility)
 					.AutoWrapText(true)
 					.Justification(ETextJustify::Center)
-					.Text(FText::FromString("This window is also accessible from the Cognitive3D menu.\n\nYou can review and upload Dynamic Objects from here.\n\n You will be prompted to export mesh geometry when you continue to the Scene Setup Window."))
+					.Text(FText::FromString("This window is also accessible from the Cognitive3D menu.\n\nYou can review and upload Dynamic Objects from here.\n\n You will be prompted to export mesh geometry when you continue to the Project Manager."))
 				]
 			]
 			+ SVerticalBox::Slot() //button to scene setup window
@@ -267,8 +267,9 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				.HeightOverride(32)
 				[
 					SNew(SButton)
-					.Text(FText::FromString("Open Scene Setup Window"))
-					.OnClicked(this,&SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow)
+					.Text(FText::FromString("Open Full Project Setup"))
+					.HAlign(HAlign_Center)
+					.OnClicked(this,&SDynamicObjectManagerWidget::ExportAndOpenProjectSetup)
 				]
 			]
 
@@ -758,7 +759,7 @@ FText SDynamicObjectManagerWidget::UploadSelectedMeshesTooltip() const
 	}
 	else if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
 	{
-		return FText::FromString("Use the Open Scene Setup Window above to export these meshes and continue the guided setup to the Scene Setup Window");
+		return FText::FromString("Use the Open Full Project Setup above to export these meshes and continue the guided setup to the Project Manager");
 	}
 	else if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory())
 	{
@@ -779,11 +780,11 @@ FText SDynamicObjectManagerWidget::UploadAllMeshesTooltip() const
 	}
 	else if (!SceneDisplayName.IsValid())
 	{
-		return FText::FromString("Use the Open Scene Setup Window above to export these meshes and continue the guided setup to the Scene Setup Window");
+		return FText::FromString("Use the Open Full Project Setup above to export these meshes and continue the guided setup to the Project Manager");
 	}
 	else if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*AdjustedSceneDisplayName))
 	{
-		return FText::FromString("Use the Open Scene Setup Window above to export these meshes and continue the guided setup to the Scene Setup Window");
+		return FText::FromString("Use the Open Full Project Setup above to export these meshes and continue the guided setup to the Project Manager");
 	}
 	else if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory())
 	{
@@ -992,7 +993,7 @@ EVisibility SDynamicObjectManagerWidget::SceneUploadedVisibility() const
 	}
 }
 
-FReply SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow()
+FReply SDynamicObjectManagerWidget::ExportAndOpenProjectSetup()
 {
 	//popup asking if meshes should be exported too
 	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export all Dynamic Object meshes?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export all Dynamic Objects"), "ExportSelectedDynamicsBody");
@@ -1012,9 +1013,9 @@ FReply SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow()
 		}
 	}
 
-	//close this window and open the scene setup window
+	//close this window and open the project manager widget
 	FCognitive3DEditorModule::CloseDynamicObjectWindow();
-	FCognitive3DEditorModule::SpawnCognitiveSceneSetupTab();
+	FCognitive3DEditorModule::SpawnFullC3DSetup();
 
 	return FReply::Handled();
 }

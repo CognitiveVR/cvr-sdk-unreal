@@ -262,7 +262,7 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 				.WidthOverride(FOptionalSize())
 				[
 					SNew(SButton)
-					.Text(FText::FromString("RemoteControls Documentation"))
+					.Text(FText::FromString("Remote Controls Documentation"))
 					.OnClicked(this, &SFeatureBuilderWidget::OnLaunchRemoteControls)
 				]
 			]
@@ -277,8 +277,8 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 					SNew(SButton)
 					.Text_Lambda([this]() {
 						return HasRemoteControlsComponent() 
-							? FText::FromString("Remove RemoteControls Component")
-							: FText::FromString("Add RemoteControls Component");
+							? FText::FromString("Remove Remote Controls Component")
+							: FText::FromString("Add Remote Controls Component");
 					})
 					.OnClicked(this, &SFeatureBuilderWidget::OnToggleRemoteControlsComponent)
 				]
