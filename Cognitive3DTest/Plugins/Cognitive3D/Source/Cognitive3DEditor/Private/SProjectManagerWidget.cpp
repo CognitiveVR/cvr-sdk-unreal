@@ -725,6 +725,23 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 														.BodyContent()
 														[
 															SNew(SVerticalBox)
+															
+															// Descriptive text at the start of SDK section
+															+ SVerticalBox::Slot()
+															.AutoHeight()
+															.Padding(5, 5, 5, 10)
+															[
+																SNew(SBox)
+																.HAlign(HAlign_Fill)
+																.WidthOverride(FOptionalSize())
+																[
+																	SNew(STextBlock)
+																	.Text(FText::FromString(TEXT("Select Third-Party SDKs you are using. If you have the appropriate SDK installed in your project, this will enable additional features like eye tracking (with supported hardware).")))
+																	.AutoWrapText(true)
+																	.Font(FEditorStyle::GetFontStyle("RegularText"))
+																	.Justification(ETextJustify::Left)
+																]
+															]
 
 																// MetaXR
 																+ SVerticalBox::Slot()
@@ -736,7 +753,6 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																	.AutoHeight()
 																	[
 																		SNew(SCheckBox)
-																		.ToolTipText(FText::FromString(TEXT("Enables Meta Quest/Rift VR headset support and hand tracking functionality")))
 																		.IsChecked_Lambda([this]() {
 																		return SDKCheckboxStates.FindRef(TEXT("MetaXR"))
 																			? ECheckBoxState::Checked
@@ -773,7 +789,6 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																	.AutoHeight()
 																	[
 																		SNew(SCheckBox)
-																		.ToolTipText(FText::FromString(TEXT("Enables Meta platform services including social features and achievements")))
 																		.IsEnabled_Lambda([this]() {
 																		return SDKCheckboxStates.FindRef(TEXT("MetaXR"));
 																			})
@@ -813,7 +828,6 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																	.AutoHeight()
 																	[
 																		SNew(SCheckBox)
-																		.ToolTipText(FText::FromString(TEXT("Enables Pico VR headset support and hand tracking")))
 																		.IsChecked_Lambda([this]() {
 																		return SDKCheckboxStates.FindRef(TEXT("PicoXR"))
 																			? ECheckBoxState::Checked
@@ -850,7 +864,6 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																	.AutoHeight()
 																	[
 																		SNew(SCheckBox)
-																		.ToolTipText(FText::FromString(TEXT("Enables HTC Vive Wave VR platform with eye tracking support")))
 																		.IsChecked_Lambda([this]() {
 																		return SDKCheckboxStates.FindRef(TEXT("WaveVR"))
 																			? ECheckBoxState::Checked
@@ -887,7 +900,6 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																		.AutoHeight()
 																		[
 																			SNew(SCheckBox)
-																			.ToolTipText(FText::FromString(TEXT("Enables OpenXR-standard eye tracking for compatible headsets")))
 																			.IsChecked_Lambda([this]() {
 																			return SDKCheckboxStates.FindRef(TEXT("OpenXREyeTracking"))
 																				? ECheckBoxState::Checked
@@ -924,7 +936,6 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																		.AutoHeight()
 																		[
 																			SNew(SCheckBox)
-																			.ToolTipText(FText::FromString(TEXT("Enables Varjo high-end VR headsets with eye tracking and mixed reality")))
 																			.IsChecked_Lambda([this]() {
 																			return SDKCheckboxStates.FindRef(TEXT("Varjo"))
 																				? ECheckBoxState::Checked
@@ -961,7 +972,6 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																		.AutoHeight()
 																		[
 																			SNew(SCheckBox)
-																			.ToolTipText(FText::FromString(TEXT("Enables HTC Vive Pro Eye tracking using SRanipal SDK")))
 																			.IsChecked_Lambda([this]() {
 																			return SDKCheckboxStates.FindRef(TEXT("SRanipal"))
 																				? ECheckBoxState::Checked
@@ -998,7 +1008,6 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																		.AutoHeight()
 																		[
 																			SNew(SCheckBox)
-																			.ToolTipText(FText::FromString(TEXT("Enables Tobii eye tracking technology for supported devices")))
 																			.IsChecked_Lambda([this]() {
 																			return SDKCheckboxStates.FindRef(TEXT("TobiiEyeTracking"))
 																				? ECheckBoxState::Checked
@@ -1035,7 +1044,6 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 																		.AutoHeight()
 																		[
 																			SNew(SCheckBox)
-																			.ToolTipText(FText::FromString(TEXT("Enables HP Omnicept biometric sensors including heart rate, eye tracking, and cognitive load detection")))
 																			.IsChecked_Lambda([this]() {
 																			return SDKCheckboxStates.FindRef(TEXT("HPOmnicept"))
 																				? ECheckBoxState::Checked
