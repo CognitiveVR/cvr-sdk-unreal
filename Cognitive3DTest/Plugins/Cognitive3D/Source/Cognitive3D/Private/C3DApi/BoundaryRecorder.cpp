@@ -245,6 +245,17 @@ void BoundaryRecorder::BoundaryCheckInterval()
 	{
 		if (HaveBoundaryPointsChanged(GuardianPoints))
 		{
+			// Calculate previous and new room sizes for custom event
+			float PreviousRoomSize = CalculateRoomSize(LastCapturedGuardianPoints);
+			float NewRoomSize = CalculateRoomSize(GuardianPoints);
+			
+			// Send custom event for boundary change
+			TSharedPtr<FJsonObject> Properties = MakeShareable(new FJsonObject);
+			Properties->SetNumberField("Previous Room Size", PreviousRoomSize);
+			Properties->SetNumberField("New Room Size", NewRoomSize);
+			
+			cog->customEventRecorder->Send("c3d.User changed boundary", Properties);
+			
 			Shapes.Empty();
 			AddGuardianBoundaryPoints(GuardianPoints);
 			LastCapturedGuardianPoints = GuardianPoints;
@@ -341,4 +352,38 @@ bool BoundaryRecorder::HaveBoundaryPointsChanged(const TArray<FVector>& NewPoint
 		}
 	}
 	return false;
+}
+
+float BoundaryRecorder::CalculateRoomSize(const TArray<FVector>& BoundaryPoints) const
+{
+	if (BoundaryPoints.Num() < 3)
+	{
+		// Not enough points to define a room, return zero size
+		return 0.0f;
+	}
+	
+	// Find the min/max X and Y coordinates to get the bounding box
+	float MinX = BoundaryPoints[0].X;
+	float MaxX = BoundaryPoints[0].X;
+	float MinY = BoundaryPoints[0].Y;
+	float MaxY = BoundaryPoints[0].Y;
+	
+	for (const FVector& Point : BoundaryPoints)
+	{
+		MinX = FMath::Min(MinX, Point.X);
+		MaxX = FMath::Max(MaxX, Point.X);
+		MinY = FMath::Min(MinY, Point.Y);
+		MaxY = FMath::Max(MaxY, Point.Y);
+	}
+	
+	// Calculate width and length from the bounding box
+	float Width = MaxX - MinX;
+	float Length = MaxY - MinY;
+	
+	// Convert from UE units (cm) to meters and calculate area
+	float WidthMeters = Width / 100.0f;
+	float LengthMeters = Length / 100.0f;
+	
+	// Return area in square meters
+	return WidthMeters * LengthMeters;
 }

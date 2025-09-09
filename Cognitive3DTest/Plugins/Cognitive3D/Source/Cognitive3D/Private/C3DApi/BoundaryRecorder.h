@@ -84,5 +84,6 @@ private:
 	static constexpr float BoundaryTolerance = 1.0f;
 
 	bool HaveBoundaryPointsChanged(const TArray<FVector>& NewPoints) const;
+	float CalculateRoomSize(const TArray<FVector>& BoundaryPoints) const;
 };
 
