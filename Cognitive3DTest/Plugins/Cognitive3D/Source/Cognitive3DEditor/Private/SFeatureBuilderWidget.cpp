@@ -30,6 +30,8 @@
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SFeatureBuilderWidget::Construct(const FArguments& InArgs)
 {
+	USegmentAnalytics::Get()->TrackEvent(TEXT("FeatureBuilderWindow_Opened"), TEXT("FeatureBuilderWindow"));
+
 	// Initialize the list of features
 	FeatureList = {
 		{ TEXT("DynamicObjects"), FText::FromString("Dynamic Objects"),
@@ -87,9 +89,15 @@ TSharedRef<SWidget> SFeatureBuilderWidget::BuildFeatureList()
 		.AutoHeight()
 		.Padding(5)
 		[
-			SNew(STextBlock)
-			.Text(FText::FromString("Explore the features of our platform. Each feature unlocks powerful capabilities you can use in your experience, from Dynamic Objects to live control and more."))
-			.Font(FEditorStyle::GetFontStyle("Heading"))
+			SNew(SBox)
+			.HAlign(HAlign_Fill)
+			.WidthOverride(FOptionalSize())
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Explore the features of our platform. Each feature unlocks powerful capabilities you can use in your experience, from Dynamic Objects to live control and more."))
+				.Font(FEditorStyle::GetFontStyle("Heading"))
+				.AutoWrapText(true)
+			]
 		];
 	for (const FFeature& Feature : FeatureList)
 	{
@@ -99,7 +107,7 @@ TSharedRef<SWidget> SFeatureBuilderWidget::BuildFeatureList()
 			[
 				SNew(SButton)
 					.ButtonStyle(FCognitiveEditorStyle::GetStyleSet().Get(), "CognitiveEditor.FeatureButton")
-					.HAlign(HAlign_Left)
+					.HAlign(HAlign_Fill)
 					.IsEnabled_Lambda([this]() {
 						return bIsDeveloperKeyValid;
 					})
@@ -112,7 +120,7 @@ TSharedRef<SWidget> SFeatureBuilderWidget::BuildFeatureList()
 							[
 								SNew(SImage).Image(Feature.Icon)]
 								+ SHorizontalBox::Slot()
-								.FillWidth(1)
+								.FillWidth(1.0f)
 								.Padding(10, 0)
 								.VAlign(VAlign_Center)
 								[
@@ -120,18 +128,29 @@ TSharedRef<SWidget> SFeatureBuilderWidget::BuildFeatureList()
 										+ SVerticalBox::Slot()
 										.AutoHeight()
 										[
-											SNew(STextBlock)
-										.Text(Feature.DisplayName)
-										.TextStyle(FCognitiveEditorStyle::GetStyleSet().Get(), "CognitiveEditor.FeatureButtonTitle")
+											SNew(SBox)
+											.HAlign(HAlign_Fill)
+											[
+												SNew(STextBlock)
+												.Text(Feature.DisplayName)
+												.TextStyle(FCognitiveEditorStyle::GetStyleSet().Get(), "CognitiveEditor.FeatureButtonTitle")
+											]
 										]
 											+ SVerticalBox::Slot()
 											.AutoHeight()
 										[
-											SNew(STextBlock)
-										.Text(Feature.Desc)
-										.AutoWrapText(true)
-										.Font(FEditorStyle::GetFontStyle("SmallText"))
-										.TextStyle(FCognitiveEditorStyle::GetStyleSet().Get(), "CognitiveEditor.FeatureButtonText")
+											SNew(SBox)
+											.HAlign(HAlign_Fill)
+											.WidthOverride(FOptionalSize())
+											[
+												SNew(STextBlock)
+												.Text(Feature.Desc)
+												.AutoWrapText(true)
+												.WrapTextAt(0.0f)
+												.Font(FEditorStyle::GetFontStyle("SmallText"))
+												.TextStyle(FCognitiveEditorStyle::GetStyleSet().Get(), "CognitiveEditor.FeatureButtonText")
+												.Justification(ETextJustify::Left)
+											]
 										]
 								]
 					]
