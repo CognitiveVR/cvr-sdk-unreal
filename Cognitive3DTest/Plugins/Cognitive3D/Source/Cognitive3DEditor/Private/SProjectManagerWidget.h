@@ -121,6 +121,17 @@ public:
 
 	TMap<TSharedPtr<FEditorSceneData>, FString> SceneItemToPath;
 
+	// Upload progress tracking
+	int32 TotalLevelsToUpload = 0;
+	int32 CompletedUploads = 0;
+	void AdvanceUploadProgress(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName);
+	
+	// Upload UI state
+	bool bIsUploading = false;
+	FString CurrentUploadStatus;
+	EVisibility GetUploadThrobberVisibility() const;
+	FText GetUploadStatusText() const;
+
 	//compression toggle helpers
 	ECheckBoxState IsCompressTexturesChecked() const { return FCognitiveEditorTools::GetInstance()->CompressExportedFiles ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; }
 	void OnCompressTexturesChanged(ECheckBoxState NewState) { FCognitiveEditorTools::GetInstance()->CompressExportedFiles = (NewState == ECheckBoxState::Checked); }

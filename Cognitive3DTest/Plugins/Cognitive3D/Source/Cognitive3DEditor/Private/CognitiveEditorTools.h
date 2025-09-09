@@ -46,6 +46,7 @@ public:
 	static FCognitiveEditorTools* GetInstance();
 
 	FOnUploadSceneGeometry OnUploadSceneGeometry;
+	FOnIndividualSceneUploadComplete OnIndividualSceneUploadComplete;
 
 	//delegates for full project setup
 	FOnUploadAllDynamics OnUploadAllDynamics;
@@ -402,6 +403,7 @@ public:
 	void SaveDeveloperKeyToFile(FString key);
 
 	void WizardUpload(const FString& LevelName);
+	bool WizardUploading = false;
 	bool IsWizardUploading();
 
 	//set to 500, 404, 401 if uploading from the wizard encountered and error

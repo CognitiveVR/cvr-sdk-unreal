@@ -140,7 +140,12 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 
     ChildSlot  
     [  
-		SNew(SVerticalBox)
+		// Main overlay to hold content + upload progress
+		SNew(SOverlay)
+		+ SOverlay::Slot()
+		[
+			// Main content
+			SNew(SVerticalBox)
 		//scrollable region
 		+SVerticalBox::Slot()
 			.FillHeight(1.0f)
@@ -1157,6 +1162,38 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 								})
 					]
 			]
+		] // End of main content slot
+		
+		// Upload progress throbber overlay
+		+ SOverlay::Slot()
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SNew(SBorder)
+			.BorderImage(FEditorStyle::GetBrush("Menu.Background"))
+			.Padding(20)
+			.Visibility(this, &SProjectManagerWidget::GetUploadThrobberVisibility)
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.HAlign(HAlign_Center)
+				.Padding(0, 0, 0, 10)
+				[
+					SNew(SThrobber)
+					.NumPieces(7)
+				]
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.HAlign(HAlign_Center)
+				[
+					SNew(STextBlock)
+					.Text(this, &SProjectManagerWidget::GetUploadStatusText)
+					.Font(FEditorStyle::GetFontStyle("NotificationList.FontBold"))
+					.Justification(ETextJustify::Center)
+				]
+			]
+		]
 	]; // end of child slot
 	
 }
@@ -2161,9 +2198,28 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SProjectManagerWidget::OnLevelsExported called with %d levels to upload"), TotalLevelCount);
-		FScopedSlowTask UploadTask(TotalLevelCount, LOCTEXT("UploadingMaps", "Uploading selected maps..."));
-		UploadTask.MakeDialog();
+		UE_LOG(LogTemp, Error, TEXT("=== SProjectManagerWidget::OnLevelsExported called with %d levels to upload ==="), TotalLevelCount);
+		
+		// Initialize upload progress tracking
+		TotalLevelsToUpload = TotalLevelCount;
+		CompletedUploads = 0;
+		
+		if (TotalLevelsToUpload <= 0)
+		{
+			UE_LOG(LogTemp, Error, TEXT("No levels to upload! TotalLevelCount is %d"), TotalLevelCount);
+			return;
+		}
+		
+		UE_LOG(LogTemp, Error, TEXT("Starting upload UI for %d levels"), TotalLevelsToUpload);
+		
+		// Show upload throbber instead of problematic progress dialog
+		bIsUploading = true;
+		CurrentUploadStatus = FString::Printf(TEXT("Starting upload of %d levels..."), TotalLevelsToUpload);
+		
+		// Show notification too
+		FNotificationInfo Info(FText::FromString(CurrentUploadStatus));
+		Info.ExpireDuration = 3.0f;
+		FSlateNotificationManager::Get().AddNotification(Info);
 
 		UWorld* World = GEditor->GetEditorWorldContext().World();
 		FString OriginalMap;
@@ -2174,6 +2230,11 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 			//UE_LOG(LogTemp, Warning, TEXT("Current World: %s"), *OriginalMap);
 		}
 
+		// Bind to individual upload completion for progress tracking
+		UE_LOG(LogTemp, Error, TEXT("Binding OnIndividualSceneUploadComplete delegate"));
+		FCognitiveEditorTools::GetInstance()->OnIndividualSceneUploadComplete.BindSP(this, &SProjectManagerWidget::AdvanceUploadProgress);
+		UE_LOG(LogTemp, Error, TEXT("OnIndividualSceneUploadComplete delegate bound successfully"));
+		// Still bind to the "all done" callback
 		FCognitiveEditorTools::GetInstance()->OnUploadAllSceneGeometry.BindSP(this, &SProjectManagerWidget::OnLevelsUploaded);
 		FCognitiveEditorTools::GetInstance()->UploadingScenesFromFullSetup = true;
 
@@ -2183,8 +2244,7 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 			{
 				FString LevelName = FPackageName::GetShortName(Pair.Key);
 				LevelName.Split(TEXT("."), nullptr, &LevelName); // Remove package extension
-				//start task
-				UploadTask.EnterProgressFrame(1.0f, FText::FromString(Pair.Key));
+				// Progress will be updated when upload completes
 				//load the map for the current pair
 				if (!FEditorFileUtils::LoadMap(Pair.Key, false, true))
 				{
@@ -2208,6 +2268,45 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 	}
 }
 
+void SProjectManagerWidget::AdvanceUploadProgress(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
+{
+	CompletedUploads++;
+	UE_LOG(LogTemp, Error, TEXT("=== AdvanceUploadProgress called for %s (success: %s) - %d/%d ==="), *LevelName, bWasSuccessful ? TEXT("true") : TEXT("false"), CompletedUploads, TotalLevelsToUpload);
+	
+	// Update upload status for throbber display
+	FString ReAdjustedLevelName = LevelName.Replace(*FCognitiveEditorTools::GetInstance()->SplitCharacter, TEXT("/")); // Revert underscores back to slashes for display
+	CurrentUploadStatus = FString::Printf(TEXT("Uploaded %s (%d/%d)"), *ReAdjustedLevelName, CompletedUploads, TotalLevelsToUpload);
+	UE_LOG(LogTemp, Error, TEXT("Upload status updated: %s"), *CurrentUploadStatus);
+	
+	// Show notification for each upload
+	FNotificationInfo Info(FText::FromString(CurrentUploadStatus));
+	Info.ExpireDuration = 2.0f;
+	FSlateNotificationManager::Get().AddNotification(Info);
+	
+	// Hide throbber when all uploads are complete
+	if (CompletedUploads >= TotalLevelsToUpload)
+	{
+		bIsUploading = false;
+		CurrentUploadStatus = TEXT("All uploads completed!");
+		UE_LOG(LogTemp, Warning, TEXT("All uploads completed, hiding throbber"));
+		
+		// Show final completion notification
+		FNotificationInfo CompletionInfo(FText::FromString("All levels uploaded successfully!"));
+		CompletionInfo.ExpireDuration = 5.0f;
+		FSlateNotificationManager::Get().AddNotification(CompletionInfo);
+	}
+}
+
+EVisibility SProjectManagerWidget::GetUploadThrobberVisibility() const
+{
+	return bIsUploading ? EVisibility::Visible : EVisibility::Collapsed;
+}
+
+FText SProjectManagerWidget::GetUploadStatusText() const
+{
+	return FText::FromString(CurrentUploadStatus);
+}
+
 void SProjectManagerWidget::OnLevelsUploaded(bool bWasSuccessful)
 {
 	
@@ -2216,6 +2315,7 @@ void SProjectManagerWidget::OnLevelsUploaded(bool bWasSuccessful)
 		if (!FCognitiveEditorTools::GetInstance()->UploadingDynamicsFromFullSetup)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("SProjectManagerWidget::OnLevelsUploaded Uploading dynamics from full setup is disabled, skipping dynamics upload"));
+			FCognitiveEditorTools::GetInstance()->WizardUploading = false;
 			RestartEditor();
 			return;
 		}

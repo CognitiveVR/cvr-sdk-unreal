@@ -292,7 +292,7 @@ void FCognitiveEditorTools::CheckIniConfigured()
 }
 
 //at any step in the uploading process
-bool WizardUploading = false;
+//bool WizardUploading = false;
 
 bool FCognitiveEditorTools::IsWizardUploading()
 {
@@ -1779,7 +1779,7 @@ void FCognitiveEditorTools::OnDynamicManifestResponse(FHttpRequestPtr Request, F
 		if(UploadingDynamicsFromFullSetup && TotalSetOfDynamicsToUpload <= 0)
 		{
 			OnUploadAllDynamics.ExecuteIfBound(true);
-			UploadingDynamicsFromFullSetup = false;
+			//UploadingDynamicsFromFullSetup = false;
 		}
 	}
 	else
@@ -2508,7 +2508,12 @@ void FCognitiveEditorTools::UploadFromDirectory(FString LevelName, FString url, 
 
 void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
-	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::OnUploadSceneCompleted called for level %s"), *LevelName);
+	UE_LOG(LogTemp, Error, TEXT("=== FCognitiveEditorTools::OnUploadSceneCompleted called for level %s ==="), *LevelName);
+	
+	// Notify individual scene upload completion for progress tracking
+	UE_LOG(LogTemp, Error, TEXT("Executing OnIndividualSceneUploadComplete delegate for %s"), *LevelName);
+	OnIndividualSceneUploadComplete.ExecuteIfBound(Request, Response, bWasSuccessful, LevelName);
+	UE_LOG(LogTemp, Error, TEXT("OnIndividualSceneUploadComplete delegate executed"));
 
 	if (bWasSuccessful)
 	{
@@ -2583,6 +2588,7 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 
 	if (bWasSuccessful)
 	{
+		UE_LOG(LogTemp, Error, TEXT("=== FCognitiveEditorTools::OnUploadObjectCompleted called for level %s ==="), *LevelName);
 		GLog->Log("FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode()));
 		ShowNotification(TEXT("Dynamic Uploaded Successfully"));
 	}
