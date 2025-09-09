@@ -1366,16 +1366,19 @@ void SProjectManagerWidget::GetApplicationKeyResponse(FHttpRequestPtr Request, F
 {
 	if (Response.IsValid() == false)
 	{
+		USegmentAnalytics::Get()->TrackEvent(TEXT("FullProjectSetupWindow_ApplicationKeyInvalidResponse"), TEXT("FullProjectSetupWindow"));
 		GLog->Log("SProjectSetupWidget::GetApplicationKeyResponse invalid response");
 		return;
 	}
 	int32 responseCode = Response->GetResponseCode();
 	if (responseCode != 200)
 	{
+		FString responseCodeStr = "InvalidDevKey_FullProjectSetupWindow_" + FString::FromInt(responseCode);
+		USegmentAnalytics::Get()->TrackEvent(responseCodeStr, TEXT("FullProjectSetupWindow"));
 		GLog->Log("Application Key Response Code is " + FString::FromInt(responseCode));
 		return;
 	}
-
+	USegmentAnalytics::Get()->TrackEvent(TEXT("ValidDevKey_FullProjectSetupWindow"), TEXT("FullProjectSetupWindow"));
 	auto content = Response->GetContentAsString();
 	FApplicationKeyResponse responseObject;
 	FJsonObjectConverter::JsonObjectStringToUStruct(content, &responseObject, 0, 0);
