@@ -2299,12 +2299,26 @@ void SProjectManagerWidget::AdvanceUploadProgress(FHttpRequestPtr Request, FHttp
 
 EVisibility SProjectManagerWidget::GetUploadThrobberVisibility() const
 {
-	return bIsUploading ? EVisibility::Visible : EVisibility::Collapsed;
+	return (bIsUploading || bIsUploadingDynamics) ? EVisibility::Visible : EVisibility::Collapsed;
 }
 
 FText SProjectManagerWidget::GetUploadStatusText() const
 {
 	return FText::FromString(CurrentUploadStatus);
+}
+
+void SProjectManagerWidget::AdvanceDynamicsUploadProgress()
+{
+	CompletedDynamicsUploads++;
+	
+	// Update status text
+	CurrentUploadStatus = FString::Printf(TEXT("Uploading dynamics (%d/%d)"), CompletedDynamicsUploads, TotalDynamicsToUpload);
+	UE_LOG(LogTemp, Error, TEXT("Dynamics upload status updated: %s"), *CurrentUploadStatus);
+	
+	// Show notification for each dynamics upload
+	FNotificationInfo Info(FText::FromString(CurrentUploadStatus));
+	Info.ExpireDuration = 2.0f;
+	FSlateNotificationManager::Get().AddNotification(Info);
 }
 
 void SProjectManagerWidget::OnLevelsUploaded(bool bWasSuccessful)
@@ -2320,10 +2334,22 @@ void SProjectManagerWidget::OnLevelsUploaded(bool bWasSuccessful)
 			return;
 		}
 		UE_LOG(LogTemp, Warning, TEXT("SProjectManagerWidget::OnLevelsUploaded called with %d dynamics to upload"), TotalLevelCount);
+		
+		// Start dynamics upload throbber
+		TotalDynamicsToUpload = DynamicObjecstMap.Num();
+		CompletedDynamicsUploads = 0;
+		bIsUploadingDynamics = true;
+		bIsUploading = false; // Transition from scene to dynamics upload
+		CurrentUploadStatus = FString::Printf(TEXT("Starting dynamics upload for %d levels..."), TotalDynamicsToUpload);
+		
+		UE_LOG(LogTemp, Error, TEXT("Starting dynamics upload UI for %d levels"), TotalDynamicsToUpload);
+		
+		// Show notification
+		FNotificationInfo Info(FText::FromString(CurrentUploadStatus));
+		Info.ExpireDuration = 3.0f;
+		FSlateNotificationManager::Get().AddNotification(Info);
+		
 		FCognitiveEditorTools::GetInstance()->OnUploadAllDynamics.BindSP(this, &SProjectManagerWidget::OnDynamicsUploaded);
-
-		//FScopedSlowTask UploadDynTask(TotalLevelCount, LOCTEXT("UploadingDynamics", "Uploading level dynamics..."));
-		//UploadDynTask.MakeDialog();
 
 		UWorld* World = GEditor->GetEditorWorldContext().World();
 		FString OriginalMap;
@@ -2337,7 +2363,8 @@ void SProjectManagerWidget::OnLevelsUploaded(bool bWasSuccessful)
 		//go through the map for <path, dynamics> and upload each dynamics manifest
 		for (const TPair<FString, TArray<UDynamicObject*>>& Pair : DynamicObjecstMap)
 		{
-			//UploadDynTask.EnterProgressFrame(1.f, FText::FromString(Pair.Key));
+			// Update progress
+			AdvanceDynamicsUploadProgress();
 
 			//load the map for the current pair
 			if (!FEditorFileUtils::LoadMap(Pair.Key, false, true))
@@ -2364,9 +2391,31 @@ void SProjectManagerWidget::OnLevelsUploaded(bool bWasSuccessful)
 
 void SProjectManagerWidget::OnDynamicsUploaded(bool bWasSuccessful)
 {
+	// Hide dynamics upload throbber
+	bIsUploadingDynamics = false;
+	
 	if (bWasSuccessful)
 	{
+		CurrentUploadStatus = TEXT("All dynamics uploaded successfully!");
+		UE_LOG(LogTemp, Warning, TEXT("All dynamics uploaded successfully"));
+		
+		// Show final completion notification
+		FNotificationInfo CompletionInfo(FText::FromString("All dynamics uploaded successfully!"));
+		CompletionInfo.ExpireDuration = 5.0f;
+		FSlateNotificationManager::Get().AddNotification(CompletionInfo);
+		
+		// Continue with restart
 		RestartEditor();
+	}
+	else
+	{
+		CurrentUploadStatus = TEXT("Dynamics upload failed!");
+		UE_LOG(LogTemp, Error, TEXT("Dynamics upload failed"));
+		
+		// Show error notification
+		FNotificationInfo ErrorInfo(FText::FromString("Dynamics upload failed!"));
+		ErrorInfo.ExpireDuration = 5.0f;
+		FSlateNotificationManager::Get().AddNotification(ErrorInfo);
 	}
 }
 

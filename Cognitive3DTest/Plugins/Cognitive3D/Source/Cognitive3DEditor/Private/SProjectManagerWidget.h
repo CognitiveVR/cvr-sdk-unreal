@@ -126,8 +126,14 @@ public:
 	int32 CompletedUploads = 0;
 	void AdvanceUploadProgress(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName);
 	
+	// Dynamics upload progress tracking
+	int32 TotalDynamicsToUpload = 0;
+	int32 CompletedDynamicsUploads = 0;
+	void AdvanceDynamicsUploadProgress();
+	
 	// Upload UI state
 	bool bIsUploading = false;
+	bool bIsUploadingDynamics = false;
 	FString CurrentUploadStatus;
 	EVisibility GetUploadThrobberVisibility() const;
 	FText GetUploadStatusText() const;
