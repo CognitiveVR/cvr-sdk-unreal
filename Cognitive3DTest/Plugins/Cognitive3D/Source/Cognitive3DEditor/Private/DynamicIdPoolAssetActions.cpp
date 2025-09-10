@@ -8,7 +8,7 @@
 #include "DynamicIdPoolAsset.h"
 
 
-#define LOCTEXT_NAMESPACE "Asset2TypeActions"
+#define LOCTEXT_NAMESPACE "Cognitive3DEditor"
 
 FDynamicIdPoolAssetActions::FDynamicIdPoolAssetActions(){ }
 
@@ -24,7 +24,7 @@ uint32 FDynamicIdPoolAssetActions::GetCategories()
 
 FText FDynamicIdPoolAssetActions::GetName() const
 {
-	return NSLOCTEXT("Asset2TypeActions", "Asset2TypeActions_TextAsset", "Dynamic Id Pool Asset");
+	return NSLOCTEXT("Cognitive3DEditor", "DynamicIdPoolAsset_Name", "Dynamic Id Pool Asset");
 }
 
 FColor FDynamicIdPoolAssetActions::GetTypeColor() const

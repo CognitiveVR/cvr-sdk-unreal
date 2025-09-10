@@ -72,7 +72,7 @@ void UPassthrough::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
                 }
                 float duration = GetWorld()->GetTimeSeconds() - lastEventTime;
                 properties->SetNumberField("Duration", duration);
-                cognitive->customEventRecorder->Send("Passthrough Layer Changed", properties);
+                cognitive->customEventRecorder->Send("c3d.passthrough_layer_changed", properties);
                 lastEventTime = GetWorld()->GetTimeSeconds();
             }
             IsPassthroughVisible = PassthroughLayer->IsVisible();

@@ -8,6 +8,11 @@
 #include "C3DCommonEditorTypes.generated.h"
 
 DECLARE_DELEGATE_ThreeParams(FOnUploadSceneGeometry, FHttpRequestPtr, FHttpResponsePtr, bool)
+DECLARE_DELEGATE_FourParams(FOnIndividualSceneUploadComplete, FHttpRequestPtr, FHttpResponsePtr, bool, FString)
+
+DECLARE_DELEGATE_OneParam(FOnUploadAllDynamics, bool)
+DECLARE_DELEGATE_OneParam(FOnUploadAllSceneGeometry, bool)
+DECLARE_DELEGATE_OneParam(FOnExportAllSceneGeometry, bool)
 
 USTRUCT()
 struct FApplicationKeyResponse

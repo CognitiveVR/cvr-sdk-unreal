@@ -3576,6 +3576,8 @@ void UEnhancedInputTracker::RightTriggerPressed()
 
 void UEnhancedInputTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	Super::EndPlay(EndPlayReason);
+
 	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	cogProvider->OnSessionBegin.RemoveDynamic(this, &UEnhancedInputTracker::FindControllers);
 }

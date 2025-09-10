@@ -12,17 +12,17 @@
 #ifdef INCLUDE_OCULUS_PLATFORM
 #include "OVR_Platform.h"
 #endif
-#include "OculusPlatform.generated.h"
+#include "SocialPlatform.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class UOculusPlatform : public UActorComponent
+class USocialPlatform : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	UOculusPlatform();
+	USocialPlatform();
 
 protected:
 	// Called when the game starts

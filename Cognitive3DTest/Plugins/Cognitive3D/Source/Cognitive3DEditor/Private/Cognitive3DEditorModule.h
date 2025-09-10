@@ -14,6 +14,8 @@
 #include "Editor/EditorStyle/Public/EditorStyleSet.h"
 #include "SceneSetupWidget.h"
 #include "ProjectSetupWidget.h"
+#include "ProjectManagerWidget.h"
+#include "FeatureBuilderWidget.h"
 #include "DynamicObjectManagerWidget.h"
 #include "WorkspaceMenuStructure.h"
 #include "CognitiveSettingsCustomization.h"
@@ -33,6 +35,12 @@ public:
 	static void CloseProjectSetupWindow();
 	static void CloseSceneSetupWindow();
 	static void CloseDynamicObjectWindow();
+
+	static void SpawnFullC3DSetup();
+	static void CloseFullC3DSetup();
+
+	static void SpawnFeatureBuilder();
+	static void CloseFeatureBuilder();
 
 	static inline FCognitive3DEditorModule& Get()
 	{
@@ -58,4 +66,5 @@ private:
 	TSharedPtr<FUICommandList> PluginCommands;
 	static void AddMenu(FMenuBarBuilder& MenuBuilder);
 	static void FillMenu(FMenuBuilder& MenuBuilder);
+	static void FillLegacySubMenu(FMenuBuilder& MenuBuilder);
 };

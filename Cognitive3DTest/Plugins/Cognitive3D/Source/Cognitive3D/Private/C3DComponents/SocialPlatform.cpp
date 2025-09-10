@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "C3DComponents/OculusPlatform.h"
+#include "C3DComponents/SocialPlatform.h"
 #ifdef INCLUDE_OCULUS_PLATFORM
 #include "OVRPlatform.h"
 #include "OVR_Platform.h"
@@ -16,7 +16,7 @@
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
 
 // Sets default values for this component's properties
-UOculusPlatform::UOculusPlatform()
+USocialPlatform::USocialPlatform()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -27,7 +27,7 @@ UOculusPlatform::UOculusPlatform()
 
 
 // Called when the game starts
-void UOculusPlatform::BeginPlay()
+void USocialPlatform::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -70,8 +70,8 @@ void UOculusPlatform::BeginPlay()
 	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cog.IsValid())
 	{
-		cog->OnSessionBegin.AddDynamic(this, &UOculusPlatform::OnSessionBegin);
-		cog->OnPreSessionEnd.AddDynamic(this, &UOculusPlatform::OnSessionEnd);
+		cog->OnSessionBegin.AddDynamic(this, &USocialPlatform::OnSessionBegin);
+		cog->OnPreSessionEnd.AddDynamic(this, &USocialPlatform::OnSessionEnd);
 		if (cog->HasStartedSession())
 		{
 			OnSessionBegin();
@@ -81,7 +81,7 @@ void UOculusPlatform::BeginPlay()
 
 
 // Called every frame
-void UOculusPlatform::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void USocialPlatform::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
@@ -91,7 +91,7 @@ void UOculusPlatform::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 #endif
 }
 
-void UOculusPlatform::OnSessionBegin()
+void USocialPlatform::OnSessionBegin()
 {
 	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
 	if (world == nullptr) { return; }
@@ -121,18 +121,20 @@ void UOculusPlatform::OnSessionBegin()
 #endif
 }
 
-void UOculusPlatform::OnSessionEnd()
+void USocialPlatform::OnSessionEnd()
 {
 	//
 }
 
-void UOculusPlatform::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void USocialPlatform::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	Super::EndPlay(EndPlayReason);
+
 	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	if (cog.IsValid())
 	{
-		cog->OnSessionBegin.RemoveDynamic(this, &UOculusPlatform::OnSessionBegin);
-		cog->OnPreSessionEnd.RemoveDynamic(this, &UOculusPlatform::OnSessionEnd);
+		cog->OnSessionBegin.RemoveDynamic(this, &USocialPlatform::OnSessionBegin);
+		cog->OnPreSessionEnd.RemoveDynamic(this, &USocialPlatform::OnSessionEnd);
 		if (cog->HasStartedSession())
 		{
 			OnSessionEnd();
@@ -141,7 +143,7 @@ void UOculusPlatform::EndPlay(const EEndPlayReason::Type EndPlayReason)
 }
 
 #ifdef INCLUDE_OCULUS_PLATFORM
-void UOculusPlatform::ProcessOculusMessages()
+void USocialPlatform::ProcessOculusMessages()
 {
 	ovrMessageHandle Message;
 	//ovrMessageHandle UserMessage;
@@ -193,7 +195,7 @@ void UOculusPlatform::ProcessOculusMessages()
 	}
 }
 
-void UOculusPlatform::HandleUserRetrieved(const ovrMessageHandle Message)
+void USocialPlatform::HandleUserRetrieved(const ovrMessageHandle Message)
 {
 	ovrUserHandle User = ovr_Message_GetUser(Message);
 
@@ -226,7 +228,7 @@ void UOculusPlatform::HandleUserRetrieved(const ovrMessageHandle Message)
 	}
 }
 
-void UOculusPlatform::HandleAccessToekenRetrieved(const ovrMessageHandle Message)
+void USocialPlatform::HandleAccessToekenRetrieved(const ovrMessageHandle Message)
 {
 	const char* AccessToken = ovr_Message_GetString(Message);
 
@@ -241,7 +243,7 @@ void UOculusPlatform::HandleAccessToekenRetrieved(const ovrMessageHandle Message
 
 }
 
-void UOculusPlatform::SubscriptionStatusQuery(FString AccessToken)
+void USocialPlatform::SubscriptionStatusQuery(FString AccessToken)
 {
 	FString Url = FString::Printf(TEXT("https://graph.oculus.com/application/subscriptions?access_token=%s&fields=sku,period_start_time,period_end_time,is_trial,is_active,next_renewal_time"), *AccessToken);
 
@@ -252,11 +254,11 @@ void UOculusPlatform::SubscriptionStatusQuery(FString AccessToken)
 	HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 
 	// Handle the response
-	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UOculusPlatform::OnHttpResponseReceived);
+	HttpRequest->OnProcessRequestComplete().BindUObject(this, &USocialPlatform::OnHttpResponseReceived);
 	HttpRequest->ProcessRequest();
 }
 
-void UOculusPlatform::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void USocialPlatform::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful && Response.IsValid())
 	{
@@ -348,7 +350,7 @@ void UOculusPlatform::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpRespo
 	}
 }
 
-void UOculusPlatform::SendSubscriptionData()
+void USocialPlatform::SendSubscriptionData()
 {
 	int partNum = cog->gazeDataRecorder->GetPartNumber();
 	cog->gazeDataRecorder->IncrementPartNumber();

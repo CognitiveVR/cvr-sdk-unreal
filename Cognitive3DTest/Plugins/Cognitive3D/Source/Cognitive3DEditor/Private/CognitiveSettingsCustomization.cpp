@@ -184,43 +184,28 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 			.HeaderRow(
 				SNew(SHeaderRow)
 				+ SHeaderRow::Column("name")
-				.FillWidth(1)
-				[
-					SNew(SRichTextBlock)
-					.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
-				.Text(FText::FromString("<RichTextBlock.BoldHighlight>Name</>"))
-				]
+				.FillWidth(1.0f)
+				.DefaultLabel(FText::FromString("Name"))
+
+				+ SHeaderRow::Column("path")
+				.FillWidth(2.0f)
+				.DefaultLabel(FText::FromString("Path"))
 
 				+ SHeaderRow::Column("id")
-				.FillWidth(1)
-				[
-					SNew(SRichTextBlock)
-					.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
-					.Text(FText::FromString("<RichTextBlock.BoldHighlight>Id</>"))
-				]
+				.FillWidth(1.0f)
+				.DefaultLabel(FText::FromString("Id"))
 
 				+ SHeaderRow::Column("version number")
-				.FillWidth(0.3)
-				[
-					SNew(SRichTextBlock)
-					.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
-					.Text(FText::FromString("<RichTextBlock.BoldHighlight>Version Number</>"))
-				]
+				.FillWidth(0.5f)
+				.DefaultLabel(FText::FromString("Version Number"))
 
 				+ SHeaderRow::Column("version id")
-				.FillWidth(0.3)
-				[
-					SNew(SRichTextBlock)
-					.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
-					.Text(FText::FromString("<RichTextBlock.BoldHighlight>Version Id</>"))
-				]
+				.FillWidth(0.5f)
+				.DefaultLabel(FText::FromString("Version Id"))
 
 				+ SHeaderRow::Column("open")
-				[
-					SNew(SRichTextBlock)
-					.DecoratorStyleSet(&FCognitiveEditorTools::GetSlateStyle())
-					.Text(FText::FromString("<RichTextBlock.BoldHighlight>Scene Explorer</>"))
-				]
+				.FillWidth(0.8f)
+				.DefaultLabel(FText::FromString("Scene Explorer"))
 			)
 		]
 	];
@@ -306,47 +291,72 @@ void ICognitiveSettingsCustomization::CustomizeDetails(IDetailLayoutBuilder& Det
 
 TSharedRef<ITableRow> ICognitiveSettingsCustomization::OnGenerateWorkspaceRow(TSharedPtr<FEditorSceneData> InItem, const TSharedRef<STableViewBase>& OwnerTable)
 {
-	return
-		SNew(SComboRow< TSharedPtr<FEditorSceneData> >, OwnerTable)
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			.FillWidth(1)
-			.Padding(2.0f)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString(InItem->Name))
-			]
-			+ SHorizontalBox::Slot()
-			.FillWidth(1)
-			.Padding(2.0f)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString(InItem->Id))
-			]
-			+ SHorizontalBox::Slot()
-			.FillWidth(0.3)
-			.Padding(2.0f)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString(FString::FromInt(InItem->VersionNumber)))
-			]
-			+ SHorizontalBox::Slot()
-			.FillWidth(0.3)
-			.Padding(2.0f)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString(FString::FromInt(InItem->VersionId)))
-			]
-			+ SHorizontalBox::Slot()
-			.FillWidth(1)
-			.Padding(2.0f)
-			[
-				SNew(SButton)
-				.Text(FText::FromString("Open in Browser..."))
-				.OnClicked_Raw(FCognitiveEditorTools::GetInstance(),&FCognitiveEditorTools::OpenSceneInBrowser,InItem->Id)
-			]
-		];
+	class SSceneSettingsTableRow : public SMultiColumnTableRow<TSharedPtr<FEditorSceneData>>
+	{
+	public:
+		SLATE_BEGIN_ARGS(SSceneSettingsTableRow) {}
+			SLATE_ARGUMENT(TSharedPtr<FEditorSceneData>, SceneData)
+		SLATE_END_ARGS()
+
+		void Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTableView)
+		{
+			SceneData = InArgs._SceneData;
+			SMultiColumnTableRow<TSharedPtr<FEditorSceneData>>::Construct(
+				FSuperRowType::FArguments()
+				.Padding(1.0f),
+				InOwnerTableView
+			);
+		}
+
+		virtual TSharedRef<SWidget> GenerateWidgetForColumn(const FName& ColumnName) override
+		{
+			if (ColumnName == "name")
+			{
+				return SNew(STextBlock)
+					.Text(FText::FromString(SceneData->Name))
+					.Margin(FMargin(4, 0));
+			}
+			else if (ColumnName == "path")
+			{
+				return SNew(STextBlock)
+					.Text(FText::FromString(SceneData->Path))
+					.Margin(FMargin(4, 0));
+			}
+			else if (ColumnName == "id")
+			{
+				return SNew(STextBlock)
+					.Text(FText::FromString(SceneData->Id))
+					.Margin(FMargin(4, 0));
+			}
+			else if (ColumnName == "version number")
+			{
+				return SNew(STextBlock)
+					.Text(FText::FromString(FString::FromInt(SceneData->VersionNumber)))
+					.Margin(FMargin(4, 0));
+			}
+			else if (ColumnName == "version id")
+			{
+				return SNew(STextBlock)
+					.Text(FText::FromString(FString::FromInt(SceneData->VersionId)))
+					.Margin(FMargin(4, 0));
+			}
+			else if (ColumnName == "open")
+			{
+				return SNew(SButton)
+					.Text(FText::FromString("Open in Browser..."))
+					.OnClicked_Raw(FCognitiveEditorTools::GetInstance(), &FCognitiveEditorTools::OpenSceneInBrowser, SceneData->Id)
+					.HAlign(HAlign_Center);
+			}
+
+			return SNullWidget::NullWidget;
+		}
+
+	private:
+		TSharedPtr<FEditorSceneData> SceneData;
+	};
+
+	return SNew(SSceneSettingsTableRow, OwnerTable)
+		.SceneData(InItem);
 }
 
 TSharedRef<ITableRow> ICognitiveSettingsCustomization::OnGenerateSDKListRow(TSharedPtr<FString> InItem, const TSharedRef<STableViewBase>& OwnerTable)

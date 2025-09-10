@@ -10,6 +10,7 @@
 
 TArray<FDashboardObject> SDynamicObjectManagerWidget::dashboardObjects = TArray<FDashboardObject>();
 TSharedPtr<FString> SDynamicObjectManagerWidget::SceneDisplayName = TSharedPtr<FString>();
+TSharedPtr<FString> SDynamicObjectManagerWidget::AdjustedSceneDisplayName = TSharedPtr<FString>();
 
 TArray<TSharedPtr<FDynamicData>> SDynamicObjectManagerWidget::GetSceneDynamics()
 {
@@ -58,9 +59,9 @@ void SDynamicObjectManagerWidget::GetDashboardManifest()
 {
 	TSharedPtr<FEditorSceneData> currentSceneData;
 
-	if (SceneDisplayName.IsValid())
+	if (AdjustedSceneDisplayName.IsValid())
 	{
-		currentSceneData = FCognitiveEditorTools::GetInstance()->GetSceneData(*SceneDisplayName);
+		currentSceneData = FCognitiveEditorTools::GetInstance()->GetSceneData(*AdjustedSceneDisplayName);
 	}
 	else
 	{
@@ -134,18 +135,23 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 	FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
 	FCognitiveEditorTools::CheckIniConfigured();
 	CheckForExpiredDeveloperKey();
+	RefreshDisplayDynamicObjectsCountInScene();
 
 	SceneDisplayName = MakeShareable(new FString(""));
+	AdjustedSceneDisplayName = MakeShareable(new FString(""));
 
 	SceneNamesComboList.Empty();
 	for (auto sceneData : FCognitiveEditorTools::GetInstance()->GetSceneData())
 	{
-		SceneNamesComboList.Add(MakeShareable(new FString(sceneData->Name)));
+		SceneNamesComboList.Add(MakeShareable(new FString(sceneData->Path + "/" + sceneData->Name)));
 	}
 	TSharedPtr<FEditorSceneData> tempSceneData = FCognitiveEditorTools::GetInstance()->GetCurrentSceneData();
+
 	if (tempSceneData.IsValid())
 	{
-		SceneDisplayName = MakeShareable(new FString(tempSceneData->Name));
+		SceneDisplayName = MakeShareable(new FString(tempSceneData->Path + "/" + tempSceneData->Name));
+		//AdjustedSceneDisplayName = MakeShareable(new FString(SceneDisplayName->Replace(TEXT("/"), TEXT("_"))));
+		AdjustedSceneDisplayName = MakeShareable(new FString(FCognitiveEditorTools::GetInstance()->AdjustPathName(*SceneDisplayName)));
 	}
 
 	ChildSlot
@@ -248,7 +254,7 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 					.Visibility(this, &SDynamicObjectManagerWidget::SceneNotUploadedVisibility)
 					.AutoWrapText(true)
 					.Justification(ETextJustify::Center)
-					.Text(FText::FromString("This window is also accessible from the Cognitive3D menu.\n\nYou can review and upload Dynamic Objects from here.\n\n You will be prompted to export mesh geometry when you continue to the Scene Setup Window."))
+					.Text(FText::FromString("This window is also accessible from the Cognitive3D menu.\n\nYou can review and upload Dynamic Objects from here.\n\n You will be prompted to export mesh geometry when you continue to the Project Manager."))
 				]
 			]
 			+ SVerticalBox::Slot() //button to scene setup window
@@ -262,8 +268,9 @@ void SDynamicObjectManagerWidget::Construct(const FArguments& Args)
 				.HeightOverride(32)
 				[
 					SNew(SButton)
-					.Text(FText::FromString("Open Scene Setup Window"))
-					.OnClicked(this,&SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow)
+					.Text(FText::FromString("Open Full Project Setup"))
+					.HAlign(HAlign_Center)
+					.OnClicked(this,&SDynamicObjectManagerWidget::ExportAndOpenProjectSetup)
 				]
 			]
 
@@ -508,7 +515,7 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 				UDynamicIdPoolAsset* IdPoolAsset = Cast<UDynamicIdPoolAsset>(IdPoolObject);
 
 				UE_LOG(LogTemp, Warning, TEXT("Found dynamic id pool asset %s, uploading ids"), *IdPoolAsset->PrefabName);
-				FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(*SceneDisplayName, IdPoolAsset->Ids, IdPoolAsset->MeshName, IdPoolAsset->PrefabName);
+				FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(*AdjustedSceneDisplayName, IdPoolAsset->Ids, IdPoolAsset->MeshName, IdPoolAsset->PrefabName);
 			}
 		}
 	}
@@ -537,10 +544,10 @@ FReply SDynamicObjectManagerWidget::UploadAllDynamicObjects()
 	if (result2 == FSuppressableWarningDialog::EResult::Confirm)
 	{
 		//then upload all
-		FCognitiveEditorTools::GetInstance()->UploadDynamics(*SceneDisplayName);
+		FCognitiveEditorTools::GetInstance()->UploadDynamics(*AdjustedSceneDisplayName);
 
 		//upload aggregation manifest data
-		FCognitiveEditorTools::GetInstance()->UploadDynamicsManifest(*SceneDisplayName);
+		FCognitiveEditorTools::GetInstance()->UploadDynamicsManifest(*AdjustedSceneDisplayName);
 	}
 
 	return FReply::Handled();
@@ -599,7 +606,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 
 			if (result1 == FSuppressableWarningDialog::EResult::Confirm)
 			{
-				FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(*SceneDisplayName, dynamic->DynamicPoolIds, dynamic->MeshName, dynamic->Name);
+				FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(*AdjustedSceneDisplayName, dynamic->DynamicPoolIds, dynamic->MeshName, dynamic->Name);
 			}
 		}
 		//id pool asset, upload ids for aggregation
@@ -616,7 +623,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 
 			if (result1 == FSuppressableWarningDialog::EResult::Confirm)
 			{
-				FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(*SceneDisplayName, dynamic->DynamicPoolIds, dynamic->MeshName, dynamic->Name);
+				FCognitiveEditorTools::GetInstance()->UploadDynamicsManifestIds(*AdjustedSceneDisplayName, dynamic->DynamicPoolIds, dynamic->MeshName, dynamic->Name);
 			}
 		}
 		//else its a normal dynamic object, we export
@@ -660,7 +667,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 		int32 uploadCount = 0;
 		for (auto& elem : selected)
 		{
-			FCognitiveEditorTools::GetInstance()->UploadDynamic(*SceneDisplayName, elem->MeshName);
+			FCognitiveEditorTools::GetInstance()->UploadDynamic(*AdjustedSceneDisplayName, elem->MeshName);
 		}
 
 		//upload aggregation manifest data of selected objects
@@ -739,7 +746,7 @@ FReply SDynamicObjectManagerWidget::UploadSelectedDynamicObjects()
 			}
 		}
 
-		FCognitiveEditorTools::GetInstance()->UploadSelectedDynamicsManifest(*SceneDisplayName, dynamics);
+		FCognitiveEditorTools::GetInstance()->UploadSelectedDynamicsManifest(*AdjustedSceneDisplayName, dynamics);
 	}
 
 	return FReply::Handled();
@@ -753,7 +760,7 @@ FText SDynamicObjectManagerWidget::UploadSelectedMeshesTooltip() const
 	}
 	else if (!FCognitiveEditorTools::GetInstance()->CurrentSceneHasSceneId())
 	{
-		return FText::FromString("Use the Open Scene Setup Window above to export these meshes and continue the guided setup to the Scene Setup Window");
+		return FText::FromString("Use the Open Full Project Setup above to export these meshes and continue the guided setup to the Project Manager");
 	}
 	else if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory())
 	{
@@ -774,11 +781,11 @@ FText SDynamicObjectManagerWidget::UploadAllMeshesTooltip() const
 	}
 	else if (!SceneDisplayName.IsValid())
 	{
-		return FText::FromString("Use the Open Scene Setup Window above to export these meshes and continue the guided setup to the Scene Setup Window");
+		return FText::FromString("Use the Open Full Project Setup above to export these meshes and continue the guided setup to the Project Manager");
 	}
-	else if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName))
+	else if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*AdjustedSceneDisplayName))
 	{
-		return FText::FromString("Use the Open Scene Setup Window above to export these meshes and continue the guided setup to the Scene Setup Window");
+		return FText::FromString("Use the Open Full Project Setup above to export these meshes and continue the guided setup to the Project Manager");
 	}
 	else if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory())
 	{
@@ -796,7 +803,7 @@ bool SDynamicObjectManagerWidget::IsUploadAllEnabled() const
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
 	if (!FCognitiveEditorTools::GetInstance()->HasSetExportDirectory()) { return false; }
 	if (!SceneDisplayName.IsValid()) { return false; }
-	if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName)) { return false; }
+	if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*AdjustedSceneDisplayName)) { return false; }
 	return true;
 }
 
@@ -902,7 +909,7 @@ bool SDynamicObjectManagerWidget::IsUploadSelectedEnabled() const
 {
 	if (!FCognitiveEditorTools::GetInstance()->HasDeveloperKey()) { return false; }
 	if (!SceneDisplayName.IsValid()) { return false; }
-	if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName)) { return false; }
+	if (!FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*AdjustedSceneDisplayName)) { return false; }
 	
 	//use the selection in the table, not in the scene
 	auto data = SceneDynamicObjectTable->GetSelectedDataCount();
@@ -938,9 +945,9 @@ FText SDynamicObjectManagerWidget::GetSceneText() const
 {
 	auto tools = FCognitiveEditorTools::GetInstance();
 	if (!SceneDisplayName.IsValid()) { return FText::FromString("Scene has not been exported!"); }
-	if (tools->SceneHasSceneId(*SceneDisplayName))
+	if (tools->SceneHasSceneId(*AdjustedSceneDisplayName))
 	{
-		auto data = tools->GetSceneData(*SceneDisplayName);
+		auto data = tools->GetSceneData(*AdjustedSceneDisplayName);
 		//return FText::FromString("Scene: " + data->Name + "   Version: " + FString::FromInt(data->VersionNumber));
 		return FText::FromString("Scene Version: " + FString::FromInt(data->VersionNumber));
 	}
@@ -951,7 +958,7 @@ EVisibility SDynamicObjectManagerWidget::SceneNotUploadedVisibility() const
 {
 	if (SceneDisplayName.IsValid())
 	{
-		if (FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName))
+		if (FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*AdjustedSceneDisplayName))
 		{
 			return EVisibility::Collapsed;
 		}
@@ -971,7 +978,7 @@ EVisibility SDynamicObjectManagerWidget::SceneUploadedVisibility() const
 {
 	if (SceneDisplayName.IsValid())
 	{
-		if (FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*SceneDisplayName))
+		if (FCognitiveEditorTools::GetInstance()->SceneHasSceneId(*AdjustedSceneDisplayName))
 		{
 			return EVisibility::Visible;
 		}
@@ -987,7 +994,7 @@ EVisibility SDynamicObjectManagerWidget::SceneUploadedVisibility() const
 	}
 }
 
-FReply SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow()
+FReply SDynamicObjectManagerWidget::ExportAndOpenProjectSetup()
 {
 	//popup asking if meshes should be exported too
 	FSuppressableWarningDialog::FSetupInfo Info(LOCTEXT("ExportSelectedDynamicsBody", "Do you want to export all Dynamic Object meshes?"), LOCTEXT("ExportSelectedDynamicsTitle", "Export all Dynamic Objects"), "ExportSelectedDynamicsBody");
@@ -1007,9 +1014,9 @@ FReply SDynamicObjectManagerWidget::ExportAndOpenSceneSetupWindow()
 		}
 	}
 
-	//close this window and open the scene setup window
+	//close this window and open the project manager widget
 	FCognitive3DEditorModule::CloseDynamicObjectWindow();
-	FCognitive3DEditorModule::SpawnCognitiveSceneSetupTab();
+	FCognitive3DEditorModule::SpawnFullC3DSetup();
 
 	return FReply::Handled();
 }
@@ -1030,7 +1037,15 @@ void SDynamicObjectManagerWidget::OnSceneNamesChanged(TSharedPtr<FString> NewSel
 	// if it's set from code, we did that on purpose
 	//if (SelectInfo != ESelectInfo::Direct)
 	{
-		SceneDisplayName = NewSelection;
+		if (NewSelection.IsValid())
+		{
+			SceneDisplayName = NewSelection;
+			//AdjustedSceneDisplayName = MakeShareable(new FString(SceneDisplayName->Replace(TEXT("/"), TEXT("_"))));
+			if (SceneDisplayName->Len() > 0)
+			{
+				AdjustedSceneDisplayName = MakeShareable(new FString(FCognitiveEditorTools::GetInstance()->AdjustPathName(*SceneDisplayName)));
+			}
+		}
 	}
 	RefreshDisplayDynamicObjectsCountInScene();
 }
@@ -1038,9 +1053,14 @@ void SDynamicObjectManagerWidget::OnSceneNamesChanged(TSharedPtr<FString> NewSel
 void SDynamicObjectManagerWidget::OnSceneNamesComboOpening()
 {
 	SceneNamesComboList.Empty();
+	if (FCognitiveEditorTools::GetInstance()->GetSceneData().Num() == 0)
+	{
+		//no scenes uploaded
+		return;
+	}
 	for (auto sceneData : FCognitiveEditorTools::GetInstance()->GetSceneData())
 	{
-		SceneNamesComboList.Add(MakeShareable(new FString(sceneData->Name)));
+		SceneNamesComboList.Add(MakeShareable(new FString(sceneData->Path + "/" + sceneData->Name)));
 	}
 
 	if (SceneNamesComboList.Num() == 0)

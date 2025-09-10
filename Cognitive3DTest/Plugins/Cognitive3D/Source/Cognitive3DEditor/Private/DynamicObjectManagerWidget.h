@@ -84,11 +84,12 @@ public:
 	void GetDashboardManifest();
 	void OnDashboardManifestResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	FReply ExportAndOpenSceneSetupWindow();
+	FReply ExportAndOpenProjectSetup();
 
 	
 
 	static TSharedPtr<FString> SceneDisplayName;
+	static TSharedPtr<FString> AdjustedSceneDisplayName;
 
 	TSharedPtr<class SComboBox<TSharedPtr<FString>>> SceneNamesComboBox;
 	TArray<TSharedPtr<FString>> SceneNamesComboList;

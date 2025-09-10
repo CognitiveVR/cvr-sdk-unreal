@@ -46,6 +46,16 @@ public:
 	static FCognitiveEditorTools* GetInstance();
 
 	FOnUploadSceneGeometry OnUploadSceneGeometry;
+	FOnIndividualSceneUploadComplete OnIndividualSceneUploadComplete;
+
+	//delegates for full project setup
+	FOnUploadAllDynamics OnUploadAllDynamics;
+	FOnUploadAllSceneGeometry OnUploadAllSceneGeometry;
+	//keep track of number levels to export/upload
+	//that way we can still call the delegates from this class but only when everything is done
+	//export all scenes, upload all scenes, then upload all dynamics
+	int32 TotalLevelsToUpload = 0;
+	int32 TotalSetOfDynamicsToUpload = 0;
 
 	void SaveSceneData(FString sceneName, FString sceneKey);
 
@@ -152,7 +162,7 @@ public:
 
 	TArray<AActor*> PrepareSceneForExport(bool OnlyExportSelected);
 	
-	bool CompressExportedFiles = false;
+	bool CompressExportedFiles = true; //default true
 	void CompressTexturesInExportFolder(const FString& ExportFolder, int32 MaxSize);
 	void CompressAndSaveTexture(const FString& SourcePath, const FString& DestinationPath, int32 MaxSize);
 
@@ -393,6 +403,7 @@ public:
 	void SaveDeveloperKeyToFile(FString key);
 
 	void WizardUpload(const FString& LevelName);
+	bool WizardUploading = false;
 	bool IsWizardUploading();
 
 	//set to 500, 404, 401 if uploading from the wizard encountered and error
@@ -432,6 +443,14 @@ public:
 
 	//notifications
 	void ShowNotification(FString Message, bool bSuccessful = true);
+
+	FString SplitCharacter = TEXT("_--_");
+	FString AdjustPathName(FString OriginalPathName) const;
+
+	//flag for when uploading dynamics from full project setup
+	bool UploadingDynamicsFromFullSetup = true;
+	//flag for when uploading scenes from full project setup
+	bool UploadingScenesFromFullSetup = false;
 };
 
 //used for uploading multiple dynamics at once
