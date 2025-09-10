@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "SProjectManagerWidget.h"
+#include "ProjectManagerWidget.h"
 #include "SlateOptMacros.h"
 #include "CognitiveEditorTools.h"
 #include "IPluginManager.h"
