@@ -35,7 +35,7 @@ void SProjectManagerWidget::Construct(const FArguments& InArgs)
 	//
 	FCognitiveEditorTools::GetInstance()->ReadSceneDataFromFile();
 	FCognitiveEditorTools::GetInstance()->RefreshDisplayDynamicObjectsCountInScene();
-	FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
+	//FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
 
 	// Initialize each SDKs state by checking build.cs
 	SDKCheckboxStates.Add(TEXT("MetaXR"),
@@ -1299,7 +1299,7 @@ FReply SProjectManagerWidget::ValidateKeys()
 	CheckForExpiredDeveloperKey(DisplayDeveloperKey);
 
 	FCognitiveEditorTools::GetInstance()->SaveDeveloperKeyToFile(DisplayDeveloperKey);
-	FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
+	//FCognitiveEditorTools::GetInstance()->CurrentSceneVersionRequest();
 	FetchApplicationKey(DisplayDeveloperKey);
 	FetchOrganizationDetails(DisplayDeveloperKey);
 	FetchDeveloperKeyExpiryDate(DisplayDeveloperKey);
