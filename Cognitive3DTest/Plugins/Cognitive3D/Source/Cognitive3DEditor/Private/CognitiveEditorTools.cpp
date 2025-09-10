@@ -346,6 +346,12 @@ FString FCognitiveEditorTools::GetSettingsFilePath() const
 			return FString();
 		}
 	}
+
+	//normalize config path for GConfig
+	ConfigFilePath = FPaths::ConvertRelativePathToFull(ConfigFilePath);
+	// Explicitly load the custom config file into GConfig.
+	GConfig->LoadFile(ConfigFilePath);
+
 	return ConfigFilePath;
 }
 
