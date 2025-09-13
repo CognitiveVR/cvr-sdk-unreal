@@ -7,6 +7,19 @@
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "Cognitive3D/Public/DynamicObject.h"
 #include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/Engine.h"
+#include "Cognitive3D/Private/C3DComponents/Media.h"
+#include "Materials/MaterialInterface.h"
+#include "Materials/Material.h"
+#include "Engine/Texture.h"
+#include "MediaAssets/Public/MediaTexture.h"
+#include "Components/StaticMeshComponent.h"
+#include "MediaAssets/Public/MediaPlayer.h"
+#include "Components/PrimitiveComponent.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "MediaAssets/Public/MediaSoundComponent.h"
+#include "Materials/MaterialInstance.h"
 
 UPlayerTracker::UPlayerTracker()
 {
@@ -183,7 +196,8 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 	currentTime -= PlayerSnapshotInterval;
 
-	
+	bool usingMedia = false;
+
 	double timestamp = FUtil::GetTimestamp();
 	FString objectid = "";
 
@@ -219,6 +233,8 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 		bool bHit = false;
 		FCollisionQueryParams gazeparams = FCollisionQueryParams(FName(), true);
+		gazeparams.bTraceComplex = true; // This is the key for UV data!
+		gazeparams.bReturnFaceIndex = true; // Also helps with UV calculation
 		bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, gazeparams);
 
 		GetWorld()->LineTraceSingleByObjectType(FloorHit, captureLocation, FVector(0, 0, -1000), params);
@@ -234,6 +250,245 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		if (bHit)
 		{
 			FVector gaze = Hit.ImpactPoint;
+
+			// Check if this actor has media-related components or materials
+			bool bIsMediaObject = false;
+			UMediaTexture* foundMediaTexture = nullptr;
+			UMediaPlayer* foundMediaPlayer = nullptr;
+			
+			if (Hit.GetActor() != NULL)
+			{
+				// Check for Media component
+				UActorComponent* mediaComponent = Hit.GetActor()->GetComponentByClass(UMedia::StaticClass());
+				if (mediaComponent != NULL)
+				{
+					bIsMediaObject = true;
+				}
+				
+				// Check for Media Sound component (which has MediaPlayer reference)
+				UMediaSoundComponent* mediaSoundComp = Hit.GetActor()->FindComponentByClass<UMediaSoundComponent>();
+				if (mediaSoundComp)
+				{
+					bIsMediaObject = true;
+					foundMediaPlayer = mediaSoundComp->GetMediaPlayer();
+					
+					if (DebugDisplayUVCoordinates && GEngine)
+					{
+						GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Orange, 
+							FString::Printf(TEXT("Found MediaSoundComponent, Player: %s"), 
+								foundMediaPlayer ? *foundMediaPlayer->GetName() : TEXT("NULL")));
+					}
+				}
+				
+				// Check for materials with Media Texture
+				if (!bIsMediaObject && Hit.GetComponent())
+				{
+					UStaticMeshComponent* meshComp = Cast<UStaticMeshComponent>(Hit.GetComponent());
+					if (meshComp)
+					{
+						for (int32 i = 0; i < meshComp->GetNumMaterials(); i++)
+						{
+							UMaterialInterface* material = meshComp->GetMaterial(i);
+							if (material)
+							{
+								// Check if material uses MediaTexture (this is a simplified check)
+								FString materialName = material->GetName();
+								if (materialName.Contains(TEXT("Media")) || materialName.Contains(TEXT("Video")))
+								{
+									bIsMediaObject = true;
+									
+									if (DebugDisplayUVCoordinates && GEngine)
+									{
+										GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Cyan, 
+											FString::Printf(TEXT("Found media material: %s"), *materialName));
+									}
+								}
+								
+								// Also try to find MediaTexture directly in material parameters
+								// Try both dynamic and regular material instances
+								UMaterialInstanceDynamic* dynMaterial = Cast<UMaterialInstanceDynamic>(material);
+								UMaterialInstance* matInstance = Cast<UMaterialInstance>(material);
+								
+								if (dynMaterial || matInstance)
+								{
+									// Try common parameter names for media textures
+									TArray<FString> CommonMediaParams = {TEXT("MediaTexture"), TEXT("Video"), TEXT("Media"), TEXT("VideoTexture"), TEXT("Texture"), TEXT("BaseColor")};
+									for (const FString& ParamName : CommonMediaParams)
+									{
+										UTexture* texture = nullptr;
+										FName paramFName(*ParamName);
+										
+										// Try dynamic material first
+										bool foundParam = false;
+										if (dynMaterial)
+										{
+											foundParam = dynMaterial->GetTextureParameterValue(paramFName, texture);
+										}
+										// Then try regular material instance
+										else if (matInstance)
+										{
+											foundParam = matInstance->GetTextureParameterValue(paramFName, texture);
+										}
+										
+										if (foundParam && texture)
+										{
+											UMediaTexture* mediaTexture = Cast<UMediaTexture>(texture);
+											if (mediaTexture)
+											{
+												bIsMediaObject = true;
+												foundMediaTexture = mediaTexture;
+												foundMediaPlayer = mediaTexture->GetMediaPlayer();
+												
+												if (DebugDisplayUVCoordinates && GEngine)
+												{
+													GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Magenta, 
+														FString::Printf(TEXT("Found MediaTexture in '%s': %s, Player: %s"), 
+															*ParamName,
+															*mediaTexture->GetName(),
+															foundMediaPlayer ? *foundMediaPlayer->GetName() : TEXT("NULL")));
+												}
+												break;
+											}
+										}
+									}
+								}
+								
+								if (bIsMediaObject && foundMediaPlayer)
+								{
+									break; // Found what we need
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			// Only calculate UV coordinates for media objects
+			if (bIsMediaObject)
+			{
+				// Calculate UV coordinates for the hit surface
+				FVector2D UVCoordinates = FVector2D::ZeroVector;
+				bool bValidUV = false;
+				
+				if (DebugDisplayUVCoordinates)
+				{
+					// First, let's see what we're hitting
+					FString HitDebugInfo = FString::Printf(TEXT("MEDIA HIT: Actor=%s, Component=%s"), 
+						Hit.GetActor() ? *Hit.GetActor()->GetName() : TEXT("NULL"),
+						Hit.GetComponent() ? *Hit.GetComponent()->GetName() : TEXT("NULL"));
+					
+					FCognitiveLog::Info(HitDebugInfo);
+					if (GEngine)
+					{
+						GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, HitDebugInfo);
+					}
+				}
+				
+				if (Hit.GetActor() != NULL && Hit.GetComponent() != NULL)
+				{
+					// Try harder to get real UV coordinates with complex trace
+					if (DebugDisplayUVCoordinates && GEngine)
+					{
+						GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::White, 
+							FString::Printf(TEXT("Complex Trace: FaceIndex=%d, Item=%d"), 
+								Hit.FaceIndex, Hit.Item));
+					}
+					
+					bValidUV = UGameplayStatics::FindCollisionUV(Hit, 0, UVCoordinates);
+					if (!bValidUV)
+					{
+						// Try UV channel 1
+						bValidUV = UGameplayStatics::FindCollisionUV(Hit, 1, UVCoordinates);
+					}
+					if (!bValidUV)
+					{
+						// Try UV channel 2
+						bValidUV = UGameplayStatics::FindCollisionUV(Hit, 2, UVCoordinates);
+					}
+					
+					if (DebugDisplayUVCoordinates)
+					{
+						if (bValidUV && GEngine)
+						{
+							GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Purple, 
+								FString::Printf(TEXT("FindCollisionUV succeeded! REAL UV: (%.3f, %.3f)"), 
+									UVCoordinates.X, UVCoordinates.Y));
+						}
+						else if (GEngine)
+						{
+							GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, 
+								TEXT("FindCollisionUV failed - falling back to manual"));
+						}
+					}
+					
+					// If FindCollisionUV still doesn't work, use simple manual calculation
+					if (!bValidUV)
+					{
+						// Convert world hit position to local coordinates
+						FVector LocalHitPos = Hit.GetActor()->GetActorTransform().InverseTransformPosition(Hit.ImpactPoint);
+						
+						// Simple UV calculation - flip Y to make (0,0) bottom-left, (1,1) top-right
+						UVCoordinates.X = FMath::Clamp((LocalHitPos.X / 100.0f) + 0.5f, 0.0f, 1.0f);
+						UVCoordinates.Y = 1.0f - FMath::Clamp((LocalHitPos.Y / 100.0f) + 0.5f, 0.0f, 1.0f);
+						bValidUV = true;
+						
+						if (DebugDisplayUVCoordinates && GEngine)
+						{
+							FString ManualCalcInfo = FString::Printf(TEXT("Simple Manual UV: LocalPos(%.1f,%.1f,%.1f)"), 
+								LocalHitPos.X, LocalHitPos.Y, LocalHitPos.Z);
+							GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Blue, ManualCalcInfo);
+						}
+					}
+					
+					if (DebugDisplayUVCoordinates)
+					{
+						FString UVResultString = FString::Printf(TEXT("UV Result: Valid=%s, UV=(%.3f, %.3f)"), 
+							bValidUV ? TEXT("TRUE") : TEXT("FALSE"),
+							UVCoordinates.X, UVCoordinates.Y);
+						
+						FCognitiveLog::Info(UVResultString);
+						if (GEngine)
+						{
+							GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, UVResultString);
+						}
+					}
+					
+					if (bValidUV && DebugDisplayUVCoordinates)
+					{
+						FString UVDebugString = FString::Printf(TEXT("MEDIA UV: (%.3f, %.3f) - Actor: %s"), 
+							UVCoordinates.X, UVCoordinates.Y, 
+							*Hit.GetActor()->GetName());
+						
+						// Try to get media timestamp if available
+						// Note: This is a simplified approach - finding the actual MediaPlayer requires
+						// more complex material graph traversal
+						FString TimestampInfo = TEXT("");
+						if (foundMediaPlayer && foundMediaPlayer != nullptr)
+						{
+							FTimespan CurrentTime = foundMediaPlayer->GetTime();
+							TimestampInfo = FString::Printf(TEXT(" | Time: %.2fs"), CurrentTime.GetTotalSeconds());
+						}
+						
+						// Log to console
+						FCognitiveLog::Info(UVDebugString + TimestampInfo);
+						
+						// Display on screen
+						if (GEngine)
+						{
+							GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, UVDebugString + TimestampInfo);
+						}
+					}
+				}
+			}
+			else if (DebugDisplayUVCoordinates)
+			{
+				// Show that we're not calculating UVs for non-media objects
+				if (GEngine)
+				{
+					GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Silver, 
+						TEXT("Non-media object - skipping UV calculation"));
+				}
+			}
 
 			if (Hit.GetActor() != NULL)
 			{

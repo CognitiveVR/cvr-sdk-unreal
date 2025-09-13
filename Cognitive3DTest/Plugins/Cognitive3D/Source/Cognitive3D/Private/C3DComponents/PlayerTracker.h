@@ -88,6 +88,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Cognitive3D Analytics")
 		bool RecordGazeHit = true;
 
+	UPROPERTY(EditAnywhere, Category = "Cognitive3D Analytics")
+		bool DebugDisplayUVCoordinates = false;
+
 	float GetLastSendTime();
 	int32 GetPartNumber();
 	int32 GetDataPoints();

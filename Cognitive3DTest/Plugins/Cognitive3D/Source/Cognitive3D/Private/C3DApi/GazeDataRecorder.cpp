@@ -82,6 +82,38 @@ void FGazeDataRecorder::BuildSnapshot(FVector position, FRotator rotation, doubl
 	}
 }
 
+void FGazeDataRecorder::BuildSnapshot(FString mediaId, int32 mediatime, FVector2D uvs, FVector position, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos, FVector gaze, FString objectId)
+{
+	FGazeData data;
+	data.Time = timestamp;
+	data.UseFloor = didHitFloor;
+	data.FloorPosition = floorHitPos;
+	if (!objectId.IsEmpty())
+	{
+		data.DynamicObjectId = objectId;
+		data.UseDynamicId = true;
+	}
+	data.HMDPosition = position;
+	data.HMDRotation = rotation;
+	data.GazePosition = gaze;
+	data.UseGaze = true;
+
+	//media
+	if(!mediaId.IsEmpty())
+	{
+		data.UseMedia = true;
+		data.MediaId = mediaId;
+		data.MediaTime = mediatime;
+		data.MediaUVs = uvs;
+	}
+
+	snapshots.Add(data);
+	if (snapshots.Num() > GazeBatchSize)
+	{
+		SendData(false);
+	}
+}
+
 void FGazeDataRecorder::SendData(bool copyDataToCache)
 {
 	if (!cog.IsValid() || !cog->HasStartedSession()) { return; }
