@@ -187,6 +187,19 @@ void FGazeDataRecorder::SendData(bool copyDataToCache)
 			snapObj->SetArrayField("g", gazeArray);
 		}
 
+		//media
+		if(snapshots[i].UseMedia)
+		{
+			snapObj->SetStringField("mediaId", snapshots[i].MediaId);
+			snapObj->SetNumberField("mediatime", snapshots[i].MediaTime);
+			TArray<TSharedPtr<FJsonValue>> uvArray;
+			JsonValue = MakeShareable(new FJsonValueNumber(snapshots[i].MediaUVs.X));
+			uvArray.Add(JsonValue);
+			JsonValue = MakeShareable(new FJsonValueNumber(snapshots[i].MediaUVs.Y));
+			uvArray.Add(JsonValue);
+			snapObj->SetArrayField("uvs", uvArray);
+		}
+
 		//rotation
 		TArray<TSharedPtr<FJsonValue>> rotArray;
 

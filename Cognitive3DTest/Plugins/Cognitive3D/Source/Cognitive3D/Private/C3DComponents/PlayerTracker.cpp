@@ -256,6 +256,10 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 			UMediaTexture* foundMediaTexture = nullptr;
 			UMediaPlayer* foundMediaPlayer = nullptr;
 			
+			// UV coordinate variables for broader scope
+			FVector2D UVCoordinates = FVector2D::ZeroVector;
+			bool bValidUV = false;
+			
 			if (Hit.GetActor() != NULL)
 			{
 				// Check for Media component
@@ -367,8 +371,6 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 			if (bIsMediaObject)
 			{
 				// Calculate UV coordinates for the hit surface
-				FVector2D UVCoordinates = FVector2D::ZeroVector;
-				bool bValidUV = false;
 				
 				if (DebugDisplayUVCoordinates)
 				{
@@ -515,7 +517,43 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 			{
 				//hit some csg or something that is not an actor
 			}
-			cog->gazeDataRecorder->BuildSnapshot(captureLocation, gaze, captureRotation, timestamp, DidHitFloor, FloorHitPosition, objectid);
+			// Use media snapshot if we have UV coordinates and MediaPlayer data
+			if (bIsMediaObject && bValidUV && foundMediaPlayer)
+			{
+				// Get media timestamp in milliseconds
+				int32 mediaTimeMs = 0;
+				if (foundMediaPlayer && foundMediaPlayer != nullptr)
+				{
+					FTimespan CurrentTime = foundMediaPlayer->GetTime();
+					mediaTimeMs = (int32)CurrentTime.GetTotalMilliseconds();
+				}
+				
+				// Use media BuildSnapshot with UV coordinates
+				cog->gazeDataRecorder->BuildSnapshot(
+					TEXT("123"), // Placeholder mediaId
+					mediaTimeMs,
+					UVCoordinates,
+					captureLocation, 
+					captureRotation, 
+					timestamp, 
+					DidHitFloor, 
+					FloorHitPosition, 
+					gaze, 
+					objectid
+				);
+				
+				if (DebugDisplayUVCoordinates && GEngine)
+				{
+					GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, 
+						FString::Printf(TEXT("MEDIA SNAPSHOT: UV(%.3f,%.3f) Time:%dms"), 
+							UVCoordinates.X, UVCoordinates.Y, mediaTimeMs));
+				}
+			}
+			else
+			{
+				// Use regular snapshot without media data
+				cog->gazeDataRecorder->BuildSnapshot(captureLocation, gaze, captureRotation, timestamp, DidHitFloor, FloorHitPosition, objectid);
+			}
 
 			if (DebugDisplayGaze)
 				DrawDebugSphere(GetWorld(), gaze, 3, 3, FColor::White, false, 0.2);
