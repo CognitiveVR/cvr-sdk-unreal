@@ -32,3 +32,42 @@ void UMedia::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponent
 	// ...
 }
 
+#if WITH_EDITOR
+void UMedia::OnRegister()
+{
+	Super::OnRegister();
+
+	// Check if the owner actor has a Dynamic Object component
+	if (AActor* Owner = GetOwner())
+	{
+		UDynamicObject* ExistingDynamicObject = Owner->FindComponentByClass<UDynamicObject>();
+		if (!ExistingDynamicObject)
+		{
+			// Add a Dynamic Object component if it doesn't exist
+			UDynamicObject* NewDynamicObject = NewObject<UDynamicObject>(Owner, UDynamicObject::StaticClass(), TEXT("DynamicObject"));
+			if (NewDynamicObject)
+			{
+				Owner->AddInstanceComponent(NewDynamicObject);
+
+				// Find a mesh component to attach to, otherwise use root
+				USceneComponent* AttachParent = Owner->GetRootComponent();
+
+				// Look for any mesh component (StaticMesh, SkeletalMesh, etc.)
+				UMeshComponent* MeshComp = Owner->FindComponentByClass<UMeshComponent>();
+				if (MeshComp)
+				{
+					AttachParent = MeshComp;
+				}
+
+				if (AttachParent)
+				{
+					NewDynamicObject->AttachToComponent(AttachParent, FAttachmentTransformRules::KeepRelativeTransform);
+				}
+
+				NewDynamicObject->RegisterComponent();
+			}
+		}
+	}
+}
+#endif
+

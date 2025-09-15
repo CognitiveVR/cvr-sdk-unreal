@@ -4,11 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Components/MeshComponent.h"
+#include "DynamicObject.h"
 #include "Media.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class UMedia : public UActorComponent
+class COGNITIVE3D_API UMedia : public UActorComponent
 {
 	GENERATED_BODY()
 
@@ -20,9 +22,25 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
+#if WITH_EDITOR
+	virtual void OnRegister() override;
+#endif
+
+public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
+	UPROPERTY(EditAnywhere, Category = "Media Source")
+	FString SelectedMediaSourceId;
+
+	UPROPERTY(VisibleAnywhere, Category = "Media Source")
+	FString MediaName;
+
+	UPROPERTY(VisibleAnywhere, Category = "Media Source")
+	FString MediaId;
+
+	UPROPERTY(VisibleAnywhere, Category = "Media Source")
+	FString MediaDescription;
+
+
 };
