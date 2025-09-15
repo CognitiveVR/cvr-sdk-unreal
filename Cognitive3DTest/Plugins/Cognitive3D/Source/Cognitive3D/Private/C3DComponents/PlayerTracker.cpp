@@ -255,6 +255,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 			bool bIsMediaObject = false;
 			UMediaTexture* foundMediaTexture = nullptr;
 			UMediaPlayer* foundMediaPlayer = nullptr;
+			UMedia* foundMediaComponent = nullptr;
 			
 			// UV coordinate variables for broader scope
 			FVector2D UVCoordinates = FVector2D::ZeroVector;
@@ -267,6 +268,7 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 				if (mediaComponent != NULL)
 				{
 					bIsMediaObject = true;
+					foundMediaComponent = Cast<UMedia>(mediaComponent);
 				}
 				
 				// Check for Media Sound component (which has MediaPlayer reference)
@@ -528,17 +530,24 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 					mediaTimeMs = (int32)CurrentTime.GetTotalMilliseconds();
 				}
 				
+				// Get the actual media ID from the Media component
+				FString mediaId = TEXT("");
+				if (foundMediaComponent && !foundMediaComponent->MediaId.IsEmpty())
+				{
+					mediaId = foundMediaComponent->MediaId;
+				}
+
 				// Use media BuildSnapshot with UV coordinates
 				cog->gazeDataRecorder->BuildSnapshot(
-					TEXT("123"), // Placeholder mediaId
+					mediaId,
 					mediaTimeMs,
 					UVCoordinates,
-					captureLocation, 
-					captureRotation, 
-					timestamp, 
-					DidHitFloor, 
-					FloorHitPosition, 
-					gaze, 
+					captureLocation,
+					captureRotation,
+					timestamp,
+					DidHitFloor,
+					FloorHitPosition,
+					gaze,
 					objectid
 				);
 				
