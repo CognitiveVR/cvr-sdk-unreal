@@ -409,6 +409,12 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 						// Try UV channel 2
 						bValidUV = UGameplayStatics::FindCollisionUV(Hit, 2, UVCoordinates);
 					}
+
+					// Flip Y coordinate to match dashboard coordinate system (0,0 = bottom-left)
+					if (bValidUV)
+					{
+						UVCoordinates.Y = 1.0f - UVCoordinates.Y;
+					}
 					
 					if (DebugDisplayUVCoordinates)
 					{
