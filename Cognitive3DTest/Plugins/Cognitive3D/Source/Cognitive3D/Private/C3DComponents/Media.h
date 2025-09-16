@@ -6,6 +6,9 @@
 #include "Components/ActorComponent.h"
 #include "Components/MeshComponent.h"
 #include "DynamicObject.h"
+#include "MediaAssets/Public/MediaPlayer.h"
+#include "MediaAssets/Public/MediaSoundComponent.h"
+#include "MediaAssets/Public/MediaTexture.h"
 #include "Media.generated.h"
 
 
@@ -21,6 +24,7 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 #if WITH_EDITOR
 	virtual void OnRegister() override;
@@ -41,6 +45,30 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "Media Source")
 	FString MediaDescription;
+
+	TSharedPtr<FAnalyticsProviderCognitive3D> cognitive;
+
+private:
+	// Reference to the associated media player
+	UPROPERTY()
+	UMediaPlayer* AssociatedMediaPlayer;
+
+	// Event handlers
+	UFUNCTION()
+	void OnMediaPlayerOpened(FString OpenedUrl);
+
+	UFUNCTION()
+	void OnMediaPlayerPlaybackResumed();
+
+	UFUNCTION()
+	void OnMediaPlayerPlaybackSuspended();
+
+	UFUNCTION()
+	void OnMediaPlayerClosed();
+
+	// Helper function to find associated media player
+	void FindAndBindToMediaPlayer();
+	void UnbindFromMediaPlayer();
 
 
 };
