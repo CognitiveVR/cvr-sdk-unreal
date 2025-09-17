@@ -24,6 +24,10 @@ public:
     void TrackEvent(const FString& EventName, const FString& ButtonName);
     void TrackEvent(const FString& EventName, TSharedPtr<FJsonObject> Properties);
 
+    //getters
+    int32 GetUserId() const { return UserId; }
+    int32 GetProjectId() const { return ProjectId; }
+
 private:
     
     FString KEY_URL = "https://data.cognitive3d.com/segmentWriteKey?engine=unreal";
@@ -32,6 +36,7 @@ private:
     int32 UserId = 0;
     int32 AnonymousId = 0;
     int32 GroupId = 0;
+    int32 ProjectId = 0;
 
     void FetchUserData();
     void Identify(TSharedPtr<FJsonObject> UserData);

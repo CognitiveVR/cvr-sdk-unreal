@@ -55,6 +55,9 @@ private:
     bool HasRemoteControlsComponent() const;
     //custom events
 	FReply OnLaunchCustomEvents();
+    //media
+    FReply OnOpenMediaDashboard();
+    FReply OnAddMediaComponent();
     //developer key validation
     void CheckForExpiredDeveloperKey(FString developerKey);
     void OnDeveloperKeyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
