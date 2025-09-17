@@ -6,9 +6,9 @@
 #include "Components/ActorComponent.h"
 #include "Components/MeshComponent.h"
 #include "DynamicObject.h"
-#include "MediaAssets/Public/MediaPlayer.h"
-#include "MediaAssets/Public/MediaSoundComponent.h"
-#include "MediaAssets/Public/MediaTexture.h"
+#include "MediaPlayer.h"
+#include "MediaSoundComponent.h"
+#include "MediaTexture.h"
 #include "Media.generated.h"
 
 

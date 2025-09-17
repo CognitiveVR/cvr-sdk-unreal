@@ -13,12 +13,12 @@
 #include "Materials/MaterialInterface.h"
 #include "Materials/Material.h"
 #include "Engine/Texture.h"
-#include "MediaAssets/Public/MediaTexture.h"
+#include "MediaTexture.h"
 #include "Components/StaticMeshComponent.h"
-#include "MediaAssets/Public/MediaPlayer.h"
+#include "MediaPlayer.h"
 #include "Components/PrimitiveComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "MediaAssets/Public/MediaSoundComponent.h"
+#include "MediaSoundComponent.h"
 #include "Materials/MaterialInstance.h"
 
 UPlayerTracker::UPlayerTracker()
