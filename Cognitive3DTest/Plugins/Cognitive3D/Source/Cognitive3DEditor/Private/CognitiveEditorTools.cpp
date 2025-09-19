@@ -4413,7 +4413,7 @@ bool FCognitiveEditorTools::GenerateSettingsJsonFile(const FString& LevelName)
 
 bool FCognitiveEditorTools::HasSettingsJsonFile(const FString& LevelName) const
 {
-	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::HasSettingsJsonFile called with LevelName: %s"), *LevelName);
+	//UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::HasSettingsJsonFile called with LevelName: %s"), *LevelName);
 
 	FString ObjPath = FPaths::Combine(BaseExportDirectory, LevelName);
 	FString escapedOutPath = ObjPath.Replace(TEXT(" "), TEXT("\" \""));
