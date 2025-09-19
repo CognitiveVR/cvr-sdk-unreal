@@ -71,6 +71,18 @@ private:
 	FVector LastDirection;
 	TArray<APlayerController*, FDefaultAllocator> controllers;
 
+	// Media detection helper functions
+	struct FMediaDetectionResult
+	{
+		bool bIsMediaObject = false;
+		class UMediaTexture* FoundMediaTexture = nullptr;
+		class UMediaPlayer* FoundMediaPlayer = nullptr;
+		class UMedia* FoundMediaComponent = nullptr;
+	};
+
+	FMediaDetectionResult DetectMediaComponents(const FHitResult& Hit);
+	bool CalculateUVCoordinates(const FHitResult& Hit, FVector2D& OutUVCoordinates);
+
 public:
 
 	const float PlayerSnapshotInterval = 0.1;
