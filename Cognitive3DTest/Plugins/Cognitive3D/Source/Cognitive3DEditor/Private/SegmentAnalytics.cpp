@@ -148,6 +148,7 @@ void USegmentAnalytics::FetchUserData()
 
             int32 ParsedUserId = 0;
             int32 ParsedGroupId = 0;
+			int32 ParsedProjectId = 0;
 
             if (UserData->TryGetNumberField(TEXT("userId"), ParsedUserId))
             {
@@ -158,6 +159,11 @@ void USegmentAnalytics::FetchUserData()
             {
                 GroupId = ParsedGroupId;
             }
+
+            if (UserData->TryGetNumberField(TEXT("projectId"), ParsedProjectId))
+            {
+                ProjectId = ParsedProjectId;
+			}
 
             Identify(UserData);
             Group(UserData);
@@ -186,9 +192,9 @@ void USegmentAnalytics::Identify(TSharedPtr<FJsonObject> UserData)
 	{
 		Traits->SetStringField(TEXT("name"), fullName);
 	}
-	int32 ProjectId = 0;
+
     FString ProjectName;
-	if (UserData->TryGetNumberField(TEXT("projectId"), ProjectId)) Traits->SetNumberField(TEXT("projectId"), ProjectId);
+    Traits->SetNumberField(TEXT("projectId"), ProjectId);
 	if (UserData->TryGetStringField(TEXT("projectName"), ProjectName))
 	{
 		Traits->SetStringField(TEXT("projectName"), ProjectName);

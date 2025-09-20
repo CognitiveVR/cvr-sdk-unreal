@@ -233,6 +233,7 @@ void FCognitive3DEditorModule::StartupModule()
 	PropertyModule.RegisterCustomClassLayout(TEXT("Cognitive3DSettings"), FOnGetDetailCustomizationInstance::CreateStatic(&ICognitiveSettingsCustomization::MakeInstance));
 	PropertyModule.RegisterCustomClassLayout(TEXT("DynamicObject"), FOnGetDetailCustomizationInstance::CreateStatic(&IDynamicObjectComponentDetails::MakeInstance));
 	PropertyModule.RegisterCustomClassLayout(TEXT("DynamicIdPoolAsset"), FOnGetDetailCustomizationInstance::CreateStatic(&IDynamicIdPoolAssetDetails::MakeInstance));
+	PropertyModule.RegisterCustomClassLayout(TEXT("Media"), FOnGetDetailCustomizationInstance::CreateStatic(&IMediaComponentDetails::MakeInstance));
 
 	UE_LOG(LogTemp, Log, TEXT("Cognitive3DEditorModule started up"));
 	if (RestartAfterSetupString == "True")
@@ -296,6 +297,10 @@ void FCognitive3DEditorModule::StartupModule()
 
 void FCognitive3DEditorModule::ShutdownModule()
 {
+	// Unregister the details customizations
+	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
+	PropertyModule.UnregisterCustomClassLayout(TEXT("Media"));
+
 	FCognitiveEditorStyle::Shutdown();
 	FCognitive3DCommands::Unregister();
 }

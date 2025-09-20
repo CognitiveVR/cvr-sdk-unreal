@@ -47,6 +47,8 @@ class UCognitive3DBlueprints;
 
 		void BuildSnapshot(FVector position, FVector gaze, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos, FString objectId = "");
 		void BuildSnapshot(FVector position, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos);
+		//build snapshot for media
+		void BuildSnapshot(FString mediaId, int32 mediatime, FVector2D uvs, FVector position, FRotator rotation, double timestamp, bool didHitFloor, FVector floorHitPos, FVector gaze, FString objectId);
 
 		float GetLastSendTime() { return LastSendTime; }
 		int32 GetPartNumber() { return jsonPart; }

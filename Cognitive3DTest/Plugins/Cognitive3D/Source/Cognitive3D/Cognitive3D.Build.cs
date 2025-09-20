@@ -63,6 +63,7 @@ namespace UnrealBuildTool.Rules
                     "EyeTracker",
 					"EnhancedInput",
 					"InputCore",
+					"MediaAssets",
                     "Landscape"
                 }
 				);

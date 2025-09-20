@@ -26,6 +26,8 @@
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "CognitiveEditorTools.h"
+#include "Cognitive3D/Private/C3DComponents/Media.h"
+#include "Toolkits/IToolkitHost.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SFeatureBuilderWidget::Construct(const FArguments& InArgs)
@@ -48,7 +50,11 @@ void SFeatureBuilderWidget::Construct(const FArguments& InArgs)
 
 		{ TEXT("CustomEvents"), FText::FromString("Custom Events"),
 		  FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.CustomEvents")),
-		  FText::FromString("Samples showing how to record custom events in C++ and Blueprints") }
+		  FText::FromString("Samples showing how to record custom events in C++ and Blueprints") },
+
+		{ TEXT("Media"), FText::FromString("Media Analytics"),
+		  FCognitiveEditorStyle::GetBrush(TEXT("CognitiveEditor.MediaComponent")),
+		  FText::FromString("Track user interactions with video and media content in your experience.") }
 	};
 
     // Validate developer key on startup
@@ -392,6 +398,51 @@ TSharedRef<SWidget> SFeatureBuilderWidget::CreateDetailWidget()
 					]
 			];
 	}
+	else if (SelectedFeature == TEXT("Media"))
+	{
+		USegmentAnalytics::Get()->TrackEvent(TEXT("MediaWindow_Opened"), TEXT("FeatureBuilderWindow"));
+		return SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(5)
+			[
+				SNew(SBox)
+				.HAlign(HAlign_Fill)
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString("Media Analytics allows you to track user interactions with video and media content. Monitor gaze patterns, points of interest, and user engagement with your media to understand content effectiveness and user behavior."))
+					.AutoWrapText(true)
+					.Font(FEditorStyle::GetFontStyle("RegularText"))
+					.Justification(ETextJustify::Left)
+				]
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.HAlign(HAlign_Center)
+			.Padding(5)
+			[
+				SNew(SBox)
+				.WidthOverride(FOptionalSize())
+				[
+					SNew(SButton)
+					.Text(FText::FromString("Open Media Dashboard"))
+					.OnClicked(this, &SFeatureBuilderWidget::OnOpenMediaDashboard)
+				]
+			]
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.HAlign(HAlign_Center)
+			.Padding(5)
+			[
+				SNew(SBox)
+				.WidthOverride(FOptionalSize())
+				[
+					SNew(SButton)
+					.Text(FText::FromString("Add Media Component"))
+					.OnClicked(this, &SFeatureBuilderWidget::OnAddMediaComponent)
+				]
+			];
+	}
 
 	// Fallback
 	return SNew(STextBlock)
@@ -720,6 +771,72 @@ FReply SFeatureBuilderWidget::OnBackClicked()
 {
 	USegmentAnalytics::Get()->TrackEvent(TEXT("BackButton_Clicked"), TEXT("FeatureBuilderWindow"));
 	CurrentMode = EPageMode::List;
+	return FReply::Handled();
+}
+
+FReply SFeatureBuilderWidget::OnOpenMediaDashboard()
+{
+	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
+	GConfig->LoadFile(C3DSettingsPath);
+
+	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	if (Gateway.Len() == 0)
+	{
+		Gateway = "app.cognitive3d.com";
+	}
+	Gateway = Gateway.Replace(TEXT("data."), TEXT("app."));
+
+	int32 ProjectId = USegmentAnalytics::Get()->GetProjectId();
+	
+	FString ManageMediaUrl = "https://" + Gateway + "/v3/settings/projects/" + FString::FromInt(ProjectId) + "/managemedia";
+
+	FPlatformProcess::LaunchURL(*ManageMediaUrl, nullptr, nullptr);
+	return FReply::Handled();
+}
+
+FReply SFeatureBuilderWidget::OnAddMediaComponent()
+{
+	// Get the currently selected actor
+	USelection* SelectedActors = GEditor->GetSelectedActors();
+	if (SelectedActors && SelectedActors->Num() > 0)
+	{
+		for (FSelectionIterator Iter(*SelectedActors); Iter; ++Iter)
+		{
+			AActor* Actor = Cast<AActor>(*Iter);
+			if (Actor)
+			{
+				// Check if the actor already has a Media component
+				UMedia* ExistingMediaComponent = Actor->FindComponentByClass<UMedia>();
+				if (ExistingMediaComponent)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Actor %s already has a Media component"), *Actor->GetName());
+					continue;
+				}
+
+				// Add Media component to the actor
+				UMedia* NewMediaComponent = NewObject<UMedia>(Actor, UMedia::StaticClass(), TEXT("MediaComponent"));
+				if (NewMediaComponent)
+				{
+					Actor->AddInstanceComponent(NewMediaComponent);
+					NewMediaComponent->RegisterComponent();
+
+					// Mark the actor as modified for saving
+					Actor->Modify();
+
+					UE_LOG(LogTemp, Log, TEXT("Added Media component to actor: %s"), *Actor->GetName());
+				}
+			}
+		}
+
+		// Refresh the details panel
+		FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+		PropertyModule.NotifyCustomizationModuleChanged();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No actor selected. Please select an actor to add the Media component."));
+	}
+
 	return FReply::Handled();
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
