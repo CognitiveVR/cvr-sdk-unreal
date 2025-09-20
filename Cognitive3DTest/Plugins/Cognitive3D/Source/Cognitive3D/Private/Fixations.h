@@ -42,6 +42,12 @@ public:
 
 		bool UseDynamicId = false;
 		FString DynamicObjectId = "";
+
+		//uv data
+		bool UseMedia = false;
+		FString MediaId = "";
+		int32 MediaTime = 0;
+		FVector2D MediaUVs = FVector2D(0, 0);
 };
 
 USTRUCT()

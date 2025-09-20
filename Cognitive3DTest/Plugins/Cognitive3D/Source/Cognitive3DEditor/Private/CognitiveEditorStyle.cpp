@@ -78,6 +78,14 @@ void FCognitiveEditorStyle::Initialize()
             )
         );
 
+        StyleInstance->Set(
+            TEXT("CognitiveEditor.MediaComponent"),
+            new FSlateImageBrush(
+                ResourceDir / TEXT("mediaComponent.png"),
+                FVector2D(100, 100)
+            )
+        );
+
         // Code box styling - consistent across UE versions
         StyleInstance->Set(
             TEXT("CognitiveEditor.CodeBox"),

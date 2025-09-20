@@ -23,6 +23,7 @@
 #include "DynamicComponentDetails.h"
 #include "DynamicIdPoolAssetDetails.h"
 #include "DynamicIdPoolAssetActions.h"
+#include "MediaComponentDetails.h"
 
 class FCognitive3DEditorModule : public IModuleInterface, IHasMenuExtensibility, IHasToolBarExtensibility
 {
