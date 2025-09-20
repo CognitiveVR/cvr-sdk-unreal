@@ -14,7 +14,7 @@
 DEFINE_LOG_CATEGORY_STATIC(Cognitive3D_Log, Log, All);
 
 #define Cognitive3D_SDK_NAME "unreal"
-#define Cognitive3D_SDK_VERSION "2.0.0"
+#define Cognitive3D_SDK_VERSION "2.1.0"
 
 class IAnalyticsProvider;
 class FAnalyticsProviderCognitive3D;
