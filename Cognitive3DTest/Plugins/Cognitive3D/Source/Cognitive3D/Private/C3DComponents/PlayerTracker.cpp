@@ -413,9 +413,9 @@ UPlayerTracker::FMediaDetectionResult UPlayerTracker::DetectMediaComponents(cons
 
 		if (DebugDisplayUVCoordinates && GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Orange,
-				FString::Printf(TEXT("Found MediaSoundComponent, Player: %s"),
-					Result.FoundMediaPlayer ? *Result.FoundMediaPlayer->GetName() : TEXT("NULL")));
+			//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Orange,
+			//	FString::Printf(TEXT("Found MediaSoundComponent, Player: %s"),
+			//		Result.FoundMediaPlayer ? *Result.FoundMediaPlayer->GetName() : TEXT("NULL")));
 		}
 	}
 
@@ -438,8 +438,8 @@ UPlayerTracker::FMediaDetectionResult UPlayerTracker::DetectMediaComponents(cons
 
 						if (DebugDisplayUVCoordinates && GEngine)
 						{
-							GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Cyan,
-								FString::Printf(TEXT("Found media material: %s"), *materialName));
+							//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Cyan,
+							//	FString::Printf(TEXT("Found media material: %s"), *materialName));
 						}
 					}
 
@@ -480,11 +480,11 @@ UPlayerTracker::FMediaDetectionResult UPlayerTracker::DetectMediaComponents(cons
 
 									if (DebugDisplayUVCoordinates && GEngine)
 									{
-										GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Magenta,
-											FString::Printf(TEXT("Found MediaTexture in '%s': %s, Player: %s"),
-												*ParamName,
-												*mediaTexture->GetName(),
-												Result.FoundMediaPlayer ? *Result.FoundMediaPlayer->GetName() : TEXT("NULL")));
+										//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Magenta,
+										//	FString::Printf(TEXT("Found MediaTexture in '%s': %s, Player: %s"),
+										//		*ParamName,
+										//		*mediaTexture->GetName(),
+										//		Result.FoundMediaPlayer ? *Result.FoundMediaPlayer->GetName() : TEXT("NULL")));
 									}
 									break;
 								}
@@ -519,7 +519,7 @@ bool UPlayerTracker::CalculateUVCoordinates(const FHitResult& Hit, FVector2D& Ou
 		FCognitiveLog::Info(HitDebugInfo);
 		if (GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, HitDebugInfo);
+			//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, HitDebugInfo);
 		}
 	}
 
@@ -528,9 +528,9 @@ bool UPlayerTracker::CalculateUVCoordinates(const FHitResult& Hit, FVector2D& Ou
 		// Try harder to get real UV coordinates with complex trace
 		if (DebugDisplayUVCoordinates && GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::White,
-				FString::Printf(TEXT("Complex Trace: FaceIndex=%d, Item=%d"),
-					Hit.FaceIndex, Hit.Item));
+			//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::White,
+			//	FString::Printf(TEXT("Complex Trace: FaceIndex=%d, Item=%d"),
+			//		Hit.FaceIndex, Hit.Item));
 		}
 
 		bValidUV = UGameplayStatics::FindCollisionUV(Hit, 0, OutUVCoordinates);
@@ -555,14 +555,14 @@ bool UPlayerTracker::CalculateUVCoordinates(const FHitResult& Hit, FVector2D& Ou
 		{
 			if (bValidUV && GEngine)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Purple,
-					FString::Printf(TEXT("FindCollisionUV succeeded! REAL UV: (%.3f, %.3f)"),
-						OutUVCoordinates.X, OutUVCoordinates.Y));
+				//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Purple,
+				//	FString::Printf(TEXT("FindCollisionUV succeeded! REAL UV: (%.3f, %.3f)"),
+				//		OutUVCoordinates.X, OutUVCoordinates.Y));
 			}
 			else if (GEngine)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red,
-					TEXT("FindCollisionUV failed - falling back to manual"));
+				//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red,
+				//	TEXT("FindCollisionUV failed - falling back to manual"));
 			}
 		}
 
@@ -581,7 +581,7 @@ bool UPlayerTracker::CalculateUVCoordinates(const FHitResult& Hit, FVector2D& Ou
 			{
 				FString ManualCalcInfo = FString::Printf(TEXT("Simple Manual UV: LocalPos(%.1f,%.1f,%.1f)"),
 					LocalHitPos.X, LocalHitPos.Y, LocalHitPos.Z);
-				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Blue, ManualCalcInfo);
+				//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Blue, ManualCalcInfo);
 			}
 		}
 
@@ -594,7 +594,7 @@ bool UPlayerTracker::CalculateUVCoordinates(const FHitResult& Hit, FVector2D& Ou
 			FCognitiveLog::Info(UVResultString);
 			if (GEngine)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, UVResultString);
+				//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, UVResultString);
 			}
 		}
 
@@ -611,7 +611,7 @@ bool UPlayerTracker::CalculateUVCoordinates(const FHitResult& Hit, FVector2D& Ou
 			// This debug info doesn't access the media player since it's not passed to this function
 			if (GEngine)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, UVDebugString + TimestampInfo);
+				//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, UVDebugString + TimestampInfo);
 			}
 		}
 	}
