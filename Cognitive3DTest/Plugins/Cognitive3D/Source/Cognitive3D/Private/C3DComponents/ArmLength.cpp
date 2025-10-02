@@ -3,6 +3,7 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/ArmLength.h"
+#include "Cognitive3D/Public/Cognitive3D.h" // Moved from header to implementation
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Cognitive3D/Public/DynamicObject.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"

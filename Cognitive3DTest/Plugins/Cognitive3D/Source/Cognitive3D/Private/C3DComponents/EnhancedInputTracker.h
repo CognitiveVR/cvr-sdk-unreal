@@ -21,7 +21,7 @@
 #include "PXR_InputFunctionLibrary.h"
 #include "PICOXRInput/Private/PXR_InputState.h"
 #endif 
-#include "Cognitive3D/Public/Cognitive3D.h"
+// #include "Cognitive3D/Public/Cognitive3D.h" // Replaced with forward declarations
 #include "Cognitive3D/Public/DynamicObject.h"
 #include "MotionControllerComponent.h"
 #include "Cognitive3D/Private/C3DComponents/InputTracker.h"

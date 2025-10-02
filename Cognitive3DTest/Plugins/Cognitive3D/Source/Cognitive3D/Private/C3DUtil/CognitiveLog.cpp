@@ -2,6 +2,7 @@
 ** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
 */
 #include "C3DUtil/CognitiveLog.h"
+#include "Cognitive3D/Public/Cognitive3D.h" // Moved from header to implementation
 #include "Analytics.h"
 
 bool FCognitiveLog::ShowDebugLogs; //basic info/warning/errors

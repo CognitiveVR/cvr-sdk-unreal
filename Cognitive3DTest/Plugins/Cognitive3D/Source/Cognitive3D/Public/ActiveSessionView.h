@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Cognitive3D/Public/Cognitive3D.h"
+// #include "Cognitive3D/Public/Cognitive3D.h" // Moved to .cpp file
 #include "Blueprint/UserWidget.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Blueprint/WidgetBlueprintGeneratedClass.h"
@@ -14,6 +14,8 @@
 #include "ActiveSessionViewRequired.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "ActiveSessionView.generated.h"
+
+class UFixationRecorder;
 
 //provides the interface to get data about fixations and eye tracking from fixation recorder to the ASV widget
 //creates the active session view widget and calls 'initialize' to pass a reference to this

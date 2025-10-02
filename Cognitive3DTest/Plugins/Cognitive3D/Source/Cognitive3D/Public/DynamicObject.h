@@ -5,7 +5,7 @@
 #pragma once
 
 #include "Cognitive3D/Public/C3DCommonTypes.h"
-#include "Cognitive3D/Public/Cognitive3D.h"
+// #include "Cognitive3D/Public/Cognitive3D.h" // Replaced with forward declarations
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -23,6 +23,7 @@ class UCognitive3DBlueprints;
 class FDynamicObjectManager;
 class FDynamicObjectId;
 class UDynamicIdPoolAsset;
+class FAnalyticsProviderCognitive3D;
 
 UENUM(BlueprintType)
 enum class EIdSourceType : uint8

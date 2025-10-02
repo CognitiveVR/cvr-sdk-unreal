@@ -2,6 +2,7 @@
 
 
 #include "C3DComponents/SocialPlatform.h"
+#include "Cognitive3D/Public/Cognitive3D.h" // Moved from header to implementation
 #ifdef INCLUDE_OCULUS_PLATFORM
 #include "OVRPlatform.h"
 #include "OVR_Platform.h"

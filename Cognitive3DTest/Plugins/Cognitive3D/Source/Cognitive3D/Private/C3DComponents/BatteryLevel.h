@@ -5,7 +5,7 @@
 #pragma once
 
 #include "Cognitive3D/Private/C3DUtil/Util.h"
-#include "Cognitive3D/Public/Cognitive3D.h"
+// #include "Cognitive3D/Public/Cognitive3D.h" // Replaced with forward declarations
 #if PLATFORM_ANDROID
 #include "Android/AndroidPlatformMisc.h"
 #endif

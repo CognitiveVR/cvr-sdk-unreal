@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "Cognitive3D/Public/Cognitive3D.h"
+//#include "Cognitive3D/Public/Cognitive3D.h" // Restored for editor module compatibility
 #include "AnalyticsSettings.h"
 #include "Cognitive3DSettings.generated.h"
 

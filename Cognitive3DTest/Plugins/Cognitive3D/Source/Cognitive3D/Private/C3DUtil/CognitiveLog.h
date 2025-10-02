@@ -3,7 +3,8 @@
 */
 #pragma once
 
-#include "Cognitive3D/Public/Cognitive3D.h"
+#include "CoreMinimal.h" // Only needs FString
+// #include "Cognitive3D/Public/Cognitive3D.h" // Replaced with minimal include
 
     class FCognitiveLog
     {

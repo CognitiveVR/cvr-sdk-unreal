@@ -3,6 +3,7 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/BatteryLevel.h"
+#include "Cognitive3D/Public/Cognitive3D.h" // Moved from header to implementation
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
 

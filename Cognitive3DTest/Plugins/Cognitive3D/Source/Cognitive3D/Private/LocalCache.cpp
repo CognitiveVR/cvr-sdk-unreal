@@ -4,6 +4,7 @@
 
 #include "LocalCache.h"
 #include "Analytics.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
 
 FLocalCache::FLocalCache(FString path)
 {

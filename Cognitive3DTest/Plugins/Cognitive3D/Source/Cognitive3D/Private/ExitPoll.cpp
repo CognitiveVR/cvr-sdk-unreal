@@ -3,6 +3,11 @@
 */
 
 #include "ExitPoll.h"
+#include "Cognitive3D/Public/Cognitive3D.h" // Moved from header
+#include "Cognitive3D/Public/Cognitive3DProvider.h" // Moved from header
+#include "Cognitive3D/Public/Cognitive3DSettings.h" // Moved from header
+#include "Cognitive3D/Private/C3DUtil/Util.h" // Moved from header
+#include "Cognitive3D/Private/C3DComponents/PlayerTracker.h" // Moved from header
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
 
 //FCognitiveExitPollResponse FExitPoll::lastResponse;

@@ -3,7 +3,7 @@
 */
 #pragma once
 
-#include "Cognitive3D/Public/Cognitive3D.h"
+// #include "Cognitive3D/Public/Cognitive3D.h" // Moved to .cpp file
 #include "Cognitive3D/Private/ExitPoll.h"
 #include "Cognitive3D/Private/LocalCache.h"
 #include "Http.h"

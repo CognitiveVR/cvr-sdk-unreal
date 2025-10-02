@@ -5,7 +5,7 @@
 #pragma once
 
 #include "C3DCommonTypes.h"
-#include "Cognitive3D/Public/Cognitive3D.h"
+// #include "Cognitive3D/Public/Cognitive3D.h" // Replaced with forward declarations
 #include "CoreMinimal.h"
 #include "Cognitive3DActor.generated.h"
 

@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "Cognitive3D/Public/Cognitive3D.h"
+// #include "Cognitive3D/Public/Cognitive3D.h" // Replaced with forward declarations
 #include "Kismet/GameplayStatics.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "Cognitive3D/Public/DynamicObject.h"

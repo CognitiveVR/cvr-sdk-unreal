@@ -3,6 +3,7 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/RoomSize.h"
+#include "Cognitive3D/Public/Cognitive3D.h" // Moved from header to implementation
 
 URoomSize::URoomSize()
 {

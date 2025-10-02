@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Cognitive3D/Public/Cognitive3D.h"
+// #include "Cognitive3D/Public/Cognitive3D.h" // Replaced with forward declarations
 #include "GenericPlatform/GenericPlatformDriver.h"
 #include "GeneralProjectSettings.h" //used to get project version
 #include "Misc/App.h" //used to get project name

@@ -3,6 +3,7 @@
 */
 
 #include "C3DUtil/Util.h"
+#include "Cognitive3D/Public/Cognitive3D.h" // Moved from header to implementation
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 

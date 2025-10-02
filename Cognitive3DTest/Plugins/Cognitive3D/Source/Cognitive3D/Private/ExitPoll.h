@@ -7,11 +7,11 @@
 #pragma once
 
 #include "Cognitive3D/Public/C3DCommonTypes.h"
-#include "Cognitive3D/Public/Cognitive3D.h"
-#include "Cognitive3D/Public/Cognitive3DProvider.h"
-#include "Cognitive3D/Public/Cognitive3DSettings.h"
-#include "Cognitive3D/Private/C3DUtil/Util.h"
-#include "Cognitive3D/Private/C3DComponents/PlayerTracker.h"
+// #include "Cognitive3D/Public/Cognitive3D.h" // Replaced with forward declarations
+// #include "Cognitive3D/Public/Cognitive3DProvider.h" // Replaced with forward declarations
+// #include "Cognitive3D/Public/Cognitive3DSettings.h" // Replaced with forward declarations
+// #include "Cognitive3D/Private/C3DUtil/Util.h" // Replaced with forward declarations
+// #include "Cognitive3D/Private/C3DComponents/PlayerTracker.h" // Replaced with forward declarations
 //#include "ExitPoll.generated.h"
 
 

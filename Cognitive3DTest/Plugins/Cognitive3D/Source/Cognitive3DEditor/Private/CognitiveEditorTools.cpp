@@ -37,6 +37,8 @@
 #include "GenericPlatformFile.h"
 #include "Classes/Engine/Level.h"
 #include "CoreMisc.h"
+#include "HAL/FileManagerGeneric.h"
+#include "Cognitive3D/Public/Cognitive3D.h" // Now comes transitively through Cognitive3DSettings.h
 //
 #include "Cognitive3D/Public/Cognitive3DBlueprints.h"
 //

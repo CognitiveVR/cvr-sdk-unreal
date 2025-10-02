@@ -6,7 +6,7 @@
 
 #include "C3DCommonTypes.h"
 #include "Components/SceneComponent.h"
-#include "Cognitive3D/Public/Cognitive3D.h"
+// #include "Cognitive3D/Public/Cognitive3D.h" // Replaced with forward declarations
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 //#include "Engine/SceneCapture2D.h"
 //#include "Engine/Texture.h"

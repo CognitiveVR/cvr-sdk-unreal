@@ -5,6 +5,8 @@
 
 //#include "Private/Cognitive3DPrivatePCH.h"
 #include "MicrophoneCaptureActor.h"
+#include "Cognitive3D/Public/Cognitive3D.h" // Moved from header to implementation
+#include "Cognitive3D/Public/Cognitive3DProvider.h" // Moved from header to implementation
 #include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
 
 #if PLATFORM_ANDROID

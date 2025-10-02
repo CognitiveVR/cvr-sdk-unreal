@@ -3,6 +3,7 @@
 */
 
 #include "DynamicObject.h"
+#include "Cognitive3D/Public/Cognitive3D.h" // Moved from header to implementation
 #include "DynamicIdPoolAsset.h"
 #include "DynamicObjectManager.h"
 #include "CustomEvent.h"

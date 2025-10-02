@@ -61,7 +61,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #undef __WINDOWS_WASAPI__
 #endif
 
-#include "Cognitive3D/Public/Cognitive3D.h"
+// #include "Cognitive3D/Public/Cognitive3D.h" // Replaced with forward declarations
 #include "Windows/MinWindows.h"
 
 #define RTAUDIO_VERSION "4.1.2"
