@@ -4,7 +4,6 @@
 #pragma once
 
 #include "C3DCommonTypes.h"
-// #include "Cognitive3D/Public/Cognitive3D.h" // Moved to .cpp file
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "Engine/EngineTypes.h"
 #include "C3DApi/CustomEventRecorder.h"

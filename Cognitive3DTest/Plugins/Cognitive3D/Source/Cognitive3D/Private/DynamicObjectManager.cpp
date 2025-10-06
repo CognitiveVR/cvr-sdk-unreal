@@ -3,7 +3,6 @@
 */
 
 #include "DynamicObjectManager.h"
-// #include "Cognitive3D/Public/Cognitive3D.h" // Already included in header
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
 #include "Cognitive3D/Public/Cognitive3DBlueprints.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"

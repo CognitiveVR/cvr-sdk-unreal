@@ -6,9 +6,6 @@
 #include "TimerManager.h"
 #include "Analytics.h"
 #include "Json.h"
-// #include "Cognitive3D/Public/Cognitive3DProvider.h" // Replaced with forward declaration
-//#include "Cognitive3D/Private/C3DUtil/Util.h"
-//#include "Cognitive3D/Private/C3DComponents/PlayerTracker.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 
 class FAnalyticsCognitive3D;

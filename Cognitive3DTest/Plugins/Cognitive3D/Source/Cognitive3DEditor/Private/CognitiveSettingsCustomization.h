@@ -5,7 +5,6 @@
 #pragma once
 
 #include "Cognitive3DSettings.h"
-#include "Cognitive3D/Public/Cognitive3D.h" // Needed for types from Cognitive3DSettings
 #include "IDetailCustomization.h"
 #include "PropertyEditing.h"
 #include "PropertyCustomizationHelpers.h"

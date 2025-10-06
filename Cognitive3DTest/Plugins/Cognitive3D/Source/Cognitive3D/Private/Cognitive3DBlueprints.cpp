@@ -2,11 +2,10 @@
 ** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
 */
 #include "Cognitive3DBlueprints.h"
-#include "Cognitive3D/Public/Cognitive3D.h" // Moved from header to implementation
-#include "Cognitive3D/Public/Cognitive3DProvider.h" // Moved from header to implementation
+#include "Cognitive3D/Public/Cognitive3D.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
 #include "Cognitive3D/Private/C3DComponents/RemoteControls.h"
-//#include "Private/Cognitive3DPrivatePCH.h"
 
 TSharedPtr<FAnalyticsProviderCognitive3D> UCognitive3DBlueprints::cog;
 

@@ -5,7 +5,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-// #include "Cognitive3D/Public/Cognitive3D.h" // Moved to .cpp file
 #include "Blueprint/UserWidget.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Blueprint/WidgetBlueprintGeneratedClass.h"

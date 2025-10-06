@@ -6,8 +6,6 @@
 #include "JsonObjectConverter.h"
 #include "Http.h"
 #include "Cognitive3D/Private/C3DUtil/Util.h"
-// #include "Cognitive3D/Public/Cognitive3D.h" // Moved to .cpp file
-//#include "BoundaryRecorder.generated.h"
 
 class FAnalyticsProviderCognitive3D;
 

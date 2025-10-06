@@ -5,8 +5,7 @@
 #pragma once
 
 #include "Cognitive3D/Private/C3DUtil/Util.h"
-// #include "Cognitive3D/Public/Cognitive3D.h" // Moved to .cpp file
-#include "HeadMountedDisplayTypes.h" // For EHMDWornState
+#include "HeadMountedDisplayTypes.h"
 #include "HMDHeight.generated.h"
 
 class FAnalyticsProviderCognitive3D;

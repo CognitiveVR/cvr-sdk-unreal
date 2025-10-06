@@ -6,13 +6,8 @@
 
 #include "C3DCommonTypes.h"
 #include "Components/SceneComponent.h"
-// #include "Cognitive3D/Public/Cognitive3D.h" // Replaced with forward declarations
 #include "Cognitive3D/Private/C3DUtil/Util.h"
-//#include "Engine/SceneCapture2D.h"
-//#include "Engine/Texture.h"
-//#include "Engine/Texture2D.h"
 #include "SceneView.h"
-//#include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/HeadMountedDisplay/Public/IXRTrackingSystem.h"
 #include "Widgets/Text/STextBlock.h"
 #if defined INCLUDE_TOBII_PLUGIN

@@ -2,7 +2,7 @@
 
 
 #include "C3DComponents/HMDRecenter.h"
-#include "Cognitive3D/Public/Cognitive3D.h" // Moved from header to implementation
+#include "Cognitive3D/Public/Cognitive3D.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
