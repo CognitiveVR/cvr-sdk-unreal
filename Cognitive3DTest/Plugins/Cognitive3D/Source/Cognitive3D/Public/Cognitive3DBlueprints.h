@@ -5,8 +5,6 @@
 
 #include "Cognitive3D/Public/C3DCommonTypes.h"
 #include "CoreMinimal.h"
-#include "Cognitive3D/Public/Cognitive3D.h"
-#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "AnalyticsBlueprintLibrary.h"
 #include "Runtime/Analytics/Analytics/Public/AnalyticsEventAttribute.h"
 #include "Cognitive3D/Private/C3DComponents/PlayerTracker.h"

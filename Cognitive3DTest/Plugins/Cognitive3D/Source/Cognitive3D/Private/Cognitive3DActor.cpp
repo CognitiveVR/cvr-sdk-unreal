@@ -3,6 +3,7 @@
 */
 
 #include "Cognitive3DActor.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
 #include "C3DUtil/CognitiveLog.h"
 #include "Components/ActorComponent.h"
 #include "GameFramework/Actor.h"

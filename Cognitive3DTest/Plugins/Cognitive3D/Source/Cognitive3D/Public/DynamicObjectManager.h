@@ -5,7 +5,7 @@
 #pragma once
 
 #include "Cognitive3D/Public/C3DCommonTypes.h"
-#include "Cognitive3D/Public/Cognitive3D.h"
+#include "Cognitive3D/Public/Cognitive3D.h" // Needed for FDynamicObjectSnapshot, etc.
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"

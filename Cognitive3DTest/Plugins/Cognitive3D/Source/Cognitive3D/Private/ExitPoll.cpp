@@ -3,12 +3,12 @@
 */
 
 #include "ExitPoll.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
+#include "Cognitive3D/Public/Cognitive3DSettings.h"
+#include "Cognitive3D/Private/C3DUtil/Util.h"
+#include "Cognitive3D/Private/C3DComponents/PlayerTracker.h"
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
-
-//FCognitiveExitPollResponse FExitPoll::lastResponse;
-//FExitPollQuestionSet FExitPoll::currentQuestionSet;
-//FString FExitPoll::lastHook;
-//double FExitPoll::lastStartTime;
 
 FExitPoll::FExitPoll()
 {

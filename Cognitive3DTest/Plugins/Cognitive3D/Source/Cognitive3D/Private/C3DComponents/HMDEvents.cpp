@@ -4,6 +4,7 @@
 
 
 #include "HMDEvents.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
 #include "DrawDebugHelpers.h"
 #include "Interfaces/IPluginManager.h"
 #include "HeadMountedDisplayFunctionLibrary.h"

@@ -11,6 +11,7 @@
 #include "MediaTexture.h"
 #include "Media.generated.h"
 
+class FAnalyticsProviderCognitive3D;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class COGNITIVE3D_API UMedia : public UActorComponent

@@ -3,9 +3,8 @@
 */
 #pragma once
 
-//#include "TimerManager.h"
+// #include "TimerManager.h"
 #include "Analytics.h"
-#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 #include "Cognitive3D/Private/Fixations.h"
 

@@ -37,6 +37,7 @@
 #include "GenericPlatformFile.h"
 #include "Classes/Engine/Level.h"
 #include "CoreMisc.h"
+#include "HAL/FileManagerGeneric.h"
 //
 #include "Cognitive3D/Public/Cognitive3DBlueprints.h"
 //

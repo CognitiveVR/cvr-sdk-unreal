@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "Cognitive3D/Public/Cognitive3D.h"
 #include "CoreMinimal.h"
 #include "Cognitive3D/Public/DynamicObject.h"
 #include "MotionControllerComponent.h"

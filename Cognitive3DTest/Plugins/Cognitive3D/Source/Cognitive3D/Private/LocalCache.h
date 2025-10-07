@@ -6,6 +6,7 @@
 
 #include "Interfaces/IAnalyticsProviderModule.h"
 #include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
+#include "HAL/FileManagerGeneric.h" // For FFileManagerGeneric
 
 #if PLATFORM_ANDROID
 #include "Android/AndroidPlatformMisc.h"

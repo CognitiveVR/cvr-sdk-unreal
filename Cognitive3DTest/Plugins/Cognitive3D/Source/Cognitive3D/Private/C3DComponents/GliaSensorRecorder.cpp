@@ -2,10 +2,8 @@
 ** Copyright (c) 2024 Cognitive3D, Inc. All rights reserved.
 */
 
-//#include "Cognitive3D.h"
 #include "GliaSensorRecorder.h"
-//#include "Cognitive3DSettings.h"
-//#include "Util.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
 
 // Sets default values for this component's properties
 UGliaSensorRecorder::UGliaSensorRecorder()
