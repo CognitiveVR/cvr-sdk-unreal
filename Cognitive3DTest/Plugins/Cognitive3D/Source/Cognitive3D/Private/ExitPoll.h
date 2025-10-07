@@ -7,7 +7,6 @@
 #pragma once
 
 #include "Cognitive3D/Public/C3DCommonTypes.h"
-#include "ExitPollStateMachine.h"
 
 class COGNITIVE3D_API FExitPoll
 {
