@@ -3,6 +3,7 @@
 */
 
 #include "InputTracker.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values

@@ -7,8 +7,10 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Cognitive3D/Private/C3DUtil/Util.h"
-#include "Cognitive3D/Public/Cognitive3D.h"
+#include "HeadMountedDisplayTypes.h"
 #include "HMDEvents.generated.h"
+
+class FAnalyticsProviderCognitive3D;
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

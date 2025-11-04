@@ -3,7 +3,7 @@
 */
 #pragma once
 
-#include "Cognitive3D/Public/Cognitive3D.h"
+#include "CoreMinimal.h"
 
     class FCognitiveLog
     {

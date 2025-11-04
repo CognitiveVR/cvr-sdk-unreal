@@ -3,11 +3,10 @@
 */
 
 #include "DynamicObject.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
 #include "DynamicIdPoolAsset.h"
 #include "DynamicObjectManager.h"
 #include "CustomEvent.h"
-//#include "Cognitive3DSettings.h"
-//#include "Util.h"
 
 UDynamicObject::UDynamicObject()
 {

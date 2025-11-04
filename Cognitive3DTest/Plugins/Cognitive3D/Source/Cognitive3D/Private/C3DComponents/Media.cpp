@@ -2,6 +2,7 @@
 
 
 #include "C3DComponents/Media.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
 #include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
 
 // Sets default values for this component's properties

@@ -4,13 +4,14 @@
 
 #pragma once
 
-#include "Cognitive3D/Public/Cognitive3D.h"
 #include "TimerManager.h"
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "CoreMinimal.h"
 
 class FAnalyticsProviderCognitive3D;
+class FAnalyticsCognitive3D;
 class UCognitive3DBlueprints;
+struct SensorData;
 
 
 	class COGNITIVE3D_API FSensors

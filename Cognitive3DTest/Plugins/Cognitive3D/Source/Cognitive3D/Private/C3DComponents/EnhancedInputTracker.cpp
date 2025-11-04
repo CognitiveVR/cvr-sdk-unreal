@@ -2,6 +2,7 @@
 
 
 #include "C3DComponents/EnhancedInputTracker.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/PlayerController.h"
 

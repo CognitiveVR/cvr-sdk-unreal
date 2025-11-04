@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include "Cognitive3D/Public/Cognitive3D.h"
 #include "Kismet/GameplayStatics.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "Cognitive3D/Public/DynamicObject.h"

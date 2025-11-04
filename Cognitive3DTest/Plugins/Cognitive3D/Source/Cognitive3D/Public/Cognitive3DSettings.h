@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "Cognitive3D/Public/Cognitive3D.h"
 #include "AnalyticsSettings.h"
 #include "Cognitive3DSettings.generated.h"
 

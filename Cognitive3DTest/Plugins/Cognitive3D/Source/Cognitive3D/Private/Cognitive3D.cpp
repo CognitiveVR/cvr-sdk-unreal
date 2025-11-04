@@ -3,7 +3,6 @@
 */
 
 #include "Cognitive3D/Public/Cognitive3D.h"
-//#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Classes/Camera/CameraComponent.h"
 #ifdef INCLUDE_OCULUS_PLUGIN
 #if ENGINE_MAJOR_VERSION == 4

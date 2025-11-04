@@ -28,6 +28,9 @@
 #include "CognitiveEditorTools.h"
 #include "Cognitive3D/Private/C3DComponents/Media.h"
 #include "Toolkits/IToolkitHost.h"
+#if ENGINE_MAJOR_VERSION == 5
+#include "UObject/SavePackage.h"
+#endif
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SFeatureBuilderWidget::Construct(const FArguments& InArgs)
@@ -483,6 +486,18 @@ FReply SFeatureBuilderWidget::OnAddExitPollBlueprint()
 				ULevel* CurrentLevel = EditorWorld->GetCurrentLevel();
 				UPackage* LevelPackage = CurrentLevel->GetOutermost();
 				FString LevelFilename = FPackageName::LongPackageNameToFilename(LevelPackage->GetName(), FPackageName::GetMapPackageExtension());
+				
+#if ENGINE_MAJOR_VERSION == 5
+
+				FSavePackageArgs SaveArgs;
+				SaveArgs.TopLevelFlags = RF_Standalone;
+				SaveArgs.Error = GError;
+				SaveArgs.bWarnOfLongFilename = true;
+				SaveArgs.bForceByteSwapping = true;
+				SaveArgs.SaveFlags = SAVE_None;
+
+				bool bLevelSaved = UPackage::SavePackage(LevelPackage, nullptr, *LevelFilename, SaveArgs);
+#elif ENGINE_MAJOR_VERSION == 4
 				bool bLevelSaved = UPackage::SavePackage(
 					LevelPackage,
 					nullptr,
@@ -494,6 +509,7 @@ FReply SFeatureBuilderWidget::OnAddExitPollBlueprint()
 					true,
 					SAVE_None
 				);
+#endif
 				if (bLevelSaved)
 				{
 					UE_LOG(LogTemp, Log, TEXT("Level auto-saved: %s"), *LevelFilename);
@@ -535,6 +551,16 @@ FReply SFeatureBuilderWidget::OnAddRemoteControlsComponent()
 				// Now save the blueprint asset automatically
 				UPackage* Package = BP->GetOutermost();
 				FString PackageFileName = FPackageName::LongPackageNameToFilename(Package->GetName(), FPackageName::GetAssetPackageExtension());
+#if ENGINE_MAJOR_VERSION == 5
+				FSavePackageArgs SavePackageArgs;
+				SavePackageArgs.TopLevelFlags = RF_Standalone;
+				SavePackageArgs.Error = GError;
+				SavePackageArgs.bWarnOfLongFilename = true;
+				SavePackageArgs.bForceByteSwapping = true;
+				SavePackageArgs.SaveFlags = SAVE_None;
+
+				bool bSaved = UPackage::SavePackage(Package, BP, *PackageFileName, SavePackageArgs);
+#elif ENGINE_MAJOR_VERSION == 4
 				bool bSaved = UPackage::SavePackage(
 					Package,
 					BP,
@@ -546,6 +572,7 @@ FReply SFeatureBuilderWidget::OnAddRemoteControlsComponent()
 					true,
 					SAVE_None
 				);
+#endif
 				if (bSaved)
 				{
 					UE_LOG(LogTemp, Log, TEXT("Blueprint auto-saved: %s"), *PackageFileName);
@@ -561,6 +588,17 @@ FReply SFeatureBuilderWidget::OnAddRemoteControlsComponent()
 						ULevel* CurrentLevel = EditorWorld->GetCurrentLevel();
 						UPackage* LevelPackage = CurrentLevel->GetOutermost();
 						FString LevelFilename = FPackageName::LongPackageNameToFilename(LevelPackage->GetName(), FPackageName::GetMapPackageExtension());
+#if ENGINE_MAJOR_VERSION == 5
+
+						FSavePackageArgs SaveArgs;
+						SaveArgs.TopLevelFlags = RF_Standalone;
+						SaveArgs.Error = GError;
+						SaveArgs.bWarnOfLongFilename = true;
+						SaveArgs.bForceByteSwapping = true;
+						SaveArgs.SaveFlags = SAVE_None;
+
+						bool bLevelSaved = UPackage::SavePackage(LevelPackage, nullptr, *LevelFilename, SaveArgs);
+#elif ENGINE_MAJOR_VERSION == 4
 						bool bLevelSaved = UPackage::SavePackage(
 							LevelPackage,
 							nullptr,
@@ -572,6 +610,7 @@ FReply SFeatureBuilderWidget::OnAddRemoteControlsComponent()
 							true,
 							SAVE_None
 						);
+#endif
 						if (bLevelSaved)
 						{
 							UE_LOG(LogTemp, Log, TEXT("Level auto-saved: %s"), *LevelFilename);
@@ -672,7 +711,28 @@ FReply SFeatureBuilderWidget::OnToggleRemoteControlsComponent()
 						// Save and compile the blueprint
 						UPackage* Package = BP->GetOutermost();
 						FString PackageFileName = FPackageName::LongPackageNameToFilename(Package->GetName(), FPackageName::GetAssetPackageExtension());
-						bool bSaved = UPackage::SavePackage(Package, BP, RF_Standalone, *PackageFileName, GError, nullptr, true, true, SAVE_None);
+#if ENGINE_MAJOR_VERSION == 5
+						FSavePackageArgs SavePackageArgs;
+						SavePackageArgs.TopLevelFlags = RF_Standalone;
+						SavePackageArgs.Error = GError;
+						SavePackageArgs.bWarnOfLongFilename = true;
+						SavePackageArgs.bForceByteSwapping = true;
+						SavePackageArgs.SaveFlags = SAVE_None;
+
+						bool bSaved = UPackage::SavePackage(Package, BP, *PackageFileName, SavePackageArgs);
+#elif ENGINE_MAJOR_VERSION == 4
+						bool bSaved = UPackage::SavePackage(
+							Package,
+							BP,
+							RF_Standalone,
+							*PackageFileName,
+							GError,
+							nullptr,
+							true,
+							true,
+							SAVE_None
+						);
+#endif
 						if (bSaved)
 						{
 							FKismetEditorUtilities::CompileBlueprint(BP);
@@ -685,6 +745,17 @@ FReply SFeatureBuilderWidget::OnToggleRemoteControlsComponent()
 								ULevel* CurrentLevel = EditorWorld->GetCurrentLevel();
 								UPackage* LevelPackage = CurrentLevel->GetOutermost();
 								FString LevelFilename = FPackageName::LongPackageNameToFilename(LevelPackage->GetName(), FPackageName::GetMapPackageExtension());
+#if ENGINE_MAJOR_VERSION == 5
+
+								FSavePackageArgs SaveArgs;
+								SaveArgs.TopLevelFlags = RF_Standalone;
+								SaveArgs.Error = GError;
+								SaveArgs.bWarnOfLongFilename = true;
+								SaveArgs.bForceByteSwapping = true;
+								SaveArgs.SaveFlags = SAVE_None;
+
+								bool bLevelSaved = UPackage::SavePackage(LevelPackage, nullptr, *LevelFilename, SaveArgs);
+#elif ENGINE_MAJOR_VERSION == 4
 								bool bLevelSaved = UPackage::SavePackage(
 									LevelPackage,
 									nullptr,
@@ -696,6 +767,7 @@ FReply SFeatureBuilderWidget::OnToggleRemoteControlsComponent()
 									true,
 									SAVE_None
 								);
+#endif
 								if (bLevelSaved)
 								{
 									UE_LOG(LogTemp, Log, TEXT("Level auto-saved: %s"), *LevelFilename);

@@ -3,6 +3,7 @@
 */
 
 #include "Network.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
 
