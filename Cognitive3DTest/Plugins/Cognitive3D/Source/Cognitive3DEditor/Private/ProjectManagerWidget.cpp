@@ -1931,9 +1931,12 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 		FARFilter MapFilter;
 		MapFilter.bRecursivePaths = true;
 		MapFilter.PackagePaths.Empty();
+
 #if ENGINE_MAJOR_VERSION == 4
 		MapFilter.ClassNames.Add(UWorld::StaticClass()->GetFName());
-#elif ENGINE_MAJOR_VERSION == 5
+#elif ENGINE_MAJOR_VERSION == 5 && (ENGINE_MINOR_VERSION == 0 || ENGINE_MINOR_VERSION == 1)
+		MapFilter.ClassNames.Add(UWorld::StaticClass()->GetFName());
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2 
 		MapFilter.ClassPaths.Add(UWorld::StaticClass()->GetClassPathName());
 #endif
 		FAssetRegistryModule& ARM = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");

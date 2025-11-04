@@ -4064,8 +4064,10 @@ void FCognitiveEditorTools::CompressAndSaveTexture(const FString& SourcePath, co
 		TArray64<uint8> RawData;
 
 #if ENGINE_MAJOR_VERSION == 4
+		if (ImageWrapperLocal->GetRaw(ERGBFormat::BGRA, 8, RawData))
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION <= 2
 		if (ImageWrapperLocal->GetRaw(ERGBFormat::BGRA, 8,RawData))
-#elif ENGINE_MAJOR_VERSION == 5 
+#elif ENGINE_MAJOR_VERSION == 5
 		if (ImageWrapperLocal->GetRaw(RawData))
 #endif
 		{
@@ -4451,6 +4453,8 @@ FString FCognitiveEditorTools::AdjustPathName(FString OriginalPathName) const
 const FSlateBrush* FCognitiveEditorTools::GetBrush(FName brushName)
 {
 #if ENGINE_MAJOR_VERSION == 4
+	return FEditorStyle::GetBrush(brushName);
+#elif ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 2
 	return FEditorStyle::GetBrush(brushName);
 #elif ENGINE_MAJOR_VERSION == 5
 	return FAppStyle::GetBrush(brushName);
