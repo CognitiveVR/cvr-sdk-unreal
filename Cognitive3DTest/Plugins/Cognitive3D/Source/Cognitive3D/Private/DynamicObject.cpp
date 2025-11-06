@@ -378,15 +378,7 @@ void UDynamicObject::Initialize()
 		dynamicObjectManager->CacheControllerPointer(this, IsRightController);
 	}
 
-	bool hasScaleChanged = true;
-	if (GetAttachParent() != nullptr)
-	{
-		if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
-		{
-			hasScaleChanged = true;
-		}
-	}
-	FDynamicObjectSnapshot initSnapshot = MakeSnapshot(hasScaleChanged);
+	FDynamicObjectSnapshot initSnapshot = MakeSnapshot(true);
 	SnapshotBoolProperty(initSnapshot, "enabled", true);
 	dynamicObjectManager->AddSnapshot(initSnapshot);
 	HasInitialized = true;
