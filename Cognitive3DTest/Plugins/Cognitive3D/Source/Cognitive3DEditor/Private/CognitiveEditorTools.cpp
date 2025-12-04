@@ -4133,15 +4133,20 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 			continue;
 		}
 
-		auto TempObject = elem->GetComponentByClass(UStaticMeshComponent::StaticClass());
-		if (TempObject == NULL) { continue; }
-		auto staticTempObject = (UStaticMeshComponent*)TempObject;
-
-		if (staticTempObject->GetOwner() == NULL) { continue; }
-
-		UActorComponent* dynamic = staticTempObject->GetOwner()->GetComponentByClass(UDynamicObject::StaticClass());
-		if (dynamic == NULL) { continue; }
-
+		auto TempObject = actorsToExport[i]->GetComponentByClass(UStaticMeshComponent::StaticClass());
+		if (TempObject != NULL)
+		{
+			auto staticTempObject = (UStaticMeshComponent*)TempObject;
+			if (staticTempObject->GetOwner() != NULL)
+			{
+				UActorComponent* dynamic = staticTempObject->GetOwner()->GetComponentByClass(UDynamicObject::StaticClass());
+				if (dynamic != NULL)
+				{
+					continue;
+				}
+			}
+		}
+		
 		GEditor->SelectActor((actorsToExport[i]), true, false, true);
 	}
 	//FString AdjustedLevelName = LevelName.Replace(TEXT("/"), TEXT("_")); // _Game_Maps_VRMap
