@@ -3,16 +3,13 @@
 */
 #pragma once
 
-#include "C3DCommonTypes.h"
-#include "Cognitive3D/Private/C3DUtil/Util.h"
-#include "Engine/EngineTypes.h"
-#include "C3DApi/CustomEventRecorder.h"
-#include "C3DApi/SensorRecorder.h"
+#include "CoreMinimal.h"
 #include "CustomEvent.generated.h"
 
 class UDynamicObject;
 class UCognitive3DBlueprints;
 class FAnalyticsProviderCognitive3D;
+class FCustomEventRecorder;
 
 UCLASS(BlueprintType)
 class COGNITIVE3D_API UCustomEvent : public UObject

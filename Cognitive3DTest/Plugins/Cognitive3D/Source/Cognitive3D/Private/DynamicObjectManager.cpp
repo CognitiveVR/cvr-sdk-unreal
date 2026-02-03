@@ -3,10 +3,15 @@
 */
 
 #include "DynamicObjectManager.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
 #include "Cognitive3D/Public/Cognitive3DBlueprints.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "Cognitive3D/Public/DynamicObject.h"
+#include "Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
+#include "Serialization/JsonSerializer.h"
+#include "Serialization/JsonWriter.h"
 
 FDynamicObjectManager::FDynamicObjectManager()
 {

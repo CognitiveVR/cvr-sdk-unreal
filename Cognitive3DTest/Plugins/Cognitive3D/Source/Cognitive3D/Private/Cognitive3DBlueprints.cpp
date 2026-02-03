@@ -4,6 +4,7 @@
 #include "Cognitive3DBlueprints.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "Cognitive3D/Public/Cognitive3DProvider.h"
+#include "Cognitive3D/Public/CustomEvent.h"
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
 #include "Cognitive3D/Private/C3DComponents/RemoteControls.h"
 

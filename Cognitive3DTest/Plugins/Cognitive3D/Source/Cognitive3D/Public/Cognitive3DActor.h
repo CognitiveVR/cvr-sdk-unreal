@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "C3DCommonTypes.h"
 #include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
 #include "Cognitive3DActor.generated.h"
 
 //this class basically only exists to send EndPlay to the CognitiveProvider
@@ -13,6 +13,8 @@
 
 class UActorComponent;
 class FAnalyticsProviderCognitive3D;
+class UMotionControllerComponent;
+class USceneComponent;
 
 UCLASS()
 class COGNITIVE3D_API ACognitive3DActor : public AActor

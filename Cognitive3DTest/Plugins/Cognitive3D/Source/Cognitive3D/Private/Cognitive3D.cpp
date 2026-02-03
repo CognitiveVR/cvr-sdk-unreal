@@ -3,7 +3,12 @@
 */
 
 #include "Cognitive3D/Public/Cognitive3D.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Classes/Camera/CameraComponent.h"
+#include "Engine/Engine.h"
+#include "HAL/FileManager.h"
+#include "Misc/Base64.h"
+#include "Misc/FileHelper.h"
 #ifdef INCLUDE_OCULUS_PLUGIN
 #if ENGINE_MAJOR_VERSION == 4
 #include "OculusFunctionLibrary.h"

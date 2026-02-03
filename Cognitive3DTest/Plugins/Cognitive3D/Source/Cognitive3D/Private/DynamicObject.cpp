@@ -7,6 +7,9 @@
 #include "DynamicIdPoolAsset.h"
 #include "DynamicObjectManager.h"
 #include "CustomEvent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "EngineUtils.h"
 
 UDynamicObject::UDynamicObject()
 {

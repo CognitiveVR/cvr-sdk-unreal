@@ -3,9 +3,14 @@
 */
 
 #include "ActiveSessionView.h"
+#include "ActiveSessionViewRequired.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Blueprint/UserWidget.h"
+#include "Components/WidgetComponent.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Cognitive3D/Private/C3DComponents/FixationRecorder.h"
 
 // Sets default values
