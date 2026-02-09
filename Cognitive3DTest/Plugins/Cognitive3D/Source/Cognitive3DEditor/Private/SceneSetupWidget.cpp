@@ -34,6 +34,10 @@ void SSceneSetupWidget::CheckForExpiredDeveloperKey()
 		auto Request = FHttpModule::Get().CreateRequest();
 		Request->OnProcessRequestComplete().BindRaw(this, &SSceneSetupWidget::OnDeveloperKeyResponseReceived);
 		FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+		if (gateway.IsEmpty())
+		{
+			gateway = "data.cognitive3d.com";
+		}
 		FString url = "https://" + gateway + "/v0/apiKeys/verify";
 		Request->SetURL(url);
 		Request->SetVerb("GET");

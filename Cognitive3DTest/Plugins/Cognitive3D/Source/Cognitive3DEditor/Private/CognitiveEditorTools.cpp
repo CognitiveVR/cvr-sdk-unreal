@@ -284,6 +284,12 @@ void FCognitiveEditorTools::CheckIniConfigured()
 
 		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("RestartAfterSetup"), *falseString, ConfigFilePath);
 		GConfig->Flush(false, ConfigFilePath);
+
+		UCognitive3DSettings* Settings = GetMutableDefault<UCognitive3DSettings>();
+		if (Settings && Settings->Gateway.IsEmpty())
+		{
+			Settings->Gateway = defaultgateway;
+		}
 	}
 	else
 	{
