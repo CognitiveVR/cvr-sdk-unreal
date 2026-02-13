@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/Interface.h"
 #include "ActiveSessionViewRequired.generated.h"
 
 class AActiveSessionView;

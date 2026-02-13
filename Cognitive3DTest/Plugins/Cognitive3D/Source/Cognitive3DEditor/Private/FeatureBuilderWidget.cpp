@@ -28,6 +28,8 @@
 #include "CognitiveEditorTools.h"
 #include "Cognitive3D/Private/C3DComponents/Media.h"
 #include "Toolkits/IToolkitHost.h"
+#include "TimerManager.h"
+#include "Runtime/Launch/Resources/Version.h"
 #if ENGINE_MAJOR_VERSION == 5
 #include "UObject/SavePackage.h"
 #endif
@@ -799,6 +801,10 @@ void SFeatureBuilderWidget::CheckForExpiredDeveloperKey(FString developerKey)
 	auto Request = FHttpModule::Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindRaw(this, &SFeatureBuilderWidget::OnDeveloperKeyResponseReceived);
 	FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	if (gateway.IsEmpty())
+	{
+		gateway = "data.cognitive3d.com";
+	}
 	FString url = "https://" + gateway + "/v0/apiKeys/verify";
 	Request->SetURL(url);
 	Request->SetVerb("GET");

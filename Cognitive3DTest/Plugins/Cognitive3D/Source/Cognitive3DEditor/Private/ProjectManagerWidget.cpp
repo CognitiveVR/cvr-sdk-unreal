@@ -6,6 +6,12 @@
 #include "CognitiveEditorTools.h"
 #include "IPluginManager.h"
 #include "Analytics.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "Misc/FileHelper.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
+#include "Runtime/Launch/Resources/Version.h"
 #if ENGINE_MAJOR_VERSION == 5
 #include "SDockTab.h"
 #elif ENGINE_MAJOR_VERSION == 4
@@ -1314,6 +1320,10 @@ void SProjectManagerWidget::CheckForExpiredDeveloperKey(FString developerKey)
 	auto Request = FHttpModule::Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindRaw(this, &SProjectManagerWidget::OnDeveloperKeyResponseReceived);
 	FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	if (gateway.IsEmpty())
+	{
+		gateway = "data.cognitive3d.com";
+	}
 	FString url = "https://" + gateway + "/v0/apiKeys/verify";
 	Request->SetURL(url);
 	Request->SetVerb("GET");
@@ -1351,6 +1361,10 @@ void SProjectManagerWidget::FetchApplicationKey(FString developerKey)
 	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
 	GConfig->LoadFile(C3DSettingsPath);
 	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	if (Gateway.IsEmpty())
+	{
+		Gateway = "data.cognitive3d.com";
+	}
 
 	FString url = FString("https://" + Gateway + "/v0/applicationKey");
 	HttpRequest->SetURL(url);
@@ -1413,6 +1427,10 @@ void SProjectManagerWidget::FetchOrganizationDetails(FString developerKey)
 	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
 	GConfig->LoadFile(C3DSettingsPath);
 	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	if (Gateway.IsEmpty())
+	{
+		Gateway = "data.cognitive3d.com";
+	}
 
 	FString url = FString("https://" + Gateway + "/v0/subscriptions");
 	HttpRequest->SetURL(url);
@@ -1486,6 +1504,10 @@ void SProjectManagerWidget::FetchDeveloperKeyExpiryDate(FString developerKey)
 	GConfig->Flush(true, C3DSettingsPath);
 	
 	FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	if (gateway.IsEmpty())
+	{
+		gateway = "data.cognitive3d.com";
+	}
 	FString url = "https://" + gateway + "/v0/user";
 	
 	HttpRequest->SetURL(url);

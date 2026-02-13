@@ -6,16 +6,11 @@
 #include "Cognitive3D/Public/C3DCommonTypes.h"
 #include "CoreMinimal.h"
 #include "AnalyticsBlueprintLibrary.h"
-#include "Runtime/Analytics/Analytics/Public/AnalyticsEventAttribute.h"
-#include "Cognitive3D/Private/C3DComponents/PlayerTracker.h"
-#include "Cognitive3D/Private/ExitPoll.h"
-#include "Cognitive3D/Private/C3DComponents/FixationRecorder.h"
-#include "Cognitive3D/Public/DynamicObjectManager.h"
-#include "Cognitive3D/Public/CustomEvent.h"
 #include "Cognitive3DBlueprints.generated.h"
 
 class Cognitive3DResponse;
 class UDynamicObject;
+class UCustomEvent;
 
 UCLASS()
 class COGNITIVE3D_API UCognitive3DBlueprints : public UBlueprintFunctionLibrary

@@ -6,15 +6,8 @@
 
 #include "Cognitive3D/Public/C3DCommonTypes.h"
 #include "Components/SceneComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "Components/SkeletalMeshComponent.h"
-#include "Engine/StaticMesh.h"
-#include "TimerManager.h"
-#include "CoreMinimal.h"
-#include "MotionControllerComponent.h"
 
-#include "EngineUtils.h"
-
+#include "Engine/EngineTypes.h"
 #include "DynamicObject.generated.h"
 
 class UCustomEvent;

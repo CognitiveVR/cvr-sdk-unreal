@@ -5,16 +5,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
-#include "UObject/ConstructorHelpers.h"
-#include "Blueprint/WidgetBlueprintGeneratedClass.h"
-#include "Components/Widget.h"
-#include "Components/WidgetComponent.h"
-#include "ActiveSessionViewRequired.h"
-#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "GameFramework/Actor.h"
 #include "ActiveSessionView.generated.h"
 
 class UFixationRecorder;
+class APlayerController;
+class UWidgetComponent;
+class UClass;
 
 //provides the interface to get data about fixations and eye tracking from fixation recorder to the ASV widget
 //creates the active session view widget and calls 'initialize' to pass a reference to this

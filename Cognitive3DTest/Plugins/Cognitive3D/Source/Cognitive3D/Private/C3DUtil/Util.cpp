@@ -4,8 +4,13 @@
 
 #include "C3DUtil/Util.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
+#include "Engine/Engine.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "Misc/EngineVersion.h"
 
 FString FUtil::HMDSpecificDeviceName = TEXT(""); // Initialize the static variable
 

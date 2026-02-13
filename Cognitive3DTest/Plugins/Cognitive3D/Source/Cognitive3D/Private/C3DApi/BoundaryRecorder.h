@@ -6,6 +6,7 @@
 #include "JsonObjectConverter.h"
 #include "Http.h"
 #include "Cognitive3D/Private/C3DUtil/Util.h"
+#include "TimerManager.h"
 
 class FAnalyticsProviderCognitive3D;
 

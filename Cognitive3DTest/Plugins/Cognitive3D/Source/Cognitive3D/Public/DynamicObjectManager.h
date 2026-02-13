@@ -5,20 +5,13 @@
 #pragma once
 
 #include "Cognitive3D/Public/C3DCommonTypes.h"
-#include "Cognitive3D/Public/Cognitive3D.h" // Needed for FDynamicObjectSnapshot, etc.
-#include "Components/SceneComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "Components/SkeletalMeshComponent.h"
-#include "Engine/StaticMesh.h"
 #include "TimerManager.h"
-#include "CoreMinimal.h"
-#include "Cognitive3D/Public/CustomEvent.h"
-#include "Cognitive3D/Public/DynamicIdPoolAsset.h"
-#include "MotionControllerComponent.h"
 
-class UCustomEvent;
 class UCognitive3DBlueprints;
 class UDynamicObject;
+class FAnalyticsProviderCognitive3D;
+class FJsonObject;
+class FJsonValueObject;
 
 class COGNITIVE3D_API FDynamicObjectManager
 {

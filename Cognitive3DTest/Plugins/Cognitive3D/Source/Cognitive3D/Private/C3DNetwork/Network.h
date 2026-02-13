@@ -6,6 +6,7 @@
 #include "Cognitive3D/Private/ExitPoll.h"
 #include "Cognitive3D/Private/LocalCache.h"
 #include "Http.h"
+#include "TimerManager.h"
 
 class FAnalyticsProviderCognitive3D;
 class HttpInterface;

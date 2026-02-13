@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
 #include "C3DCommonTypes.generated.h"
 
 //multicast delegates cannot be static. CognitiveActor holds the actual values

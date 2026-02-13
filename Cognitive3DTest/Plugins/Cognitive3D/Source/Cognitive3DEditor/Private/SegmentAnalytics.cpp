@@ -7,6 +7,8 @@
 #include "Interfaces/IHttpResponse.h"
 #include "Json.h"
 #include "Misc/Base64.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
 
 USegmentAnalytics* USegmentAnalytics::SingletonInstance = nullptr;
 

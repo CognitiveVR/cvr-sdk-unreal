@@ -4,12 +4,15 @@
 
 
 #include "HMDEvents.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "DrawDebugHelpers.h"
 #include "Interfaces/IPluginManager.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 // Sets default values for this component's properties
 UHMDEvents::UHMDEvents()

@@ -1,13 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "C3DComponents/Passthrough.h"
+#include "C3DComponents/C3DPassthrough.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
 #include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "EngineUtils.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Pawn.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 // Sets default values for this component's properties
 UPassthrough::UPassthrough()

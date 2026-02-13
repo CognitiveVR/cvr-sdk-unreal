@@ -3,11 +3,14 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/TrackingEvent.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
 #include "Cognitive3D/Public/DynamicObject.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 UTrackingEvent::UTrackingEvent()
 {

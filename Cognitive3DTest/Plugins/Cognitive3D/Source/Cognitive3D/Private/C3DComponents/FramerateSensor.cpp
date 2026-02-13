@@ -3,8 +3,10 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/FramerateSensor.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 #ifdef INCLUDE_OCULUS_PLUGIN
 #if ENGINE_MAJOR_VERSION == 4

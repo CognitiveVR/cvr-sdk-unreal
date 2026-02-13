@@ -8,6 +8,7 @@
 #include "Components/ActorComponent.h"
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "HeadMountedDisplayTypes.h"
+#include "TimerManager.h"
 #include "HMDEvents.generated.h"
 
 class FAnalyticsProviderCognitive3D;

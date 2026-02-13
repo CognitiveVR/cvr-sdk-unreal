@@ -4,6 +4,7 @@
 
 #include "CognitiveEditorTools.h"
 #include "Kismet2/KismetEditorUtilities.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
 
 
 #include "Cognitive3DSettings.h"
@@ -38,11 +39,22 @@
 #include "Classes/Engine/Level.h"
 #include "CoreMisc.h"
 #include "HAL/FileManagerGeneric.h"
+#include "Cognitive3D/Public/DynamicIdPoolAsset.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Misc/EngineVersion.h"
+#include "Engine/SkeletalMesh.h"
+#include "Engine/Engine.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
+#include "Runtime/Launch/Resources/Version.h"
 //
 #include "Cognitive3D/Public/Cognitive3DBlueprints.h"
 //
 #include "Engine/Blueprint.h"
 #include "Kismet2/KismetEditorUtilities.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Engine/SCS_Node.h"
 #include "Engine/BlueprintGeneratedClass.h"
@@ -284,6 +296,12 @@ void FCognitiveEditorTools::CheckIniConfigured()
 
 		GConfig->SetString(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("RestartAfterSetup"), *falseString, ConfigFilePath);
 		GConfig->Flush(false, ConfigFilePath);
+
+		UCognitive3DSettings* Settings = GetMutableDefault<UCognitive3DSettings>();
+		if (Settings && Settings->Gateway.IsEmpty())
+		{
+			Settings->Gateway = defaultgateway;
+		}
 	}
 	else
 	{

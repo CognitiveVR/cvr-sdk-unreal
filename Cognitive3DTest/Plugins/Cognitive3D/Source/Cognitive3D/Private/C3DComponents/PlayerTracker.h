@@ -47,6 +47,8 @@
 #endif
 #include "DrawDebugHelpers.h"
 #include "Cognitive3D/Private/C3DApi/GazeDataRecorder.h"
+#include "Components/ActorComponent.h"
+#include "Engine/EngineTypes.h"
 #include "PlayerTracker.generated.h"
 
 class FAnalyticsProviderCognitive3D;

@@ -3,8 +3,11 @@
 */
 
 #include "InputTracker.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "Kismet/GameplayStatics.h"
+#include "UObject/UObjectIterator.h"
+#include "Components/InputComponent.h"
 
 // Sets default values
 UInputTracker::UInputTracker()

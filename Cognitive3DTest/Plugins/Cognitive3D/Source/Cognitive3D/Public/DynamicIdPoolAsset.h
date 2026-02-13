@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "Internationalization/Text.h"
+#include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "UObject/ObjectMacros.h"
 

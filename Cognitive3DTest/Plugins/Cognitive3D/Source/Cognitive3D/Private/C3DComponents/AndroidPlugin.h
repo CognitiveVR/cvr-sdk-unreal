@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Engine/EngineTypes.h"
 #include "AndroidPlugin.generated.h"
 
 

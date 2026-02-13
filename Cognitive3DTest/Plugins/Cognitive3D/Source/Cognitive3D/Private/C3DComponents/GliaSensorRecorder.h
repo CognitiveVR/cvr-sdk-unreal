@@ -16,6 +16,9 @@
 #include "HPGliaClient.h"
 #endif
 #include "DrawDebugHelpers.h"
+#include "Components/ActorComponent.h"
+#include "TimerManager.h"
+#include "Engine/EngineTypes.h"
 #include "GliaSensorRecorder.generated.h"
 
 class FAnalyticsProviderCognitive3D;

@@ -3,6 +3,7 @@
 */
 
 #include "Cognitive3DActor.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "C3DUtil/CognitiveLog.h"
 #include "Components/ActorComponent.h"
@@ -11,9 +12,13 @@
 #include "MotionControllerComponent.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
+#include "EngineUtils.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Cognitive3DProvider.h"
 #include "DynamicObject.h"
 #include "Cognitive3D/Private/C3DUtil/Util.h"
+#include "TimerManager.h"
+#include "Engine/SkeletalMesh.h"
 #if WITH_EDITOR
 #include <Editor.h>
 #endif
@@ -328,10 +333,10 @@ USceneComponent* ACognitive3DActor::FindHandComponent(USceneComponent* Parent)
 	{
 		// Check if this component is a Skeletal Mesh Component
 		USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(Child);
-		if (SkeletalMeshComponent && SkeletalMeshComponent->SkeletalMesh)
+		if (SkeletalMeshComponent && SkeletalMeshComponent->GetSkeletalMeshAsset())
 		{
 			UE_LOG(LogTemp, Log, TEXT("Found Hand Scene Component: %s (Contains Skeletal Mesh: %s)"),
-				*Child->GetName(), *SkeletalMeshComponent->SkeletalMesh->GetName());
+				*Child->GetName(), *SkeletalMeshComponent->GetSkeletalMeshAsset()->GetName());
 			return Child;  // Return the scene component that holds the skeletal mesh
 		}
 	}
