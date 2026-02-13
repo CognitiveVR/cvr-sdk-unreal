@@ -2,10 +2,13 @@
 
 
 #include "C3DComponents/HMDRecenter.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 // Sets default values for this component's properties
 UHMDRecenter::UHMDRecenter()

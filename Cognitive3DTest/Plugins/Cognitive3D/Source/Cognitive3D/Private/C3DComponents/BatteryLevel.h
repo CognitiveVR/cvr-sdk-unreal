@@ -8,6 +8,9 @@
 #if PLATFORM_ANDROID
 #include "Android/AndroidPlatformMisc.h"
 #endif
+#include "Components/ActorComponent.h"
+#include "TimerManager.h"
+#include "Engine/EngineTypes.h"
 #include "BatteryLevel.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))

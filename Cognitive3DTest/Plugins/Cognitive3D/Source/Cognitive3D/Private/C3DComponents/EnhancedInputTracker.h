@@ -25,6 +25,8 @@
 #include "Cognitive3D/Public/DynamicObject.h"
 #include "MotionControllerComponent.h"
 #include "Cognitive3D/Private/C3DComponents/InputTracker.h"
+#include "Engine/EngineTypes.h"
+#include "Runtime/Launch/Resources/Version.h"
 #include "EnhancedInputTracker.generated.h"
 
 
