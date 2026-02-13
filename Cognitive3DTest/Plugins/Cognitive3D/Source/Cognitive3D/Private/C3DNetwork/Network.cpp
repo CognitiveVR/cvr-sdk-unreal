@@ -3,9 +3,14 @@
 */
 
 #include "Network.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
 
 FNetwork::FNetwork()
 {

@@ -6,6 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Engine/EngineTypes.h"
 #include "Cognitive3DActor.generated.h"
 
 //this class basically only exists to send EndPlay to the CognitiveProvider

@@ -3,13 +3,17 @@
 */
 
 #include "DynamicObject.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "DynamicIdPoolAsset.h"
 #include "DynamicObjectManager.h"
 #include "CustomEvent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 #include "EngineUtils.h"
+#include "Cognitive3D/Private/C3DUtil/Util.h"
+#include "Engine/SkeletalMesh.h"
 
 UDynamicObject::UDynamicObject()
 {
@@ -165,9 +169,9 @@ void UDynamicObject::TryGenerateMeshName()
 			if (actorSkeletalComponent != NULL)
 			{
 				USkeletalMeshComponent* skeletalmeshComponent = Cast<USkeletalMeshComponent>(actorSkeletalComponent);
-				if (skeletalmeshComponent != NULL && skeletalmeshComponent->SkeletalMesh != NULL)
+				if (skeletalmeshComponent != NULL && skeletalmeshComponent->GetSkeletalMeshAsset() != NULL)
 				{
-					MeshName = skeletalmeshComponent->SkeletalMesh->GetName();
+					MeshName = skeletalmeshComponent->GetSkeletalMeshAsset()->GetName();
 					return;
 				}
 			}

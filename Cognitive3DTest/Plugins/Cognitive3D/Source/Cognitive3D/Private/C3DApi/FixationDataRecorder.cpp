@@ -5,6 +5,13 @@
 #include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3DBlueprints.h"
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
+#include "Cognitive3D/Public/Cognitive3D.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Analytics.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
 
 FFixationDataRecorder::FFixationDataRecorder()
 {
@@ -125,7 +132,7 @@ void FFixationDataRecorder::SendData(bool copyDataToCache)
 
 
 	FString OutputString;
-	auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
+	auto Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 
 	if (OutputString.Len() > 0)

@@ -4,9 +4,16 @@
 #include "Cognitive3DBlueprints.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "Cognitive3D/Public/Cognitive3DProvider.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Cognitive3D/Public/DynamicObjectManager.h"
 #include "Cognitive3D/Public/CustomEvent.h"
+#include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
+#include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
+#include "Cognitive3D/Private/C3DComponents/PlayerTracker.h"
+#include "Cognitive3D/Private/C3DComponents/FixationRecorder.h"
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
 #include "Cognitive3D/Private/C3DComponents/RemoteControls.h"
+#include "Engine/Engine.h"
 
 TSharedPtr<FAnalyticsProviderCognitive3D> UCognitive3DBlueprints::cog;
 

@@ -61,7 +61,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #undef __WINDOWS_WASAPI__
 #endif
 
-#include "Windows/MinWindows.h"
+#include "Windows/WindowsHWrapper.h"
 
 #define RTAUDIO_VERSION "4.1.2"
 

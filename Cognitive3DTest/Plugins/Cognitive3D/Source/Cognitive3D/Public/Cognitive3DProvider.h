@@ -10,6 +10,7 @@
 #include "Interfaces/IAnalyticsProvider.h"
 #include "HeadMountedDisplayTypes.h"
 #include "Dom/JsonObject.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 

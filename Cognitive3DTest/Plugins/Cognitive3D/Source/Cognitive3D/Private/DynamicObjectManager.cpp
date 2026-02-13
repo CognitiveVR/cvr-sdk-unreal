@@ -4,14 +4,19 @@
 
 #include "DynamicObjectManager.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
 #include "Cognitive3D/Public/Cognitive3DBlueprints.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "Cognitive3D/Public/DynamicObject.h"
+#include "Analytics.h"
 #include "Dom/JsonObject.h"
 #include "Dom/JsonValue.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "UObject/UObjectIterator.h"
 
 FDynamicObjectManager::FDynamicObjectManager()
 {
@@ -355,7 +360,7 @@ void FDynamicObjectManager::SendData(bool copyDataToCache)
 
 
 	FString OutputString;
-	auto Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
+	auto Writer = TJsonWriterFactory<>::Create(&OutputString);
 	FJsonSerializer::Serialize(wholeObj.ToSharedRef(), Writer);
 	cogProvider->network->NetworkCall("dynamics", OutputString, copyDataToCache);
 

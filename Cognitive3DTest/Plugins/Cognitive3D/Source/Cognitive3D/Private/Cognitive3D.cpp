@@ -4,11 +4,17 @@
 
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "Cognitive3D/Public/Cognitive3DProvider.h"
+#include "EngineUtils.h"
 #include "Classes/Camera/CameraComponent.h"
 #include "Engine/Engine.h"
 #include "HAL/FileManager.h"
 #include "Misc/Base64.h"
 #include "Misc/FileHelper.h"
+#include "Engine/World.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
+#include "Runtime/Launch/Resources/Version.h"
+#include "GameFramework/Pawn.h"
 #ifdef INCLUDE_OCULUS_PLUGIN
 #if ENGINE_MAJOR_VERSION == 4
 #include "OculusFunctionLibrary.h"
@@ -55,6 +61,7 @@
 #include "Cognitive3D/Private/C3DComponents/RemoteControls.h"
 #include "Cognitive3D/Private/C3DApi/RemoteControlsRecorder.h"
 #include "Cognitive3D/Private/C3DApi/BoundaryRecorder.h"
+#include "Cognitive3D/Public/DynamicObjectManager.h"
 #include "LandscapeStreamingProxy.h"
 
 IMPLEMENT_MODULE(FAnalyticsCognitive3D, Cognitive3D);

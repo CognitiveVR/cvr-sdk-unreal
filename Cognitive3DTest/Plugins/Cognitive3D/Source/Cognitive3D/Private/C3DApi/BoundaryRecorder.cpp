@@ -3,13 +3,21 @@
 
 #include "C3DApi/BoundaryRecorder.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
+#include "GameFramework/Pawn.h"
 #ifdef INCLUDE_PICO_PLUGIN
 #include "PXR_HMDFunctionLibrary.h"
 #endif
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
+#include "Analytics.h"
 #include <Kismet/GameplayStatics.h>
 
 BoundaryRecorder::BoundaryRecorder()

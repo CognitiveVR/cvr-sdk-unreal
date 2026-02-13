@@ -4,7 +4,10 @@
 
 #include "CustomEvent.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/DynamicObject.h"
+#include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
+#include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
 #include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 
