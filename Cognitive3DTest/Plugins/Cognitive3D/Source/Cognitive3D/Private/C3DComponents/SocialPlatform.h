@@ -11,6 +11,7 @@
 #ifdef INCLUDE_OCULUS_PLATFORM
 #include "OVR_Platform.h"
 #endif
+#include "Engine/EngineTypes.h"
 #include "SocialPlatform.generated.h"
 
 class FAnalyticsProviderCognitive3D;

@@ -2,7 +2,12 @@
 
 
 #include "C3DComponents/SocialPlatform.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
+#include "Engine/GameInstance.h"
+#include "Engine/Engine.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
 #ifdef INCLUDE_OCULUS_PLATFORM
 #include "OVRPlatform.h"
 #include "OVR_Platform.h"

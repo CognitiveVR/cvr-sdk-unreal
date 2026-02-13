@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "TimerManager.h"
+#include "Engine/EngineTypes.h"
 #include "WifiSignal.generated.h"
 
 

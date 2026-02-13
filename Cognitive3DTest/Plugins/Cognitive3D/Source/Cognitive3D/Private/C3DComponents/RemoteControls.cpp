@@ -2,6 +2,7 @@
 
 
 #include "C3DComponents/RemoteControls.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "C3DComponents/SocialPlatform.h"
 #include "Components/ActorComponent.h"
@@ -12,6 +13,10 @@
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
 #include "TimerManager.h"
 #include "Cognitive3D/Private/C3DApi/RemoteControlsRecorder.h"
+#include "Engine/World.h"
+#include "Misc/FileHelper.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
 
 // Sets default values for this component's properties
 URemoteControls::URemoteControls()

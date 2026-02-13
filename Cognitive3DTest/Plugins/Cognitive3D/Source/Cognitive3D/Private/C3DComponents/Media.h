@@ -9,6 +9,7 @@
 #include "MediaPlayer.h"
 #include "MediaSoundComponent.h"
 #include "MediaTexture.h"
+#include "Engine/EngineTypes.h"
 #include "Media.generated.h"
 
 class FAnalyticsProviderCognitive3D;

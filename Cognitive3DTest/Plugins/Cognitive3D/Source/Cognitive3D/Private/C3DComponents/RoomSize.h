@@ -5,6 +5,8 @@
 #pragma once
 
 #include "Cognitive3D/Private/C3DUtil/Util.h"
+#include "Components/ActorComponent.h"
+#include "Engine/EngineTypes.h"
 #include "RoomSize.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))

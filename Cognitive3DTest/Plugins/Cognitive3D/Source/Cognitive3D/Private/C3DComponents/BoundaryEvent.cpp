@@ -3,10 +3,13 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/BoundaryEvent.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "DrawDebugHelpers.h"
 #include "Interfaces/IPluginManager.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 #ifdef INCLUDE_PICO_PLUGIN
 #include "PXR_HMDFunctionLibrary.h"
 #endif
