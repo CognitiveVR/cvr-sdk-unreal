@@ -2,10 +2,14 @@
 
 
 #include "C3DComponents/AndroidPlugin.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "Regex.h"
 #include "Analytics.h"
+#include "Misc/FileHelper.h"
+#include "Engine/World.h"
+#include "Engine/Level.h"
 #if PLATFORM_ANDROID
 #include "Android/AndroidJNI.h"
 #include "Android/AndroidApplication.h"
@@ -222,7 +226,13 @@ void UAndroidPlugin::OnLevelLoad()
 
     UE_LOG(LogTemp, Warning, TEXT("UAndroidPlugin: Level loaded"));
 
-    auto level = GWorld->GetCurrentLevel();
+    UWorld* World = GetWorld();
+    if (World == nullptr)
+    {
+        return;
+    }
+
+    auto level = World->GetCurrentLevel();
     if (level == nullptr)
     {
         return;

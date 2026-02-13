@@ -3,10 +3,16 @@
 */
 
 #include "FixationRecorder.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
 #include "Cognitive3D/Private/C3DApi/FixationDataRecorder.h"
+#include "Engine/Engine.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/GameInstance.h"
+#include "Engine/GameViewportClient.h"
+#include "UnrealClient.h"
 
 UFixationRecorder::UFixationRecorder()
 {

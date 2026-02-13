@@ -48,6 +48,8 @@
 #endif
 #include "Runtime/Engine/Classes/Engine/UserInterfaceSettings.h" //for getting ui dpi for active session view
 #include "DrawDebugHelpers.h"
+#include "Components/ActorComponent.h"
+#include "Engine/EngineTypes.h"
 #include "FixationRecorder.generated.h"
 
 class UCognitive3DBlueprints;

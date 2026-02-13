@@ -9,7 +9,8 @@
 #include "OculusXRPassthroughLayerComponent.h"
 #endif
 #include "Cognitive3D/Private/C3DUtil/Util.h"
-#include "Passthrough.generated.h"
+#include "Engine/EngineTypes.h"
+#include "C3DPassthrough.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
