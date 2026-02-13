@@ -3,17 +3,10 @@
 */
 
 #include "DynamicObject.h"
-#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "DynamicIdPoolAsset.h"
 #include "DynamicObjectManager.h"
 #include "CustomEvent.h"
-#include "Components/SkeletalMeshComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "Engine/StaticMesh.h"
-#include "EngineUtils.h"
-#include "Cognitive3D/Private/C3DUtil/Util.h"
-#include "Engine/SkeletalMesh.h"
 
 UDynamicObject::UDynamicObject()
 {
@@ -169,9 +162,9 @@ void UDynamicObject::TryGenerateMeshName()
 			if (actorSkeletalComponent != NULL)
 			{
 				USkeletalMeshComponent* skeletalmeshComponent = Cast<USkeletalMeshComponent>(actorSkeletalComponent);
-				if (skeletalmeshComponent != NULL && skeletalmeshComponent->GetSkeletalMeshAsset() != NULL)
+				if (skeletalmeshComponent != NULL && skeletalmeshComponent->SkeletalMesh != NULL)
 				{
-					MeshName = skeletalmeshComponent->GetSkeletalMeshAsset()->GetName();
+					MeshName = skeletalmeshComponent->SkeletalMesh->GetName();
 					return;
 				}
 			}
@@ -385,15 +378,7 @@ void UDynamicObject::Initialize()
 		dynamicObjectManager->CacheControllerPointer(this, IsRightController);
 	}
 
-	bool hasScaleChanged = true;
-	if (GetAttachParent() != nullptr)
-	{
-		if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
-		{
-			hasScaleChanged = true;
-		}
-	}
-	FDynamicObjectSnapshot initSnapshot = MakeSnapshot(hasScaleChanged);
+	FDynamicObjectSnapshot initSnapshot = MakeSnapshot(true);
 	SnapshotBoolProperty(initSnapshot, "enabled", true);
 	dynamicObjectManager->AddSnapshot(initSnapshot);
 	HasInitialized = true;
