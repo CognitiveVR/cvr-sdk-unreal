@@ -8,6 +8,11 @@
 #include "IPluginManager.h"
 #include "Analytics.h"
 #include "SegmentAnalytics.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Misc/FileHelper.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 

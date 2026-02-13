@@ -5,6 +5,8 @@
 */
 
 #include "DynamicIdPoolAssetDetails.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 TSharedRef<IDetailCustomization> IDynamicIdPoolAssetDetails::MakeInstance()
 {

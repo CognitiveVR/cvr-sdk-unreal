@@ -5,6 +5,7 @@
 #include "DynamicObjectManagerWidget.h"
 #include "Analytics.h"
 #include "SegmentAnalytics.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 

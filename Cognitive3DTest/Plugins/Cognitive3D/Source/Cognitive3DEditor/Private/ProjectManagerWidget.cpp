@@ -6,6 +6,12 @@
 #include "CognitiveEditorTools.h"
 #include "IPluginManager.h"
 #include "Analytics.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "Misc/FileHelper.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
+#include "Runtime/Launch/Resources/Version.h"
 #if ENGINE_MAJOR_VERSION == 5
 #include "SDockTab.h"
 #elif ENGINE_MAJOR_VERSION == 4

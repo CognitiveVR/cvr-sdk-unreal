@@ -28,6 +28,8 @@
 #include "CognitiveEditorTools.h"
 #include "Cognitive3D/Private/C3DComponents/Media.h"
 #include "Toolkits/IToolkitHost.h"
+#include "TimerManager.h"
+#include "Runtime/Launch/Resources/Version.h"
 #if ENGINE_MAJOR_VERSION == 5
 #include "UObject/SavePackage.h"
 #endif

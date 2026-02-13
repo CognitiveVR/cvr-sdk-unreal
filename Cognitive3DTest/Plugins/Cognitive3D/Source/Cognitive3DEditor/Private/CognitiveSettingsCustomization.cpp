@@ -4,6 +4,7 @@
 
 #include "CognitiveSettingsCustomization.h"
 #include "CognitiveEditorData.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 

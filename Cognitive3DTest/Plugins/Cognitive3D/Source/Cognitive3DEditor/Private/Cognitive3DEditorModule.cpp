@@ -6,6 +6,7 @@
 #include "C3DCommands.h"
 #include "CognitiveEditorStyle.h"
 #include "SegmentAnalytics.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 IMPLEMENT_MODULE(FCognitive3DEditorModule, Cognitive3DEditor);
 
