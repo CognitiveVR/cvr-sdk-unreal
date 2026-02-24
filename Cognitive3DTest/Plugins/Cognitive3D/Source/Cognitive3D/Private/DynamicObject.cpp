@@ -7,7 +7,14 @@
 #include "DynamicIdPoolAsset.h"
 #include "DynamicObjectManager.h"
 #include "CustomEvent.h"
-
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
+#include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "EngineUtils.h"
+#include "Engine/Blueprint.h"
+#include "Misc/Optional.h"
+#include "C3DUtil/Util.h"
 UDynamicObject::UDynamicObject()
 {
 	PrimaryComponentTick.bCanEverTick = true;
