@@ -2231,6 +2231,7 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 		// Initialize upload progress tracking
 		TotalLevelsToUpload = TotalLevelCount;
 		CompletedUploads = 0;
+		FailedUploads = 0;
 		
 		if (TotalLevelsToUpload <= 0)
 		{
@@ -2299,11 +2300,25 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 void SProjectManagerWidget::AdvanceUploadProgress(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
 	CompletedUploads++;
-	UE_LOG(LogTemp, Error, TEXT("=== AdvanceUploadProgress called for %s (success: %s) - %d/%d ==="), *LevelName, bWasSuccessful ? TEXT("true") : TEXT("false"), CompletedUploads, TotalLevelsToUpload);
+
+	const bool bHasValidResponse = Response.IsValid();
+	const int32 ResponseCode = bHasValidResponse ? Response->GetResponseCode() : 0;
+	const bool bUploadSucceeded = bWasSuccessful && bHasValidResponse && ResponseCode >= 200 && ResponseCode < 300;
+
+	UE_LOG(LogTemp, Error, TEXT("=== AdvanceUploadProgress called for %s (success: %s, code: %d) - %d/%d ==="), *LevelName, bUploadSucceeded ? TEXT("true") : TEXT("false"), ResponseCode, CompletedUploads, TotalLevelsToUpload);
 	
 	// Update upload status for throbber display
 	FString ReAdjustedLevelName = LevelName.Replace(*FCognitiveEditorTools::GetInstance()->SplitCharacter, TEXT("/")); // Revert underscores back to slashes for display
-	CurrentUploadStatus = FString::Printf(TEXT("Uploaded %s (%d/%d)"), *ReAdjustedLevelName, CompletedUploads, TotalLevelsToUpload);
+	if (bUploadSucceeded)
+	{
+		CurrentUploadStatus = FString::Printf(TEXT("Uploaded %s (%d/%d)"), *ReAdjustedLevelName, CompletedUploads, TotalLevelsToUpload);
+	}
+	else
+	{
+		FailedUploads++;
+		const FString FailureCode = bHasValidResponse ? FString::FromInt(ResponseCode) : FString(TEXT("NoResponse"));
+		CurrentUploadStatus = FString::Printf(TEXT("Failed to upload %s (%d/%d) [code: %s]"), *ReAdjustedLevelName, CompletedUploads, TotalLevelsToUpload, *FailureCode);
+	}
 	UE_LOG(LogTemp, Error, TEXT("Upload status updated: %s"), *CurrentUploadStatus);
 	
 	// Show notification for each upload
@@ -2315,11 +2330,22 @@ void SProjectManagerWidget::AdvanceUploadProgress(FHttpRequestPtr Request, FHttp
 	if (CompletedUploads >= TotalLevelsToUpload)
 	{
 		bIsUploading = false;
-		CurrentUploadStatus = TEXT("All uploads completed!");
-		UE_LOG(LogTemp, Warning, TEXT("All uploads completed, hiding throbber"));
-		
+		if (FailedUploads > 0)
+		{
+			CurrentUploadStatus = FString::Printf(TEXT("Uploads completed with %d failure(s)."), FailedUploads);
+			UE_LOG(LogTemp, Warning, TEXT("All uploads completed with failures, hiding throbber"));
+		}
+		else
+		{
+			CurrentUploadStatus = TEXT("All uploads completed!");
+			UE_LOG(LogTemp, Warning, TEXT("All uploads completed, hiding throbber"));
+		}
+
 		// Show final completion notification
-		FNotificationInfo CompletionInfo(FText::FromString("All levels uploaded successfully!"));
+		const FString CompletionText = FailedUploads > 0
+			? FString::Printf(TEXT("Uploads completed with %d failure(s)."), FailedUploads)
+			: FString(TEXT("All levels uploaded successfully!"));
+		FNotificationInfo CompletionInfo(FText::FromString(CompletionText));
 		CompletionInfo.ExpireDuration = 5.0f;
 		FSlateNotificationManager::Get().AddNotification(CompletionInfo);
 	}

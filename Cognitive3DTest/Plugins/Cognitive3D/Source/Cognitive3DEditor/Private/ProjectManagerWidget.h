@@ -124,6 +124,7 @@ public:
 	// Upload progress tracking
 	int32 TotalLevelsToUpload = 0;
 	int32 CompletedUploads = 0;
+	int32 FailedUploads = 0;
 	void AdvanceUploadProgress(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName);
 	
 	// Dynamics upload progress tracking
