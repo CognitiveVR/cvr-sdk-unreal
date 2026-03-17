@@ -58,9 +58,16 @@ void UArmLength::EndInterval()
 		TWeakObjectPtr<UDynamicObject> object = cognitive->GetControllerDynamic(false);
 		if (object != nullptr)
 		{
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 7
 
+			FXRMotionControllerState data;
+			EXRControllerPoseType poseType = EXRControllerPoseType::Grip;
+			EXRSpaceType spaceType = EXRSpaceType::UnrealWorldSpace;
+			UHeadMountedDisplayFunctionLibrary::GetMotionControllerState(object->GetWorld(), spaceType, EControllerHand::Left, poseType, data);
+#else
 			FXRMotionControllerData data;
-			UHeadMountedDisplayFunctionLibrary::GetMotionControllerData(object->GetWorld(), EControllerHand::Right, data);
+			UHeadMountedDisplayFunctionLibrary::GetMotionControllerData(object->GetWorld(), EControllerHand::Left, data);
+#endif
 			if (data.TrackingStatus == ETrackingStatus::Tracked)
 			{
 				auto handPos = object.Get()->GetComponentLocation();
@@ -71,8 +78,15 @@ void UArmLength::EndInterval()
 		object = cognitive->GetControllerDynamic(true);
 		if (object != nullptr)
 		{
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 7
+			FXRMotionControllerState data;
+			EXRControllerPoseType poseType = EXRControllerPoseType::Grip;
+			EXRSpaceType spaceType = EXRSpaceType::UnrealWorldSpace;
+			UHeadMountedDisplayFunctionLibrary::GetMotionControllerState(object->GetWorld(), spaceType, EControllerHand::Right, poseType, data);
+#else
 			FXRMotionControllerData data;
 			UHeadMountedDisplayFunctionLibrary::GetMotionControllerData(object->GetWorld(), EControllerHand::Right, data);
+#endif
 			if (data.TrackingStatus == ETrackingStatus::Tracked)
 			{
 				auto handPos = object.Get()->GetComponentLocation();

@@ -2516,7 +2516,7 @@ void FCognitiveEditorTools::UploadFromDirectory(FString LevelName, FString url, 
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetContent(AllBytes);
-#if !(ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 6)
+#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION <= 6)
 	FHttpModule::Get().SetHttpTimeout(0);
 #endif
 	if (expectedResponseType == "scene")
