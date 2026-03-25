@@ -2234,11 +2234,9 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 		
 		if (TotalLevelsToUpload <= 0)
 		{
-			UE_LOG(LogTemp, Error, TEXT("No levels to upload! TotalLevelCount is %d"), TotalLevelCount);
+			UE_LOG(LogTemp, Warning, TEXT("No levels to upload! TotalLevelCount is %d"), TotalLevelCount);
 			return;
 		}
-		
-		UE_LOG(LogTemp, Error, TEXT("Starting upload UI for %d levels"), TotalLevelsToUpload);
 		
 		// Show upload throbber instead of problematic progress dialog
 		bIsUploading = true;
@@ -2259,9 +2257,7 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 		}
 
 		// Bind to individual upload completion for progress tracking
-		UE_LOG(LogTemp, Error, TEXT("Binding OnIndividualSceneUploadComplete delegate"));
 		FCognitiveEditorTools::GetInstance()->OnIndividualSceneUploadComplete.BindSP(this, &SProjectManagerWidget::AdvanceUploadProgress);
-		UE_LOG(LogTemp, Error, TEXT("OnIndividualSceneUploadComplete delegate bound successfully"));
 		// Still bind to the "all done" callback
 		FCognitiveEditorTools::GetInstance()->OnUploadAllSceneGeometry.BindSP(this, &SProjectManagerWidget::OnLevelsUploaded);
 		FCognitiveEditorTools::GetInstance()->UploadingScenesFromFullSetup = true;
@@ -2299,27 +2295,30 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 void SProjectManagerWidget::AdvanceUploadProgress(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
 	CompletedUploads++;
-	UE_LOG(LogTemp, Error, TEXT("=== AdvanceUploadProgress called for %s (success: %s) - %d/%d ==="), *LevelName, bWasSuccessful ? TEXT("true") : TEXT("false"), CompletedUploads, TotalLevelsToUpload);
-	
-	// Update upload status for throbber display
-	FString ReAdjustedLevelName = LevelName.Replace(*FCognitiveEditorTools::GetInstance()->SplitCharacter, TEXT("/")); // Revert underscores back to slashes for display
-	CurrentUploadStatus = FString::Printf(TEXT("Uploaded %s (%d/%d)"), *ReAdjustedLevelName, CompletedUploads, TotalLevelsToUpload);
-	UE_LOG(LogTemp, Error, TEXT("Upload status updated: %s"), *CurrentUploadStatus);
-	
-	// Show notification for each upload
+
+	FString ReAdjustedLevelName = LevelName.Replace(*FCognitiveEditorTools::GetInstance()->SplitCharacter, TEXT("/"));
+
+	if (bWasSuccessful && Response.IsValid() && Response->GetResponseCode() < 300)
+	{
+		CurrentUploadStatus = FString::Printf(TEXT("Uploaded %s (%d/%d)"), *ReAdjustedLevelName, CompletedUploads, TotalLevelsToUpload);
+	}
+	else
+	{
+		int32 ResponseCode = (bWasSuccessful && Response.IsValid()) ? Response->GetResponseCode() : 0;
+		CurrentUploadStatus = FString::Printf(TEXT("Failed to upload %s (%d/%d) [code: %d]"), *ReAdjustedLevelName, CompletedUploads, TotalLevelsToUpload, ResponseCode);
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Upload progress: %s"), *CurrentUploadStatus);
+
 	FNotificationInfo Info(FText::FromString(CurrentUploadStatus));
 	Info.ExpireDuration = 2.0f;
 	FSlateNotificationManager::Get().AddNotification(Info);
-	
-	// Hide throbber when all uploads are complete
+
 	if (CompletedUploads >= TotalLevelsToUpload)
 	{
 		bIsUploading = false;
-		CurrentUploadStatus = TEXT("All uploads completed!");
-		UE_LOG(LogTemp, Warning, TEXT("All uploads completed, hiding throbber"));
-		
-		// Show final completion notification
-		FNotificationInfo CompletionInfo(FText::FromString("All levels uploaded successfully!"));
+
+		FNotificationInfo CompletionInfo(FText::FromString(TEXT("All level uploads completed!")));
 		CompletionInfo.ExpireDuration = 5.0f;
 		FSlateNotificationManager::Get().AddNotification(CompletionInfo);
 	}
@@ -2341,7 +2340,7 @@ void SProjectManagerWidget::AdvanceDynamicsUploadProgress()
 	
 	// Update status text
 	CurrentUploadStatus = FString::Printf(TEXT("Uploading dynamics (%d/%d)"), CompletedDynamicsUploads, TotalDynamicsToUpload);
-	UE_LOG(LogTemp, Error, TEXT("Dynamics upload status updated: %s"), *CurrentUploadStatus);
+	UE_LOG(LogTemp, Log, TEXT("Dynamics upload progress: %s"), *CurrentUploadStatus);
 	
 	// Show notification for each dynamics upload
 	FNotificationInfo Info(FText::FromString(CurrentUploadStatus));

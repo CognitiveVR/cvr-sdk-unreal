@@ -106,7 +106,6 @@ void UTrackingEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	//data, spaceType and poseType reused from above
 	UHeadMountedDisplayFunctionLibrary::GetMotionControllerState(GetWorld(), spaceType, EControllerHand::Left, poseType, data);
 #else
-	FXRMotionControllerData data;
 	UHeadMountedDisplayFunctionLibrary::GetMotionControllerData(GetWorld(), EControllerHand::Left, data);
 #endif
 	if (data.bValid)

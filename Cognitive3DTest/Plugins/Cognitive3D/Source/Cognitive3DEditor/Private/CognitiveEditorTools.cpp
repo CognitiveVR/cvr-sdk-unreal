@@ -2533,23 +2533,32 @@ void FCognitiveEditorTools::UploadFromDirectory(FString LevelName, FString url, 
 
 void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
-	UE_LOG(LogTemp, Error, TEXT("=== FCognitiveEditorTools::OnUploadSceneCompleted called for level %s ==="), *LevelName);
-	
 	// Notify individual scene upload completion for progress tracking
-	UE_LOG(LogTemp, Error, TEXT("Executing OnIndividualSceneUploadComplete delegate for %s"), *LevelName);
 	OnIndividualSceneUploadComplete.ExecuteIfBound(Request, Response, bWasSuccessful, LevelName);
-	UE_LOG(LogTemp, Error, TEXT("OnIndividualSceneUploadComplete delegate executed"));
 
 	if (bWasSuccessful)
 	{
-		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted bWasSuccessful response code " + FString::FromInt(Response->GetResponseCode()));
+		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted response code " + FString::FromInt(Response->GetResponseCode()));
 	}
 	else
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted failed to connect");
 		WizardUploadError = "FCognitiveEditorTools::OnUploadSceneCompleted failed to connect";
-		WizardUploading = false;
 		WizardUploadResponseCode = 0;
+		if (UploadingScenesFromFullSetup)
+		{
+			TotalLevelsToUpload--;
+			if (TotalLevelsToUpload <= 0)
+			{
+				WizardUploading = false;
+				OnUploadAllSceneGeometry.ExecuteIfBound(false);
+				UploadingScenesFromFullSetup = false;
+			}
+		}
+		else
+		{
+			WizardUploading = false;
+		}
 		return;
 	}
 	WizardUploadResponseCode = Response->GetResponseCode();
@@ -2601,9 +2610,22 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 		USegmentAnalytics::Get()->TrackEvent(responseCodeStr, "SceneSetupSceneUploadPage");
 
 		ShowNotification(TEXT("Failed to upload scene"), false);
-		WizardUploading = false;
 		WizardUploadError = "FCognitiveEditorTools::OnUploadSceneCompleted Failed to Upload. Response code " + FString::FromInt(Response->GetResponseCode());
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted Failed to Upload. Response code " + FString::FromInt(Response->GetResponseCode()));
+		if (UploadingScenesFromFullSetup)
+		{
+			TotalLevelsToUpload--;
+			if (TotalLevelsToUpload <= 0)
+			{
+				WizardUploading = false;
+				OnUploadAllSceneGeometry.ExecuteIfBound(false);
+				UploadingScenesFromFullSetup = false;
+			}
+		}
+		else
+		{
+			WizardUploading = false;
+		}
 	}
 }
 
@@ -2613,7 +2635,6 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 
 	if (bWasSuccessful)
 	{
-		UE_LOG(LogTemp, Error, TEXT("=== FCognitiveEditorTools::OnUploadObjectCompleted called for level %s ==="), *LevelName);
 		GLog->Log("FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode()));
 		ShowNotification(TEXT("Dynamic Uploaded Successfully"));
 	}
@@ -3625,9 +3646,22 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::SceneVersionResponse failed to connect"));
-		WizardUploading = false;
 		WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse failed to connect";
 		WizardUploadResponseCode = 0;
+		if (UploadingScenesFromFullSetup)
+		{
+			TotalLevelsToUpload--;
+			if (TotalLevelsToUpload <= 0)
+			{
+				WizardUploading = false;
+				OnUploadAllSceneGeometry.ExecuteIfBound(false);
+				UploadingScenesFromFullSetup = false;
+			}
+		}
+		else
+		{
+			WizardUploading = false;
+		}
 		return;
 	}
 
@@ -3638,25 +3672,47 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		//internal server error
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::SceneVersionResponse %d, internal server error"), Response->GetResponseCode());
 		WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode());
+		if (UploadingScenesFromFullSetup)
+		{
+			TotalLevelsToUpload--;
+			if (TotalLevelsToUpload <= 0)
+			{
+				WizardUploading = false;
+				OnUploadAllSceneGeometry.ExecuteIfBound(false);
+				UploadingScenesFromFullSetup = false;
+			}
+		}
 		return;
 	}
 	if (WizardUploadResponseCode >= 400)
 	{
-		WizardUploading = false;
 		if (WizardUploadResponseCode == 401)
 		{
 			//not authorized or scene id does not exist
 			UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::SceneVersionResponse error code %d, not authorized or scene doesn't exist!"), Response->GetResponseCode());
 			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode()) + "\nThe Developer Key: " + DeveloperKey + " does not have access to the scene";
-			return;
 		}
 		else
 		{
 			//maybe no scene?
 			UE_LOG(LogTemp, Error, TEXT("FCognitiveTools::SceneVersionResponse error code %d. Maybe no scene?"), Response->GetResponseCode());
 			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode());
-			return;
 		}
+		if (UploadingScenesFromFullSetup)
+		{
+			TotalLevelsToUpload--;
+			if (TotalLevelsToUpload <= 0)
+			{
+				WizardUploading = false;
+				OnUploadAllSceneGeometry.ExecuteIfBound(false);
+				UploadingScenesFromFullSetup = false;
+			}
+		}
+		else
+		{
+			WizardUploading = false;
+		}
+		return;
 	}
 	WizardUploadError = "";
 
@@ -3791,7 +3847,20 @@ void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpR
 		{
 			WizardUploadError = "FCognitiveToolsCustomization::SceneVersionResponse failed to parse json response";
 			WizardUploadResponseCode = 0;
-			WizardUploading = false;
+			if (UploadingScenesFromFullSetup)
+			{
+				TotalLevelsToUpload--;
+				if (TotalLevelsToUpload <= 0)
+				{
+					WizardUploading = false;
+					OnUploadAllSceneGeometry.ExecuteIfBound(false);
+					UploadingScenesFromFullSetup = false;
+				}
+			}
+			else
+			{
+				WizardUploading = false;
+			}
 		}
 	}
 }
