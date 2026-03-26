@@ -16,6 +16,7 @@ class FDynamicObjectManager;
 class FDynamicObjectId;
 class UDynamicIdPoolAsset;
 class FAnalyticsProviderCognitive3D;
+class FAnalyticsCognitive3D;
 
 UENUM(BlueprintType)
 enum class EIdSourceType : uint8
