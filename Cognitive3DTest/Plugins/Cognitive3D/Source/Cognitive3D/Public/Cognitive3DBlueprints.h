@@ -8,6 +8,7 @@
 #include "AnalyticsBlueprintLibrary.h"
 #include "Cognitive3DBlueprints.generated.h"
 
+class FAnalyticsProviderCognitive3D;
 class Cognitive3DResponse;
 class UDynamicObject;
 class UCustomEvent;
