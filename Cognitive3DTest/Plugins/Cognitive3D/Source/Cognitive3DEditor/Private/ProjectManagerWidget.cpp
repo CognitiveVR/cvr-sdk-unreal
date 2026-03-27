@@ -2235,11 +2235,9 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 		
 		if (TotalLevelsToUpload <= 0)
 		{
-			UE_LOG(LogTemp, Error, TEXT("No levels to upload! TotalLevelCount is %d"), TotalLevelCount);
+			UE_LOG(LogTemp, Warning, TEXT("No levels to upload! TotalLevelCount is %d"), TotalLevelCount);
 			return;
 		}
-		
-		UE_LOG(LogTemp, Error, TEXT("Starting upload UI for %d levels"), TotalLevelsToUpload);
 		
 		// Show upload throbber instead of problematic progress dialog
 		bIsUploading = true;
@@ -2260,9 +2258,7 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 		}
 
 		// Bind to individual upload completion for progress tracking
-		UE_LOG(LogTemp, Error, TEXT("Binding OnIndividualSceneUploadComplete delegate"));
 		FCognitiveEditorTools::GetInstance()->OnIndividualSceneUploadComplete.BindSP(this, &SProjectManagerWidget::AdvanceUploadProgress);
-		UE_LOG(LogTemp, Error, TEXT("OnIndividualSceneUploadComplete delegate bound successfully"));
 		// Still bind to the "all done" callback
 		FCognitiveEditorTools::GetInstance()->OnUploadAllSceneGeometry.BindSP(this, &SProjectManagerWidget::OnLevelsUploaded);
 		FCognitiveEditorTools::GetInstance()->UploadingScenesFromFullSetup = true;
@@ -2325,8 +2321,7 @@ void SProjectManagerWidget::AdvanceUploadProgress(FHttpRequestPtr Request, FHttp
 	FNotificationInfo Info(FText::FromString(CurrentUploadStatus));
 	Info.ExpireDuration = 2.0f;
 	FSlateNotificationManager::Get().AddNotification(Info);
-	
-	// Hide throbber when all uploads are complete
+
 	if (CompletedUploads >= TotalLevelsToUpload)
 	{
 		bIsUploading = false;
@@ -2367,7 +2362,7 @@ void SProjectManagerWidget::AdvanceDynamicsUploadProgress()
 	
 	// Update status text
 	CurrentUploadStatus = FString::Printf(TEXT("Uploading dynamics (%d/%d)"), CompletedDynamicsUploads, TotalDynamicsToUpload);
-	UE_LOG(LogTemp, Error, TEXT("Dynamics upload status updated: %s"), *CurrentUploadStatus);
+	UE_LOG(LogTemp, Log, TEXT("Dynamics upload progress: %s"), *CurrentUploadStatus);
 	
 	// Show notification for each dynamics upload
 	FNotificationInfo Info(FText::FromString(CurrentUploadStatus));

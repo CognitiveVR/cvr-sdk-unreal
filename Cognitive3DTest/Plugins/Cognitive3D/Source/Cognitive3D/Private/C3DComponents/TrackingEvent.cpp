@@ -65,8 +65,15 @@ void UTrackingEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		return;
 	}
 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 7
+	FXRMotionControllerState data;
+	EXRControllerPoseType poseType = EXRControllerPoseType::Grip;
+	EXRSpaceType spaceType = EXRSpaceType::UnrealWorldSpace;
+	UHeadMountedDisplayFunctionLibrary::GetMotionControllerState(GetWorld(), spaceType, EControllerHand::Right, poseType, data);
+#else
 	FXRMotionControllerData data;
 	UHeadMountedDisplayFunctionLibrary::GetMotionControllerData(GetWorld(), EControllerHand::Right, data);
+#endif
 	if (data.bValid)
 	{
 		if (IsTrackingRightController && data.TrackingStatus == ETrackingStatus::NotTracked)
@@ -95,7 +102,12 @@ void UTrackingEvent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		}
 	}
 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 7
+	//data, spaceType and poseType reused from above
+	UHeadMountedDisplayFunctionLibrary::GetMotionControllerState(GetWorld(), spaceType, EControllerHand::Left, poseType, data);
+#else
 	UHeadMountedDisplayFunctionLibrary::GetMotionControllerData(GetWorld(), EControllerHand::Left, data);
+#endif
 	if (data.bValid)
 	{
 		if (IsTrackingLeftController && data.TrackingStatus == ETrackingStatus::NotTracked)

@@ -261,13 +261,13 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 					}
 					else if (Type == "boolean")
 					{
-						bool ValueBool = TestObj->GetBoolField(TEXT("valueBool"));
-						properties->SetBoolField("ValueBool", ValueBool);
+						bool ValueBoolean = TestObj->GetBoolField(TEXT("valueBoolean"));
+						properties->SetBoolField("ValueBoolean", ValueBoolean);
 						FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
-						cog->SetSessionProperty(PropertyName, ValueBool);
-						FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Add(RemoteVariableName, ValueBool);
+						cog->SetSessionProperty(PropertyName, ValueBoolean);
+						FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Add(RemoteVariableName, ValueBoolean);
 						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
-						//	*Name, *Description, *RemoteVariableName, *Type, ValueBool);
+						//	*Name, *Description, *RemoteVariableName, *Type, ValueBoolean);
 					}
 
 					properties->SetStringField("Name", Name);
@@ -343,16 +343,16 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 					}
 					else if (Type == "boolean")
 					{
-						bool ValueBool = ConfigObj->GetBoolField(TEXT("valueBool"));
+						bool ValueBoolean = ConfigObj->GetBoolField(TEXT("valueBoolean"));
 						if (!FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Contains(RemoteVariableName))
 						{
-							properties->SetBoolField("ValueBool", ValueBool);
+							properties->SetBoolField("ValueBoolean", ValueBoolean);
 							FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
-							cog->SetSessionProperty(PropertyName, ValueBool);
-							FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Add(RemoteVariableName, ValueBool);
+							cog->SetSessionProperty(PropertyName, ValueBoolean);
+							FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Add(RemoteVariableName, ValueBoolean);
 						}
 						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
-						//	*Name, *Description, *RemoteVariableName, *Type, ValueBool);
+						//	*Name, *Description, *RemoteVariableName, *Type, ValueBoolean);
 					}
 					properties->SetStringField("Name", Name);
 					properties->SetStringField("Description", Description);
