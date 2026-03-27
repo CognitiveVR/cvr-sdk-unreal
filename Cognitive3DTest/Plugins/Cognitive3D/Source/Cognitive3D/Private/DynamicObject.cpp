@@ -7,6 +7,9 @@
 #include "DynamicIdPoolAsset.h"
 #include "DynamicObjectManager.h"
 #include "CustomEvent.h"
+#include "EngineUtils.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
+#include "Cognitive3D/Private/C3DUtil/Util.h"
 
 UDynamicObject::UDynamicObject()
 {
