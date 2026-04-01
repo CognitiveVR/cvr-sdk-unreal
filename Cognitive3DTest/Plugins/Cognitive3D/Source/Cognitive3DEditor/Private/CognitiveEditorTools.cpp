@@ -4213,17 +4213,28 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 	{
 		if (ALandscapeStreamingProxy* LandscapeProxy = Cast<ALandscapeStreamingProxy>(actorsToExport[i]))
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("FOUND LANDSCAPE PROXY, SKIPPING SELECT"));
+			continue;
 		}
-		else if (actorsToExport[i]->GetName().StartsWith("SkySphereBlueprint"))
+		if (actorsToExport[i]->GetName().StartsWith("SkySphereBlueprint"))
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("FOUND SKYSPHERE, SKIPPING SELECT"));
+			continue;
 		}
-		else
+
+		auto TempObject = actorsToExport[i]->GetComponentByClass(UStaticMeshComponent::StaticClass());
+		if (TempObject != NULL)
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("NOT PROXY, FOUND ACTOR: %s"), *actorsToExport[i]->GetFName().ToString());
-			GEditor->SelectActor((actorsToExport[i]), true, false, true);
+			auto staticTempObject = (UStaticMeshComponent*)TempObject;
+			if (staticTempObject->GetOwner() != NULL)
+			{
+				UActorComponent* dynamic = staticTempObject->GetOwner()->GetComponentByClass(UDynamicObject::StaticClass());
+				if (dynamic != NULL)
+				{
+					continue;
+				}
+			}
 		}
+		
+		GEditor->SelectActor((actorsToExport[i]), true, false, true);
 	}
 	//FString AdjustedLevelName = LevelName.Replace(TEXT("/"), TEXT("_")); // _Game_Maps_VRMap
 	FString AdjustedLevelName = AdjustPathName(LevelName);
