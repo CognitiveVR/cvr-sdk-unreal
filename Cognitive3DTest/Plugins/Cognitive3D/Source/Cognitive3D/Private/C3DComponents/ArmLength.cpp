@@ -3,10 +3,13 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/ArmLength.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Cognitive3D/Public/DynamicObject.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 UArmLength::UArmLength()
 {
@@ -55,9 +58,16 @@ void UArmLength::EndInterval()
 		TWeakObjectPtr<UDynamicObject> object = cognitive->GetControllerDynamic(false);
 		if (object != nullptr)
 		{
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 7
 
+			FXRMotionControllerState data;
+			EXRControllerPoseType poseType = EXRControllerPoseType::Grip;
+			EXRSpaceType spaceType = EXRSpaceType::UnrealWorldSpace;
+			UHeadMountedDisplayFunctionLibrary::GetMotionControllerState(object->GetWorld(), spaceType, EControllerHand::Left, poseType, data);
+#else
 			FXRMotionControllerData data;
-			UHeadMountedDisplayFunctionLibrary::GetMotionControllerData(object->GetWorld(), EControllerHand::Right, data);
+			UHeadMountedDisplayFunctionLibrary::GetMotionControllerData(object->GetWorld(), EControllerHand::Left, data);
+#endif
 			if (data.TrackingStatus == ETrackingStatus::Tracked)
 			{
 				auto handPos = object.Get()->GetComponentLocation();
@@ -68,8 +78,15 @@ void UArmLength::EndInterval()
 		object = cognitive->GetControllerDynamic(true);
 		if (object != nullptr)
 		{
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 7
+			FXRMotionControllerState data;
+			EXRControllerPoseType poseType = EXRControllerPoseType::Grip;
+			EXRSpaceType spaceType = EXRSpaceType::UnrealWorldSpace;
+			UHeadMountedDisplayFunctionLibrary::GetMotionControllerState(object->GetWorld(), spaceType, EControllerHand::Right, poseType, data);
+#else
 			FXRMotionControllerData data;
 			UHeadMountedDisplayFunctionLibrary::GetMotionControllerData(object->GetWorld(), EControllerHand::Right, data);
+#endif
 			if (data.TrackingStatus == ETrackingStatus::Tracked)
 			{
 				auto handPos = object.Get()->GetComponentLocation();

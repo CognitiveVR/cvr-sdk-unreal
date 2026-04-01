@@ -2,6 +2,7 @@
 
 
 #include "C3DComponents/RemoteControls.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "C3DComponents/SocialPlatform.h"
 #include "Components/ActorComponent.h"
@@ -12,6 +13,10 @@
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
 #include "TimerManager.h"
 #include "Cognitive3D/Private/C3DApi/RemoteControlsRecorder.h"
+#include "Engine/World.h"
+#include "Misc/FileHelper.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
 
 // Sets default values for this component's properties
 URemoteControls::URemoteControls()
@@ -256,13 +261,13 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 					}
 					else if (Type == "boolean")
 					{
-						bool ValueBool = TestObj->GetBoolField(TEXT("valueBool"));
-						properties->SetBoolField("ValueBool", ValueBool);
+						bool ValueBoolean = TestObj->GetBoolField(TEXT("valueBoolean"));
+						properties->SetBoolField("ValueBoolean", ValueBoolean);
 						FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
-						cog->SetSessionProperty(PropertyName, ValueBool);
-						FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Add(RemoteVariableName, ValueBool);
+						cog->SetSessionProperty(PropertyName, ValueBoolean);
+						FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Add(RemoteVariableName, ValueBoolean);
 						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
-						//	*Name, *Description, *RemoteVariableName, *Type, ValueBool);
+						//	*Name, *Description, *RemoteVariableName, *Type, ValueBoolean);
 					}
 
 					properties->SetStringField("Name", Name);
@@ -338,16 +343,16 @@ void URemoteControls::ParseJsonResponse(const FString& JsonResponse)
 					}
 					else if (Type == "boolean")
 					{
-						bool ValueBool = ConfigObj->GetBoolField(TEXT("valueBool"));
+						bool ValueBoolean = ConfigObj->GetBoolField(TEXT("valueBoolean"));
 						if (!FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Contains(RemoteVariableName))
 						{
-							properties->SetBoolField("ValueBool", ValueBool);
+							properties->SetBoolField("ValueBoolean", ValueBoolean);
 							FString PropertyName = "c3d.remote_variable." + RemoteVariableName;
-							cog->SetSessionProperty(PropertyName, ValueBool);
-							FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Add(RemoteVariableName, ValueBool);
+							cog->SetSessionProperty(PropertyName, ValueBoolean);
+							FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Add(RemoteVariableName, ValueBoolean);
 						}
 						//UE_LOG(LogTemp, Log, TEXT("AB Test - Name: %s, Description: %s, RemoteVariableName: %s, Type: %s, ValueInt: %d"),
-						//	*Name, *Description, *RemoteVariableName, *Type, ValueBool);
+						//	*Name, *Description, *RemoteVariableName, *Type, ValueBoolean);
 					}
 					properties->SetStringField("Name", Name);
 					properties->SetStringField("Description", Description);

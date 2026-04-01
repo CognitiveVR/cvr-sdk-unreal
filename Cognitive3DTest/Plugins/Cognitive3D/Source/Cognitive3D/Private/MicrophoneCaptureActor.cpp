@@ -7,6 +7,7 @@
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Private/C3DUtil/CognitiveLog.h"
+#include "Misc/FileHelper.h"
 
 #if PLATFORM_ANDROID
 

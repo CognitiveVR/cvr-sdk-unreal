@@ -3,8 +3,10 @@
 */
 
 #include "LocalCache.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Analytics.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
+#include "Misc/FileHelper.h"
 
 FLocalCache::FLocalCache(FString path)
 {

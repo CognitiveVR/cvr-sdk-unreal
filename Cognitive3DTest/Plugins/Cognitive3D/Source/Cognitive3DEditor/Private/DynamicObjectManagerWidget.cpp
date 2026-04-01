@@ -5,6 +5,7 @@
 #include "DynamicObjectManagerWidget.h"
 #include "Analytics.h"
 #include "SegmentAnalytics.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
 
@@ -26,6 +27,10 @@ void SDynamicObjectManagerWidget::CheckForExpiredDeveloperKey()
 		auto Request = FHttpModule::Get().CreateRequest();
 		Request->OnProcessRequestComplete().BindRaw(this, &SDynamicObjectManagerWidget::OnDeveloperKeyResponseReceived);
 		FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+		if (gateway.IsEmpty())
+		{
+			gateway = "data.cognitive3d.com";
+		}
 		FString url = "https://" + gateway + "/v0/apiKeys/verify";
 		Request->SetURL(url);
 		Request->SetVerb("GET");
@@ -82,6 +87,10 @@ void SDynamicObjectManagerWidget::GetDashboardManifest()
 		FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
 		GConfig->LoadFile(C3DSettingsPath);
 		FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+		if (gateway.IsEmpty())
+		{
+			gateway = "data.cognitive3d.com";
+		}
 		FString versionid = FString::FromInt(currentSceneData->VersionId);
 		FString url = "https://" + gateway + "/v0/versions/"+versionid+"/objects";
 		Request->SetURL(url);

@@ -3,9 +3,12 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/HMDOrientation.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 UHMDOrientation::UHMDOrientation()
 {

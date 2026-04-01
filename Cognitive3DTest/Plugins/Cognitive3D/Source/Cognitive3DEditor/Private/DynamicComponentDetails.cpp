@@ -5,6 +5,8 @@
 */
 
 #include "DynamicComponentDetails.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 TSharedRef<IDetailCustomization> IDynamicObjectComponentDetails::MakeInstance()
 {

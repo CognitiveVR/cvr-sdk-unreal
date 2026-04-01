@@ -7,7 +7,15 @@
 #include "DynamicIdPoolAsset.h"
 #include "DynamicObjectManager.h"
 #include "CustomEvent.h"
-
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
+#include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "Engine/SkeletalMesh.h"
+#include "EngineUtils.h"
+#include "Engine/Blueprint.h"
+#include "Misc/Optional.h"
+#include "C3DUtil/Util.h"
 UDynamicObject::UDynamicObject()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -378,15 +386,7 @@ void UDynamicObject::Initialize()
 		dynamicObjectManager->CacheControllerPointer(this, IsRightController);
 	}
 
-	bool hasScaleChanged = true;
-	if (GetAttachParent() != nullptr)
-	{
-		if (FMath::Abs(LastScale.Size() - GetAttachParent()->GetComponentTransform().GetScale3D().Size()) > ScaleThreshold)
-		{
-			hasScaleChanged = true;
-		}
-	}
-	FDynamicObjectSnapshot initSnapshot = MakeSnapshot(hasScaleChanged);
+	FDynamicObjectSnapshot initSnapshot = MakeSnapshot(true);
 	SnapshotBoolProperty(initSnapshot, "enabled", true);
 	dynamicObjectManager->AddSnapshot(initSnapshot);
 	HasInitialized = true;

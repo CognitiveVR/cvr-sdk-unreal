@@ -9,12 +9,8 @@
 #include "Cognitive3D/Public/C3DCommonTypes.h"
 #include "Interfaces/IAnalyticsProvider.h"
 #include "HeadMountedDisplayTypes.h"
-#include "Json.h"
-#include "Misc/FileHelper.h"
-#include "HAL/FileManagerGeneric.h"
-#include "Engine/Engine.h"
-#include "Misc/Base64.h"
-#include "Misc/PackageName.h"//to get friendly name of streaming levels
+#include "Dom/JsonObject.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 	//included here so the class can be saved as a variable without a circular reference (since these often need to reference the provider)
 

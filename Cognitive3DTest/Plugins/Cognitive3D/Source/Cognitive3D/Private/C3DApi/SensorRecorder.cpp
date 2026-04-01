@@ -3,9 +3,18 @@
 */
 
 #include "Cognitive3D/Private/C3DApi/SensorRecorder.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "Cognitive3D/Public/Cognitive3DBlueprints.h"
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
+#include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Cognitive3D/Private/C3DUtil/Util.h"
+#include "Kismet/GameplayStatics.h"
+#include "Analytics.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
 
 FSensors::FSensors()
 {

@@ -3,9 +3,12 @@
 */
 
 #include "Cognitive3D/Private/C3DComponents/HMDHeight.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "HeadMountedDisplayTypes.h"
 #include "Cognitive3D/Public/Cognitive3DActor.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 UHMDHeight::UHMDHeight()
 {

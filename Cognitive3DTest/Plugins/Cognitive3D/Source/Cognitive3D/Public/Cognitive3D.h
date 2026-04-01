@@ -4,17 +4,14 @@
 
 #pragma once
 
-#include "Cognitive3D/Public/C3DCommonTypes.h"
-#include "UObject/UObjectIterator.h"
-#include "Cognitive3D/Public/Cognitive3DProvider.h"
+#include "CoreMinimal.h"
 #include "Interfaces/IAnalyticsProviderModule.h"
 #include "Modules/ModuleManager.h"
-#include "Runtime/Engine/Classes/Engine/LevelStreaming.h"
 
 DEFINE_LOG_CATEGORY_STATIC(Cognitive3D_Log, Log, All);
 
 #define Cognitive3D_SDK_NAME "unreal"
-#define Cognitive3D_SDK_VERSION "2.1.1"
+#define Cognitive3D_SDK_VERSION "2.1.2"
 
 class IAnalyticsProvider;
 class FAnalyticsProviderCognitive3D;

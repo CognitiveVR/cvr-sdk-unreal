@@ -7,6 +7,9 @@
 #include "CoreMinimal.h"
 #include "Cognitive3D/Public/DynamicObject.h"
 #include "MotionControllerComponent.h"
+#include "Components/ActorComponent.h"
+#include "Engine/EngineTypes.h"
+#include "Components/InputComponent.h"
 #include "InputTracker.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))

@@ -9,6 +9,8 @@
 #include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
+#include "TimerManager.h"
+#include "Engine/EngineTypes.h"
 #include "RemoteControls.generated.h"
 
 class FAnalyticsProviderCognitive3D;

@@ -11,6 +11,7 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SBox.h"
 #include "Analytics.h"
+#include "Serialization/JsonWriter.h"
 
 #define LOCTEXT_NAMESPACE "Cognitive3DEditor"
 

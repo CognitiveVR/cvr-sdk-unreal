@@ -10,6 +10,8 @@
 #include "Cognitive3D/Private/C3DRtaudio/CRtAudio.h"
 #endif
 #include "Misc/Base64.h"
+#include "GameFramework/Actor.h"
+#include "HAL/ThreadSafeBool.h"
 #include "MicrophoneCaptureActor.generated.h"
 
 UCLASS()

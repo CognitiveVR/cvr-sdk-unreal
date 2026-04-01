@@ -9,6 +9,8 @@
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "Cognitive3D/Private/C3DComponents/PlayerTracker.h"
 #include "Cognitive3D/Private/C3DNetwork/Network.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
 
 FExitPoll::FExitPoll()
 {

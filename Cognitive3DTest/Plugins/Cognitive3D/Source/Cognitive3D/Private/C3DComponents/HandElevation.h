@@ -5,6 +5,9 @@
 #pragma once
 
 #include "Cognitive3D/Private/C3DUtil/Util.h"
+#include "Components/ActorComponent.h"
+#include "TimerManager.h"
+#include "Engine/EngineTypes.h"
 #include "HandElevation.generated.h"
 
 class FAnalyticsProviderCognitive3D;

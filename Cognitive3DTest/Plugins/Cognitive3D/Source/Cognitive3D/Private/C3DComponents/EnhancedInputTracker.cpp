@@ -2,9 +2,13 @@
 
 
 #include "C3DComponents/EnhancedInputTracker.h"
+#include "Cognitive3D/Public/Cognitive3DProvider.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
+#include "Engine/Engine.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/PlayerController.h"
+#include "UObject/UObjectIterator.h"
+#include "Runtime/Launch/Resources/Version.h"
 
 // Sets default values for this component's properties
 UEnhancedInputTracker::UEnhancedInputTracker()
@@ -780,7 +784,7 @@ void UEnhancedInputTracker::InitializeEnhancedInput(APlayerController* PlayerCon
 	//touchpad axis
 
 	//valve index
-#if !(ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 6)
+#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION <= 6)
 	C3DInputMappingContext->MapKey(C3D_LeftMenuButton, EKeys::ValveIndex_Left_System_Click);
 	C3DInputMappingContext->MapKey(C3D_RightMenuButton, EKeys::ValveIndex_Right_System_Click);
 #endif

@@ -6,6 +6,12 @@
 #include "CognitiveEditorTools.h"
 #include "IPluginManager.h"
 #include "Analytics.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "Misc/FileHelper.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
+#include "Runtime/Launch/Resources/Version.h"
 #if ENGINE_MAJOR_VERSION == 5
 #include "SDockTab.h"
 #elif ENGINE_MAJOR_VERSION == 4
@@ -1314,6 +1320,10 @@ void SProjectManagerWidget::CheckForExpiredDeveloperKey(FString developerKey)
 	auto Request = FHttpModule::Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindRaw(this, &SProjectManagerWidget::OnDeveloperKeyResponseReceived);
 	FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	if (gateway.IsEmpty())
+	{
+		gateway = "data.cognitive3d.com";
+	}
 	FString url = "https://" + gateway + "/v0/apiKeys/verify";
 	Request->SetURL(url);
 	Request->SetVerb("GET");
@@ -1351,6 +1361,10 @@ void SProjectManagerWidget::FetchApplicationKey(FString developerKey)
 	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
 	GConfig->LoadFile(C3DSettingsPath);
 	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	if (Gateway.IsEmpty())
+	{
+		Gateway = "data.cognitive3d.com";
+	}
 
 	FString url = FString("https://" + Gateway + "/v0/applicationKey");
 	HttpRequest->SetURL(url);
@@ -1413,6 +1427,10 @@ void SProjectManagerWidget::FetchOrganizationDetails(FString developerKey)
 	FString C3DSettingsPath = FCognitiveEditorTools::GetInstance()->GetSettingsFilePath();
 	GConfig->LoadFile(C3DSettingsPath);
 	FString Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	if (Gateway.IsEmpty())
+	{
+		Gateway = "data.cognitive3d.com";
+	}
 
 	FString url = FString("https://" + Gateway + "/v0/subscriptions");
 	HttpRequest->SetURL(url);
@@ -1486,6 +1504,10 @@ void SProjectManagerWidget::FetchDeveloperKeyExpiryDate(FString developerKey)
 	GConfig->Flush(true, C3DSettingsPath);
 	
 	FString gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
+	if (gateway.IsEmpty())
+	{
+		gateway = "data.cognitive3d.com";
+	}
 	FString url = "https://" + gateway + "/v0/user";
 	
 	HttpRequest->SetURL(url);
@@ -2209,14 +2231,13 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 		// Initialize upload progress tracking
 		TotalLevelsToUpload = TotalLevelCount;
 		CompletedUploads = 0;
+		FailedUploads = 0;
 		
 		if (TotalLevelsToUpload <= 0)
 		{
-			UE_LOG(LogTemp, Error, TEXT("No levels to upload! TotalLevelCount is %d"), TotalLevelCount);
+			UE_LOG(LogTemp, Warning, TEXT("No levels to upload! TotalLevelCount is %d"), TotalLevelCount);
 			return;
 		}
-		
-		UE_LOG(LogTemp, Error, TEXT("Starting upload UI for %d levels"), TotalLevelsToUpload);
 		
 		// Show upload throbber instead of problematic progress dialog
 		bIsUploading = true;
@@ -2237,9 +2258,7 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 		}
 
 		// Bind to individual upload completion for progress tracking
-		UE_LOG(LogTemp, Error, TEXT("Binding OnIndividualSceneUploadComplete delegate"));
 		FCognitiveEditorTools::GetInstance()->OnIndividualSceneUploadComplete.BindSP(this, &SProjectManagerWidget::AdvanceUploadProgress);
-		UE_LOG(LogTemp, Error, TEXT("OnIndividualSceneUploadComplete delegate bound successfully"));
 		// Still bind to the "all done" callback
 		FCognitiveEditorTools::GetInstance()->OnUploadAllSceneGeometry.BindSP(this, &SProjectManagerWidget::OnLevelsUploaded);
 		FCognitiveEditorTools::GetInstance()->UploadingScenesFromFullSetup = true;
@@ -2277,27 +2296,51 @@ void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 void SProjectManagerWidget::AdvanceUploadProgress(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
 	CompletedUploads++;
-	UE_LOG(LogTemp, Error, TEXT("=== AdvanceUploadProgress called for %s (success: %s) - %d/%d ==="), *LevelName, bWasSuccessful ? TEXT("true") : TEXT("false"), CompletedUploads, TotalLevelsToUpload);
+
+	const bool bHasValidResponse = Response.IsValid();
+	const int32 ResponseCode = bHasValidResponse ? Response->GetResponseCode() : 0;
+	const bool bUploadSucceeded = bWasSuccessful && bHasValidResponse && ResponseCode >= 200 && ResponseCode < 300;
+
+	UE_LOG(LogTemp, Error, TEXT("=== AdvanceUploadProgress called for %s (success: %s, code: %d) - %d/%d ==="), *LevelName, bUploadSucceeded ? TEXT("true") : TEXT("false"), ResponseCode, CompletedUploads, TotalLevelsToUpload);
 	
 	// Update upload status for throbber display
 	FString ReAdjustedLevelName = LevelName.Replace(*FCognitiveEditorTools::GetInstance()->SplitCharacter, TEXT("/")); // Revert underscores back to slashes for display
-	CurrentUploadStatus = FString::Printf(TEXT("Uploaded %s (%d/%d)"), *ReAdjustedLevelName, CompletedUploads, TotalLevelsToUpload);
+	if (bUploadSucceeded)
+	{
+		CurrentUploadStatus = FString::Printf(TEXT("Uploaded %s (%d/%d)"), *ReAdjustedLevelName, CompletedUploads, TotalLevelsToUpload);
+	}
+	else
+	{
+		FailedUploads++;
+		const FString FailureCode = bHasValidResponse ? FString::FromInt(ResponseCode) : FString(TEXT("NoResponse"));
+		CurrentUploadStatus = FString::Printf(TEXT("Failed to upload %s (%d/%d) [code: %s]"), *ReAdjustedLevelName, CompletedUploads, TotalLevelsToUpload, *FailureCode);
+	}
 	UE_LOG(LogTemp, Error, TEXT("Upload status updated: %s"), *CurrentUploadStatus);
 	
 	// Show notification for each upload
 	FNotificationInfo Info(FText::FromString(CurrentUploadStatus));
 	Info.ExpireDuration = 2.0f;
 	FSlateNotificationManager::Get().AddNotification(Info);
-	
-	// Hide throbber when all uploads are complete
+
 	if (CompletedUploads >= TotalLevelsToUpload)
 	{
 		bIsUploading = false;
-		CurrentUploadStatus = TEXT("All uploads completed!");
-		UE_LOG(LogTemp, Warning, TEXT("All uploads completed, hiding throbber"));
-		
+		if (FailedUploads > 0)
+		{
+			CurrentUploadStatus = FString::Printf(TEXT("Uploads completed with %d failure(s)."), FailedUploads);
+			UE_LOG(LogTemp, Warning, TEXT("All uploads completed with failures, hiding throbber"));
+		}
+		else
+		{
+			CurrentUploadStatus = TEXT("All uploads completed!");
+			UE_LOG(LogTemp, Warning, TEXT("All uploads completed, hiding throbber"));
+		}
+
 		// Show final completion notification
-		FNotificationInfo CompletionInfo(FText::FromString("All levels uploaded successfully!"));
+		const FString CompletionText = FailedUploads > 0
+			? FString::Printf(TEXT("Uploads completed with %d failure(s)."), FailedUploads)
+			: FString(TEXT("All levels uploaded successfully!"));
+		FNotificationInfo CompletionInfo(FText::FromString(CompletionText));
 		CompletionInfo.ExpireDuration = 5.0f;
 		FSlateNotificationManager::Get().AddNotification(CompletionInfo);
 	}
@@ -2319,7 +2362,7 @@ void SProjectManagerWidget::AdvanceDynamicsUploadProgress()
 	
 	// Update status text
 	CurrentUploadStatus = FString::Printf(TEXT("Uploading dynamics (%d/%d)"), CompletedDynamicsUploads, TotalDynamicsToUpload);
-	UE_LOG(LogTemp, Error, TEXT("Dynamics upload status updated: %s"), *CurrentUploadStatus);
+	UE_LOG(LogTemp, Log, TEXT("Dynamics upload progress: %s"), *CurrentUploadStatus);
 	
 	// Show notification for each dynamics upload
 	FNotificationInfo Info(FText::FromString(CurrentUploadStatus));

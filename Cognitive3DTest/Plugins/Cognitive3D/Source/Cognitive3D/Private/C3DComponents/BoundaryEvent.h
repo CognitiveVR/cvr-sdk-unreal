@@ -6,6 +6,9 @@
 
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "VRNotificationsComponent.h"
+#include "Components/ActorComponent.h"
+#include "TimerManager.h"
+#include "Engine/EngineTypes.h"
 #include "BoundaryEvent.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
