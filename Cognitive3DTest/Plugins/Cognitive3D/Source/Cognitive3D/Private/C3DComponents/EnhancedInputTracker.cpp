@@ -784,7 +784,7 @@ void UEnhancedInputTracker::InitializeEnhancedInput(APlayerController* PlayerCon
 	//touchpad axis
 
 	//valve index
-#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION <= 6)
+#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 6)
 	C3DInputMappingContext->MapKey(C3D_LeftMenuButton, EKeys::ValveIndex_Left_System_Click);
 	C3DInputMappingContext->MapKey(C3D_RightMenuButton, EKeys::ValveIndex_Right_System_Click);
 #endif
