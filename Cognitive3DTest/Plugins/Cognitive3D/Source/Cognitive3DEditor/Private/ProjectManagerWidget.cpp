@@ -7,6 +7,8 @@
 #include "IPluginManager.h"
 #include "Analytics.h"
 #include "Engine/World.h"
+#include "Engine/LevelStreaming.h"
+#include "UObject/UnrealType.h"
 #include "TimerManager.h"
 #include "Misc/FileHelper.h"
 #include "Serialization/JsonWriter.h"
@@ -30,6 +32,130 @@
 #include "SegmentAnalytics.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
+
+namespace
+{
+class FScopedCognitiveStreamingState
+{
+public:
+	explicit FScopedCognitiveStreamingState(UWorld* InWorld)
+		: World(InWorld)
+	{
+		const FBoolProperty* LoadedFlag = FindFProperty<FBoolProperty>(ULevelStreaming::StaticClass(), TEXT("bShouldBeLoaded"));
+		check(LoadedFlag);
+		for (ULevelStreaming* StreamingLevel : InWorld->GetStreamingLevels())
+		{
+			if (StreamingLevel)
+			{
+				FLevelState State;
+				State.Level = StreamingLevel;
+				State.bLoaded = LoadedFlag->GetPropertyValue_InContainer(StreamingLevel);
+				State.bVisible = StreamingLevel->GetShouldBeVisibleFlag();
+				State.bEditorVisible = StreamingLevel->GetShouldBeVisibleInEditor();
+				Levels.Add(State);
+			}
+		}
+	}
+
+	~FScopedCognitiveStreamingState()
+	{
+		Restore();
+	}
+
+	void Restore()
+	{
+		for (const FLevelState& State : Levels)
+		{
+			if (ULevelStreaming* StreamingLevel = State.Level.Get())
+			{
+				StreamingLevel->SetShouldBeLoaded(State.bLoaded);
+				StreamingLevel->SetShouldBeVisible(State.bVisible);
+				StreamingLevel->SetShouldBeVisibleInEditor(State.bEditorVisible);
+			}
+		}
+		if (UWorld* ExportWorld = World.Get())
+		{
+			ExportWorld->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+		}
+	}
+
+	bool PrepareForExport(const FString* OnlySublevel = nullptr)
+	{
+		UWorld* ExportWorld = World.Get();
+		if (!ExportWorld)
+		{
+			return false;
+		}
+
+		bool bFoundRequestedLevel = OnlySublevel == nullptr;
+		for (const FLevelState& State : Levels)
+		{
+			if (ULevelStreaming* StreamingLevel = State.Level.Get())
+			{
+				const bool bIncludeLevel = !OnlySublevel || StreamingLevel->GetWorldAssetPackageName() == *OnlySublevel;
+				bFoundRequestedLevel |= bIncludeLevel;
+				StreamingLevel->SetShouldBeLoaded(bIncludeLevel);
+				StreamingLevel->SetShouldBeVisible(bIncludeLevel);
+				StreamingLevel->SetShouldBeVisibleInEditor(bIncludeLevel);
+			}
+		}
+		ExportWorld->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+
+		bool bLoadedRequestedLevels = bFoundRequestedLevel;
+		for (const FLevelState& State : Levels)
+		{
+			if (ULevelStreaming* StreamingLevel = State.Level.Get())
+			{
+				if (!OnlySublevel || StreamingLevel->GetWorldAssetPackageName() == *OnlySublevel)
+				{
+					ULevel* LoadedLevel = StreamingLevel->GetLoadedLevel();
+					if (!LoadedLevel || !ExportWorld->GetLevels().Contains(LoadedLevel))
+					{
+						UE_LOG(LogTemp, Error, TEXT("Unable to load scene geometry from sublevel %s"), *StreamingLevel->GetWorldAssetPackageName());
+						bLoadedRequestedLevels = false;
+					}
+				}
+			}
+		}
+		if (!bFoundRequestedLevel)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Unable to find sublevel %s in its parent world"), **OnlySublevel);
+		}
+		return bLoadedRequestedLevels;
+	}
+
+private:
+	struct FLevelState
+	{
+		TWeakObjectPtr<ULevelStreaming> Level;
+		bool bLoaded;
+		bool bVisible;
+		bool bEditorVisible;
+	};
+
+	TWeakObjectPtr<UWorld> World;
+	TArray<FLevelState> Levels;
+};
+
+void CollectCognitiveExportActors(ULevel* Level, TArray<AActor*>& Actors, TArray<UDynamicObject*>& DynamicObjects)
+{
+	if (!Level)
+	{
+		return;
+	}
+	for (AActor* Actor : Level->Actors)
+	{
+		if (Actor && !Actor->IsPendingKillPending() && !Actor->IsTemplate())
+		{
+			Actors.Add(Actor);
+			if (UDynamicObject* DynamicObject = Cast<UDynamicObject>(Actor->GetComponentByClass(UDynamicObject::StaticClass())))
+			{
+				DynamicObjects.Add(DynamicObject);
+			}
+		}
+	}
+}
+}
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SProjectManagerWidget::Construct(const FArguments& InArgs)
@@ -2057,13 +2183,7 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 			bAllScenesExported = false;
 			continue;
 		}
-
-		// disable all sublevels
-		for (ULevelStreaming* LS : W->GetStreamingLevels())
-		{
-			if (LS) { LS->SetShouldBeLoaded(false); LS->SetShouldBeVisible(false);}
-		}
-		W->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+		FScopedCognitiveStreamingState StreamingState(W);
 
 		bool bFoundC3DActor = false;
 
@@ -2071,7 +2191,7 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 		//check if there's a Cognitive3DActor already in the world
 		for (TObjectIterator<ACognitive3DActor> Itr; Itr; ++Itr)
 		{
-			if (Itr->IsPendingKillPending())
+			if (Itr->IsPendingKillPending() || Itr->GetWorld() != W)
 			{
 				//if a ACognitive3DActor was deleted from the world, it sticks around but is pending a kill. possibly in some undo buffer?
 				continue;
@@ -2108,6 +2228,7 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 
 			//Save the map back to disk so your spawned actor is baked in
 			{
+				StreamingState.Restore();
 				UPackage* LevelPackage = W->PersistentLevel->GetOutermost();
 				TArray<UPackage*> ToSave = { LevelPackage };
 				if (FEditorFileUtils::PromptForCheckoutAndSave(ToSave, false, false) != FEditorFileUtils::PR_Success)
@@ -2119,27 +2240,16 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 			}
 		}
 
-		// only grab actors from the *persistent* level, never from sublevels
-		TArray<AActor*> ActorsToExport;
-		TArray<UDynamicObject*> DynamicObjects; //ExportDynamicObjectArray
-		if (ULevel* Persistent = W->PersistentLevel)
+		if (!StreamingState.PrepareForExport())
 		{
-			for (AActor* A : Persistent->Actors)
-			{
-				if (A && !A->IsPendingKillPending() && !A->IsTemplate())
-				{
-					ActorsToExport.Add(A);
-
-					//check for dynamic object component on actors
-					if(UDynamicObject* DynamicObject = Cast<UDynamicObject>(A->GetComponentByClass(UDynamicObject::StaticClass())))
-					{
-						if (DynamicObject != nullptr)
-						{
-							DynamicObjects.Add(DynamicObject);
-						}
-					}
-				}
-			}
+			bAllScenesExported = false;
+			continue;
+		}
+		TArray<AActor*> ActorsToExport;
+		TArray<UDynamicObject*> DynamicObjects;
+		for (ULevel* Level : W->GetLevels())
+		{
+			CollectCognitiveExportActors(Level, ActorsToExport, DynamicObjects);
 		}
 
 		if (!FCognitiveEditorTools::GetInstance()->ExportScene(PackageToLoad, ActorsToExport))
@@ -2175,63 +2285,25 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 			bAllScenesExported = false;
 			continue;
 		}
-
-		// turn off all, then only SubPath
-		for (ULevelStreaming* LS : W->GetStreamingLevels())
+		FScopedCognitiveStreamingState StreamingState(W);
+		if (!StreamingState.PrepareForExport(&SubPath))
 		{
-			if (!LS) continue;
-			const FString ChildPkg = LS->GetWorldAssetPackageName();
-			LS->SetShouldBeLoaded(ChildPkg == SubPath);
-			LS->SetShouldBeVisible(ChildPkg == SubPath);
+			bAllScenesExported = false;
+			continue;
 		}
-		W->FlushLevelStreaming(EFlushLevelStreamingType::Full);
 
-		// build the allowed set of levels
-		TSet<ULevel*> AllowedLevels;
-		AllowedLevels.Add(W->PersistentLevel);
-
-		// find the one streaming level that matches our SubPkg and add its level
+		TArray<AActor*> ActorsToExport;
+		TArray<UDynamicObject*> DynamicObjects;
 		for (ULevelStreaming* LS : W->GetStreamingLevels())
 		{
 			if (!LS) continue;
 			if (LS->GetWorldAssetPackageName() == SubPath)
 			{
-				if (ULevel* Loaded = LS->GetLoadedLevel())
-				{
-					AllowedLevels.Add(Loaded);
-				}
+				CollectCognitiveExportActors(LS->GetLoadedLevel(), ActorsToExport, DynamicObjects);
 				break;
 			}
 		}
 
-		// now only export actors from those levels
-		TArray<AActor*> ActorsToExport;
-		//TArray<TSharedPtr<UDynamicObject*>> DynamicObjects; //ExportDynamicObjectArray
-		TArray<UDynamicObject*> DynamicObjects;
-		for (ULevel* Level : W->GetLevels())
-		{
-			if (!AllowedLevels.Contains(Level))
-				continue;
-
-			for (AActor* Actor : Level->Actors)
-			{
-				if (Actor && !Actor->IsPendingKillPending() && !Actor->IsTemplate())
-				{
-					ActorsToExport.Add(Actor);
-
-					//check for dynamic object component on actors
-					if (UDynamicObject* DynamicObject = Cast<UDynamicObject>(Actor->GetComponentByClass(UDynamicObject::StaticClass())))
-					{
-						if (DynamicObject != nullptr)
-						{
-							DynamicObjects.Add(DynamicObject);
-						}
-					}
-				}
-			}
-		}
-
-		// Export under the sublevel's name
 		if (!FCognitiveEditorTools::GetInstance()->ExportScene(SubPath, ActorsToExport))
 		{
 			bAllScenesExported = false;
