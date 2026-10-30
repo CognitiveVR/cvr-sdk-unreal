@@ -691,6 +691,7 @@ void FAnalyticsProviderCognitive3D::FlushAndCacheEvents()
 	fixationDataRecorder->SendData(true);
 	dynamicObjectManager->SendData(true);
 	sensors->SendData(true);
+	boundaryRecorder->SendData(true);
 	OnRequestSend.Broadcast(true);
 	if (localCache.IsValid()) localCache->SerializeToFile();
 }
