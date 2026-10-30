@@ -32,7 +32,7 @@ bool HasUnavailableControllerPose(const UDynamicObject* Dynamic)
 		if (const UMotionControllerComponent* Motion = Cast<UMotionControllerComponent>(Parent))
 		{
 			bFoundMotionController = true;
-			if (Motion->IsTracked()) { return Motion->GetRelativeLocation().IsNearlyZero(0.01f); }
+			if (FUtil::IsMotionControllerTracked(Motion)) { return Motion->GetRelativeLocation().IsNearlyZero(0.01f); }
 		}
 	}
 	return bFoundMotionController;

@@ -209,7 +209,7 @@ void ACognitive3DActor::InitializeControllers()
 			const bool bLeft = Source == TEXT("Left") || Source == TEXT("LeftGrip") || Source == TEXT("LeftAim");
 			if (!bRight && !bLeft) continue;
 			const int32 Score = bHeadset
-				? (Component->IsTracked() ? 1000 : 0) + (Actor == Pawn ? 100 : 0) + (FindHandComponent(Component) ? 10 : 0)
+				? (FUtil::IsMotionControllerTracked(Component) ? 1000 : 0) + (Actor == Pawn ? 100 : 0) + (FindHandComponent(Component) ? 10 : 0)
 				: (FindHandComponent(Component) ? 100 : 0) + (Actor != Pawn ? 10 : 0);
 			const int32 Side = bRight ? 1 : 0;
 			if (Score > Scores[Side]) { Selected[Side] = Component; Scores[Side] = Score; }
