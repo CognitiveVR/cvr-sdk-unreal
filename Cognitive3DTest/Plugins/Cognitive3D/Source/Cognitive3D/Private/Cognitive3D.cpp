@@ -631,22 +631,22 @@ void FAnalyticsProviderCognitive3D::EndSession()
 	localCache->Close();
 
 	//cleanup pause and level load delegates
-	if (!PauseHandle.IsValid())
+	if (PauseHandle.IsValid())
 	{
 		FCoreDelegates::ApplicationWillEnterBackgroundDelegate.Remove(PauseHandle);
 		PauseHandle.Reset();
 	}
-	if (!LevelLoadHandle.IsValid())
+	if (LevelLoadHandle.IsValid())
 	{
 		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(LevelLoadHandle);
 		LevelLoadHandle.Reset();
 	}
-	if (!SublevelLoadedHandle.IsValid())
+	if (SublevelLoadedHandle.IsValid())
 	{
 		FWorldDelegates::LevelAddedToWorld.Remove(SublevelLoadedHandle);
 		SublevelLoadedHandle.Reset();
 	}
-	if (!SublevelUnloadedHandle.IsValid())
+	if (SublevelUnloadedHandle.IsValid())
 	{
 		FWorldDelegates::LevelRemovedFromWorld.Remove(SublevelUnloadedHandle);
 		SublevelUnloadedHandle.Reset();
