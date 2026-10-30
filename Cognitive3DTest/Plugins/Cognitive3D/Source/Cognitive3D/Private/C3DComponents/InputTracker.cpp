@@ -8,6 +8,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "UObject/UObjectIterator.h"
 #include "Components/InputComponent.h"
+#include "Cognitive3DActor.h"
+#include "GameFramework/PlayerController.h"
+#include "GameFramework/InputSettings.h"
 
 // Sets default values
 UInputTracker::UInputTracker()
@@ -22,11 +25,28 @@ void UInputTracker::BeginPlay()
 	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	Super::BeginPlay();
 
-	//get player controller 0 and enable input
-	APlayerController* p0 = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	GetOwner()->EnableInput(p0);
+	InitializeInputBindings();
+
+	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	if (cogProvider.IsValid() && cogProvider->HasStartedSession())
+	{
+		HandleSessionBegin();
+	}
+	if (cogProvider.IsValid()) cogProvider->OnSessionBegin.AddUniqueDynamic(this, &UInputTracker::HandleSessionBegin);
+}
+
+bool UInputTracker::InitializeInputBindings()
+{
+	APlayerController* Player = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (!IsValid(Player) || !IsValid(GetOwner())) return false;
+	if (IsValid(InputComponent) && BoundPlayerController.Get() == Player) return true;
+	UInputComponent* PreviousComponent = InputComponent;
+	if (BoundPlayerController.IsValid()) GetOwner()->DisableInput(BoundPlayerController.Get());
+	GetOwner()->EnableInput(Player);
 	InputComponent = GetOwner()->InputComponent;
-	
+	if (!IsValid(InputComponent)) return false;
+	BoundPlayerController = Player;
+	if (InputComponent == PreviousComponent && bHasInputBindings) return true;
 	InputComponent->bBlockInput = 0;
 
 	InputComponent->BindAction("C3D_RightMenuButton", EInputEvent::IE_Pressed, this, &UInputTracker::RightMenuButtonPressed).bConsumeInput = 0;
@@ -83,143 +103,147 @@ void UInputTracker::BeginPlay()
 	InputComponent->BindAxis(TEXT("C3D_LeftGripAxis")).bConsumeInput = 0;
 	InputComponent->BindAxis(TEXT("C3D_RightGripAxis")).bConsumeInput = 0;
 
-	//listen for event or find controller immediately if session already started
-	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
-	if (cogProvider->HasStartedSession())
+
+	const UInputSettings* Settings = GetDefault<UInputSettings>();
+	auto BindPico = [this, Settings](FName Action, const TCHAR* KeyName,
+		void (UInputTracker::*Pressed)(), void (UInputTracker::*Released)())
 	{
-		FindControllers();
+		for (const FInputActionKeyMapping& Mapping : Settings->GetActionMappings())
+			if (Mapping.ActionName == Action) return;
+		const FKey Key(KeyName);
+		if (!Key.IsValid()) return;
+		FInputKeyBinding& PressBinding = InputComponent->BindKey(Key, IE_Pressed, this, Pressed);
+		PressBinding.bConsumeInput = false;
+		PressBinding.bExecuteWhenPaused = true;
+		FInputKeyBinding& ReleaseBinding = InputComponent->BindKey(Key, IE_Released, this, Released);
+		ReleaseBinding.bConsumeInput = false;
+		ReleaseBinding.bExecuteWhenPaused = true;
+	};
+	BindPico(TEXT("C3D_LeftMenuButton"), TEXT("PICOTouch_Left_Menu_Click"), &UInputTracker::LeftMenuButtonPressed, &UInputTracker::LeftMenuButtonReleased);
+	BindPico(TEXT("C3D_LeftTrigger"), TEXT("PICOTouch_Left_Trigger_Click"), &UInputTracker::LeftTriggerPressed, &UInputTracker::LeftTriggerReleased);
+	BindPico(TEXT("C3D_LeftGrip"), TEXT("PICOTouch_Left_Grip_Click"), &UInputTracker::LeftGripPressed, &UInputTracker::LeftGripReleased);
+	BindPico(TEXT("C3D_LeftJoystick"), TEXT("PICOTouch_Left_Thumbstick_Click"), &UInputTracker::LeftJoystickPressed, &UInputTracker::LeftJoystickReleased);
+	BindPico(TEXT("C3D_LeftFaceButtonOne"), TEXT("PICOTouch_Left_X_Click"), &UInputTracker::LeftFaceButtonOnePressed, &UInputTracker::LeftFaceButtonOneReleased);
+	BindPico(TEXT("C3D_LeftFaceButtonTwo"), TEXT("PICOTouch_Left_Y_Click"), &UInputTracker::LeftFaceButtonTwoPressed, &UInputTracker::LeftFaceButtonTwoReleased);
+	BindPico(TEXT("C3D_RightMenuButton"), TEXT("PICOTouch_Right_System_Click"), &UInputTracker::RightMenuButtonPressed, &UInputTracker::RightMenuButtonReleased);
+	BindPico(TEXT("C3D_RightTrigger"), TEXT("PICOTouch_Right_Trigger_Click"), &UInputTracker::RightTriggerPressed, &UInputTracker::RightTriggerReleased);
+	BindPico(TEXT("C3D_RightGrip"), TEXT("PICOTouch_Right_Grip_Click"), &UInputTracker::RightGripPressed, &UInputTracker::RightGripReleased);
+	BindPico(TEXT("C3D_RightJoystick"), TEXT("PICOTouch_Right_Thumbstick_Click"), &UInputTracker::RightJoystickPressed, &UInputTracker::RightJoystickReleased);
+	BindPico(TEXT("C3D_RightFaceButtonOne"), TEXT("PICOTouch_Right_A_Click"), &UInputTracker::RightFaceButtonOnePressed, &UInputTracker::RightFaceButtonOneReleased);
+	BindPico(TEXT("C3D_RightFaceButtonTwo"), TEXT("PICOTouch_Right_B_Click"), &UInputTracker::RightFaceButtonTwoPressed, &UInputTracker::RightFaceButtonTwoReleased);
+	PicoAxisFallbacks.Empty();
+	auto AddPicoAxis = [this, Settings](FName Axis, const TCHAR* KeyName)
+	{
+		for (const FInputAxisKeyMapping& Mapping : Settings->GetAxisMappings())
+			if (Mapping.AxisName == Axis) return;
+		const FKey Key(KeyName);
+		if (Key.IsValid()) PicoAxisFallbacks.Add(Axis, Key);
+	};
+	AddPicoAxis(TEXT("C3D_LeftTriggerAxis"), TEXT("PICOTouch_Left_Trigger_Axis"));
+	AddPicoAxis(TEXT("C3D_LeftGripAxis"), TEXT("PICOTouch_Left_Grip_Axis"));
+	AddPicoAxis(TEXT("C3D_LeftJoystickH"), TEXT("PICOTouch_Left_Thumbstick_X"));
+	AddPicoAxis(TEXT("C3D_LeftJoystickV"), TEXT("PICOTouch_Left_Thumbstick_Y"));
+	AddPicoAxis(TEXT("C3D_RightTriggerAxis"), TEXT("PICOTouch_Right_Trigger_Axis"));
+	AddPicoAxis(TEXT("C3D_RightGripAxis"), TEXT("PICOTouch_Right_Grip_Axis"));
+	AddPicoAxis(TEXT("C3D_RightJoystickH"), TEXT("PICOTouch_Right_Thumbstick_X"));
+	AddPicoAxis(TEXT("C3D_RightJoystickV"), TEXT("PICOTouch_Right_Thumbstick_Y"));
+	bHasInputBindings = true;
+	return true;
+}
+
+float UInputTracker::ReadAxis(FName AxisName) const
+{
+	if (ControllerType == EC3DControllerType::PicoNeo2 || ControllerType == EC3DControllerType::PicoNeo3 ||
+		ControllerType == EC3DControllerType::PicoNeo4)
+	{
+		const FKey* Key = PicoAxisFallbacks.Find(AxisName);
+		if (Key && BoundPlayerController.IsValid()) return BoundPlayerController->GetInputAnalogKeyState(*Key);
 	}
-	cogProvider->OnSessionBegin.AddDynamic(this, &UInputTracker::FindControllers);
+	return IsValid(InputComponent) ? InputComponent->GetAxisValue(AxisName) : 0.0f;
 }
 
 void UInputTracker::FindControllers()
 {
-	for (TObjectIterator<UMotionControllerComponent> Itr; Itr; ++Itr)
+	ACognitive3DActor* Recorder = ACognitive3DActor::GetCognitive3DActor(this);
+	UDynamicObject* NewLeft = IsValid(Recorder) ? Recorder->GetControllerDynamic(false) : nullptr;
+	UDynamicObject* NewRight = IsValid(Recorder) ? Recorder->GetControllerDynamic(true) : nullptr;
+	if (LeftHand != NewLeft) { LeftHand = NewLeft; ResetInputState(false); }
+	if (RightHand != NewRight) { RightHand = NewRight; ResetInputState(true); }
+	if (IsValid(LeftHand)) ControllerType = LeftHand->ControllerType;
+	else if (IsValid(RightHand)) ControllerType = RightHand->ControllerType;
+}
+
+void UInputTracker::ResetInputState(bool bRight)
+{
+	if (bRight)
 	{
-		UMotionControllerComponent* Component = *Itr;
-		if (Component == NULL) { continue; }
-		if (Component->GetWorld() == NULL) { continue; }
-		if (!Component->GetWorld()->IsGameWorld()) { continue; }
+		RightInputStates.States.Empty();
+		RightTriggerValue = RightGripValue = -1;
+		RightJoystickAxis = RightTouchpadAxis = FVector(BIG_NUMBER, BIG_NUMBER, 0);
+		bSeedRightButtons = true;
+	}
+	else
+	{
+		LeftInputStates.States.Empty();
+		LeftTriggerValue = LeftGripValue = -1;
+		LeftJoystickAxis = LeftTouchpadAxis = FVector(BIG_NUMBER, BIG_NUMBER, 0);
+		bSeedLeftButtons = true;
+	}
+}
 
-		if (LeftHand == NULL && Component->GetTrackingSource() == EControllerHand::Left)
+void UInputTracker::HandleSessionBegin()
+{
+	ResetInputState(false);
+	ResetInputState(true);
+	CurrentIntervalTime = 0;
+	FindControllers();
+}
+
+void UInputTracker::SeedButtonStates(bool bRight)
+{
+	APlayerController* Player = BoundPlayerController.Get();
+	if (!IsValid(Player)) return;
+	const UInputSettings* Settings = GetDefault<UInputSettings>();
+	auto Seed = [this, Player, Settings](FName Action, const TCHAR* PicoKey,
+		void (UInputTracker::*Pressed)(), void (UInputTracker::*Released)())
+	{
+		bool bDown = false, bMapped = false;
+		for (const FInputActionKeyMapping& Mapping : Settings->GetActionMappings())
 		{
-			TArray<USceneComponent*> childComponents;
-			Component->GetChildrenComponents(true, childComponents);
-
-			UDynamicObject* dyn = NULL;
-			for (auto& Elem : childComponents)
-			{
-				dyn = Cast<UDynamicObject>(Elem);
-				if (dyn != NULL)
-				{
-					if (!dyn->IsController) { continue; }
-
-					if (dyn->ControllerInputImageName == "oculustouchleft")
-					{
-						ControllerType = EC3DControllerType::OculusRift;
-						LeftHand = dyn;
-					}
-					else if (dyn->ControllerInputImageName == "windows_mixed_reality_controller_left")
-					{
-						ControllerType = EC3DControllerType::WindowsMixedReality;
-						LeftHand = dyn;
-					}
-					else if (dyn->ControllerInputImageName == "vivecontroller")
-					{
-						ControllerType = EC3DControllerType::Vive;
-						LeftHand = dyn;
-					}
-					else if (dyn->ControllerInputImageName == "pico_neo_2_eye_controller_left")
-					{
-						ControllerType = EC3DControllerType::PicoNeo2;
-						LeftHand = dyn;
-					}
-					else if (dyn->ControllerInputImageName == "pico_neo_3_eye_controller_left")
-					{
-						ControllerType = EC3DControllerType::PicoNeo3;
-						LeftHand = dyn;
-					}
-					else if (dyn->ControllerInputImageName == "oculusquesttouchleft")
-					{
-						ControllerType = EC3DControllerType::Quest2;
-						LeftHand = dyn;
-					}
-					else if (dyn->ControllerInputImageName == "quest_plus_touch_left")
-					{
-						ControllerType = EC3DControllerType::Quest3;
-						LeftHand = dyn;
-					}
-					else if (dyn->ControllerInputImageName == "quest_pro_touch_left")
-					{
-						ControllerType = EC3DControllerType::QuestPro;
-						LeftHand = dyn;
-					}
-				}
-			}
+			if (Mapping.ActionName != Action) continue;
+			bMapped = true;
+			bDown |= Player->IsInputKeyDown(Mapping.Key);
 		}
-		else if (RightHand == NULL && Component->GetTrackingSource() == EControllerHand::Right)
-		{
-			TArray<USceneComponent*> childComponents;
-			Component->GetChildrenComponents(true, childComponents);
-
-			UDynamicObject* dyn = NULL;
-			for (auto& Elem : childComponents)
-			{
-				dyn = Cast<UDynamicObject>(Elem);
-				if (dyn != NULL)
-				{
-					if (!dyn->IsController) { continue; }
-
-					if (dyn->ControllerInputImageName == "oculustouchright")
-					{
-						ControllerType = EC3DControllerType::OculusRift;
-						RightHand = dyn;
-					}
-					else if (dyn->ControllerInputImageName == "windows_mixed_reality_controller_right")
-					{
-						ControllerType = EC3DControllerType::WindowsMixedReality;
-						RightHand = dyn;
-					}
-					else if (dyn->ControllerInputImageName == "vivecontroller")
-					{
-						ControllerType = EC3DControllerType::Vive;
-						RightHand = dyn;
-					}
-					else if (dyn->ControllerInputImageName == "pico_neo_2_eye_controller_right")
-					{
-						ControllerType = EC3DControllerType::PicoNeo2;
-						RightHand = dyn;
-					}
-					else if (dyn->ControllerInputImageName == "pico_neo_3_eye_controller_right")
-					{
-						ControllerType = EC3DControllerType::PicoNeo3;
-						RightHand = dyn;
-					}
-					else if (dyn->ControllerInputImageName == "oculusquesttouchright")
-					{
-						ControllerType = EC3DControllerType::Quest2;
-						RightHand = dyn;
-					}
-					else if (dyn->ControllerInputImageName == "quest_plus_touch_right")
-					{
-						ControllerType = EC3DControllerType::Quest3;
-						RightHand = dyn;
-					}
-					else if (dyn->ControllerInputImageName == "quest_pro_touch_right")
-					{
-						ControllerType = EC3DControllerType::QuestPro;
-						RightHand = dyn;
-					}
-				}
-			}
-		}
+		if (!bMapped && (ControllerType == EC3DControllerType::PicoNeo2 ||
+			ControllerType == EC3DControllerType::PicoNeo3 || ControllerType == EC3DControllerType::PicoNeo4))
+			bDown = Player->IsInputKeyDown(FKey(PicoKey));
+		(this->*(bDown ? Pressed : Released))();
+	};
+	if (bRight)
+	{
+		Seed(TEXT("C3D_RightMenuButton"), TEXT("PICOTouch_Right_System_Click"), &UInputTracker::RightMenuButtonPressed, &UInputTracker::RightMenuButtonReleased);
+		Seed(TEXT("C3D_RightTrigger"), TEXT("PICOTouch_Right_Trigger_Click"), &UInputTracker::RightTriggerPressed, &UInputTracker::RightTriggerReleased);
+		Seed(TEXT("C3D_RightGrip"), TEXT("PICOTouch_Right_Grip_Click"), &UInputTracker::RightGripPressed, &UInputTracker::RightGripReleased);
+		Seed(TEXT("C3D_RightJoystick"), TEXT("PICOTouch_Right_Thumbstick_Click"), &UInputTracker::RightJoystickPressed, &UInputTracker::RightJoystickReleased);
+		Seed(TEXT("C3D_RightFaceButtonOne"), TEXT("PICOTouch_Right_A_Click"), &UInputTracker::RightFaceButtonOnePressed, &UInputTracker::RightFaceButtonOneReleased);
+		Seed(TEXT("C3D_RightFaceButtonTwo"), TEXT("PICOTouch_Right_B_Click"), &UInputTracker::RightFaceButtonTwoPressed, &UInputTracker::RightFaceButtonTwoReleased);
+	}
+	else
+	{
+		Seed(TEXT("C3D_LeftMenuButton"), TEXT("PICOTouch_Left_Menu_Click"), &UInputTracker::LeftMenuButtonPressed, &UInputTracker::LeftMenuButtonReleased);
+		Seed(TEXT("C3D_LeftTrigger"), TEXT("PICOTouch_Left_Trigger_Click"), &UInputTracker::LeftTriggerPressed, &UInputTracker::LeftTriggerReleased);
+		Seed(TEXT("C3D_LeftGrip"), TEXT("PICOTouch_Left_Grip_Click"), &UInputTracker::LeftGripPressed, &UInputTracker::LeftGripReleased);
+		Seed(TEXT("C3D_LeftJoystick"), TEXT("PICOTouch_Left_Thumbstick_Click"), &UInputTracker::LeftJoystickPressed, &UInputTracker::LeftJoystickReleased);
+		Seed(TEXT("C3D_LeftFaceButtonOne"), TEXT("PICOTouch_Left_X_Click"), &UInputTracker::LeftFaceButtonOnePressed, &UInputTracker::LeftFaceButtonOneReleased);
+		Seed(TEXT("C3D_LeftFaceButtonTwo"), TEXT("PICOTouch_Left_Y_Click"), &UInputTracker::LeftFaceButtonTwoPressed, &UInputTracker::LeftFaceButtonTwoReleased);
 	}
 }
 
 void UInputTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	if (!cog->HasStartedSession()) { return; }
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	if (!InitializeInputBindings() || !cog.IsValid() || !cog->HasStartedSession()) return;
+	FindControllers();
 
 	if (LeftInputStates.States.Num() > 0)
 	{
@@ -241,14 +265,9 @@ void UInputTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 	CurrentIntervalTime += DeltaTime;
 	if (CurrentIntervalTime > Interval)
 	{
-		if (LeftHand == NULL || RightHand == NULL)
-		{
-			FindControllers();
-		}
-		else
-		{
-			IntervalUpdate();
-		}
+		if (IsValid(LeftHand) && bSeedLeftButtons) { SeedButtonStates(false); bSeedLeftButtons = false; }
+		if (IsValid(RightHand) && bSeedRightButtons) { SeedButtonStates(true); bSeedRightButtons = false; }
+		if (IsValid(LeftHand) || IsValid(RightHand)) IntervalUpdate();
 		CurrentIntervalTime -= Interval;
 	}
 }
@@ -261,7 +280,7 @@ void UInputTracker::IntervalUpdate()
 	case EC3DControllerType::Vive:
 	{
 		//triggers
-		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
+		float currentValue = ReadAxis("C3D_LeftTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		if (LeftTriggerValue != icurrentValue)
 		{
@@ -269,7 +288,7 @@ void UInputTracker::IntervalUpdate()
 			AppendInputState(false, b);
 			LeftTriggerValue = icurrentValue;
 		}
-		currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");
+		currentValue = ReadAxis("C3D_RightTriggerAxis");
 		icurrentValue = (int32)(currentValue * 100);
 		if (RightTriggerValue != icurrentValue)
 		{
@@ -279,7 +298,7 @@ void UInputTracker::IntervalUpdate()
 		}
 
 		//touchpads
-		FVector currentLeftTouchpad = FVector(InputComponent->GetAxisValue("C3D_LeftTouchpadH"), InputComponent->GetAxisValue("C3D_LeftTouchpadV"), LeftTouchpadAxis.Z);
+		FVector currentLeftTouchpad = FVector(ReadAxis("C3D_LeftTouchpadH"), ReadAxis("C3D_LeftTouchpadV"), LeftTouchpadAxis.Z);
 		if (FVector::Distance(LeftTouchpadAxis, currentLeftTouchpad) > MinimumVectorChange)
 		{
 			//write new stuff
@@ -288,7 +307,7 @@ void UInputTracker::IntervalUpdate()
 			AppendInputState(false, b);
 		}
 
-		FVector currentRightTouchpad = FVector(InputComponent->GetAxisValue("C3D_RightTouchpadH"), InputComponent->GetAxisValue("C3D_RightTouchpadV"), RightTouchpadAxis.Z);
+		FVector currentRightTouchpad = FVector(ReadAxis("C3D_RightTouchpadH"), ReadAxis("C3D_RightTouchpadV"), RightTouchpadAxis.Z);
 		if (FVector::Distance(RightTouchpadAxis, currentRightTouchpad) > MinimumVectorChange)
 		{
 			//write new stuff
@@ -301,7 +320,7 @@ void UInputTracker::IntervalUpdate()
 	case EC3DControllerType::OculusRift:
 	{
 		//triggers
-		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
+		float currentValue = ReadAxis("C3D_LeftTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		if (LeftTriggerValue != icurrentValue)
 		{
@@ -309,7 +328,7 @@ void UInputTracker::IntervalUpdate()
 			AppendInputState(false, b);
 			LeftTriggerValue = icurrentValue;
 		}
-		currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");
+		currentValue = ReadAxis("C3D_RightTriggerAxis");
 		icurrentValue = (int32)(currentValue * 100);
 		if (RightTriggerValue != icurrentValue)
 		{
@@ -319,7 +338,7 @@ void UInputTracker::IntervalUpdate()
 		}
 
 		//grip
-		currentValue = InputComponent->GetAxisValue("C3D_LeftGripAxis");
+		currentValue = ReadAxis("C3D_LeftGripAxis");
 		icurrentValue = (int32)(currentValue * 100);
 		if (LeftGripValue != icurrentValue)
 		{
@@ -327,7 +346,7 @@ void UInputTracker::IntervalUpdate()
 			AppendInputState(false, b);
 			LeftGripValue = icurrentValue;
 		}
-		currentValue = InputComponent->GetAxisValue("C3D_RightGripAxis");
+		currentValue = ReadAxis("C3D_RightGripAxis");
 		icurrentValue = (int32)(currentValue * 100);
 		if (RightGripValue != icurrentValue)
 		{
@@ -337,7 +356,7 @@ void UInputTracker::IntervalUpdate()
 		}
 
 		//joysticks
-		FVector currentLeftJoystick = FVector(InputComponent->GetAxisValue("C3D_LeftJoystickH"), InputComponent->GetAxisValue("C3D_LeftJoystickV"), LeftJoystickAxis.Z);
+		FVector currentLeftJoystick = FVector(ReadAxis("C3D_LeftJoystickH"), ReadAxis("C3D_LeftJoystickV"), LeftJoystickAxis.Z);
 		if (FVector::Distance(LeftJoystickAxis, currentLeftJoystick) > MinimumVectorChange)
 		{
 			//write new stuff
@@ -346,7 +365,7 @@ void UInputTracker::IntervalUpdate()
 			AppendInputState(false, b);
 		}
 
-		FVector currentRightJoystick = FVector(InputComponent->GetAxisValue("C3D_RightJoystickH"), InputComponent->GetAxisValue("C3D_RightJoystickV"), RightJoystickAxis.Z);
+		FVector currentRightJoystick = FVector(ReadAxis("C3D_RightJoystickH"), ReadAxis("C3D_RightJoystickV"), RightJoystickAxis.Z);
 		if (FVector::Distance(RightJoystickAxis, currentRightJoystick) > MinimumVectorChange)
 		{
 			//write new stuff
@@ -361,7 +380,7 @@ void UInputTracker::IntervalUpdate()
 	case EC3DControllerType::QuestPro:
 	{
 		//triggers
-		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
+		float currentValue = ReadAxis("C3D_LeftTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		if (LeftTriggerValue != icurrentValue)
 		{
@@ -369,7 +388,7 @@ void UInputTracker::IntervalUpdate()
 			AppendInputState(false, b);
 			LeftTriggerValue = icurrentValue;
 		}
-		currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");
+		currentValue = ReadAxis("C3D_RightTriggerAxis");
 		icurrentValue = (int32)(currentValue * 100);
 		if (RightTriggerValue != icurrentValue)
 		{
@@ -379,7 +398,7 @@ void UInputTracker::IntervalUpdate()
 		}
 
 		//grip
-		currentValue = InputComponent->GetAxisValue("C3D_LeftGripAxis");
+		currentValue = ReadAxis("C3D_LeftGripAxis");
 		icurrentValue = (int32)(currentValue * 100);
 		if (LeftGripValue != icurrentValue)
 		{
@@ -387,7 +406,7 @@ void UInputTracker::IntervalUpdate()
 			AppendInputState(false, b);
 			LeftGripValue = icurrentValue;
 		}
-		currentValue = InputComponent->GetAxisValue("C3D_RightGripAxis");
+		currentValue = ReadAxis("C3D_RightGripAxis");
 		icurrentValue = (int32)(currentValue * 100);
 		if (RightGripValue != icurrentValue)
 		{
@@ -397,7 +416,7 @@ void UInputTracker::IntervalUpdate()
 		}
 
 		//joysticks
-		FVector currentLeftJoystick = FVector(InputComponent->GetAxisValue("C3D_LeftJoystickH"), InputComponent->GetAxisValue("C3D_LeftJoystickV"), LeftJoystickAxis.Z);
+		FVector currentLeftJoystick = FVector(ReadAxis("C3D_LeftJoystickH"), ReadAxis("C3D_LeftJoystickV"), LeftJoystickAxis.Z);
 		if (FVector::Distance(LeftJoystickAxis, currentLeftJoystick) > MinimumVectorChange)
 		{
 			//write new stuff
@@ -406,7 +425,7 @@ void UInputTracker::IntervalUpdate()
 			AppendInputState(false, b);
 		}
 
-		FVector currentRightJoystick = FVector(InputComponent->GetAxisValue("C3D_RightJoystickH"), InputComponent->GetAxisValue("C3D_RightJoystickV"), RightJoystickAxis.Z);
+		FVector currentRightJoystick = FVector(ReadAxis("C3D_RightJoystickH"), ReadAxis("C3D_RightJoystickV"), RightJoystickAxis.Z);
 		if (FVector::Distance(RightJoystickAxis, currentRightJoystick) > MinimumVectorChange)
 		{
 			//write new stuff
@@ -420,7 +439,7 @@ void UInputTracker::IntervalUpdate()
 	{
 
 		//triggers
-		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
+		float currentValue = ReadAxis("C3D_LeftTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		if (LeftTriggerValue != icurrentValue)
 		{
@@ -428,7 +447,7 @@ void UInputTracker::IntervalUpdate()
 			AppendInputState(false, b);
 			LeftTriggerValue = icurrentValue;
 		}
-		currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");
+		currentValue = ReadAxis("C3D_RightTriggerAxis");
 		icurrentValue = (int32)(currentValue * 100);
 		if (RightTriggerValue != icurrentValue)
 		{
@@ -439,7 +458,7 @@ void UInputTracker::IntervalUpdate()
 
 		//touchpads
 
-		FVector currentLeftTouchpad = FVector(InputComponent->GetAxisValue("C3D_LeftTouchpadH"), InputComponent->GetAxisValue("C3D_LeftTouchpadV"), LeftTouchpadAxis.Z);
+		FVector currentLeftTouchpad = FVector(ReadAxis("C3D_LeftTouchpadH"), ReadAxis("C3D_LeftTouchpadV"), LeftTouchpadAxis.Z);
 		if (FVector::Distance(LeftTouchpadAxis, currentLeftTouchpad) > MinimumVectorChange)
 		{
 			//write new stuff
@@ -448,7 +467,7 @@ void UInputTracker::IntervalUpdate()
 			AppendInputState(false, b);
 		}
 
-		FVector currentRightTouchpad = FVector(InputComponent->GetAxisValue("C3D_RightTouchpadH"), InputComponent->GetAxisValue("C3D_RightTouchpadV"), RightTouchpadAxis.Z);
+		FVector currentRightTouchpad = FVector(ReadAxis("C3D_RightTouchpadH"), ReadAxis("C3D_RightTouchpadV"), RightTouchpadAxis.Z);
 		if (FVector::Distance(RightTouchpadAxis, currentRightTouchpad) > MinimumVectorChange)
 		{
 			//write new stuff
@@ -458,7 +477,7 @@ void UInputTracker::IntervalUpdate()
 		}
 
 		//joysticks
-		FVector currentLeftJoystick = FVector(InputComponent->GetAxisValue("C3D_LeftJoystickH"), InputComponent->GetAxisValue("C3D_LeftJoystickV"), LeftJoystickAxis.Z);
+		FVector currentLeftJoystick = FVector(ReadAxis("C3D_LeftJoystickH"), ReadAxis("C3D_LeftJoystickV"), LeftJoystickAxis.Z);
 		if (FVector::Distance(LeftJoystickAxis, currentLeftJoystick) > MinimumVectorChange)
 		{
 			//write new stuff
@@ -467,7 +486,7 @@ void UInputTracker::IntervalUpdate()
 			AppendInputState(false, b);
 		}
 
-		FVector currentRightJoystick = FVector(InputComponent->GetAxisValue("C3D_RightJoystickH"), InputComponent->GetAxisValue("C3D_RightJoystickV"), RightJoystickAxis.Z);
+		FVector currentRightJoystick = FVector(ReadAxis("C3D_RightJoystickH"), ReadAxis("C3D_RightJoystickV"), RightJoystickAxis.Z);
 		if (FVector::Distance(RightJoystickAxis, currentRightJoystick) > MinimumVectorChange)
 		{
 			//write new stuff
@@ -478,10 +497,11 @@ void UInputTracker::IntervalUpdate()
 		break;
 	}
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	case EC3DControllerType::PicoNeo2:
 	{
 		//triggers
-		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
+		float currentValue = ReadAxis("C3D_LeftTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		if (LeftTriggerValue != icurrentValue)
 		{
@@ -489,7 +509,7 @@ void UInputTracker::IntervalUpdate()
 			AppendInputState(false, b);
 			LeftTriggerValue = icurrentValue;
 		}
-		currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");
+		currentValue = ReadAxis("C3D_RightTriggerAxis");
 		icurrentValue = (int32)(currentValue * 100);
 		if (RightTriggerValue != icurrentValue)
 		{
@@ -498,8 +518,25 @@ void UInputTracker::IntervalUpdate()
 			RightTriggerValue = icurrentValue;
 		}
 
+		currentValue = ReadAxis("C3D_LeftGripAxis");
+		icurrentValue = (int32)(currentValue * 100);
+		if (LeftGripValue != icurrentValue)
+		{
+			auto State = FControllerInputState("pico_grip", icurrentValue);
+			AppendInputState(false, State);
+			LeftGripValue = icurrentValue;
+		}
+		currentValue = ReadAxis("C3D_RightGripAxis");
+		icurrentValue = (int32)(currentValue * 100);
+		if (RightGripValue != icurrentValue)
+		{
+			auto State = FControllerInputState("pico_grip", icurrentValue);
+			AppendInputState(true, State);
+			RightGripValue = icurrentValue;
+		}
+
 		//joysticks
-		FVector currentLeftJoystick = FVector(InputComponent->GetAxisValue("C3D_LeftJoystickH"), InputComponent->GetAxisValue("C3D_LeftJoystickV"), LeftJoystickAxis.Z);
+		FVector currentLeftJoystick = FVector(ReadAxis("C3D_LeftJoystickH"), ReadAxis("C3D_LeftJoystickV"), LeftJoystickAxis.Z);
 		if (FVector::Distance(LeftJoystickAxis, currentLeftJoystick) > MinimumVectorChange)
 		{
 			//write new stuff
@@ -508,7 +545,7 @@ void UInputTracker::IntervalUpdate()
 			AppendInputState(false, b);
 		}
 
-		FVector currentRightJoystick = FVector(InputComponent->GetAxisValue("C3D_RightJoystickH"), InputComponent->GetAxisValue("C3D_RightJoystickV"), RightJoystickAxis.Z);
+		FVector currentRightJoystick = FVector(ReadAxis("C3D_RightJoystickH"), ReadAxis("C3D_RightJoystickV"), RightJoystickAxis.Z);
 		if (FVector::Distance(RightJoystickAxis, currentRightJoystick) > MinimumVectorChange)
 		{
 			//write new stuff
@@ -523,6 +560,8 @@ void UInputTracker::IntervalUpdate()
 
 void UInputTracker::AppendInputState(const bool isRight, FControllerInputState& state)
 {
+	if (!cog.IsValid() || !cog->HasStartedSession()) return;
+	if (isRight ? !IsValid(RightHand) : !IsValid(LeftHand)) return;
 	//append or change value
 	if (isRight)
 	{
@@ -570,6 +609,7 @@ void UInputTracker::LeftFaceButtonOnePressed()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_xbtn", 100);
 		AppendInputState(false, b);
@@ -602,6 +642,7 @@ void UInputTracker::LeftFaceButtonOneReleased()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_xbtn", 0);
 		AppendInputState(false, b);
@@ -634,6 +675,7 @@ void UInputTracker::LeftFaceButtonTwoPressed()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_ybtn", 100);
 		AppendInputState(false, b);
@@ -665,6 +707,7 @@ void UInputTracker::LeftFaceButtonTwoReleased()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_ybtn", 0);
 		AppendInputState(false, b);
@@ -701,6 +744,7 @@ void UInputTracker::LeftMenuButtonPressed()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_menubtn", 100);
 		AppendInputState(false, b);
@@ -740,6 +784,7 @@ void UInputTracker::LeftMenuButtonReleased()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_menubtn", 0);
 		AppendInputState(false, b);
@@ -762,8 +807,8 @@ void UInputTracker::LeftJoystickPressed()
 		break;
 	case EC3DControllerType::OculusRift:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
+		float x = ReadAxis("C3D_LeftJoystickH");
+		float y = ReadAxis("C3D_LeftJoystickV");
 		auto b = FControllerInputState("rift_joystick", FVector(x, y, 100));
 		LeftJoystickAxis = FVector(x, y, 100);
 		AppendInputState(false, b);
@@ -773,8 +818,8 @@ void UInputTracker::LeftJoystickPressed()
 	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
+		float x = ReadAxis("C3D_LeftJoystickH");
+		float y = ReadAxis("C3D_LeftJoystickV");
 		auto b = FControllerInputState("joystick", FVector(x, y, 100));
 		LeftJoystickAxis = FVector(x, y, 100);
 		AppendInputState(false, b);
@@ -782,9 +827,10 @@ void UInputTracker::LeftJoystickPressed()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
+		float x = ReadAxis("C3D_LeftJoystickH");
+		float y = ReadAxis("C3D_LeftJoystickV");
 		auto b = FControllerInputState("pico_joystick", FVector(x, y, 100));
 		LeftJoystickAxis = FVector(x, y, 100);
 		AppendInputState(false, b);
@@ -792,8 +838,8 @@ void UInputTracker::LeftJoystickPressed()
 	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
+		float x = ReadAxis("C3D_LeftJoystickH");
+		float y = ReadAxis("C3D_LeftJoystickV");
 		auto b = FControllerInputState("wmr_joystick", FVector(x, y, 100));
 		LeftJoystickAxis = FVector(x, y, 100);
 		AppendInputState(false, b);
@@ -809,8 +855,8 @@ void UInputTracker::LeftJoystickReleased()
 		break;
 	case EC3DControllerType::OculusRift:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
+		float x = ReadAxis("C3D_LeftJoystickH");
+		float y = ReadAxis("C3D_LeftJoystickV");
 		auto b = FControllerInputState("rift_joystick", FVector(x, y, 0));
 		LeftJoystickAxis = FVector(x, y, 0);
 		AppendInputState(false, b);
@@ -820,8 +866,8 @@ void UInputTracker::LeftJoystickReleased()
 	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
+		float x = ReadAxis("C3D_LeftJoystickH");
+		float y = ReadAxis("C3D_LeftJoystickV");
 		auto b = FControllerInputState("joystick", FVector(x, y, 0));
 		LeftJoystickAxis = FVector(x, y, 0);
 		AppendInputState(false, b);
@@ -829,9 +875,10 @@ void UInputTracker::LeftJoystickReleased()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
+		float x = ReadAxis("C3D_LeftJoystickH");
+		float y = ReadAxis("C3D_LeftJoystickV");
 		auto b = FControllerInputState("pico_joystick", FVector(x, y, 0));
 		LeftJoystickAxis = FVector(x, y, 0);
 		AppendInputState(false, b);
@@ -839,8 +886,8 @@ void UInputTracker::LeftJoystickReleased()
 	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_LeftJoystickV");
+		float x = ReadAxis("C3D_LeftJoystickH");
+		float y = ReadAxis("C3D_LeftJoystickV");
 		auto b = FControllerInputState("wmr_joystick", FVector(x, y, 0));
 		LeftJoystickAxis = FVector(x, y, 0);
 		AppendInputState(false, b);
@@ -855,8 +902,8 @@ void UInputTracker::LeftTouchpadReleased()
 	{
 	case EC3DControllerType::Vive:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_LeftTouchpadV");
+		float x = ReadAxis("C3D_LeftTouchpadH");
+		float y = ReadAxis("C3D_LeftTouchpadV");
 		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 0));
 		LeftTouchpadAxis = FVector(x, y, 0);
 		AppendInputState(false, b);
@@ -866,8 +913,8 @@ void UInputTracker::LeftTouchpadReleased()
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_LeftTouchpadV");
+		float x = ReadAxis("C3D_LeftTouchpadH");
+		float y = ReadAxis("C3D_LeftTouchpadV");
 		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 0));
 		LeftTouchpadAxis = FVector(x, y, 0);
 		AppendInputState(false, b);
@@ -881,8 +928,8 @@ void UInputTracker::LeftTouchpadTouched()
 	{
 	case EC3DControllerType::Vive:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_LeftTouchpadV");
+		float x = ReadAxis("C3D_LeftTouchpadH");
+		float y = ReadAxis("C3D_LeftTouchpadV");
 		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 50));
 		LeftTouchpadAxis = FVector(x, y, 50);
 		AppendInputState(false, b);
@@ -892,8 +939,8 @@ void UInputTracker::LeftTouchpadTouched()
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_LeftTouchpadV");
+		float x = ReadAxis("C3D_LeftTouchpadH");
+		float y = ReadAxis("C3D_LeftTouchpadV");
 		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 50));
 		LeftTouchpadAxis = FVector(x, y, 50);
 		AppendInputState(false, b);
@@ -907,8 +954,8 @@ void UInputTracker::LeftTouchpadPressed()
 	{
 	case EC3DControllerType::Vive:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_LeftTouchpadV");
+		float x = ReadAxis("C3D_LeftTouchpadH");
+		float y = ReadAxis("C3D_LeftTouchpadV");
 		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 100));
 		LeftTouchpadAxis = FVector(x, y, 100);
 		AppendInputState(false, b);
@@ -918,8 +965,8 @@ void UInputTracker::LeftTouchpadPressed()
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_LeftTouchpadV");
+		float x = ReadAxis("C3D_LeftTouchpadH");
+		float y = ReadAxis("C3D_LeftTouchpadV");
 		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 100));
 		LeftTouchpadAxis = FVector(x, y, 100);
 		AppendInputState(false, b);
@@ -934,8 +981,8 @@ void UInputTracker::LeftTouchpadPressRelease()
 	{
 	case EC3DControllerType::Vive:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_LeftTouchpadV");
+		float x = ReadAxis("C3D_LeftTouchpadH");
+		float y = ReadAxis("C3D_LeftTouchpadV");
 		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 50));
 		LeftTouchpadAxis = FVector(x, y, 50);
 		AppendInputState(false, b);
@@ -945,8 +992,8 @@ void UInputTracker::LeftTouchpadPressRelease()
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		float x = InputComponent->GetAxisValue("C3D_LeftTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_LeftTouchpadV");
+		float x = ReadAxis("C3D_LeftTouchpadH");
+		float y = ReadAxis("C3D_LeftTouchpadV");
 		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 50));
 		LeftTouchpadAxis = FVector(x, y, 50);
 		AppendInputState(false, b);
@@ -978,6 +1025,7 @@ void UInputTracker::RightFaceButtonOnePressed()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_abtn", 100);
 		AppendInputState(true, b);
@@ -1009,6 +1057,7 @@ void UInputTracker::RightFaceButtonOneReleased()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_abtn", 0);
 		AppendInputState(true, b);
@@ -1041,6 +1090,7 @@ void UInputTracker::RightFaceButtonTwoPressed()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_bbtn", 100);
 		AppendInputState(true, b);
@@ -1072,6 +1122,7 @@ void UInputTracker::RightFaceButtonTwoReleased()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_bbtn", 0);
 		AppendInputState(true, b);
@@ -1108,6 +1159,7 @@ void UInputTracker::RightMenuButtonPressed()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_menubtn", 100);
 		AppendInputState(true, b);
@@ -1147,6 +1199,7 @@ void UInputTracker::RightMenuButtonReleased()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_menubtn", 0);
 		AppendInputState(true, b);
@@ -1169,8 +1222,8 @@ void UInputTracker::RightJoystickPressed()
 		break;
 	case EC3DControllerType::OculusRift:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
+		float x = ReadAxis("C3D_RightJoystickH");
+		float y = ReadAxis("C3D_RightJoystickV");
 		auto b = FControllerInputState("rift_joystick", FVector(x, y, 100));
 		RightJoystickAxis = FVector(x, y, 100);
 		AppendInputState(true, b);
@@ -1180,8 +1233,8 @@ void UInputTracker::RightJoystickPressed()
 	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
+		float x = ReadAxis("C3D_RightJoystickH");
+		float y = ReadAxis("C3D_RightJoystickV");
 		auto b = FControllerInputState("joystick", FVector(x, y, 100));
 		RightJoystickAxis = FVector(x, y, 100);
 		AppendInputState(true, b);
@@ -1189,9 +1242,10 @@ void UInputTracker::RightJoystickPressed()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
+		float x = ReadAxis("C3D_RightJoystickH");
+		float y = ReadAxis("C3D_RightJoystickV");
 		auto b = FControllerInputState("pico_joystick", FVector(x, y, 100));
 		RightJoystickAxis = FVector(x, y, 100);
 		AppendInputState(true, b);
@@ -1199,8 +1253,8 @@ void UInputTracker::RightJoystickPressed()
 	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
+		float x = ReadAxis("C3D_RightJoystickH");
+		float y = ReadAxis("C3D_RightJoystickV");
 		auto b = FControllerInputState("wmr_joystick", FVector(x, y, 100));
 		RightJoystickAxis = FVector(x, y, 100);
 		AppendInputState(true, b);
@@ -1216,8 +1270,8 @@ void UInputTracker::RightJoystickReleased()
 		break;
 	case EC3DControllerType::OculusRift:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
+		float x = ReadAxis("C3D_RightJoystickH");
+		float y = ReadAxis("C3D_RightJoystickV");
 		auto b = FControllerInputState("rift_joystick", FVector(x, y, 0));
 		RightJoystickAxis = FVector(x, y, 0);
 		AppendInputState(true, b);
@@ -1227,8 +1281,8 @@ void UInputTracker::RightJoystickReleased()
 	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
+		float x = ReadAxis("C3D_RightJoystickH");
+		float y = ReadAxis("C3D_RightJoystickV");
 		auto b = FControllerInputState("joystick", FVector(x, y, 0));
 		RightJoystickAxis = FVector(x, y, 0);
 		AppendInputState(true, b);
@@ -1236,9 +1290,10 @@ void UInputTracker::RightJoystickReleased()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
+		float x = ReadAxis("C3D_RightJoystickH");
+		float y = ReadAxis("C3D_RightJoystickV");
 		auto b = FControllerInputState("pico_joystick", FVector(x, y, 0));
 		RightJoystickAxis = FVector(x, y, 0);
 		AppendInputState(true, b);
@@ -1246,8 +1301,8 @@ void UInputTracker::RightJoystickReleased()
 	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightJoystickH");
-		float y = InputComponent->GetAxisValue("C3D_RightJoystickV");
+		float x = ReadAxis("C3D_RightJoystickH");
+		float y = ReadAxis("C3D_RightJoystickV");
 		auto b = FControllerInputState("wmr_joystick", FVector(x, y, 0));
 		RightJoystickAxis = FVector(x, y, 0);
 		AppendInputState(true, b);
@@ -1262,8 +1317,8 @@ void UInputTracker::RightTouchpadReleased()
 	{
 	case EC3DControllerType::Vive:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_RightTouchpadV");
+		float x = ReadAxis("C3D_RightTouchpadH");
+		float y = ReadAxis("C3D_RightTouchpadV");
 		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 0));
 		RightTouchpadAxis = FVector(x, y, 0);
 		AppendInputState(true, b);
@@ -1273,8 +1328,8 @@ void UInputTracker::RightTouchpadReleased()
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_RightTouchpadV");
+		float x = ReadAxis("C3D_RightTouchpadH");
+		float y = ReadAxis("C3D_RightTouchpadV");
 		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 0));
 		RightTouchpadAxis = FVector(x, y, 0);
 		AppendInputState(true, b);
@@ -1288,8 +1343,8 @@ void UInputTracker::RightTouchpadTouched()
 	{
 	case EC3DControllerType::Vive:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_RightTouchpadV");
+		float x = ReadAxis("C3D_RightTouchpadH");
+		float y = ReadAxis("C3D_RightTouchpadV");
 		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 50));
 		RightTouchpadAxis = FVector(x, y, 50);
 		AppendInputState(true, b);
@@ -1299,8 +1354,8 @@ void UInputTracker::RightTouchpadTouched()
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_RightTouchpadV");
+		float x = ReadAxis("C3D_RightTouchpadH");
+		float y = ReadAxis("C3D_RightTouchpadV");
 		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 50));
 		RightTouchpadAxis = FVector(x, y, 50);
 		AppendInputState(true, b);
@@ -1314,8 +1369,8 @@ void UInputTracker::RightTouchpadPressed()
 	{
 	case EC3DControllerType::Vive:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_RightTouchpadV");
+		float x = ReadAxis("C3D_RightTouchpadH");
+		float y = ReadAxis("C3D_RightTouchpadV");
 		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 100));
 		RightTouchpadAxis = FVector(x, y, 100);
 		AppendInputState(true, b);
@@ -1325,8 +1380,8 @@ void UInputTracker::RightTouchpadPressed()
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_RightTouchpadV");
+		float x = ReadAxis("C3D_RightTouchpadH");
+		float y = ReadAxis("C3D_RightTouchpadV");
 		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 100));
 		RightTouchpadAxis = FVector(x, y, 100);
 		AppendInputState(true, b);
@@ -1341,8 +1396,8 @@ void UInputTracker::RightTouchpadPressRelease()
 	{
 	case EC3DControllerType::Vive:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_RightTouchpadV");
+		float x = ReadAxis("C3D_RightTouchpadH");
+		float y = ReadAxis("C3D_RightTouchpadV");
 		auto b = FControllerInputState("vive_touchpad", FVector(x, y, 50));
 		RightTouchpadAxis = FVector(x, y, 50);
 		AppendInputState(true, b);
@@ -1352,8 +1407,8 @@ void UInputTracker::RightTouchpadPressRelease()
 		break;
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		float x = InputComponent->GetAxisValue("C3D_RightTouchpadH");
-		float y = InputComponent->GetAxisValue("C3D_RightTouchpadV");
+		float x = ReadAxis("C3D_RightTouchpadH");
+		float y = ReadAxis("C3D_RightTouchpadV");
 		auto b = FControllerInputState("wmr_touchpad", FVector(x, y, 50));
 		RightTouchpadAxis = FVector(x, y, 50);
 		AppendInputState(true, b);
@@ -1388,6 +1443,7 @@ void UInputTracker::RightGripPressed()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_grip", 100);
 		AppendInputState(true, b);
@@ -1414,7 +1470,7 @@ void UInputTracker::RightGripReleased()
 	}
 	case EC3DControllerType::OculusRift:
 	{
-		float currentValue = InputComponent->GetAxisValue("C3D_RightGripAxis");
+		float currentValue = ReadAxis("C3D_RightGripAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		RightGripValue = icurrentValue;
 		auto b = FControllerInputState("rift_grip", icurrentValue);
@@ -1425,7 +1481,7 @@ void UInputTracker::RightGripReleased()
 	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
-		float currentValue = InputComponent->GetAxisValue("C3D_RightGripAxis");
+		float currentValue = ReadAxis("C3D_RightGripAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		RightGripValue = icurrentValue;
 		auto b = FControllerInputState("grip", icurrentValue);
@@ -1434,6 +1490,7 @@ void UInputTracker::RightGripReleased()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_grip", 0);
 		AppendInputState(true, b);
@@ -1474,6 +1531,7 @@ void UInputTracker::LeftGripPressed()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_grip", 100);
 		AppendInputState(false, b);
@@ -1500,7 +1558,7 @@ void UInputTracker::LeftGripReleased()
 	}
 	case EC3DControllerType::OculusRift:
 	{
-		float currentValue = InputComponent->GetAxisValue("C3D_LeftGripAxis");
+		float currentValue = ReadAxis("C3D_LeftGripAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		LeftGripValue = icurrentValue;
 		auto b = FControllerInputState("rift_grip", icurrentValue);
@@ -1511,7 +1569,7 @@ void UInputTracker::LeftGripReleased()
 	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
-		float currentValue = InputComponent->GetAxisValue("C3D_LeftGripAxis");
+		float currentValue = ReadAxis("C3D_LeftGripAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		LeftGripValue = icurrentValue;
 		auto b = FControllerInputState("grip", icurrentValue);
@@ -1520,6 +1578,7 @@ void UInputTracker::LeftGripReleased()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_grip", 0);
 		AppendInputState(false, b);
@@ -1564,6 +1623,7 @@ void UInputTracker::LeftTriggerPressed()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_trigger", 100);
 		LeftTriggerValue = 100;
@@ -1586,7 +1646,7 @@ void UInputTracker::LeftTriggerReleased()
 	{
 	case EC3DControllerType::Vive:
 	{
-		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
+		float currentValue = ReadAxis("C3D_LeftTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		LeftTriggerValue = icurrentValue;
 		auto b = FControllerInputState("vive_trigger", icurrentValue);
@@ -1595,7 +1655,7 @@ void UInputTracker::LeftTriggerReleased()
 	}
 	case EC3DControllerType::OculusRift:
 	{
-		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
+		float currentValue = ReadAxis("C3D_LeftTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		LeftTriggerValue = icurrentValue;
 		auto b = FControllerInputState("rift_trigger", icurrentValue);
@@ -1606,7 +1666,7 @@ void UInputTracker::LeftTriggerReleased()
 	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
-		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
+		float currentValue = ReadAxis("C3D_LeftTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		LeftTriggerValue = icurrentValue;
 		auto b = FControllerInputState("trigger", icurrentValue);
@@ -1615,6 +1675,7 @@ void UInputTracker::LeftTriggerReleased()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_trigger", 0);
 		LeftTriggerValue = 0;
@@ -1623,7 +1684,7 @@ void UInputTracker::LeftTriggerReleased()
 	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		float currentValue = InputComponent->GetAxisValue("C3D_LeftTriggerAxis");
+		float currentValue = ReadAxis("C3D_LeftTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		LeftTriggerValue = icurrentValue;
 		auto b = FControllerInputState("wmr_trigger", icurrentValue);
@@ -1662,6 +1723,7 @@ void UInputTracker::RightTriggerPressed()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_trigger", 100);
 		RightTriggerValue = 100;
@@ -1684,7 +1746,7 @@ void UInputTracker::RightTriggerReleased()
 	{
 	case EC3DControllerType::Vive:
 	{
-		float currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");
+		float currentValue = ReadAxis("C3D_RightTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		RightTriggerValue = icurrentValue;
 		auto b = FControllerInputState("vive_trigger", icurrentValue);
@@ -1693,7 +1755,7 @@ void UInputTracker::RightTriggerReleased()
 	}
 	case EC3DControllerType::OculusRift:
 	{
-		float currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");
+		float currentValue = ReadAxis("C3D_RightTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		RightTriggerValue = icurrentValue;
 		auto b = FControllerInputState("rift_trigger", icurrentValue);
@@ -1704,7 +1766,7 @@ void UInputTracker::RightTriggerReleased()
 	case EC3DControllerType::Quest3:
 	case EC3DControllerType::QuestPro:
 	{
-		float currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");
+		float currentValue = ReadAxis("C3D_RightTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		RightTriggerValue = icurrentValue;
 		auto b = FControllerInputState("trigger", icurrentValue);
@@ -1713,6 +1775,7 @@ void UInputTracker::RightTriggerReleased()
 	}
 	case EC3DControllerType::PicoNeo2:
 	case EC3DControllerType::PicoNeo3:
+	case EC3DControllerType::PicoNeo4:
 	{
 		auto b = FControllerInputState("pico_trigger", 0);
 		RightTriggerValue = 0;
@@ -1721,7 +1784,7 @@ void UInputTracker::RightTriggerReleased()
 	}
 	case EC3DControllerType::WindowsMixedReality:
 	{
-		float currentValue = InputComponent->GetAxisValue("C3D_RightTriggerAxis");
+		float currentValue = ReadAxis("C3D_RightTriggerAxis");
 		int32 icurrentValue = (int32)(currentValue * 100);
 		RightTriggerValue = icurrentValue;
 		auto b = FControllerInputState("wmr_trigger", icurrentValue);
@@ -1736,5 +1799,9 @@ void UInputTracker::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 
 	TSharedPtr<FAnalyticsProviderCognitive3D> cogProvider = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
-	cogProvider->OnSessionBegin.RemoveDynamic(this, &UInputTracker::FindControllers);
+	if (cogProvider.IsValid()) cogProvider->OnSessionBegin.RemoveDynamic(this, &UInputTracker::HandleSessionBegin);
+	if (IsValid(GetOwner()) && BoundPlayerController.IsValid()) GetOwner()->DisableInput(BoundPlayerController.Get());
+	LeftHand = nullptr;
+	RightHand = nullptr;
+	BoundPlayerController.Reset();
 }

@@ -18,7 +18,9 @@ class COGNITIVE3D_API UInputTracker : public UActorComponent
 	GENERATED_BODY()
 	
 private:
+	UPROPERTY(Transient)
 	UDynamicObject* LeftHand;
+	UPROPERTY(Transient)
 	UDynamicObject* RightHand;
 
 	float Interval = 0.1;
@@ -27,17 +29,29 @@ private:
 public:	
 	UFUNCTION()
 	void FindControllers();
+	UFUNCTION()
+	void HandleSessionBegin();
 
 private:
 
 	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
+	UPROPERTY(Transient)
 	UInputComponent* InputComponent;
+	TWeakObjectPtr<APlayerController> BoundPlayerController;
+	TMap<FName, FKey> PicoAxisFallbacks;
+	bool bHasInputBindings = false;
 
 	EC3DControllerType ControllerType;
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	void IntervalUpdate();
+	bool InitializeInputBindings();
+	float ReadAxis(FName AxisName) const;
+	void ResetInputState(bool bRight);
+	void SeedButtonStates(bool bRight);
+	bool bSeedLeftButtons = true;
+	bool bSeedRightButtons = true;
 
 	float CurrentIntervalTime = 0;
 	float MinimumVectorChange = 0.05;
