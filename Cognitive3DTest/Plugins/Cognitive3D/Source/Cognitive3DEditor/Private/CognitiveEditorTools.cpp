@@ -4,6 +4,7 @@
 
 #include "CognitiveEditorTools.h"
 #include "CognitiveSceneExportUtils.h"
+#include "Components/PrimitiveComponent.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 
@@ -65,6 +66,37 @@
 #include "SegmentAnalytics.h"
 
 #define LOCTEXT_NAMESPACE "BaseToolEditor"
+
+class FScopedCognitiveInvisibleComponents
+{
+public:
+	explicit FScopedCognitiveInvisibleComponents(const TArray<AActor*>& Actors)
+	{
+		for (AActor* Actor : Actors)
+		{
+			if (!IsValid(Actor)) continue;
+			TArray<UPrimitiveComponent*> Components;
+			Actor->GetComponents(Components);
+			for (UPrimitiveComponent* Component : Components)
+			{
+				if (Component && (!Component->IsVisible() || !Component->bRenderInMainPass) && !Component->bHiddenInGame)
+				{
+					HiddenComponents.Add(Component);
+					Component->SetHiddenInGame(true);
+				}
+			}
+		}
+	}
+	~FScopedCognitiveInvisibleComponents()
+	{
+		for (const TWeakObjectPtr<UPrimitiveComponent>& Component : HiddenComponents)
+		{
+			if (Component.IsValid()) Component->SetHiddenInGame(false);
+		}
+	}
+private:
+	TArray<TWeakObjectPtr<UPrimitiveComponent>> HiddenComponents;
+};
 
 
 
@@ -4210,6 +4242,7 @@ bool FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 		return false;
 	}
 
+	FScopedCognitiveInvisibleComponents RestoreComponentVisibility(actorsToExport);
 	GEditor->SelectNone(false, true, false);
 
 	for (int32 i = 0; i < actorsToExport.Num(); i++)
@@ -4224,21 +4257,9 @@ bool FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 			continue;
 		}
 
-		auto TempObject = actorsToExport[i]->GetComponentByClass(UStaticMeshComponent::StaticClass());
-		if (TempObject != NULL)
-		{
-			auto staticTempObject = (UStaticMeshComponent*)TempObject;
-			if (staticTempObject->GetOwner() != NULL)
-			{
-				UActorComponent* dynamic = staticTempObject->GetOwner()->GetComponentByClass(UDynamicObject::StaticClass());
-				if (dynamic != NULL)
-				{
-					continue;
-				}
-			}
-		}
-		
-		GEditor->SelectActor((actorsToExport[i]), true, false, true);
+		if (actorsToExport[i]->FindComponentByClass<UDynamicObject>()) continue;
+
+		GEditor->SelectActor(actorsToExport[i], true, false, true);
 	}
 	if (GEditor->GetSelectedActors()->Num() == 0)
 	{
@@ -4277,6 +4298,7 @@ bool FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 
 	// Texture compression settings
 	ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+	ExportOptions->bExportHiddenInGame = false;
 
 	// Create export task
 	UAssetExportTask* ExportTask = NewObject<UAssetExportTask>();
