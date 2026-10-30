@@ -333,10 +333,13 @@ USceneComponent* ACognitive3DActor::FindHandComponent(USceneComponent* Parent)
 	{
 		// Check if this component is a Skeletal Mesh Component
 		USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(Child);
-		if (SkeletalMeshComponent && SkeletalMeshComponent->GetSkeletalMeshAsset())
+#if ENGINE_MAJOR_VERSION == 4 || (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 1)
+		USkeletalMesh* SkeletalMesh = SkeletalMeshComponent ? SkeletalMeshComponent->SkeletalMesh : nullptr;
+#else
+		USkeletalMesh* SkeletalMesh = SkeletalMeshComponent ? SkeletalMeshComponent->GetSkeletalMeshAsset() : nullptr;
+#endif
+		if (SkeletalMesh)
 		{
-			UE_LOG(LogTemp, Log, TEXT("Found Hand Scene Component: %s (Contains Skeletal Mesh: %s)"),
-				*Child->GetName(), *SkeletalMeshComponent->GetSkeletalMeshAsset()->GetName());
 			return Child;  // Return the scene component that holds the skeletal mesh
 		}
 	}
