@@ -39,7 +39,7 @@ public:
 
 private:
 
-    static TMap<uint32, ACognitive3DActor *> PerWorldInstanceMap;
+	static TMap<uint32, TWeakObjectPtr<ACognitive3DActor>> PerWorldInstanceMap;
 	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

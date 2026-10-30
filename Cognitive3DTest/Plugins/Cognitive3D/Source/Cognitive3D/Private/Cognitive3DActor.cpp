@@ -23,7 +23,7 @@
 #include <Editor.h>
 #endif
 
-TMap<uint32, ACognitive3DActor*> ACognitive3DActor::PerWorldInstanceMap;
+TMap<uint32, TWeakObjectPtr<ACognitive3DActor>> ACognitive3DActor::PerWorldInstanceMap;
 
 // Sets default values
 ACognitive3DActor::ACognitive3DActor()
@@ -60,6 +60,11 @@ void ACognitive3DActor::BeginPlay()
 
 void ACognitive3DActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (UWorld* World = GetWorld())
+	{
+		TWeakObjectPtr<ACognitive3DActor>* CachedActor = PerWorldInstanceMap.Find(World->GetUniqueID());
+		if (CachedActor && (!CachedActor->IsValid() || CachedActor->Get() == this)) PerWorldInstanceMap.Remove(World->GetUniqueID());
+	}
 	if (!cog.IsValid())
 	{
 		return;
@@ -395,13 +400,16 @@ ACognitive3DActor* ACognitive3DActor::GetCognitive3DActor(const UObject *WorldCo
 	}
  
  	// Check per-world cache
-    ACognitive3DActor **AnalyticsActor = PerWorldInstanceMap.Find(RequestedWorld->GetUniqueID());
- 	if (AnalyticsActor != nullptr && IsValid(*AnalyticsActor)) {
-         return *AnalyticsActor;
+	TWeakObjectPtr<ACognitive3DActor>* CachedActor = PerWorldInstanceMap.Find(RequestedWorld->GetUniqueID());
+	ACognitive3DActor* AnalyticsActor = CachedActor ? CachedActor->Get() : nullptr;
+	if (IsValid(AnalyticsActor) && AnalyticsActor->GetWorld() == RequestedWorld && !AnalyticsActor->IsActorBeingDestroyed()) {
+		return AnalyticsActor;
  	}
+	PerWorldInstanceMap.Remove(RequestedWorld->GetUniqueID());
  
      // This world has not been added yet so let's search it
  	for (TActorIterator<ACognitive3DActor> Itr(RequestedWorld); Itr; ++Itr) {
+		if (!IsValid(*Itr) || Itr->IsActorBeingDestroyed() || Itr->GetWorld() != RequestedWorld) continue;
          // Found one so let's add this instance to the map
  		PerWorldInstanceMap.Add(RequestedWorld->GetUniqueID(), *Itr);
  		return *Itr;
