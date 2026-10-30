@@ -19,9 +19,8 @@ double FUtil::GetTimestamp()
 	//#pragma warning(push)
 	//#pragma warning(disable:4244) //Disable warning regarding loss of accuracy, no concern.
 
-	long ts = time(0);
-	double miliseconds = FDateTime::UtcNow().GetMillisecond();
-	double finalTime = ts + miliseconds*0.001;
+	const FDateTime Now = FDateTime::UtcNow();
+	double finalTime = (double)Now.ToUnixTimestamp() + Now.GetMillisecond() * 0.001;
 
 	return finalTime;
 	//http://stackoverflow.com/questions/997946/how-to-get-current-time-and-date-in-c
