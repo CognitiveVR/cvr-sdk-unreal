@@ -199,7 +199,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 					// Register the component
 					dynamicComponent->RegisterComponent();
 				}
-				if (dynamicComponent && !dynamicComponent->IsController)
+				if (dynamicComponent && dynamicComponent->IsRegistered())
 				{
 					dynamicComponent->HasInitialized = false;
 					dynamicComponent->Initialize();
@@ -310,7 +310,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 						// Register the component
 						dynamicComponent->RegisterComponent();
 					}
-					if (dynamicComponent && !dynamicComponent->IsController)
+					if (dynamicComponent && dynamicComponent->IsRegistered())
 					{
 						dynamicComponent->HasInitialized = false;
 						dynamicComponent->Initialize();
