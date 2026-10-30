@@ -2191,6 +2191,16 @@ void* FCognitiveEditorTools::ChooseParentWindowHandle()
 
 FReply FCognitiveEditorTools::UploadScene(const FString& LevelName)
 {
+	FString ValidationError;
+	if (!CognitiveSceneExportUtils::NormalizeGLTFForUpload(
+		FPaths::Combine(GetSceneExportDirectory(LevelName), TEXT("scene.gltf")), ValidationError))
+	{
+		OnUploadSceneCompleted(nullptr, nullptr, false, LevelName);
+		WizardUploadError = FString::Printf(TEXT("Scene export is invalid: %s. Export the scene again before uploading."), *ValidationError);
+		UE_LOG(LogTemp, Error, TEXT("%s"), *WizardUploadError);
+		ShowNotification(WizardUploadError, false);
+		return FReply::Handled();
+	}
 	//LevelName formatted as _Game_Maps_VRMap for example, use _ to split
 	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadScene called for level %s"), *LevelName);
 
@@ -4298,6 +4308,10 @@ bool FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 
 	// Texture compression settings
 	ExportOptions->TextureImageFormat = EGLTFTextureImageFormat::PNG;
+	ExportOptions->BakeMaterialInputs = EGLTFMaterialBakeMode::UseMeshData;
+#if ENGINE_MAJOR_VERSION == 4
+	ExportOptions->bStrictCompliance = true;
+#endif
 	ExportOptions->bExportHiddenInGame = false;
 
 	// Create export task
@@ -4460,6 +4474,11 @@ bool FCognitiveEditorTools::ModifyGLTFContent(FString FilePath)
 	if (!FFileHelper::SaveStringToFile(Output, *FilePath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
 	{
 		WizardUploadError = TEXT("Unable to write the exported scene glTF.");
+		return false;
+	}
+	if (!CognitiveSceneExportUtils::NormalizeGLTFForUpload(FilePath, WizardUploadError))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Scene export validation failed: %s"), *WizardUploadError);
 		return false;
 	}
 	return true;
