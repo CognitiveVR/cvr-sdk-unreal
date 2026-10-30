@@ -2034,6 +2034,7 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 	//Create the slow task for TOTAL items = PureMaps + SublevelKeys
 	FScopedSlowTask ExportTask(PureMaps.Num() + SublevelKeys.Num(), LOCTEXT("ExportingMaps", "Exporting selected maps..."));
 	ExportTask.MakeDialog();
+	bool bAllScenesExported = true;
 
 	//Export each pure map
 	for (const FString& PackageToLoad : PureMaps)
@@ -2046,11 +2047,16 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 		if (!FEditorFileUtils::LoadMap(PackageToLoad, false, true))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Failed to load %s"), *PackageToLoad);
+			bAllScenesExported = false;
 			continue;
 		}
 
 		UWorld* W = GEditor->GetEditorWorldContext().World();
-		if (!W) continue;
+		if (!W)
+		{
+			bAllScenesExported = false;
+			continue;
+		}
 
 		// disable all sublevels
 		for (ULevelStreaming* LS : W->GetStreamingLevels())
@@ -2080,6 +2086,12 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 			if (classPtr)
 			{
 				AActor* obj = W->SpawnActor<AActor>(classPtr);
+				if (!obj)
+				{
+					UE_LOG(LogTemp, Error, TEXT("Unable to spawn BP_Cognitive3DActor in %s"), *PackageToLoad);
+					bAllScenesExported = false;
+					continue;
+				}
 				obj->OnConstruction(obj->GetTransform());
 				obj->PostActorConstruction();
 				GLog->Log("SSceneSetupWidget::SpawnCognitive3DActor spawned BP_Cognitive3DActor in world");
@@ -2087,6 +2099,8 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 			else
 			{
 				GLog->Log("SSceneSetupWidget::SpawnCognitive3DActor couldn't find BP_Cognitive3DActor class");
+				bAllScenesExported = false;
+				continue;
 			}
 
 			//Mark the level dirty so the editor knows it's changed
@@ -2096,7 +2110,12 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 			{
 				UPackage* LevelPackage = W->PersistentLevel->GetOutermost();
 				TArray<UPackage*> ToSave = { LevelPackage };
-				FEditorFileUtils::PromptForCheckoutAndSave(ToSave, false, false);
+				if (FEditorFileUtils::PromptForCheckoutAndSave(ToSave, false, false) != FEditorFileUtils::PR_Success)
+				{
+					UE_LOG(LogTemp, Error, TEXT("Unable to save BP_Cognitive3DActor in %s"), *PackageToLoad);
+					bAllScenesExported = false;
+					continue;
+				}
 			}
 		}
 
@@ -2123,7 +2142,11 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 			}
 		}
 
-		FCognitiveEditorTools::GetInstance()->ExportScene(PackageToLoad, ActorsToExport);
+		if (!FCognitiveEditorTools::GetInstance()->ExportScene(PackageToLoad, ActorsToExport))
+		{
+			bAllScenesExported = false;
+			continue;
+		}
 
 		if (FCognitiveEditorTools::GetInstance()->UploadingDynamicsFromFullSetup)
 		{
@@ -2142,11 +2165,16 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 		if (!FEditorFileUtils::LoadMap(ParentMap, false, true))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Failed to load parent %s for sublevel %s"), *ParentMap, *SubPath);
+			bAllScenesExported = false;
 			continue;
 		}
 
 		UWorld* W = GEditor->GetEditorWorldContext().World();
-		if (!W) continue;
+		if (!W)
+		{
+			bAllScenesExported = false;
+			continue;
+		}
 
 		// turn off all, then only SubPath
 		for (ULevelStreaming* LS : W->GetStreamingLevels())
@@ -2204,7 +2232,11 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 		}
 
 		// Export under the sublevel's name
-		FCognitiveEditorTools::GetInstance()->ExportScene(SubPath, ActorsToExport);
+		if (!FCognitiveEditorTools::GetInstance()->ExportScene(SubPath, ActorsToExport))
+		{
+			bAllScenesExported = false;
+			continue;
+		}
 
 		if (FCognitiveEditorTools::GetInstance()->UploadingDynamicsFromFullSetup)
 		{
@@ -2216,14 +2248,27 @@ void SProjectManagerWidget::FinalizeProjectSetup()
 	// Restore original map
 	if (!OriginalMap.IsEmpty())
 	{
-		FEditorFileUtils::LoadMap(OriginalMap, false, true);
+		if (!FEditorFileUtils::LoadMap(OriginalMap, false, true))
+		{
+			bAllScenesExported = false;
+		}
 	}
 
-	OnExportAllSceneGeometry.ExecuteIfBound(true);
+	OnExportAllSceneGeometry.ExecuteIfBound(bAllScenesExported);
 }
 
 void SProjectManagerWidget::OnLevelsExported(bool bWasSuccessful)
 {
+	if (!bWasSuccessful)
+	{
+		bIsUploading = false;
+		CurrentUploadStatus = TEXT("Scene export failed. No scenes were uploaded.");
+		UE_LOG(LogTemp, Error, TEXT("Scene export failed; automatic upload was cancelled."));
+		FNotificationInfo Info(FText::FromString(CurrentUploadStatus));
+		Info.ExpireDuration = 5.0f;
+		FSlateNotificationManager::Get().AddNotification(Info);
+		return;
+	}
 	if (bWasSuccessful)
 	{
 		UE_LOG(LogTemp, Error, TEXT("=== SProjectManagerWidget::OnLevelsExported called with %d levels to upload ==="), TotalLevelCount);

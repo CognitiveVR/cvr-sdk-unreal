@@ -421,13 +421,13 @@ public:
 	//exporting scene.
 	//create directory
 	//export scene as gltf
-	void ExportScene(FString LevelName, TArray<AActor*> actorsToExport);
+	bool ExportScene(FString LevelName, TArray<AActor*> actorsToExport);
 
-	void ValidateGeneratedFiles(const FString LevelName);
+	bool ValidateGeneratedFiles(const FString LevelName);
 
 	bool RenameFile(FString oldPath, FString newPath);
 
-	void ModifyGLTFContent(FString FilePath);
+	bool ModifyGLTFContent(FString FilePath);
 
 	bool GenerateSettingsJsonFile(const FString& LevelName);
 	bool HasSettingsJsonFile(const FString& LevelName) const;

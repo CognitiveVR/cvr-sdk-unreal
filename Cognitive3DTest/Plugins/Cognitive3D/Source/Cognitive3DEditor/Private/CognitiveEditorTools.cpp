@@ -4197,22 +4197,24 @@ void FCognitiveEditorTools::CompressAndSaveTexture(const FString& SourcePath, co
 	}
 }
 
-void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actorsToExport)
+bool FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actorsToExport)
 {
 	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::ExportScene called with LevelName: %s"), *LevelName); // /Game/Maps/VRMap
+	WizardUploadError.Empty();
 
 	UWorld* tempworld = GEditor->GetEditorWorldContext().World();
 
 	if (!tempworld)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportScene world is null"));
-		return;
+		return false;
 	}
 
 	GEditor->SelectNone(false, true, false);
 
 	for (int32 i = 0; i < actorsToExport.Num(); i++)
 	{
+		if (!IsValid(actorsToExport[i])) continue;
 		if (ALandscapeStreamingProxy* LandscapeProxy = Cast<ALandscapeStreamingProxy>(actorsToExport[i]))
 		{
 			continue;
@@ -4237,6 +4239,12 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 		}
 		
 		GEditor->SelectActor((actorsToExport[i]), true, false, true);
+	}
+	if (GEditor->GetSelectedActors()->Num() == 0)
+	{
+		WizardUploadError = TEXT("No scene actors remain after filtering the export selection.");
+		UE_LOG(LogTemp, Error, TEXT("%s"), *WizardUploadError);
+		return false;
 	}
 	//FString AdjustedLevelName = LevelName.Replace(TEXT("/"), TEXT("_")); // _Game_Maps_VRMap
 	FString AdjustedLevelName = AdjustPathName(LevelName);
@@ -4282,7 +4290,12 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 	ExportTask->Options = ExportOptions;
 
 	// Perform export
-	ExportTask->Exporter->RunAssetExportTask(ExportTask);
+	if (!ExportTask->Exporter->RunAssetExportTask(ExportTask))
+	{
+		WizardUploadError = TEXT("Scene geometry export failed. Check the GLTFExporter messages in the Output Log.");
+		UE_LOG(LogTemp, Error, TEXT("%s"), *WizardUploadError);
+		return false;
+	}
 
 	// Compress and save textures after export
 	if (CompressExportedFiles)
@@ -4302,7 +4315,7 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 	if (!PlatformFile.FileExists(*ExportedSceneFile2))
 	{
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene Cancelled scene geometry export"));
-		return;
+		return false;
 	}
 
 	//export materials
@@ -4337,6 +4350,7 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 	{
 		ShowNotification(TEXT("Unable to save settings.json"), false);
 		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene unable to save settings.json"));
+		return false;
 	}
 	//write debug.log including unreal data, scene contents, folder contents
 	//should happen after next button is pressed
@@ -4345,87 +4359,31 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 	FString fileContents = BuildDebugFileContents();
 	FFileHelper::SaveStringToFile(fileContents, *fullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 
-	ValidateGeneratedFiles(AdjustedLevelName); // _Game_Maps_VRMap
+	return ValidateGeneratedFiles(AdjustedLevelName);
 	
 
 }
 
-void FCognitiveEditorTools::ValidateGeneratedFiles(const FString LevelName)
+bool FCognitiveEditorTools::ValidateGeneratedFiles(const FString LevelName)
 {
-	TArray<FString> SplitLevelName;
-	LevelName.ParseIntoArray(SplitLevelName, *SplitCharacter, true);
-	FString ShortName = SplitLevelName.Last();
-
-	//validate other files:
-	FString ExportDirPath = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/";
-	TArray<FString> FoundFiles;
-	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-
-	// Get all files with .gltf extension in the directory
-	PlatformFile.FindFiles(FoundFiles, *ExportDirPath, TEXT("gltf"));
-	//bin
-	PlatformFile.FindFiles(FoundFiles, *ExportDirPath, TEXT("bin"));
-	//json
-	PlatformFile.FindFiles(FoundFiles, *ExportDirPath, TEXT("json"));
-	//fbx
-	PlatformFile.FindFiles(FoundFiles, *ExportDirPath, TEXT("fbx"));
-	//bmp
-	PlatformFile.FindFiles(FoundFiles, *ExportDirPath, TEXT("bmp"));
-
-	bool FoundErrorFile = false;
-
-	//see if the size is more than or equal to 3, meaning we found the gltf, the bin and json files
-	if (FoundFiles.Num() >= 3)
+	TArray<FString> Parts;
+	LevelName.ParseIntoArray(Parts, *SplitCharacter, true);
+	if (Parts.Num() == 0)
 	{
-		// Found at least one .txt file in the directory.
-		for (FString File : FoundFiles)
-		{
-			// Do something with each file, if needed.
-			UE_LOG(LogTemp, Warning, TEXT("Found file: %s"), *File);
-			if (File.Contains(".fbx"))
-			{
-				FMessageDialog::Open(EAppMsgType::Ok, FText::FromString("Warning!! Found fbx file in export folder. Please try exporting again."));
-				UE_LOG(LogTemp, Error, TEXT("Warning!! Found fbx file: %s. Please try exporting again."), *File);
-				FoundErrorFile = true;
-			}
-			if (File.Contains(".bmp"))
-			{
-				FMessageDialog::Open(EAppMsgType::Ok, FText::FromString("Warning!! Found bmp file in export folder. Please try exporting again."));
-				UE_LOG(LogTemp, Error, TEXT("Warning!! Found bmp file: %s. Please try exporting again."), *File);
-				FoundErrorFile = true;
-			}
-		}
-		if (!FoundErrorFile)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::ExportScene verified generated files"));
-			WizardUploadError = "";
-		}
-		
+		WizardUploadError = TEXT("Scene name is empty.");
+		return false;
 	}
-	else
+	const FString Directory = GetSceneExportDirectory(LevelName);
+	const FString ShortName = Parts.Last();
+	const FString ScenePath = FPaths::Combine(Directory, TEXT("scene.gltf"));
+	if (!RenameFile(FPaths::Combine(Directory, ShortName + TEXT(".gltf")), ScenePath)
+		|| !RenameFile(FPaths::Combine(Directory, ShortName + TEXT(".bin")), FPaths::Combine(Directory, TEXT("scene.bin"))))
 	{
-		// No required files found in the directory.
-		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::ExportScene could not validate generated files"));
+		WizardUploadError = TEXT("Scene export did not produce its geometry and binary buffer.");
+		UE_LOG(LogTemp, Error, TEXT("%s"), *WizardUploadError);
+		return false;
 	}
-
-	//rename exports and .bin reference in the .gltf when exporting with arbitrary names to be scene.gltf and scene.bin
-	//FString levelName = GWorld->GetMapName(); //GetWorld()->GetMapName();
-	//levelName.RemoveFromStart(GWorld->StreamingLevelsPrefix);
-
-	FString scenegltfPath = ExportDirPath + "/scene.gltf";
-	FString levelgltfPath = ExportDirPath + "/" + ShortName +  ".gltf";
-
-	FString scenebinPath = ExportDirPath + "/scene.bin";
-	FString levelbinPath = ExportDirPath + "/" + ShortName + ".bin";
-
-	FString scenemtlPath = ExportDirPath + "/scene.mtl";
-	FString levelmtlPath = ExportDirPath + "/" + ShortName + ".mtl";
-
-	RenameFile(levelgltfPath, scenegltfPath);
-	RenameFile(levelbinPath, scenebinPath);
-	RenameFile(levelmtlPath, scenemtlPath);
-
-	ModifyGLTFContent(scenegltfPath);
+	return ModifyGLTFContent(ScenePath);
 }
 
 bool FCognitiveEditorTools::RenameFile(FString oldPath, FString newPath)
@@ -4460,40 +4418,29 @@ bool FCognitiveEditorTools::RenameFile(FString oldPath, FString newPath)
 	return false;
 }
 
-void FCognitiveEditorTools::ModifyGLTFContent(FString FilePath)
+bool FCognitiveEditorTools::ModifyGLTFContent(FString FilePath)
 {
-	FString FileContent;
-
-	// Load the .gltf file content
-	if (FFileHelper::LoadFileToString(FileContent, *FilePath))
+	FString Content;
+	TSharedPtr<FJsonObject> Document;
+	if (!FFileHelper::LoadFileToString(Content, *FilePath)
+		|| !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Content), Document) || !Document.IsValid())
 	{
-		TSharedPtr<FJsonObject> JsonObject;
-		TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(FileContent);
-
-		if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
-		{
-			// find the uri under buffers and change it
-			if (JsonObject->HasField("buffers"))
-			{
-				TArray<TSharedPtr<FJsonValue>> Buffers = JsonObject->GetArrayField("buffers");
-				if (Buffers.Num() > 0)
-				{
-					TSharedPtr<FJsonObject> FirstBuffer = Buffers[0]->AsObject();
-					if (FirstBuffer->HasField("uri"))
-					{
-						FirstBuffer->SetStringField("uri", "scene.bin");
-					}
-				}
-			}
-
-			// Save modified content back to file
-			FString OutputString;
-			TSharedRef<TJsonWriter<>> JsonWriter = TJsonWriterFactory<>::Create(&OutputString);
-			FJsonSerializer::Serialize(JsonObject.ToSharedRef(), JsonWriter);
-
-			FFileHelper::SaveStringToFile(OutputString, *FilePath);
-		}
+		WizardUploadError = TEXT("Exported scene glTF is missing or invalid JSON.");
+		return false;
 	}
+	const TArray<TSharedPtr<FJsonValue>>* Buffers = nullptr;
+	if (Document->TryGetArrayField(TEXT("buffers"), Buffers) && Buffers->Num() > 0)
+	{
+		(*Buffers)[0]->AsObject()->SetStringField(TEXT("uri"), TEXT("scene.bin"));
+	}
+	FString Output;
+	FJsonSerializer::Serialize(Document.ToSharedRef(), TJsonWriterFactory<>::Create(&Output));
+	if (!FFileHelper::SaveStringToFile(Output, *FilePath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
+	{
+		WizardUploadError = TEXT("Unable to write the exported scene glTF.");
+		return false;
+	}
+	return true;
 }
 
 bool FCognitiveEditorTools::GenerateSettingsJsonFile(const FString& LevelName)
