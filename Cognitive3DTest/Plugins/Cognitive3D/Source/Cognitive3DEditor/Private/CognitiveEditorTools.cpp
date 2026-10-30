@@ -1887,6 +1887,57 @@ void FCognitiveEditorTools::OnDynamicManifestResponse(FHttpRequestPtr Request, F
 }
 int32 OutstandingDynamicUploadRequests = 0;
 
+namespace
+{
+	bool bBulkSceneBatchActive = false;
+	bool bBulkSceneBatchFailed = false;
+	TSet<FString> PendingBulkScenes;
+	TSet<FString> CompletedBulkScenes;
+	TSet<FString> FailedBulkDynamics;
+	TMap<FString, int32> PendingBulkDynamicRequests;
+
+	void RegisterBulkScene(FCognitiveEditorTools& Tools, const FString& LevelName)
+	{
+		if (!Tools.UploadingScenesFromFullSetup) return;
+		if (!bBulkSceneBatchActive)
+		{
+			bBulkSceneBatchActive = true;
+			bBulkSceneBatchFailed = false;
+			PendingBulkScenes.Reset();
+			CompletedBulkScenes.Reset();
+			FailedBulkDynamics.Reset();
+			PendingBulkDynamicRequests.Reset();
+		}
+		if (!CompletedBulkScenes.Contains(LevelName)) PendingBulkScenes.Add(LevelName);
+	}
+
+	void CompleteBulkScene(FCognitiveEditorTools& Tools, const FString& LevelName, bool bSuccessful)
+	{
+		if (!PendingBulkScenes.Remove(LevelName)) return;
+		CompletedBulkScenes.Add(LevelName);
+		PendingBulkDynamicRequests.Remove(LevelName);
+		FailedBulkDynamics.Remove(LevelName);
+		bBulkSceneBatchFailed |= !bSuccessful;
+		Tools.TotalLevelsToUpload = FMath::Max(0, Tools.TotalLevelsToUpload - 1);
+		if (Tools.TotalLevelsToUpload == 0)
+		{
+			const bool bBatchSuccessful = !bBulkSceneBatchFailed;
+			bBulkSceneBatchActive = false;
+			Tools.WizardUploading = false;
+			Tools.UploadingScenesFromFullSetup = false;
+			Tools.OnUploadAllSceneGeometry.ExecuteIfBound(bBatchSuccessful);
+		}
+	}
+
+	void FailSceneMetadata(FCognitiveEditorTools& Tools, const FString& LevelName, const FString& Error)
+	{
+		Tools.WizardUploadError = Error;
+		UE_LOG(LogTemp, Error, TEXT("%s"), *Error);
+		if (PendingBulkScenes.Contains(LevelName)) CompleteBulkScene(Tools, LevelName, false);
+		else if (!bBulkSceneBatchActive) Tools.WizardUploading = false;
+	}
+}
+
 FReply FCognitiveEditorTools::UploadDynamics(FString LevelName)
 {
 	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::UploadDynamics called for level %s"), *LevelName);
@@ -2579,53 +2630,21 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 {
 	// Notify individual scene upload completion for progress tracking
 	OnIndividualSceneUploadComplete.ExecuteIfBound(Request, Response, bWasSuccessful, LevelName);
-
-	if (bWasSuccessful)
+	if (GWorld) LevelName.RemoveFromStart(GWorld->StreamingLevelsPrefix);
+	RegisterBulkScene(*this, LevelName);
+	WizardUploadResponseCode = Response.IsValid() ? Response->GetResponseCode() : 0;
+	if (!bWasSuccessful || !Response.IsValid())
 	{
-		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted response code " + FString::FromInt(Response->GetResponseCode()));
-	}
-	else
-	{
-		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted failed to connect");
-		WizardUploadError = "FCognitiveEditorTools::OnUploadSceneCompleted failed to connect";
-		WizardUploadResponseCode = 0;
-		if (UploadingScenesFromFullSetup)
-		{
-			TotalLevelsToUpload--;
-			if (TotalLevelsToUpload <= 0)
-			{
-				WizardUploading = false;
-				OnUploadAllSceneGeometry.ExecuteIfBound(false);
-				UploadingScenesFromFullSetup = false;
-			}
-		}
-		else
-		{
-			WizardUploading = false;
-		}
+		FailSceneMetadata(*this, LevelName, TEXT("Scene upload failed to connect"));
 		return;
 	}
-	WizardUploadResponseCode = Response->GetResponseCode();
 
-	if (bWasSuccessful && Response->GetResponseCode() < 300)
+	if (WizardUploadResponseCode >= 200 && WizardUploadResponseCode < 300)
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted Successful Upload");
 		ShowNotification(TEXT("Scene Uploaded Successfully"));
-		//UE_LOG(LogTemp, Warning, TEXT("Upload Scene Response is %s"), *Response->GetContentAsString());
-
-		UWorld* myworld = GWorld->GetWorld();
-		if (myworld == NULL)
-		{
-			UE_LOG(LogTemp, Error, TEXT("Upload Scene - No world!"));
-			WizardUploadError = "FCognitiveEditorTools::OnUploadSceneCompleted no world";
-			return;
-		}
-
-
-		//FString currentSceneName = myworld->GetMapName();
-		LevelName.RemoveFromStart(myworld->StreamingLevelsPrefix);
-
-		FString responseNoQuotes = *Response->GetContentAsString().Replace(TEXT("\""), TEXT(""));
+		FString responseNoQuotes = Response->GetContentAsString().Replace(TEXT("\""), TEXT(""));
+		responseNoQuotes.TrimStartAndEndInline();
 
 		if (responseNoQuotes.Len() > 0)
 		{
@@ -2634,8 +2653,11 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 
 			TSharedPtr<FJsonObject> PropertiesObject = MakeShared<FJsonObject>();
 			TSharedPtr<FEditorSceneData> sceneData = GetSceneData(LevelName);
-			PropertiesObject->SetNumberField("sceneVersion", sceneData->VersionNumber);
-			USegmentAnalytics::Get()->TrackEvent("UploadingSceneComplete_SceneUploadPage", PropertiesObject);
+			if (sceneData.IsValid())
+			{
+				PropertiesObject->SetNumberField("sceneVersion", sceneData->VersionNumber);
+				USegmentAnalytics::Get()->TrackEvent("UploadingSceneComplete_SceneUploadPage", PropertiesObject);
+			}
 		}
 		else
 		{
@@ -2643,10 +2665,7 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 			ReadSceneDataFromFile();
 		}
 		ConfigFileHasChanged = true;
-		if (WizardUploading)
-		{
-			SceneNameVersionRequest(LevelName); // _Game_Maps_VRMap
-		}
+		SceneNameVersionRequest(LevelName);
 	}
 	else
 	{
@@ -2654,30 +2673,27 @@ void FCognitiveEditorTools::OnUploadSceneCompleted(FHttpRequestPtr Request, FHtt
 		USegmentAnalytics::Get()->TrackEvent(responseCodeStr, "SceneSetupSceneUploadPage");
 
 		ShowNotification(TEXT("Failed to upload scene"), false);
-		WizardUploadError = "FCognitiveEditorTools::OnUploadSceneCompleted Failed to Upload. Response code " + FString::FromInt(Response->GetResponseCode());
-		GLog->Log("FCognitiveEditorTools::OnUploadSceneCompleted Failed to Upload. Response code " + FString::FromInt(Response->GetResponseCode()));
-		if (UploadingScenesFromFullSetup)
-		{
-			TotalLevelsToUpload--;
-			if (TotalLevelsToUpload <= 0)
-			{
-				WizardUploading = false;
-				OnUploadAllSceneGeometry.ExecuteIfBound(false);
-				UploadingScenesFromFullSetup = false;
-			}
-		}
-		else
-		{
-			WizardUploading = false;
-		}
+		FailSceneMetadata(*this, LevelName, TEXT("Scene upload failed. Response code ") + FString::FromInt(WizardUploadResponseCode));
 	}
 }
 
 void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
-	OutstandingDynamicUploadRequests--;
+	OutstandingDynamicUploadRequests = FMath::Max(0, OutstandingDynamicUploadRequests - 1);
+	const bool bObjectUploaded = bWasSuccessful && Response.IsValid() && Response->GetResponseCode() >= 200 && Response->GetResponseCode() < 300;
+	WizardUploadResponseCode = Response.IsValid() ? Response->GetResponseCode() : 0;
+	if (int32* RemainingRequests = PendingBulkDynamicRequests.Find(LevelName))
+	{
+		if (!bObjectUploaded)
+		{
+			FailedBulkDynamics.Add(LevelName);
+			WizardUploadError = TEXT("Dynamic upload failed. Response code ") + FString::FromInt(WizardUploadResponseCode);
+		}
+		if (--(*RemainingRequests) <= 0) CompleteBulkScene(*this, LevelName, !FailedBulkDynamics.Contains(LevelName));
+		return;
+	}
 
-	if (bWasSuccessful)
+	if (bWasSuccessful && Response.IsValid())
 	{
 		GLog->Log("FCognitiveEditorTools::OnUploadObjectCompleted response code " + FString::FromInt(Response->GetResponseCode()));
 		ShowNotification(TEXT("Dynamic Uploaded Successfully"));
@@ -2694,7 +2710,7 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 
 	WizardUploadResponseCode = Response->GetResponseCode();
 
-	if (bWasSuccessful && Response->GetResponseCode() < 300)
+	if (bObjectUploaded)
 	{
 		FString responseNoQuotes = *Response->GetContentAsString().Replace(TEXT("\""), TEXT(""));
 		//GLog->Log("Upload Dynamic Complete " + Request->GetURL());
@@ -2717,15 +2733,6 @@ void FCognitiveEditorTools::OnUploadObjectCompleted(FHttpRequestPtr Request, FHt
 		{
 			//upload manifest
 			UploadDynamicsManifest(LevelName); // _Game_Maps_VRMap
-		}
-		if (UploadingScenesFromFullSetup)
-		{
-			TotalLevelsToUpload--;
-			if (TotalLevelsToUpload <= 0)
-			{
-				OnUploadAllSceneGeometry.ExecuteIfBound(true);
-				UploadingScenesFromFullSetup = false;
-			}
 		}
 	}
 }
@@ -3433,6 +3440,10 @@ void FCognitiveEditorTools::SceneNameVersionRequest(const FString& LevelName)
 	{
 		SceneVersionRequest(*scenedata);
 	}
+	else
+	{
+		FailSceneMetadata(*this, LevelName, TEXT("Uploaded scene has no matching scene mapping"));
+	}
 }
 
 FReply FCognitiveEditorTools::OpenURL(FString url)
@@ -3646,17 +3657,17 @@ void FCognitiveEditorTools::ReadSceneDataFromFile()
 
 void FCognitiveEditorTools::SceneVersionRequest(const FEditorSceneData& data)
 {
+	const FString LevelName = AdjustPathName(data.Path.IsEmpty() ? data.Name : data.Path + TEXT("/") + data.Name);
 	if (!HasDeveloperKey())
 	{
-		GLog->Log("FCognitiveTools::SceneVersionRequest no developer key set!");
-		//auto httprequest = RequestAuthTokenCallback();
-
+		FailSceneMetadata(*this, LevelName, TEXT("Scene metadata request has no developer key"));
 		return;
 	}
 
 	auto HttpRequest = FHttpModule::Get().CreateRequest();
 
 	HttpRequest->SetURL(GetSceneVersion(data.Id));
+	HttpRequest->SetVerb(TEXT("GET"));
 
 	HttpRequest->SetHeader("X-HTTP-Method-Override", TEXT("GET"));
 	//HttpRequest->SetHeader("Authorization", TEXT("Data " + FAnalyticsCognitive3D::Get().EditorAuthToken));
@@ -3664,248 +3675,126 @@ void FCognitiveEditorTools::SceneVersionRequest(const FEditorSceneData& data)
 	HttpRequest->SetHeader("Authorization", AuthValue);
 	HttpRequest->SetHeader("Content-Type", "application/json");
 
-	//create levelname with path included
-	FString LevelName = data.Name;
-	FString LevelPath = data.Path;
-	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::SceneVersionRequest LevelName %s"), *LevelName);
-	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::SceneVersionRequest LevelPath %s"), *LevelPath);
-
-	if (LevelPath.Len() > 0)
-	{
-		LevelName = LevelPath + "/" + LevelName;
-	}
-	//LevelName = LevelName.Replace(TEXT("/"), TEXT("_")); //replace / with _ for url
-	LevelName = AdjustPathName(LevelName); //adjust path name to be valid for url
 	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::SceneVersionRequest %s"), *LevelName);
 	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FCognitiveEditorTools::SceneVersionResponse, LevelName); //data.Name old input. _Game_Maps_VRMap
-	HttpRequest->ProcessRequest();
+	if (!HttpRequest->ProcessRequest())
+	{
+		FailSceneMetadata(*this, LevelName, TEXT("Scene metadata request could not start"));
+	}
 }
 
 void FCognitiveEditorTools::SceneVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString LevelName)
 {
-	UE_LOG(LogTemp, Warning, TEXT("FCognitiveEditorTools::SceneVersionResponse %s"), *LevelName);
-
-	if (bWasSuccessful)
-		GLog->Log("FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode()));
-	else
+	WizardUploadResponseCode = Response.IsValid() ? Response->GetResponseCode() : 0;
+	if (!bWasSuccessful || !Response.IsValid() || WizardUploadResponseCode < 200 || WizardUploadResponseCode >= 300)
 	{
-		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::SceneVersionResponse failed to connect"));
-		WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse failed to connect";
-		WizardUploadResponseCode = 0;
-		if (UploadingScenesFromFullSetup)
-		{
-			TotalLevelsToUpload--;
-			if (TotalLevelsToUpload <= 0)
-			{
-				WizardUploading = false;
-				OnUploadAllSceneGeometry.ExecuteIfBound(false);
-				UploadingScenesFromFullSetup = false;
-			}
-		}
-		else
-		{
-			WizardUploading = false;
-		}
+		FailSceneMetadata(*this, LevelName, TEXT("Scene metadata request failed. Response code ") + FString::FromInt(WizardUploadResponseCode));
 		return;
 	}
-
-	WizardUploadResponseCode = Response->GetResponseCode();
-
-	if (WizardUploadResponseCode >= 500)
-	{
-		//internal server error
-		UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::SceneVersionResponse %d, internal server error"), Response->GetResponseCode());
-		WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode());
-		if (UploadingScenesFromFullSetup)
-		{
-			TotalLevelsToUpload--;
-			if (TotalLevelsToUpload <= 0)
-			{
-				WizardUploading = false;
-				OnUploadAllSceneGeometry.ExecuteIfBound(false);
-				UploadingScenesFromFullSetup = false;
-			}
-		}
-		return;
-	}
-	if (WizardUploadResponseCode >= 400)
-	{
-		if (WizardUploadResponseCode == 401)
-		{
-			//not authorized or scene id does not exist
-			UE_LOG(LogTemp, Error, TEXT("FCognitiveEditorTools::SceneVersionResponse error code %d, not authorized or scene doesn't exist!"), Response->GetResponseCode());
-			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode()) + "\nThe Developer Key: " + DeveloperKey + " does not have access to the scene";
-		}
-		else
-		{
-			//maybe no scene?
-			UE_LOG(LogTemp, Error, TEXT("FCognitiveTools::SceneVersionResponse error code %d. Maybe no scene?"), Response->GetResponseCode());
-			WizardUploadError = "FCognitiveEditorTools::SceneVersionResponse response code " + FString::FromInt(Response->GetResponseCode());
-		}
-		if (UploadingScenesFromFullSetup)
-		{
-			TotalLevelsToUpload--;
-			if (TotalLevelsToUpload <= 0)
-			{
-				WizardUploading = false;
-				OnUploadAllSceneGeometry.ExecuteIfBound(false);
-				UploadingScenesFromFullSetup = false;
-			}
-		}
-		else
-		{
-			WizardUploading = false;
-		}
-		return;
-	}
-	WizardUploadError = "";
-
-	//parse response content to json
 
 	TSharedPtr<FJsonObject> JsonSceneSettings;
-
-	TSharedRef<TJsonReader<>>Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
-	if (FJsonSerializer::Deserialize(Reader, JsonSceneSettings))
+	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
+	const TArray<TSharedPtr<FJsonValue>>* Versions = nullptr;
+	if (!FJsonSerializer::Deserialize(Reader, JsonSceneSettings) || !JsonSceneSettings.IsValid() ||
+		!JsonSceneSettings->TryGetArrayField(TEXT("versions"), Versions))
 	{
-		//get the latest version of the scene
-		int32 versionNumber = 0;
-		int32 versionId = 0;
-		TArray<TSharedPtr<FJsonValue>> versions = JsonSceneSettings->GetArrayField("versions");
-		for (int32 i = 0; i < versions.Num(); i++) {
+		FailSceneMetadata(*this, LevelName, TEXT("Scene metadata response has no valid versions array"));
+		return;
+	}
 
-			int32 tempversion = versions[i]->AsObject()->GetNumberField("versionnumber");
-			if (tempversion > versionNumber)
-			{
-				versionNumber = tempversion;
-				versionId = versions[i]->AsObject()->GetNumberField("id");
-			}
-		}
-		if (versionNumber + versionId == 0)
+	int32 VersionNumber = 0;
+	int32 VersionId = 0;
+	for (const TSharedPtr<FJsonValue>& Value : *Versions)
+	{
+		const TSharedPtr<FJsonObject>* Version = nullptr;
+		double Number = 0;
+		double Id = 0;
+		if (!Value.IsValid() || !Value->TryGetObject(Version) || !Version || !Version->IsValid() ||
+			!(*Version)->TryGetNumberField(TEXT("versionNumber"), Number) || !(*Version)->TryGetNumberField(TEXT("id"), Id) ||
+			!FMath::IsFinite(Number) || !FMath::IsFinite(Id) || Number < 1 || Number > MAX_int32 || Id < 1 || Id > MAX_int32 ||
+			Number != static_cast<int32>(Number) || Id != static_cast<int32>(Id)) continue;
+		if (Number > VersionNumber)
 		{
-			GLog->Log("FCognitiveTools::SceneVersionResponse couldn't find a latest version in SceneVersion data");
-			WizardUploadError = "FCognitiveTools::SceneVersionResponse couldn't find a latest version in SceneVersion data";
-			return;
-		}
-
-		//check that there is scene data in ini
-		TSharedPtr<FEditorSceneData> currentSceneData = GetSceneData(LevelName); // _Game_Maps_VRMap
-		if (!currentSceneData.IsValid())
-		{
-			GLog->Log("FCognitiveTools::SceneVersionResponse can't find current scene data in ini files");
-			WizardUploadError = "FCognitiveTools::SceneVersionResponse can't find current scene data in ini files";
-			return;
-		}
-
-		//get array of scene data
-		TArray<FString> iniscenedata;
-
-		FString C3DSettingsPath = GetSettingsFilePath();
-		GConfig->LoadFile(C3DSettingsPath);
-		GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, C3DSettingsPath);
-		
-		if (iniscenedata.Num() == 0)
-		{
-			GLog->Log("FCognitiveTools::SceneVersionResponse can't find scene data in C3D ini files");
-			WizardUploadError = "FCognitiveTools::SceneVersionResponse can't find scene data in ini files";
-
-
-			FString TestSyncFile = FPaths::Combine(*(FPaths::ProjectDir()), TEXT("Config/DefaultEngine.ini"));
-
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
-			const FString NormalizedTestSyncFile = GConfig->NormalizeConfigIniPath(TestSyncFile);
-			GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, NormalizedTestSyncFile);
-			GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, C3DSettingsPath);
-			GConfig->Flush(false, NormalizedTestSyncFile);
-#else
-			GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, TestSyncFile);
-			GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, C3DSettingsPath);
-			GConfig->Flush(false, TestSyncFile);
-#endif
-		}
-		//GLog->Log("found this many scene datas in ini " + FString::FromInt(iniscenedata.Num()));
-		//GLog->Log("looking for scene " + currentSceneData->Name);
-
-		int32 lastVersionNumber = 0;
-
-		//update current scene
-		for (int32 i = 0; i < iniscenedata.Num(); i++)
-		{
-			//GLog->Log("looking at data " + iniscenedata[i]);
-
-			TArray<FString> entryarray;
-			iniscenedata[i].ParseIntoArray(entryarray, TEXT(","), true);
-
-			if (entryarray[0] == currentSceneData->Name && entryarray[1] == currentSceneData->Path && versionNumber > lastVersionNumber) //need to also check path to write to the correct scene
-			{
-				lastVersionNumber = versionNumber;
-				iniscenedata[i] = entryarray[0] /*Name*/ + "," + entryarray[1] /*Path*/ + "," + entryarray[2] /*Id*/ + "," + FString::FromInt(versionNumber) + "," + FString::FromInt(versionId);
-				UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::SceneVersionResponse overwriting scene data to append versionnumber %d and versionid %d"), versionNumber, versionId);
-				UE_LOG(LogTemp, Log, TEXT("FCognitiveToolsCustomization::SceneVersionResponse scene data: %s"), *iniscenedata[i]);
-				//GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse overwriting scene data to append versionnumber and versionid");
-				//GLog->Log(iniscenedata[i]);
-			}
-			else
-			{
-				//GLog->Log("found scene " + entryarray[0]);
-			}
-		}
-
-		GLog->Log("FCognitiveTools::SceneVersionResponse successful. Write scene data to config file");
-
-		GConfig->RemoveKey(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), C3DSettingsPath);
-		GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), iniscenedata, C3DSettingsPath);
-
-		GConfig->Flush(false, C3DSettingsPath);
-
-		ConfigFileHasChanged = true;
-		ReadSceneDataFromFile();
-
-		if (WizardUploading)
-		{
-			if (UploadingScenesFromFullSetup)
-			{
-				if (UploadingDynamicsFromFullSetup)
-				{
-					UploadDynamics(LevelName); // _Game_Maps_VRMap
-				}
-				else
-				{
-					TotalLevelsToUpload--;
-					if (TotalLevelsToUpload <= 0)
-					{
-						OnUploadAllSceneGeometry.ExecuteIfBound(true);
-						UploadingScenesFromFullSetup = false;
-					}
-				}
-			}
-			else
-			{
-				UploadDynamics(LevelName); // _Game_Maps_VRMap
-			}
+			VersionNumber = static_cast<int32>(Number);
+			VersionId = static_cast<int32>(Id);
 		}
 	}
-	else
+	if (VersionNumber == 0 || VersionId == 0)
 	{
-		GLog->Log("FCognitiveToolsCustomization::SceneVersionResponse failed to parse json response");
-		if (WizardUploading)
+		FailSceneMetadata(*this, LevelName, TEXT("Scene metadata response has no valid current version"));
+		return;
+	}
+
+	TSharedPtr<FEditorSceneData> CurrentSceneData = GetSceneData(LevelName);
+	if (!CurrentSceneData.IsValid())
+	{
+		FailSceneMetadata(*this, LevelName, TEXT("Scene metadata has no matching scene mapping"));
+		return;
+	}
+
+	TArray<FString> IniSceneData;
+	FString SettingsPath = GetSettingsFilePath();
+	GConfig->LoadFile(SettingsPath);
+	GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), IniSceneData, SettingsPath);
+	if (IniSceneData.Num() == 0)
+	{
+		FString LegacyPath = FPaths::Combine(FPaths::ProjectDir(), TEXT("Config/DefaultEngine.ini"));
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 2
+		LegacyPath = GConfig->NormalizeConfigIniPath(LegacyPath);
+#endif
+		GConfig->GetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), IniSceneData, LegacyPath);
+	}
+
+	bool bUpdated = false;
+	for (FString& Entry : IniSceneData)
+	{
+		TArray<FString> Parts;
+		Entry.ParseIntoArray(Parts, TEXT(","), false);
+		if (Parts.Num() >= 3 && Parts[0] == CurrentSceneData->Name && Parts[1] == CurrentSceneData->Path && Parts[2] == CurrentSceneData->Id)
 		{
-			WizardUploadError = "FCognitiveToolsCustomization::SceneVersionResponse failed to parse json response";
-			WizardUploadResponseCode = 0;
-			if (UploadingScenesFromFullSetup)
+			if (Parts.Num() == 5 && FCString::Atoi(*Parts[3]) > VersionNumber)
 			{
-				TotalLevelsToUpload--;
-				if (TotalLevelsToUpload <= 0)
-				{
-					WizardUploading = false;
-					OnUploadAllSceneGeometry.ExecuteIfBound(false);
-					UploadingScenesFromFullSetup = false;
-				}
+				bUpdated = true;
+				continue;
 			}
-			else
+			Entry = Parts[0] + TEXT(",") + Parts[1] + TEXT(",") + Parts[2] + TEXT(",") +
+				FString::FromInt(VersionNumber) + TEXT(",") + FString::FromInt(VersionId);
+			bUpdated = true;
+		}
+	}
+	if (!bUpdated)
+	{
+		FailSceneMetadata(*this, LevelName, TEXT("Scene metadata has no matching scene mapping in settings"));
+		return;
+	}
+
+	GConfig->SetArray(TEXT("/Script/Cognitive3D.Cognitive3DSceneSettings"), TEXT("SceneData"), IniSceneData, SettingsPath);
+	GConfig->Flush(false, SettingsPath);
+	ConfigFileHasChanged = true;
+	ReadSceneDataFromFile();
+	WizardUploadError = TEXT("");
+
+	if (PendingBulkScenes.Contains(LevelName))
+	{
+		if (PendingBulkDynamicRequests.Contains(LevelName)) return;
+		if (UploadingDynamicsFromFullSetup)
+		{
+			const int32 RequestsBefore = OutstandingDynamicUploadRequests;
+			UploadDynamics(LevelName);
+			const int32 SceneRequests = OutstandingDynamicUploadRequests - RequestsBefore;
+			if (SceneRequests > 0)
 			{
-				WizardUploading = false;
+				PendingBulkDynamicRequests.Add(LevelName, SceneRequests);
+				WizardUploading = true;
+				return;
 			}
 		}
+		CompleteBulkScene(*this, LevelName, true);
+		if (bBulkSceneBatchActive) WizardUploading = true;
+	}
+	else if (WizardUploading && !bBulkSceneBatchActive)
+	{
+		UploadDynamics(LevelName);
 	}
 }
 
@@ -4029,6 +3918,11 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 	FString ReAdjustedLevelName = sceneName.Replace(*SplitCharacter, TEXT("/"));
 	TArray<FString> PathParts;
 	ReAdjustedLevelName.ParseIntoArray(PathParts, TEXT("/"), true);
+	if (PathParts.Num() == 0 || sceneKey.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("SaveSceneData requires a scene name and scene ID"));
+		return;
+	}
 	FString ShortName = PathParts.Last();
 	FString PathName = "/";
 	for (int32 i = 0; i < PathParts.Num() - 1; i++)
@@ -4039,8 +3933,7 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 
 	UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::SaveSceneData - SceneName: %s, SceneKey: %s, ShortName: %s, PathName: %s"), *sceneName, *sceneKey, *ShortName, *PathName);
 
-	//FString keyValue = sceneName + "," + sceneKey;
-	FString keyValue = ShortName + "," + PathName + "," + sceneKey;
+	FString keyValue = ShortName + "," + PathName + "," + sceneKey + ",1,0";
 
 	TArray<FString> scenePairs = TArray<FString>();
 
@@ -4067,17 +3960,18 @@ void FCognitiveEditorTools::SaveSceneData(FString sceneName, FString sceneKey)
 	bool didSetKey = false;
 	for (int32 i = 0; i < scenePairs.Num(); i++)
 	{
-		FString name;
-		FString key;
 		TArray<FString> keyParts;
-		scenePairs[i].ParseIntoArray(keyParts, TEXT(","), true);
-		//scenePairs[i].Split(TEXT(","), &name, &key);
-		UE_LOG(LogTemp, Log, TEXT("FCognitiveEditorTools::SaveSceneData - checking scene %s with path %s and key %s"), *keyParts[0], *keyParts[1], *keyParts[2]);
-		if (*keyParts[0] == ShortName && *keyParts[1] == PathName) // *name == scenename <- old
+		scenePairs[i].ParseIntoArray(keyParts, TEXT(","), false);
+		if (keyParts.Num() < 3) continue;
+		if (keyParts[0] == ShortName && keyParts[1] == PathName)
 		{
+			if (keyParts.Num() == 5 && keyParts[2] == sceneKey)
+			{
+				keyValue = ShortName + "," + PathName + "," + sceneKey + "," + keyParts[3] + "," + keyParts[4];
+			}
 			scenePairs[i] = keyValue;
 			didSetKey = true;
-			GLog->Log("FCognitiveToolsCustomization::SaveSceneData - found and replace key for scene " + name + " new value " + keyValue);
+			GLog->Log("FCognitiveToolsCustomization::SaveSceneData - updated scene " + ShortName);
 			break;
 		}
 	}

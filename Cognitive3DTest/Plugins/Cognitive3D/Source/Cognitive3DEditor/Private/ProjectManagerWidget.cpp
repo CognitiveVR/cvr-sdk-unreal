@@ -2441,25 +2441,14 @@ void SProjectManagerWidget::AdvanceUploadProgress(FHttpRequestPtr Request, FHttp
 
 	if (CompletedUploads >= TotalLevelsToUpload)
 	{
-		bIsUploading = false;
 		if (FailedUploads > 0)
 		{
-			CurrentUploadStatus = FString::Printf(TEXT("Uploads completed with %d failure(s)."), FailedUploads);
-			UE_LOG(LogTemp, Warning, TEXT("All uploads completed with failures, hiding throbber"));
+			CurrentUploadStatus = FString::Printf(TEXT("Scene geometry received with %d failure(s); finishing scene versions..."), FailedUploads);
 		}
 		else
 		{
-			CurrentUploadStatus = TEXT("All uploads completed!");
-			UE_LOG(LogTemp, Warning, TEXT("All uploads completed, hiding throbber"));
+			CurrentUploadStatus = TEXT("Scene geometry received; finishing scene versions...");
 		}
-
-		// Show final completion notification
-		const FString CompletionText = FailedUploads > 0
-			? FString::Printf(TEXT("Uploads completed with %d failure(s)."), FailedUploads)
-			: FString(TEXT("All levels uploaded successfully!"));
-		FNotificationInfo CompletionInfo(FText::FromString(CompletionText));
-		CompletionInfo.ExpireDuration = 5.0f;
-		FSlateNotificationManager::Get().AddNotification(CompletionInfo);
 	}
 }
 
@@ -2489,12 +2478,25 @@ void SProjectManagerWidget::AdvanceDynamicsUploadProgress()
 
 void SProjectManagerWidget::OnLevelsUploaded(bool bWasSuccessful)
 {
-	
+	bIsUploading = false;
+	if (!bWasSuccessful)
+	{
+		CurrentUploadStatus = TEXT("Scene upload or scene version lookup failed. Check the Output Log.");
+		FCognitiveEditorTools::GetInstance()->ShowNotification(CurrentUploadStatus, false);
+		return;
+	}
+	CurrentUploadStatus = TEXT("All scenes uploaded and scene versions saved.");
+	FCognitiveEditorTools::GetInstance()->ShowNotification(CurrentUploadStatus);
 	if (bWasSuccessful)
 	{
-		if (!FCognitiveEditorTools::GetInstance()->UploadingDynamicsFromFullSetup)
+		int32 DynamicSceneCount = 0;
+		for (const auto& Pair : DynamicObjecstMap)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("SProjectManagerWidget::OnLevelsUploaded Uploading dynamics from full setup is disabled, skipping dynamics upload"));
+			if (Pair.Value.Num() > 0) ++DynamicSceneCount;
+		}
+		if (!FCognitiveEditorTools::GetInstance()->UploadingDynamicsFromFullSetup || DynamicSceneCount == 0)
+		{
+			UE_LOG(LogTemp, Log, TEXT("No dynamic manifests need uploading; scene upload is complete."));
 			FCognitiveEditorTools::GetInstance()->WizardUploading = false;
 			RestartEditor();
 			return;
@@ -2502,7 +2504,8 @@ void SProjectManagerWidget::OnLevelsUploaded(bool bWasSuccessful)
 		UE_LOG(LogTemp, Warning, TEXT("SProjectManagerWidget::OnLevelsUploaded called with %d dynamics to upload"), TotalLevelCount);
 		
 		// Start dynamics upload throbber
-		TotalDynamicsToUpload = DynamicObjecstMap.Num();
+		TotalDynamicsToUpload = DynamicSceneCount;
+		FCognitiveEditorTools::GetInstance()->TotalSetOfDynamicsToUpload = DynamicSceneCount;
 		CompletedDynamicsUploads = 0;
 		bIsUploadingDynamics = true;
 		bIsUploading = false; // Transition from scene to dynamics upload
@@ -2529,6 +2532,7 @@ void SProjectManagerWidget::OnLevelsUploaded(bool bWasSuccessful)
 		//go through the map for <path, dynamics> and upload each dynamics manifest
 		for (const TPair<FString, TArray<UDynamicObject*>>& Pair : DynamicObjecstMap)
 		{
+			if (Pair.Value.Num() == 0) continue;
 			// Update progress
 			AdvanceDynamicsUploadProgress();
 
