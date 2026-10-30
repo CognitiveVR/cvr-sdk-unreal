@@ -146,6 +146,7 @@
 		FString AttributionKey = "";
 
 		FString GetSettingsFilePathRuntime() const;
+		double GetPositionUnitScale();
 		FString GetKeysFilePathRuntime() const;
 
 		FString GetCurrentSceneId();
@@ -156,6 +157,7 @@
 		
 		//used to identify when a scene changes and session properties need to be resent
 		FString CurrentTrackingSceneId;
+		double PositionUnitScale = 0.0;
 		//used to see id the current scene has changed and needs to search for new sceneId
 		TSharedPtr<FSceneData> LastSceneData;
 		//holds scenedata for all open scenes (including sublevels). used to get the latest data after a sublevel is loaded

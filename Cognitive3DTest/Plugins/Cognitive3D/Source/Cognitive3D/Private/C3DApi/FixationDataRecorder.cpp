@@ -84,6 +84,7 @@ void FFixationDataRecorder::SendData(bool copyDataToCache)
 	wholeObj->SetStringField("formatversion", "1.0");
 
 	TArray<TSharedPtr<FJsonValue>> dataArray;
+	const double unitScale = cog->GetPositionUnitScale();
 	for (int32 i = 0; i != Fixations.Num(); ++i)
 	{
 		//write fixation to json
@@ -93,17 +94,17 @@ void FFixationDataRecorder::SendData(bool copyDataToCache)
 
 		fixObj->SetNumberField("time", d);
 		fixObj->SetNumberField("duration", Fixations[i].DurationMs);
-		fixObj->SetNumberField("maxradius", Fixations[i].MaxRadius);
+		fixObj->SetNumberField("maxradius", Fixations[i].MaxRadius * unitScale);
 
 		if (Fixations[i].IsLocal)
 		{
 			TArray<TSharedPtr<FJsonValue>> posArray;
 			TSharedPtr<FJsonValueNumber> JsonValue;
-			JsonValue = MakeShareable(new FJsonValueNumber(-Fixations[i].LocalPosition.X)); //right
+			JsonValue = MakeShareable(new FJsonValueNumber(-Fixations[i].LocalPosition.X * unitScale)); //right
 			posArray.Add(JsonValue);
-			JsonValue = MakeShareable(new FJsonValueNumber(Fixations[i].LocalPosition.Z)); //up
+			JsonValue = MakeShareable(new FJsonValueNumber(Fixations[i].LocalPosition.Z * unitScale)); //up
 			posArray.Add(JsonValue);
-			JsonValue = MakeShareable(new FJsonValueNumber(Fixations[i].LocalPosition.Y));  //forward
+			JsonValue = MakeShareable(new FJsonValueNumber(Fixations[i].LocalPosition.Y * unitScale));  //forward
 			posArray.Add(JsonValue);
 
 			fixObj->SetArrayField("p", posArray);
@@ -114,11 +115,11 @@ void FFixationDataRecorder::SendData(bool copyDataToCache)
 		{
 			TArray<TSharedPtr<FJsonValue>> posArray;
 			TSharedPtr<FJsonValueNumber> JsonValue;
-			JsonValue = MakeShareable(new FJsonValueNumber(-Fixations[i].WorldPosition.X)); //right
+			JsonValue = MakeShareable(new FJsonValueNumber(-Fixations[i].WorldPosition.X * unitScale)); //right
 			posArray.Add(JsonValue);
-			JsonValue = MakeShareable(new FJsonValueNumber(Fixations[i].WorldPosition.Z)); //up
+			JsonValue = MakeShareable(new FJsonValueNumber(Fixations[i].WorldPosition.Z * unitScale)); //up
 			posArray.Add(JsonValue);
-			JsonValue = MakeShareable(new FJsonValueNumber(Fixations[i].WorldPosition.Y));  //forward
+			JsonValue = MakeShareable(new FJsonValueNumber(Fixations[i].WorldPosition.Y * unitScale));  //forward
 			posArray.Add(JsonValue);
 
 			fixObj->SetArrayField("p", posArray);

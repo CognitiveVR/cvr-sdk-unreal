@@ -30,6 +30,7 @@ void UCognitive3DSettings::ReadConfigSettings()
 	GConfig->GetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("SensorDataLimit"), SensorDataLimit, CustomConfigFilePath);
 	GConfig->GetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("SensorAutoTimer"), SensorAutoTimer, CustomConfigFilePath);
 	GConfig->GetBool(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("AutomaticallySetTrackingScene"), AutomaticallySetTrackingScene, CustomConfigFilePath);
+	GConfig->GetBool(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("MetricSceneUnits"), MetricSceneUnits, CustomConfigFilePath);
 }
 
 void UCognitive3DSettings::WriteConfigSettings()
@@ -48,6 +49,7 @@ void UCognitive3DSettings::WriteConfigSettings()
 	GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("SensorDataLimit"), SensorDataLimit, CustomConfigFilePath);
 	GConfig->SetInt(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("SensorAutoTimer"), SensorAutoTimer, CustomConfigFilePath);
 	GConfig->SetBool(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("AutomaticallySetTrackingScene"), AutomaticallySetTrackingScene, CustomConfigFilePath);
+	GConfig->SetBool(TEXT("/Script/Cognitive3D.Cognitive3DSettings"), TEXT("MetricSceneUnits"), MetricSceneUnits, CustomConfigFilePath);
 	// ... repeat for each setting
 
 	GConfig->Flush(false, CustomConfigFilePath);

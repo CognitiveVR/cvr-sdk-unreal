@@ -491,6 +491,8 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	{
 		AutomaticallySetTrackingScene = FCString::ToBool(*ValueReceived);
 	}
+	PositionUnitScale = 0.0;
+	GetPositionUnitScale();
 
 	if (ApplicationKey.Len() == 0)
 	{
@@ -1086,6 +1088,18 @@ TSharedPtr<FSceneData> FAnalyticsProviderCognitive3D::GetSceneData(FString scene
 	}
 	FCognitiveLog::Warning("FAnalyticsProviderCognitive3D::GetSceneData couldn't find SceneData for scene " + scenename);
 	return NULL;
+}
+
+double FAnalyticsProviderCognitive3D::GetPositionUnitScale()
+{
+	if (PositionUnitScale <= 0.0)
+	{
+		const FString C3DSettingsPath = GetSettingsFilePathRuntime();
+		GConfig->LoadFile(C3DSettingsPath);
+		const FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "MetricSceneUnits", false);
+		PositionUnitScale = ValueReceived.Len() > 0 && FCString::ToBool(*ValueReceived) ? 0.01 : 1.0;
+	}
+	return PositionUnitScale;
 }
 
 FString FAnalyticsProviderCognitive3D::GetSettingsFilePathRuntime() const

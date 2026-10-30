@@ -185,9 +185,10 @@ void FCustomEventRecorder::Send(FString category, FVector Position, TSharedPtr<F
 
 	double ts = FUtil::GetTimestamp();
 	TArray< TSharedPtr<FJsonValue> > pos;
-	pos.Add(MakeShareable(new FJsonValueNumber(-Position.X)));
-	pos.Add(MakeShareable(new FJsonValueNumber(Position.Z)));
-	pos.Add(MakeShareable(new FJsonValueNumber(Position.Y)));
+	const double unitScale = cog->GetPositionUnitScale();
+	pos.Add(MakeShareable(new FJsonValueNumber(-Position.X * unitScale)));
+	pos.Add(MakeShareable(new FJsonValueNumber(Position.Z * unitScale)));
+	pos.Add(MakeShareable(new FJsonValueNumber(Position.Y * unitScale)));
 
 	TSharedPtr<FJsonObject>eventObject = MakeShareable(new FJsonObject);
 	eventObject->SetStringField("name", category);

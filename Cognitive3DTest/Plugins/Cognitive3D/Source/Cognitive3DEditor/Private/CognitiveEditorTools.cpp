@@ -3,6 +3,7 @@
 */
 
 #include "CognitiveEditorTools.h"
+#include "CognitiveSceneExportUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 
@@ -918,7 +919,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 			UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
 
 			// Set custom export settings
-			ExportOptions->ExportUniformScale = 1.0f;
+			ExportOptions->ExportUniformScale = CognitiveSceneExportUtils::GetExportUniformScale();
 			ExportOptions->bExportPreviewMesh = true;
 
 			// Texture compression settings
@@ -978,7 +979,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 						UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
 
 						// Set custom export settings
-						ExportOptions->ExportUniformScale = 1.0f;
+						ExportOptions->ExportUniformScale = CognitiveSceneExportUtils::GetExportUniformScale();
 						ExportOptions->bExportPreviewMesh = true;
 
 						// Texture compression settings
@@ -1011,7 +1012,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 						UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
 
 						// Set custom export settings
-						ExportOptions->ExportUniformScale = 1.0f;
+						ExportOptions->ExportUniformScale = CognitiveSceneExportUtils::GetExportUniformScale();
 						ExportOptions->bExportPreviewMesh = true;
 
 						// Texture compression settings
@@ -1108,7 +1109,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 						UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
 
 						// Set custom export settings
-						ExportOptions->ExportUniformScale = 1.0f;
+						ExportOptions->ExportUniformScale = CognitiveSceneExportUtils::GetExportUniformScale();
 						ExportOptions->bExportPreviewMesh = true;
 
 						// Texture compression settings
@@ -1141,7 +1142,7 @@ FProcHandle FCognitiveEditorTools::ExportDynamicObjectArray(TArray<UDynamicObjec
 					UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
 
 					// Set custom export settings
-					ExportOptions->ExportUniformScale = 1.0f;
+					ExportOptions->ExportUniformScale = CognitiveSceneExportUtils::GetExportUniformScale();
 					ExportOptions->bExportPreviewMesh = true;
 
 					// Texture compression settings
@@ -1552,7 +1553,8 @@ FReply FCognitiveEditorTools::UploadSelectedDynamicsManifest(FString LevelName, 
 				}
                 objectManifest += "\"isController\":\"" + isController + "\",";
 				objectManifest += "\"scaleCustom\":[" + FString::SanitizeFloat(scale.X) + "," + FString::SanitizeFloat(scale.Z) + "," + FString::SanitizeFloat(scale.Y) + "],";
-				objectManifest += "\"initialPosition\":[" + FString::SanitizeFloat(-location.X) + "," + FString::SanitizeFloat(location.Z) + "," + FString::SanitizeFloat(location.Y) + "],";
+				const float unitScale = CognitiveSceneExportUtils::GetExportUniformScale();
+				objectManifest += "\"initialPosition\":[" + FString::SanitizeFloat(-location.X * unitScale) + "," + FString::SanitizeFloat(location.Z * unitScale) + "," + FString::SanitizeFloat(location.Y * unitScale) + "],";
 				objectManifest += "\"initialRotation\":[" + FString::SanitizeFloat(-rotation.X) + "," + FString::SanitizeFloat(rotation.Z) + "," + FString::SanitizeFloat(-rotation.Y) + "," + FString::SanitizeFloat(rotation.W) + "]";
 				objectManifest += "},";
 			}
@@ -4262,7 +4264,7 @@ void FCognitiveEditorTools::ExportScene(FString LevelName, TArray<AActor*> actor
 	UGLTFExportOptions* ExportOptions = NewObject<UGLTFExportOptions>();
 
 	// Set custom export settings
-	ExportOptions->ExportUniformScale = 1.0f;
+	ExportOptions->ExportUniformScale = CognitiveSceneExportUtils::GetExportUniformScale();
 	ExportOptions->bExportPreviewMesh = true;
 
 	// Texture compression settings
@@ -4506,7 +4508,7 @@ bool FCognitiveEditorTools::GenerateSettingsJsonFile(const FString& LevelName)
 	FString ShortName = SplitFullPathName.Last();
 
 	//create settings.json
-	FString settingsContents = "{\"scale\":100,\"sdkVersion\":\"" + FString(Cognitive3D_SDK_VERSION) + "\",\"sceneName\":\"" + ShortName + "\"}";
+	FString settingsContents = "{\"scale\":" + FString::FromInt(CognitiveSceneExportUtils::GetSceneSettingsScale()) + ",\"sdkVersion\":\"" + FString(Cognitive3D_SDK_VERSION) + "\",\"sceneName\":\"" + ShortName + "\"}";
 	FString settingsFullPath = FCognitiveEditorTools::GetInstance()->GetSceneExportDirectory(LevelName) + "/settings.json";
 	return FFileHelper::SaveStringToFile(settingsContents, *settingsFullPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	
