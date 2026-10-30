@@ -682,23 +682,13 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 	if (GetAttachParent() != nullptr)
 	{
 		rot = bUseLastPose ? LastRotation.Rotator() : GetAttachParent()->GetComponentRotation();
-    //we check if the snapshot if that of a controller
-    //that way we can add a small rotational offset to correct how controllers looks on SceneExplorer
-    if (IsController)
-    {
-      if (IsRightController)
-      {
-        rot.Yaw -= 45.f;
-      }
-      else
-      {
-        rot.Yaw += 45.f;
-      }
-      rot.Normalize();
-    }
 	}
 	
 	quat = rot.Quaternion();
+	if (IsController)
+	{
+		quat = quat * FQuat(FVector::UpVector, FMath::DegreesToRadians(-90.f));
+	}
 	if ((quat | LastSnapshotQuat) < 0.f) { quat = FQuat(-quat.X, -quat.Y, -quat.Z, -quat.W); }
 	LastSnapshotQuat = quat;
 
