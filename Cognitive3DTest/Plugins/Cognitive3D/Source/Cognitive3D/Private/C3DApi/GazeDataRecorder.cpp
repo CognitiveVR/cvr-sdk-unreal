@@ -25,6 +25,7 @@ FGazeDataRecorder::FGazeDataRecorder()
 void FGazeDataRecorder::StartSession()
 {
 	snapshots.Empty();
+	LastGazeQuat = FQuat::Identity;
 	jsonPart = 1;
 
 	FString ValueReceived;
@@ -218,6 +219,8 @@ void FGazeDataRecorder::SendData(bool copyDataToCache)
 		FRotator adjustedRot = snapshots[i].HMDRotation;
 		adjustedRot.Yaw -= 90;
 		quat = adjustedRot.Quaternion();
+		if ((quat | LastGazeQuat) < 0.f) { quat = FQuat(-quat.X, -quat.Y, -quat.Z, -quat.W); }
+		LastGazeQuat = quat;
 
 		JsonValue = MakeShareable(new FJsonValueNumber(quat.Y));
 		rotArray.Add(JsonValue);

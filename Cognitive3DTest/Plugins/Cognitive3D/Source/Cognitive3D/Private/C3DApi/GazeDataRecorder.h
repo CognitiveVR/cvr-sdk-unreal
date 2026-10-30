@@ -30,6 +30,7 @@ class UCognitive3DBlueprints;
 		void PostSessionEnd();
 
 		TArray< FGazeData> snapshots;
+		FQuat LastGazeQuat = FQuat::Identity;
 		float LastSendTime = -60;
 		int32 GazeBatchSize = 100;
 

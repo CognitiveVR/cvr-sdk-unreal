@@ -640,6 +640,8 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 	}
 	
 	quat = rot.Quaternion();
+	if ((quat | LastSnapshotQuat) < 0.f) { quat = FQuat(-quat.X, -quat.Y, -quat.Z, -quat.W); }
+	LastSnapshotQuat = quat;
 
 	snapshot.rotation = FQuat(quat.X, quat.Z, quat.Y, quat.W);
 
