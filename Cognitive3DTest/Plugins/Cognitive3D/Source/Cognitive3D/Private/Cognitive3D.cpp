@@ -83,7 +83,8 @@ void FAnalyticsCognitive3D::StartupModule()
 	Cognitive3DProvider.Pin()->fixationDataRecorder = new FFixationDataRecorder();
 	Cognitive3DProvider.Pin()->gazeDataRecorder = new FGazeDataRecorder();
 	Cognitive3DProvider.Pin()->boundaryRecorder = new BoundaryRecorder();
-	Cognitive3DProvider.Pin()->localCache = MakeShareable(new FLocalCache(FPaths::Combine(FPaths::ProjectConfigDir(), TEXT("c3dlocal/"))));
+	FString CacheDirectory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Cognitive3D/cache/"));
+	Cognitive3DProvider.Pin()->localCache = MakeShareable(new FLocalCache(CacheDirectory));
 	Cognitive3DProvider.Pin()->network = MakeShareable(new FNetwork());
 	Cognitive3DProvider.Pin()->dynamicObjectManager = new FDynamicObjectManager();
 	FRemoteControlsRecorder::Initialize();
