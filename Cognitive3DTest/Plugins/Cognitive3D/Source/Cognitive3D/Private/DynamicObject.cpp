@@ -228,6 +228,8 @@ void UDynamicObject::OnPreSessionEnd()
 void UDynamicObject::OnPostSessionEnd()
 {
 	HasInitialized = false;
+	dynamicObjectManager = nullptr;
+	ObjectID.Reset();
 }
 
 void UDynamicObject::Initialize()
@@ -392,7 +394,7 @@ void UDynamicObject::Initialize()
 	HasInitialized = true;
 	if (SyncUpdateWithPlayer)
 	{
-		cogProvider->OnCognitiveInterval.AddDynamic(this, &UDynamicObject::UpdateSyncWithPlayer);
+		cogProvider->OnCognitiveInterval.AddUniqueDynamic(this, &UDynamicObject::UpdateSyncWithPlayer);
 	}
 }
 
@@ -403,6 +405,7 @@ TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
 
 void UDynamicObject::UpdateSyncWithPlayer()
 {
+	if (!HasInitialized || !cogProvider.IsValid() || !cogProvider->HasStartedSession()) { return; }
 	if (dynamicObjectManager == nullptr) { return; }
 	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
@@ -779,13 +782,23 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		break;
 	}
 
-	if (!shouldWriteEndSnapshot) { return; }
-	CleanupDynamicObject();
+	if (shouldWriteEndSnapshot) CleanupDynamicObject();
+	if (cogProvider.IsValid())
+	{
+		cogProvider->OnSessionBegin.RemoveDynamic(this, &UDynamicObject::Initialize);
+		cogProvider->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPostSessionEnd);
+		cogProvider->OnPreSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPreSessionEnd);
+		cogProvider->OnCognitiveInterval.RemoveDynamic(this, &UDynamicObject::UpdateSyncWithPlayer);
+	}
+	if (IsValid(GetOwner())) GetOwner()->OnDestroyed.RemoveDynamic(this, &UDynamicObject::HandleOwnerDestroyed);
+	HasInitialized = false;
+	dynamicObjectManager = nullptr;
 }
 
 //also called from cognitive actor broadcast end session
 void UDynamicObject::CleanupDynamicObject()
 {
+	if (!HasInitialized || !cogProvider.IsValid()) { return; }
 	if (IdSourceType == EIdSourceType::PoolId && HasValidPoolId && IDPool != NULL)
 	{
 		if (ObjectID.IsValid() && !ObjectID->Id.IsEmpty())
@@ -795,14 +808,7 @@ void UDynamicObject::CleanupDynamicObject()
 		}
 	}
 
-	cogProvider->OnSessionBegin.RemoveDynamic(this, &UDynamicObject::Initialize);
-	cogProvider->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPostSessionEnd);
-	cogProvider->OnPreSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPreSessionEnd);
-	if (GetOwner() != NULL)
-	{
-		GetOwner()->OnDestroyed.RemoveDynamic(this, &UDynamicObject::HandleOwnerDestroyed);
-	}
-
+	cogProvider->OnCognitiveInterval.RemoveDynamic(this, &UDynamicObject::UpdateSyncWithPlayer);
 	HasInitialized = false;
 
 	if (dynamicObjectManager == nullptr) { return; }
