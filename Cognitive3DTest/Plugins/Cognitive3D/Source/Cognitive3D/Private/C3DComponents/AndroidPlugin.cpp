@@ -34,9 +34,11 @@ void UAndroidPlugin::BeginPlay()
     auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
     if (cognitive.IsValid())
     {
+        C3DSettingsPath = cognitive->GetSettingsFilePathRuntime();
         cognitive->OnSessionBegin.AddDynamic(this, &UAndroidPlugin::OnSessionBegin);
         cognitive->OnPreSessionEnd.AddDynamic(this, &UAndroidPlugin::OnSessionEnd);
         cognitive->OnCognitiveLevelChange.AddDynamic(this, &UAndroidPlugin::OnLevelLoad);
+        if (cognitive->HasStartedSession()) OnSessionBegin();
     }
 }
 
