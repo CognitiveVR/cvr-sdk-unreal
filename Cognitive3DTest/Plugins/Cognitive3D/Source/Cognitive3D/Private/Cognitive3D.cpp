@@ -502,6 +502,7 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	}
 
 	//pre session startup
+	LastSessionSceneData.Reset();
 	CacheSceneData();
 	SessionTimestamp = FUtil::GetTimestamp();
 	if (SessionId.IsEmpty())
@@ -607,8 +608,12 @@ void FAnalyticsProviderCognitive3D::EndSession()
 	auto cognitiveActor = ACognitive3DActor::GetCognitive3DActor();
 	if (cognitiveActor == nullptr)
 	{
-		FCognitiveLog::Error("FAnalyticsProviderCognitive3D::EndSession cognitiveActor is null");
-		return;
+		FCognitiveLog::Warning("Cognitive3D ending session after its recording world has unloaded");
+	}
+	if (!LastSceneData.IsValid() && LastSessionSceneData.IsValid())
+	{
+		LastSceneData = LastSessionSceneData;
+		CurrentTrackingSceneId = LastSceneData->Id;
 	}
 	gazeDataRecorder->PreSessionEnd();
 	customEventRecorder->PreSessionEnd();
@@ -664,6 +669,8 @@ void FAnalyticsProviderCognitive3D::EndSession()
 	FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Empty();
 	CurrentTrackingSceneId.Empty();
 	LastSceneData.Reset();
+	LastSessionSceneData.Reset();
+	LoadedSceneDataStack.Empty();
 
 	//broadcast end session
 	FCognitiveLog::Info("Cognitive3D EndSession");
@@ -1029,6 +1036,7 @@ FAnalyticsEventAttribute FAnalyticsProviderCognitive3D::GetDefaultEventAttribute
 
 TSharedPtr<FSceneData> FAnalyticsProviderCognitive3D::GetCurrentSceneData()
 {
+	if (LastSceneData.IsValid()) LastSessionSceneData = LastSceneData;
 	return LastSceneData;
 }
 

@@ -54,6 +54,7 @@
 		void CacheSceneData();
 		static bool bHasSessionStarted;
 		double SceneStartTime = 0;
+		TSharedPtr<FSceneData> LastSessionSceneData;
 
 	public:
 		FAnalyticsProviderCognitive3D();
