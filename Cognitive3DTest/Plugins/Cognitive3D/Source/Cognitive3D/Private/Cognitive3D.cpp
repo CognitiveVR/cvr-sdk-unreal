@@ -503,6 +503,7 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	}
 
 	//pre session startup
+	if (localCache.IsValid()) localCache->Reopen();
 	LastSessionSceneData.Reset();
 	CacheSceneData();
 	SessionTimestamp = FUtil::GetTimestamp();
@@ -634,6 +635,7 @@ void FAnalyticsProviderCognitive3D::EndSession()
 	boundaryRecorder->PostSessionEnd();
 	sensors->PostSessionEnd();
 	OnPostSessionEnd.Broadcast();
+	if (network.IsValid()) network->SessionEnd();
 	localCache->Close();
 
 	//cleanup pause and level load delegates
@@ -689,6 +691,7 @@ void FAnalyticsProviderCognitive3D::FlushAndCacheEvents()
 	dynamicObjectManager->SendData(true);
 	sensors->SendData(true);
 	OnRequestSend.Broadcast(true);
+	if (localCache.IsValid()) localCache->SerializeToFile();
 }
 
 //broadcast to all listeners that outstanding data should be sent. this won't immediately write all data to the cache

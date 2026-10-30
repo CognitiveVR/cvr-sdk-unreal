@@ -7,6 +7,7 @@
 #include "Analytics.h"
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "Misc/FileHelper.h"
+#include "Containers/StringConv.h"
 
 FLocalCache::FLocalCache(FString path)
 {
@@ -35,14 +36,14 @@ FLocalCache::FLocalCache(FString path)
 		return;
 	}
 
-	int32 targetCacheSize = 100 * 1024 * 1024; //convert to MB
+	int64 targetCacheSize = 100LL * 1024 * 1024;
 	ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "LocalCacheSize", false);
 	if (ValueReceived.Len() > 0)
 	{
 		int32 tempSize = FCString::Atoi(*ValueReceived);
 		if (tempSize > 0)
 		{
-			targetCacheSize = tempSize * 1024 * 1024; //convert to MB
+			targetCacheSize = static_cast<int64>(tempSize) * 1024 * 1024;
 		}
 	}
 	MaxCacheSize = targetCacheSize;
@@ -90,28 +91,64 @@ bool FLocalCache::IsEnabled()
 	return localCacheEnabled;
 }
 
-bool FLocalCache::CanWrite(int32 byteCount)
+bool FLocalCache::Reopen()
 {
 	if (!localCacheEnabled) { return false; }
-
-	int32 currentCacheSize = 0;
-	if (byteCount + currentCacheSize < MaxCacheSize)
+	if (WriterArchive != nullptr && !WriterArchive->IsError()) { return true; }
+	if (WriterArchive != nullptr)
 	{
-		return true;
+		WriterArchive->Close();
+		delete WriterArchive;
+		WriterArchive = nullptr;
 	}
-	return false;
+	WriterArchive = FileManager.CreateFileWriter(*writeFilePath, FILEWRITE_Append | FILEWRITE_AllowRead);
+	if (WriterArchive == nullptr)
+	{
+		FCognitiveLog::Error("Cognitive3D local cache writer could not be opened");
+		return false;
+	}
+	return true;
 }
 
-void FLocalCache::WriteData(FString destination, FString body)
+bool FLocalCache::CanWrite(int64 byteCount)
 {
-	if (WriterArchive == nullptr) { return; }
-	if (!localCacheEnabled) { return; }
-	WriterArchive->Serialize(TCHAR_TO_ANSI(*destination), destination.Len());
-	WriterArchive->Serialize(TCHAR_TO_ANSI(*FString("\n")), 1);
-	WriterArchive->Serialize(TCHAR_TO_ANSI(*body), body.Len());
-	WriterArchive->Serialize(TCHAR_TO_ANSI(*FString("\n")), 1);
+	if (!localCacheEnabled || byteCount < 0) { return false; }
+	const int64 ReadBytes = FMath::Max<int64>(0, FileManager.FileSize(*readFilePath));
+	int64 WriteBytes = FMath::Max<int64>(0, FileManager.FileSize(*writeFilePath));
+	if (WriterArchive != nullptr)
+	{
+		WriteBytes = FMath::Max(WriteBytes, WriterArchive->Tell());
+	}
+	return ReadBytes + WriteBytes <= MaxCacheSize && byteCount <= MaxCacheSize - ReadBytes - WriteBytes;
+}
+
+bool FLocalCache::WriteData(FString destination, FString body)
+{
+	if (!localCacheEnabled || !Reopen()) { return false; }
+	FTCHARToUTF8 DestinationUtf8(*destination);
+	body.ReplaceInline(TEXT("\r"), TEXT(""));
+	body.ReplaceInline(TEXT("\n"), TEXT(""));
+	FTCHARToUTF8 BodyUtf8(*body);
+	const int64 RequiredBytes = static_cast<int64>(DestinationUtf8.Length()) + BodyUtf8.Length() + 2;
+	if (!CanWrite(RequiredBytes))
+	{
+		FCognitiveLog::Warning("Cognitive3D local cache is full; request could not be retained");
+		return false;
+	}
+	WriterArchive->Serialize(const_cast<ANSICHAR*>(DestinationUtf8.Get()), DestinationUtf8.Length());
+	uint8 Newline = '\n';
+	WriterArchive->Serialize(&Newline, 1);
+	WriterArchive->Serialize(const_cast<ANSICHAR*>(BodyUtf8.Get()), BodyUtf8.Length());
+	WriterArchive->Serialize(&Newline, 1);
+	WriterArchive->Flush();
+	if (WriterArchive->IsError())
+	{
+		FCognitiveLog::Error("Cognitive3D local cache write failed");
+		return false;
+	}
 
 	numberWriteBatches++;
+	return true;
 }
 
 bool FLocalCache::PeekContent(FString& url, FString& content)
@@ -121,7 +158,7 @@ bool FLocalCache::PeekContent(FString& url, FString& content)
 		if (numberWriteBatches > 0) //there is content in the write file
 		{
 			MergeDataFiles(); //merged write file into read file
-			if (NumberOfBatches() > 1) //checks read file again
+			if (NumberOfBatches() >= 1)
 			{
 				//returns the url and content
 				url = readContent[readContent.Num() - 2];
@@ -151,8 +188,10 @@ bool FLocalCache::PeekContent(FString& url, FString& content)
 
 void FLocalCache::PopContent()
 {
+	if (readContent.Num() < 2) { return; }
 	readContent.RemoveAt(readContent.Num() - 1);
 	readContent.RemoveAt(readContent.Num() - 1);
+	SerializeToFile();
 }
 
 
@@ -198,7 +237,8 @@ void FLocalCache::MergeDataFiles()
 	readContent.Append(writeContent);
 
 	//serialize read to file
-	bool result = FFileHelper::SaveStringArrayToFile(readContent, *readFilePath, FFileHelper::EEncodingOptions::ForceUTF8);
+	const FString ReadText = readContent.Num() > 0 ? FString::Join(readContent, TEXT("\n")) + TEXT("\n") : FString();
+	bool result = FFileHelper::SaveStringToFile(ReadText, *readFilePath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	if (result)
 	{
 	}
@@ -207,8 +247,13 @@ void FLocalCache::MergeDataFiles()
 		FCognitiveLog::Error("FLocalCache::MergeDataFiles Error serialize readContents to file");
 	}
 
+	if (!result) { return; }
 	//clear write file
-	WriterArchive = FileManager.CreateFileWriter(*writeFilePath);
+	WriterArchive = FileManager.CreateFileWriter(*writeFilePath, FILEWRITE_AllowRead);
+	if (WriterArchive == nullptr)
+	{
+		FCognitiveLog::Error("Cognitive3D local cache writer could not be opened after merge");
+	}
 	numberWriteBatches = 0;
 }
 
@@ -218,7 +263,8 @@ void FLocalCache::SerializeToFile()
 	{
 		WriterArchive->Flush();
 	}
-	bool result = FFileHelper::SaveStringArrayToFile(readContent, *readFilePath, FFileHelper::EEncodingOptions::ForceUTF8);
+	const FString ReadText = readContent.Num() > 0 ? FString::Join(readContent, TEXT("\n")) + TEXT("\n") : FString();
+	bool result = FFileHelper::SaveStringToFile(ReadText, *readFilePath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
 	if (result)
 	{
 

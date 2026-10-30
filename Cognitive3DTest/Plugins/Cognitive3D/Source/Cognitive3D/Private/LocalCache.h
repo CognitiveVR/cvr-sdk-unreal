@@ -20,7 +20,9 @@ class FLocalCache
 
 		FLocalCache(FString path);
 
-		void WriteData(FString destination, FString body);
+		bool WriteData(FString destination, FString body);
+
+		bool Reopen();
 
 		int32 NumberOfBatches();
 		bool HasContent();
@@ -35,7 +37,7 @@ class FLocalCache
 		
 		//checks for max file size
 		bool IsEnabled();
-		bool CanWrite(int32 byteCount);
+		bool CanWrite(int64 byteCount);
 		//
 		void SerializeToFile();
 	private:
@@ -49,5 +51,5 @@ class FLocalCache
 		//simple tracker for how many entires (url + content) are in the write file without doing IO stuff
 		int32 numberWriteBatches = 0;
 		bool localCacheEnabled = true;
-		int32 MaxCacheSize = 0;
+		int64 MaxCacheSize = 0;
 };

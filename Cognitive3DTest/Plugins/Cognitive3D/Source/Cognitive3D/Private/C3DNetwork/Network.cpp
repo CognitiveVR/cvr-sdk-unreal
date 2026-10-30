@@ -11,359 +11,163 @@
 #include "TimerManager.h"
 #include "Serialization/JsonWriter.h"
 #include "Serialization/JsonSerializer.h"
+#include "Containers/StringConv.h"
 
 FNetwork::FNetwork()
 {
 	auto cognitive = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
-	if (!cognitive.IsValid()) {
-		return;
-	}
-
+	if (!cognitive.IsValid()) { return; }
 	FString C3DSettingsPath = cognitive->GetSettingsFilePathRuntime();
 	GConfig->LoadFile(C3DSettingsPath);
-
 	Gateway = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "Gateway", false);
-	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
+	cog = cognitive;
 	Http = &FHttpModule::Get();
-	hasErrorResponse = false;
+}
+
+bool FNetwork::CacheRequest(FHttpRequestPtr Request)
+{
+	if (!Request.IsValid() || !cog.IsValid() || !cog->localCache.IsValid() || !cog->localCache->IsEnabled()) { return false; }
+	const TArray<uint8>& Content = Request->GetContent();
+	return cog->localCache->WriteData(Request->GetURL(), TArrayToString(Content, Content.Num()));
 }
 
 void FNetwork::NetworkCall(FString suburl, FString contents, bool copyDataToCache)
 {
-	if (!cog.IsValid())
-	{
-		FCognitiveLog::Warning("Network::NetworkCall Cognitive3DProvider is invalid!");
-		return;
-	}
+	if (!cog.IsValid()) { FCognitiveLog::Warning("Network::NetworkCall Cognitive3DProvider is invalid!"); return; }
+	if (cog->GetCurrentSceneId().IsEmpty()) { FCognitiveLog::Warning("Network::NetworkCall Cognitive3DProvider scene id is invalid!"); return; }
+	if (cog->GetCurrentSceneVersionNumber().IsEmpty()) { FCognitiveLog::Warning("Network::NetworkCall Cognitive3DProvider scene version is invalid!"); return; }
+	if (Http == nullptr) { FCognitiveLog::Warning("Network::NetworkCall Http module not initialized!"); return; }
 
-	if (cog->GetCurrentSceneId().Len() == 0)
-	{
-		FCognitiveLog::Warning("Network::NetworkCall Cognitive3DProvider scene id is invalid!");
-		return;
-	}
-	if (cog->GetCurrentSceneVersionNumber().Len() == 0)
-	{
-		FCognitiveLog::Warning("Network::NetworkCall Cognitive3DProvider scene version is invalid!");
-		return;
-	}
-
-	if (Http == NULL)
-	{
-		FCognitiveLog::Warning("Network::NetworkCall Http module not initialized! possibly hasn't started session");
-		return;
-	}
-
-	//json to scene endpoint
-	FString url = "https://"+ Gateway +"/v"+FString::FromInt(0)+"/"+suburl+"/"+cog->GetCurrentSceneId() + "?version=" + cog->GetCurrentSceneVersionNumber();
-	FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
-
+	const FString Url = "https://" + Gateway + "/v0/" + suburl + "/" + cog->GetCurrentSceneId() + "?version=" + cog->GetCurrentSceneVersionNumber();
 	auto HttpRequest = Http->CreateRequest();
 	HttpRequest->SetContentAsString(contents);
-	HttpRequest->SetURL(url);
+	HttpRequest->SetURL(Url);
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Content-Type", TEXT("application/json"));
-	HttpRequest->SetHeader("Authorization", AuthValue);
-	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FNetwork::OnSessionDataResponse);
-
+	HttpRequest->SetHeader("Authorization", "APIKEY:DATA " + cog->ApplicationKey);
 	if (IsServerUnreachable)
 	{
-		//
-		if (!cog.IsValid()) { return; }
-		if (!cog->HasStartedSession()) { return; }
-
-		if (!cog->localCache.IsValid()) { return; }
-		if (cog->localCache->IsEnabled())
-		{
-			TArray<uint8> contentArray = HttpRequest->GetContent();
-			if (cog->localCache->CanWrite(contentArray.Num()))
-			{
-				FString contentString = TArrayToString(contentArray, HttpRequest->GetContent().Num());
-				cog->localCache->WriteData(HttpRequest->GetURL(), contentString);
-			}
-		}
-		//
-		
-	
-		return;	
+		const bool bCached = CacheRequest(HttpRequest);
+		FCognitiveLog::Info(FString::Printf(TEXT("Cognitive3D delivery deferred; cached=%s"), bCached ? TEXT("true") : TEXT("false")));
+		return;
 	}
-	else
+
+	const bool bAlreadyCached = copyDataToCache && CacheRequest(HttpRequest);
+	const TSharedRef<bool> CompletionHandled = MakeShared<bool>(false);
+	HttpRequest->OnProcessRequestComplete().BindLambda([this, bAlreadyCached, CompletionHandled](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 	{
-		HttpRequest->ProcessRequest();
+		if (*CompletionHandled) { return; }
+		*CompletionHandled = true;
+		OnSessionDataResponse(Request, Response, bWasSuccessful, bAlreadyCached);
+	});
+	if (!HttpRequest->ProcessRequest() && !*CompletionHandled)
+	{
+		*CompletionHandled = true;
+		OnSessionDataResponse(HttpRequest, FHttpResponsePtr(), false, bAlreadyCached);
 	}
+	if (FCognitiveLog::DevLogEnabled()) { FCognitiveLog::DevLog("Cognitive3D recording request submitted: " + suburl); }
+}
 
-	if (FCognitiveLog::DevLogEnabled())
-		FCognitiveLog::DevLog(url + "\n" + contents);
-	
-	//this section is only for writing requests to the cache when the app is closing and we dont know what the response will be
-	if (!copyDataToCache) { return; }
+FString FNetwork::TArrayToString(const TArray<uint8> In, int32 Count)
+{
+	const int32 SafeCount = FMath::Clamp(Count, 0, In.Num());
+	if (SafeCount == 0) { return FString(); }
+	FUTF8ToTCHAR Converted(reinterpret_cast<const ANSICHAR*>(In.GetData()), SafeCount);
+	return FString(Converted.Length(), Converted.Get());
+}
+
+void FNetwork::BackOffAfterFailure()
+{
+	hasErrorResponse = true;
+	IsServerUnreachable = true;
+	VariableDelayMultiplier = FMath::Min(VariableDelayMultiplier + 1, 10);
+	auto World = ACognitive3DActor::GetCognitiveSessionWorld();
+	if (World == nullptr) { return; }
+	World->GetTimerManager().ClearTimer(TimerHandleShortDelay);
+	const float Delay = static_cast<float>(VariableDelayTime * VariableDelayMultiplier);
+	World->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateRaw(this, &FNetwork::ResetVariableTimer), Delay, false);
+}
+
+void FNetwork::BeginCacheUpload()
+{
+	if (!cog.IsValid() || !cog->HasStartedSession() || !cog->localCache.IsValid() || Http == nullptr || IsServerUnreachable || localCacheRequest.IsValid()) { return; }
+	auto World = ACognitive3DActor::GetCognitiveSessionWorld();
+	if (World == nullptr) { return; }
+	FString Url;
+	FString Contents;
+	if (!cog->localCache->PeekContent(Url, Contents)) { return; }
+	localCacheRequest = Http->CreateRequest();
+	localCacheRequest->SetContentAsString(Contents);
+	localCacheRequest->SetURL(Url);
+	localCacheRequest->SetVerb("POST");
+	localCacheRequest->SetHeader("Content-Type", TEXT("application/json"));
+	localCacheRequest->SetHeader("Authorization", "APIKEY:DATA " + cog->ApplicationKey);
+	World->GetTimerManager().SetTimer(TimerHandleShortDelay, FTimerDelegate::CreateRaw(this, &FNetwork::RequestLocalCache), LocalCacheLoopDelay, false);
+}
+
+void FNetwork::OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, bool bAlreadyCached)
+{
 	if (!cog.IsValid()) { return; }
-	if (!cog->HasStartedSession()) { return; }
-
-	if (!cog->localCache.IsValid()) { return; }
-	if (cog->localCache->IsEnabled())
+	const int32 Status = Response.IsValid() ? Response->GetResponseCode() : 0;
+	if (bWasSuccessful && Status == 200)
 	{
-		TArray<uint8> contentArray = HttpRequest->GetContent();
-		if (cog->localCache->CanWrite(contentArray.Num()))
-		{
-			FString contentString = TArrayToString(contentArray, HttpRequest->GetContent().Num());
-			cog->localCache->WriteData(HttpRequest->GetURL(), contentString);
-		}
-	}
-	
-}
-
-inline FString FNetwork::TArrayToString(const TArray<uint8> In, int32 Count)
-{
-	FString Result;
-	Result.Empty(Count);
-
-	for (int32 i = 0; i < Count; i++)
-	{
-		int16 Value = In[i];
-		Result += TCHAR(Value);
-	}
-	return Result;
-}
-
-void FNetwork::OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-{
-	if (!cog.IsValid()) { GLog->Log("Network::OnCallReceivedAsync response while cognitive providor is invalid"); return; }
-	if (!cog->HasStartedSession()) { GLog->Log("Network::OnCallReceivedAsync response while session not started"); return; }
-	if (Response.IsValid())
-	{
-		int32 responseCode = Response.Get()->GetResponseCode();
-		//during the wait time for the 500 error code, skip this part and only do the "else" block
-		if (responseCode == 200) 
+		FCognitiveLog::Info("Cognitive3D recording delivery accepted: HTTP 200");
+		if (cog->HasStartedSession())
 		{
 			VariableDelayMultiplier = 0;
-			if (!cog->localCache.IsValid()) { GLog->Log("Network::OnCallReceivedAsync response while local cache is invalid"); return; }
-			if (localCacheRequest == NULL)
-			{
-				//start uploading data
-				FString contents;
-				FString url;
-				auto world = ACognitive3DActor::GetCognitiveSessionWorld();
-				if (world != nullptr)
-				{
-					if (world->GetTimerManager().IsTimerActive(TimerHandleShortDelay))
-					{
-						return;
-					}
-					else
-					{
-					}
-					if (cog->localCache->PeekContent(url, contents))
-					{
-						localCacheRequest = Http->CreateRequest();
-						localCacheRequest->SetContentAsString(*contents);
-						localCacheRequest->SetURL(*url);
-						localCacheRequest->SetVerb("POST");
-						FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
-						localCacheRequest->SetHeader("Content-Type", TEXT("application/json"));
-						localCacheRequest->SetHeader("Authorization", AuthValue);
-
-						if (!world->GetTimerManager().IsTimerActive(TimerHandleShortDelay))
-						{
-							ResetVariableTimer();
-							world->GetTimerManager().SetTimer(TimerHandleShortDelay, FTimerDelegate::CreateRaw(this, &FNetwork::RequestLocalCache), LocalCacheLoopDelay, false);
-						}
-						VariableDelayMultiplier = 0;
-					}
-				}
-			}
-			else
-			{
-			}
+			IsServerUnreachable = false;
+			BeginCacheUpload();
 		}
-		//when we get here, we start the variable delay, 60 seconds each time, and just let the rest of the block happen
-		else 
-		{
-			if (responseCode < 500 && responseCode != 0) {return;}
-
-			if (Request == nullptr) { return; }
-
-			//hold a pointer to a request specifically for uploading cached data
-			//if request exist, cancel it
-			auto world = ACognitive3DActor::GetCognitiveSessionWorld();
-			if (world != nullptr)
-			{
-				world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
-				if (!IsServerUnreachable)
-				{
-					IsServerUnreachable = true;
-					++VariableDelayMultiplier;
-
-					if (!world->GetTimerManager().IsTimerActive(TimerHandle))
-					{
-						float VariableDelay = VariableDelayTime * VariableDelayMultiplier;
-						world->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateRaw(this, &FNetwork::ResetVariableTimer), VariableDelay, false, VariableDelay);
-					}
-				}
-			}
-			
-			
-
-			if (cog->localCache == nullptr) { return; } //not set to null on session end
-			//isUploadingFromCache = false;
-			if (cog->localCache->IsEnabled())
-			{
-				TArray<uint8> contentArray = Request->GetContent();
-				if (cog->localCache->CanWrite(contentArray.Num()))
-				{
-					FString contentString = TArrayToString(contentArray, Request->GetContent().Num());
-					cog->localCache->WriteData(Request->GetURL(), contentString);
-				}
-			}
-
-			hasErrorResponse = true;
-		}
+		return;
 	}
-	else
-	{
-		//FCognitiveLog::DevLog("Network::OnCallReceivedAsync Response Invalid!");
-	}
+	const bool bCached = bAlreadyCached || CacheRequest(Request);
+	FCognitiveLog::Warning(FString::Printf(TEXT("Cognitive3D recording delivery failed: HTTP %d, transport_success=%s, cached=%s"), Status, bWasSuccessful ? TEXT("true") : TEXT("false"), bCached ? TEXT("true") : TEXT("false")));
+	if (cog->HasStartedSession()) { BackOffAfterFailure(); }
 }
 
 void FNetwork::SessionEnd()
 {
 	VariableDelayMultiplier = 0;
-	localCacheRequest = NULL;
-	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
-	if (world != nullptr)
+	IsServerUnreachable = false;
+	localCacheRequest.Reset();
+	auto World = ACognitive3DActor::GetCognitiveSessionWorld();
+	if (World != nullptr)
 	{
-		world->GetTimerManager().ClearTimer(TimerHandle);
-		world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
+		World->GetTimerManager().ClearTimer(TimerHandle);
+		World->GetTimerManager().ClearTimer(TimerHandleShortDelay);
 	}
-	
 }
 
 void FNetwork::RequestLocalCache()
 {
-	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
-	if (world != nullptr)
-	{
-		if (!world->GetTimerManager().IsTimerActive(TimerHandleShortDelay))
-		{
-			if (IsServerUnreachable)
-			{
-				world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
-				localCacheRequest = NULL;
-				return;
-			}
-			localCacheRequest->OnProcessRequestComplete().BindRaw(this, &FNetwork::OnLocalCacheResponse);
-			localCacheRequest->ProcessRequest();
-		}
-	}
-	
+	if (!localCacheRequest.IsValid() || IsServerUnreachable || !cog.IsValid() || !cog->HasStartedSession()) { return; }
+	auto Request = localCacheRequest;
+	Request->OnProcessRequestComplete().BindRaw(this, &FNetwork::OnLocalCacheResponse);
+	if (!Request->ProcessRequest()) { OnLocalCacheResponse(Request, FHttpResponsePtr(), false); }
 }
 
 void FNetwork::ResetVariableTimer()
 {
 	IsServerUnreachable = false;
-	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
-	if (world != nullptr)
-	{
-		if (!world->GetTimerManager().IsTimerActive(TimerHandle))
-		{
-			world->GetTimerManager().ClearTimer(TimerHandle);
-		}
-	}
+	BeginCacheUpload();
 }
 
 void FNetwork::OnLocalCacheResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	if (!cog.IsValid()) { return; }
-	if (!cog->HasStartedSession()) { FCognitiveLog::Info("Network::OnLocalCacheCallReceivedAsync get response while session not started"); return; }
-	auto world = ACognitive3DActor::GetCognitiveSessionWorld();
-	
-	if (world == nullptr)
+	if (!localCacheRequest.IsValid() || Request != localCacheRequest || !cog.IsValid() || !cog->HasStartedSession()) { return; }
+	const int32 Status = Response.IsValid() ? Response->GetResponseCode() : 0;
+	localCacheRequest.Reset();
+	if (bWasSuccessful && Status == 200)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ACognitive3DActor::GetCognitiveSessionWorld() returns NULLPTR"));
+		if (cog->localCache.IsValid()) { cog->localCache->PopContent(); }
+		VariableDelayMultiplier = 0;
+		IsServerUnreachable = false;
+		FCognitiveLog::Info("Cognitive3D cached delivery accepted: HTTP 200");
+		BeginCacheUpload();
 		return;
 	}
-
-	if (Response.IsValid())
-	{
-		int32 responseCode = Response.Get()->GetResponseCode();
-		if (responseCode == 200)
-		{
-			if (!cog->localCache.IsValid()) { return; }
-
-			cog->localCache->PopContent();
-			localCacheRequest = NULL;
-			FString contents;
-			FString url;
-			if (cog->localCache->PeekContent(url, contents))
-			{
-				localCacheRequest = Http->CreateRequest();
-				localCacheRequest->SetContentAsString(*contents);
-				localCacheRequest->SetURL(*url);
-				localCacheRequest->SetVerb("POST");
-				FString AuthValue = "APIKEY:DATA " + cog->ApplicationKey;
-				localCacheRequest->SetHeader("Content-Type", TEXT("application/json"));
-				localCacheRequest->SetHeader("Authorization", AuthValue);
-
-				if (!world->GetTimerManager().IsTimerActive(TimerHandle))
-				{
-					world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
-					world->GetTimerManager().SetTimer(TimerHandleShortDelay, FTimerDelegate::CreateRaw(this, &FNetwork::RequestLocalCache), LocalCacheLoopDelay, false);
-				}
-			}
-			else
-			{
-				localCacheRequest = NULL;
-				world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
-			}
-		}
-		else
-		{
-			if (responseCode < 500 && responseCode != 0)
-			{
-				cog->localCache->PopContent();
-				world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
-				localCacheRequest = NULL;
-				return;
-			}
-
-
-			//if local cache upload request gets 500 response start variable delay timer
-			if (!IsServerUnreachable)
-			{
-				IsServerUnreachable = true;
-				if (VariableDelayMultiplier < 10)
-				{
-					VariableDelayMultiplier++;
-				}
-				world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
-				localCacheRequest = NULL;
-
-				if (!world->GetTimerManager().IsTimerActive(TimerHandle))
-				{
-					float VariableDelay = VariableDelayTime * VariableDelayMultiplier;
-					world->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateRaw(this, &FNetwork::ResetVariableTimer), VariableDelay, false, VariableDelay);
-				}
-			}
-
-			world->GetTimerManager().ClearTimer(TimerHandleShortDelay);
-			//TEST should pop content from the read file anyway and write it to the write file
-			if (cog->localCache->IsEnabled())
-			{
-				TArray<uint8> contentArray = Request->GetContent();
-				if (cog->localCache->CanWrite(contentArray.Num()))
-				{
-					FString contentString = TArrayToString(contentArray, Request->GetContent().Num());
-					cog->localCache->WriteData(Request->GetURL(), contentString);
-					cog->localCache->PopContent();
-				}
-			}
-			localCacheRequest = NULL;
-		}
-	}
-	else
-	{
-		FCognitiveLog::Error("Network::OnLocalCacheCallReceivedAsync Response Invalid");
-		localCacheRequest = NULL;
-	}
+	FCognitiveLog::Warning(FString::Printf(TEXT("Cognitive3D cached delivery failed: HTTP %d; entry retained"), Status));
+	BackOffAfterFailure();
 }
 
 bool FNetwork::HasErrorResponse()
