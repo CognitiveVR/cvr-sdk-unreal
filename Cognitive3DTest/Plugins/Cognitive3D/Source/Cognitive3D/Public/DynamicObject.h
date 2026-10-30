@@ -43,6 +43,7 @@ private:
 	FQuat LastRotation;
 	FVector LastScale;
 	bool HasInitialized = false;
+	bool bPendingEnableSnapshot = false;
 	FQuat LastSnapshotQuat = FQuat::Identity;
 
 	//used to set unique object id from snapshot or when accessed from elsewhere
