@@ -19,6 +19,11 @@
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "TimerManager.h"
 #include "Engine/SkeletalMesh.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
+#include "HeadMountedDisplayFunctionLibrary.h"
+#include "Engine/Engine.h"
+#include "IXRTrackingSystem.h"
 #if WITH_EDITOR
 #include <Editor.h>
 #endif
@@ -42,6 +47,7 @@ void ACognitive3DActor::BeginPlay()
 
 	cog = FAnalyticsCognitive3D::Get().GetCognitive3DProvider().Pin();
 	cog->OnSessionBegin.AddDynamic(this, &ACognitive3DActor::ReceiveBeginSession);
+	cog->OnSessionBegin.AddUniqueDynamic(this, &ACognitive3DActor::InitializeControllers);
 	cog->OnPreSessionEnd.AddDynamic(this, &ACognitive3DActor::ReceivePreEndSession);
 	cog->OnPostSessionEnd.AddDynamic(this, &ACognitive3DActor::ReceivePostEndSession);
 
@@ -56,12 +62,15 @@ void ACognitive3DActor::BeginPlay()
 	InitializeControllers();
 
 	Super::BeginPlay();
+	world->GetTimerManager().SetTimer(ControllerDiscoveryHandle, this,
+		&ACognitive3DActor::InitializeControllers, 0.5f, true);
 }
 
 void ACognitive3DActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (UWorld* World = GetWorld())
 	{
+		World->GetTimerManager().ClearTimer(ControllerDiscoveryHandle);
 		TWeakObjectPtr<ACognitive3DActor>* CachedActor = PerWorldInstanceMap.Find(World->GetUniqueID());
 		if (CachedActor && (!CachedActor->IsValid() || CachedActor->Get() == this)) PerWorldInstanceMap.Remove(World->GetUniqueID());
 	}
@@ -118,6 +127,7 @@ void ACognitive3DActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 			cog->EndSession();
 		}
 		cog->OnSessionBegin.RemoveDynamic(this, &ACognitive3DActor::ReceiveBeginSession);
+		cog->OnSessionBegin.RemoveDynamic(this, &ACognitive3DActor::InitializeControllers);
 		cog->OnPreSessionEnd.RemoveDynamic(this, &ACognitive3DActor::ReceivePreEndSession);
 		cog->OnPostSessionEnd.RemoveDynamic(this, &ACognitive3DActor::ReceivePostEndSession);
 		cog.Reset();
@@ -131,196 +141,116 @@ void ACognitive3DActor::OnEndPIE(bool bIsSimulating)
 }
 
 
+namespace
+{
+EC3DControllerType GetAutomaticControllerType()
+{
+	const FString Name = FUtil::GetHMDDeviceName() + TEXT(" ") +
+		UHeadMountedDisplayFunctionLibrary::GetHMDDeviceName().ToString();
+	if (Name.Contains(TEXT("Pico Neo 2"))) return EC3DControllerType::PicoNeo2;
+	if (Name.Contains(TEXT("Pico Neo 3"))) return EC3DControllerType::PicoNeo3;
+	if (Name.Contains(TEXT("Pico"))) return EC3DControllerType::PicoNeo4;
+	if (Name.Contains(TEXT("Quest Pro"))) return EC3DControllerType::QuestPro;
+	if (Name.Contains(TEXT("Quest 2"))) return EC3DControllerType::Quest2;
+	if (Name.Contains(TEXT("Quest 3"))) return EC3DControllerType::Quest3;
+	if (Name.Contains(TEXT("Vive"))) return EC3DControllerType::Vive;
+	if (Name.Contains(TEXT("WindowsMixedReality"))) return EC3DControllerType::WindowsMixedReality;
+	if (Name.Contains(TEXT("Oculus")) || Name.Contains(TEXT("Meta Quest"))) return EC3DControllerType::OculusRift;
+	return EC3DControllerType::Quest3;
+}
+
+void GatherLocalPawnActors(APawn* Pawn, TArray<AActor*>& OutActors)
+{
+	OutActors.Reset();
+	if (!IsValid(Pawn)) return;
+	OutActors.Add(Pawn);
+	for (int32 Index = 0; Index < OutActors.Num(); ++Index)
+	{
+		AActor* Current = OutActors[Index];
+		for (AActor* OwnedActor : Current->Children)
+			if (IsValid(OwnedActor) && !OwnedActor->IsActorBeingDestroyed()) OutActors.AddUnique(OwnedActor);
+		TArray<AActor*> AttachedActors;
+		Current->GetAttachedActors(AttachedActors);
+		for (AActor* AttachedActor : AttachedActors)
+			if (IsValid(AttachedActor) && !AttachedActor->IsActorBeingDestroyed()) OutActors.AddUnique(AttachedActor);
+	}
+}
+
+bool IsControllerBound(UMotionControllerComponent* Controller, UDynamicObject* Dynamic)
+{
+	return IsValid(Controller) && Controller->IsRegistered() && IsValid(Dynamic) && Dynamic->IsRegistered();
+}
+}
+
 void ACognitive3DActor::InitializeControllers()
 {
 	UWorld* World = GetWorld();
-	if (!World)
-	{
-		UE_LOG(LogTemp, Error, TEXT("World is null!"));
-		return;
-	}
-
-	// Get all actors in the world
-	TArray<AActor*> AllActors;
-	UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), AllActors);
-
-	for (AActor* Actor : AllActors)
+	if (!World || !cog.IsValid() || !cog->HasStartedSession()) return;
+	APlayerController* Player = UGameplayStatics::GetPlayerController(World, 0);
+	APawn* Pawn = IsValid(Player) && Player->IsLocalController() ? Player->GetPawn() : nullptr;
+	if (!IsValid(Pawn)) return;
+	if (ControllerPawn.Get() == Pawn && IsControllerBound(LeftController, LeftDynamic) &&
+		IsControllerBound(RightController, RightDynamic)) return;
+	ControllerPawn = Pawn;
+	TArray<AActor*> Candidates;
+	GatherLocalPawnActors(Pawn, Candidates);
+	const bool bHeadset = GEngine && GEngine->XRSystem.IsValid() && GEngine->XRSystem->IsHeadTrackingAllowed();
+	UMotionControllerComponent* Selected[2] = { nullptr, nullptr };
+	int32 Scores[2] = { -1, -1 };
+	for (AActor* Actor : Candidates)
 	{
 		TArray<UMotionControllerComponent*> Components;
 		Actor->GetComponents(Components);
-
 		for (UMotionControllerComponent* Component : Components)
 		{
-			if (Component->GetTrackingSource() == EControllerHand::Left)
-			{
-				LeftController = Component;
-				UE_LOG(LogTemp, Log, TEXT("Left Controller found: %s"), *Component->GetName());
-
-				// Find the scene component that contains a skeletal mesh
-				LeftHandComponent = FindHandComponent(LeftController);
-				if (LeftHandComponent)
-				{
-					UE_LOG(LogTemp, Log, TEXT("Left Hand Component found: %s"), *LeftHandComponent->GetName());
-				}
-				else
-				{
-					UE_LOG(LogTemp, Warning, TEXT("No Left Hand Component found."));
-				}
-			}
-			else if (Component->GetTrackingSource() == EControllerHand::Right)
-			{
-				RightController = Component;
-				UE_LOG(LogTemp, Log, TEXT("Right Controller found: %s"), *Component->GetName());
-
-				// Find the scene component that contains a skeletal mesh
-				RightHandComponent = FindHandComponent(RightController);
-				if (RightHandComponent)
-				{
-					UE_LOG(LogTemp, Log, TEXT("Right Hand Component found: %s"), *RightHandComponent->GetName());
-				}
-				else
-				{
-					UE_LOG(LogTemp, Warning, TEXT("No Right Hand Component found."));
-				}
-			}
-
-			if (LeftHandComponent && RightHandComponent)
-			{
-				break;
-			}
+			if (!IsValid(Component) || !Component->IsRegistered() || Component->PlayerIndex != 0) continue;
+			const FString Source = Component->MotionSource.ToString();
+			const bool bRight = Source == TEXT("Right") || Source == TEXT("RightGrip") || Source == TEXT("RightAim");
+			const bool bLeft = Source == TEXT("Left") || Source == TEXT("LeftGrip") || Source == TEXT("LeftAim");
+			if (!bRight && !bLeft) continue;
+			const int32 Score = bHeadset
+				? (Component->IsTracked() ? 1000 : 0) + (Actor == Pawn ? 100 : 0) + (FindHandComponent(Component) ? 10 : 0)
+				: (FindHandComponent(Component) ? 100 : 0) + (Actor != Pawn ? 10 : 0);
+			const int32 Side = bRight ? 1 : 0;
+			if (Score > Scores[Side]) { Selected[Side] = Component; Scores[Side] = Score; }
 		}
 	}
 
-	if (!LeftController || !RightController)
+	auto Configure = [this](UMotionControllerComponent* SelectedController, bool bRight,
+		UMotionControllerComponent*& Controller, USceneComponent*& Hand,
+		UDynamicObject*& Dynamic, UDynamicObject*& Automatic)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("MotionControllerComponents not found in the scene."));
-	}
+		if (Controller != SelectedController && IsValid(Automatic))
+		{
+			Automatic->DestroyComponent();
+			Automatic = nullptr;
+		}
+		Controller = SelectedController;
+		Hand = IsValid(Controller) ? FindHandComponent(Controller) : nullptr;
+		Dynamic = IsValid(Controller) ? FindControllerDynamic(Controller, bRight) : nullptr;
+		if (!IsValid(Controller) || IsValid(Dynamic)) return;
+		AActor* ControllerOwner = Controller->GetOwner();
+		if (!IsValid(ControllerOwner)) return;
+		Automatic = NewObject<UDynamicObject>(ControllerOwner, NAME_None, RF_Transient);
+		Automatic->IdSourceType = EIdSourceType::GeneratedId;
+		Automatic->IsController = true;
+		Automatic->IsRightController = bRight;
+		Automatic->SyncUpdateWithPlayer = true;
+		Automatic->ControllerType = GetAutomaticControllerType();
+		Automatic->SetupAttachment(Controller);
+		ControllerOwner->AddInstanceComponent(Automatic);
+		Automatic->RegisterComponent();
+		Dynamic = Automatic;
+		UE_LOG(LogTemp, Log, TEXT("Cognitive3D %s controller bound to %s"), bRight ? TEXT("right") : TEXT("left"), *Controller->GetPathName());
+	};
+	Configure(Selected[0], false, LeftController, LeftHandComponent, LeftDynamic, AutomaticLeftDynamic);
+	Configure(Selected[1], true, RightController, RightHandComponent, RightDynamic, AutomaticRightDynamic);
+}
 
-	if (LeftController && !HasDynamicObjectComponent(LeftController))
-	{
-		//create dynamic objects and assign them during runtime
-		UDynamicObject* LeftHandDyn = NewObject<UDynamicObject>(LeftController);
-		if (LeftHandComponent)
-		{
-			LeftHandDyn->AttachToComponent(LeftHandComponent, FAttachmentTransformRules::KeepRelativeTransform);
-		}
-		else
-		{
-			LeftHandDyn->AttachToComponent(LeftController, FAttachmentTransformRules::KeepRelativeTransform);
-		}
-		//LeftHandDyn->MeshName = TEXT("LeftHandMesh");
-		LeftHandDyn->IdSourceType = EIdSourceType::GeneratedId;
-		LeftHandDyn->IsController = true;
-		LeftHandDyn->IsRightController = false;
-		LeftHandDyn->SyncUpdateWithPlayer = true;
-
-		FString HMDDeviceName = FUtil::GetHMDDeviceName();
-
-		if (HMDDeviceName.Contains(TEXT("Meta Quest 2"), ESearchCase::IgnoreCase))
-		{
-			LeftHandDyn->ControllerType = EC3DControllerType::Quest2;
-		}
-		else if (HMDDeviceName.Contains(TEXT("Meta Quest 3"), ESearchCase::IgnoreCase))
-		{
-			LeftHandDyn->ControllerType = EC3DControllerType::Quest3;
-		}
-		else if (HMDDeviceName.Contains(TEXT("Meta Quest Pro"), ESearchCase::IgnoreCase))
-		{
-			LeftHandDyn->ControllerType = EC3DControllerType::QuestPro;
-		}
-		else if (HMDDeviceName.Contains(TEXT("Meta Quest"), ESearchCase::IgnoreCase))
-		{
-			LeftHandDyn->ControllerType = EC3DControllerType::OculusRift;
-		}
-		else if (HMDDeviceName.Contains(TEXT("Pico Neo 2"), ESearchCase::IgnoreCase))
-		{
-			LeftHandDyn->ControllerType = EC3DControllerType::PicoNeo2;
-		}
-		else if (HMDDeviceName.Contains(TEXT("Pico Neo 3"), ESearchCase::IgnoreCase))
-		{
-			LeftHandDyn->ControllerType = EC3DControllerType::PicoNeo3;
-		}
-		else if (HMDDeviceName.Contains(TEXT("Pico 4"), ESearchCase::IgnoreCase))
-		{
-			LeftHandDyn->ControllerType = EC3DControllerType::PicoNeo4;
-		}
-		else if (HMDDeviceName.Contains(TEXT("HTC Vive"), ESearchCase::IgnoreCase))
-		{
-			LeftHandDyn->ControllerType = EC3DControllerType::Vive;
-		}
-		else
-		{
-			LeftHandDyn->ControllerType = EC3DControllerType::Quest3;
-		}
-
-		LeftHandDyn->RegisterComponent();
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("LeftHandDyn already exists. Skipping creation."));
-	}
-
-	if (RightController && !HasDynamicObjectComponent(RightController))
-	{
-		UDynamicObject* RightHandDyn = NewObject<UDynamicObject>(RightController);
-		if (RightHandComponent)
-		{
-			RightHandDyn->AttachToComponent(RightHandComponent, FAttachmentTransformRules::KeepRelativeTransform);
-		}
-		else
-		{
-			RightHandDyn->AttachToComponent(RightController, FAttachmentTransformRules::KeepRelativeTransform);
-		}
-		//RightHandDyn->MeshName = TEXT("RightHandMesh");
-		RightHandDyn->IdSourceType = EIdSourceType::GeneratedId;
-		RightHandDyn->IsController = true;
-		RightHandDyn->IsRightController = true;
-		RightHandDyn->SyncUpdateWithPlayer = true;
-
-		FString HMDDeviceName = FUtil::GetHMDDeviceName();
-		if (HMDDeviceName.Contains(TEXT("Meta Quest 2"), ESearchCase::IgnoreCase))
-		{
-			RightHandDyn->ControllerType = EC3DControllerType::Quest2;
-		}
-		else if (HMDDeviceName.Contains(TEXT("Meta Quest 3"), ESearchCase::IgnoreCase))
-		{
-			RightHandDyn->ControllerType = EC3DControllerType::Quest3;
-		}
-		else if (HMDDeviceName.Contains(TEXT("Meta Quest Pro"), ESearchCase::IgnoreCase))
-		{
-			RightHandDyn->ControllerType = EC3DControllerType::QuestPro;
-		}
-		else if (HMDDeviceName.Contains(TEXT("Meta Quest"), ESearchCase::IgnoreCase))
-		{
-			RightHandDyn->ControllerType = EC3DControllerType::OculusRift;
-		}
-		else if (HMDDeviceName.Contains(TEXT("Pico Neo 2"), ESearchCase::IgnoreCase))
-		{
-			RightHandDyn->ControllerType = EC3DControllerType::PicoNeo2;
-		}
-		else if (HMDDeviceName.Contains(TEXT("Pico Neo 3"), ESearchCase::IgnoreCase))
-		{
-			RightHandDyn->ControllerType = EC3DControllerType::PicoNeo3;
-		}
-		else if (HMDDeviceName.Contains(TEXT("Pico 4"), ESearchCase::IgnoreCase))
-		{
-			RightHandDyn->ControllerType = EC3DControllerType::PicoNeo4;
-		}
-		else if (HMDDeviceName.Contains(TEXT("HTC Vive"), ESearchCase::IgnoreCase))
-		{
-			RightHandDyn->ControllerType = EC3DControllerType::Vive;
-		}
-		else
-		{
-			RightHandDyn->ControllerType = EC3DControllerType::Quest3;
-		}
-
-		RightHandDyn->RegisterComponent();
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("RightHandDyn already exists. Skipping creation."));
-	}
+UDynamicObject* ACognitive3DActor::GetControllerDynamic(bool bRight) const
+{
+	UDynamicObject* Dynamic = bRight ? RightDynamic : LeftDynamic;
+	return IsValid(Dynamic) && Dynamic->IsRegistered() && Dynamic->GetWorld() == GetWorld() ? Dynamic : nullptr;
 }
 
 USceneComponent* ACognitive3DActor::FindHandComponent(USceneComponent* Parent)
@@ -352,26 +282,18 @@ USceneComponent* ACognitive3DActor::FindHandComponent(USceneComponent* Parent)
 	return nullptr;  // No valid component found
 }
 
-bool ACognitive3DActor::HasDynamicObjectComponent(USceneComponent* Parent)
+UDynamicObject* ACognitive3DActor::FindControllerDynamic(USceneComponent* Parent, bool bRight) const
 {
-	if (!Parent)
+	if (!IsValid(Parent)) return nullptr;
+	TArray<USceneComponent*> ChildComponents;
+	Parent->GetChildrenComponents(true, ChildComponents);
+	for (USceneComponent* Child : ChildComponents)
 	{
-		return false;
+		UDynamicObject* Dynamic = Cast<UDynamicObject>(Child);
+		if (IsValid(Dynamic) && Dynamic->IsController && Dynamic->IsRightController == bRight)
+			return Dynamic;
 	}
-
-	// Get all child components recursively
-	TArray<USceneComponent*> ChildrenComponents;
-	Parent->GetChildrenComponents(true, ChildrenComponents);
-
-	for (USceneComponent* Child : ChildrenComponents)
-	{
-		if (Cast<UDynamicObject>(Child)) // Check if the child is a UDynamicObject
-		{
-			return true;
-		}
-	}
-
-	return false; // No existing UDynamicObject found
+	return nullptr;
 }
 
 UWorld* ACognitive3DActor::GetCognitiveSessionWorld()

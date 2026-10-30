@@ -7,6 +7,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Engine/EngineTypes.h"
+#include "TimerManager.h"
 #include "Cognitive3DActor.generated.h"
 
 //this class basically only exists to send EndPlay to the CognitiveProvider
@@ -16,6 +17,8 @@ class UActorComponent;
 class FAnalyticsProviderCognitive3D;
 class UMotionControllerComponent;
 class USceneComponent;
+class UDynamicObject;
+class APawn;
 
 UCLASS()
 class COGNITIVE3D_API ACognitive3DActor : public AActor
@@ -28,6 +31,7 @@ public:
 
 	static ACognitive3DActor* GetCognitive3DActor(const UObject *WorldContextObject = nullptr);
 	static UWorld* GetCognitiveSessionWorld();
+	UDynamicObject* GetControllerDynamic(bool bRight) const;
 
 	//used only for blueprint events
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "Begin Session"))
@@ -61,9 +65,25 @@ private:
 	UPROPERTY()
 	USceneComponent* RightHandComponent;
 
+	UPROPERTY(Transient)
+	UDynamicObject* LeftDynamic;
+
+	UPROPERTY(Transient)
+	UDynamicObject* RightDynamic;
+
+	UPROPERTY(Transient)
+	UDynamicObject* AutomaticLeftDynamic;
+
+	UPROPERTY(Transient)
+	UDynamicObject* AutomaticRightDynamic;
+
+	FTimerHandle ControllerDiscoveryHandle;
+	TWeakObjectPtr<APawn> ControllerPawn;
+
+	UFUNCTION()
 	void InitializeControllers();
 
 	USceneComponent* FindHandComponent(USceneComponent* Parent);
 
-	bool HasDynamicObjectComponent(USceneComponent* Parent);
+	UDynamicObject* FindControllerDynamic(USceneComponent* Parent, bool bRight) const;
 };
