@@ -59,6 +59,8 @@ private:
 
 public:
 
+	double ControllerSettleUntil = 0.0;
+
 	FString ControllerInputImageName;
 
 	//the name of the mesh to render on the dashboard

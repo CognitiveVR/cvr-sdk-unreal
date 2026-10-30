@@ -19,12 +19,14 @@
 #include "MotionControllerComponent.h"
 #include "Engine/Engine.h"
 #include "IXRTrackingSystem.h"
+#include "HAL/PlatformTime.h"
 
 namespace
 {
 bool HasUnavailableControllerPose(const UDynamicObject* Dynamic)
 {
 	if (!Dynamic->IsController) { return false; }
+	if (FPlatformTime::Seconds() < Dynamic->ControllerSettleUntil) { return true; }
 	if (!GEngine || !GEngine->XRSystem.IsValid() || !GEngine->XRSystem->IsHeadTrackingAllowed()) { return false; }
 	bool bFoundMotionController = false;
 	for (const USceneComponent* Parent = Dynamic->GetAttachParent(); Parent != nullptr; Parent = Parent->GetAttachParent())

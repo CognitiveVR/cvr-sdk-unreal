@@ -62,6 +62,7 @@ class COGNITIVE3D_API UPlayerTracker : public UActorComponent
 
 private:
 	float currentTime = 0;
+	double SettleUntil = -1.0;
 	TSharedPtr<FAnalyticsProviderCognitive3D> cog;
 
 	FVector GetWorldGazeEnd(FVector start);

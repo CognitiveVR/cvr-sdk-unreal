@@ -238,6 +238,7 @@ void ACognitive3DActor::InitializeControllers()
 		Automatic->SyncUpdateWithPlayer = true;
 		Automatic->ControllerType = GetAutomaticControllerType();
 		Automatic->SetupAttachment(Controller);
+		Automatic->ControllerSettleUntil = FPlatformTime::Seconds() + 0.35;
 		ControllerOwner->AddInstanceComponent(Automatic);
 		Automatic->RegisterComponent();
 		Dynamic = Automatic;
