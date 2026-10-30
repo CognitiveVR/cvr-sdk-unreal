@@ -354,13 +354,13 @@ void UDynamicObject::Initialize()
 		case EC3DControllerType::PicoNeo4:
 			if (IsRightController)
 			{
-				ControllerInputImageName = "pico_neo_4_enterprise_controller_right";
-				MeshName = "pico_neo_4_enterprise_controller_right";
+				ControllerInputImageName = "pico_neo_4_eye_controller_right";
+				MeshName = "PicoNeo4ControllerRight";
 			}
 			else
 			{
-				ControllerInputImageName = "pico_neo_4_enterprise_controller_left";
-				MeshName = "pico_neo_4_enterprise_controller_left";
+				ControllerInputImageName = "pico_neo_4_eye_controller_left";
+				MeshName = "PicoNeo4ControllerLeft";
 			}
 			break;
 		default:

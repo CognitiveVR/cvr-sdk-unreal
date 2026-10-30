@@ -135,7 +135,7 @@ void UEnhancedInputTracker::FindControllers()
 						ControllerType = EC3DControllerType::PicoNeo3;
 						LeftHand = dyn;
 					}
-					else if (dyn->ControllerInputImageName == "pico_neo_4_enterprise_controller_left")
+					else if (dyn->ControllerInputImageName == "pico_neo_4_eye_controller_left")
 					{
 						ControllerType = EC3DControllerType::PicoNeo4;
 						LeftHand = dyn;
@@ -198,7 +198,7 @@ void UEnhancedInputTracker::FindControllers()
 						ControllerType = EC3DControllerType::PicoNeo3;
 						RightHand = dyn;
 					}
-					else if (dyn->ControllerInputImageName == "pico_neo_4_enterprise_controller_right")
+					else if (dyn->ControllerInputImageName == "pico_neo_4_eye_controller_right")
 					{
 						ControllerType = EC3DControllerType::PicoNeo4;
 						RightHand = dyn;
