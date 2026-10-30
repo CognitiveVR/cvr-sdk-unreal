@@ -4221,8 +4221,12 @@ void FCognitiveEditorTools::CompressAndSaveTexture(const FString& SourcePath, co
 				DstData = SrcData;
 			}
 
-			ImageWrapper->SetRaw(DstData.GetData(), DstData.Num() * sizeof(FColor), DstWidth, DstHeight, ERGBFormat::BGRA, 8);
-			const TArray64<uint8>& CompressedData = ImageWrapper->GetCompressed();
+			if (!ImageWrapperLocal->SetRaw(DstData.GetData(), DstData.Num() * sizeof(FColor), DstWidth, DstHeight, ERGBFormat::BGRA, 8))
+			{
+				UE_LOG(LogTemp, Error, TEXT("Failed to encode exported texture: %s"), *SourcePath);
+				return;
+			}
+			const TArray64<uint8>& CompressedData = ImageWrapperLocal->GetCompressed();
 			if (FFileHelper::SaveArrayToFile(CompressedData, *DestinationPath))
 			{
 				UE_LOG(LogTemp, Log, TEXT("Saved compressed texture: %s"), *DestinationPath);
