@@ -10,6 +10,7 @@
 #include "Cognitive3D/Public/Cognitive3DActor.h"
 #include "Cognitive3D/Private/C3DUtil/Util.h"
 #include "Kismet/GameplayStatics.h"
+#include "HAL/PlatformTime.h"
 #include "Analytics.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
@@ -25,6 +26,7 @@ void FSensors::StartSession()
 {
 	LastSensorValues.Empty();
 	SensorDataPoints.Empty();
+	for (auto& Entry : sensorData) { delete Entry.Value; }
 	sensorData.Empty();
 	jsonPart = 1;
 
@@ -75,34 +77,7 @@ void FSensors::InitializeSensor(FString sensorName, float hzRate, float initialV
 
 void FSensors::RecordSensor(FString Name, float value)
 {
-	if (FMath::IsNaN(value)) { return; }
-
-	UWorld* world = ACognitive3DActor::GetCognitiveSessionWorld();
-	if (world == nullptr) { return; }
-	if (cog->CurrentTrackingSceneId.IsEmpty()) { return; }
-
-	float realtime = UGameplayStatics::GetRealTimeSeconds(world);
-	if (SensorDataPoints.Contains(Name))
-	{
-		//check time since world startup
-		if (realtime < sensorData[Name]->NextRecordTime)
-		{
-			return; //recording above rate!
-		}
-		SensorDataPoints[Name].Add("[" + FString::SanitizeFloat(FUtil::GetTimestamp()) + "," + FString::SanitizeFloat(value) + "]");
-	}
-	else
-	{
-		InitializeSensor(Name, 10, value);
-	}
-
-	sensorData[Name]->NextRecordTime = (realtime + sensorData[Name]->UpdateInterval);
-	LastSensorValues.Add(Name, (float)value);
-	sensorDataCount ++;
-	if (sensorDataCount >= SensorThreshold)
-	{
-		SendData(false);
-	}
+	RecordSensor(Name, static_cast<double>(value));
 }
 
 void FSensors::RecordSensor(FString Name, double value)
@@ -113,10 +88,9 @@ void FSensors::RecordSensor(FString Name, double value)
 	if (world == nullptr) { return; }
 	if (cog->CurrentTrackingSceneId.IsEmpty()) { return; }
 
-	float realtime = UGameplayStatics::GetRealTimeSeconds(world);
+	const double realtime = FPlatformTime::Seconds();
 	if (SensorDataPoints.Contains(Name))
 	{
-		//check time since world startup
 		if (realtime < sensorData[Name]->NextRecordTime)
 		{
 			return; //recording above rate!

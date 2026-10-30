@@ -305,19 +305,12 @@ struct COGNITIVE3D_API SensorData
 public:
 	FString Name;
 	FString Rate;
-	float NextRecordTime;
-	float UpdateInterval;
+	double NextRecordTime = 0.0;
+	float UpdateInterval = 0.1f;
 	SensorData(FString name, float rate)
 	{
 		Name = name;
 		Rate = FString::SanitizeFloat(rate);
-		if (rate == 0)
-		{
-			UpdateInterval = 1 / 10;
-		}
-		else
-		{
-			UpdateInterval = 1 / rate;
-		}
+		UpdateInterval = rate > 0.0f ? 1.0f / rate : 0.1f;
 	}
 };
