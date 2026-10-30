@@ -1451,6 +1451,42 @@ bool FAnalyticsProviderCognitive3D::TryGetHMDGuardianPoints(TArray<FVector>& Gua
 	GuardianPoints = UOculusXRFunctionLibrary::GetGuardianPoints(EOculusXRBoundaryType::Boundary_PlayArea, usePawnSpace);
 	return true;
 #endif
+#elif defined INCLUDE_PICO_PLUGIN
+	GuardianPoints = UPICOXRHMDFunctionLibrary::PXR_GetBoundaryGeometry(EPICOXRBoundaryType::PlayArea);
+	if (GuardianPoints.Num() < 3)
+	{
+		GuardianPoints = UPICOXRHMDFunctionLibrary::PXR_GetBoundaryGeometry(EPICOXRBoundaryType::Outer);
+	}
+	if (GuardianPoints.Num() < 3)
+	{
+		FVector Dimensions = UPICOXRHMDFunctionLibrary::PXR_GetBoundaryDimensions(EPICOXRBoundaryType::PlayArea);
+		if (Dimensions.X > 5000.f || Dimensions.Y > 5000.f) { Dimensions /= 1000.f; }
+		GuardianPoints.Empty();
+		if (Dimensions.X > 1.f && Dimensions.Y > 1.f)
+		{
+			const float HalfX = Dimensions.X * 0.5f;
+			const float HalfY = Dimensions.Y * 0.5f;
+			GuardianPoints.Add(FVector(HalfX, HalfY, 0.f));
+			GuardianPoints.Add(FVector(HalfX, -HalfY, 0.f));
+			GuardianPoints.Add(FVector(-HalfX, -HalfY, 0.f));
+			GuardianPoints.Add(FVector(-HalfX, HalfY, 0.f));
+		}
+	}
+	if (GuardianPoints.Num() < 3)
+	{
+		GuardianPoints.Empty();
+		return false;
+	}
+	float MaxExtent = 0.f;
+	for (const FVector& Point : GuardianPoints)
+	{
+		MaxExtent = FMath::Max(MaxExtent, static_cast<float>(FMath::Max(FMath::Abs(Point.X), FMath::Abs(Point.Y))));
+	}
+	if (MaxExtent > 5000.f)
+	{
+		for (FVector& Point : GuardianPoints) { Point /= 1000.f; }
+	}
+	return true;
 #elif (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION == 27) || (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 0)
 	//OpenXR/SteamVR
 	// 1) Query the full rectangle size
