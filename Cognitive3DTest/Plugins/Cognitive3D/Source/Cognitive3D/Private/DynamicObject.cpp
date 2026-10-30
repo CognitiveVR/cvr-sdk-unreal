@@ -781,7 +781,7 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 	{
 		if (GetAttachParent() != nullptr)
 		{
-			Engagements[UniqueEngagementId]->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));\
+			Engagements[UniqueEngagementId]->SetPosition(GetAttachParent()->GetComponentLocation());
 		}
 		Engagements[UniqueEngagementId]->Send();
 		Engagements.Remove(UniqueEngagementId);
@@ -794,7 +794,7 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 		ce->SetDynamicObject(parentDynamicObjectId);
 		if (GetAttachParent() != nullptr)
 		{
-			ce->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));
+			ce->SetPosition(GetAttachParent()->GetComponentLocation());
 		}
 		ce->Send();
 	}
@@ -881,7 +881,7 @@ void UDynamicObject::CleanupDynamicObject()
 		{
 			if (GetAttachParent() != nullptr)
 			{
-				Elem.Value->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));
+				Elem.Value->SetPosition(GetAttachParent()->GetComponentLocation());
 			}
 			Elem.Value->Send();
 		}
