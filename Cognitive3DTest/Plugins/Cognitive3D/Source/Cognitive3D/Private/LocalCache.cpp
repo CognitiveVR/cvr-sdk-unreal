@@ -194,6 +194,49 @@ void FLocalCache::PopContent()
 	SerializeToFile();
 }
 
+bool FLocalCache::RemoveEntry(const FString& url, FString body)
+{
+	if (!localCacheEnabled) { return false; }
+	body.ReplaceInline(TEXT("\r"), TEXT(""));
+	body.ReplaceInline(TEXT("\n"), TEXT(""));
+	for (int32 Index = readContent.Num() - readContent.Num() % 2 - 2; Index >= 0; Index -= 2)
+	{
+		if (readContent[Index] == url && readContent[Index + 1] == body)
+		{
+			readContent.RemoveAt(Index, 2);
+			SerializeToFile();
+			return true;
+		}
+	}
+	if (numberWriteBatches < 1) { return false; }
+
+	if (WriterArchive != nullptr)
+	{
+		WriterArchive->Flush();
+		WriterArchive->Close();
+		delete WriterArchive;
+		WriterArchive = nullptr;
+	}
+	bool bRemoved = false;
+	TArray<FString> writeContent;
+	if (FFileHelper::LoadFileToStringArray(writeContent, *writeFilePath))
+	{
+		for (int32 Index = writeContent.Num() - writeContent.Num() % 2 - 2; Index >= 0; Index -= 2)
+		{
+			if (writeContent[Index] == url && writeContent[Index + 1] == body)
+			{
+				writeContent.RemoveAt(Index, 2);
+				const FString WriteText = writeContent.Num() > 0 ? FString::Join(writeContent, TEXT("\n")) + TEXT("\n") : FString();
+				bRemoved = FFileHelper::SaveStringToFile(WriteText, *writeFilePath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+				if (bRemoved) { numberWriteBatches = FMath::Max(0, numberWriteBatches - 1); }
+				break;
+			}
+		}
+	}
+	Reopen();
+	return bRemoved;
+}
+
 
 void FLocalCache::MergeDataFiles()
 {

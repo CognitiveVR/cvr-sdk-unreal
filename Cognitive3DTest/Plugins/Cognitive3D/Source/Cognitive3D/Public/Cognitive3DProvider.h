@@ -80,6 +80,7 @@
 		virtual void EndSession() override;
 		virtual void FlushEvents() override;
 		void FlushAndCacheEvents();
+		void FinishPendingDeliveries(double TimeoutSeconds);
 
 		virtual void SetUserID(const FString& InUserID) override;
 		//returns unique participant id

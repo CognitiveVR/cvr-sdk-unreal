@@ -30,6 +30,15 @@ struct FExitPollResponse;
 		void BeginCacheUpload();
 		void BackOffAfterFailure();
 
+		struct FPendingDelivery
+		{
+			FPendingDelivery(FHttpRequestPtr InRequest, bool bInCachedCopy) : Request(InRequest), bCachedCopy(bInCachedCopy) {}
+			FHttpRequestPtr Request;
+			bool bCachedCopy;
+		};
+		TArray<FPendingDelivery> PendingDeliveries;
+		bool HasCachedCopyInFlight() const;
+
 		//
 		int32 VariableDelayMultiplier = 0;
 		int32 VariableDelayTime = 60;
@@ -51,6 +60,7 @@ struct FExitPollResponse;
 
 
 		void SessionEnd();
+		void FinishPendingDeliveries(double TimeoutSeconds);
 		void RequestLocalCache();
 		void ResetVariableTimer();
 	};

@@ -12,6 +12,9 @@
 #include "Serialization/JsonWriter.h"
 #include "Serialization/JsonSerializer.h"
 #include "Containers/StringConv.h"
+#include "HttpManager.h"
+#include "HAL/PlatformProcess.h"
+#include "HAL/PlatformTime.h"
 
 FNetwork::FNetwork()
 {
@@ -53,6 +56,7 @@ void FNetwork::NetworkCall(FString suburl, FString contents, bool copyDataToCach
 	}
 
 	const bool bAlreadyCached = copyDataToCache && CacheRequest(HttpRequest);
+	PendingDeliveries.Emplace(HttpRequest, bAlreadyCached);
 	const TSharedRef<bool> CompletionHandled = MakeShared<bool>(false);
 	HttpRequest->OnProcessRequestComplete().BindLambda([this, bAlreadyCached, CompletionHandled](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 	{
@@ -88,9 +92,15 @@ void FNetwork::BackOffAfterFailure()
 	World->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateRaw(this, &FNetwork::ResetVariableTimer), Delay, false);
 }
 
+bool FNetwork::HasCachedCopyInFlight() const
+{
+	return PendingDeliveries.ContainsByPredicate([](const FPendingDelivery& Pending) { return Pending.bCachedCopy; });
+}
+
 void FNetwork::BeginCacheUpload()
 {
 	if (!cog.IsValid() || !cog->HasStartedSession() || !cog->localCache.IsValid() || Http == nullptr || IsServerUnreachable || localCacheRequest.IsValid()) { return; }
+	if (HasCachedCopyInFlight()) { return; }
 	auto World = ACognitive3DActor::GetCognitiveSessionWorld();
 	if (World == nullptr) { return; }
 	FString Url;
@@ -107,11 +117,22 @@ void FNetwork::BeginCacheUpload()
 
 void FNetwork::OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, bool bAlreadyCached)
 {
+	const int32 PendingIndex = PendingDeliveries.IndexOfByPredicate([&Request](const FPendingDelivery& Pending) { return Pending.Request == Request; });
+	if (PendingIndex != INDEX_NONE)
+	{
+		bAlreadyCached = PendingDeliveries[PendingIndex].bCachedCopy;
+		PendingDeliveries.RemoveAtSwap(PendingIndex);
+	}
 	if (!cog.IsValid()) { return; }
 	const int32 Status = Response.IsValid() ? Response->GetResponseCode() : 0;
 	if (bWasSuccessful && Status == 200)
 	{
 		FCognitiveLog::Info("Cognitive3D recording delivery accepted: HTTP 200");
+		if (bAlreadyCached && cog->localCache.IsValid())
+		{
+			const TArray<uint8>& Content = Request->GetContent();
+			cog->localCache->RemoveEntry(Request->GetURL(), TArrayToString(Content, Content.Num()));
+		}
 		if (cog->HasStartedSession())
 		{
 			VariableDelayMultiplier = 0;
@@ -136,6 +157,27 @@ void FNetwork::SessionEnd()
 		World->GetTimerManager().ClearTimer(TimerHandle);
 		World->GetTimerManager().ClearTimer(TimerHandleShortDelay);
 	}
+}
+
+void FNetwork::FinishPendingDeliveries(double TimeoutSeconds)
+{
+	if (Http == nullptr || PendingDeliveries.Num() == 0) { return; }
+	const int32 Outstanding = PendingDeliveries.Num();
+	const double Deadline = FPlatformTime::Seconds() + TimeoutSeconds;
+	double LastTick = FPlatformTime::Seconds();
+	while (PendingDeliveries.Num() > 0 && FPlatformTime::Seconds() < Deadline)
+	{
+		FPlatformProcess::Sleep(0.01f);
+		const double Now = FPlatformTime::Seconds();
+		Http->GetHttpManager().Tick(static_cast<float>(Now - LastTick));
+		LastTick = Now;
+	}
+	for (FPendingDelivery& Pending : PendingDeliveries)
+	{
+		if (!Pending.bCachedCopy) { Pending.bCachedCopy = CacheRequest(Pending.Request); }
+	}
+	FCognitiveLog::Info(FString::Printf(TEXT("Cognitive3D final delivery: %d of %d outstanding request(s) completed; %d kept in local cache"),
+		Outstanding - PendingDeliveries.Num(), Outstanding, PendingDeliveries.Num()));
 }
 
 void FNetwork::RequestLocalCache()

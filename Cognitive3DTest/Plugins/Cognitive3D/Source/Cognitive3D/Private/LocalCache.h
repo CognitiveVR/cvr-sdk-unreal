@@ -31,6 +31,7 @@ class FLocalCache
 		bool PeekContent(FString& url, FString& content);
 		//remove content
 		void PopContent();
+		bool RemoveEntry(const FString& url, FString body);
 
 		//close filestreams
 		void Close();
