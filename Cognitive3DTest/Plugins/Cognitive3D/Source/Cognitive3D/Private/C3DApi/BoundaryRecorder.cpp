@@ -33,6 +33,7 @@ void BoundaryRecorder::StartSession()
 {
 	Data.Empty();
 	Shapes.Empty();
+	CapturedSceneId.Empty();
 	jsonPart = 1;
 	FString ValueReceived;
 	FString C3DSettingsPath = cog->GetSettingsFilePathRuntime();
@@ -229,7 +230,26 @@ void BoundaryRecorder::BoundaryCheckInterval()
 {
 	if (!cog) return;
 	if (!cog->HasStartedSession()) return;
+	if (cog->CurrentTrackingSceneId.IsEmpty()) return;
 	bool bShouldSend = false;
+
+	if (CapturedSceneId != cog->CurrentTrackingSceneId)
+	{
+		APlayerController* ScenePC = UGameplayStatics::GetPlayerController(GWorld, 0);
+		if (!ScenePC || !ScenePC->GetPawn()) return;
+		CapturedSceneId = cog->CurrentTrackingSceneId;
+		Data.Empty();
+		Shapes.Empty();
+		CapturePlayerTransform();
+		TArray<FVector> SceneGuardianPoints;
+		if (cog->TryGetHMDGuardianPoints(SceneGuardianPoints, true))
+		{
+			AddGuardianBoundaryPoints(SceneGuardianPoints);
+			LastCapturedGuardianPoints = SceneGuardianPoints;
+		}
+		SendData(false);
+		return;
+	}
 
 	// Check if the player has moved significantly
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GWorld, 0);
@@ -280,6 +300,7 @@ void BoundaryRecorder::BoundaryCheckInterval()
 
 void BoundaryRecorder::SendData(bool bCacheData)
 {
+	if (Data.Num() == 0 && Shapes.Num() == 0) { return; }
 	if (!SerializeToJsonString(JsonDataString))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to serialize JSON"));
@@ -290,6 +311,8 @@ void BoundaryRecorder::SendData(bool bCacheData)
 	{
 		cog->network->NetworkCall("boundary", JsonDataString, bCacheData);
 	}
+	Data.Empty();
+	Shapes.Empty();
 }
 
 void BoundaryRecorder::PerformInitialCapture()
@@ -342,6 +365,7 @@ void BoundaryRecorder::PerformInitialCapture()
 	}
 
 	// --- Send JSON after capturing everything ---
+	CapturedSceneId = cog->CurrentTrackingSceneId;
 	SendData(false); // Or true, if you plan to cache
 
 }

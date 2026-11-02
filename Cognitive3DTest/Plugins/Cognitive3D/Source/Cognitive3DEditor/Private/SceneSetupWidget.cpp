@@ -1117,10 +1117,12 @@ FReply SSceneSetupWidget::EvaluateSceneExport()
 
 	TArray<AActor*> ToBeExportedFinal = FCognitiveEditorTools::GetInstance()->PrepareSceneForExport(OnlyExportSelected);
 
-	FCognitiveEditorTools::GetInstance()->ExportScene(AdjustedLevelName,ToBeExportedFinal);
-	
-
-	SceneWasExported = true;
+	SceneWasExported = FCognitiveEditorTools::GetInstance()->ExportScene(AdjustedLevelName,ToBeExportedFinal);
+	if (!SceneWasExported)
+	{
+		FCognitiveEditorTools::GetInstance()->ShowNotification(
+			FCognitiveEditorTools::GetInstance()->WizardUploadError, false);
+	}
 	FCognitiveEditorTools::GetInstance()->RefreshSceneUploadFiles(AdjustedLevelName);
 	return FReply::Handled();
 }

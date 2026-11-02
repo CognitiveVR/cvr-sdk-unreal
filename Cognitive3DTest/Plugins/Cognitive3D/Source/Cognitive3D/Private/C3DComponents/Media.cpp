@@ -6,7 +6,6 @@
 #include "Cognitive3D/Public/Cognitive3D.h"
 #include "Cognitive3D/Private/C3DApi/CustomEventRecorder.h"
 #include "Materials/MaterialInterface.h"
-#include "MaterialTypes.h"
 
 // Sets default values for this component's properties
 UMedia::UMedia()

@@ -33,6 +33,8 @@
 
             static UWorld* GetCurrentActiveWorld();
 
+            static bool IsMotionControllerTracked(const class UMotionControllerComponent* Controller);
+
     private:
         static FString HMDSpecificDeviceName;
     };

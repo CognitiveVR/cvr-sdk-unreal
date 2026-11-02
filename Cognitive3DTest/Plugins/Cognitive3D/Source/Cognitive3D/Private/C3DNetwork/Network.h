@@ -19,13 +19,25 @@ struct FExitPollResponse;
 	class FNetwork
 	{
 	private:
-		FHttpModule* Http;
+		FHttpModule* Http = nullptr;
 		FString Gateway;
 		TSharedPtr<FAnalyticsProviderCognitive3D> cog;
-		bool hasErrorResponse;
+		bool hasErrorResponse = false;
 		bool isUploadingFromCache = false;
 		FHttpRequestPtr localCacheRequest;
 		FString TArrayToString(const TArray<uint8> data, int32 count);
+		bool CacheRequest(FHttpRequestPtr Request);
+		void BeginCacheUpload();
+		void BackOffAfterFailure();
+
+		struct FPendingDelivery
+		{
+			FPendingDelivery(FHttpRequestPtr InRequest, bool bInCachedCopy) : Request(InRequest), bCachedCopy(bInCachedCopy) {}
+			FHttpRequestPtr Request;
+			bool bCachedCopy;
+		};
+		TArray<FPendingDelivery> PendingDeliveries;
+		bool HasCachedCopyInFlight() const;
 
 		//
 		int32 VariableDelayMultiplier = 0;
@@ -38,7 +50,7 @@ struct FExitPollResponse;
 		FNetwork();
 
 		void NetworkCall(FString suburl, FString contents, bool copyDataToCache);
-		void OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+		void OnSessionDataResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, bool bAlreadyCached = false);
 		void OnLocalCacheResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 		bool HasErrorResponse();
 
@@ -48,6 +60,7 @@ struct FExitPollResponse;
 
 
 		void SessionEnd();
+		void FinishPendingDeliveries(double TimeoutSeconds);
 		void RequestLocalCache();
 		void ResetVariableTimer();
 	};

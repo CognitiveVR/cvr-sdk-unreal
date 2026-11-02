@@ -25,6 +25,7 @@ FGazeDataRecorder::FGazeDataRecorder()
 void FGazeDataRecorder::StartSession()
 {
 	snapshots.Empty();
+	LastGazeQuat = FQuat::Identity;
 	jsonPart = 1;
 
 	FString ValueReceived;
@@ -163,6 +164,7 @@ void FGazeDataRecorder::SendData(bool copyDataToCache)
 	wholeObj->SetStringField("formatversion", "1.0");
 	wholeObj->SetStringField("hmdtype", DeviceNameString);
 
+	const double unitScale = cog->GetPositionUnitScale();
 	for (int32 i = 0; i != snapshots.Num(); ++i)
 	{
 		TSharedPtr<FJsonObject>snapObj = MakeShareable(new FJsonObject);
@@ -172,11 +174,11 @@ void FGazeDataRecorder::SendData(bool copyDataToCache)
 		//positions
 		TArray<TSharedPtr<FJsonValue>> posArray;
 		TSharedPtr<FJsonValueNumber> JsonValue;
-		JsonValue = MakeShareable(new FJsonValueNumber(-snapshots[i].HMDPosition.X)); //right
+		JsonValue = MakeShareable(new FJsonValueNumber(-snapshots[i].HMDPosition.X * unitScale)); //right
 		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(snapshots[i].HMDPosition.Z)); //up
+		JsonValue = MakeShareable(new FJsonValueNumber(snapshots[i].HMDPosition.Z * unitScale)); //up
 		posArray.Add(JsonValue);
-		JsonValue = MakeShareable(new FJsonValueNumber(snapshots[i].HMDPosition.Y));  //forward
+		JsonValue = MakeShareable(new FJsonValueNumber(snapshots[i].HMDPosition.Y * unitScale));  //forward
 		posArray.Add(JsonValue);
 
 		snapObj->SetArrayField("p", posArray);
@@ -189,11 +191,11 @@ void FGazeDataRecorder::SendData(bool copyDataToCache)
 		if (snapshots[i].UseGaze)
 		{
 			TArray<TSharedPtr<FJsonValue>> gazeArray;
-			JsonValue = MakeShareable(new FJsonValueNumber(-snapshots[i].GazePosition.X));
+			JsonValue = MakeShareable(new FJsonValueNumber(-snapshots[i].GazePosition.X * unitScale));
 			gazeArray.Add(JsonValue);
-			JsonValue = MakeShareable(new FJsonValueNumber(snapshots[i].GazePosition.Z));
+			JsonValue = MakeShareable(new FJsonValueNumber(snapshots[i].GazePosition.Z * unitScale));
 			gazeArray.Add(JsonValue);
-			JsonValue = MakeShareable(new FJsonValueNumber(snapshots[i].GazePosition.Y));
+			JsonValue = MakeShareable(new FJsonValueNumber(snapshots[i].GazePosition.Y * unitScale));
 			gazeArray.Add(JsonValue);
 			snapObj->SetArrayField("g", gazeArray);
 		}
@@ -218,6 +220,8 @@ void FGazeDataRecorder::SendData(bool copyDataToCache)
 		FRotator adjustedRot = snapshots[i].HMDRotation;
 		adjustedRot.Yaw -= 90;
 		quat = adjustedRot.Quaternion();
+		if ((quat | LastGazeQuat) < 0.f) { quat = FQuat(-quat.X, -quat.Y, -quat.Z, -quat.W); }
+		LastGazeQuat = quat;
 
 		JsonValue = MakeShareable(new FJsonValueNumber(quat.Y));
 		rotArray.Add(JsonValue);
@@ -234,11 +238,11 @@ void FGazeDataRecorder::SendData(bool copyDataToCache)
 		{
 			//floor position
 			TArray<TSharedPtr<FJsonValue>> floorArray;
-			JsonValue = MakeShareable(new FJsonValueNumber(-snapshots[i].FloorPosition.X)); //right
+			JsonValue = MakeShareable(new FJsonValueNumber(-snapshots[i].FloorPosition.X * unitScale)); //right
 			floorArray.Add(JsonValue);
-			JsonValue = MakeShareable(new FJsonValueNumber(snapshots[i].FloorPosition.Z)); //up
+			JsonValue = MakeShareable(new FJsonValueNumber(snapshots[i].FloorPosition.Z * unitScale)); //up
 			floorArray.Add(JsonValue);
-			JsonValue = MakeShareable(new FJsonValueNumber(snapshots[i].FloorPosition.Y));  //forward
+			JsonValue = MakeShareable(new FJsonValueNumber(snapshots[i].FloorPosition.Y * unitScale));  //forward
 			floorArray.Add(JsonValue);
 			snapObj->SetArrayField("f", floorArray);
 		}

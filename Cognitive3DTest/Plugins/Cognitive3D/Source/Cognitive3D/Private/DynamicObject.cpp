@@ -16,6 +16,31 @@
 #include "Engine/Blueprint.h"
 #include "Misc/Optional.h"
 #include "C3DUtil/Util.h"
+#include "MotionControllerComponent.h"
+#include "Engine/Engine.h"
+#include "IXRTrackingSystem.h"
+#include "HAL/PlatformTime.h"
+
+namespace
+{
+bool HasUnavailableControllerPose(const UDynamicObject* Dynamic)
+{
+	if (!Dynamic->IsController) { return false; }
+	if (FPlatformTime::Seconds() < Dynamic->ControllerSettleUntil) { return true; }
+	if (!GEngine || !GEngine->XRSystem.IsValid() || !GEngine->XRSystem->IsHeadTrackingAllowed()) { return false; }
+	bool bFoundMotionController = false;
+	for (const USceneComponent* Parent = Dynamic->GetAttachParent(); Parent != nullptr; Parent = Parent->GetAttachParent())
+	{
+		if (const UMotionControllerComponent* Motion = Cast<UMotionControllerComponent>(Parent))
+		{
+			bFoundMotionController = true;
+			if (FUtil::IsMotionControllerTracked(Motion)) { return Motion->GetRelativeLocation().IsNearlyZero(0.01f); }
+		}
+	}
+	return bFoundMotionController;
+}
+}
+
 UDynamicObject::UDynamicObject()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -228,6 +253,8 @@ void UDynamicObject::OnPreSessionEnd()
 void UDynamicObject::OnPostSessionEnd()
 {
 	HasInitialized = false;
+	dynamicObjectManager = nullptr;
+	ObjectID.Reset();
 }
 
 void UDynamicObject::Initialize()
@@ -250,8 +277,11 @@ void UDynamicObject::Initialize()
 	//scene component
 	if (GetAttachParent() != nullptr)
 	{
-		LastPosition = GetAttachParent()->GetComponentLocation();
-		LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
+		if (!HasUnavailableControllerPose(this))
+		{
+			LastPosition = GetAttachParent()->GetComponentLocation();
+			LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
+		}
 	}
 	else
 	{
@@ -354,13 +384,13 @@ void UDynamicObject::Initialize()
 		case EC3DControllerType::PicoNeo4:
 			if (IsRightController)
 			{
-				ControllerInputImageName = "pico_neo_4_enterprise_controller_right";
-				MeshName = "pico_neo_4_enterprise_controller_right";
+				ControllerInputImageName = "pico_neo_4_eye_controller_right";
+				MeshName = "PicoNeo4ControllerRight";
 			}
 			else
 			{
-				ControllerInputImageName = "pico_neo_4_enterprise_controller_left";
-				MeshName = "pico_neo_4_enterprise_controller_left";
+				ControllerInputImageName = "pico_neo_4_eye_controller_left";
+				MeshName = "PicoNeo4ControllerLeft";
 			}
 			break;
 		default:
@@ -386,13 +416,17 @@ void UDynamicObject::Initialize()
 		dynamicObjectManager->CacheControllerPointer(this, IsRightController);
 	}
 
-	FDynamicObjectSnapshot initSnapshot = MakeSnapshot(true);
-	SnapshotBoolProperty(initSnapshot, "enabled", true);
-	dynamicObjectManager->AddSnapshot(initSnapshot);
+	bPendingEnableSnapshot = HasUnavailableControllerPose(this);
+	if (!bPendingEnableSnapshot)
+	{
+		FDynamicObjectSnapshot initSnapshot = MakeSnapshot(true);
+		SnapshotBoolProperty(initSnapshot, "enabled", true);
+		dynamicObjectManager->AddSnapshot(initSnapshot);
+	}
 	HasInitialized = true;
 	if (SyncUpdateWithPlayer)
 	{
-		cogProvider->OnCognitiveInterval.AddDynamic(this, &UDynamicObject::UpdateSyncWithPlayer);
+		cogProvider->OnCognitiveInterval.AddUniqueDynamic(this, &UDynamicObject::UpdateSyncWithPlayer);
 	}
 }
 
@@ -403,8 +437,20 @@ TSharedPtr<FDynamicObjectId> UDynamicObject::GetObjectId()
 
 void UDynamicObject::UpdateSyncWithPlayer()
 {
+	if (!HasInitialized || !cogProvider.IsValid() || !cogProvider->HasStartedSession()) { return; }
 	if (dynamicObjectManager == nullptr) { return; }
 	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
+	if (HasUnavailableControllerPose(this)) { return; }
+	if (bPendingEnableSnapshot)
+	{
+		bPendingEnableSnapshot = false;
+		LastPosition = GetAttachParent()->GetComponentLocation();
+		LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
+		FDynamicObjectSnapshot enableSnapshot = MakeSnapshot(true);
+		SnapshotBoolProperty(enableSnapshot, "enabled", true);
+		dynamicObjectManager->AddSnapshot(enableSnapshot);
+		return;
+	}
 
 	FRotator parentRotator;
 	//rotation angle to degrees
@@ -472,6 +518,17 @@ void UDynamicObject::TickComponent( float DeltaTime, ELevelTick TickType, FActor
 	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
 
 	if (SyncUpdateWithPlayer){return;}
+	if (HasUnavailableControllerPose(this)) { return; }
+	if (bPendingEnableSnapshot)
+	{
+		bPendingEnableSnapshot = false;
+		LastPosition = GetAttachParent()->GetComponentLocation();
+		LastRotation = GetAttachParent()->GetComponentRotation().Quaternion();
+		FDynamicObjectSnapshot enableSnapshot = MakeSnapshot(true);
+		SnapshotBoolProperty(enableSnapshot, "enabled", true);
+		dynamicObjectManager->AddSnapshot(enableSnapshot);
+		return;
+	}
 
 	currentTime += DeltaTime;
 
@@ -602,9 +659,11 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 
 	snapshot.timestamp = ts;
 	snapshot.id = ObjectID->Id;
+	const bool bUseLastPose = HasUnavailableControllerPose(this);
 	if (GetAttachParent() != nullptr)
 	{
-		snapshot.position = FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y);
+		const FVector Location = bUseLastPose ? LastPosition : GetAttachParent()->GetComponentLocation();
+		snapshot.position = FVector(-Location.X, Location.Z, Location.Y);
 	}
 
 	if (hasChangedScale)
@@ -622,24 +681,16 @@ FDynamicObjectSnapshot UDynamicObject::MakeSnapshot(bool hasChangedScale)
 
 	if (GetAttachParent() != nullptr)
 	{
-		rot = GetAttachParent()->GetComponentRotation();
-    //we check if the snapshot if that of a controller
-    //that way we can add a small rotational offset to correct how controllers looks on SceneExplorer
-    if (IsController)
-    {
-      if (IsRightController)
-      {
-        rot.Yaw -= 45.f;
-      }
-      else
-      {
-        rot.Yaw += 45.f;
-      }
-      rot.Normalize();
-    }
+		rot = bUseLastPose ? LastRotation.Rotator() : GetAttachParent()->GetComponentRotation();
 	}
 	
 	quat = rot.Quaternion();
+	if (IsController)
+	{
+		quat = quat * FQuat(FVector::UpVector, FMath::DegreesToRadians(-90.f));
+	}
+	if ((quat | LastSnapshotQuat) < 0.f) { quat = FQuat(-quat.X, -quat.Y, -quat.Z, -quat.W); }
+	LastSnapshotQuat = quat;
 
 	snapshot.rotation = FQuat(quat.X, quat.Z, quat.Y, quat.W);
 
@@ -730,7 +781,7 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 	{
 		if (GetAttachParent() != nullptr)
 		{
-			Engagements[UniqueEngagementId]->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));\
+			Engagements[UniqueEngagementId]->SetPosition(GetAttachParent()->GetComponentLocation());
 		}
 		Engagements[UniqueEngagementId]->Send();
 		Engagements.Remove(UniqueEngagementId);
@@ -743,7 +794,7 @@ void UDynamicObject::EndEngagementId(FString parentDynamicObjectId, FString enga
 		ce->SetDynamicObject(parentDynamicObjectId);
 		if (GetAttachParent() != nullptr)
 		{
-			ce->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));
+			ce->SetPosition(GetAttachParent()->GetComponentLocation());
 		}
 		ce->Send();
 	}
@@ -777,13 +828,23 @@ void UDynamicObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		break;
 	}
 
-	if (!shouldWriteEndSnapshot) { return; }
-	CleanupDynamicObject();
+	if (shouldWriteEndSnapshot) CleanupDynamicObject();
+	if (cogProvider.IsValid())
+	{
+		cogProvider->OnSessionBegin.RemoveDynamic(this, &UDynamicObject::Initialize);
+		cogProvider->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPostSessionEnd);
+		cogProvider->OnPreSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPreSessionEnd);
+		cogProvider->OnCognitiveInterval.RemoveDynamic(this, &UDynamicObject::UpdateSyncWithPlayer);
+	}
+	if (IsValid(GetOwner())) GetOwner()->OnDestroyed.RemoveDynamic(this, &UDynamicObject::HandleOwnerDestroyed);
+	HasInitialized = false;
+	dynamicObjectManager = nullptr;
 }
 
 //also called from cognitive actor broadcast end session
 void UDynamicObject::CleanupDynamicObject()
 {
+	if (!HasInitialized || !cogProvider.IsValid()) { return; }
 	if (IdSourceType == EIdSourceType::PoolId && HasValidPoolId && IDPool != NULL)
 	{
 		if (ObjectID.IsValid() && !ObjectID->Id.IsEmpty())
@@ -793,14 +854,7 @@ void UDynamicObject::CleanupDynamicObject()
 		}
 	}
 
-	cogProvider->OnSessionBegin.RemoveDynamic(this, &UDynamicObject::Initialize);
-	cogProvider->OnPostSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPostSessionEnd);
-	cogProvider->OnPreSessionEnd.RemoveDynamic(this, &UDynamicObject::OnPreSessionEnd);
-	if (GetOwner() != NULL)
-	{
-		GetOwner()->OnDestroyed.RemoveDynamic(this, &UDynamicObject::HandleOwnerDestroyed);
-	}
-
+	cogProvider->OnCognitiveInterval.RemoveDynamic(this, &UDynamicObject::UpdateSyncWithPlayer);
 	HasInitialized = false;
 
 	if (dynamicObjectManager == nullptr) { return; }
@@ -827,7 +881,7 @@ void UDynamicObject::CleanupDynamicObject()
 		{
 			if (GetAttachParent() != nullptr)
 			{
-				Elem.Value->SetPosition(FVector(-GetAttachParent()->GetComponentLocation().X, GetAttachParent()->GetComponentLocation().Z, GetAttachParent()->GetComponentLocation().Y));
+				Elem.Value->SetPosition(GetAttachParent()->GetComponentLocation());
 			}
 			Elem.Value->Send();
 		}
@@ -854,6 +908,7 @@ void UDynamicObject::FlushButtons(FControllerInputStateCollection& target)
 	}
 	
 	if (cogProvider->CurrentTrackingSceneId.IsEmpty()) { return; }
+	if (bPendingEnableSnapshot) { return; }
 
 	FDynamicObjectSnapshot snap = MakeSnapshot(false);
 	snap.Buttons = target.States;

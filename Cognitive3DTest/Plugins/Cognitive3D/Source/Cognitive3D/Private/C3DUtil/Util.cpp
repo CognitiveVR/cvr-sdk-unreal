@@ -11,6 +11,7 @@
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "Misc/EngineVersion.h"
+#include "MotionControllerComponent.h"
 
 FString FUtil::HMDSpecificDeviceName = TEXT(""); // Initialize the static variable
 
@@ -19,14 +20,29 @@ double FUtil::GetTimestamp()
 	//#pragma warning(push)
 	//#pragma warning(disable:4244) //Disable warning regarding loss of accuracy, no concern.
 
-	long ts = time(0);
-	double miliseconds = FDateTime::UtcNow().GetMillisecond();
-	double finalTime = ts + miliseconds*0.001;
+	const FDateTime Now = FDateTime::UtcNow();
+	double finalTime = (double)Now.ToUnixTimestamp() + Now.GetMillisecond() * 0.001;
 
 	return finalTime;
 	//http://stackoverflow.com/questions/997946/how-to-get-current-time-and-date-in-c
 
 	//#pragma warning(pop)
+}
+
+bool FUtil::IsMotionControllerTracked(const UMotionControllerComponent* Controller)
+{
+	if (!Controller) { return false; }
+	static const FName GripTrackedName(TEXT("GripControllerIsTracked"));
+	if (UFunction* GripTracked = Controller->FindFunction(GripTrackedName))
+	{
+		struct FGripTrackedParams { bool ReturnValue = false; } Params;
+		if (GripTracked->ParmsSize == sizeof(FGripTrackedParams))
+		{
+			const_cast<UMotionControllerComponent*>(Controller)->ProcessEvent(GripTracked, &Params);
+			return Params.ReturnValue;
+		}
+	}
+	return Controller->IsTracked();
 }
 
 FString FUtil::GetDeviceName(FString DeviceName)

@@ -33,6 +33,9 @@ class COGNITIVE3D_API UCognitive3DSettings : public UAnalyticsSettingsBase
 	UPROPERTY(EditAnywhere, Category = Cognitive3D)
 		bool AutomaticallySetTrackingScene = true;
 
+	UPROPERTY(EditAnywhere, Category = Cognitive3D)
+		bool MetricSceneUnits = false;
+
 	/** The number of player snapshots that will be collected together before being sent to analytics server and scene explorer*/
 	UPROPERTY(EditAnywhere, Category = "Cognitive_3D_Data")
 		int32 GazeBatchSize = 256;

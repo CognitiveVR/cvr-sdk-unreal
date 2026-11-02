@@ -80,6 +80,8 @@ private:
 	FVector LastPlayerLocation;
 	FTimerHandle IntervalTimerHandle; // For the interval timer
 
+	FString CapturedSceneId;
+
 	// how far the player must move (squared) before we consider it changed
 	static constexpr float MovementThresholdSqr = 100.0f;
 	// how far two boundary points can differ before we treat them as changed

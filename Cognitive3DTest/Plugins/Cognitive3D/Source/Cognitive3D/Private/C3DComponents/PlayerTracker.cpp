@@ -190,13 +190,17 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	const double SettleNow = FPlatformTime::Seconds();
+	if (SettleUntil < 0.0) { SettleUntil = SettleNow + 0.35; }
+	if (SettleNow < SettleUntil) { return; }
+
 	currentTime += DeltaTime;
 	if (currentTime < PlayerSnapshotInterval)
 	{
 		return;
 	}
 
-	currentTime -= PlayerSnapshotInterval;
+	currentTime = FMath::Fmod(currentTime, PlayerSnapshotInterval);
 
 	bool usingMedia = false;
 

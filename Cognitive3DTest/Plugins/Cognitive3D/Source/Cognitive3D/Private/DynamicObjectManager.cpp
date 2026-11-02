@@ -198,11 +198,12 @@ TSharedPtr<FJsonValueObject> FDynamicObjectManager::WriteSnapshotToJson(FDynamic
 	TArray<TSharedPtr<FJsonValue>> scaleArray;
 	TSharedPtr<FJsonValueNumber> JsonValue;
 
-	JsonValue = MakeShareable(new FJsonValueNumber(snapshot.position.X)); //right
+	const double unitScale = cogProvider.IsValid() ? cogProvider->GetPositionUnitScale() : 1.0;
+	JsonValue = MakeShareable(new FJsonValueNumber(snapshot.position.X * unitScale)); //right
 	posArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(snapshot.position.Y)); //up
+	JsonValue = MakeShareable(new FJsonValueNumber(snapshot.position.Y * unitScale)); //up
 	posArray.Add(JsonValue);
-	JsonValue = MakeShareable(new FJsonValueNumber(snapshot.position.Z));  //forward
+	JsonValue = MakeShareable(new FJsonValueNumber(snapshot.position.Z * unitScale));  //forward
 	posArray.Add(JsonValue);
 
 	snapObj->SetArrayField("p", posArray);

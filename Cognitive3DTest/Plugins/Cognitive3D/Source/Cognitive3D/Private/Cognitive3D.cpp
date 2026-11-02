@@ -83,7 +83,8 @@ void FAnalyticsCognitive3D::StartupModule()
 	Cognitive3DProvider.Pin()->fixationDataRecorder = new FFixationDataRecorder();
 	Cognitive3DProvider.Pin()->gazeDataRecorder = new FGazeDataRecorder();
 	Cognitive3DProvider.Pin()->boundaryRecorder = new BoundaryRecorder();
-	Cognitive3DProvider.Pin()->localCache = MakeShareable(new FLocalCache(FPaths::Combine(FPaths::ProjectConfigDir(), TEXT("c3dlocal/"))));
+	FString CacheDirectory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Cognitive3D/cache/"));
+	Cognitive3DProvider.Pin()->localCache = MakeShareable(new FLocalCache(CacheDirectory));
 	Cognitive3DProvider.Pin()->network = MakeShareable(new FNetwork());
 	Cognitive3DProvider.Pin()->dynamicObjectManager = new FDynamicObjectManager();
 	FRemoteControlsRecorder::Initialize();
@@ -198,7 +199,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelLoaded(ULevel* level, UWorld* 
 					// Register the component
 					dynamicComponent->RegisterComponent();
 				}
-				if (dynamicComponent && !dynamicComponent->IsController)
+				if (dynamicComponent && dynamicComponent->IsRegistered())
 				{
 					dynamicComponent->HasInitialized = false;
 					dynamicComponent->Initialize();
@@ -309,7 +310,7 @@ void FAnalyticsProviderCognitive3D::HandleSublevelUnloaded(ULevel* level, UWorld
 						// Register the component
 						dynamicComponent->RegisterComponent();
 					}
-					if (dynamicComponent && !dynamicComponent->IsController)
+					if (dynamicComponent && dynamicComponent->IsRegistered())
 					{
 						dynamicComponent->HasInitialized = false;
 						dynamicComponent->Initialize();
@@ -490,6 +491,8 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	{
 		AutomaticallySetTrackingScene = FCString::ToBool(*ValueReceived);
 	}
+	PositionUnitScale = 0.0;
+	GetPositionUnitScale();
 
 	if (ApplicationKey.Len() == 0)
 	{
@@ -502,6 +505,8 @@ bool FAnalyticsProviderCognitive3D::StartSession(const TArray<FAnalyticsEventAtt
 	}
 
 	//pre session startup
+	if (localCache.IsValid()) localCache->Reopen();
+	LastSessionSceneData.Reset();
 	CacheSceneData();
 	SessionTimestamp = FUtil::GetTimestamp();
 	if (SessionId.IsEmpty())
@@ -607,8 +612,12 @@ void FAnalyticsProviderCognitive3D::EndSession()
 	auto cognitiveActor = ACognitive3DActor::GetCognitive3DActor();
 	if (cognitiveActor == nullptr)
 	{
-		FCognitiveLog::Error("FAnalyticsProviderCognitive3D::EndSession cognitiveActor is null");
-		return;
+		FCognitiveLog::Warning("Cognitive3D ending session after its recording world has unloaded");
+	}
+	if (!LastSceneData.IsValid() && LastSessionSceneData.IsValid())
+	{
+		LastSceneData = LastSessionSceneData;
+		CurrentTrackingSceneId = LastSceneData->Id;
 	}
 	gazeDataRecorder->PreSessionEnd();
 	customEventRecorder->PreSessionEnd();
@@ -628,25 +637,27 @@ void FAnalyticsProviderCognitive3D::EndSession()
 	boundaryRecorder->PostSessionEnd();
 	sensors->PostSessionEnd();
 	OnPostSessionEnd.Broadcast();
+	if (IsEngineExitRequested()) { FinishPendingDeliveries(3.0); }
+	if (network.IsValid()) network->SessionEnd();
 	localCache->Close();
 
 	//cleanup pause and level load delegates
-	if (!PauseHandle.IsValid())
+	if (PauseHandle.IsValid())
 	{
 		FCoreDelegates::ApplicationWillEnterBackgroundDelegate.Remove(PauseHandle);
 		PauseHandle.Reset();
 	}
-	if (!LevelLoadHandle.IsValid())
+	if (LevelLoadHandle.IsValid())
 	{
 		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(LevelLoadHandle);
 		LevelLoadHandle.Reset();
 	}
-	if (!SublevelLoadedHandle.IsValid())
+	if (SublevelLoadedHandle.IsValid())
 	{
 		FWorldDelegates::LevelAddedToWorld.Remove(SublevelLoadedHandle);
 		SublevelLoadedHandle.Reset();
 	}
-	if (!SublevelUnloadedHandle.IsValid())
+	if (SublevelUnloadedHandle.IsValid())
 	{
 		FWorldDelegates::LevelRemovedFromWorld.Remove(SublevelUnloadedHandle);
 		SublevelUnloadedHandle.Reset();
@@ -664,6 +675,8 @@ void FAnalyticsProviderCognitive3D::EndSession()
 	FRemoteControlsRecorder::GetInstance()->RemoteControlVariablesBool.Empty();
 	CurrentTrackingSceneId.Empty();
 	LastSceneData.Reset();
+	LastSessionSceneData.Reset();
+	LoadedSceneDataStack.Empty();
 
 	//broadcast end session
 	FCognitiveLog::Info("Cognitive3D EndSession");
@@ -680,7 +693,14 @@ void FAnalyticsProviderCognitive3D::FlushAndCacheEvents()
 	fixationDataRecorder->SendData(true);
 	dynamicObjectManager->SendData(true);
 	sensors->SendData(true);
+	boundaryRecorder->SendData(true);
 	OnRequestSend.Broadcast(true);
+	if (localCache.IsValid()) localCache->SerializeToFile();
+}
+
+void FAnalyticsProviderCognitive3D::FinishPendingDeliveries(double TimeoutSeconds)
+{
+	if (network.IsValid()) { network->FinishPendingDeliveries(TimeoutSeconds); }
 }
 
 //broadcast to all listeners that outstanding data should be sent. this won't immediately write all data to the cache
@@ -1029,6 +1049,7 @@ FAnalyticsEventAttribute FAnalyticsProviderCognitive3D::GetDefaultEventAttribute
 
 TSharedPtr<FSceneData> FAnalyticsProviderCognitive3D::GetCurrentSceneData()
 {
+	if (LastSceneData.IsValid()) LastSessionSceneData = LastSceneData;
 	return LastSceneData;
 }
 
@@ -1067,6 +1088,18 @@ TSharedPtr<FSceneData> FAnalyticsProviderCognitive3D::GetSceneData(FString scene
 	}
 	FCognitiveLog::Warning("FAnalyticsProviderCognitive3D::GetSceneData couldn't find SceneData for scene " + scenename);
 	return NULL;
+}
+
+double FAnalyticsProviderCognitive3D::GetPositionUnitScale()
+{
+	if (PositionUnitScale <= 0.0)
+	{
+		const FString C3DSettingsPath = GetSettingsFilePathRuntime();
+		GConfig->LoadFile(C3DSettingsPath);
+		const FString ValueReceived = FAnalytics::Get().GetConfigValueFromIni(C3DSettingsPath, "/Script/Cognitive3D.Cognitive3DSettings", "MetricSceneUnits", false);
+		PositionUnitScale = ValueReceived.Len() > 0 && FCString::ToBool(*ValueReceived) ? 0.01 : 1.0;
+	}
+	return PositionUnitScale;
 }
 
 FString FAnalyticsProviderCognitive3D::GetSettingsFilePathRuntime() const
@@ -1432,6 +1465,42 @@ bool FAnalyticsProviderCognitive3D::TryGetHMDGuardianPoints(TArray<FVector>& Gua
 	GuardianPoints = UOculusXRFunctionLibrary::GetGuardianPoints(EOculusXRBoundaryType::Boundary_PlayArea, usePawnSpace);
 	return true;
 #endif
+#elif defined INCLUDE_PICO_PLUGIN
+	GuardianPoints = UPICOXRHMDFunctionLibrary::PXR_GetBoundaryGeometry(EPICOXRBoundaryType::PlayArea);
+	if (GuardianPoints.Num() < 3)
+	{
+		GuardianPoints = UPICOXRHMDFunctionLibrary::PXR_GetBoundaryGeometry(EPICOXRBoundaryType::Outer);
+	}
+	if (GuardianPoints.Num() < 3)
+	{
+		FVector Dimensions = UPICOXRHMDFunctionLibrary::PXR_GetBoundaryDimensions(EPICOXRBoundaryType::PlayArea);
+		if (Dimensions.X > 5000.f || Dimensions.Y > 5000.f) { Dimensions /= 1000.f; }
+		GuardianPoints.Empty();
+		if (Dimensions.X > 1.f && Dimensions.Y > 1.f)
+		{
+			const float HalfX = Dimensions.X * 0.5f;
+			const float HalfY = Dimensions.Y * 0.5f;
+			GuardianPoints.Add(FVector(HalfX, HalfY, 0.f));
+			GuardianPoints.Add(FVector(HalfX, -HalfY, 0.f));
+			GuardianPoints.Add(FVector(-HalfX, -HalfY, 0.f));
+			GuardianPoints.Add(FVector(-HalfX, HalfY, 0.f));
+		}
+	}
+	if (GuardianPoints.Num() < 3)
+	{
+		GuardianPoints.Empty();
+		return false;
+	}
+	float MaxExtent = 0.f;
+	for (const FVector& Point : GuardianPoints)
+	{
+		MaxExtent = FMath::Max(MaxExtent, static_cast<float>(FMath::Max(FMath::Abs(Point.X), FMath::Abs(Point.Y))));
+	}
+	if (MaxExtent > 5000.f)
+	{
+		for (FVector& Point : GuardianPoints) { Point /= 1000.f; }
+	}
+	return true;
 #elif (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION == 27) || (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 0)
 	//OpenXR/SteamVR
 	// 1) Query the full rectangle size

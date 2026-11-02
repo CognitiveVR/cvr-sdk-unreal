@@ -39,7 +39,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /************************************************************************/
 
 
-#if PLATFORM_ANDROID
+#if defined(PLATFORM_ANDROID) && PLATFORM_ANDROID
 //#include "Platform.h"
 #else
 
