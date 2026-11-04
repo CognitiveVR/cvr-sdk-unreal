@@ -83,6 +83,8 @@ private:
 public:
 
 	const float PlayerSnapshotInterval = 0.1;
+	// how far below the camera (cm) the fallback floor trace reaches when there is no pawn
+	static constexpr float FloorTraceDistance = 1000.0f;
 
 	UPlayerTracker();
 

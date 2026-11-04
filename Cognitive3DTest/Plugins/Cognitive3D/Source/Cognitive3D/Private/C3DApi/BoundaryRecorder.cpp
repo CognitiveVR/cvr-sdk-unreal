@@ -216,6 +216,7 @@ void BoundaryRecorder::CapturePlayerTransform()
 	LastPlayerLocation = PlayerLocation;
 	FRotator PlayerRotation = Pawn->GetActorRotation();
 	FQuat PlayerQuat = PlayerRotation.Quaternion();
+	LastPlayerRotation = PlayerQuat;
 
 	BoundaryRecorder::FDataEntry Entry;
 	Entry.Time = FUtil::GetTimestamp();
@@ -231,7 +232,7 @@ void BoundaryRecorder::BoundaryCheckInterval()
 	if (!cog->HasStartedSession()) return;
 	bool bShouldSend = false;
 
-	// Check if the player has moved significantly
+	// Check if the player has moved or turned significantly
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GWorld, 0);
 	if (PC)
 	{
@@ -239,7 +240,10 @@ void BoundaryRecorder::BoundaryCheckInterval()
 		if (Pawn)
 		{
 			FVector PlayerLocation = Pawn->GetActorLocation();
-			if ((PlayerLocation - LastPlayerLocation).SizeSquared() > MovementThresholdSqr) // Adjust threshold as needed
+			FQuat PlayerQuat = Pawn->GetActorRotation().Quaternion();
+			bool bMoved = (PlayerLocation - LastPlayerLocation).SizeSquared() > MovementThresholdSqr; // Adjust threshold as needed
+			bool bRotated = PlayerQuat.AngularDistance(LastPlayerRotation) > FMath::DegreesToRadians(RotationThresholdDegrees);
+			if (bMoved || bRotated)
 			{
 				Data.Empty();
 				CapturePlayerTransform();
@@ -318,6 +322,7 @@ void BoundaryRecorder::PerformInitialCapture()
 			LastPlayerLocation = PlayerLocation;
 			FRotator PlayerRotation = Pawn->GetActorRotation();
 			FQuat PlayerQuat = PlayerRotation.Quaternion();
+			LastPlayerRotation = PlayerQuat;
 
 			FDataEntry Entry;
 			Entry.Time = FUtil::GetTimestamp(); //cog->GetSessionTimestamp();

@@ -78,10 +78,15 @@ private:
 	TArray<FVector> LastCapturedGuardianPoints; // To compare for changes later
 
 	FVector LastPlayerLocation;
+	FQuat LastPlayerRotation = FQuat::Identity;
 	FTimerHandle IntervalTimerHandle; // For the interval timer
 
 	// how far the player must move (squared) before we consider it changed
 	static constexpr float MovementThresholdSqr = 100.0f;
+	// how far the pawn must rotate (degrees) before we consider it changed. Snap turns are
+	// 30 to 90 degrees and can leave the location unchanged; head movement turns the camera,
+	// not the pawn, so 5 degrees catches every snap turn without recording head jitter
+	static constexpr float RotationThresholdDegrees = 5.0f;
 	// how far two boundary points can differ before we treat them as changed
 	static constexpr float BoundaryTolerance = 1.0f;
 
