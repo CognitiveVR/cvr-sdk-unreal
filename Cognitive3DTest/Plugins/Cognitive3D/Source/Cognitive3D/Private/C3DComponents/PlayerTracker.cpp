@@ -22,6 +22,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "MediaSoundComponent.h"
 #include "Materials/MaterialInstance.h"
+#include "GameFramework/Pawn.h"
 
 UPlayerTracker::UPlayerTracker()
 {
@@ -212,8 +213,17 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	FVector captureLocation = controllers[0]->PlayerCameraManager->GetCameraLocation();
 	FRotator captureRotation = controllers[0]->PlayerCameraManager->GetCameraRotation();
 
+	// Floor point "f": the tracking-space origin, i.e. the player pawn's actor location.
+	// This is the same pose BoundaryRecorder::CapturePlayerTransform writes as the boundary
+	// origin, and matches the Unity SDK (GazeCore.GetFloorPosition writes the tracking space position).
 	bool DidHitFloor = false;
 	FVector FloorHitPosition = FVector::ZeroVector;
+	APawn* TrackingPawn = controllers[0]->GetPawn();
+	if (TrackingPawn != nullptr)
+	{
+		DidHitFloor = true;
+		FloorHitPosition = TrackingPawn->GetActorLocation();
+	}
 	if (RecordGazeHit)
 	{
 
@@ -239,14 +249,16 @@ void UPlayerTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		gazeparams.bReturnFaceIndex = true; // Also helps with UV calculation
 		bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, gazeparams);
 
-		GetWorld()->LineTraceSingleByObjectType(FloorHit, captureLocation, FVector(0, 0, -1000), params);
-
-		DidHitFloor = false;
-
-		if (FloorHit.GetActor() != NULL)
+		// Fallback when there is no pawn: trace straight down from the camera to find the floor under the HMD
+		if (TrackingPawn == nullptr)
 		{
-			DidHitFloor = true;
-			FloorHitPosition = FloorHit.ImpactPoint;
+			GetWorld()->LineTraceSingleByObjectType(FloorHit, captureLocation, captureLocation + FVector(0, 0, -FloorTraceDistance), params);
+
+			if (FloorHit.GetActor() != NULL)
+			{
+				DidHitFloor = true;
+				FloorHitPosition = FloorHit.ImpactPoint;
+			}
 		}
 
 		if (bHit)
